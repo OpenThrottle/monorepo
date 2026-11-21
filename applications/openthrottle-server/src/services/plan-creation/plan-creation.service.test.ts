@@ -242,6 +242,24 @@ describe('PlanCreationService', () => {
       expect(plansRepository.create).toHaveBeenCalledTimes(1);
     });
 
+    it('reads back the trigger-derived repositoryId onto the created plan', async () => {
+      const repositoryId = '33333333-3333-4333-8333-333333333333';
+      plansRepository.findOne.mockResolvedValue(null);
+      plansRepository.create.mockImplementation(async (fields) => {
+        return plansFactory.build(fields);
+      });
+      plansRepository.loadRepositoryIds.mockImplementationOnce(
+        async (plans) => {
+          for (const plan of plans) plan.repositoryId = repositoryId;
+          return plans;
+        },
+      );
+
+      const result = await service.createPlanFromInput(input(CLIENT_ID));
+
+      expect(result.repositoryId).toBe(repositoryId);
+    });
+
     it('returns the plan an earlier call created instead of inserting again', async () => {
       plansRepository.findOne.mockResolvedValue(plan('My plan'));
 
@@ -300,6 +318,7 @@ describe('PlanCreationService', () => {
       id: 'p1',
       project: null,
       projectId: null,
+      repositoryId: null,
       status: 'PENDING',
       summary: null,
       title: 'My plan',
@@ -347,6 +366,7 @@ describe('PlanCreationService', () => {
       id: 'p-run-config',
       project: null,
       projectId: null,
+      repositoryId: null,
       status: 'PENDING',
       summary: null,
       title: 'Plan',
@@ -388,6 +408,7 @@ describe('PlanCreationService', () => {
       id: 'p2',
       project: null,
       projectId: null,
+      repositoryId: null,
       status: 'PENDING',
       summary: null,
       title: 'Plan',
@@ -452,6 +473,22 @@ describe('PlanCreationService', () => {
       expect(planRepo.manager.transaction).toHaveBeenCalledTimes(1);
       expect(planRepo.save).toHaveBeenCalledTimes(1);
       expect(result.map((plan) => plan.title)).toEqual(['A', 'B']);
+    });
+
+    it('reads back repositoryId for the whole batch in one call', async () => {
+      planRepo.create.mockImplementation((fields: unknown) => fields);
+      planRepo.save.mockImplementation((entities: unknown) =>
+        Promise.resolve(entities),
+      );
+      plansRepository.loadRepositoryIds.mockClear();
+
+      const result = await service.createPlansFromInput([
+        validInput('A'),
+        validInput('B'),
+      ]);
+
+      expect(plansRepository.loadRepositoryIds).toHaveBeenCalledTimes(1);
+      expect(plansRepository.loadRepositoryIds).toHaveBeenCalledWith(result);
     });
 
     it('throws before opening a transaction when any input is invalid', async () => {

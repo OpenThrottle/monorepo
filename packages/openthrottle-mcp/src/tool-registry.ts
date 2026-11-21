@@ -521,6 +521,13 @@ export const developerMcpToolDefinitions: readonly DeveloperMcpToolDefinition[] 
     ),
     defineTool(
       'admin',
+      'preview_tag_action_rule',
+      Th.previewTagActionRuleToolDescription,
+      Th.previewTagActionRuleToolParameters,
+      Th.previewTagActionRuleToolHandler,
+    ),
+    defineTool(
+      'admin',
       'upsert_tag_action_rule',
       Th.upsertTagActionRuleToolDescription,
       Th.upsertTagActionRuleToolParameters,

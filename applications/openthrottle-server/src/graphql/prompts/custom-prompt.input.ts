@@ -29,7 +29,10 @@ export class CreateCustomPromptInput {
   })
   filePath!: string | null;
 
-  @Field(() => ID, { nullable: true })
+  @Field(() => ID, {
+    deprecationReason: `Ignored: the owner is always the authenticated user.`,
+    nullable: true,
+  })
   userId!: string | null;
 
   @Field(() => ID, { nullable: true })
@@ -65,7 +68,10 @@ export class UpdateCustomPromptInput {
   @Field(() => String, { nullable: true })
   filePath!: string | null;
 
-  @Field(() => ID, { nullable: true })
+  @Field(() => ID, {
+    deprecationReason: `Ignored: the owner is always the authenticated user.`,
+    nullable: true,
+  })
   userId!: string | null;
 
   @Field(() => ID, { nullable: true })
@@ -107,6 +113,7 @@ export class ListCustomPromptsInput {
   projectId!: string | null;
 
   @Field(() => ID, {
+    deprecationReason: `Prompts are always scoped to the authenticated user plus system prompts; this only narrows within that set.`,
     description: 'Filter by user ID',
     nullable: true,
   })

@@ -5,7 +5,10 @@ import { BaseRepository } from '@openthrottle/nestjs-postgres';
 import { IsNull, Not, Repository } from 'typeorm';
 
 import { CustomPrompt } from './custom-prompt.entity.ts';
-import type { ListCustomPromptsFilter } from './custom-prompts.types.ts';
+import type {
+  CustomPromptType,
+  ListCustomPromptsFilter,
+} from './custom-prompts.types.ts';
 
 /**
  * @description Data access for the openthrottle `custom_prompts` table on the default
@@ -68,6 +71,14 @@ export class CustomPromptsRepository extends BaseRepository<
       query.andWhere('cp.user_id = :userId', { userId: filter.userId });
     }
 
+    if (filter.viewerUserId === null) {
+      query.andWhere('cp.user_id IS NULL');
+    } else if (filter.viewerUserId !== undefined) {
+      query.andWhere('(cp.user_id = :viewerUserId OR cp.user_id IS NULL)', {
+        viewerUserId: filter.viewerUserId,
+      });
+    }
+
     query.orderBy('cp.created_at', 'DESC');
 
     return query.getMany();
@@ -78,6 +89,50 @@ export class CustomPromptsRepository extends BaseRepository<
    */
   async findIncludingDeleted(id: string): Promise<CustomPrompt | null> {
     return this.findOne({ where: { id }, withDeleted: true });
+  }
+
+  /**
+   * @description A live prompt by id that `ownerUserId` may see: owned by that user, or a
+   * system row (`user_id IS NULL`). A null `ownerUserId` (a caller with no user identity)
+   * sees system rows only. Null when the id is missing, soft deleted, or owned by someone
+   * else (the caller cannot tell which).
+   */
+  async findVisibleById(
+    id: string,
+    ownerUserId: string | null,
+  ): Promise<CustomPrompt | null> {
+    const prompt = await this.findOne({ where: { id } });
+    if (prompt == null) {
+      return null;
+    }
+    const isVisible = prompt.userId == null || prompt.userId === ownerUserId;
+    return isVisible ? prompt : null;
+  }
+
+  /**
+   * @description The live prompt for `(filePath, promptType)` that `ownerUserId` may see. When
+   * both a user-owned and a system row match, the user-owned one wins. A null `ownerUserId`
+   * sees system rows only. Null when none is visible.
+   */
+  async findVisibleByFilePath(
+    filePath: string,
+    promptType: CustomPromptType,
+    ownerUserId: string | null,
+  ): Promise<CustomPrompt | null> {
+    const systemWhere = { filePath, promptType, userId: IsNull() };
+    const ownerWhere = {
+      filePath,
+      promptType,
+      userId: ownerUserId ?? IsNull(),
+    };
+    const where =
+      ownerUserId == null ? [systemWhere] : [ownerWhere, systemWhere];
+    const candidates = await this.findBy({ where });
+    return (
+      candidates.find((prompt) => prompt.userId === ownerUserId) ??
+      candidates[0] ??
+      null
+    );
   }
 
   /**

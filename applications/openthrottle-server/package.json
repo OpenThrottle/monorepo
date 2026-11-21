@@ -307,6 +307,7 @@
     "./src/graphql/skill-availability/skill-availability.object.ts",
     "./src/graphql/skill-tags/skill-tag.object.ts",
     "./src/graphql/skill-tags/skill-tags.input.ts",
+    "./src/graphql/tag-action-rules/tag-action-rule-preview.object.ts",
     "./src/graphql/tag-action-rules/tag-action-rule.object.ts",
     "./src/graphql/tag-action-rules/tag-action-rules.input.ts",
     "./src/graphql/tags/tag.object.ts",

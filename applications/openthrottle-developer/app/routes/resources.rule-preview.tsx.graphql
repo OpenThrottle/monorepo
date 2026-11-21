@@ -1,0 +1,33 @@
+# Dry-run of a tag→action rule against the caller's plans (read-only). Backs the
+# live "matches N plans" summary in the rule form and the "why does/doesn't this
+# match" section of the rule detail page.
+query RulePreview($environment: String, $input: UpsertTagActionRuleInput!) {
+  previewTagActionRule(environment: $environment, input: $input) {
+    cap
+    environment
+    evaluated
+    matched {
+      id
+      repositoryId
+      status
+      title
+    }
+    matchedCount
+    nonMatching {
+      conditions {
+        actual
+        condition
+        expected
+        passed
+      }
+      failedOnlyOnEnvironment
+      id
+      missingTags
+      repositoryId
+      status
+      title
+    }
+    specificity
+    truncated
+  }
+}

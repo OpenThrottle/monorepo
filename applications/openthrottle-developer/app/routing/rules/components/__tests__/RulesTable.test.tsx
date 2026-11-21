@@ -1,6 +1,6 @@
 import { GLOBAL_POPOVER_COPY } from '@openthrottle/react-router-ui-global';
 import type { RenderResult } from '@testing-library/react';
-import { cleanup, render } from '@testing-library/react';
+import { cleanup, render, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
@@ -39,6 +39,7 @@ describe('RulesTable Component', () => {
     cleanup();
     props = {
       onToggleEnabled: vi.fn(),
+      repositories: [],
       rules: [
         {
           actionPayloadJson: '{"placement":"first","skillSlug":"grilling"}',
@@ -47,6 +48,8 @@ describe('RulesTable Component', () => {
           enabled: true,
           environment: null,
           id: 'rule-1',
+          repositoryId: null,
+          specificity: 2,
           status: 'PENDING',
           tagAll: ['breakdown'],
           title: 'Grill breakdowns',
@@ -81,16 +84,24 @@ describe('RulesTable Component', () => {
     expect(component.getByText('grilling · first')).toBeInTheDocument();
     expect(component.getByText('breakdown')).toBeInTheDocument();
     expect(
-      component.getByText(`${RULES_COPY.statusLabel}: PENDING`),
+      component.getByRole('columnheader', { name: RULES_COPY.scopeHeader }),
     ).toBeInTheDocument();
   });
 
-  test('title links to the dedicated edit route', () => {
+  test('renders a Global badge trail ending in the status', () => {
+    const trail = component.getByTestId('RulesScopeBadges');
+
+    expect(within(trail).getAllByRole('listitem')).toHaveLength(2);
+    expect(within(trail).getByText(RULES_COPY.scopeGlobalLabel)).toBeVisible();
+    expect(within(trail).getByText('PENDING')).toBeVisible();
+  });
+
+  test('title links to the rule detail route', () => {
     expect(
       component.getByRole('link', {
-        name: `${RULES_COPY.editAction}: Grill breakdowns`,
+        name: `${RULES_COPY.viewAction}: Grill breakdowns`,
       }),
-    ).toHaveAttribute('href', '/rules/rule-1/edit');
+    ).toHaveAttribute('href', '/rules/rule-1');
   });
 
   test('delegates toggle and exposes edit/delete in the row menu', async () => {
@@ -146,6 +157,7 @@ describe('RulesTable Component', () => {
       cleanup();
       props = {
         onToggleEnabled: vi.fn(),
+        repositories: [],
         rules: [
           {
             actionPayloadJson: '{}',
@@ -154,6 +166,8 @@ describe('RulesTable Component', () => {
             enabled: false,
             environment: null,
             id: 'rule-2',
+            repositoryId: null,
+            specificity: 0,
             status: null,
             tagAll: [],
             title: 'Disabled rule',
@@ -184,6 +198,116 @@ describe('RulesTable Component', () => {
         component.getByRole('menuitem', { name: RULES_COPY.enableAction }),
       );
       expect(props.onToggleEnabled).toHaveBeenCalledWith(props.rules[0]);
+    });
+  });
+
+  describe('when rules span repositories', () => {
+    const makeRule = (
+      id: string,
+      overrides: Partial<RulesTableProps['rules'][number]>,
+    ): RulesTableProps['rules'][number] => {
+      return {
+        actionPayloadJson: '{}',
+        actionType: 'inject-task',
+        createdAt: '2026-01-01T00:00:00.000Z',
+        enabled: true,
+        environment: null,
+        id,
+        repositoryId: null,
+        specificity: 0,
+        status: null,
+        tagAll: [],
+        title: `Rule ${id}`,
+        updatedAt: '2026-01-01T00:00:00.000Z',
+        userId: 'user-1',
+        ...overrides,
+      };
+    };
+
+    beforeEach(() => {
+      cleanup();
+      props = {
+        onToggleEnabled: vi.fn(),
+        repositories: [
+          { id: 'repo-b', name: 'website' },
+          { id: 'repo-a', name: 'monorepo' },
+        ],
+        rules: [
+          makeRule('web', { repositoryId: 'repo-b', specificity: 2 }),
+          makeRule('gone', { repositoryId: 'repo-deleted', specificity: 2 }),
+          makeRule('mono-wide', { repositoryId: 'repo-a', specificity: 2 }),
+          makeRule('mono-narrow', {
+            environment: 'staging',
+            repositoryId: 'repo-a',
+            specificity: 3,
+          }),
+          makeRule('global', {}),
+        ],
+      };
+      component = renderTable();
+    });
+
+    const groupAt = (index: number): HTMLElement => {
+      const group = component.getAllByTestId('RulesTableGroup')[index];
+      if (group === undefined) {
+        throw new Error(`No group at index ${index}`);
+      }
+      return group;
+    };
+
+    const groupNames = (): string[] => {
+      return component
+        .getAllByTestId('RulesTableGroup')
+        .map((group) => group.getAttribute('data-group-kind') ?? '');
+    };
+
+    test('orders groups Global, repositories by name, then unknown', () => {
+      expect(groupNames()).toEqual([
+        'global',
+        'repository',
+        'repository',
+        'unknown',
+      ]);
+
+      const headings = component
+        .getAllByRole('heading', { level: 2 })
+        .map((heading) => heading.textContent ?? '');
+
+      expect(headings[1]).toContain('monorepo');
+      expect(headings[2]).toContain('website');
+      expect(headings[3]).toContain(RULES_COPY.scopeUnknownRepositoryLabel);
+    });
+
+    test('lists the narrowest rule first inside a repository group', () => {
+      const monorepoGroup = groupAt(1);
+      const links = within(monorepoGroup).getAllByRole('link');
+
+      expect(links[0]).toHaveAttribute('href', '/rules/mono-narrow');
+      expect(links[1]).toHaveAttribute('href', '/rules/mono-wide');
+    });
+
+    test('shows the repository name then environment in the trail', () => {
+      const monorepoGroup = groupAt(1);
+      const [trail] = within(monorepoGroup).getAllByTestId('RulesScopeBadges');
+      const kinds = within(trail ?? monorepoGroup)
+        .getAllByRole('listitem')
+        .map((item) => {
+          return item
+            .querySelector('[data-scope-kind]')
+            ?.getAttribute('data-scope-kind');
+        });
+
+      expect(kinds).toEqual(['repository', 'environment']);
+    });
+
+    test('keeps a rule with a dangling repository id visible as unknown', () => {
+      const unknownGroup = groupAt(3);
+
+      expect(
+        within(unknownGroup).getByRole('link', {
+          name: `${RULES_COPY.viewAction}: Rule gone`,
+        }),
+      ).toBeInTheDocument();
     });
   });
 });

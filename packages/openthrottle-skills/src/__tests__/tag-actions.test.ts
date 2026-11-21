@@ -1,6 +1,7 @@
 import { describe, expect, it, test } from 'vitest';
 
 import {
+  attachPromptActionPayloadSchema,
   availabilityExceptionActionPayloadSchema,
   evaluateTagActionRules,
   injectTaskActionPayloadSchema,
@@ -14,10 +15,12 @@ import {
 const baseRule: TagActionRuleInput = {
   actionPayload: { skillSlug: 'grilling' },
   actionType: TAG_ACTION_TYPES.INJECT_TASK,
+  createdAt: new Date('2026-01-01T00:00:00.000Z'),
   enabled: true,
   environment: null,
   id: 'rule-1',
   projectId: null,
+  repositoryId: null,
   status: null,
   tagAll: ['breakdown'],
 };
@@ -27,6 +30,7 @@ const baseContext: TagActionEvaluationContext = {
   environment: null,
   planStatus: 'PENDING',
   projectId: 'project-1',
+  repositoryId: 'repo-1',
 };
 
 describe('evaluateTagActionRules', () => {
@@ -62,6 +66,32 @@ describe('evaluateTagActionRules', () => {
       matches: false,
       name: 'project-scoped rule does not match a projectless plan',
       rule: { projectId: 'project-1' },
+    },
+    {
+      matches: true,
+      name: 'NULL repositoryId matches any repository',
+      rule: { repositoryId: null },
+    },
+    {
+      matches: true,
+      name: 'equal repositoryId matches',
+      rule: { repositoryId: 'repo-1' },
+    },
+    {
+      matches: false,
+      name: 'different repositoryId does not match',
+      rule: { repositoryId: 'repo-2' },
+    },
+    {
+      context: { repositoryId: null },
+      matches: false,
+      name: 'repository-scoped rule does not match a repository-less plan',
+      rule: { repositoryId: 'repo-1' },
+    },
+    {
+      context: { repositoryId: null },
+      matches: true,
+      name: 'unscoped rule matches a repository-less plan',
     },
     {
       context: { environment: 'ralph' },
@@ -162,8 +192,8 @@ describe('evaluateTagActionRules', () => {
   test('is pure: does not mutate its inputs', () => {
     const rules = [{ ...baseRule }];
     const context = { ...baseContext, effectiveTags: ['breakdown'] };
-    const rulesSnapshot = JSON.parse(JSON.stringify(rules));
-    const contextSnapshot = JSON.parse(JSON.stringify(context));
+    const rulesSnapshot = structuredClone(rules);
+    const contextSnapshot = structuredClone(context);
 
     evaluateTagActionRules(context, rules);
 
@@ -310,5 +340,86 @@ describe('injectTaskActionPayloadSchema', () => {
       skillSlug: 'grilling',
     });
     expect(parsed).toMatchObject({ placement: 'before' });
+  });
+});
+
+describe('attachPromptActionPayloadSchema', () => {
+  const promptId = '11111111-1111-4111-8111-111111111111';
+
+  test('accepts a promptId reference and defaults placement to end', () => {
+    expect(
+      attachPromptActionPayloadSchema.parse({
+        promptId,
+        promptType: 'prompts',
+      }),
+    ).toEqual({ placement: 'end', promptId, promptType: 'prompts' });
+  });
+
+  test('accepts a filePath reference for a persona', () => {
+    expect(
+      attachPromptActionPayloadSchema.safeParse({
+        filePath: '.agents/personas/reviewer.md',
+        placement: 'start',
+        promptType: 'personas',
+      }).success,
+    ).toBe(true);
+  });
+
+  describe('exactly one of promptId or filePath', () => {
+    test('rejects both', () => {
+      expect(
+        attachPromptActionPayloadSchema.safeParse({
+          filePath: 'a.md',
+          promptId,
+          promptType: 'prompts',
+        }).success,
+      ).toBe(false);
+    });
+
+    test('rejects neither', () => {
+      expect(
+        attachPromptActionPayloadSchema.safeParse({ promptType: 'prompts' })
+          .success,
+      ).toBe(false);
+    });
+
+    test('rejects a blank filePath', () => {
+      expect(
+        attachPromptActionPayloadSchema.safeParse({
+          filePath: '   ',
+          promptType: 'prompts',
+        }).success,
+      ).toBe(false);
+    });
+  });
+
+  test.each(['rules', 'skills', 'agents', 'commands'])(
+    'rejects promptType %s',
+    (promptType) => {
+      expect(
+        attachPromptActionPayloadSchema.safeParse({ promptId, promptType })
+          .success,
+      ).toBe(false);
+    },
+  );
+
+  test('rejects unknown keys', () => {
+    expect(
+      attachPromptActionPayloadSchema.safeParse({
+        extra: true,
+        promptId,
+        promptType: 'prompts',
+      }).success,
+    ).toBe(false);
+  });
+
+  test('is registered with parseTagActionPayload and isTagActionType', () => {
+    expect(isTagActionType(TAG_ACTION_TYPES.ATTACH_PROMPT)).toBe(true);
+    expect(
+      parseTagActionPayload(TAG_ACTION_TYPES.ATTACH_PROMPT, {
+        promptId,
+        promptType: 'personas',
+      }),
+    ).toEqual({ placement: 'end', promptId, promptType: 'personas' });
   });
 });

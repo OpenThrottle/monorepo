@@ -58,6 +58,7 @@ export class ProjectTagsResolver {
         this.planRulesEvaluationService.enqueueEvaluation(
           plan.id,
           PLAN_RULES_TRIGGER_KINDS.TAG_CHANGED,
+          null,
         ),
       ),
     );

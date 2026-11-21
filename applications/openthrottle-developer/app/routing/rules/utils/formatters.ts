@@ -1,3 +1,9 @@
+import { RULES_COPY } from '~/routing/rules/data/data.copy';
+import {
+  ATTACH_PROMPT_ACTION_TYPE,
+  DEFAULT_ATTACH_PROMPT_PLACEMENT,
+} from '~/routing/rules/data/data.rule-form-options';
+
 /**
  * Formatters for the rules routing area — simple, testable pure functions.
  */
@@ -40,6 +46,17 @@ export const summarizeRuleAction = (
     return `${skillSlug} · ${placement}`;
   }
 
+  if (actionType === ATTACH_PROMPT_ACTION_TYPE) {
+    const promptType = asString(payload.promptType) || 'prompts';
+    const reference =
+      asString(payload.filePath) ||
+      asString(payload.promptId).slice(0, 8) ||
+      '(no prompt)';
+    const placement =
+      asString(payload.placement) || DEFAULT_ATTACH_PROMPT_PLACEMENT;
+    return `${promptType}: ${reference} · ${placement}`;
+  }
+
   if (actionType === 'availability-exception') {
     const allow = countList(payload.tagAllow) + countList(payload.slugAllow);
     const deny = countList(payload.tagDeny) + countList(payload.slugDeny);
@@ -47,4 +64,49 @@ export const summarizeRuleAction = (
   }
 
   return actionType;
+};
+
+export interface RuleScopeStep {
+  readonly kind: 'environment' | 'global' | 'repository' | 'status' | 'unknown';
+  readonly label: string;
+}
+
+export interface RuleScopeSource {
+  readonly environment?: string | null;
+  readonly repositoryId?: string | null;
+  readonly status?: string | null;
+}
+
+/**
+ * @description The rule's narrowness as an ordered trail — Global or the
+ * repository name, then environment, then status — for the Scope column.
+ * A repository id missing from `repositoryNames` reads as the unknown repository.
+ */
+export const buildRuleScopeTrail = (
+  rule: RuleScopeSource,
+  repositoryNames: ReadonlyMap<string, string>,
+): RuleScopeStep[] => {
+  const trail: RuleScopeStep[] = [];
+  const repositoryName = repositoryNames.get(rule.repositoryId ?? '');
+
+  if (rule.repositoryId == null) {
+    trail.push({ kind: 'global', label: RULES_COPY.scopeGlobalLabel });
+  } else if (repositoryName === undefined) {
+    trail.push({
+      kind: 'unknown',
+      label: RULES_COPY.scopeUnknownRepositoryLabel,
+    });
+  } else {
+    trail.push({ kind: 'repository', label: repositoryName });
+  }
+
+  if (rule.environment != null && rule.environment !== '') {
+    trail.push({ kind: 'environment', label: rule.environment });
+  }
+
+  if (rule.status != null && rule.status !== '') {
+    trail.push({ kind: 'status', label: rule.status });
+  }
+
+  return trail;
 };

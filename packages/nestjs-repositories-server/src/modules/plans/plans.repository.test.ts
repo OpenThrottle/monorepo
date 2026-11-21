@@ -85,6 +85,36 @@ describe('PlansRepository', () => {
     repository = app.get<PlansRepository>(PlansRepository);
   });
 
+  describe('loadRepositoryIds', () => {
+    it('writes the stored repositoryId onto each plan with one query', async () => {
+      const linked = plansFactory.build({ repositoryId: null });
+      const unlinked = plansFactory.build({ repositoryId: null });
+      const repositoryId = '33333333-3333-4333-8333-333333333333';
+      find.mockResolvedValue([
+        { id: linked.id, repositoryId },
+        { id: unlinked.id, repositoryId: null },
+      ]);
+
+      const result = await repository.loadRepositoryIds([linked, unlinked]);
+
+      expect(find).toHaveBeenCalledTimes(1);
+      expect(find).toHaveBeenCalledWith({
+        select: { id: true, repositoryId: true },
+        where: { id: In([linked.id, unlinked.id]) },
+        withDeleted: true,
+      });
+      expect(result.map((plan) => plan.repositoryId)).toEqual([
+        repositoryId,
+        null,
+      ]);
+    });
+
+    it('skips the query for an empty batch', async () => {
+      await expect(repository.loadRepositoryIds([])).resolves.toEqual([]);
+      expect(find).not.toHaveBeenCalled();
+    });
+  });
+
   describe('remove', () => {
     it('soft deletes the plan, then its live tasks, in one transaction', async () => {
       const deleted = plansFactory.build({
@@ -384,6 +414,23 @@ describe('PlansRepository', () => {
         [Plan, { id: 'a', projectId: 'project-1' }, { projectSortOrder: 2000 }],
         [Plan, { id: 'b', projectId: 'project-1' }, { projectSortOrder: 3000 }],
       ]);
+    });
+  });
+  describe('listRecentForAuthor', () => {
+    it('loads the authors plans newest updated first, capped', async () => {
+      const plans = plansFactory.buildList(2);
+      find.mockResolvedValue(plans);
+
+      await expect(repository.listRecentForAuthor('octocat', 5)).resolves.toBe(
+        plans,
+      );
+      expect(find).toHaveBeenCalledWith(
+        expect.objectContaining({
+          order: { updatedAt: 'DESC' },
+          take: 5,
+          where: { author: 'octocat' },
+        }),
+      );
     });
   });
 });

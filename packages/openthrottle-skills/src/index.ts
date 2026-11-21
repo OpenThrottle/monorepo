@@ -53,17 +53,40 @@ export type {
   MatchedTagAction,
   TagActionEvaluationContext,
   TagActionRuleInput,
+  TagActionRuleScope,
 } from './tag-actions.ts';
 export { evaluateTagActionRules } from './tag-actions.ts';
 
 /** @public */
 export type {
+  TagActionCondition,
+  TagActionConditionResult,
+  TagActionRuleMatchExplanation,
+} from './explainTagActionRuleMatch.ts';
+export {
+  explainTagActionRuleMatch,
+  TAG_ACTION_CONDITIONS,
+} from './explainTagActionRuleMatch.ts';
+
+/** @public */
+export {
+  rankMatchedTagActions,
+  scoreTagActionSpecificity,
+  TAG_ACTION_SPECIFICITY_WEIGHTS,
+} from './rankMatchedTagActions.ts';
+
+/** @public */
+export type {
+  AttachPromptActionPayload,
   AvailabilityExceptionActionPayload,
   InjectTaskActionPayload,
   PromoteTaskToPlanActionPayload,
   TagActionType,
 } from './tag-actions.ts';
 export {
+  ATTACH_PROMPT_PLACEMENTS,
+  ATTACH_PROMPT_TYPES,
+  attachPromptActionPayloadSchema,
   availabilityExceptionActionPayloadSchema,
   injectTaskActionPayloadSchema,
   isTagActionType,

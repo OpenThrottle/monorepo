@@ -4,6 +4,7 @@
  */
 
 import './tag-action-rule.object.ts';
+import './tag-action-rule-preview.object.ts';
 import './tag-action-rules.input.ts';
 
 import { Module } from '@nestjs/common';
@@ -14,6 +15,7 @@ import {
 } from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { TagActionRulePreviewModule } from '../../services/tag-action-rule-preview/tag-action-rule-preview.module.ts';
 import { TagActionRulesModule } from '../../services/tag-action-rules/tag-action-rules.module.ts';
 import { TagActionRulesResolver } from './tag-action-rules.resolver.ts';
 
@@ -21,6 +23,7 @@ import { TagActionRulesResolver } from './tag-action-rules.resolver.ts';
   imports: [
     RolesModule,
     RuleApplicationsModule,
+    TagActionRulePreviewModule,
     TagActionRulesModule,
     TagActionRulesRepositoryModule,
   ],

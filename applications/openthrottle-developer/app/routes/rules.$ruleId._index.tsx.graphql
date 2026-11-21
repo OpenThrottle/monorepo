@@ -1,0 +1,22 @@
+# One rule, its apply-once ledger across plans (plan titles included), and the
+# registered repositories that name its scope trail.
+query RuleDetailLoader($id: ID!) {
+  ruleApplicationsForRule(ruleId: $id) {
+    createdAt
+    detailsJson
+    id
+    planId
+    planTitle
+    ruleId
+    state
+    taskId
+    updatedAt
+  }
+  tagActionRule(id: $id) {
+    ...TagActionRuleRow
+  }
+  workspaceRepositories {
+    id
+    name
+  }
+}

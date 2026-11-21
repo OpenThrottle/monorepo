@@ -2410,6 +2410,7 @@ export function UpsertTagActionRuleInputSchema(): z.ZodObject<
     environment: z.string().nullish(),
     id: z.string().nullish(),
     projectId: z.string().nullish(),
+    repositoryId: z.string().nullish(),
     status: z.string().nullish(),
     tagAll: z.array(z.string().min(1)).default([]),
     title: z.string().min(1),

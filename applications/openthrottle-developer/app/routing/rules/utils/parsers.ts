@@ -8,10 +8,15 @@ export const RULES_ENABLED_FILTERS = ['all', 'disabled', 'enabled'] as const;
 
 export type RulesEnabledFilter = (typeof RULES_ENABLED_FILTERS)[number];
 
+/** `scope` param values besides a repository id: everything, or Global only. */
+export const RULES_SCOPE_ALL = 'all';
+export const RULES_SCOPE_GLOBAL = 'global';
+
 export interface RulesListFilterable {
   actionType: string;
   enabled: boolean;
   environment?: string | null;
+  repositoryId?: string | null;
   status?: string | null;
   tagAll: readonly string[];
   title: string;
@@ -44,17 +49,31 @@ export function parseRulesEnabledFilterFromSearchParams(
 }
 
 /**
+ * @description Reads `scope` from URL search params: `all` (default), `global`,
+ * or a repository id.
+ */
+export function parseRulesScopeFromSearchParams(
+  searchParams: URLSearchParams,
+): string {
+  const raw = (searchParams.get('scope') ?? '').trim();
+  return raw === '' ? RULES_SCOPE_ALL : raw;
+}
+
+/**
  * @description Client-side filter: optional case-insensitive `q` over title,
- * action type, tags, status, and environment; optional enabled slice.
+ * action type, tags, status, and environment; optional enabled slice;
+ * optional `scope` (`all`, `global`, or a repository id). Order is preserved.
  */
 export function filterRulesList<T extends RulesListFilterable>(
   rules: readonly T[],
   options: {
     enabledFilter?: RulesEnabledFilter;
+    scope?: string;
     search?: string;
   },
 ): T[] {
   const enabledFilter = options.enabledFilter ?? 'all';
+  const scope = options.scope ?? RULES_SCOPE_ALL;
   const q = (options.search ?? '').trim().toLowerCase();
 
   return rules.filter((rule) => {
@@ -63,6 +82,18 @@ export function filterRulesList<T extends RulesListFilterable>(
     }
 
     if (enabledFilter === 'disabled' && rule.enabled) {
+      return false;
+    }
+
+    if (scope === RULES_SCOPE_GLOBAL && rule.repositoryId != null) {
+      return false;
+    }
+
+    if (
+      scope !== RULES_SCOPE_ALL &&
+      scope !== RULES_SCOPE_GLOBAL &&
+      rule.repositoryId !== scope
+    ) {
       return false;
     }
 

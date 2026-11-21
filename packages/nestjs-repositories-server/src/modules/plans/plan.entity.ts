@@ -1,7 +1,7 @@
 /**
  * @description TypeORM entity for the openthrottle `plans` table. Extends `BaseModel`, so a
  * delete is a soft delete (`PlansRepository.remove` also soft-deletes the plan's tasks).
- * Matches databases/openthrottle/migrations (002, 012, 014, 022, 055, 173, 185).
+ * Matches databases/openthrottle/migrations (002, 012, 014, 022, 055, 173, 185, 188).
  * @public
  */
 
@@ -68,6 +68,21 @@ export class Plan extends BaseModel {
    */
   @Column({ name: 'project_sort_order', nullable: true, type: 'int' })
   projectSortOrder!: number | null;
+
+  /**
+   * @description The repository this plan runs in, DERIVED from `runConfig.workspace.repositoryId`
+   * by the `trg_plans_derive_repository_id` trigger (migration 188): NULL when the run config
+   * names none, a non-UUID, or a repository that does not exist. Mapped read-only — the ORM never
+   * writes it, so the trigger stays its single writer; re-read the plan after a save to see it.
+   */
+  @Column({
+    insert: false,
+    name: 'repository_id',
+    nullable: true,
+    type: 'uuid',
+    update: false,
+  })
+  repositoryId!: string | null;
 
   @Column({
     default: () => '\'{"hooks":[]}\'::jsonb',

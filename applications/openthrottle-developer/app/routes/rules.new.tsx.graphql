@@ -1,0 +1,24 @@
+# Registered repositories for the rule form's repository select. Rules scope to
+# a repository (repositories.id), so list workspaceRepositories rather than the
+# checkout-keyed workspaceSettings.localRepositories.
+query RuleNewRepositories {
+  workspaceRepositories {
+    id
+    name
+  }
+}
+
+# Prompts and personas the attach-prompt picker can offer. The server returns
+# only the caller's prompts plus system prompts (userId null).
+query RuleNewPrompts {
+  personas: customPrompts(input: { promptType: PERSONAS }) {
+    id
+    title
+    userId
+  }
+  prompts: customPrompts(input: { promptType: PROMPTS }) {
+    id
+    title
+    userId
+  }
+}

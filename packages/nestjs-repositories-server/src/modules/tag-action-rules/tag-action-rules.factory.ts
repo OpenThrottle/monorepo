@@ -27,6 +27,7 @@ export const tagActionRulesFactory = Factory.define<
     environment: null,
     id: faker.string.uuid(),
     projectId: null,
+    repositoryId: null,
     status: null,
     tagAll: [faker.word.noun()],
     title: faker.lorem.words(3),

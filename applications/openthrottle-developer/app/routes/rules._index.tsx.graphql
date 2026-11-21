@@ -5,7 +5,7 @@ fragment TagActionRuleRow on TagActionRuleObject {
   enabled
   environment
   id
-  projectId
+  repositoryId
   status
   tagAll
   title
@@ -32,6 +32,10 @@ query RulesIndexLoader {
   }
   tagActionRules {
     ...TagActionRuleRow
+  }
+  workspaceRepositories {
+    id
+    name
   }
 }
 

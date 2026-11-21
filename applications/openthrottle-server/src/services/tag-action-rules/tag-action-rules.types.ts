@@ -10,6 +10,7 @@ export interface UpsertTagActionRuleInput {
   /** When present, updates the existing rule (must belong to the user). */
   readonly id?: string | null;
   readonly projectId?: string | null;
+  readonly repositoryId?: string | null;
   readonly status?: string | null;
   readonly tagAll?: readonly string[];
   readonly title: string;

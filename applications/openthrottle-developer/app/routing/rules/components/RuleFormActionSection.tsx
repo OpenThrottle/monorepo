@@ -9,10 +9,15 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
+import { RuleFormAttachPromptFields } from '~/routing/rules/components/RuleFormAttachPromptFields';
 import { RULES_COPY } from '~/routing/rules/data/data.copy';
+import { ATTACH_PROMPT_ACTION_TYPE } from '~/routing/rules/data/data.rule-form-options';
+import type { RuleFormAttachPromptState } from '~/routing/rules/types';
+import type { RuleFormPromptOption } from '~/routing/rules/utils/rule-prompt-options';
 
 export interface RuleFormActionSectionProps {
   actionType: string;
+  attachPrompt: RuleFormAttachPromptState;
   onActionTypeChange: (actionType: string) => void;
   onPlacementChange: (placement: string) => void;
   onSkillSlugChange: (skillSlug: string) => void;
@@ -22,6 +27,7 @@ export interface RuleFormActionSectionProps {
   onTagDenyChange: (value: string) => void;
   onTitleTemplateChange: (value: string) => void;
   placement: string;
+  promptOptions: readonly RuleFormPromptOption[];
   skillSlug: string;
   skillSlugs: string[];
   slugAllow: string;
@@ -42,6 +48,7 @@ export const RuleFormActionSection = (
 ): React.ReactElement => {
   const {
     actionType,
+    attachPrompt,
     onActionTypeChange,
     onPlacementChange,
     onSkillSlugChange,
@@ -51,6 +58,7 @@ export const RuleFormActionSection = (
     onTagDenyChange,
     onTitleTemplateChange,
     placement,
+    promptOptions,
     skillSlug,
     skillSlugs,
     slugAllow,
@@ -64,6 +72,8 @@ export const RuleFormActionSection = (
 
   // Setup
   const isInjectTask = actionType === 'inject-task';
+  const isAttachPrompt = actionType === ATTACH_PROMPT_ACTION_TYPE;
+  const isAvailabilityException = !isInjectTask && !isAttachPrompt;
 
   // Handlers
 
@@ -173,6 +183,9 @@ export const RuleFormActionSection = (
             <SelectItem value="inject-task">
               {RULES_COPY.injectTaskOption}
             </SelectItem>
+            <SelectItem value={ATTACH_PROMPT_ACTION_TYPE}>
+              {RULES_COPY.attachPromptOption}
+            </SelectItem>
             <SelectItem value="availability-exception">
               {RULES_COPY.availabilityExceptionOption}
             </SelectItem>
@@ -180,7 +193,14 @@ export const RuleFormActionSection = (
         </Select>
       </div>
 
-      {isInjectTask ? injectTaskFields : availabilityFields}
+      {isInjectTask && injectTaskFields}
+      {isAttachPrompt && (
+        <RuleFormAttachPromptFields
+          attachPrompt={attachPrompt}
+          promptOptions={promptOptions}
+        />
+      )}
+      {isAvailabilityException && availabilityFields}
     </section>
   );
 };

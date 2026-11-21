@@ -16,10 +16,23 @@
  * (deleted) or 'orphaned' (re-matched) — is handed to reinject() so it is not a
  * permanent no-op.
  *
+ * Precedence: inject-task matches that would inject the same skill at the
+ * same placement are arbitrated by specificity (see ActionExecutor); the loser
+ * is ledgered 'flagged' {reason:'superseded-by', ruleId: <winner>} and never
+ * dispatched or re-injected.
+ *
  * The plan owner is resolved from plan.author (GitHub username → users row);
- * a plan whose author has no user row has no rules and is skipped. The v1
- * worker evaluates with environment=null, so environment-qualified rules only
- * match on qualified read paths (plan-context availability), not here.
+ * a plan whose author has no user row has no rules and is skipped.
+ *
+ * The evaluation environment comes from the job data (`environment`, set by the
+ * trigger that knows it: `ci | interactive | ralph`). An environment-qualified
+ * rule matches only a pass carrying that environment; a null-environment pass
+ * (a trigger that does not know its environment) skips every qualified rule,
+ * which then applies on a pass for its environment or on a qualified
+ * plan-context read. As of this writing no trigger knows its environment, so
+ * every pass is null and environment-qualified rules take effect only on
+ * qualified plan-context reads; a trigger opts in by passing its environment
+ * to enqueueEvaluation.
  */
 
 import { Processor, WorkerHost } from '@nestjs/bullmq';
@@ -55,6 +68,7 @@ import type {
   PlanRulesEvaluateJob,
   PlanRulesEvaluateJobResult,
 } from './plan-rules.types.ts';
+import { findSupersededInjectTasks } from './plan-rules.utils.ts';
 
 @Processor(PLAN_RULES_QUEUE_NAME, {
   ...defaultWorkerOptions,
@@ -83,7 +97,7 @@ export class PlanRulesProcessor
    * @description {@link OrphanedTaskStatusCapture} supplied to
    * `orphanUnmatchedApplications`: captures one `status_change` artifact per task that call
    * soft-closes, inside the SAME transaction (`params.manager`) as the ledger flip and the task
-   * write. This worker has no request principal (jobs carry only `{planId, triggerKind}`), so
+   * write. This worker has no request principal (jobs carry only `{environment, planId, triggerKind}`), so
    * attribution is the `status-change-system` service account, same as the stale-run sweeper and
    * `InjectTaskExecutor`'s revive path. Non-fatal: a ledger hiccup must not fail the whole
    * evaluation pass over a capture error.
@@ -126,7 +140,7 @@ export class PlanRulesProcessor
   async process(
     job: PlanRulesEvaluateJob,
   ): Promise<PlanRulesEvaluateJobResult> {
-    const { planId, triggerKind } = job.data;
+    const { environment, planId, triggerKind } = job.data;
 
     const plan = await this.plansRepository.findOne({ where: { id: planId } });
     if (plan == null) {
@@ -164,10 +178,12 @@ export class PlanRulesProcessor
     const ruleInputs: TagActionRuleInput[] = rules.map((rule) => ({
       actionPayload: rule.actionPayload,
       actionType: rule.actionType,
+      createdAt: rule.createdAt,
       enabled: rule.enabled,
       environment: rule.environment,
       id: rule.id,
       projectId: rule.projectId,
+      repositoryId: rule.repositoryId,
       status: rule.status,
       tagAll: rule.tagAll,
     }));
@@ -175,9 +191,10 @@ export class PlanRulesProcessor
     const matched = evaluateTagActionRules(
       {
         effectiveTags: effectiveTags.map((tag) => tag.tag),
-        environment: null,
+        environment,
         planStatus: plan.status,
         projectId: plan.projectId,
+        repositoryId: plan.repositoryId,
       },
       ruleInputs,
     );
@@ -192,7 +209,34 @@ export class PlanRulesProcessor
       ),
     );
 
-    const fresh = matched.filter((_, index) => fingerprints[index] == null);
+    // Same-skill, same-placement inject-task matches: only the narrowest is
+    // dispatched. Computed over ALL matches (applied or not).
+    const superseded = findSupersededInjectTasks(matched);
+
+    // A loser with no ledger row yet gets a visible 'flagged' row naming the
+    // winner; the apply-once fingerprint then keeps it from being rewritten.
+    await Promise.all(
+      matched.flatMap((action, index) => {
+        const winnerRuleId = superseded.get(action.ruleId);
+        if (winnerRuleId == null || fingerprints[index] != null) {
+          return [];
+        }
+
+        return [
+          this.ruleApplicationsRepository.record({
+            details: { reason: 'superseded-by', ruleId: winnerRuleId },
+            planId,
+            ruleId: action.ruleId,
+            state: RULE_APPLICATION_STATES.FLAGGED,
+          }),
+        ];
+      }),
+    );
+
+    const fresh = matched.filter(
+      (action, index) =>
+        fingerprints[index] == null && !superseded.has(action.ruleId),
+    );
 
     const dispatchable = fresh.flatMap((action) => {
       const executor = this.executorRegistry.get(action.actionType);
@@ -271,7 +315,7 @@ export class PlanRulesProcessor
     // safety as reconcile.
     const reinjectable = matched.flatMap((action, index) => {
       const application = fingerprints[index];
-      if (application == null) return [];
+      if (application == null || superseded.has(action.ruleId)) return [];
       const deletedApplied =
         application.state === RULE_APPLICATION_STATES.APPLIED &&
         application.taskId == null;

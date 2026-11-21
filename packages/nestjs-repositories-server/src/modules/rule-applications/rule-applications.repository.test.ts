@@ -37,14 +37,17 @@ describe('RuleApplicationsRepository', () => {
   const save = vi.fn();
   const getRawMany = vi.fn();
   const getMany = vi.fn();
+  const getOne = vi.fn();
 
   const edgeQueryBuilder = {
     addOrderBy: vi.fn().mockReturnThis(),
     addSelect: vi.fn().mockReturnThis(),
     andWhere: vi.fn().mockReturnThis(),
     getMany,
+    getOne,
     getRawMany,
     innerJoin: vi.fn().mockReturnThis(),
+    leftJoinAndSelect: vi.fn().mockReturnThis(),
     orderBy: vi.fn().mockReturnThis(),
     select: vi.fn().mockReturnThis(),
     where: vi.fn().mockReturnThis(),
@@ -157,6 +160,27 @@ describe('RuleApplicationsRepository', () => {
     });
   });
 
+  describe('listForRule', () => {
+    it('lists the rule ledger rows newest first with the plan loaded', async () => {
+      const rows = ruleApplicationsFactory.buildList(2, { ruleId: 'rule-1' });
+      getMany.mockResolvedValue(rows);
+
+      await expect(repository.listForRule('rule-1')).resolves.toEqual(rows);
+      expect(edgeQueryBuilder.leftJoinAndSelect).toHaveBeenCalledWith(
+        'application.plan',
+        'plan',
+      );
+      expect(edgeQueryBuilder.where).toHaveBeenCalledWith(
+        'application.ruleId = :ruleId',
+        { ruleId: 'rule-1' },
+      );
+      expect(edgeQueryBuilder.orderBy).toHaveBeenCalledWith(
+        'application.createdAt',
+        'DESC',
+      );
+    });
+  });
+
   describe('findByRuleAndPlan', () => {
     it('returns the ledger row in any state', async () => {
       const row = ruleApplicationsFactory.build({ planId: PLAN_ID });
@@ -263,6 +287,33 @@ describe('RuleApplicationsRepository', () => {
       expect(entity).toEqual(
         expect.objectContaining({ id: 'existing', taskId: 'task-2' }),
       );
+    });
+  });
+
+  describe('findAppliedAttachPrompt', () => {
+    it('queries applied rows of live attach-prompt rules by details.promptId', async () => {
+      const row = appliedRow('app-1', 'rule-1', null);
+      getOne.mockResolvedValue(row);
+
+      await expect(
+        repository.findAppliedAttachPrompt(PLAN_ID, 'prompt-1'),
+      ).resolves.toBe(row);
+      expect(edgeQueryBuilder.andWhere).toHaveBeenCalledWith(
+        'rule.actionType = :actionType',
+        { actionType: 'attach-prompt' },
+      );
+      expect(edgeQueryBuilder.andWhere).toHaveBeenCalledWith(
+        "application.details->>'promptId' = :promptId",
+        { promptId: 'prompt-1' },
+      );
+    });
+
+    it('returns null when no row matches', async () => {
+      getOne.mockResolvedValue(null);
+
+      await expect(
+        repository.findAppliedAttachPrompt(PLAN_ID, 'prompt-1'),
+      ).resolves.toBeNull();
     });
   });
 

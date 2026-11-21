@@ -21,6 +21,7 @@ export type PlanData = Pick<
   | 'id'
   | 'project'
   | 'projectId'
+  | 'repositoryId'
   | 'status'
   | 'summary'
   | 'title'
@@ -28,7 +29,11 @@ export type PlanData = Pick<
 >;
 
 type PlanRelationKeys =
-  'planEmbeddings' | 'planOutputChunks' | 'projectRelation' | 'tasks';
+  | 'planEmbeddings'
+  | 'planOutputChunks'
+  | 'projectRelation'
+  | 'repositoryId'
+  | 'tasks';
 
 type PlanDefaultedKeys =
   | 'assignee'
@@ -121,6 +126,8 @@ export interface PlansRepositoryMock extends BaseRepositoryMock<
   readonly listDistinctPeople: Mock<PlansRepository['listDistinctPeople']>;
   readonly listFiltered: Mock<PlansRepository['listFiltered']>;
   readonly listInProject: Mock<PlansRepository['listInProject']>;
+  readonly listRecentForAuthor: Mock<PlansRepository['listRecentForAuthor']>;
+  readonly loadRepositoryIds: Mock<PlansRepository['loadRepositoryIds']>;
   readonly maxProjectSortOrders: Mock<PlansRepository['maxProjectSortOrders']>;
   readonly renumberProjectPlans: Mock<PlansRepository['renumberProjectPlans']>;
 }

@@ -71,10 +71,12 @@ describe('ProjectTagsResolver', () => {
     expect(enqueueEvaluation).toHaveBeenCalledWith(
       'plan-a',
       PLAN_RULES_TRIGGER_KINDS.TAG_CHANGED,
+      null,
     );
     expect(enqueueEvaluation).toHaveBeenCalledWith(
       'plan-b',
       PLAN_RULES_TRIGGER_KINDS.TAG_CHANGED,
+      null,
     );
   });
 
