@@ -18,14 +18,10 @@ import { Form, Link, redirect } from 'react-router';
 import type { Route } from '@/app/routes/+types/schedule.$jobId._index';
 import {
   ApproveScheduledAgentJobDocument,
-  CreateScheduledAgentJobWebhookTriggerDocument,
   DeleteScheduledAgentJobDocument,
-  DeleteScheduledAgentJobWebhookTriggerDocument,
-  RotateScheduledAgentJobWebhookTriggerDocument,
   RunScheduledAgentJobNowDocument,
   ScheduledAgentJobDetailDocument,
   SetScheduledAgentJobEnabledDocument,
-  UpdateScheduledAgentJobWebhookTriggerDocument,
 } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import { ScheduleApprovalNotice } from '~/routing/schedule/components/ScheduleApprovalNotice';
@@ -34,7 +30,10 @@ import { ScheduleDetailTabs } from '~/routing/schedule/components/ScheduleDetail
 import { ScheduleRunNowButton } from '~/routing/schedule/components/ScheduleRunNowButton';
 import { ScheduleWebhookTab } from '~/routing/schedule/components/ScheduleWebhookTab';
 import { useScheduleWebhookReveal } from '~/routing/schedule/hooks/useScheduleWebhookReveal';
-import { parseWebhookForm } from '~/routing/schedule/utils/parseWebhookForm';
+import {
+  isWebhookIntent,
+  runWebhookIntent,
+} from '~/routing/schedule/utils/runWebhookIntent';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -175,77 +174,6 @@ export default function Component(
   );
 }
 
-type WebhookIntent =
-  'webhook-create' | 'webhook-delete' | 'webhook-rotate' | 'webhook-update';
-
-/**
- * Create and rotate return the URL path and secret once; they pass straight through to the
- * component's one-time reveal and are never stored or logged here.
- */
-const runWebhookIntent = async (
-  request: Request,
-  jobId: string,
-  intent: WebhookIntent,
-  form: FormData,
-) => {
-  if (intent === 'webhook-rotate') {
-    const { rotateScheduledAgentJobWebhookTrigger: rotated } =
-      await executeGraphqlWithAuth(
-        request,
-        RotateScheduledAgentJobWebhookTriggerDocument,
-        { scheduledAgentJobId: jobId },
-      );
-    return {
-      ok: true,
-      webhookCredentials: {
-        secret: rotated.secret,
-        webhookPath: rotated.webhookPath,
-      },
-    };
-  }
-
-  if (intent === 'webhook-delete') {
-    await executeGraphqlWithAuth(
-      request,
-      DeleteScheduledAgentJobWebhookTriggerDocument,
-      { scheduledAgentJobId: jobId },
-    );
-    return { ok: true };
-  }
-
-  const parsed = parseWebhookForm(form);
-
-  if (!parsed.ok) {
-    return { webhookError: parsed.error };
-  }
-
-  const input = { ...parsed.input, scheduledAgentJobId: jobId };
-
-  if (intent === 'webhook-update') {
-    await executeGraphqlWithAuth(
-      request,
-      UpdateScheduledAgentJobWebhookTriggerDocument,
-      { input },
-    );
-    return { ok: true };
-  }
-
-  const { createScheduledAgentJobWebhookTrigger: created } =
-    await executeGraphqlWithAuth(
-      request,
-      CreateScheduledAgentJobWebhookTriggerDocument,
-      { input },
-    );
-
-  return {
-    ok: true,
-    webhookCredentials: {
-      secret: created.secret,
-      webhookPath: created.webhookPath,
-    },
-  };
-};
-
 export const action = async (args: Route.ActionArgs) => {
   const { jobId } = args.params;
   const form = await args.request.formData();
@@ -272,12 +200,7 @@ export const action = async (args: Route.ActionArgs) => {
       return { ok: true };
     }
 
-    if (
-      intent === 'webhook-create' ||
-      intent === 'webhook-update' ||
-      intent === 'webhook-rotate' ||
-      intent === 'webhook-delete'
-    ) {
+    if (isWebhookIntent(intent)) {
       return await runWebhookIntent(args.request, jobId, intent, form);
     }
 
