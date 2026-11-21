@@ -1,8 +1,9 @@
 import type {
   DiscoveredWorktreeFieldsFragment,
+  DiscoveredWorktreesScanFragment,
   GetSettingsRepositoriesDiscoveryQuery,
-  PruneWorktreeCheckoutsMutation,
-  RemovePlanRunWorktreeMutation,
+  PruneWorktreeCheckoutResultFragment,
+  RemovePlanRunWorktreeResultFragment,
   WorkspaceRepositoryFieldsFragment,
 } from '~/__generated__/graphql';
 import type {
@@ -29,8 +30,7 @@ export type DiscoveredWorktree = DiscoveredWorktreeFieldsFragment;
  * @description The whole worktree-scan payload: the worktrees plus the scan-level
  * facts (where it looked, what it could not read, what the cap dropped).
  */
-export type DiscoveredWorktreesResult =
-  GetSettingsRepositoriesDiscoveryQuery['discoveredWorktrees'];
+export type DiscoveredWorktreesResult = DiscoveredWorktreesScanFragment;
 
 /**
  * @description The deferred half of the repositories loader: both on-disk scans (worktrees and
@@ -96,8 +96,7 @@ export type ScannedWorktreeRoot =
   DiscoveredWorktreesResult['scannedRoots'][number];
 
 /** @description One per-id outcome from the `pruneWorktreeCheckouts` mutation. */
-export type PruneWorktreeCheckoutResult =
-  PruneWorktreeCheckoutsMutation['pruneWorktreeCheckouts']['results'][number];
+export type PruneWorktreeCheckoutResult = PruneWorktreeCheckoutResultFragment;
 
 /** @description The last `refreshCheckout` result the page reports drift and merges from. */
 export interface RefreshedCheckout {
@@ -107,8 +106,7 @@ export interface RefreshedCheckout {
 }
 
 /** @description What `removePlanRunWorktree` answered for one worktree. */
-export type RemovePlanRunWorktreeResult =
-  RemovePlanRunWorktreeMutation['removePlanRunWorktree'];
+export type RemovePlanRunWorktreeResult = RemovePlanRunWorktreeResultFragment;
 
 /**
  * @description One table row = one thing on disk, carrying enough of its parent

@@ -1,4 +1,7 @@
-import type { GetDashboardOnboardingQuery } from '~/__generated__/graphql';
+import type {
+  GetDashboardOnboardingQuery,
+  PlanStatusCountFragment,
+} from '~/__generated__/graphql';
 
 /**
  * @description Stable identifiers for the dashboard "Get Started" checklist
@@ -34,9 +37,7 @@ export type OnboardingCompletion = Record<OnboardingStepId, boolean>;
  * @description Total number of plans across every status bucket returned by
  * `planCountsByStatus`.
  */
-const totalPlanCount = (
-  counts: GetDashboardOnboardingQuery['planCountsByStatus'],
-): number => {
+const totalPlanCount = (counts: PlanStatusCountFragment[]): number => {
   return counts.reduce((sum, entry) => sum + entry.count, 0);
 };
 
@@ -44,9 +45,7 @@ const totalPlanCount = (
  * @description Number of plans whose status implies a run was started (see
  * RUN_STARTED_PLAN_STATUSES). Status comparison is case-insensitive.
  */
-const runStartedPlanCount = (
-  counts: GetDashboardOnboardingQuery['planCountsByStatus'],
-): number => {
+const runStartedPlanCount = (counts: PlanStatusCountFragment[]): number => {
   return counts
     .filter((entry) =>
       RUN_STARTED_PLAN_STATUSES.includes(entry.status.toUpperCase()),

@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import type { GetSkillDetailUsageQuery } from '~/__generated__/graphql';
+import type { SkillDetailUsageFragment } from '~/__generated__/graphql';
 
 import { toSkillDetailUsageData } from '../toSkillDetailUsageData';
 
-type SkillUsage = GetSkillDetailUsageQuery['skillUsage'];
+type SkillUsage = SkillDetailUsageFragment;
 
 const byDay: SkillUsage['byDay'] = [
   {

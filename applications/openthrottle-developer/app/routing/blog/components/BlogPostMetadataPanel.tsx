@@ -6,7 +6,10 @@ import {
 import { ChevronDownIcon } from 'lucide-react';
 import * as React from 'react';
 
-import type { GetBlogPostEditorQuery } from '~/__generated__/graphql';
+import type {
+  BlogEditorAuthorFragment,
+  BlogEditorTagFragment,
+} from '~/__generated__/graphql';
 import { BlogPostAuthorField } from '~/routing/blog/components/BlogPostAuthorField';
 import { BlogPostCoverFields } from '~/routing/blog/components/BlogPostCoverFields';
 import { BlogPostSeoFields } from '~/routing/blog/components/BlogPostSeoFields';
@@ -20,10 +23,10 @@ import type {
 } from '~/routing/blog/types';
 
 export interface BlogPostMetadataPanelProps {
-  readonly authors: GetBlogPostEditorQuery['blogAdminAuthors'];
+  readonly authors: BlogEditorAuthorFragment[];
   readonly errors: BlogPostFieldErrors;
   readonly onFieldChange: BlogPostFieldChangeHandler;
-  readonly tags: GetBlogPostEditorQuery['blogAdminTags'];
+  readonly tags: BlogEditorTagFragment[];
   readonly values: BlogPostEditorValues;
 }
 

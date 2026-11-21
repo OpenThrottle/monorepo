@@ -86,13 +86,97 @@ query getTasksByPlanId($input: TasksByPlanIdInput!) {
   }
 }
 
+# A queued run, as the Run dialog toasts it.
+fragment EnqueuePlanRunResult on EnqueuePlanRunResultObject {
+  executionBackend
+  jobId
+  planId
+  queuePosition
+  queueTotal
+}
+
+# A scheduled run, as the Run dialog toasts it.
+fragment SchedulePlanRunResult on SchedulePlanRunResultObject {
+  executionBackend
+  jobId
+  planId
+  planRunId
+  scheduledFor
+}
+
+fragment CancelPlanRunResult on CancelPlanRunResultObject {
+  activeJobIdsCouldNotCancel
+  cancelRequested
+  noMatchingJob
+  outcome
+  planId
+  planStatusAfter
+  removedJobIds
+  signaledActiveRunToStop
+}
+
+fragment ForceSettledPlanRun on PlanRunObject {
+  heartbeatExpected
+  id
+  isStale
+  status
+}
+
+fragment PlanOutputChunk on PlanOutputStreamChunkObject {
+  content
+  createdAt
+  id
+  iteration
+  kind
+  planId
+  taskId
+}
+
+# One completed BullMQ job's metrics, joined onto Run history rows by job id.
+fragment PlanRunJobMetricsEntry on PlanRunMetricsEntry {
+  executionBackend
+  finishedOn
+  jobId
+  taskRunMetrics {
+    atEnd {
+      rssMb
+    }
+  }
+}
+
+fragment PlanRunHistoryEntry on PlanRunObject {
+  branch
+  bullmqJobId
+  checkout {
+    displayName
+    filesystemPath
+    kind
+  }
+  createdAt
+  executionBackend
+  heartbeatExpected
+  id
+  isStale
+  lastHeartbeatAt
+  model
+  pullRequest {
+    number
+    repo
+    state
+    url
+  }
+  resumeOfRunId
+  runConfigSnapshotJson
+  runKind
+  scheduledFor
+  settledReason
+  status
+  usageLimitResetsAt
+}
+
 mutation PlanDetailEnqueuePlanRun($input: EnqueuePlanRunInput!) {
   enqueuePlanRun(input: $input) {
-    executionBackend
-    jobId
-    planId
-    queuePosition
-    queueTotal
+    ...EnqueuePlanRunResult
   }
 }
 
@@ -101,11 +185,7 @@ mutation PlanDetailEnqueuePlanRun($input: EnqueuePlanRunInput!) {
 # and anything beyond its 30-day horizon with a message that names the cap.
 mutation PlanDetailSchedulePlanRun($input: SchedulePlanRunInput!) {
   schedulePlanRun(input: $input) {
-    executionBackend
-    jobId
-    planId
-    planRunId
-    scheduledFor
+    ...SchedulePlanRunResult
   }
 }
 
@@ -131,14 +211,7 @@ mutation PlanDetailEvaluatePlanRules($planId: ID!) {
 
 mutation PlanDetailCancelPlanRun($input: CancelPlanRunInput!) {
   cancelPlanRun(input: $input) {
-    activeJobIdsCouldNotCancel
-    cancelRequested
-    noMatchingJob
-    outcome
-    planId
-    planStatusAfter
-    removedJobIds
-    signaledActiveRunToStop
+    ...CancelPlanRunResult
   }
 }
 
@@ -148,10 +221,7 @@ mutation PlanDetailCancelPlanRun($input: CancelPlanRunInput!) {
 # the run no longer matched the guard (already settled, or a supervised run).
 mutation PlanDetailForceSettlePlanRun($input: ForceSettlePlanRunInput!) {
   forceSettlePlanRun(input: $input) {
-    heartbeatExpected
-    id
-    isStale
-    status
+    ...ForceSettledPlanRun
   }
 }
 
@@ -259,27 +329,14 @@ query PlanDetailWorkspaceRepositories {
 # When the Output tab grows paging, `offset` is already on the input alongside it.
 query PlanDetailOutputChunks($planId: ID!) {
   planOutputStreamChunks(input: { planId: $planId, limit: 200 }) {
-    content
-    createdAt
-    id
-    iteration
-    kind
-    planId
-    taskId
+    ...PlanOutputChunk
   }
 }
 
 query PlanDetailRunHistory($planId: ID!) {
   metrics {
     recentPlanRunsMetrics(planId: $planId, limit: 25) {
-      executionBackend
-      finishedOn
-      jobId
-      taskRunMetrics {
-        atEnd {
-          rssMb
-        }
-      }
+      ...PlanRunJobMetricsEntry
     }
   }
   # `limit: 25` matches `recentPlanRunsMetrics` above so completed-job metrics can
@@ -290,33 +347,7 @@ query PlanDetailRunHistory($planId: ID!) {
   planRunsByPlanId(
     input: { includeAllScheduled: true, limit: 25, planId: $planId }
   ) {
-    branch
-    bullmqJobId
-    checkout {
-      displayName
-      filesystemPath
-      kind
-    }
-    createdAt
-    executionBackend
-    heartbeatExpected
-    id
-    isStale
-    lastHeartbeatAt
-    model
-    pullRequest {
-      number
-      repo
-      state
-      url
-    }
-    resumeOfRunId
-    runConfigSnapshotJson
-    runKind
-    scheduledFor
-    settledReason
-    status
-    usageLimitResetsAt
+    ...PlanRunHistoryEntry
   }
 }
 
@@ -366,13 +397,7 @@ fragment LinkedArtifact on WorkArtifactObject {
 
 subscription PlanOutputChunkAdded($planId: ID!) {
   planOutputChunkAdded(planId: $planId) {
-    content
-    createdAt
-    id
-    iteration
-    kind
-    planId
-    taskId
+    ...PlanOutputChunk
   }
 }
 

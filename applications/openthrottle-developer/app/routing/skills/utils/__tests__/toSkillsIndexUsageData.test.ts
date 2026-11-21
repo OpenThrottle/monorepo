@@ -1,12 +1,12 @@
 import { describe, expect, test } from 'vitest';
 
-import type { GetUsageSkillUsageQuery } from '~/__generated__/graphql';
+import type { UsageSkillUsageReportFragment } from '~/__generated__/graphql';
 
 import { toSkillsIndexUsageData } from '../toSkillsIndexUsageData';
 
 const skillUsage = (
-  overrides: Partial<GetUsageSkillUsageQuery['skillUsage']> = {},
-): GetUsageSkillUsageQuery['skillUsage'] => {
+  overrides: Partial<UsageSkillUsageReportFragment> = {},
+): UsageSkillUsageReportFragment => {
   return {
     byDay: [],
     byScope: [],

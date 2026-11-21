@@ -1,6 +1,9 @@
 import * as React from 'react';
 
-import type { GetBlogPostEditorQuery } from '~/__generated__/graphql';
+import type {
+  BlogEditorAuthorFragment,
+  BlogEditorTagFragment,
+} from '~/__generated__/graphql';
 import { BlogPostMarkdownEditor } from '~/routing/blog/components/BlogPostMarkdownEditor';
 import { BlogPostMetadataPanel } from '~/routing/blog/components/BlogPostMetadataPanel';
 import { BlogPostPreview } from '~/routing/blog/components/BlogPostPreview';
@@ -11,13 +14,13 @@ import type {
 } from '~/routing/blog/types';
 
 export interface BlogPostEditorWorkspaceProps {
-  readonly authors: GetBlogPostEditorQuery['blogAdminAuthors'];
+  readonly authors: BlogEditorAuthorFragment[];
   readonly errors: BlogPostFieldErrors;
   readonly onFieldChange: BlogPostFieldChangeHandler;
   readonly postId: string;
   /** Preview only: no metadata form, no Markdown editor. */
   readonly readOnly: boolean;
-  readonly tags: GetBlogPostEditorQuery['blogAdminTags'];
+  readonly tags: BlogEditorTagFragment[];
   readonly values: BlogPostEditorValues;
 }
 

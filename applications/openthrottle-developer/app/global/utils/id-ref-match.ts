@@ -1,9 +1,9 @@
 import type { IdRefMatch } from '@openthrottle/react-router-ui';
 
-import type { ResolveIdRefQuery } from '~/__generated__/graphql';
+import type { IdRefMatchFragment } from '~/__generated__/graphql';
 import { IdRefKind } from '~/__generated__/graphql';
 
-type ResolvedIdRef = ResolveIdRefQuery['resolveIdRef'][number];
+type ResolvedIdRef = IdRefMatchFragment;
 
 /**
  * @description Narrow a GraphQL `IdRefObject` into the client's discriminated

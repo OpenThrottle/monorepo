@@ -1,4 +1,4 @@
-import type { GetProjectsQuery } from '~/__generated__/graphql';
+import type { ProjectCardFragment } from '~/__generated__/graphql';
 import type { ProjectWithStats } from '~/routing/projects/types';
 import type {
   ProjectsSortBy,
@@ -13,7 +13,7 @@ import {
  * Maps API project to ProjectWithStats so loader always returns the same shape; when API adds planCount/lastActivityAt, use them here.
  */
 export function parseProjectWithStats(
-  p: GetProjectsQuery['projects'][number],
+  p: ProjectCardFragment,
 ): ProjectWithStats {
   return {
     ...p,

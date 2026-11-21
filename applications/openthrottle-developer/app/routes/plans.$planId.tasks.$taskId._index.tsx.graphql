@@ -67,13 +67,7 @@ query TaskLinkedArtifacts($taskId: ID!) {
 
 query TaskOutputStreamChunks($planId: ID!, $taskId: ID!) {
   planOutputStreamChunks(input: { planId: $planId, taskId: $taskId }) {
-    content
-    createdAt
-    id
-    iteration
-    kind
-    planId
-    taskId
+    ...PlanOutputChunk
   }
 }
 

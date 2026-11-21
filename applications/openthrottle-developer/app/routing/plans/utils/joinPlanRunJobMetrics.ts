@@ -1,8 +1,7 @@
-import type { PlanDetailRunHistoryQuery } from '~/__generated__/graphql';
+import type { PlanRunJobMetricsEntryFragment } from '~/__generated__/graphql';
 
 /** One completed BullMQ job's metrics, as `metrics.recentPlanRunsMetrics` returns it. */
-export type PlanRunMetricsEntry =
-  PlanDetailRunHistoryQuery['metrics']['recentPlanRunsMetrics'][number];
+export type PlanRunMetricsEntry = PlanRunJobMetricsEntryFragment;
 
 /** The completed-job metrics a Run history row shows in its expanded detail. */
 export interface PlanRunJobMetrics {

@@ -8,13 +8,14 @@
 import { useSubscription } from '@openthrottle/react-router-graphql';
 import * as React from 'react';
 
-import {
-  AgentSetupChunkAddedDocument,
-  type AgentSetupChunkAddedSubscription,
+import type {
+  AgentSetupChunkAddedSubscription,
+  AgentSetupChunkFragment,
 } from '~/__generated__/graphql';
+import { AgentSetupChunkAddedDocument } from '~/__generated__/graphql';
 import { getGraphqlWsClient } from '~/services/getGraphqlWsClient';
 
-type Chunk = AgentSetupChunkAddedSubscription['agentSetupChunkAdded'];
+type Chunk = AgentSetupChunkFragment;
 
 export interface UseAgentSetupStreamResult {
   readonly chunks: readonly Chunk[];

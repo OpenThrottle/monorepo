@@ -11,12 +11,12 @@ import { CheckCircle2Icon } from 'lucide-react';
 import * as React from 'react';
 import { Form } from 'react-router';
 
-import type { AddWorkspaceFolderMutation } from '~/__generated__/graphql';
+import type { AddWorkspaceFolderResultFragment } from '~/__generated__/graphql';
 import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
 import { deriveCheckoutInspectionBadges } from '~/routing/settings/repositories/utils/deriveCheckoutInspectionBadges';
 
 export interface AddFolderResultProps {
-  payload: AddWorkspaceFolderMutation['addWorkspaceFolder'];
+  payload: AddWorkspaceFolderResultFragment;
 }
 
 export const AddFolderResult = (
