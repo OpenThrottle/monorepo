@@ -3,13 +3,16 @@ import { randomBytes } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BaseRepository } from '@openthrottle/nestjs-postgres';
-import bcrypt from 'bcrypt';
 import type { DeepPartial } from 'typeorm';
 import { IsNull, Repository } from 'typeorm';
 
 import { ServiceAccount } from '../service-accounts/service-account.entity.ts';
-import { SERVICE_ACCOUNT_SECRET_BCRYPT_ROUNDS } from './secret/secret.constants.ts';
-import { hashSecret } from './secret/secret.utils.ts';
+import { SERVICE_ACCOUNT_SECRET_MIN_LENGTH } from './secret/secret.constants.ts';
+import {
+  hashSecret,
+  isLegacySecretHash,
+  validateSecret,
+} from './secret/secret.utils.ts';
 import { ServiceAccountCredential } from './service-account-credential.entity.ts';
 import type {
   CreateServiceAccountCredentialResult,
@@ -24,7 +27,7 @@ import {
 } from './token/token.utils.ts';
 
 const PREFIX_LENGTH = 12;
-const SECRET_LENGTH = 32;
+const SECRET_LENGTH = SERVICE_ACCOUNT_SECRET_MIN_LENGTH;
 const ALPHABET = `abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789`;
 
 /**
@@ -41,8 +44,6 @@ export class ServiceAccountCredentialsRepository extends BaseRepository<
   ServiceAccountCredentialCreateInput
 > {
   protected readonly tableName = 'service_account_credentials';
-
-  private dummyBcryptHash: string | null = null;
 
   constructor(
     @InjectRepository(ServiceAccountCredential)
@@ -89,7 +90,7 @@ export class ServiceAccountCredentialsRepository extends BaseRepository<
 
     const prefix = await this.generateUniquePrefix();
     const secret = this.randomAlphanumeric(SECRET_LENGTH);
-    const secretHash = await hashSecret(secret);
+    const secretHash = hashSecret(secret);
 
     const credential = await this.create({
       expiresAt: input.expiresAt ?? null,
@@ -112,8 +113,10 @@ export class ServiceAccountCredentialsRepository extends BaseRepository<
    * `noop` when a non-revoked credential with that prefix already verifies the
    * secret; otherwise the row is rehashed and un-revoked in place (`updated`),
    * or created (`created`). Returns null when the service account is missing,
-   * soft deleted or disabled. Throws when `token` is malformed or its prefix
-   * belongs to a different service account.
+   * soft deleted or disabled. Throws when `token` is malformed, its prefix
+   * belongs to a different service account, or its secret is shorter than
+   * `SERVICE_ACCOUNT_SECRET_MIN_LENGTH` and would have to be written (a
+   * credential that already verifies stays a `noop`).
    */
   async upsertCredentialForToken(input: {
     label?: string | null;
@@ -146,11 +149,12 @@ export class ServiceAccountCredentialsRepository extends BaseRepository<
       }
       const alreadyMatches =
         existing.revokedAt == null &&
-        (await bcrypt.compare(parsed.secret, existing.secretHash));
+        (await validateSecret(parsed.secret, existing.secretHash));
       if (alreadyMatches) {
         return { action: 'noop', credential: existing };
       }
-      existing.secretHash = await hashSecret(parsed.secret);
+      assertSecretLongEnough(parsed.secret);
+      existing.secretHash = hashSecret(parsed.secret);
       existing.revokedAt = null;
       if (input.label !== undefined) {
         existing.label = input.label;
@@ -159,7 +163,8 @@ export class ServiceAccountCredentialsRepository extends BaseRepository<
       return { action: 'updated', credential: updated };
     }
 
-    const secretHash = await hashSecret(parsed.secret);
+    assertSecretLongEnough(parsed.secret);
+    const secretHash = hashSecret(parsed.secret);
     const created = await this.create({
       expiresAt: null,
       label: input.label ?? null,
@@ -175,6 +180,8 @@ export class ServiceAccountCredentialsRepository extends BaseRepository<
    * `last_used_at` on success. Null for a malformed or unknown token, a wrong secret, a
    * revoked or expired credential, and a credential whose service account is disabled or soft
    * deleted (the account relation reads live rows only, so a deleted account loads as null).
+   * A legacy bcrypt hash that verifies is rewritten to SHA-256 in place, so each credential pays
+   * bcrypt once after the scheme change; an unknown prefix hashes nothing (the prefix is public).
    */
   async verifyBearerToken(
     authorizationOrToken: string,
@@ -196,12 +203,16 @@ export class ServiceAccountCredentialsRepository extends BaseRepository<
       where: { prefix: parsed.prefix },
     });
 
-    const hashToCompare =
-      credential?.secretHash ?? (await this.getDummyBcryptHash());
-    const secretMatches = await bcrypt.compare(parsed.secret, hashToCompare);
+    if (credential == null) {
+      return null;
+    }
+
+    const secretMatches = await validateSecret(
+      parsed.secret,
+      credential.secretHash,
+    );
 
     if (
-      credential == null ||
       !secretMatches ||
       credential.revokedAt != null ||
       this.isExpired(credential.expiresAt) ||
@@ -211,7 +222,17 @@ export class ServiceAccountCredentialsRepository extends BaseRepository<
       return null;
     }
 
-    await this.touchLastUsedAt(credential.id);
+    if (
+      isLegacySecretHash(credential.secretHash) &&
+      parsed.secret.length >= SERVICE_ACCOUNT_SECRET_MIN_LENGTH
+    ) {
+      await this.updateMany(
+        { id: credential.id },
+        { lastUsedAt: new Date(), secretHash: hashSecret(parsed.secret) },
+      );
+    } else {
+      await this.touchLastUsedAt(credential.id);
+    }
 
     return {
       credentialId: credential.id,
@@ -318,15 +339,16 @@ export class ServiceAccountCredentialsRepository extends BaseRepository<
       return ALPHABET.charAt(byte % ALPHABET.length);
     }).join('');
   }
+}
 
-  /** Bcrypt compare target when prefix is unknown (mitigates timing leaks). */
-  private async getDummyBcryptHash(): Promise<string> {
-    if (this.dummyBcryptHash == null) {
-      this.dummyBcryptHash = await bcrypt.hash(
-        '__invalid_service_account_credential__',
-        SERVICE_ACCOUNT_SECRET_BCRYPT_ROUNDS,
-      );
-    }
-    return this.dummyBcryptHash;
+/**
+ * @description Refuses to store a secret too short for a fast hash to be safe. Throwing is the
+ * desired behavior: it only runs on the one-shot provisioning path, which must fail loudly.
+ */
+function assertSecretLongEnough(secret: string): void {
+  if (secret.length < SERVICE_ACCOUNT_SECRET_MIN_LENGTH) {
+    throw new Error(
+      `Service account token secret is ${secret.length} characters; at least ${SERVICE_ACCOUNT_SECRET_MIN_LENGTH} are required. Mint one with \`pnpm run database:bootstrap-service-accounts\` (leave the env var unset) instead of choosing it by hand.`,
+    );
   }
 }

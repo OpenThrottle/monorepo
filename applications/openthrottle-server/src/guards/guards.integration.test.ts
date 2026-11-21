@@ -36,7 +36,6 @@ import { GqlPermissionsGuard } from './gql-permissions.guard.ts';
 
 const serviceAccountId = '11111111-1111-4111-8111-111111111111';
 const userId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
-const TEST_BCRYPT_ROUNDS = 4;
 const credentialId = '22222222-2222-4222-8222-222222222222';
 
 const credentialRow = (fields: {
@@ -184,7 +183,7 @@ describe('auth guard matrix (GlobalAuthGuard + GqlPermissionsGuard)', () => {
       stubRouteMetadata({ permissions: [PERMISSIONS.PLANS_READ] });
       const secret = 'matrixSecret1';
       const prefix = 'matrixprefix';
-      const hash = await hashSecret(secret, TEST_BCRYPT_ROUNDS);
+      const hash = hashSecret(secret);
       credentialRepository.findOne.mockResolvedValue(
         credentialRow({ prefix, revokedAt: null, secretHash: hash }),
       );
@@ -212,7 +211,7 @@ describe('auth guard matrix (GlobalAuthGuard + GqlPermissionsGuard)', () => {
       stubRouteMetadata({ permissions: [PERMISSIONS.PLANS_READ] });
       const secret = 'revokedSecret';
       const prefix = 'revprefix01';
-      const hash = await hashSecret(secret, TEST_BCRYPT_ROUNDS);
+      const hash = hashSecret(secret);
       credentialRepository.findOne.mockResolvedValue(
         credentialRow({ prefix, revokedAt: new Date(), secretHash: hash }),
       );
@@ -234,7 +233,7 @@ describe('auth guard matrix (GlobalAuthGuard + GqlPermissionsGuard)', () => {
       stubRouteMetadata({ permissions: [PERMISSIONS.PLANS_WRITE] });
       const secret = 'readOnlySec1';
       const prefix = 'readprefix1';
-      const hash = await hashSecret(secret, TEST_BCRYPT_ROUNDS);
+      const hash = hashSecret(secret);
       credentialRepository.findOne.mockResolvedValue(
         credentialRow({ prefix, revokedAt: null, secretHash: hash }),
       );

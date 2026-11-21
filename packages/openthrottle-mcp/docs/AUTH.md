@@ -38,7 +38,7 @@ Every minted/rotated line is also written to the git-ignored `.bootstrap-secrets
 
 ## Recovering a missing token in `.bootstrap-secrets.local`
 
-`.bootstrap-secrets.local` must always hold all six keys: `OPENTHROTTLE_ADMIN_URL`, `OPENTHROTTLE_BOOTSTRAP_USER_EMAIL`, `OPENTHROTTLE_BOOTSTRAP_USER_PASSWORD`, `OPENTHROTTLE_DEVELOPER_URL`, `OPENTHROTTLE_MCP_AUTH_TOKEN`, `OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN`. A token line only appears when its credential is **freshly minted, rotated, or provisioned from the environment** — the stored value is a bcrypt hash, so a plaintext token can **never** be re-derived from the database once minted.
+`.bootstrap-secrets.local` must always hold all six keys: `OPENTHROTTLE_ADMIN_URL`, `OPENTHROTTLE_BOOTSTRAP_USER_EMAIL`, `OPENTHROTTLE_BOOTSTRAP_USER_PASSWORD`, `OPENTHROTTLE_DEVELOPER_URL`, `OPENTHROTTLE_MCP_AUTH_TOKEN`, `OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN`. A token line only appears when its credential is **freshly minted, rotated, or provisioned from the environment** — the stored value is a one-way SHA-256 hash, so a plaintext token can **never** be re-derived from the database once minted.
 
 `pnpm database:bootstrap-service-accounts` now **self-heals**: if a service account already has an active credential but its key is absent from the file, it revokes the stale credential(s), mints a fresh token, and writes it (restricted to the `openthrottle-mcp` / `workflow-ralph` bootstrap accounts). So the normal recovery is simply:
 

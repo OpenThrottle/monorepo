@@ -9,7 +9,10 @@ import { maskCredentialToken } from './credential-mask/credential-mask.utils.ts'
 import { McpConnectorConnection } from './mcp-connector-connection.entity.ts';
 import type { ConnectMcpConnectorInput } from './mcp-connector-connections.types.ts';
 
-/** bcrypt cost for an api_token credential hash, mirroring service-account credentials. */
+/**
+ * bcrypt cost for an api_token credential hash. bcrypt, unlike the SHA-256 that `ot_sa_` secrets
+ * use, because a third-party token's entropy is unknown and this hash is never verified per request.
+ */
 const BCRYPT_ROUNDS = 10;
 
 /**

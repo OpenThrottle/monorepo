@@ -7,7 +7,7 @@
  * Two modes, chosen per account by whether its env var is set:
  * - Env-provided (fully-Dockerized / shared-instance path): when
  *   `OPENTHROTTLE_MCP_AUTH_TOKEN` / `OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN` is
- *   set, deterministically upsert a credential whose bcrypt hash matches the
+ *   set, deterministically upsert a credential whose stored hash matches the
  *   provided token so the same value verifies end-to-end. Idempotent: a token
  *   that already verifies is a no-op. Nothing secret is printed.
  * - Mint-and-print (host `setup.sh` path): when the env var is unset, mint a
@@ -148,7 +148,7 @@ async function createAndRecordCredential(
 /**
  * Revoke every active credential for a bootstrap account, then mint a fresh
  * one. Used to self-heal the skip branch when an active credential exists but
- * its plaintext is absent from the local file and unrecoverable (only a bcrypt
+ * its plaintext is absent from the local file and unrecoverable (only a SHA-256
  * hash is stored). Restricted by its only callers to the two known
  * BOOTSTRAP_ACCOUNTS — never a generalized revoke of arbitrary accounts.
  */
