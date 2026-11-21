@@ -5,7 +5,10 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { CONVERSATION_STREAM_CHUNK_KINDS } from '../../types.ts';
+import {
+  CONVERSATION_STREAM_CHUNK_KINDS,
+  CONVERSATION_TOOL_DENIED_ERROR,
+} from '../../types.ts';
 import { createAntigravityEventMapper } from '../events.ts';
 
 /** Captured `init` event (tools list truncated; `conversation_id` is top-level). */
@@ -361,6 +364,94 @@ describe('createAntigravityEventMapper', () => {
   });
 
   describe('when agy denied a permission', () => {
+    // agy 1.5.13, conv 01a1fbb0: the MCP call was refused, agy cancelled the cascade, and the read
+    // it had batched behind it came back DONE with no output without having run.
+    const DENIAL = `permission check failed for mcp "openthrottle_openthrottle-mcp/health": user denied permission for mcp(openthrottle_openthrottle-mcp/health)`;
+    const deniedStep = step({
+      state: 'ERROR',
+      step_index: 4,
+      step_type: 'tool',
+      tool_info: {
+        error: { message: DENIAL, type: 'TOOL_ERROR' },
+        name: 'call_mcp_tool',
+      },
+      tool_name: 'call_mcp_tool',
+    });
+
+    it("words the refused step like the ACP path, not with agy's raw message", () => {
+      const map = createAntigravityEventMapper();
+
+      const [chunk] = map(deniedStep);
+
+      expect(chunk?.metadata).toEqual({
+        callId: '4',
+        isError: true,
+        toolCall: CONVERSATION_TOOL_DENIED_ERROR,
+        toolName: 'call_mcp_tool',
+      });
+    });
+
+    it('reports an outputless DONE step after the refusal as not run', () => {
+      const map = createAntigravityEventMapper();
+      map(deniedStep);
+
+      const [chunk] = map(
+        step({
+          state: 'DONE',
+          step_index: 5,
+          step_type: 'tool',
+          tool_info: { name: 'read_file', parameters: { Path: '/repo/x' } },
+          tool_name: 'read_file',
+        }),
+      );
+
+      expect(chunk?.metadata).toEqual({
+        callId: '5',
+        isError: false,
+        notRun: true,
+        toolCall: null,
+        toolName: 'read_file',
+      });
+    });
+
+    it('keeps a DONE step that reports output after the refusal succeeded', () => {
+      const map = createAntigravityEventMapper();
+      map(deniedStep);
+
+      const [chunk] = map(
+        step({
+          state: 'DONE',
+          step_index: 5,
+          step_type: 'tool',
+          tool_info: { name: 'read_file', output: '3 lines, 17 bytes' },
+          tool_name: 'read_file',
+        }),
+      );
+
+      expect(chunk?.metadata).toEqual({
+        callId: '5',
+        isError: false,
+        toolCall: '3 lines, 17 bytes',
+        toolName: 'read_file',
+      });
+    });
+
+    it('keeps an outputless DONE step succeeded when nothing was refused', () => {
+      const map = createAntigravityEventMapper();
+
+      const [chunk] = map(
+        step({
+          state: 'DONE',
+          step_index: 5,
+          step_type: 'tool',
+          tool_name: 'read_file',
+        }),
+      );
+
+      expect(chunk?.metadata).not.toHaveProperty('notRun');
+      expect(chunk?.metadata).toMatchObject({ isError: false, toolCall: null });
+    });
+
     it('lists result.denied_actions on the terminal metadata', () => {
       const map = createAntigravityEventMapper();
 

@@ -23,6 +23,7 @@ export const CHAT_PERSIST_HINT_COPY = {
 /** Copy for {@link ChatToolCall}. */
 export const CHAT_TOOL_CALL_COPY = {
   noOutputReported: 'No output reported.',
+  notRun: `Not run: the agent cancelled this call after a permission was refused.`,
   payloadTruncated: 'Output truncated when saved',
 } as const;
 

@@ -323,6 +323,15 @@ probe (pwd, read `package.json`, an MCP call, a read of a missing file):
   "Permission denied". After one refusal agy fails the rest of the parallel batch unrun and ends
   the turn `end_turn` **with no answer text**. That is the same silent turn the stream-json path
   shows for `result.denied_actions`.
+- **Calls cancelled by a refusal never ran** (agy 1.5.13, `CancelCascadeInvocation`). Over ACP they
+  come back `failed` with no reason; over stream-json a batched read came back `DONE` with no
+  output. Once a turn has a refusal, both mappers flag such a call `notRun`
+  (`CONVERSATION_TOOL_NOT_RUN_KEY`) and its card reads "not run". A call that reports an error
+  text or output did run, and keeps its real state.
+- **A refused step reads the same on both paths.** stream-json's ERROR text for a refusal
+  (`permission check failed … user denied permission`, plus an instruction to the model) is
+  replaced on the card by `CONVERSATION_TOOL_DENIED_ERROR`, the ACP path's "Permission denied: the
+  tool call was refused."
 - **No plugin MCP servers.** Under ACP agy exposes only the servers `session/new` hands it, not its
   own `openthrottle_openthrottle-mcp` plugin server. An MCP call the server did not inject never
   reaches a tool step. The model reports the tool as unavailable.

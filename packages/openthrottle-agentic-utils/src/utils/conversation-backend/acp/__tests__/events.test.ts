@@ -236,15 +236,108 @@ describe('createAcpUpdateMapper', () => {
       };
 
       const [denied] = map(failed('c3'));
-      const [missing] = map(failed('c4'));
 
       expect(denied?.metadata).toMatchObject({
         isError: true,
         toolCall: 'Permission denied: the tool call was refused.',
       });
-      expect(missing?.metadata).toMatchObject({
+    });
+  });
+
+  // agy 1.5.13, conv 01a1fbab: `pwd` was refused, and agy cancelled the
+  // cascade, so the three calls it had batched behind it came back `failed`
+  // with no reason and never ran.
+  describe('calls agy cancelled after a refusal (agy 1.5.13)', () => {
+    const reasonlessFailure = (toolCallId: string): SessionUpdate => {
+      return {
+        content: [{ content: { text: '', type: 'text' }, type: 'content' }],
+        rawOutput: { output: '' },
+        sessionUpdate: 'tool_call_update',
+        status: 'failed',
+        toolCallId,
+      };
+    };
+    const announce = (
+      map: ReturnType<typeof createAcpUpdateMapper>,
+      toolCallId: string,
+      title: string,
+    ): void => {
+      map({
+        kind: 'read',
+        rawInput: { Path: `/repo/${title}` },
+        sessionUpdate: 'tool_call',
+        status: 'in_progress',
+        title,
+        toolCallId,
+      });
+    };
+
+    it('reports a reasonless failure after the refusal as not run', () => {
+      const map = createAcpUpdateMapper({ deniedCallIds: new Set(['c1']) });
+      announce(map, 'c2', 'File package.json');
+
+      const [result] = map(reasonlessFailure('c2'));
+
+      expect(result?.error).toBeNull();
+      expect(result?.metadata).toEqual({
+        callId: 'c2',
+        isError: false,
+        notRun: true,
+        toolCall: null,
+        toolName: 'File package.json',
+      });
+    });
+
+    it('keeps the failure of a call that says why it failed', () => {
+      const map = createAcpUpdateMapper({ deniedCallIds: new Set(['c1']) });
+      announce(map, 'c2', 'File missing.txt');
+
+      const [result] = map({
+        content: [
+          {
+            content: { text: 'file does not exist', type: 'text' },
+            type: 'content',
+          },
+        ],
+        sessionUpdate: 'tool_call_update',
+        status: 'failed',
+        toolCallId: 'c2',
+      });
+
+      expect(result?.metadata).toMatchObject({
+        isError: true,
+        toolCall: 'file does not exist',
+      });
+      expect(result?.metadata).not.toHaveProperty('notRun');
+    });
+
+    it('keeps a generic failure when nothing was refused', () => {
+      const map = createAcpUpdateMapper();
+      announce(map, 'c2', 'File missing.txt');
+
+      const [result] = map(reasonlessFailure('c2'));
+
+      expect(result?.metadata).toMatchObject({
         isError: true,
         toolCall: 'The agent reported a failed tool call.',
+      });
+    });
+
+    it('keeps a call that completed after the refusal succeeded', () => {
+      const map = createAcpUpdateMapper({ deniedCallIds: new Set(['c1']) });
+      announce(map, 'c2', 'File package.json');
+
+      const [result] = map({
+        sessionUpdate: 'tool_call_update',
+        status: 'completed',
+        toolCallId: 'c2',
+      });
+
+      expect(result?.metadata).toEqual({
+        callId: 'c2',
+        isError: false,
+        toolCall: null,
+        toolName: 'File package.json',
       });
     });
   });

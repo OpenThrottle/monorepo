@@ -24,7 +24,7 @@ export interface ChatToolCallProps {
 /**
  * @description A correlated tool_call/tool_result rendered as a single
  * collapsible tool card: tool name + a status Badge (running / succeeded /
- * failed) in the always-visible header, with expandable pretty-printed
+ * failed / not run) in the always-visible header, with expandable pretty-printed
  * arguments and result. Failed calls surface their error inline (role=alert)
  * and start expanded. Large payloads are scroll-bounded so they never blow out
  * the thread layout. Status is conveyed by icon + label, not color alone.
@@ -48,10 +48,12 @@ export const ChatToolCall = (props: ChatToolCallProps): React.ReactElement => {
   const hasNoPayload = args === null && result === null;
   const isRunning = event.status === ChatToolStatus.running;
   const isSucceeded = event.status === ChatToolStatus.succeeded;
+  const isNotRun = event.status === ChatToolStatus.notRun;
   // A call that finished with arguments but no result says so, rather than leaving the reader to
   // guess whether the Result pane is missing or the tool returned nothing.
   const hasNoOutput = isSucceeded && args !== null && result === null;
   const emptyLabel = isRunning ? 'Awaiting result…' : 'No payload.';
+  const showEmptyLabel = hasNoPayload && !isNotRun;
   const spinClassName = 'animate-spin motion-reduce:animate-none';
   const iconClassName = status.spin ? spinClassName : undefined;
 
@@ -102,8 +104,16 @@ export const ChatToolCall = (props: ChatToolCallProps): React.ReactElement => {
       >
         {args !== null && <ToolPayload content={args} label="Arguments" />}
         {result !== null && <ToolPayload content={result} label="Result" />}
-        {hasNoPayload && (
+        {showEmptyLabel && (
           <p className="text-muted-foreground text-xs italic">{emptyLabel}</p>
+        )}
+        {isNotRun && (
+          <p
+            className="text-muted-foreground text-xs italic"
+            data-testid="ChatToolCall-not-run"
+          >
+            {CHAT_TOOL_CALL_COPY.notRun}
+          </p>
         )}
         {hasNoOutput && (
           <p

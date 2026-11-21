@@ -222,3 +222,125 @@ describe('antigravity denied permissions (persisted replay)', () => {
     ).toHaveTextContent('McpTool.');
   });
 });
+
+// --- Calls agy cancelled after a refusal (agy 1.5.13, 2026-11-20) -------------
+
+/** A call agy cancelled unrun after a refusal, as both mappers now emit it. */
+const toolNotRun = (
+  callId: string,
+  toolName: string,
+): Record<string, unknown> => {
+  return {
+    delta: '',
+    kind: 'tool_result',
+    metadata: {
+      callId,
+      isError: false,
+      notRun: true,
+      toolCall: null,
+      toolName,
+    },
+  };
+};
+
+/**
+ * Conv 01a1fbab over ACP (default posture): `pwd` was refused and agy
+ * cancelled the cascade, so the three calls batched behind it never ran.
+ */
+const ACP_CANCELLED_TURN = persisted([
+  { delta: '', kind: 'session', metadata: { sessionId: 'agy-acp-2' } },
+  toolCall('c1', 'pwd', { CommandLine: 'pwd' }),
+  toolError('c1', 'pwd', ACP_DENIED),
+  toolCall('c2', 'File package.json', { Path: `${REPO}/package.json` }),
+  toolNotRun('c2', 'File package.json'),
+  toolCall('c3', 'Run mcp_openthrottle-mcp_health', {
+    toolSummary: 'OpenThrottle health check',
+  }),
+  toolNotRun('c3', 'Run mcp_openthrottle-mcp_health'),
+  toolCall('c4', 'File does-not-exist/missing.txt', { Path: MISSING }),
+  toolNotRun('c4', 'File does-not-exist/missing.txt'),
+  {
+    delta: '',
+    kind: 'usage',
+    metadata: { deniedActions: ['pwd'], stopReason: 'end_turn' },
+  },
+]);
+
+/**
+ * Conv 01a1fbb0 over stream-json (Supervised): the MCP call was refused after
+ * `pwd` and the `package.json` read had run; the missing-file read behind it
+ * came back DONE with no output, never having run.
+ */
+const STREAM_CANCELLED_TURN = persisted([
+  { delta: '', kind: 'session', metadata: { sessionId: 'agy-conv-3' } },
+  toolCall('2', 'run_command', { CommandLine: 'pwd' }),
+  toolDone('2', 'run_command', PWD_OUTPUT),
+  toolCall('3', 'read_file', { Path: `${REPO}/package.json` }),
+  toolDone('3', 'read_file', '377 lines, 24624 bytes'),
+  toolCall('4', 'call_mcp_tool', {
+    Arguments: {},
+    ServerName: 'openthrottle_openthrottle-mcp',
+    ToolName: 'health',
+  }),
+  toolError('4', 'call_mcp_tool', ACP_DENIED),
+  toolCall('5', 'read_file', { Path: MISSING }),
+  toolNotRun('5', 'read_file'),
+]);
+
+describe('antigravity calls cancelled after a refusal (persisted replay)', () => {
+  test('ACP: the refused call fails and the cancelled ones read not run', () => {
+    const events = replayToolEvents(ACP_CANCELLED_TURN);
+
+    expect(events.map((event) => [event.callId, event.status])).toEqual([
+      ['c1', 'failed'],
+      ['c2', 'not_run'],
+      ['c3', 'not_run'],
+      ['c4', 'not_run'],
+    ]);
+  });
+
+  test('ACP: a cancelled card says it was not run, not that it failed', () => {
+    const card = findCard(replayToolEvents(ACP_CANCELLED_TURN), 'c4');
+    const component = render(<ChatToolCall defaultOpen={true} event={card} />);
+
+    expect(card.error).toBeNull();
+    expect(component.getByText('not run')).toBeInTheDocument();
+    expect(component.queryByRole('alert')).not.toBeInTheDocument();
+    expect(component.getByTestId('ChatToolCall-not-run')).toBeInTheDocument();
+    expect(component.container.textContent).not.toContain(
+      'The agent reported a failed tool call.',
+    );
+  });
+
+  test('stream-json: calls that ran keep their state; the cancelled read is not run', () => {
+    const events = replayToolEvents(STREAM_CANCELLED_TURN);
+
+    expect(events.map((event) => [event.callId, event.status])).toEqual([
+      ['2', 'succeeded'],
+      ['3', 'succeeded'],
+      ['4', 'failed'],
+      ['5', 'not_run'],
+    ]);
+  });
+
+  test('stream-json: the refused card says Permission denied, as on ACP', () => {
+    const card = findCard(replayToolEvents(STREAM_CANCELLED_TURN), '4');
+    const component = render(<ChatToolCall defaultOpen={true} event={card} />);
+
+    expect(component.getByRole('alert')).toHaveTextContent(ACP_DENIED);
+    expect(component.container.textContent).not.toContain(
+      'permission check failed',
+    );
+  });
+
+  test('stream-json: the cancelled read no longer reads succeeded', () => {
+    const card = findCard(replayToolEvents(STREAM_CANCELLED_TURN), '5');
+    const component = render(<ChatToolCall defaultOpen={true} event={card} />);
+
+    expect(component.queryByText('succeeded')).not.toBeInTheDocument();
+    expect(
+      component.queryByTestId('ChatToolCall-no-output'),
+    ).not.toBeInTheDocument();
+    expect(component.getByTestId('ChatToolCall-not-run')).toBeInTheDocument();
+  });
+});
