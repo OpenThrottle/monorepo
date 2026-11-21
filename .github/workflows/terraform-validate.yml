@@ -77,6 +77,11 @@ jobs:
       - name: '🔒 tfsec (static security scan)'
         uses: aquasecurity/tfsec-action@b466648d6e39e7c75324f25d83891162a721f2d6 # v1.0.3
         with:
+          # The action looks up the latest tfsec release on the GitHub API before
+          # it scans. Unauthenticated, that call shares a 60/hour limit with every
+          # job on the runner's IP and fails the step with a 403 "rate limit
+          # exceeded"; the job token raises the limit and needs no extra permission.
+          github_token: ${{ github.token }}
           working_directory: infra
           soft_fail: false
 
