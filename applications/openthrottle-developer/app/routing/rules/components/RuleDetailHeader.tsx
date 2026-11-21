@@ -3,8 +3,8 @@ import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import * as React from 'react';
 import { Link } from 'react-router';
 
-import { RulesScopeBadges } from '~/routing/rules/components/RulesScopeBadges';
 import type { TagActionRuleRowFragment } from '~/__generated__/graphql';
+import { RulesScopeBadges } from '~/routing/rules/components/RulesScopeBadges';
 import { RulesTableRowActions } from '~/routing/rules/components/RulesTableRowActions';
 import { RULE_DETAIL_COPY, RULES_COPY } from '~/routing/rules/data/data.copy';
 import {

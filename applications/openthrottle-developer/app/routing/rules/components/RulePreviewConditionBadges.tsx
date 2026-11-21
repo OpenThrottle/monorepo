@@ -2,13 +2,13 @@ import { Badge, cn } from '@openthrottle/react-router-shadcn';
 import { CheckIcon, XIcon } from 'lucide-react';
 import * as React from 'react';
 
+import type { RulePreviewNonMatchFragment } from '~/__generated__/graphql';
 import { RULE_PREVIEW_COPY } from '~/routing/rules/data/data.copy';
-import type { RulePreviewNonMatch } from '~/routing/rules/types';
-import { selectVisibleConditions } from '~/routing/rules/utils/rule-preview-conditions';
+import { selectVisibleConditions } from '~/routing/rules/utils/selectVisibleConditions';
 
 export interface RulePreviewConditionBadgesProps {
   readonly className?: string;
-  readonly plan: RulePreviewNonMatch;
+  readonly plan: RulePreviewNonMatchFragment;
 }
 
 const conditionLabels = new Map<string, string>(

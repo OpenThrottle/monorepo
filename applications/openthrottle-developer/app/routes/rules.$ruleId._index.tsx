@@ -12,12 +12,12 @@ import * as React from 'react';
 import { redirect, useFetcher } from 'react-router';
 
 import type { Route } from '@/app/routes/+types/rules.$ruleId._index';
+import type { TagActionRuleRowFragment } from '~/__generated__/graphql';
 import { RuleDetailLoaderDocument } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import { RuleApplicationsSection } from '~/routing/rules/components/RuleApplicationsSection';
 import { RuleDetailHeader } from '~/routing/rules/components/RuleDetailHeader';
 import { RulePreviewSection } from '~/routing/rules/components/RulePreviewSection';
-import type { TagActionRuleRowFragment } from '~/__generated__/graphql';
 import { RULE_PREVIEW_ENVIRONMENT_PARAM } from '~/routing/rules/config/rule-preview';
 import {
   RULE_DETAIL_COPY,
@@ -25,8 +25,8 @@ import {
 } from '~/routing/rules/data/data.copy';
 import { loadRulePreviewForRule } from '~/routing/rules/utils/rule-preview.server';
 import { parseRulePreviewEnvironment } from '~/routing/rules/utils/rule-preview-params';
-import { runRulesAction } from '~/routing/rules/utils/rules-action.server';
 import { RulesActionFormSchema } from '~/routing/rules/utils/RulesActionFormSchema';
+import { runRulesAction } from '~/routing/rules/utils/runRulesAction.server';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

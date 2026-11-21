@@ -1,17 +1,9 @@
-import type { RulePreviewQuery } from '~/__generated__/graphql';
-
-/** The rule preview as the dry-run query returns it. */
-export type RulePreviewData = NonNullable<
-  RulePreviewQuery['previewTagActionRule']
->;
-
-/** One plan's per-condition verdicts in the preview's non-matching sample. */
-export type RulePreviewNonMatch = RulePreviewData['nonMatching'][number];
+import type { RulePreviewFragment } from '~/__generated__/graphql';
 
 /** What the preview resource route (and the detail loader) hands the UI. */
 export type RulePreviewState =
   | { readonly kind: 'error'; readonly message: string }
-  | { readonly kind: 'ready'; readonly preview: RulePreviewData };
+  | { readonly kind: 'ready'; readonly preview: RulePreviewFragment };
 
 /** The attach-prompt slice of the form state, handed to the section as one prop. */
 export interface RuleFormAttachPromptState {

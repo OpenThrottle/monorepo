@@ -1,11 +1,13 @@
 import { cleanup, render } from '@testing-library/react';
 import { afterEach, describe, expect, test } from 'vitest';
 
-import type { RulePreviewNonMatch } from '~/routing/rules/types';
+import type { RulePreviewNonMatchFragment } from '~/__generated__/graphql';
 
 import { RulePreviewConditionBadges } from '../RulePreviewConditionBadges';
 
-const plan = (overrides: Partial<RulePreviewNonMatch>): RulePreviewNonMatch => {
+const plan = (
+  overrides: Partial<RulePreviewNonMatchFragment>,
+): RulePreviewNonMatchFragment => {
   return {
     conditions: [
       {

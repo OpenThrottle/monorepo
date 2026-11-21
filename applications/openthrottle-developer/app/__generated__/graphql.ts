@@ -13586,6 +13586,64 @@ export type ResolveIdRefQuery = {
   }>;
 };
 
+export type RulePreviewConditionFragment = {
+  __typename?: 'TagActionConditionObject';
+  actual?: string | null;
+  condition: string;
+  expected?: string | null;
+  passed: boolean;
+};
+
+export type RulePreviewNonMatchFragment = {
+  __typename?: 'TagActionRulePreviewNonMatchObject';
+  failedOnlyOnEnvironment: boolean;
+  id: string;
+  missingTags: Array<string>;
+  repositoryId?: string | null;
+  status: string;
+  title: string;
+  conditions: Array<{
+    __typename?: 'TagActionConditionObject';
+    actual?: string | null;
+    condition: string;
+    expected?: string | null;
+    passed: boolean;
+  }>;
+};
+
+export type RulePreviewFragment = {
+  __typename?: 'TagActionRulePreviewObject';
+  cap: number;
+  environment?: string | null;
+  evaluated: number;
+  matchedCount: number;
+  specificity: number;
+  truncated: boolean;
+  matched: Array<{
+    __typename?: 'TagActionRulePreviewPlanObject';
+    id: string;
+    repositoryId?: string | null;
+    status: string;
+    title: string;
+  }>;
+  nonMatching: Array<{
+    __typename?: 'TagActionRulePreviewNonMatchObject';
+    failedOnlyOnEnvironment: boolean;
+    id: string;
+    missingTags: Array<string>;
+    repositoryId?: string | null;
+    status: string;
+    title: string;
+    conditions: Array<{
+      __typename?: 'TagActionConditionObject';
+      actual?: string | null;
+      condition: string;
+      expected?: string | null;
+      passed: boolean;
+    }>;
+  }>;
+};
+
 export type RulePreviewQueryVariables = Exact<{
   environment?: InputMaybe<Scalars['String']['input']>;
   input: UpsertTagActionRuleInput;
@@ -20997,6 +21055,190 @@ export const IdRefMatchFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<IdRefMatchFragment, unknown>;
+export const RulePreviewConditionFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RulePreviewCondition' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TagActionConditionObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'actual' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'condition' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'expected' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'passed' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<RulePreviewConditionFragment, unknown>;
+export const RulePreviewNonMatchFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RulePreviewNonMatch' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TagActionRulePreviewNonMatchObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'conditions' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'RulePreviewCondition' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'failedOnlyOnEnvironment' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'missingTags' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RulePreviewCondition' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TagActionConditionObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'actual' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'condition' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'expected' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'passed' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<RulePreviewNonMatchFragment, unknown>;
+export const RulePreviewFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RulePreview' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TagActionRulePreviewObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'cap' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'environment' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'evaluated' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'matched' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'repositoryId' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'matchedCount' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'nonMatching' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'RulePreviewNonMatch' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'specificity' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'truncated' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RulePreviewCondition' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TagActionConditionObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'actual' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'condition' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'expected' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'passed' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RulePreviewNonMatch' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TagActionRulePreviewNonMatchObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'conditions' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'RulePreviewCondition' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'failedOnlyOnEnvironment' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'missingTags' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<RulePreviewFragment, unknown>;
 export const UsageBranchOptionFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -35683,92 +35925,113 @@ export const RulePreviewDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'cap' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'environment' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'evaluated' } },
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'matched' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'repositoryId' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'status' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
-                    ],
-                  },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'RulePreview' },
                 },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'matchedCount' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'nonMatching' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'conditions' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'actual' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'condition' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'expected' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'passed' },
-                            },
-                          ],
-                        },
-                      },
-                      {
-                        kind: 'Field',
-                        name: {
-                          kind: 'Name',
-                          value: 'failedOnlyOnEnvironment',
-                        },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'missingTags' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'repositoryId' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'status' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
-                    ],
-                  },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'specificity' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'truncated' } },
               ],
             },
           },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RulePreviewCondition' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TagActionConditionObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'actual' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'condition' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'expected' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'passed' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RulePreviewNonMatch' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TagActionRulePreviewNonMatchObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'conditions' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'RulePreviewCondition' },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'failedOnlyOnEnvironment' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'missingTags' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'RulePreview' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TagActionRulePreviewObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'cap' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'environment' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'evaluated' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'matched' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'repositoryId' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'matchedCount' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'nonMatching' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'RulePreviewNonMatch' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'specificity' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'truncated' } },
         ],
       },
     },

@@ -1,7 +1,7 @@
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 
-import { RulePreviewDocument } from '~/__generated__/graphql';
 import type { TagActionRuleRowFragment } from '~/__generated__/graphql';
+import { RulePreviewDocument } from '~/__generated__/graphql';
 import type { RulePreviewState } from '~/routing/rules/types';
 import type { RulePreviewRequest } from '~/routing/rules/utils/rule-preview-params';
 

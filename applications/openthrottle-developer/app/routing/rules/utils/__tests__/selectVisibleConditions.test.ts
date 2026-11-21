@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { selectVisibleConditions } from '../rule-preview-conditions';
+import { selectVisibleConditions } from '../selectVisibleConditions';
 
 const condition = (
   name: string,

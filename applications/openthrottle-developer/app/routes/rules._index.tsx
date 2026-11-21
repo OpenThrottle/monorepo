@@ -34,8 +34,8 @@ import {
   RULES_SCOPE_ALL,
 } from '~/routing/rules/utils/parsers';
 import { countRulesByScope } from '~/routing/rules/utils/rule-groups';
-import { runRulesAction } from '~/routing/rules/utils/rules-action.server';
 import { RulesActionFormSchema } from '~/routing/rules/utils/RulesActionFormSchema';
+import { runRulesAction } from '~/routing/rules/utils/runRulesAction.server';
 
 export const handle: GlobalLayoutBreadcrumbsHandle = {
   breadcrumb: () => 'Rules',

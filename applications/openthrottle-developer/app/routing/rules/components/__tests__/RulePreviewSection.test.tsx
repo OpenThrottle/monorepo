@@ -4,11 +4,14 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, describe, expect, test } from 'vitest';
 
-import type { RulePreviewData, RulePreviewState } from '~/routing/rules/types';
+import type { RulePreviewFragment } from '~/__generated__/graphql';
+import type { RulePreviewState } from '~/routing/rules/types';
 
 import { RulePreviewSection } from '../RulePreviewSection';
 
-const preview = (overrides: Partial<RulePreviewData>): RulePreviewData => {
+const preview = (
+  overrides: Partial<RulePreviewFragment>,
+): RulePreviewFragment => {
   return {
     cap: 500,
     environment: null,
