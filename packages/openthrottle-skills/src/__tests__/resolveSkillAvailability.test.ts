@@ -457,3 +457,98 @@ describe('resolveSkillAvailability — reserved-inert axes + shape', () => {
     expect(result.warnings).toEqual([]);
   });
 });
+
+describe('resolveSkillAvailability — specificity layers', () => {
+  test('narrow slug allow beats broad slug deny', () => {
+    const { skill: resolved } = resolveOne(
+      skill({ slug: 'x' }),
+      ruleSet('allow', [
+        rule({ id: 'broad', slugDeny: ['x'], specificity: 1 }),
+        rule({ id: 'narrow', slugAllow: ['x'], specificity: 3 }),
+      ]),
+    );
+
+    expect(resolved.effectiveDisableModelInvocation).toBe(false);
+    expect(resolved.provenance).toBe('slug-allow:x@narrow');
+  });
+
+  test('narrow slug deny beats broad slug allow', () => {
+    const { skill: resolved } = resolveOne(
+      skill({ slug: 'x' }),
+      ruleSet('allow', [
+        rule({ id: 'narrow', slugDeny: ['x'], specificity: 3 }),
+        rule({ id: 'broad', slugAllow: ['x'], specificity: 0 }),
+      ]),
+    );
+
+    expect(resolved.effectiveDisableModelInvocation).toBe(true);
+    expect(resolved.provenance).toBe('slug-deny:x@narrow');
+  });
+
+  test('narrow tag allow beats broad tag deny, and the reverse', () => {
+    const allow = resolveOne(
+      skill({ slug: 'x', tags: ['git'] }),
+      ruleSet('allow', [
+        rule({ id: 'broad', specificity: 0, tagDeny: ['git'] }),
+        rule({ id: 'narrow', specificity: 2, tagAllow: ['git'] }),
+      ]),
+    );
+    const deny = resolveOne(
+      skill({ slug: 'x', tags: ['git'] }),
+      ruleSet('allow', [
+        rule({ id: 'broad', specificity: 0, tagAllow: ['git'] }),
+        rule({ id: 'narrow', specificity: 2, tagDeny: ['git'] }),
+      ]),
+    );
+
+    expect(allow.skill.provenance).toBe('tag-allow:git@narrow');
+    expect(deny.skill.provenance).toBe('tag-deny:git@narrow');
+  });
+
+  test('deny still wins within one specificity level', () => {
+    const { skill: resolved } = resolveOne(
+      skill({ slug: 'x' }),
+      ruleSet('allow', [
+        rule({ id: 'a', slugAllow: ['x'], specificity: 2 }),
+        rule({ id: 'b', slugDeny: ['x'], specificity: 2 }),
+        rule({ id: 'c', slugAllow: ['x'], specificity: 0 }),
+      ]),
+    );
+
+    expect(resolved.provenance).toBe('slug-deny:x@b');
+  });
+
+  test('a broader layer decides when the narrower layer has no match', () => {
+    const { skill: resolved } = resolveOne(
+      skill({ slug: 'x' }),
+      ruleSet('allow', [
+        rule({ id: 'narrow', slugDeny: ['other'], specificity: 3 }),
+        rule({ id: 'broad', slugDeny: ['x'], specificity: 0 }),
+      ]),
+    );
+
+    expect(resolved.provenance).toBe('slug-deny:x@broad');
+  });
+
+  test('omitted specificity keeps the flat deny-wins behavior', () => {
+    const { skill: resolved } = resolveOne(
+      skill({ slug: 'x' }),
+      ruleSet('allow', [
+        rule({ id: 'a', slugAllow: ['x'] }),
+        rule({ id: 'b', slugDeny: ['x'] }),
+      ]),
+    );
+
+    expect(resolved.provenance).toBe('slug-deny:x@b');
+  });
+
+  test('no exception rules: frontmatter passthrough is unchanged', () => {
+    const { skill: resolved } = resolveOne(
+      skill({ disableModelInvocation: true, slug: 'x' }),
+      ruleSet('allow', []),
+    );
+
+    expect(resolved.effectiveDisableModelInvocation).toBe(true);
+    expect(resolved.provenance).toBe('frontmatter:true');
+  });
+});

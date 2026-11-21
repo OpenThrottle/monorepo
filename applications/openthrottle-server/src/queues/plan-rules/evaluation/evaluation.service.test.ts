@@ -1,7 +1,7 @@
 /**
  * @description Unit tests for {@link PlanRulesEvaluationService.enqueueEvaluation}:
- * plan-scoped deduplication (one active + one waiting pass per plan; distinct
- * plans independent) and the never-throw fire-and-forget contract.
+ * plan- and environment-scoped deduplication (one active + one waiting pass per
+ * plan and environment; distinct plans and environments independent) and the never-throw fire-and-forget contract.
  */
 
 import { createMock } from '@golevelup/ts-vitest';
@@ -29,15 +29,15 @@ describe('PlanRulesEvaluationService.enqueueEvaluation', () => {
   });
 
   it('enqueues with a plan-scoped deduplication id and keepLastIfActive', async () => {
-    await service.enqueueEvaluation(planId, 'task-created');
+    await service.enqueueEvaluation(planId, 'task-created', 'ralph');
 
     expect(queue.add).toHaveBeenCalledTimes(1);
     expect(queue.add).toHaveBeenCalledWith(
       PLAN_RULES_EVALUATE_JOB_NAME,
-      { planId, triggerKind: 'task-created' },
+      { environment: 'ralph', planId, triggerKind: 'task-created' },
       {
         deduplication: {
-          id: planRulesEvaluationDedupId(planId),
+          id: planRulesEvaluationDedupId(planId, 'ralph'),
           keepLastIfActive: true,
         },
       },
@@ -45,24 +45,46 @@ describe('PlanRulesEvaluationService.enqueueEvaluation', () => {
   });
 
   it('gives distinct plans distinct dedup ids so they evaluate independently', async () => {
-    await service.enqueueEvaluation(planId, 'tag-changed');
-    await service.enqueueEvaluation(otherPlanId, 'tag-changed');
+    await service.enqueueEvaluation(planId, 'tag-changed', null);
+    await service.enqueueEvaluation(otherPlanId, 'tag-changed', null);
 
     const dedupIds = vi
       .mocked(queue.add)
       .mock.calls.map((call) => call[2]?.deduplication?.id);
     expect(dedupIds).toEqual([
-      planRulesEvaluationDedupId(planId),
-      planRulesEvaluationDedupId(otherPlanId),
+      planRulesEvaluationDedupId(planId, null),
+      planRulesEvaluationDedupId(otherPlanId, null),
     ]);
     expect(new Set(dedupIds).size).toBe(2);
+  });
+
+  it('carries a null environment on the job data', async () => {
+    await service.enqueueEvaluation(planId, 'manual', null);
+
+    expect(vi.mocked(queue.add).mock.calls[0]?.[1]).toEqual({
+      environment: null,
+      planId,
+      triggerKind: 'manual',
+    });
+  });
+
+  it('keeps passes for different environments of one plan from collapsing', async () => {
+    await service.enqueueEvaluation(planId, 'status-changed', 'ralph');
+    await service.enqueueEvaluation(planId, 'status-changed', null);
+    await service.enqueueEvaluation(planId, 'status-changed', 'ralph');
+
+    const dedupIds = vi
+      .mocked(queue.add)
+      .mock.calls.map((call) => call[2]?.deduplication?.id);
+    expect(dedupIds[0]).toBe(dedupIds[2]);
+    expect(dedupIds[0]).not.toBe(dedupIds[1]);
   });
 
   it('swallows enqueue failures (never throws) and logs the error', async () => {
     vi.mocked(queue.add).mockRejectedValueOnce(new Error('redis down'));
 
     await expect(
-      service.enqueueEvaluation(planId, 'manual'),
+      service.enqueueEvaluation(planId, 'manual', null),
     ).resolves.toBeUndefined();
     expect(logger.error).toHaveBeenCalledOnce();
   });

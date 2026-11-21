@@ -7,6 +7,7 @@ const RuleRowSchema = z.object({
   enabled: z.boolean(),
   environment: z.string().nullish(),
   id: z.string().min(1),
+  repositoryId: z.string().nullish(),
   status: z.string().nullish(),
   tagAll: z.array(z.string()),
   title: z.string(),
@@ -43,3 +44,5 @@ export const RulesActionFormSchema = z.discriminatedUnion('intent', [
     rule: RuleJsonSchema,
   }),
 ]);
+
+export type RulesActionFormData = z.infer<typeof RulesActionFormSchema>;

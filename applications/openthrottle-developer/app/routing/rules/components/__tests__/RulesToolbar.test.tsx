@@ -19,9 +19,14 @@ function RulesToolbarWithQueryString(props: RulesToolbarProps) {
   );
 }
 
+const REPOSITORIES: RulesToolbarProps['repositories'] = [
+  { id: 'repo-1', name: 'monorepo' },
+  { id: 'repo-2', name: 'website' },
+];
+
 function renderToolbar(
   initialEntry = '/',
-  props: RulesToolbarProps = {},
+  props: RulesToolbarProps = { repositories: REPOSITORIES },
 ): RenderResult {
   // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
   const Component = () => {
@@ -238,6 +243,85 @@ describe('RulesToolbar Component', () => {
         );
         expect(qs.has('q')).toBe(false);
         expect(qs.has('enabled')).toBe(false);
+      });
+    });
+  });
+
+  describe('scope filter', () => {
+    const scopeFilter = (): HTMLElement => {
+      return component.getByRole('combobox', {
+        name: RULES_COPY.scopeFilterLabel,
+      });
+    };
+
+    const currentParams = (): URLSearchParams => {
+      return new URLSearchParams(
+        component.getByTestId('current-search').textContent ?? '',
+      );
+    };
+
+    test('defaults to all scopes', () => {
+      expect(scopeFilter()).toHaveTextContent(RULES_COPY.scopeAllOption);
+    });
+
+    test('lists Global and every repository', async () => {
+      const user = userEvent.setup();
+      await user.click(scopeFilter());
+
+      expect(
+        component.getByRole('option', { name: RULES_COPY.scopeAllOption }),
+      ).toBeInTheDocument();
+      expect(
+        component.getByRole('option', { name: RULES_COPY.scopeGlobalLabel }),
+      ).toBeInTheDocument();
+      expect(
+        component.getByRole('option', { name: 'monorepo' }),
+      ).toBeInTheDocument();
+      expect(
+        component.getByRole('option', { name: 'website' }),
+      ).toBeInTheDocument();
+    });
+
+    test('writes a repository id to the scope param and clears it on All', async () => {
+      const user = userEvent.setup();
+      await user.click(scopeFilter());
+      await user.click(component.getByRole('option', { name: 'website' }));
+
+      await waitFor(() => {
+        expect(currentParams().get('scope')).toBe('repo-2');
+      });
+
+      await user.click(scopeFilter());
+      await user.click(
+        component.getByRole('option', { name: RULES_COPY.scopeAllOption }),
+      );
+
+      await waitFor(() => {
+        expect(currentParams().has('scope')).toBe(false);
+      });
+    });
+
+    test('reflects scope=global from the URL and offers clear filters', () => {
+      cleanup();
+      component = renderToolbar('/?scope=global');
+
+      expect(scopeFilter()).toHaveTextContent(RULES_COPY.scopeGlobalLabel);
+      expect(
+        component.getByRole('button', { name: RULES_COPY.clearFiltersAction }),
+      ).toBeInTheDocument();
+    });
+
+    test('clear filters removes the scope param', async () => {
+      cleanup();
+      component = renderToolbar('/?scope=repo-1');
+      const user = userEvent.setup();
+
+      await user.click(
+        component.getByRole('button', { name: RULES_COPY.clearFiltersAction }),
+      );
+
+      await waitFor(() => {
+        expect(currentParams().has('scope')).toBe(false);
       });
     });
   });

@@ -19,7 +19,7 @@ const buildInitialRule = (
     enabled: true,
     environment: 'ci',
     id: 'rule-1',
-    projectId: null,
+    repositoryId: null,
     status: 'IN_PROGRESS',
     tagAll: ['breakdown'],
     title: 'Grill breakdowns',
@@ -36,6 +36,7 @@ describe('useRuleForm', () => {
     expect(result.current.isEdit).toBe(false);
     expect(result.current.title).toBe('');
     expect(result.current.actionType).toBe('inject-task');
+    expect(result.current.repositoryId).toBe(ANY);
     expect(result.current.status).toBe(ANY);
     expect(result.current.environment).toBe(ANY);
     expect(result.current.tagAll).toEqual([]);
@@ -114,5 +115,99 @@ describe('useRuleForm', () => {
 
     act(() => result.current.handleToggleTag('domain:github'));
     expect(result.current.tagAll).toEqual([]);
+  });
+
+  describe('attach-prompt', () => {
+    const attachRule = (payload: Record<string, string>) => {
+      return buildInitialRule({
+        actionPayloadJson: JSON.stringify(payload),
+        actionType: 'attach-prompt',
+      });
+    };
+
+    test('serializes the chosen prompt by id with its type and placement', () => {
+      const { result } = renderHook(() => useRuleForm({}));
+
+      act(() => {
+        result.current.setActionType('attach-prompt');
+        result.current.setTitle('Attach');
+      });
+      expect(result.current.submitDisabled).toBe(true);
+
+      act(() => {
+        result.current.attachPrompt.onPromptChange('prompt-1', 'personas');
+        result.current.attachPrompt.onPlacementChange('start');
+      });
+
+      expect(JSON.parse(result.current.actionPayloadJson)).toEqual({
+        placement: 'start',
+        promptId: 'prompt-1',
+        promptType: 'personas',
+      });
+      expect(result.current.submitDisabled).toBe(false);
+    });
+
+    test('defaults placement to end', () => {
+      const { result } = renderHook(() => useRuleForm({}));
+
+      expect(result.current.attachPrompt.placement).toBe('end');
+    });
+
+    test('round-trips an existing rule', () => {
+      const { result } = renderHook(() =>
+        useRuleForm({
+          initialRule: attachRule({
+            placement: 'start',
+            promptId: 'prompt-9',
+            promptType: 'personas',
+          }),
+        }),
+      );
+
+      expect(result.current.actionType).toBe('attach-prompt');
+      expect(result.current.attachPrompt.promptId).toBe('prompt-9');
+      expect(result.current.attachPrompt.placement).toBe('start');
+      expect(JSON.parse(result.current.actionPayloadJson)).toEqual({
+        placement: 'start',
+        promptId: 'prompt-9',
+        promptType: 'personas',
+      });
+    });
+
+    test('keeps a filePath reference until a prompt is chosen', () => {
+      const { result } = renderHook(() =>
+        useRuleForm({
+          initialRule: attachRule({
+            filePath: 'a/b.md',
+            placement: 'end',
+            promptType: 'prompts',
+          }),
+        }),
+      );
+
+      expect(result.current.attachPrompt.filePath).toBe('a/b.md');
+      expect(result.current.submitDisabled).toBe(false);
+      expect(JSON.parse(result.current.actionPayloadJson)).toEqual({
+        filePath: 'a/b.md',
+        placement: 'end',
+        promptType: 'prompts',
+      });
+
+      act(() => result.current.attachPrompt.onPromptChange('p-2', 'prompts'));
+
+      expect(JSON.parse(result.current.actionPayloadJson)).toEqual({
+        placement: 'end',
+        promptId: 'p-2',
+        promptType: 'prompts',
+      });
+    });
+
+    test('an inject-task rule does not leak its placement into attach-prompt', () => {
+      const { result } = renderHook(() =>
+        useRuleForm({ initialRule: buildInitialRule() }),
+      );
+
+      expect(result.current.attachPrompt.placement).toBe('end');
+    });
   });
 });

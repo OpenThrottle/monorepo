@@ -15,20 +15,26 @@ import { RULES_COPY } from '../data/data.copy';
 import {
   isRulesEnabledFilter,
   parseRulesEnabledFilterFromSearchParams,
+  parseRulesScopeFromSearchParams,
+  RULES_SCOPE_ALL,
   type RulesEnabledFilter,
 } from '../utils/parsers';
+import type { RulesRepositoryOption } from '../utils/rule-groups';
+import { RulesScopeFilter } from './RulesScopeFilter';
 
 export interface RulesToolbarProps {
   className?: string;
+  repositories: RulesRepositoryOption[];
 }
 
 /**
  * @description Toolbar for rules list: URL-driven search (`q`), enabled filter
- * (`all|enabled|disabled`), and New rule CTA. Preserves `role=search` and
+ * (`all|enabled|disabled`), scope
+ * (`all|global|<repositoryId>`), and New rule CTA. Preserves `role=search` and
  * URL-driven state for client-side filtering on the index route.
  */
 export const RulesToolbar = (props: RulesToolbarProps): React.ReactElement => {
-  const { className } = props;
+  const { className, repositories } = props;
 
   // Hooks
   const [searchParams, setSearchParams] = useSearchParams();
@@ -41,7 +47,11 @@ export const RulesToolbar = (props: RulesToolbarProps): React.ReactElement => {
 
   // Setup
   const enabledFilter = parseRulesEnabledFilterFromSearchParams(searchParams);
-  const hasActiveFilters = searchQuery.length > 0 || enabledFilter !== 'all';
+  const scope = parseRulesScopeFromSearchParams(searchParams);
+  const hasActiveFilters =
+    searchQuery.length > 0 ||
+    enabledFilter !== 'all' ||
+    scope !== RULES_SCOPE_ALL;
 
   // Handlers
   const handleSearchSubmit = React.useCallback(
@@ -74,10 +84,26 @@ export const RulesToolbar = (props: RulesToolbarProps): React.ReactElement => {
     [searchParams, setSearchParams],
   );
 
+  const handleScopeChange = React.useCallback(
+    (value: string): void => {
+      const next = new URLSearchParams(searchParams);
+
+      if (value === RULES_SCOPE_ALL) {
+        next.delete('scope');
+      } else {
+        next.set('scope', value);
+      }
+
+      setSearchParams(next, { replace: true });
+    },
+    [searchParams, setSearchParams],
+  );
+
   const handleClearFilters = React.useCallback(() => {
     const next = new URLSearchParams(searchParams);
     next.delete('enabled');
     next.delete('q');
+    next.delete('scope');
     setSearchParams(next, { replace: true });
   }, [searchParams, setSearchParams]);
 
@@ -130,6 +156,12 @@ export const RulesToolbar = (props: RulesToolbarProps): React.ReactElement => {
             {RULES_COPY.filterDisabledLabel}
           </ToggleGroupItem>
         </ToggleGroup>
+
+        <RulesScopeFilter
+          onChange={handleScopeChange}
+          repositories={repositories}
+          value={scope}
+        />
 
         {hasActiveFilters && (
           <Button

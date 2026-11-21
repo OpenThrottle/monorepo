@@ -47,6 +47,7 @@ const buildMockPlan = (projectId: string): Plan => {
     projectId,
     projectRelation: null,
     projectSortOrder: 1000,
+    repositoryId: null,
     runConfig: getDefaultPlanRunConfigStorage(),
     status: 'completed',
     summary: null,

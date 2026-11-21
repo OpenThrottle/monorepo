@@ -60,6 +60,7 @@ const availabilityExceptionRule = (
     environment: null,
     id: 'exception-rule-1',
     projectId: null,
+    repositoryId: null,
     status: null,
     tagAll: ['breakdown'],
     userId: ownerId,
@@ -243,6 +244,84 @@ describe('PlanContextAvailabilityService', () => {
     expect(grilling?.effectiveDisableModelInvocation).toBe(true);
   });
 
+  describe('specificity layering', () => {
+    const repositoryId = '00000000-0000-4000-8000-000000000009';
+
+    const scopedRule = (
+      id: string,
+      scopedRepositoryId: string | null,
+      payload: Record<string, unknown>,
+    ): TagActionRule => {
+      return asMock<TagActionRule>({
+        ...availabilityExceptionRule(payload),
+        createdAt: new Date('2026-01-01T00:00:00Z'),
+        id,
+        repositoryId: scopedRepositoryId,
+      });
+    };
+
+    beforeEach(() => {
+      planFindOne.mockResolvedValue(
+        asMock<Plan>({
+          author: 'owner-gh',
+          id: planId,
+          projectId,
+          repositoryId,
+          status: 'PENDING',
+        }),
+      );
+    });
+
+    it('a repository-scoped allow beats a global deny for the same slug', async () => {
+      listEnabledForUser.mockResolvedValue([
+        scopedRule('global-rule', null, { slugDeny: ['grilling'] }),
+        scopedRule('repo-rule', repositoryId, { slugAllow: ['grilling'] }),
+      ]);
+
+      const result = await service.resolveForPlan({
+        planId,
+        vocabularySeedDefaults: true,
+        vocabularyUserId: callerId,
+      });
+
+      const grilling = result.skills.find((skill) => skill.slug === 'grilling');
+      expect(grilling?.effectiveDisableModelInvocation).toBe(false);
+      expect(grilling?.provenance).toContain('rule:repo-rule');
+    });
+
+    it('a repository-scoped deny beats a global allow for the same tag', async () => {
+      listEnabledForUser.mockResolvedValue([
+        scopedRule('global-rule', null, { tagAllow: ['github'] }),
+        scopedRule('repo-rule', repositoryId, { tagDeny: ['github'] }),
+      ]);
+
+      const result = await service.resolveForPlan({
+        planId,
+        vocabularySeedDefaults: true,
+        vocabularyUserId: callerId,
+      });
+
+      const grilling = result.skills.find((skill) => skill.slug === 'grilling');
+      expect(grilling?.effectiveDisableModelInvocation).toBe(true);
+    });
+
+    it('deny still wins between two rules of the same specificity', async () => {
+      listEnabledForUser.mockResolvedValue([
+        scopedRule('a-rule', null, { slugAllow: ['grilling'] }),
+        scopedRule('b-rule', null, { slugDeny: ['grilling'] }),
+      ]);
+
+      const result = await service.resolveForPlan({
+        planId,
+        vocabularySeedDefaults: true,
+        vocabularyUserId: callerId,
+      });
+
+      const grilling = result.skills.find((skill) => skill.slug === 'grilling');
+      expect(grilling?.effectiveDisableModelInvocation).toBe(true);
+    });
+  });
+
   it('an unmatched exception rule (tag_all not satisfied) changes nothing', async () => {
     listEnabledForUser.mockResolvedValue([
       asMock<TagActionRule>({
@@ -252,6 +331,7 @@ describe('PlanContextAvailabilityService', () => {
         environment: null,
         id: 'exception-rule-2',
         projectId: null,
+        repositoryId: null,
         status: null,
         tagAll: ['terraform'],
         userId: ownerId,

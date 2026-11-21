@@ -2242,6 +2242,45 @@ describe('PlansResolver', () => {
       );
     });
 
+    test('re-reads the trigger-derived repositoryId after a runConfigJson change', async () => {
+      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
+      const repositoryId = '33333333-3333-4333-8333-333333333333';
+      const defaults = getDefaultPlanRunConfigStorage({ planId: mockPlan.id });
+      const saved = createMock<Plan>({ id: mockPlan.id, repositoryId: null });
+      vi.mocked(repo.save).mockImplementation(() => Promise.resolve(saved));
+      mockPlansRepository.loadRepositoryIds.mockImplementationOnce(
+        async (plans) => {
+          for (const plan of plans) plan.repositoryId = repositoryId;
+          return plans;
+        },
+      );
+
+      const result = await resolver.updatePlan({
+        id: mockPlan.id,
+        runConfigJson: JSON.stringify({
+          ...defaults,
+          workspace: { ...defaults.workspace, repositoryId },
+        }),
+      });
+
+      expect(mockPlansRepository.loadRepositoryIds).toHaveBeenCalledWith([
+        saved,
+      ]);
+      expect(result?.repositoryId).toBe(repositoryId);
+    });
+
+    test('does not re-read repositoryId when runConfigJson is untouched', async () => {
+      vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
+      vi.mocked(repo.save).mockImplementation(() =>
+        Promise.resolve(createMock<Plan>()),
+      );
+      mockPlansRepository.loadRepositoryIds.mockClear();
+
+      await resolver.updatePlan({ id: mockPlan.id, title: 'Renamed plan' });
+
+      expect(mockPlansRepository.loadRepositoryIds).not.toHaveBeenCalled();
+    });
+
     test('resets runConfigJson to defaults when null', async () => {
       const planWithCustomConfig: Plan = {
         ...mockPlan,
@@ -2714,6 +2753,7 @@ describe('PlansResolver', () => {
       expect(mockEnqueueEvaluation).toHaveBeenCalledWith(
         mockPlan.id,
         PLAN_RULES_TRIGGER_KINDS.MANUAL,
+        null,
       );
       expect(result).toEqual({
         enqueued: true,

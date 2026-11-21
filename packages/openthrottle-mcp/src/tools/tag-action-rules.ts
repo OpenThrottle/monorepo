@@ -1,6 +1,7 @@
 /**
  * @description Tag→action rule tool handlers + schemas: upsert_tag_action_rule,
- * delete_tag_action_rule, list_tag_action_rules, list_rule_applications.
+ * delete_tag_action_rule, list_tag_action_rules, list_rule_applications,
+ * preview_tag_action_rule.
  * GraphQL-only boundary — no core import, no Nest bootstrap. Rules are
  * user-owned: v1 rule mutations require the MCP to authenticate with a USER
  * token; a service-account token gets an explanatory server error. Action
@@ -11,9 +12,15 @@
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import { z } from 'zod';
 
+import type {
+  PreviewTagActionRuleQuery,
+  RuleApplicationsQuery,
+} from '../__generated__/graphql.js';
 import {
   DeleteTagActionRuleDocument,
+  PreviewTagActionRuleDocument,
   RuleApplicationsDocument,
+  RuleApplicationsForRuleDocument,
   TagActionRulesDocument,
   UpsertTagActionRuleDocument,
 } from '../__generated__/graphql.js';
@@ -34,6 +41,7 @@ type TagActionRule = {
   environment: string | null;
   id: string;
   projectId: string | null;
+  repositoryId: string | null;
   status: string | null;
   tagAll: string[];
   title: string;
@@ -82,6 +90,7 @@ export async function listTagActionRulesToolHandler(
         environment: rule.environment ?? null,
         id: rule.id,
         projectId: rule.projectId ?? null,
+        repositoryId: rule.repositoryId ?? null,
         status: rule.status ?? null,
         tagAll: rule.tagAll,
         title: rule.title,
@@ -108,20 +117,62 @@ export async function listTagActionRulesToolHandler(
 
 // ── list_rule_applications ───────────────────────────────────────────────────
 
+const fetchLedgerRows = async (
+  token: string,
+  scope: {
+    readonly planId: string | undefined;
+    readonly ruleId: string | undefined;
+  },
+): Promise<RuleApplicationsQuery['ruleApplications'] | undefined> => {
+  if (scope.ruleId !== undefined) {
+    const result = await executeGraphqlWithAuth(
+      token,
+      RuleApplicationsForRuleDocument,
+      { ruleId: scope.ruleId },
+    );
+    return result?.ruleApplicationsForRule;
+  }
+  const result = await executeGraphqlWithAuth(token, RuleApplicationsDocument, {
+    planId: scope.planId ?? '',
+  });
+  return result?.ruleApplications;
+};
+
+/**
+ * @description The registered (advertised) schema: a plain strict object so `tools/list` publishes `planId` and
+ * `ruleId`. The exactly-one rule lives in {@link listRuleApplicationsArgs}: a zod v3 `.refine()` is a ZodEffects,
+ * which the MCP SDK serializes as `properties: {}`.
+ */
 export const listRuleApplicationsToolParameters = z
   .object({
-    planId: z.string().min(1),
+    planId: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('List the ledger of this plan.'),
+    ruleId: z
+      .string()
+      .min(1)
+      .optional()
+      .describe(
+        'List the ledger of this rule across plans (your own rules only).',
+      ),
   })
   .strict();
 
-export const listRuleApplicationsToolDescription = `List the apply-once ledger rows (rule_applications) for a plan via the ruleApplications GraphQL query. Requires planId. States: applied | pre-satisfied | flagged | orphaned — flagged/orphaned rows are the human-attention queue.`;
+const listRuleApplicationsArgs = listRuleApplicationsToolParameters.refine(
+  (data) => (data.planId === undefined) !== (data.ruleId === undefined),
+  { message: 'Provide exactly one of planId or ruleId' },
+);
+
+export const listRuleApplicationsToolDescription = `List the apply-once ledger rows (rule_applications) for a plan (ruleApplications query) or for one of your own rules across plans (ruleApplicationsForRule query). Provide exactly one of planId or ruleId. States: applied | pre-satisfied | flagged | orphaned — flagged/orphaned rows are the human-attention queue.`;
 
 export async function listRuleApplicationsToolHandler(
   args: z.infer<typeof listRuleApplicationsToolParameters>,
 ): Promise<
   GenericResult<{ applications: RuleApplication[]; totalCount: number }>
 > {
-  const parsed = listRuleApplicationsToolParameters.safeParse(args);
+  const parsed = listRuleApplicationsArgs.safeParse(args);
   if (!parsed.success) {
     return invalidArgsContent(parsed.error);
   }
@@ -130,12 +181,8 @@ export async function listRuleApplicationsToolHandler(
     'list_rule_applications',
     async () => {
       const token = getAuthToken();
-      const result = await executeGraphqlWithAuth(
-        token,
-        RuleApplicationsDocument,
-        { planId: parsed.data.planId },
-      );
-      const rows = result?.ruleApplications;
+      const { planId, ruleId } = parsed.data;
+      const rows = await fetchLedgerRows(token, { planId, ruleId });
       if (!rows) {
         return null;
       }
@@ -153,7 +200,9 @@ export async function listRuleApplicationsToolHandler(
       const applicationList = applications
         .map((application) => `${application.ruleId} → ${application.state}`)
         .join('; ');
-      const emptyText = `No rule applications for plan ${parsed.data.planId}.`;
+      const subject =
+        ruleId === undefined ? `plan ${planId}` : `rule ${ruleId}`;
+      const emptyText = `No rule applications for ${subject}.`;
       const listText = `Rule applications (${applications.length}): ${applicationList}`;
       const text = applications.length === 0 ? emptyText : listText;
 
@@ -202,6 +251,7 @@ export async function upsertTagActionRuleToolHandler(
         environment: row.environment ?? null,
         id: row.id,
         projectId: row.projectId ?? null,
+        repositoryId: row.repositoryId ?? null,
         status: row.status ?? null,
         tagAll: row.tagAll,
         title: row.title,
@@ -244,4 +294,104 @@ export async function deleteTagActionRuleToolHandler(
       : `Rule not found: ${parsed.data.id}`;
     return { structuredContent: { deleted }, text };
   });
+}
+
+// ── preview_tag_action_rule ──────────────────────────────────────────────────
+
+export const previewTagActionRuleToolParameters = z
+  .object({
+    actionType: z
+      .string()
+      .min(1)
+      .describe(
+        'The rule action type: inject-task | availability-exception | promote-task-to-plan | attach-prompt.',
+      ),
+    environment: z
+      .string()
+      .nullish()
+      .describe(
+        `The rule's own environment qualifier (ci | interactive | ralph); omit for a rule that applies everywhere.`,
+      ),
+    evaluateEnvironment: z
+      .string()
+      .nullish()
+      .describe(
+        'The environment to evaluate your plans in (ci | interactive | ralph). Omit for none, which is what the worker does today: an environment-qualified rule then matches nothing.',
+      ),
+    repositoryId: z
+      .string()
+      .nullish()
+      .describe('The rule repository scope; omit to match every repository.'),
+    status: z
+      .string()
+      .nullish()
+      .describe('The rule plan-status qualifier (e.g. PENDING).'),
+    tagAll: z
+      .array(z.string())
+      .optional()
+      .describe('Tags that must ALL be on the plan; empty matches every plan.'),
+  })
+  .strict();
+
+export const previewTagActionRuleToolDescription = `Dry run a tag→action rule via the previewTagActionRule GraphQL query: which of your plans it would match and, for a sample of the rest, which conditions (repository, environment, status, tags) failed and which tags are missing. Answers "why didn't my rule fire". Read-only: dispatches nothing and writes no ledger row. Only the match fields are needed (no payload). Evaluates your newest 500 plans and says when it truncated. A rule qualified on an environment matches nothing unless you pass evaluateEnvironment, because the worker passes none today (failedOnlyOnEnvironment marks that case). Requires a USER token.`;
+
+type PreviewRule = NonNullable<
+  PreviewTagActionRuleQuery['previewTagActionRule']
+>;
+
+const describePreview = (preview: PreviewRule): string => {
+  const lines = [
+    `Matches ${preview.matchedCount} of ${preview.evaluated} plans${preview.truncated ? ` (truncated: only the newest ${preview.cap} were evaluated)` : ''}${preview.environment == null ? '' : ` in environment ${preview.environment}`}.`,
+  ];
+  for (const plan of preview.nonMatching) {
+    const failed = plan.conditions
+      .filter((condition) => !condition.passed)
+      .map((condition) => condition.condition)
+      .join(', ');
+    const hint = plan.failedOnlyOnEnvironment ? ' (environment only)' : '';
+    lines.push(
+      `Not matched: ${plan.id} "${plan.title}" failed ${failed}${hint}`,
+    );
+  }
+  return lines.join('\n');
+};
+
+export async function previewTagActionRuleToolHandler(
+  args: z.infer<typeof previewTagActionRuleToolParameters>,
+): Promise<GenericResult<{ preview: PreviewRule }>> {
+  const parsed = previewTagActionRuleToolParameters.safeParse(args);
+  if (!parsed.success) {
+    return invalidArgsContent(parsed.error);
+  }
+
+  return runTool<{ preview: PreviewRule }>(
+    'preview_tag_action_rule',
+    async () => {
+      const token = getAuthToken();
+      const { actionType, environment, evaluateEnvironment, repositoryId } =
+        parsed.data;
+      const result = await executeGraphqlWithAuth(
+        token,
+        PreviewTagActionRuleDocument,
+        {
+          environment: evaluateEnvironment ?? null,
+          // The server reads only the match fields; title and payload are placeholders.
+          input: {
+            actionPayloadJson: '{}',
+            actionType,
+            environment: environment ?? null,
+            repositoryId: repositoryId ?? null,
+            status: parsed.data.status ?? null,
+            tagAll: parsed.data.tagAll ?? [],
+            title: 'preview',
+          },
+        },
+      );
+      const preview = result?.previewTagActionRule;
+      if (!preview) {
+        return null;
+      }
+      return { structuredContent: { preview }, text: describePreview(preview) };
+    },
+  );
 }

@@ -55,6 +55,14 @@ export interface SkillAvailabilityRule {
   readonly slugAllow: readonly string[];
   /** Slugs this rule denies (rung 1). */
   readonly slugDeny: readonly string[];
+  /**
+   * How narrowly the rule is scoped (higher is narrower), e.g. from
+   * `scoreTagActionSpecificity`. Rules are layered by this score: a narrower
+   * layer's verdict overrides a broader layer's, and deny-wins applies only
+   * within one layer. Optional on purpose: omitted means `0`, so callers that
+   * pass no specificity keep the flat deny-wins behavior.
+   */
+  readonly specificity?: number;
   /** Tags this rule allows (rung 2). */
   readonly tagAllow: readonly string[];
   /** Tags this rule denies (rung 2). */
@@ -173,8 +181,28 @@ const resolveWinningMatches = <
   return { polarity, winners };
 };
 
-/** Resolves rung 1 (exact-slug allow/deny), or `undefined` if not decisive. */
-const resolveSlugRung = (
+/**
+ * Groups rules into specificity layers, narrowest first. A rule without
+ * `specificity` sits in layer 0, so an all-unscored rule set is one layer.
+ */
+const groupRulesBySpecificity = (
+  rules: readonly SkillAvailabilityRule[],
+): SkillAvailabilityRule[][] => {
+  const layers = new Map<number, SkillAvailabilityRule[]>();
+  for (const rule of rules) {
+    const score = rule.specificity ?? 0;
+    const layer = layers.get(score) ?? [];
+    layer.push(rule);
+    layers.set(score, layer);
+  }
+
+  return [...layers.entries()]
+    .sort(([left], [right]) => right - left)
+    .map(([, layer]) => layer);
+};
+
+/** Resolves rung 1 within ONE specificity layer, or `undefined` if not decisive. */
+const resolveSlugLayer = (
   slug: string,
   rules: readonly SkillAvailabilityRule[],
 ): { readonly effective: boolean; readonly provenance: string } | undefined => {
@@ -208,8 +236,8 @@ const resolveSlugRung = (
   };
 };
 
-/** Resolves rung 2 (tag allow/deny over vocabulary tags), or `undefined`. */
-const resolveTagRung = (
+/** Resolves rung 2 within ONE specificity layer, or `undefined`. */
+const resolveTagLayer = (
   participatingTags: readonly string[],
   rules: readonly SkillAvailabilityRule[],
 ): { readonly effective: boolean; readonly provenance: string } | undefined => {
@@ -246,6 +274,27 @@ const resolveTagRung = (
   };
 };
 
+type RungDecision =
+  { readonly effective: boolean; readonly provenance: string } | undefined;
+
+/**
+ * Walks specificity layers narrowest first; the first layer with a decisive
+ * verdict wins, so a narrower layer overrides a broader layer's opposite
+ * verdict while deny-wins still arbitrates inside each layer.
+ */
+const firstDecisiveLayer = (
+  layers: readonly (readonly SkillAvailabilityRule[])[],
+  resolveLayer: (layer: readonly SkillAvailabilityRule[]) => RungDecision,
+): RungDecision => {
+  for (const layer of layers) {
+    const decision = resolveLayer(layer);
+    if (decision !== undefined) {
+      return decision;
+    }
+  }
+  return undefined;
+};
+
 /** Resolves rung 4 (static frontmatter), always decisive. */
 const resolveFrontmatterRung = (
   staticDisableModelInvocation: boolean | undefined,
@@ -277,7 +326,12 @@ const resolveFrontmatterRung = (
  *
  * Within rungs 1–2, conflicts resolve in strict order: (a) if any matching
  * rule is environment-specific, environment-agnostic matches are discarded;
- * (b) among survivors, deny wins over allow. When several matches survive, the
+ * (b) among survivors, deny wins over allow. Rules may carry a `specificity`
+ * score: within a rung, rules are layered by score and applied broadest to
+ * narrowest, i.e. the narrowest layer with any match decides, so a narrower
+ * layer's allow/deny beats a broader layer's opposite verdict; the two steps
+ * above run inside each layer. Unscored rules form one layer (flat behavior).
+ * When several matches survive, the
  * named tag/rule is the alphabetically first (slug rung: by rule id; tag rung:
  * by tag then rule id).
  *
@@ -305,6 +359,8 @@ export const resolveSkillAvailability = (
     return rule.environment === null || rule.environment === environment;
   });
 
+  const layers = groupRulesBySpecificity(applicableRules);
+
   const warnings = new Set<string>();
   const resolvedSkills: ResolvedSkillAvailability[] = [];
 
@@ -322,7 +378,9 @@ export const resolveSkillAvailability = (
     }
 
     // Rung 1: exact-slug allow/deny.
-    const slugDecision = resolveSlugRung(skill.slug, applicableRules);
+    const slugDecision = firstDecisiveLayer(layers, (layer) => {
+      return resolveSlugLayer(skill.slug, layer);
+    });
     if (slugDecision !== undefined) {
       resolvedSkills.push({
         effectiveDisableModelInvocation: slugDecision.effective,
@@ -344,7 +402,9 @@ export const resolveSkillAvailability = (
       }
     }
 
-    const tagDecision = resolveTagRung(participatingTags, applicableRules);
+    const tagDecision = firstDecisiveLayer(layers, (layer) => {
+      return resolveTagLayer(participatingTags, layer);
+    });
     if (tagDecision !== undefined) {
       resolvedSkills.push({
         effectiveDisableModelInvocation: tagDecision.effective,

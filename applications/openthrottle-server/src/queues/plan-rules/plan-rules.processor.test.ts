@@ -39,14 +39,19 @@ import type { TagsService } from '../../services/tags/tags.service.ts';
 import { ActionExecutorRegistry } from './action-executor-registry/action-executor-registry.service.ts';
 import type { ActionExecutor } from './action-executor-registry/action-executor-registry.types.ts';
 import { PlanRulesProcessor } from './plan-rules.processor.ts';
-import type { PlanRulesEvaluateJob } from './plan-rules.types.ts';
+import type {
+  PlanRulesEnvironment,
+  PlanRulesEvaluateJob,
+} from './plan-rules.types.ts';
 
 const planId = '00000000-0000-4000-8000-000000000001';
 const userId = '00000000-0000-4000-8000-000000000002';
 
-const buildJob = (): PlanRulesEvaluateJob => {
+const buildJob = (
+  environment: PlanRulesEnvironment = null,
+): PlanRulesEvaluateJob => {
   return asMock<PlanRulesEvaluateJob>({
-    data: { planId, triggerKind: 'tag-changed' },
+    data: { environment, planId, triggerKind: 'tag-changed' },
   });
 };
 
@@ -63,10 +68,12 @@ const buildRule = (overrides: Partial<TagActionRule> = {}): TagActionRule => {
   return asMock<TagActionRule>({
     actionPayload: { placement: 'first', skillSlug: 'grilling' },
     actionType: 'inject-task',
+    createdAt: new Date('2026-01-01T00:00:00Z'),
     enabled: true,
     environment: null,
     id: 'rule-1',
     projectId: null,
+    repositoryId: null,
     status: null,
     tagAll: ['breakdown'],
     userId,
@@ -172,6 +179,36 @@ describe('PlanRulesProcessor.process', () => {
     });
   });
 
+  describe('environment-qualified rules', () => {
+    beforeEach(() => {
+      registry.register(executor);
+      tagActionRulesRepository.listEnabledForUser.mockResolvedValue([
+        buildRule({ environment: 'ralph' }),
+      ]);
+    });
+
+    it('matches when the job carries that environment', async () => {
+      const result = await processor.process(buildJob('ralph'));
+
+      expect(result.matched).toBe(1);
+      expect(executor.execute).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not match when the job environment is null', async () => {
+      const result = await processor.process(buildJob(null));
+
+      expect(result.matched).toBe(0);
+      expect(executor.execute).not.toHaveBeenCalled();
+    });
+
+    it('does not match a different environment', async () => {
+      const result = await processor.process(buildJob('ci'));
+
+      expect(result.matched).toBe(0);
+      expect(executor.execute).not.toHaveBeenCalled();
+    });
+  });
+
   it('no-ops on duplicate delivery: an existing ledger row in ANY state blocks dispatch', async () => {
     registry.register(executor);
     vi.mocked(ruleApplicationsRepository.findByRuleAndPlan).mockResolvedValue(
@@ -268,6 +305,143 @@ describe('PlanRulesProcessor.process', () => {
     expect(reinjectingExecutor.reinject).toHaveBeenCalledTimes(1);
     expect(reinjectingExecutor.execute).not.toHaveBeenCalled();
     expect(result.reinjected).toBe(1);
+  });
+
+  describe('inject-task supersede arbitration', () => {
+    const repositoryId = '00000000-0000-4000-8000-0000000000aa';
+    const broad = buildRule({ id: 'rule-broad' });
+    const narrow = buildRule({ id: 'rule-narrow', repositoryId });
+
+    beforeEach(() => {
+      plansFindOne.mockResolvedValue(
+        asMock<Plan>({ ...buildPlan(), repositoryId }),
+      );
+      registry.register(executor);
+    });
+
+    it('dispatches only the narrowest and flags the loser as superseded-by', async () => {
+      tagActionRulesRepository.listEnabledForUser.mockResolvedValue([
+        broad,
+        narrow,
+      ]);
+
+      const result = await processor.process(buildJob());
+
+      expect(executor.execute).toHaveBeenCalledTimes(1);
+      expect(executor.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: expect.objectContaining({ ruleId: 'rule-narrow' }),
+        }),
+      );
+      expect(ruleApplicationsRepository.record).toHaveBeenCalledTimes(1);
+      expect(ruleApplicationsRepository.record).toHaveBeenCalledWith({
+        details: { reason: 'superseded-by', ruleId: 'rule-narrow' },
+        planId,
+        ruleId: 'rule-broad',
+        state: 'flagged',
+      });
+      expect(result.dispatched).toBe(1);
+      expect(result.matched).toBe(2);
+    });
+
+    it('still supersedes a fresh broader rule when the narrow winner is already applied', async () => {
+      tagActionRulesRepository.listEnabledForUser.mockResolvedValue([
+        broad,
+        narrow,
+      ]);
+      vi.mocked(
+        ruleApplicationsRepository.findByRuleAndPlan,
+      ).mockImplementation(async (ruleId) => {
+        return ruleId === 'rule-narrow'
+          ? asMock<RuleApplication>({ state: 'applied', taskId: 'task-1' })
+          : null;
+      });
+
+      await processor.process(buildJob());
+
+      expect(executor.execute).not.toHaveBeenCalled();
+      expect(ruleApplicationsRepository.record).toHaveBeenCalledWith(
+        expect.objectContaining({
+          details: { reason: 'superseded-by', ruleId: 'rule-narrow' },
+          ruleId: 'rule-broad',
+          state: 'flagged',
+        }),
+      );
+    });
+
+    it('writes no flagged row when the loser already has a ledger row', async () => {
+      tagActionRulesRepository.listEnabledForUser.mockResolvedValue([
+        broad,
+        narrow,
+      ]);
+      vi.mocked(
+        ruleApplicationsRepository.findByRuleAndPlan,
+      ).mockImplementation(async (ruleId) => {
+        return ruleId === 'rule-broad'
+          ? asMock<RuleApplication>({ state: 'flagged' })
+          : null;
+      });
+
+      await processor.process(buildJob());
+
+      expect(ruleApplicationsRepository.record).not.toHaveBeenCalled();
+      expect(executor.execute).toHaveBeenCalledTimes(1);
+    });
+
+    it('dispatches both when the placement differs', async () => {
+      tagActionRulesRepository.listEnabledForUser.mockResolvedValue([
+        buildRule({
+          actionPayload: { placement: 'last', skillSlug: 'grilling' },
+          id: 'rule-broad',
+        }),
+        narrow,
+      ]);
+
+      await processor.process(buildJob());
+
+      expect(executor.execute).toHaveBeenCalledTimes(2);
+      expect(ruleApplicationsRepository.record).not.toHaveBeenCalled();
+    });
+
+    it('dispatches both when the skill differs', async () => {
+      tagActionRulesRepository.listEnabledForUser.mockResolvedValue([
+        buildRule({
+          actionPayload: { placement: 'first', skillSlug: 'other-skill' },
+          id: 'rule-broad',
+        }),
+        narrow,
+      ]);
+
+      await processor.process(buildJob());
+
+      expect(executor.execute).toHaveBeenCalledTimes(2);
+    });
+
+    it('treats before/after placements with different anchors as distinct', async () => {
+      const anchored = (
+        id: string,
+        titleMatch: string,
+        scopedRepositoryId: string | null,
+      ): TagActionRule => {
+        return buildRule({
+          actionPayload: {
+            anchor: { titleMatch },
+            placement: 'after',
+            skillSlug: 'grilling',
+          },
+          id,
+          repositoryId: scopedRepositoryId,
+        });
+      };
+      tagActionRulesRepository.listEnabledForUser.mockResolvedValue([
+        anchored('rule-a', 'one', null),
+        anchored('rule-b', 'two', repositoryId),
+      ]);
+
+      await processor.process(buildJob());
+
+      expect(executor.execute).toHaveBeenCalledTimes(2);
+    });
   });
 
   it('skips a matched action with no registered executor WITHOUT writing a ledger row', async () => {

@@ -67,6 +67,12 @@ export class PlanObject implements PlanData {
   })
   projectRelation!: ProjectObject | null;
 
+  @Field(() => String, {
+    description: `The repository this plan runs in (repositories.id), derived server-side from runConfigJson's workspace.repositoryId; null when it names none or a repository that does not exist. Read-only: set it by updating runConfigJson.`,
+    nullable: true,
+  })
+  repositoryId!: string | null;
+
   @Field(() => Int, {
     description: `Number of tasks a whole-plan run would pick up (status PENDING, IN_PROGRESS, BLOCKED, BACKLOG, SKIPPED, CANCELED or QUEUED): the count enqueuePlanRun and schedulePlanRun require to be above zero. Resolved through a batched loader; select it in plan-detail documents rather than list documents.`,
   })

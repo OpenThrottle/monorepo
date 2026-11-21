@@ -5,7 +5,9 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { RULES_COPY } from '~/routing/rules/data/data.copy';
+import { RULE_PREVIEW_PATH } from '~/routing/rules/config/rule-preview';
+import { RULE_PREVIEW_COPY, RULES_COPY } from '~/routing/rules/data/data.copy';
+import type { RulePreviewState } from '~/routing/rules/types';
 
 import type { RuleFormProps } from '../RuleForm';
 import { RuleForm } from '../RuleForm';
@@ -17,6 +19,8 @@ describe('RuleForm Component', () => {
   beforeEach(() => {
     props = {
       initialRule: null,
+      promptOptions: [],
+      repositories: [{ id: 'repo-1', name: 'monorepo' }],
       skillSlugs: ['grilling', 'github-deep-review'],
       vocabulary: [
         { dimension: 'phase', tag: 'breakdown' },
@@ -27,7 +31,23 @@ describe('RuleForm Component', () => {
     const Component = () => {
       return <RuleForm {...props} />;
     };
-    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    const previewState: RulePreviewState = {
+      kind: 'ready',
+      preview: {
+        cap: 500,
+        environment: null,
+        evaluated: 4,
+        matched: [],
+        matchedCount: 3,
+        nonMatching: [],
+        specificity: 0,
+        truncated: false,
+      },
+    };
+    const RoutesStub = createRoutesStub([
+      { Component, path: '/' },
+      { loader: () => previewState, path: RULE_PREVIEW_PATH },
+    ]);
 
     component = render(<RoutesStub />);
   });
@@ -43,6 +63,12 @@ describe('RuleForm Component', () => {
     ).toBeInTheDocument();
     expect(
       component.getByRole('heading', { name: RULES_COPY.actionLegend }),
+    ).toBeInTheDocument();
+  });
+
+  test('renders the repository select above the status select', () => {
+    expect(
+      component.getByLabelText(RULES_COPY.repositoryLabel),
     ).toBeInTheDocument();
   });
 
@@ -100,5 +126,12 @@ describe('RuleForm Component', () => {
 
     expect(component.getByLabelText('Tag deny list')).toBeInTheDocument();
     expect(component.getByLabelText('Slug allow list')).toBeInTheDocument();
+  });
+
+  test('shows a live "matches N of M plans" summary from the dry run', async () => {
+    const summary = await component.findByTestId('RuleFormPreviewSummary');
+
+    expect(summary).toHaveTextContent(`${RULE_PREVIEW_COPY.summaryPrefix} 3`);
+    expect(summary).toHaveTextContent('4');
   });
 });

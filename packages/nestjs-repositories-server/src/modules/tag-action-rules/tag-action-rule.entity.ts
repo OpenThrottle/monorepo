@@ -12,6 +12,7 @@ import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 
 import { PLAN_STATUS_VALUES } from '../../plan-task-status/plan-task-status.constants.ts';
 import type { Project } from '../projects/project.entity.ts';
+import type { Repository } from '../repositories/repository.entity.ts';
 import type { User } from '../users/user.entity.ts';
 
 @Entity('tag_action_rules')
@@ -29,6 +30,17 @@ export class TagActionRule extends BaseModel {
   @ManyToOne('Project', { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'project_id' })
   project?: Project | null;
+
+  /**
+   * @description Repository scope: NULL matches plans in every repository; a value matches only
+   * plans whose `repositoryId` equals it. CASCADE on repository deletion (migration 189).
+   */
+  @Column({ name: 'repository_id', nullable: true, type: 'uuid' })
+  repositoryId!: string | null;
+
+  @ManyToOne('Repository', { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'repository_id' })
+  repository?: Repository | null;
 
   @Column({ name: 'title', type: 'text' })
   title!: string;

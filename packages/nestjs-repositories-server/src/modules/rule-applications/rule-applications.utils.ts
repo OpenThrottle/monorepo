@@ -18,6 +18,9 @@ export function createRuleApplicationsRepositoryMock(): RuleApplicationsReposito
       RuleApplication,
       CreateModelInput<RuleApplication>
     >('rule_applications'),
+    findAppliedAttachPrompt: vi.fn(async () => {
+      return null;
+    }),
     findByRuleAndPlan: vi.fn(async () => {
       return null;
     }),
@@ -25,6 +28,9 @@ export function createRuleApplicationsRepositoryMock(): RuleApplicationsReposito
       return [];
     }),
     listForPlan: vi.fn(async () => {
+      return [];
+    }),
+    listForRule: vi.fn(async () => {
       return [];
     }),
     orphanUnmatchedApplications: vi.fn(async () => {
