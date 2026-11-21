@@ -34,10 +34,11 @@ export type ScheduledAgentJobRunStatus =
 
 /**
  * @description schedule = cron fire; manual = run-now; resume = delayed continuation of a
- * usage_limited run.
+ * usage_limited run; webhook = an accepted delivery to the job's webhook trigger (migration 182).
  * @public
  */
-export type ScheduledAgentJobRunTrigger = 'manual' | 'resume' | 'schedule';
+export type ScheduledAgentJobRunTrigger =
+  'manual' | 'resume' | 'schedule' | 'webhook';
 
 /**
  * Effective run settings captured on the run row at execution time, so later edits
@@ -192,6 +193,7 @@ export interface HasLiveScheduledAgentJobRunInput {
 export type ScheduledAgentJobRunsRepositoryMethod =
   | 'claimScheduledSlot'
   | 'countInFlightRunsByStatus'
+  | 'countInFlightRunsForTrigger'
   | 'countRunsByStatusSince'
   | 'countUsageLimitedInChain'
   | 'createRun'

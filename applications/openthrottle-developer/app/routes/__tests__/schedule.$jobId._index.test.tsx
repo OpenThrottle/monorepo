@@ -3,7 +3,12 @@ import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/schedule.$jobId._index';
+import {
+  SCHEDULE_APPROVAL_COPY,
+  SCHEDULE_WEBHOOK_COPY,
+} from '~/routing/schedule/data/data.copy';
 import { renderRoutesStub } from '~/testing/route-fixtures';
+import { scheduleWebhookTriggerFixture } from '~/testing/schedule-fixtures';
 
 import Component from '../schedule.$jobId._index';
 
@@ -13,7 +18,9 @@ function stubMatches(): unknown {
 }
 
 const job: Route.ComponentProps['loaderData']['job'] = {
+  approvalState: 'not_required',
   createdAt: '2026-07-24T00:00:00.000Z',
+  createdVia: 'ui',
   cronPattern: '0 * * * *',
   cwd: null,
   driverId: 'claude',
@@ -61,7 +68,7 @@ describe('routes/schedule.$jobId._index.tsx', () => {
     const view = renderRoutesStub(
       <Component
         actionData={undefined}
-        loaderData={{ job, runs: [] }}
+        loaderData={{ job, runs: [], webhookTrigger: null }}
         matches={stubMatches()}
         params={{ jobId: job.id }}
       />,
@@ -82,7 +89,7 @@ describe('routes/schedule.$jobId._index.tsx', () => {
     const view = renderRoutesStub(
       <Component
         actionData={undefined}
-        loaderData={{ job, runs: [] }}
+        loaderData={{ job, runs: [], webhookTrigger: null }}
         matches={stubMatches()}
         params={{ jobId: job.id }}
       />,
@@ -100,7 +107,7 @@ describe('routes/schedule.$jobId._index.tsx', () => {
     const view = renderRoutesStub(
       <Component
         actionData={undefined}
-        loaderData={{ job, runs: [run] }}
+        loaderData={{ job, runs: [run], webhookTrigger: null }}
         matches={stubMatches()}
         params={{ jobId: job.id }}
       />,
@@ -118,7 +125,11 @@ describe('routes/schedule.$jobId._index.tsx', () => {
     const view = renderRoutesStub(
       <Component
         actionData={{ error: 'Action failed.' }}
-        loaderData={{ job: { ...job, enabled: false }, runs: [] }}
+        loaderData={{
+          job: { ...job, enabled: false },
+          runs: [],
+          webhookTrigger: null,
+        }}
         matches={stubMatches()}
         params={{ jobId: job.id }}
       />,
@@ -126,5 +137,88 @@ describe('routes/schedule.$jobId._index.tsx', () => {
 
     expect(view.getByRole('button', { name: 'Enable' })).toBeInTheDocument();
     expect(view.getByRole('alert')).toHaveTextContent('Action failed.');
+  });
+
+  test('shows the Awaiting approval state with Approve, and no Enable, for a pending job', () => {
+    const view = renderRoutesStub(
+      <Component
+        actionData={undefined}
+        loaderData={{
+          job: {
+            ...job,
+            approvalState: 'pending',
+            createdVia: 'mcp',
+            enabled: false,
+          },
+          runs: [],
+          webhookTrigger: null,
+        }}
+        matches={stubMatches()}
+        params={{ jobId: job.id }}
+      />,
+    );
+
+    expect(view.getByRole('status')).toHaveTextContent(
+      SCHEDULE_APPROVAL_COPY.awaitingDescription,
+    );
+    expect(
+      view.getByRole('button', { name: SCHEDULE_APPROVAL_COPY.approveAction }),
+    ).toBeInTheDocument();
+    expect(
+      view.queryByRole('button', { name: 'Enable' }),
+    ).not.toBeInTheDocument();
+    expect(
+      view.getByText(SCHEDULE_APPROVAL_COPY.agentCreatedBadge),
+    ).toBeInTheDocument();
+  });
+
+  test('puts trigger setup on the Webhook tab', async () => {
+    const user = userEvent.setup();
+    const view = renderRoutesStub(
+      <Component
+        actionData={undefined}
+        loaderData={{ job, runs: [], webhookTrigger: null }}
+        matches={stubMatches()}
+        params={{ jobId: job.id }}
+      />,
+    );
+
+    await user.click(
+      view.getByRole('tab', { name: SCHEDULE_WEBHOOK_COPY.tabLabel }),
+    );
+
+    expect(
+      view.getByRole('button', { name: SCHEDULE_WEBHOOK_COPY.createAction }),
+    ).toBeInTheDocument();
+  });
+
+  test('reveals the one-time credentials returned by a create, on the Webhook tab', async () => {
+    const user = userEvent.setup();
+    const view = renderRoutesStub(
+      <Component
+        actionData={{
+          ok: true,
+          webhookCredentials: {
+            secret: 'abc',
+            webhookPath: '/webhooks/agent-jobs/t',
+          },
+        }}
+        loaderData={{
+          job,
+          runs: [],
+          webhookTrigger: scheduleWebhookTriggerFixture(),
+        }}
+        matches={stubMatches()}
+        params={{ jobId: job.id }}
+      />,
+    );
+
+    await user.click(
+      view.getByRole('tab', { name: SCHEDULE_WEBHOOK_COPY.tabLabel }),
+    );
+
+    expect(
+      view.getByLabelText(SCHEDULE_WEBHOOK_COPY.revealSecretLabel),
+    ).toHaveValue('abc');
   });
 });

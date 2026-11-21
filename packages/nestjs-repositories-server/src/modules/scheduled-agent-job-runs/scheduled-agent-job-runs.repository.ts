@@ -15,6 +15,7 @@ import type {
   RecordMissedScheduledAgentJobRunsInput,
   ScheduledAgentJobRunStatus,
   ScheduledAgentJobRunStatusCount,
+  ScheduledAgentJobRunTrigger,
   StartScheduledAgentJobRunInput,
 } from './scheduled-agent-job-runs.types.ts';
 
@@ -89,6 +90,26 @@ export class ScheduledAgentJobRunsRepository extends BaseRepository<
       trigger: input.trigger,
     });
     return this.repository.save(draft);
+  }
+
+  /**
+   * @description How many runs of this schedule with the given trigger are queued or running right
+   * now. The webhook ingress queue cap reads it, so the cap counts only webhook-started runs.
+   */
+  async countInFlightRunsForTrigger(
+    scheduledAgentJobId: string,
+    trigger: ScheduledAgentJobRunTrigger,
+  ): Promise<number> {
+    return this.repository
+      .createQueryBuilder('run')
+      .where('run.scheduled_agent_job_id = :scheduledAgentJobId', {
+        scheduledAgentJobId,
+      })
+      .andWhere('run.trigger = :trigger', { trigger })
+      .andWhere('run.status IN (:...statuses)', {
+        statuses: [...SCHEDULED_AGENT_JOB_RUN_IN_FLIGHT_STATUSES],
+      })
+      .getCount();
   }
 
   /**

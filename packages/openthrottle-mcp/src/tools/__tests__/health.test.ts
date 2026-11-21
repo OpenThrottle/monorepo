@@ -102,7 +102,12 @@ describe('healthToolHandler', () => {
       expect(result).toMatchObject({
         structuredContent: {
           toolsets: {
-            disabled: [{ name: 'admin' }, { name: 'agents' }, { name: 'blog' }],
+            disabled: [
+              { name: 'admin' },
+              { name: 'agents' },
+              { name: 'blog' },
+              { name: 'scheduling' },
+            ],
             enableWith: expect.stringContaining('OPENTHROTTLE_MCP_TOOLSETS'),
             enabled: ['core'],
           },
@@ -113,7 +118,9 @@ describe('healthToolHandler', () => {
 
   describe('when every toolset is active', () => {
     it('reports none disabled', async () => {
-      setActiveToolsets(new Set(['admin', 'agents', 'blog', 'core']));
+      setActiveToolsets(
+        new Set(['admin', 'agents', 'blog', 'core', 'scheduling']),
+      );
       vi.mocked(executeGraphql).mockResolvedValue({
         serverHealth: {
           api: 'ok',

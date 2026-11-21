@@ -1,0 +1,22 @@
+fragment ScheduleWebhookDeliveryRow on ScheduledAgentJobWebhookDeliveryObject {
+  bodyBytes
+  dedupeKey
+  filterIndex
+  httpStatus
+  id
+  receivedAt
+  rejectReason
+  renderedPrompt
+  runId
+  status
+}
+
+query scheduledAgentJobWebhookDeliveries($jobId: ID!) {
+  scheduledAgentJob(id: $jobId) {
+    id
+    name
+  }
+  scheduledAgentJobWebhookDeliveries(scheduledAgentJobId: $jobId, limit: 50) {
+    ...ScheduleWebhookDeliveryRow
+  }
+}

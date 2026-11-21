@@ -19,7 +19,9 @@ export const toScheduledAgentJobObject = (
   job: ScheduledAgentJob,
 ): ScheduledAgentJobObject => {
   return {
+    approvalState: job.approvalState,
     createdAt: job.createdAt,
+    createdVia: job.createdVia,
     cronPattern: job.cronPattern,
     cwd: job.cwd,
     driverId: job.driverId,

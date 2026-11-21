@@ -5,11 +5,7 @@
  * Run logs are NOT here — read them via queueJobLogs/queueJobLogTail keyed by the run's bullmqJobId.
  * Coexists with (never replaces) the low-level repeatableJobs/removeRepeatableJob queue introspection.
  */
-import {
-  BadRequestException,
-  ForbiddenException,
-  UseGuards,
-} from '@nestjs/common';
+import { UseGuards } from '@nestjs/common';
 import {
   Args,
   ID,
@@ -20,11 +16,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import {
-  AUTH_PRINCIPAL_KIND_USER,
-  type AuthPrincipal,
-  CurrentUser,
-} from '@openthrottle/nestjs-auth';
+import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import type { ScheduledAgentJob } from '@openthrottle/nestjs-repositories-server';
@@ -49,14 +41,15 @@ import {
   toScheduledAgentJobRunStatsObject,
 } from './scheduled-agent-jobs.mapper.ts';
 import { ScheduledAgentJobsGraphqlService } from './scheduled-agent-jobs.service.ts';
-import { resolveTargetRepository } from './scheduled-agent-jobs.utils.ts';
+import {
+  assertScheduledAgentEnabled,
+  assertScheduledAgentJobOwner,
+  ownerUserIdFor,
+  resolveTargetRepository,
+} from './scheduled-agent-jobs.utils.ts';
 
 /** Default window for the run-stats query: the trailing 24 hours. */
 const RUN_STATS_WINDOW_MS = 24 * 60 * 60 * 1000;
-
-const ownerUserIdFor = (principal: AuthPrincipal): string | null => {
-  return principal.kind === AUTH_PRINCIPAL_KIND_USER ? principal.sub : null;
-};
 
 @Resolver(() => ScheduledAgentJobObject)
 @UseGuards(GqlPermissionsGuard)
@@ -207,6 +200,19 @@ export class ScheduledAgentJobsResolver {
     return toScheduledAgentJobObject(job);
   }
 
+  @Mutation(() => ScheduledAgentJobObject, {
+    description: `Approve an agent-created scheduled job that is awaiting approval (owner only): marks it approved and enables it. The only way to arm a pending job.`,
+  })
+  @Permissions(PERMISSIONS.SETTINGS_WRITE)
+  async approveScheduledAgentJob(
+    @CurrentUser() principal: AuthPrincipal,
+    @Args('id', { type: () => ID }) id: string,
+  ): Promise<ScheduledAgentJobObject> {
+    await this.assertOwner(id, principal);
+    const job = await this.service.approve(id);
+    return toScheduledAgentJobObject(job);
+  }
+
   @Mutation(() => ScheduledAgentJobRunObject, {
     description: `Enqueue an immediate one-off run (owner only); allowed even when the schedule is disabled.`,
   })
@@ -241,39 +247,18 @@ export class ScheduledAgentJobsResolver {
     return resolveTargetRepository(this.loaders, parent.repositoryCheckoutId);
   }
 
-  /**
-   * @description Rejects scheduling a job against an agent backend — or a specific model of that
-   * backend — the owner has disabled on /settings/agents. A null owner (service-account principal) has
-   * no per-user preferences, so the check is skipped — the job's driver id is still validated for
-   * existence by the service. When a model is given and non-empty, a KNOWN-but-disabled model is also
-   * rejected.
-   */
+  /** @description See {@link assertScheduledAgentEnabled}. */
   private async assertAgentEnabled(
     ownerUserId: string | null,
     driverId: string,
     model?: string | null,
   ): Promise<void> {
-    if (ownerUserId === null) {
-      return;
-    }
-    if (!(await this.disabledAgentClis.isEnabled(ownerUserId, driverId))) {
-      throw new BadRequestException(
-        `The ${driverId} agent is disabled. Re-enable it on Settings › Setup to schedule it.`,
-      );
-    }
-    const trimmedModel = model?.trim() ?? '';
-    if (
-      trimmedModel !== '' &&
-      !(await this.disabledAgentClis.isModelEnabled(
-        ownerUserId,
-        driverId,
-        trimmedModel,
-      ))
-    ) {
-      throw new BadRequestException(
-        `The ${trimmedModel} model is disabled. Re-enable it on Settings › Setup to schedule it.`,
-      );
-    }
+    await assertScheduledAgentEnabled(
+      this.disabledAgentClis,
+      ownerUserId,
+      driverId,
+      model,
+    );
   }
 
   /** @description Rejects a mutation on a schedule owned by a different user. Null-owner rows are open. */
@@ -281,22 +266,10 @@ export class ScheduledAgentJobsResolver {
     id: string,
     principal: AuthPrincipal,
   ): Promise<ScheduledAgentJob> {
-    const job = await this.service.get(id);
-    if (job === null) {
-      throw new ForbiddenException(`Scheduled job ${id} not found`);
-    }
-
-    const callerId = ownerUserIdFor(principal);
-    if (
-      job.ownerUserId !== null &&
-      callerId !== null &&
-      job.ownerUserId !== callerId
-    ) {
-      throw new ForbiddenException(
-        `Scheduled job ${id} is owned by another user`,
-      );
-    }
-
-    return job;
+    return assertScheduledAgentJobOwner(
+      await this.service.get(id),
+      id,
+      principal,
+    );
   }
 }

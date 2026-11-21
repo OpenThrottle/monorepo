@@ -50,6 +50,7 @@ const renderTabs = (
       jobId="job-1"
       prompt="Ship the nightly digest."
       runs={[run()]}
+      webhook={<p>Webhook body</p>}
       {...props}
     />,
   );
@@ -73,6 +74,7 @@ const renderTabsAt = (search: string): RenderResult => {
                 jobId="job-1"
                 prompt="Ship the nightly digest."
                 runs={[run()]}
+                webhook={<p>Webhook body</p>}
               />
             </React.Fragment>
           );

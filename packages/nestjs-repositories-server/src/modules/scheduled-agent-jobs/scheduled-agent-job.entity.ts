@@ -1,6 +1,6 @@
 /**
  * @description TypeORM entity for the scheduled_agent_jobs table (databases/openthrottle/migrations/082, 096,
- * 141, 142, 178): a user-defined "run a prompt with a driver/model/settings on a schedule" job — a cron
+ * 141, 142, 178, 183): a user-defined "run a prompt with a driver/model/settings on a schedule" job — a cron
  * pattern, an interval, or a single run. The DB row is
  * authoritative; a BullMQ repeatable scheduler keyed by `schedulerKey` is a projection reconciled
  * from it. Extends `BaseModel`: a deleted schedule is soft deleted, and `scheduler_key` is unique
@@ -12,6 +12,8 @@ import { BaseModel } from '@openthrottle/nestjs-postgres';
 import { Column, Entity } from 'typeorm';
 
 import type {
+  ScheduledAgentJobApprovalState,
+  ScheduledAgentJobCreatedVia,
   ScheduledAgentJobDriverId,
   ScheduledAgentJobMisfirePolicy,
   ScheduledAgentJobScheduleKind,
@@ -20,6 +22,17 @@ import type {
 
 @Entity('scheduled_agent_jobs')
 export class ScheduledAgentJob extends BaseModel {
+  /**
+   * Human-approval state (migration 183). `pending` rows are stored disabled and cannot be enabled
+   * except by approving them; see {@link ScheduledAgentJobApprovalState}.
+   */
+  @Column({ default: 'not_required', name: 'approval_state', type: 'text' })
+  approvalState!: ScheduledAgentJobApprovalState;
+
+  /** Which surface created the job (migration 183); the agent path edits only `mcp` jobs. */
+  @Column({ default: 'ui', name: 'created_via', type: 'text' })
+  createdVia!: ScheduledAgentJobCreatedVia;
+
   /**
    * 5- or 6-field cron pattern, validated on write; interpreted in `timezone` or UTC. Set exactly
    * when `scheduleKind` is `cron`; null for interval and once schedules.
@@ -40,6 +53,10 @@ export class ScheduledAgentJob extends BaseModel {
 
   @Column({ default: true, name: 'enabled', type: 'boolean' })
   enabled!: boolean;
+
+  /** Caller-supplied idempotency key (migration 183); unique per owner among live jobs. */
+  @Column({ name: 'idempotency_key', nullable: true, type: 'text' })
+  idempotencyKey!: string | null;
 
   /**
    * For `interval` schedules: elapsed ms from the end of one fire to the start of the next (>= 60000).

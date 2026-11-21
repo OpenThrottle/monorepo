@@ -930,4 +930,59 @@ export class McpDeveloperMcpSurface {
   ): ReturnType<typeof Th.promoteTaskToolHandler> {
     return Th.promoteTaskToolHandler(args);
   }
+
+  @Tool({
+    description: Th.createScheduledJobToolDescription,
+    name: 'create_scheduled_job',
+    parameters: asMcpParameters(Th.createScheduledJobToolParameters),
+  })
+  createScheduledJob(
+    args: Parameters<typeof Th.createScheduledJobToolHandler>[0],
+  ): ReturnType<typeof Th.createScheduledJobToolHandler> {
+    return Th.createScheduledJobToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.listScheduledJobsToolDescription,
+    name: 'list_scheduled_jobs',
+    parameters: asMcpParameters(Th.listScheduledJobsToolParameters),
+  })
+  listScheduledJobs(
+    args: Parameters<typeof Th.listScheduledJobsToolHandler>[0],
+  ): ReturnType<typeof Th.listScheduledJobsToolHandler> {
+    return Th.listScheduledJobsToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.updateScheduledJobToolDescription,
+    name: 'update_scheduled_job',
+    parameters: asMcpParameters(Th.updateScheduledJobToolParameters),
+  })
+  updateScheduledJob(
+    args: Parameters<typeof Th.updateScheduledJobToolHandler>[0],
+  ): ReturnType<typeof Th.updateScheduledJobToolHandler> {
+    return Th.updateScheduledJobToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.deleteScheduledJobToolDescription,
+    name: 'delete_scheduled_job',
+    parameters: asMcpParameters(Th.deleteScheduledJobToolParameters),
+  })
+  deleteScheduledJob(
+    args: Parameters<typeof Th.deleteScheduledJobToolHandler>[0],
+  ): ReturnType<typeof Th.deleteScheduledJobToolHandler> {
+    return Th.deleteScheduledJobToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.runScheduledJobNowToolDescription,
+    name: 'run_scheduled_job_now',
+    parameters: asMcpParameters(Th.runScheduledJobNowToolParameters),
+  })
+  runScheduledJobNow(
+    args: Parameters<typeof Th.runScheduledJobNowToolHandler>[0],
+  ): ReturnType<typeof Th.runScheduledJobNowToolHandler> {
+    return Th.runScheduledJobNowToolHandler(args);
+  }
 }

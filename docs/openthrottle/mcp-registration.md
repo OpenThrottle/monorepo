@@ -161,11 +161,12 @@ Each tool reads its own MCP config file; schemas differ, but the **default-on se
 
 `openthrottle-mcp` serves its tools in named toolsets. **With no configuration a client gets `core`**: plans, tasks, notes, plan output and runs, work sessions, the plan inbox, the knowledge base, activity and `health`. That is 42 tools and ~33.8 KB of schemas, against ~58.6 KB for all four toolsets. The other toolsets are opt-in:
 
-| Toolset  | What it adds                                                                                       |
-| -------- | -------------------------------------------------------------------------------------------------- |
-| `admin`  | Skill, plan, task and project tags; tag-action rules; skill availability; `delete_project`         |
-| `agents` | `discover_agent_clis`, `discover_local_models`, `agent_conversation_*` (human JWT)                 |
-| `blog`   | Draft-only blog authoring (`list_blog_posts`, `create_blog_post`, …; `blog:draft` service account) |
+| Toolset      | What it adds                                                                                                                                                                           |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `admin`      | Skill, plan, task and project tags; tag-action rules; skill availability; `delete_project`                                                                                             |
+| `agents`     | `discover_agent_clis`, `discover_local_models`, `agent_conversation_*` (human JWT)                                                                                                     |
+| `blog`       | Draft-only blog authoring (`list_blog_posts`, `create_blog_post`, …; `blog:draft` service account)                                                                                     |
+| `scheduling` | Scheduled agent jobs (`create_scheduled_job`, `list_scheduled_jobs`, `update_scheduled_job`, `delete_scheduled_job`, `run_scheduled_job_now`); service account acts as its linked user |
 
 The committed configs leave the default alone, so every session in this repo pays only for `core`. To opt in, pass a comma list (or `all`) as `--toolsets=<names>` in the server's arguments, or set `OPENTHROTTLE_MCP_TOOLSETS` in its env. The argument wins if both are set. `core` is always included, and an unknown name stops the server from starting. Put the change in your **user-level** config, or keep it uncommitted, unless the whole team needs it.
 

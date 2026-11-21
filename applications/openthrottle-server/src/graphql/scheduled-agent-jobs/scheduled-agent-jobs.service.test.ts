@@ -17,9 +17,10 @@ import {
 } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import type { Job, Queue } from 'bullmq';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { ScheduledAgentJobCancellationService } from '../../queues/scheduled-agent-jobs/cancellation/cancellation.service.ts';
+import { ScheduledAgentJobRunEnqueueService } from '../../queues/scheduled-agent-jobs/run-enqueue/run-enqueue.service.ts';
 import type { ScheduledAgentJobPayload } from '../../queues/scheduled-agent-jobs/scheduled-agent-jobs.types.ts';
 import type { ScheduledAgentJobSchedulerService } from '../../queues/scheduled-agent-jobs/scheduler/scheduler.service.ts';
 import type { ScheduledAgentJobCheckoutPathService } from '../../services/scheduled-agent-job-checkout-path/scheduled-agent-job-checkout-path.service.ts';
@@ -86,6 +87,10 @@ describe('ScheduledAgentJobsGraphqlService', () => {
       checkoutPaths,
       scheduler,
       cancellation,
+      new ScheduledAgentJobRunEnqueueService(
+        queue,
+        asMock<ScheduledAgentJobRunsRepository>(runsRepository),
+      ),
       queue,
     );
   });
@@ -549,6 +554,131 @@ describe('ScheduledAgentJobsGraphqlService', () => {
       await expect(service.cancelRun('run-1')).resolves.toBeDefined();
       expect(runsRepository.requestRunCancel).toHaveBeenCalledWith('run-1');
       expect(runsRepository.markRunFinished).not.toHaveBeenCalled();
+    });
+  });
+  describe('per-owner caps', () => {
+    const request = {
+      cronPattern: '0 9 * * *',
+      driverId: 'claude',
+      name: 'nightly',
+      ownerUserId: 'user-1',
+      prompt: 'audit',
+    };
+
+    afterEach(() => {
+      vi.unstubAllEnvs();
+    });
+
+    it('refuses a create at the default cap of 25 jobs, loudly and with a code', async () => {
+      jobsRepository.countJobsForOwner.mockResolvedValue(25);
+
+      await expect(service.create(request)).rejects.toMatchObject({
+        extensions: { code: 'SCHEDULED_AGENT_JOB_LIMIT_REACHED' },
+      });
+      expect(jobsRepository.createJob).not.toHaveBeenCalled();
+    });
+
+    it('allows a create one under the cap', async () => {
+      jobsRepository.countJobsForOwner.mockResolvedValue(24);
+
+      await service.create(request);
+
+      expect(jobsRepository.createJob).toHaveBeenCalled();
+    });
+
+    it('honors SCHEDULED_AGENT_JOBS_MAX_PER_OWNER', async () => {
+      vi.stubEnv('SCHEDULED_AGENT_JOBS_MAX_PER_OWNER', '3');
+      jobsRepository.countJobsForOwner.mockResolvedValue(3);
+
+      await expect(service.create(request)).rejects.toMatchObject({
+        extensions: { code: 'SCHEDULED_AGENT_JOB_LIMIT_REACHED' },
+      });
+    });
+
+    it('refuses an agent-created job at 10 agent-created jobs even under the total cap', async () => {
+      jobsRepository.countJobsForOwner.mockImplementation(
+        async (_owner, createdVia) => {
+          return createdVia === 'mcp' ? 10 : 12;
+        },
+      );
+
+      await expect(
+        service.create({ ...request, createdVia: 'mcp' }),
+      ).rejects.toMatchObject({
+        extensions: { code: 'SCHEDULED_AGENT_JOB_LIMIT_REACHED' },
+      });
+      expect(jobsRepository.createJob).not.toHaveBeenCalled();
+    });
+
+    it('does not apply the agent-created cap to a UI create', async () => {
+      jobsRepository.countJobsForOwner.mockImplementation(
+        async (_owner, createdVia) => {
+          return createdVia === 'mcp' ? 10 : 12;
+        },
+      );
+
+      await service.create(request);
+
+      expect(jobsRepository.createJob).toHaveBeenCalled();
+    });
+
+    it('does not count jobs of a null owner', async () => {
+      await service.create({ ...request, ownerUserId: null });
+
+      expect(jobsRepository.countJobsForOwner).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('approval', () => {
+    beforeEach(() => {
+      jobsRepository.findJobById.mockResolvedValue(
+        jobFixture({ approvalState: 'pending', enabled: false }),
+      );
+    });
+
+    it('refuses setEnabled(true) on a job awaiting approval', async () => {
+      await expect(service.setEnabled('j1', true)).rejects.toMatchObject({
+        extensions: { code: 'SCHEDULED_AGENT_JOB_APPROVAL_PENDING' },
+      });
+      expect(jobsRepository.setJobEnabled).not.toHaveBeenCalled();
+    });
+
+    it('refuses an update that enables a job awaiting approval', async () => {
+      await expect(
+        service.update('j1', { enabled: true }),
+      ).rejects.toMatchObject({
+        extensions: { code: 'SCHEDULED_AGENT_JOB_APPROVAL_PENDING' },
+      });
+      expect(jobsRepository.updateJob).not.toHaveBeenCalled();
+    });
+
+    it('still lets a pending job be disabled', async () => {
+      jobsRepository.setJobEnabled.mockResolvedValue(jobFixture());
+
+      await service.setEnabled('j1', false);
+
+      expect(jobsRepository.setJobEnabled).toHaveBeenCalledWith('j1', false);
+    });
+
+    it('approve marks the job approved and enabled, then projects the scheduler', async () => {
+      await service.approve('j1');
+
+      expect(jobsRepository.updateJob).toHaveBeenCalledWith('j1', {
+        approvalState: 'approved',
+        enabled: true,
+      });
+      expect(scheduler.upsertScheduler).toHaveBeenCalled();
+    });
+
+    it('approve refuses a job that is not awaiting approval', async () => {
+      jobsRepository.findJobById.mockResolvedValue(
+        jobFixture({ approvalState: 'not_required' }),
+      );
+
+      await expect(service.approve('j1')).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
+      expect(jobsRepository.updateJob).not.toHaveBeenCalled();
     });
   });
 });

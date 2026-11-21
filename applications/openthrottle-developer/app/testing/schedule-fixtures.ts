@@ -9,6 +9,8 @@ import type {
   ScheduledJobCardFragment,
   ScheduleInFlightRunFragment,
   ScheduleRunStatsFragment,
+  ScheduleWebhookDeliveryRowFragment,
+  ScheduleWebhookTriggerFragment,
 } from '~/__generated__/graphql';
 
 export const scheduleJobFixture = (
@@ -16,6 +18,8 @@ export const scheduleJobFixture = (
 ): ScheduledJobCardFragment => {
   return {
     __typename: 'ScheduledAgentJobObject',
+    approvalState: 'not_required',
+    createdVia: 'ui',
     cronPattern: '0 9 * * *',
     driverId: 'claude',
     enabled: true,
@@ -85,6 +89,51 @@ export const scheduleLoaderDataFixture = (
     jobs: [],
     runStats: scheduleRunStatsFixture(),
     search: '',
+    ...overrides,
+  };
+};
+
+export const scheduleWebhookTriggerFixture = (
+  overrides: Partial<ScheduleWebhookTriggerFragment> = {},
+): ScheduleWebhookTriggerFragment => {
+  return {
+    __typename: 'ScheduledAgentJobWebhookTriggerObject',
+    coalesceWindowMs: 0,
+    createdAt: '2026-07-31T00:00:00.000Z',
+    deliveryIdHeader: 'X-OT-Webhook-Id',
+    enabled: true,
+    filters: [],
+    id: 'trigger-1',
+    maxInFlight: 3,
+    rateLimitPerMinute: 30,
+    rotatedAt: null,
+    scheduledAgentJobId: 'job-1',
+    signatureEncoding: 'hex',
+    signatureHeader: 'X-OT-Signature',
+    signaturePreset: 'generic',
+    timestampHeader: 'X-OT-Timestamp',
+    timestampToleranceSeconds: 300,
+    tokenPrefix: 'abc123',
+    updatedAt: '2026-07-31T00:00:00.000Z',
+    ...overrides,
+  };
+};
+
+export const scheduleWebhookDeliveryFixture = (
+  overrides: Partial<ScheduleWebhookDeliveryRowFragment> = {},
+): ScheduleWebhookDeliveryRowFragment => {
+  return {
+    __typename: 'ScheduledAgentJobWebhookDeliveryObject',
+    bodyBytes: 120,
+    dedupeKey: 'delivery-1',
+    filterIndex: null,
+    httpStatus: 202,
+    id: 'delivery-1',
+    receivedAt: '2026-07-31T09:00:00.000Z',
+    rejectReason: null,
+    renderedPrompt: 'Review PR 12\n  indented line',
+    runId: 'run-1',
+    status: 'accepted',
     ...overrides,
   };
 };

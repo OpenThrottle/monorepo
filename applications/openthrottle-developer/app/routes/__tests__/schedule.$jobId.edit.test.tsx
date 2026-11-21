@@ -12,7 +12,9 @@ import EditSchedule from '../schedule.$jobId.edit';
 
 const job: ScheduledJobDetailFragment = {
   __typename: 'ScheduledAgentJobObject',
+  approvalState: 'not_required',
   createdAt: '2026-07-31T00:00:00.000Z',
+  createdVia: 'ui',
   cronPattern: '0 9 * * *',
   cwd: null,
   driverId: 'claude',

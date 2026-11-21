@@ -13,6 +13,7 @@ import { codeEmbeddingsPolicy } from './code-embeddings.policy.ts';
 import { planOutputStreamPolicy } from './plan-output-stream.policy.ts';
 import { planRunsPolicy } from './plan-runs.policy.ts';
 import { scheduledAgentJobRunsPolicy } from './scheduled-agent-job-runs.policy.ts';
+import { scheduledAgentJobWebhookDeliveriesPolicy } from './scheduled-agent-job-webhook-deliveries.policy.ts';
 import {
   skillUsageEventsPolicy,
   skillUsageOutcomesPolicy,
@@ -29,6 +30,7 @@ export const DATA_RETENTION_POLICIES: readonly RetentionPolicy[] = [
   agentConversationsPolicy,
   planRunsPolicy,
   scheduledAgentJobRunsPolicy,
+  scheduledAgentJobWebhookDeliveriesPolicy,
 ];
 
 /**

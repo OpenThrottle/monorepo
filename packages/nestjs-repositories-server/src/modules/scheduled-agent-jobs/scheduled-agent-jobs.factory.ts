@@ -18,13 +18,16 @@ export const scheduledAgentJobsFactory = Factory.define<ScheduledAgentJob>(
     const id = faker.string.uuid();
 
     return {
+      approvalState: 'not_required',
       createdAt: faker.date.past(),
+      createdVia: 'ui',
       cronPattern: '0 * * * *',
       cwd: null,
       deletedAt: null,
       driverId: 'claude',
       enabled: true,
       id,
+      idempotencyKey: null,
       intervalMs: null,
       lastRunAt: null,
       misfirePolicy: 'skip',

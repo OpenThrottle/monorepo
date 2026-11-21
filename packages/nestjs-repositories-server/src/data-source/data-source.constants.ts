@@ -34,6 +34,8 @@ import { RepositoryCheckout } from '../modules/repository-checkouts/repository-c
 import { Role } from '../modules/roles/role.entity.ts';
 import { RuleApplication } from '../modules/rule-applications/rule-application.entity.ts';
 import { ScheduledAgentJobRun } from '../modules/scheduled-agent-job-runs/scheduled-agent-job-run.entity.ts';
+import { ScheduledAgentJobWebhookDelivery } from '../modules/scheduled-agent-job-webhook-deliveries/scheduled-agent-job-webhook-delivery.entity.ts';
+import { ScheduledAgentJobWebhookTrigger } from '../modules/scheduled-agent-job-webhook-triggers/scheduled-agent-job-webhook-trigger.entity.ts';
 import { ScheduledAgentJob } from '../modules/scheduled-agent-jobs/scheduled-agent-job.entity.ts';
 import { ServiceAccountCredential } from '../modules/service-account-credentials/service-account-credential.entity.ts';
 import { ServiceAccount } from '../modules/service-accounts/service-account.entity.ts';
@@ -103,6 +105,8 @@ export const OPENTHROTTLE_ENTITIES = [
   RuleApplication,
   ScheduledAgentJob,
   ScheduledAgentJobRun,
+  ScheduledAgentJobWebhookDelivery,
+  ScheduledAgentJobWebhookTrigger,
   ServiceAccount,
   ServiceAccountCredential,
   SkillAvailabilityRule,

@@ -13,6 +13,8 @@ import * as React from 'react';
 import { Link } from 'react-router';
 
 import type { ScheduledJobCardFragment } from '~/__generated__/graphql';
+import { ScheduleApproveButton } from '~/routing/schedule/components/ScheduleApproveButton';
+import { ScheduleJobMarkers } from '~/routing/schedule/components/ScheduleJobMarkers';
 import type { ScheduleTableProps } from '~/routing/schedule/components/ScheduleTable';
 import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
 import { RUN_STATUS_COLOR } from '~/routing/schedule/data/data.run-status';
@@ -69,6 +71,11 @@ export const buildScheduleTableColumns = (
             >
               {row.original.name}
             </Link>
+
+            <ScheduleJobMarkers job={row.original} />
+            {row.original.approvalState === 'pending' ? (
+              <ScheduleApproveButton jobId={row.original.id} />
+            ) : null}
 
             <div className="text-muted-foreground space-y-1">
               <div>

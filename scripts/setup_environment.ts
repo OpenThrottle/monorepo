@@ -14,7 +14,14 @@
  * erasable-syntax TypeScript (no enums, namespaces or parameter properties)
  * that imports node builtins and scripts/utils only.
  */
-import { copyFileSync, existsSync, readdirSync } from 'node:fs';
+import { randomBytes } from 'node:crypto';
+import {
+  copyFileSync,
+  existsSync,
+  readdirSync,
+  readFileSync,
+  writeFileSync,
+} from 'node:fs';
 import { join } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { fileURLToPath } from 'node:url';
@@ -48,6 +55,32 @@ export const environmentDirectories = (root: string): string[] => {
   return result;
 };
 
+/** Template keys that hold a locally generated secret when the template ships them empty. */
+const GENERATED_SECRET_KEYS = ['WEBHOOK_SECRET_ENCRYPTION_KEY'] as const;
+
+/**
+ * Copy a .env.default over its .env, filling each empty generated-secret key (see
+ * {@link GENERATED_SECRET_KEYS}) with 32 fresh random bytes, base64. A template line that already
+ * carries a value is left alone.
+ */
+export const copyEnvironmentTemplate = (
+  template: string,
+  target: string,
+): void => {
+  copyFileSync(template, target);
+
+  let contents = readFileSync(target, 'utf8');
+
+  for (const key of GENERATED_SECRET_KEYS) {
+    contents = contents.replace(
+      new RegExp(`^${key}=(?:""|'')?[ \\t]*$`, 'm'),
+      `${key}=${randomBytes(32).toString('base64')}`,
+    );
+  }
+
+  writeFileSync(target, contents);
+};
+
 export interface ResetOutcome {
   /** .env files newly created from a template. */
   created: string[];
@@ -78,7 +111,7 @@ export const resetEnvironmentFiles = async (
     }
 
     if (!existsSync(target)) {
-      copyFileSync(template, target);
+      copyEnvironmentTemplate(template, target);
       outcome.created.push(target);
       logger.success(`created ${target}`);
 
@@ -86,7 +119,7 @@ export const resetEnvironmentFiles = async (
     }
 
     if (await confirmReset(file)) {
-      copyFileSync(template, target);
+      copyEnvironmentTemplate(template, target);
       outcome.reset.push(target);
 
       logger.success(`reset ${file}`);

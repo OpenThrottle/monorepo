@@ -1,4 +1,6 @@
 fragment ScheduledJobCard on ScheduledAgentJobObject {
+  approvalState
+  createdVia
   cronPattern
   driverId
   enabled

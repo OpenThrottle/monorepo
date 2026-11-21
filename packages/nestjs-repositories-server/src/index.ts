@@ -180,6 +180,15 @@ export * from './modules/scheduled-agent-job-runs/scheduled-agent-job-runs.const
 export * from './modules/scheduled-agent-job-runs/scheduled-agent-job-runs.module.ts';
 export * from './modules/scheduled-agent-job-runs/scheduled-agent-job-runs.repository.ts';
 export type * from './modules/scheduled-agent-job-runs/scheduled-agent-job-runs.types.ts';
+export * from './modules/scheduled-agent-job-webhook-deliveries/scheduled-agent-job-webhook-deliveries.module.ts';
+export * from './modules/scheduled-agent-job-webhook-deliveries/scheduled-agent-job-webhook-deliveries.repository.ts';
+export type * from './modules/scheduled-agent-job-webhook-deliveries/scheduled-agent-job-webhook-deliveries.types.ts';
+export * from './modules/scheduled-agent-job-webhook-deliveries/scheduled-agent-job-webhook-delivery.entity.ts';
+export * from './modules/scheduled-agent-job-webhook-triggers/scheduled-agent-job-webhook-trigger.entity.ts';
+export * from './modules/scheduled-agent-job-webhook-triggers/scheduled-agent-job-webhook-triggers.constants.ts';
+export * from './modules/scheduled-agent-job-webhook-triggers/scheduled-agent-job-webhook-triggers.module.ts';
+export * from './modules/scheduled-agent-job-webhook-triggers/scheduled-agent-job-webhook-triggers.repository.ts';
+export type * from './modules/scheduled-agent-job-webhook-triggers/scheduled-agent-job-webhook-triggers.types.ts';
 export * from './modules/scheduled-agent-jobs/scheduled-agent-job.entity.ts';
 export * from './modules/scheduled-agent-jobs/scheduled-agent-jobs.constants.ts';
 export * from './modules/scheduled-agent-jobs/scheduled-agent-jobs.module.ts';

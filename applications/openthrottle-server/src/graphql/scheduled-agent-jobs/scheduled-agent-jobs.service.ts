@@ -11,6 +11,8 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
   ScheduledAgentJob,
+  ScheduledAgentJobApprovalState,
+  ScheduledAgentJobCreatedVia,
   ScheduledAgentJobDriverId,
   ScheduledAgentJobMisfirePolicy,
   ScheduledAgentJobRun,
@@ -31,11 +33,8 @@ import type { Queue } from 'bullmq';
 
 import { ScheduledAgentJobCancellationService } from '../../queues/scheduled-agent-jobs/cancellation/cancellation.service.ts';
 import { SCHEDULED_AGENT_JOB_MISFIRE_MIN_THRESHOLD_MS } from '../../queues/scheduled-agent-jobs/misfire/misfire.constants.ts';
-import {
-  SCHEDULED_AGENT_JOB_NAME,
-  SCHEDULED_AGENT_JOB_OPTIONS,
-  SCHEDULED_AGENT_JOBS_QUEUE_NAME,
-} from '../../queues/scheduled-agent-jobs/scheduled-agent-jobs.constants.ts';
+import { ScheduledAgentJobRunEnqueueService } from '../../queues/scheduled-agent-jobs/run-enqueue/run-enqueue.service.ts';
+import { SCHEDULED_AGENT_JOBS_QUEUE_NAME } from '../../queues/scheduled-agent-jobs/scheduled-agent-jobs.constants.ts';
 import type { ScheduledAgentJobPayload } from '../../queues/scheduled-agent-jobs/scheduled-agent-jobs.types.ts';
 import { ScheduledAgentJobSchedulerService } from '../../queues/scheduled-agent-jobs/scheduler/scheduler.service.ts';
 import { ScheduledAgentJobCheckoutPathService } from '../../services/scheduled-agent-job-checkout-path/scheduled-agent-job-checkout-path.service.ts';
@@ -44,12 +43,21 @@ import type {
   ScheduleSpecRequest,
 } from './schedule-spec/schedule-spec.types.ts';
 import { resolveScheduleSpec } from './schedule-spec/schedule-spec.utils.ts';
+import { SCHEDULED_AGENT_JOB_LIMIT_CODES } from './scheduled-agent-jobs.constants.ts';
+import {
+  createScheduledAgentJobGuardrailError,
+  resolveScheduledAgentJobLimits,
+} from './scheduled-agent-jobs.utils.ts';
 
 /** Shape a create request arrives in (settings already validated/parsed). */
 interface CreateArgs extends ScheduleSpecRequest {
+  readonly approvalState?: ScheduledAgentJobApprovalState;
+  /** Defaults to `ui`; only the agent service passes `mcp`. */
+  readonly createdVia?: ScheduledAgentJobCreatedVia;
   readonly cwd?: string | null;
   readonly driverId: string;
   readonly enabled?: boolean;
+  readonly idempotencyKey?: string | null;
   readonly misfirePolicy?: string | null;
   readonly misfireThresholdMs?: number | null;
   readonly model?: string | null;
@@ -63,8 +71,10 @@ interface CreateArgs extends ScheduleSpecRequest {
 }
 
 interface UpdateArgs extends ScheduleSpecRequest {
+  readonly approvalState?: ScheduledAgentJobApprovalState;
   readonly cwd?: string | null;
   readonly driverId?: string;
+  readonly enabled?: boolean;
   readonly misfirePolicy?: string | null;
   readonly misfireThresholdMs?: number | null;
   readonly model?: string | null;
@@ -85,6 +95,7 @@ export class ScheduledAgentJobsGraphqlService {
     private readonly checkoutPaths: ScheduledAgentJobCheckoutPathService,
     private readonly scheduler: ScheduledAgentJobSchedulerService,
     private readonly cancellation: ScheduledAgentJobCancellationService,
+    private readonly runEnqueue: ScheduledAgentJobRunEnqueueService,
     @InjectQueue(SCHEDULED_AGENT_JOBS_QUEUE_NAME)
     private readonly queue: Queue<ScheduledAgentJobPayload, void>,
   ) {}
@@ -140,12 +151,16 @@ export class ScheduledAgentJobsGraphqlService {
       args.repositoryCheckoutId,
       args.ownerUserId,
     );
+    await this.assertWithinOwnerCaps(args.ownerUserId, args.createdVia);
 
     const job = await this.jobsRepository.createJob({
       ...spec,
+      approvalState: args.approvalState,
+      createdVia: args.createdVia,
       cwd: args.cwd ?? null,
       driverId,
       enabled: args.enabled ?? true,
+      idempotencyKey: args.idempotencyKey ?? null,
       misfirePolicy,
       misfireThresholdMs,
       model: args.model ?? null,
@@ -190,10 +205,14 @@ export class ScheduledAgentJobsGraphqlService {
       nextSettings = this.parseSettings(args.settingsJson);
     }
 
+    this.assertNotEnablingPending(existing, args.enabled);
+
     const updated = await this.jobsRepository.updateJob(id, {
       ...spec,
+      approvalState: args.approvalState,
       cwd: args.cwd,
       driverId: nextDriverId,
+      enabled: args.enabled,
       misfirePolicy,
       misfireThresholdMs,
       model: args.model,
@@ -213,7 +232,33 @@ export class ScheduledAgentJobsGraphqlService {
   }
 
   async setEnabled(id: string, enabled: boolean): Promise<ScheduledAgentJob> {
+    this.assertNotEnablingPending(await this.requireJob(id), enabled);
+
     const updated = await this.jobsRepository.setJobEnabled(id, enabled);
+    if (updated === null) {
+      throw new BadRequestException(`Scheduled job ${id} not found`);
+    }
+
+    await this.projectScheduler(updated);
+    return this.reload(id);
+  }
+
+  /**
+   * @description A human approves a `pending` agent-created job: marks it `approved` and enables it
+   * (the one path that arms a pending job). Refuses a job that is not awaiting approval.
+   */
+  async approve(id: string): Promise<ScheduledAgentJob> {
+    const existing = await this.requireJob(id);
+    if (existing.approvalState !== 'pending') {
+      throw new BadRequestException(
+        `Scheduled job ${id} is not awaiting approval`,
+      );
+    }
+
+    const updated = await this.jobsRepository.updateJob(id, {
+      approvalState: 'approved',
+      enabled: true,
+    });
     if (updated === null) {
       throw new BadRequestException(`Scheduled job ${id} not found`);
     }
@@ -234,38 +279,18 @@ export class ScheduledAgentJobsGraphqlService {
 
   /**
    * @description Enqueue an immediate one-off run. Pre-creates the run row (trigger=manual) and sets
-   * the BullMQ jobId to the run id so the JSONL log join is deterministic. Allowed on a disabled
+   * the BullMQ jobId to the run id so the JSONL log join is deterministic (see
+   * {@link ScheduledAgentJobRunEnqueueService}, shared with webhook ingress). Allowed on a disabled
    * schedule (useful to test before enabling).
    */
   async runNow(id: string): Promise<ScheduledAgentJobRun> {
     const job = await this.requireJob(id);
 
-    const run = await this.runsRepository.createRun({
-      driverId: job.driverId,
-      model: job.model,
-      scheduledAgentJobId: job.id,
-      status: 'queued',
+    return this.runEnqueue.enqueueRun({
+      job,
+      prompt: job.prompt,
       trigger: 'manual',
     });
-
-    const payload: ScheduledAgentJobPayload = {
-      cwd: job.cwd,
-      driverId: job.driverId,
-      model: job.model,
-      prompt: job.prompt,
-      repositoryCheckoutId: job.repositoryCheckoutId,
-      runId: run.id,
-      scheduleId: job.id,
-      settings: job.settings,
-      timeoutMs: job.timeoutMs,
-    };
-
-    await this.queue.add(SCHEDULED_AGENT_JOB_NAME, payload, {
-      ...SCHEDULED_AGENT_JOB_OPTIONS,
-      jobId: run.id,
-    });
-
-    return run;
   }
 
   /**
@@ -319,6 +344,60 @@ export class ScheduledAgentJobsGraphqlService {
       this.logger.warn(
         `Could not remove the queued job for scheduled run ${run.id}: ${error instanceof Error ? error.message : String(error)}`,
         ScheduledAgentJobsGraphqlService.name,
+      );
+    }
+  }
+
+  /**
+   * @description Refuses to enable a job still awaiting human approval; `approve` is the only way
+   * to arm it. Disabling, or enabling any other job, is unaffected.
+   */
+  private assertNotEnablingPending(
+    job: ScheduledAgentJob,
+    enabled: boolean | undefined,
+  ): void {
+    if (enabled === true && job.approvalState === 'pending') {
+      throw createScheduledAgentJobGuardrailError(
+        SCHEDULED_AGENT_JOB_LIMIT_CODES.APPROVAL_PENDING,
+        `Scheduled job ${job.id} is awaiting approval; approve it to enable it.`,
+      );
+    }
+  }
+
+  /**
+   * @description Fails loudly when creating one more job would push the owner past
+   * `SCHEDULED_AGENT_JOBS_MAX_PER_OWNER` (all jobs) or, for an agent-created job, past the
+   * agent-created cap. A null owner (system rows) is not counted. Count-then-insert, so two truly
+   * simultaneous creates can overshoot by one; the cap is a runaway guard, not an exact quota.
+   */
+  private async assertWithinOwnerCaps(
+    ownerUserId: string | null,
+    createdVia: ScheduledAgentJobCreatedVia | undefined,
+  ): Promise<void> {
+    if (ownerUserId === null) {
+      return;
+    }
+
+    const limits = resolveScheduledAgentJobLimits(process.env);
+    const total = await this.jobsRepository.countJobsForOwner(ownerUserId);
+    if (total >= limits.maxPerOwner) {
+      throw createScheduledAgentJobGuardrailError(
+        SCHEDULED_AGENT_JOB_LIMIT_CODES.LIMIT_REACHED,
+        `You already have ${total} scheduled jobs (limit ${limits.maxPerOwner}). Delete one before creating another.`,
+      );
+    }
+
+    if (createdVia !== 'mcp') {
+      return;
+    }
+    const viaMcp = await this.jobsRepository.countJobsForOwner(
+      ownerUserId,
+      'mcp',
+    );
+    if (viaMcp >= limits.maxMcpPerOwner) {
+      throw createScheduledAgentJobGuardrailError(
+        SCHEDULED_AGENT_JOB_LIMIT_CODES.LIMIT_REACHED,
+        `You already have ${viaMcp} agent-created scheduled jobs (limit ${limits.maxMcpPerOwner}). Delete one before creating another.`,
       );
     }
   }

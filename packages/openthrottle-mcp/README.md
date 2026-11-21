@@ -120,12 +120,13 @@ Which of these a client sees depends on its [toolsets](#toolsets). GraphQL-only 
 
 Tools are grouped into named toolsets so a session only pays for the schemas it uses. With no configuration a client gets **`core`** (42 tools, ~33.8 KB of `tools/list` schemas, against ~58.6 KB for everything).
 
-| Toolset  | Tools | Contents                                                                                                                                              |
-| -------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `core`   | 42    | Plans, tasks, notes, plan output, plan runs, work sessions and the work ledger, plan inbox, knowledge base (`semantic_search`, …), activity, `health` |
-| `admin`  | 24    | Skill, plan, task and project tags; tag-action rules; skill availability; `delete_project`                                                            |
-| `blog`   | 7     | [Blog authoring tools](#blog-authoring-tools-draft-only)                                                                                              |
-| `agents` | 5     | `discover_agent_clis`, `discover_local_models`, and the [agent conversation read tools](#agent-conversation-read-tools)                               |
+| Toolset      | Tools | Contents                                                                                                                                                                   |
+| ------------ | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `core`       | 42    | Plans, tasks, notes, plan output, plan runs, work sessions and the work ledger, plan inbox, knowledge base (`semantic_search`, …), activity, `health`                      |
+| `admin`      | 24    | Skill, plan, task and project tags; tag-action rules; skill availability; `delete_project`                                                                                 |
+| `blog`       | 7     | [Blog authoring tools](#blog-authoring-tools-draft-only)                                                                                                                   |
+| `agents`     | 5     | `discover_agent_clis`, `discover_local_models`, and the [agent conversation read tools](#agent-conversation-read-tools)                                                    |
+| `scheduling` | 5     | [Scheduled agent job tools](#scheduled-job-tools) (`create_scheduled_job`, `list_scheduled_jobs`, `update_scheduled_job`, `delete_scheduled_job`, `run_scheduled_job_now`) |
 
 Turn more on with a comma list of names, or `all`:
 
@@ -172,6 +173,17 @@ deepest containing checkout wins) and ignores anything it cannot own. It never f
   `process.cwd()` is the server's own directory; it sends no `workspacePath` at all. The capture is
   gated on `runServerLocal` rather than module load precisely so importing the shared tool handlers
   cannot pick up a bogus path.
+
+## Scheduled job tools
+
+Opt-in: the [`scheduling` toolset](#toolsets). `create_scheduled_job`, `list_scheduled_jobs`, `update_scheduled_job`, `delete_scheduled_job`, `run_scheduled_job_now` schedule agent runs through the server's `…AsAgent` GraphQL operations, which enforce the guardrails (threat T10 in [webhook-triggered-agent-jobs.md](../../docs/openthrottle/webhook-triggered-agent-jobs.md)):
+
+- **Acts as a user.** The usual `ot_sa_…` service-account token acts as its linked acting user (`pnpm run database:bootstrap-service-accounts` links `openthrottle-mcp` to the default user); a service account with no acting user is refused.
+- **The caller is the ceiling.** Same `settings:read` / `settings:write` as the UI, owner is the calling user, and the target `repositoryCheckoutId` must be the user's own. There is no tool for webhook triggers.
+- **Marked and fenced.** Jobs made here are `created_via = 'mcp'`; update and delete work only on those. Jobs a person made in the UI can be listed and run, not changed.
+- **Idempotent create.** `idempotencyKey` is required; the same key returns the existing job.
+- **Capped.** At most 25 jobs per user (`SCHEDULED_AGENT_JOBS_MAX_PER_OWNER`), 10 of them created here. Over the cap the create fails loudly.
+- **Optional approval.** With `SCHEDULED_AGENT_JOBS_MCP_REQUIRE_APPROVAL=true` on the server, a created job is stored disabled (`approvalState: pending`) until a person approves it in the Developer UI, and run-now is refused until then.
 
 ## Agent conversation read tools
 
