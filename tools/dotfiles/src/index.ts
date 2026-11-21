@@ -28,6 +28,7 @@ import { noScreen } from './rules/noScreen.ts';
 import { noTestSleep } from './rules/noTestSleep.ts';
 import { noWallClockInTests } from './rules/noWallClockInTests.ts';
 import { planTaskStatusChokepoint } from './rules/planTaskStatusChokepoint.ts';
+import { preferGraphqlFragment } from './rules/preferGraphqlFragment.ts';
 import { preHooksUnpack } from './rules/preHooksUnpack.ts';
 import { routePrimitiveShape } from './rules/routePrimitiveShape.ts';
 import { skipRequiresIssue } from './rules/skipRequiresIssue.ts';
@@ -129,6 +130,16 @@ const resolveConfigDirname = (): string => {
 
   return __dirname;
 };
+
+/**
+ * Where `openthrottle/prefer-graphql-fragment` applies: every TypeScript file
+ * except generated and built output. Shared by the `error` block in
+ * {@link eslintConfig} and {@link preferGraphqlFragmentWarningsEslintConfig},
+ * so the override can never widen or narrow the rule's scope.
+ */
+const PREFER_GRAPHQL_FRAGMENT_FILES = ['**/*.{cts,mts,ts,tsx}'];
+
+const PREFER_GRAPHQL_FRAGMENT_IGNORES = ['**/__generated__/**', '**/dist/**'];
 
 /**
  * ESLint and the new "flat config" system
@@ -286,6 +297,7 @@ export const eslintConfig = tslint.config([
           'no-wall-clock-in-tests': noWallClockInTests,
           'plan-task-status-chokepoint': planTaskStatusChokepoint,
           'pre-hooks-unpack': preHooksUnpack,
+          'prefer-graphql-fragment': preferGraphqlFragment,
           'route-primitive-shape': routePrimitiveShape,
           'skip-requires-issue': skipRequiresIssue,
           'three-line-ternary': threeLineTernary,
@@ -560,6 +572,20 @@ export const eslintConfig = tslint.config([
     rules: {
       'openthrottle/agent-cli-spawn-chokepoint': 'error',
       'openthrottle/mcp-tool-registration': 'error',
+    },
+  },
+  /**
+   * GraphQL data is typed with generated `*Fragment` types, never by indexed
+   * access into a generated operation type (docs/monorepo/code-style.md,
+   * "GraphQL data uses fragment types"). Tests included. A project with
+   * violations spreads `preferGraphqlFragmentWarningsEslintConfig` last until
+   * it is clean.
+   */
+  {
+    files: PREFER_GRAPHQL_FRAGMENT_FILES,
+    ignores: PREFER_GRAPHQL_FRAGMENT_IGNORES,
+    rules: {
+      'openthrottle/prefer-graphql-fragment': 'error',
     },
   },
 
@@ -936,6 +962,24 @@ export const sourceFirstEslintConfig = tslint.config([
           selector: 'Decorator',
         },
       ],
+    },
+  },
+]);
+
+/**
+ * `openthrottle/prefer-graphql-fragment` lowered to `warn`, for a project that
+ * still has violations. The rule is `error` in {@link eslintConfig}; spread this
+ * **last** in the project's `eslint.config.ts` with a comment saying it goes
+ * once the project is clean, and delete it then. The fix is a `.graphql`
+ * fragment plus a codegen run, so it cannot be autofixed away.
+ * @public
+ */
+export const preferGraphqlFragmentWarningsEslintConfig = tslint.config([
+  {
+    files: PREFER_GRAPHQL_FRAGMENT_FILES,
+    ignores: PREFER_GRAPHQL_FRAGMENT_IGNORES,
+    rules: {
+      'openthrottle/prefer-graphql-fragment': 'warn',
     },
   },
 ]);

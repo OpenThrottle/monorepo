@@ -62,6 +62,7 @@ export default createVitestConfigJsdom({
 ## Exports
 
 - `eslintConfig` - ESLint flat config with TypeScript, React, and Nx rules
+- `preferGraphqlFragmentWarningsEslintConfig` - Lowers `openthrottle/prefer-graphql-fragment` to `warn`; spread it last in a project that still has violations, and delete it once the project is clean
 - `prettierConfig` - Shared Prettier options
 - `createViteConfig` - Create Vite configuration
 - `defineViteConfig` - Define Vite configuration

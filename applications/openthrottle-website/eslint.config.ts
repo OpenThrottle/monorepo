@@ -1,4 +1,8 @@
-import { dataFolderEslintConfig, eslintConfig } from '@tools/dotfiles';
+import {
+  dataFolderEslintConfig,
+  eslintConfig,
+  preferGraphqlFragmentWarningsEslintConfig,
+} from '@tools/dotfiles';
 
 export default [
   {
@@ -14,4 +18,7 @@ export default [
 
   ...eslintConfig,
   ...dataFolderEslintConfig,
+
+  // Has prefer-graphql-fragment violations; drop this once they are fixed.
+  ...preferGraphqlFragmentWarningsEslintConfig,
 ];
