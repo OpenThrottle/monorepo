@@ -1,4 +1,7 @@
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  executeGraphqlWithAuth,
+  parseFormData,
+} from '@openthrottle/react-router-graphql';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
   GlobalErrorBoundary,
@@ -24,10 +27,8 @@ import {
 import { SITE_TITLE } from '~/global/config/settings';
 import { ScheduleForm } from '~/routing/schedule/components/ScheduleForm';
 import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
-import {
-  missingScheduleTiming,
-  parseScheduleForm,
-} from '~/routing/schedule/utils/parse-form';
+import { missingScheduleTiming } from '~/routing/schedule/utils/missingScheduleTiming';
+import { ScheduleFormSchema } from '~/routing/schedule/utils/ScheduleFormSchema';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -135,12 +136,14 @@ export default function Component(
 export const action = async (args: Route.ActionArgs) => {
   const { jobId } = args.params;
   const form = await args.request.formData();
-  const { enabled: _enabled, ...patch } = parseScheduleForm(form);
-
-  if (!patch.name || !patch.prompt || !patch.driverId) {
-    return { error: 'Name, prompt, provider, and schedule are required.' };
+  const result = parseFormData(form, ScheduleFormSchema);
+  if (!result.success) {
+    return { error: result.error };
   }
 
+  // UpdateScheduledAgentJobInputType has no `enabled` field, so it stays out
+  // of the patch.
+  const { enabled: _enabled, ...patch } = result.data;
   const missingTiming = missingScheduleTiming(patch);
   if (missingTiming !== null) {
     return { error: missingTiming };

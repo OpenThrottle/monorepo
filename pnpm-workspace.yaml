@@ -440,6 +440,21 @@ overrides:
   # @rekog/mcp-nest and build tooling) allows ^3.0.1 but the lockfile held
   # 3.1.4. Drop this once the lockfile resolves >= 3.1.9 without it.
   'fast-uri@<3.1.9': '^3.1.9'
+  # Reachable at runtime (2026-11 audit triage, OT plan dff74902): @apollo/server
+  # (the server's GraphQL path, via nestjs-graphql/nestjs-throttler) resolved
+  # @graphql-tools/utils 12.0.1, which carries the mergeIncrementalResult
+  # prototype-pollution advisory fixed in 12.0.2; @langchain/community >
+  # ibm-cloud-sdk-core (nestjs-langchain) resolved axios 1.18.0, which carries
+  # seven high advisories fixed in 1.20.0. Drop each once the lockfile resolves
+  # the fixed version without it.
+  '@graphql-tools/utils@>=12.0.0 <12.0.2': '^12.0.2'
+  'axios@<1.20.0': '^1.20.0'
+  # Build-time only (swc/cli workers, graphql-codegen/cli, the react-router-devtools
+  # Vite plugin), but each fix is a patch or minor bump in the same major, so take
+  # it rather than carry the advisory. Drop once the lockfile resolves them unaided.
+  'launch-editor@<2.14.2': '^2.14.2'
+  'piscina@>=4.0.0 <4.9.4': '^4.9.4'
+  'shell-quote@<1.11.0': '^1.11.0'
   'graphql-request': 'catalog:'
   'react': 'catalog:'
   'react-dom': 'catalog:'
