@@ -2329,6 +2329,9 @@ importers:
       graphql-ws:
         specifier: 'catalog:'
         version: 6.4.2(graphql@16.14.2)(ws@8.22.1)
+      ioredis:
+        specifier: 'catalog:'
+        version: 5.11.1(supports-color@8.1.1)
       jsonwebtoken:
         specifier: 'catalog:'
         version: 9.0.3

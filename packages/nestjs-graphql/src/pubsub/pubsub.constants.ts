@@ -1,7 +1,7 @@
 /**
  * @description Nest DI token for the shared GraphQL-subscriptions PubSub engine.
  * Resolvers inject it with `@Inject(PUB_SUB)` typed as {@link PubSubEngine} so the
- * concrete implementation (in-memory now, Redis-backed later) stays swappable.
+ * concrete implementation (Redis-backed when configured, in-memory otherwise) stays swappable.
  */
 
 /**
