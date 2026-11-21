@@ -8,6 +8,12 @@ export const WEBHOOK_SECRET_ENCRYPTION_KEY_ENV = `WEBHOOK_SECRET_ENCRYPTION_KEY`
 /** Raw body cap: 1 MiB, enforced on `rawBody.length` so the limit is ours and not parser config. */
 export const WEBHOOK_MAX_BODY_BYTES = 1_048_576;
 
+/**
+ * Most bytes the raw-body middleware reads (and discards past the cap) so an oversized body can
+ * still be answered 413 with a delivery row. Past this the connection is dropped unrecorded.
+ */
+export const WEBHOOK_MAX_DRAIN_BYTES = 8 * WEBHOOK_MAX_BODY_BYTES;
+
 /** Length in bytes of the URL token and of the HMAC secret before encoding. */
 export const WEBHOOK_RANDOM_BYTES = 32;
 

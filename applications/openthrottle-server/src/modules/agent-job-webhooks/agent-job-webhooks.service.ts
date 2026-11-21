@@ -141,8 +141,9 @@ export class AgentJobWebhooksService {
 
   /**
    * @description Token lookup by sha256, re-compared in constant time; null for an unknown token,
-   * a disabled trigger or a deleted job. The job's own `enabled` gates only its schedule, so a
-   * webhook-only job can leave its schedule off and still be fired here.
+   * a disabled trigger, a deleted job or a job still awaiting approval (firing it would sidestep the
+   * approval; threat model T10). The job's own `enabled` gates only its schedule, so a webhook-only
+   * job can leave its schedule off and still be fired here.
    */
   private async lookup(token: string): Promise<TriggerMatch | null> {
     const tokenHash = hashWebhookToken(token);
@@ -158,7 +159,7 @@ export class AgentJobWebhooksService {
 
     const job = await this.jobs.findJobById(trigger.scheduledAgentJobId);
 
-    if (job === null) {
+    if (job === null || job.approvalState === 'pending') {
       return null;
     }
 

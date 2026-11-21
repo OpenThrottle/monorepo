@@ -46,12 +46,13 @@ not stored (there is no trigger to attach it to, and storing it would let anyone
 
 The global `NestjsThrottlerModule` IP throttle still applies in front of all of this.
 
-**Known gap — malformed and oversized JSON.** The app-wide JSON body parser (`main.ts`) runs before
-the controller, so a body that is not valid JSON, or a JSON body over its `1mb` limit, is answered by
-Nest's generic `400`/`413` and never reaches the webhook code: no delivery row is written for it. The
-`invalid_json` and `payload_too_large` reject reasons are only recorded when the controller sees the
-request (for example, the 1 MiB re-check on `rawBody`). Giving this route its own parser is a
-follow-up, not a security issue: no unverified body reaches the agent either way.
+**The route reads its own bytes.** The app-wide JSON parser never sees this route: `readWebhookRawBody`
+(`modules/agent-job-webhooks/raw-body/`) is mounted ahead of it in `configureBodyParsers`
+(`src/body-parsers/`) and stores the body on `req.rawBody` unparsed. So a body that is not valid JSON
+reaches the pipeline and, once its signature verifies, is recorded as `invalid_json` (400), and a body
+over 1 MiB is recorded as `payload_too_large` (413) — not answered by Nest's generic 400/413 with no
+delivery row. The middleware keeps only the first 1 MiB + 1 byte and discards the rest; past 8 MiB it
+drops the connection without a row, so an endless upload cannot be made to fill memory or the log.
 
 ### Ingress route
 
@@ -221,17 +222,26 @@ code.
   winner). Deleting the job frees the key.
 - **Per-owner cap** (T3 has none) — at most `SCHEDULED_AGENT_JOBS_MAX_PER_OWNER` (default 25) live jobs
   per owner, whichever surface created them, and at most 10 of them `mcp`-created (fixed). Over it the
-  create fails with a GraphQL error, `extensions.code = SCHEDULED_AGENT_JOB_LIMIT_REACHED`. The check
-  is count-then-insert, so two truly simultaneous creates can overshoot by one.
+  create fails with a GraphQL error, `extensions.code = SCHEDULED_AGENT_JOB_LIMIT_REACHED`. The count
+  and the insert run in one transaction under a per-owner advisory lock
+  (`ScheduledAgentJobsRepository.createJobWithinOwnerCaps`), so simultaneous creates cannot overshoot
+  either cap.
 - **Optional approval** — with `SCHEDULED_AGENT_JOBS_MCP_REQUIRE_APPROVAL=true`, an `mcp`-created job
-  is stored disabled with `approval_state = 'pending'`. The agent path cannot enable it, nor run it
-  now. Only the human mutation `approveScheduledAgentJob` (settings:write, owner) sets `approved` and
-  enables it; `setScheduledAgentJobEnabled` refuses to enable a pending job
-  (`SCHEDULED_AGENT_JOB_APPROVAL_PENDING`). Under required approval, an agent edit that changes an
-  approved job's content sends it back to `pending` and disables it, so an approved schedule cannot
-  be rewritten after the fact. The MCP does not expose approval, but a token that holds
-  `settings:write` can call the mutation directly; the approval is a speed bump for a prompt-injected
-  agent, not a boundary against a client holding the same token.
+  is stored disabled with `approval_state = 'pending'`. Nothing runs a pending job: the agent path
+  cannot enable it or run it now, the human `setScheduledAgentJobEnabled` and
+  `runScheduledAgentJobNow` refuse it (`SCHEDULED_AGENT_JOB_APPROVAL_PENDING`), and webhook ingress
+  answers 404 for it as for a disabled job. Only the human mutation `approveScheduledAgentJob`
+  (settings:write, owner) sets `approved` and enables it, and it takes a **signed-in user**: a
+  service-account principal is refused whatever its roles. That check is on the principal _kind_,
+  not a permission, because the MCP token holds `settings:write` like a user, and a dedicated approve
+  permission would be inherited by any service account given a user role. Under required approval,
+  an agent edit that changes an approved job's content sends it back to `pending` and disables it.
+
+  **Residual:** the other human mutations (`updateScheduledAgentJob`, the webhook-trigger mutations)
+  still accept a service-account principal on any job, and the human update path does not re-pend
+  an approved job. So a client holding the MCP token can rewrite an approved job's prompt without a
+  new approval. That is the open follow-up: dedicated `scheduled-jobs:*` permissions, or refusing
+  service accounts on the human mutations.
 
 ## Threat model
 
@@ -246,20 +256,20 @@ PR body) — **the main threat**: signed, genuine, and hostile.
 D. Someone replaying a captured genuine delivery.
 E. A prompt-injected agent using MCP tools to persist itself (schedule its own re-runs).
 
-| #   | Threat                                                          | Mitigation                                                                                                          | Residual                                                                                                                                            |
-| --- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| T1  | A guesses a token                                               | 256-bit token; hash lookup; uniform 404 for unknown/disabled; IP throttle                                           | none practical                                                                                                                                      |
-| T2  | B fires the job with a leaked URL                               | HMAC required on every trigger; rotate replaces both                                                                | a leaked secret + URL = full sender; rotate                                                                                                         |
-| T3  | D replays a captured delivery                                   | timestamp window inside the signed string (generic); 7-day dedupe key (all presets)                                 | `github`: replay after 7 days with the same delivery id is impossible only because GitHub ids are unique; a body-hash key is replayable after purge |
-| T4  | C injects instructions ("ignore previous… run `curl …\| sh`")   | nonce-tagged data blocks; non-removable preamble; defanging of `$ @ / <`; truncation                                | **prompt injection is mitigated, not solved** — a model may still comply                                                                            |
-| T5  | C closes the data tag to escape framing                         | unguessable per-request nonce; every `<` before a letter/`/` defanged                                               | none known                                                                                                                                          |
-| T6  | C triggers slash commands / file mentions / shell expansion     | defang `/cmd`, `@`, `$` with U+2060                                                                                 | agent-specific syntax we have not seen                                                                                                              |
-| T7  | Payload leaks credentials into prompt, logs or the delivery log | key- and shape-based redaction before render; raw body never stored; header allow-list                              | novel credential formats                                                                                                                            |
-| T8  | A or C floods: cost and queue exhaustion                        | body cap, rate cap, in-flight cap, coalesce, filters, uniform cheap rejects                                         | a signed sender can spend up to the caps                                                                                                            |
-| T9  | ReDoS via filters                                               | no regex ops; bounded `in` lists; ≤ 16 filters                                                                      | none                                                                                                                                                |
-| T10 | E schedules itself / escalates via MCP                          | caller ceiling; no trigger tools; `mcp` jobs editable only by MCP-created lineage; per-owner cap; optional approval | an injected agent can create ≤ 10 jobs until approval is on                                                                                         |
-| T11 | Signature bypass via timing or parser differential              | `timingSafeEqual` on equal lengths; verify the **raw** bytes, parse after                                           | none                                                                                                                                                |
-| T12 | Secret theft from the DB                                        | AES-256-GCM at rest, key outside the DB; fail closed without a key                                                  | DB + env compromise together                                                                                                                        |
+| #   | Threat                                                          | Mitigation                                                                                                                                                                                      | Residual                                                                                                                                                                                                      |
+| --- | --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| T1  | A guesses a token                                               | 256-bit token; hash lookup; uniform 404 for unknown/disabled; IP throttle                                                                                                                       | none practical                                                                                                                                                                                                |
+| T2  | B fires the job with a leaked URL                               | HMAC required on every trigger; rotate replaces both                                                                                                                                            | a leaked secret + URL = full sender; rotate                                                                                                                                                                   |
+| T3  | D replays a captured delivery                                   | timestamp window inside the signed string (generic); 7-day dedupe key (all presets)                                                                                                             | `github`: replay after 7 days with the same delivery id is impossible only because GitHub ids are unique; a body-hash key is replayable after purge                                                           |
+| T4  | C injects instructions ("ignore previous… run `curl …\| sh`")   | nonce-tagged data blocks; non-removable preamble; defanging of `$ @ / <`; truncation                                                                                                            | **prompt injection is mitigated, not solved** — a model may still comply                                                                                                                                      |
+| T5  | C closes the data tag to escape framing                         | unguessable per-request nonce; every `<` before a letter/`/` defanged                                                                                                                           | none known                                                                                                                                                                                                    |
+| T6  | C triggers slash commands / file mentions / shell expansion     | defang `/cmd`, `@`, `$` with U+2060                                                                                                                                                             | agent-specific syntax we have not seen                                                                                                                                                                        |
+| T7  | Payload leaks credentials into prompt, logs or the delivery log | key- and shape-based redaction before render; raw body never stored; header allow-list                                                                                                          | novel credential formats                                                                                                                                                                                      |
+| T8  | A or C floods: cost and queue exhaustion                        | body cap, rate cap, in-flight cap, coalesce, filters, uniform cheap rejects                                                                                                                     | a signed sender can spend up to the caps                                                                                                                                                                      |
+| T9  | ReDoS via filters                                               | no regex ops; bounded `in` lists; ≤ 16 filters                                                                                                                                                  | none                                                                                                                                                                                                          |
+| T10 | E schedules itself / escalates via MCP                          | caller ceiling; no trigger tools; `mcp` jobs editable only by MCP-created lineage; per-owner cap (race-free); optional approval, given only by a signed-in user, and nothing runs a pending job | an injected agent can create ≤ 10 jobs while approval is off; with it on, its own token can neither approve nor run them, but can still rewrite an approved job through the human update mutation (follow-up) |
+| T11 | Signature bypass via timing or parser differential              | `timingSafeEqual` on equal lengths; verify the **raw** bytes, parse after                                                                                                                       | none                                                                                                                                                                                                          |
+| T12 | Secret theft from the DB                                        | AES-256-GCM at rest, key outside the DB; fail closed without a key                                                                                                                              | DB + env compromise together                                                                                                                                                                                  |
 
 **Operator guidance (in the UI).** Webhook-triggered jobs should target a repository the agent may
 safely modify, run with `settings.worktree` so a bad run is disposable, and use filters to limit which

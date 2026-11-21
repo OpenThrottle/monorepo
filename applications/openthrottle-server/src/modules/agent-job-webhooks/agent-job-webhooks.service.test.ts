@@ -180,6 +180,18 @@ describe('AgentJobWebhooksService', () => {
       expect(await service.handle(genericRequest())).toStrictEqual(NOT_FOUND);
     });
 
+    it('answers the identical 404 for a job still awaiting approval, and enqueues nothing', async () => {
+      jobs.findJobById.mockResolvedValue(
+        scheduledAgentJobsFactory.build({
+          approvalState: 'pending',
+          enabled: false,
+        }),
+      );
+
+      expect(await service.handle(genericRequest())).toStrictEqual(NOT_FOUND);
+      expect(deliveries.recordDelivery).not.toHaveBeenCalled();
+    });
+
     it('answers 404 when the stored hash does not match the presented token', async () => {
       useTrigger(buildTrigger({ tokenHash: generateWebhookToken().tokenHash }));
 

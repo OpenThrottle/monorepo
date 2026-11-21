@@ -66,6 +66,21 @@ export const assertScheduledAgentJobOwner = (
   return job;
 };
 
+/**
+ * @description Approval is the human checkpoint on an agent-created job, so only a signed-in user
+ * may give it. A service account is refused whatever its permissions: the MCP token holds
+ * `settings:write` like a user does, and a service account given a user role would inherit any
+ * dedicated approve permission too, so only the principal kind tells the two apart (threat model
+ * T10 in docs/openthrottle/webhook-triggered-agent-jobs.md).
+ */
+export const assertHumanApprover = (principal: AuthPrincipal): void => {
+  if (principal.kind !== AUTH_PRINCIPAL_KIND_USER) {
+    throw new ForbiddenException(
+      `Only a signed-in user can approve a scheduled job; service-account tokens cannot.`,
+    );
+  }
+};
+
 /** Env var: most live jobs one owner may have, whichever surface created them. */
 const MAX_PER_OWNER_ENV = 'SCHEDULED_AGENT_JOBS_MAX_PER_OWNER';
 const DEFAULT_MAX_PER_OWNER = 25;

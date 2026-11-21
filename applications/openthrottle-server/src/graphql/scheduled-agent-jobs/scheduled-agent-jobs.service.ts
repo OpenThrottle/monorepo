@@ -10,6 +10,7 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
+  CreateScheduledAgentJobInput,
   ScheduledAgentJob,
   ScheduledAgentJobApprovalState,
   ScheduledAgentJobCreatedVia,
@@ -151,9 +152,7 @@ export class ScheduledAgentJobsGraphqlService {
       args.repositoryCheckoutId,
       args.ownerUserId,
     );
-    await this.assertWithinOwnerCaps(args.ownerUserId, args.createdVia);
-
-    const job = await this.jobsRepository.createJob({
+    const job = await this.insertWithinOwnerCaps({
       ...spec,
       approvalState: args.approvalState,
       createdVia: args.createdVia,
@@ -281,10 +280,17 @@ export class ScheduledAgentJobsGraphqlService {
    * @description Enqueue an immediate one-off run. Pre-creates the run row (trigger=manual) and sets
    * the BullMQ jobId to the run id so the JSONL log join is deterministic (see
    * {@link ScheduledAgentJobRunEnqueueService}, shared with webhook ingress). Allowed on a disabled
-   * schedule (useful to test before enabling).
+   * schedule (useful to test before enabling), but not on one awaiting approval: running it would
+   * sidestep the approval, whoever asks (threat model T10).
    */
   async runNow(id: string): Promise<ScheduledAgentJobRun> {
     const job = await this.requireJob(id);
+    if (job.approvalState === 'pending') {
+      throw createScheduledAgentJobGuardrailError(
+        SCHEDULED_AGENT_JOB_LIMIT_CODES.APPROVAL_PENDING,
+        `Scheduled job ${id} is awaiting approval; approve it before running it.`,
+      );
+    }
 
     return this.runEnqueue.enqueueRun({
       job,
@@ -365,41 +371,37 @@ export class ScheduledAgentJobsGraphqlService {
   }
 
   /**
-   * @description Fails loudly when creating one more job would push the owner past
+   * @description Inserts the job, failing loudly when one more would push the owner past
    * `SCHEDULED_AGENT_JOBS_MAX_PER_OWNER` (all jobs) or, for an agent-created job, past the
-   * agent-created cap. A null owner (system rows) is not counted. Count-then-insert, so two truly
-   * simultaneous creates can overshoot by one; the cap is a runaway guard, not an exact quota.
+   * agent-created cap. A null owner (system rows) is not counted. The count and the insert are one
+   * locked transaction in the repository, so simultaneous creates cannot overshoot a cap.
    */
-  private async assertWithinOwnerCaps(
-    ownerUserId: string | null,
-    createdVia: ScheduledAgentJobCreatedVia | undefined,
-  ): Promise<void> {
-    if (ownerUserId === null) {
-      return;
+  private async insertWithinOwnerCaps(
+    input: CreateScheduledAgentJobInput,
+  ): Promise<ScheduledAgentJob> {
+    const { ownerUserId } = input;
+    if (ownerUserId === null || ownerUserId === undefined) {
+      return this.jobsRepository.createJob(input);
     }
 
     const limits = resolveScheduledAgentJobLimits(process.env);
-    const total = await this.jobsRepository.countJobsForOwner(ownerUserId);
-    if (total >= limits.maxPerOwner) {
-      throw createScheduledAgentJobGuardrailError(
-        SCHEDULED_AGENT_JOB_LIMIT_CODES.LIMIT_REACHED,
-        `You already have ${total} scheduled jobs (limit ${limits.maxPerOwner}). Delete one before creating another.`,
-      );
+    const result = await this.jobsRepository.createJobWithinOwnerCaps(
+      { ...input, ownerUserId },
+      {
+        maxMcpPerOwner: limits.maxMcpPerOwner,
+        maxPerOwner: limits.maxPerOwner,
+      },
+    );
+    if (result.ok) {
+      return result.job;
     }
 
-    if (createdVia !== 'mcp') {
-      return;
-    }
-    const viaMcp = await this.jobsRepository.countJobsForOwner(
-      ownerUserId,
-      'mcp',
+    const kind =
+      result.scope === 'mcp' ? 'agent-created scheduled' : 'scheduled';
+    throw createScheduledAgentJobGuardrailError(
+      SCHEDULED_AGENT_JOB_LIMIT_CODES.LIMIT_REACHED,
+      `You already have ${result.count} ${kind} jobs (limit ${result.limit}). Delete one before creating another.`,
     );
-    if (viaMcp >= limits.maxMcpPerOwner) {
-      throw createScheduledAgentJobGuardrailError(
-        SCHEDULED_AGENT_JOB_LIMIT_CODES.LIMIT_REACHED,
-        `You already have ${viaMcp} agent-created scheduled jobs (limit ${limits.maxMcpPerOwner}). Delete one before creating another.`,
-      );
-    }
   }
 
   private async projectScheduler(job: ScheduledAgentJob): Promise<void> {

@@ -8252,12 +8252,12 @@ type Mutation {
   setScheduledAgentJobEnabled(input: SetScheduledAgentJobEnabledInputType!): ScheduledAgentJobObject!
 
   """
-  Approve an agent-created scheduled job that is awaiting approval (owner only): marks it approved and enables it. The only way to arm a pending job.
+  Approve an agent-created scheduled job that is awaiting approval (owner only, signed-in users only: a service-account token is refused): marks it approved and enables it. The only way to arm a pending job.
   """
   approveScheduledAgentJob(id: ID!): ScheduledAgentJobObject!
 
   """
-  Enqueue an immediate one-off run (owner only); allowed even when the schedule is disabled.
+  Enqueue an immediate one-off run (owner only); allowed even when the schedule is disabled, but refused (SCHEDULED_AGENT_JOB_APPROVAL_PENDING) while the job awaits approval.
   """
   runScheduledAgentJobNow(id: ID!): ScheduledAgentJobRunObject!
 

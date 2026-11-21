@@ -16,6 +16,7 @@ import { getCorsOptions } from '@openthrottle/nestjs-rbac';
 
 import { ApiAppModule } from './api-app/api-app.module.ts';
 import { AppModule } from './app.module.ts';
+import { configureBodyParsers } from './body-parsers/body-parsers.utils.ts';
 import { PROCESS_ROLES } from './config/config.constants.ts';
 import type { ProcessRole } from './config/config.types.ts';
 import { resolveProcessRole } from './config/config.utils.ts';
@@ -78,31 +79,7 @@ async function bootstrap(role: 'all' | 'api'): Promise<void> {
     },
   );
 
-  /**
-   * Browsers deliver CSP violation reports with non-JSON content types the
-   * default body parser skips: `application/csp-report` (legacy report-uri)
-   * and `application/reports+json` (Reports API). Parse both as JSON so the
-   * public /csp-reports endpoint receives a body.
-   *
-   * `application/json` must stay in this list: registering any custom json
-   * parser makes Nest skip its default one (both are named `jsonParser`, and
-   * registerParserMiddleware dedupes by middleware function name), so this
-   * parser becomes the ONLY json parser — omitting `application/json` leaves
-   * /graphql POST bodies unparsed and Apollo rejects them with 400.
-   *
-   * `limit` replaces body-parser's 100 KB default, which answered 413 to any
-   * `recordTokenUsage` batch over ~80 rows although the mutation accepts 500
-   * (~1.2 KB each). 1 MB fits that with headroom and matches a typical proxy's
-   * own cap; the hooks still send far smaller batches.
-   */
-  app.useBodyParser('json', {
-    limit: '1mb',
-    type: [
-      'application/csp-report',
-      'application/json',
-      'application/reports+json',
-    ],
-  });
+  configureBodyParsers(app);
 
   const config = app.get(ConfigService);
   const globalPrefix = '';
