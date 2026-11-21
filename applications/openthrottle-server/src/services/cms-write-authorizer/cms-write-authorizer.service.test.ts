@@ -1,6 +1,7 @@
 /**
  * @description Unit tests for CmsWriteAuthorizerService: the cms:write check against
- * database-backed permissions, and the writer it returns for users and service accounts.
+ * database-backed permissions, the refusal of deleted or disabled users, and the writer it returns
+ * for users and service accounts.
  */
 
 import { createMock } from '@golevelup/ts-vitest';
@@ -58,7 +59,7 @@ describe('CmsWriteAuthorizerService', () => {
       const { roles, service, users } = buildService([PERMISSIONS.CMS_WRITE]);
 
       users.findOne.mockResolvedValue(
-        usersFactory.build({ email: 'row@example.test' }),
+        usersFactory.build({ disabledAt: null, email: 'row@example.test' }),
       );
 
       await expect(
@@ -72,6 +73,60 @@ describe('CmsWriteAuthorizerService', () => {
         writer: { email: 'row@example.test', kind: 'user', userId: 'u1' },
       });
       expect(roles.getPermissionsForUser).toHaveBeenCalledWith('u1');
+    });
+  });
+
+  describe('when the user row is gone (soft deleted)', () => {
+    it('refuses even though the token still carries a sub', async () => {
+      const { service, users } = buildService([PERMISSIONS.CMS_WRITE]);
+
+      users.findOne.mockResolvedValue(null);
+
+      const decision = await service.authorize({
+        email: 'token@example.test',
+        kind: AUTH_PRINCIPAL_KIND_USER,
+        sub: 'u1',
+      });
+
+      expect(decision.ok).toBe(false);
+    });
+  });
+
+  describe('when the user is disabled', () => {
+    it('refuses', async () => {
+      const { service, users } = buildService([PERMISSIONS.CMS_WRITE]);
+
+      users.findOne.mockResolvedValue(
+        usersFactory.build({ disabledAt: new Date('2026-11-01T00:00:00Z') }),
+      );
+
+      const decision = await service.authorize({
+        kind: AUTH_PRINCIPAL_KIND_USER,
+        sub: 'u1',
+      });
+
+      expect(decision.ok).toBe(false);
+    });
+  });
+
+  describe('when the users row has no email', () => {
+    it('falls back to the token email', async () => {
+      const { service, users } = buildService([PERMISSIONS.CMS_WRITE]);
+
+      users.findOne.mockResolvedValue(
+        usersFactory.build({ disabledAt: null, email: null }),
+      );
+
+      await expect(
+        service.authorize({
+          email: 'token@example.test',
+          kind: AUTH_PRINCIPAL_KIND_USER,
+          sub: 'u1',
+        }),
+      ).resolves.toEqual({
+        ok: true,
+        writer: { email: 'token@example.test', kind: 'user', userId: 'u1' },
+      });
     });
   });
 

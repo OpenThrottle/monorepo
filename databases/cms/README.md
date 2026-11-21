@@ -135,6 +135,15 @@ ledger.
 - `profiles.email` is NOT NULL but `users.email` is nullable, so a user without one gets
   `<user id>@openthrottle.invalid` (RFC 2606 reserved; it can never deliver).
 - Service accounts write without a profile.
+- **When an OpenThrottle user is deleted: a soft link, not an orphan sweep** (OT plan `12d714d9`).
+  OpenThrottle only soft deletes users (`users.deleted_at`) and never reissues a user id, so the
+  profile keeps its `openthrottle_user_id`: the content they edited stays attributable, and an
+  account that is restored gets the same profile back. The host's `CMS_WRITE_AUTHORIZER`
+  (openthrottle-server's `CmsWriteAuthorizerService`) refuses a writer whose user row is soft deleted
+  or `disabled_at` is set, even while their JWT is unexpired, so a removed account can never create
+  or restore a profile. A new account that reuses the email gets a new user id and therefore its
+  own profile (`profiles.email` is not unique; lookups are by user id only). No cross-database
+  sweep is needed while users are never hard deleted; a hard delete would warrant revisiting this.
 - Every cms mutation needs the `cms:write` permission (admin only, `openthrottle` migration `159`);
   cms reads stay public.
 

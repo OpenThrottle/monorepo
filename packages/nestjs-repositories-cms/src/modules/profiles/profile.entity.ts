@@ -1,9 +1,9 @@
 /**
  * @description TypeORM entity for the cms `profiles` table: display details for
- * a person who edits CMS content. Matches databases/cms/migrations (005).
- * `uuid` is the CMS's own key — there is no link to an OpenThrottle user (see
- * databases/cms/README.md § profile identity). The username length CHECK lives
- * in the SQL only.
+ * a person who edits CMS content. Matches databases/cms/migrations (005, 012).
+ * `uuid` is the CMS's own key; the OpenThrottle user is linked by value through
+ * `openthrottleUserId` (see databases/cms/README.md § profile identity). The
+ * username length CHECK lives in the SQL only.
  * @public
  */
 
