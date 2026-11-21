@@ -171,10 +171,24 @@ export const developerMcpToolDefinitions: readonly DeveloperMcpToolDefinition[] 
     ),
     defineTool(
       'admin',
+      'create_project',
+      Th.createProjectToolDescription,
+      Th.createProjectToolParameters,
+      Th.createProjectToolHandler,
+    ),
+    defineTool(
+      'admin',
       'delete_project',
       Th.deleteProjectToolDescription,
       Th.deleteProjectToolParameters,
       Th.deleteProjectToolHandler,
+    ),
+    defineTool(
+      'admin',
+      'update_project',
+      Th.updateProjectToolDescription,
+      Th.updateProjectToolParameters,
+      Th.updateProjectToolHandler,
     ),
     defineTool(
       'core',
@@ -381,10 +395,24 @@ export const developerMcpToolDefinitions: readonly DeveloperMcpToolDefinition[] 
     ),
     defineTool(
       'core',
+      'get_project',
+      Th.getProjectToolDescription,
+      Th.getProjectToolParameters,
+      Th.getProjectToolHandler,
+    ),
+    defineTool(
+      'core',
       'get_project_plans',
       Th.getProjectPlansToolDescription,
       Th.getProjectPlansToolParameters,
       Th.getProjectPlansToolHandler,
+    ),
+    defineTool(
+      'core',
+      'list_projects',
+      Th.listProjectsToolDescription,
+      Th.listProjectsToolParameters,
+      Th.listProjectsToolHandler,
     ),
     defineTool(
       'core',

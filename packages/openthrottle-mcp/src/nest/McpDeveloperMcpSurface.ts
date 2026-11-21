@@ -164,6 +164,17 @@ export class McpDeveloperMcpSurface {
   }
 
   @Tool({
+    description: Th.createProjectToolDescription,
+    name: 'create_project',
+    parameters: asMcpParameters(Th.createProjectToolParameters),
+  })
+  createProject(
+    args: Parameters<typeof Th.createProjectToolHandler>[0],
+  ): ReturnType<typeof Th.createProjectToolHandler> {
+    return Th.createProjectToolHandler(args);
+  }
+
+  @Tool({
     description: Th.deleteProjectToolDescription,
     name: 'delete_project',
     parameters: asMcpParameters(Th.deleteProjectToolParameters),
@@ -172,6 +183,17 @@ export class McpDeveloperMcpSurface {
     args: Parameters<typeof Th.deleteProjectToolHandler>[0],
   ): ReturnType<typeof Th.deleteProjectToolHandler> {
     return Th.deleteProjectToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.updateProjectToolDescription,
+    name: 'update_project',
+    parameters: asMcpParameters(Th.updateProjectToolParameters),
+  })
+  updateProject(
+    args: Parameters<typeof Th.updateProjectToolHandler>[0],
+  ): ReturnType<typeof Th.updateProjectToolHandler> {
+    return Th.updateProjectToolHandler(args);
   }
 
   @Tool({
@@ -526,6 +548,28 @@ export class McpDeveloperMcpSurface {
     args: Parameters<typeof Th.addPlanToProjectToolHandler>[0],
   ): ReturnType<typeof Th.addPlanToProjectToolHandler> {
     return Th.addPlanToProjectToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.getProjectToolDescription,
+    name: 'get_project',
+    parameters: asMcpParameters(Th.getProjectToolParameters),
+  })
+  getProject(
+    args: Parameters<typeof Th.getProjectToolHandler>[0],
+  ): ReturnType<typeof Th.getProjectToolHandler> {
+    return Th.getProjectToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.listProjectsToolDescription,
+    name: 'list_projects',
+    parameters: asMcpParameters(Th.listProjectsToolParameters),
+  })
+  listProjects(
+    args: Parameters<typeof Th.listProjectsToolHandler>[0],
+  ): ReturnType<typeof Th.listProjectsToolHandler> {
+    return Th.listProjectsToolHandler(args);
   }
 
   @Tool({

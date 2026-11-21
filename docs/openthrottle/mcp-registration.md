@@ -159,11 +159,11 @@ Each tool reads its own MCP config file; schemas differ, but the **default-on se
 
 ## Toolsets
 
-`openthrottle-mcp` serves its tools in named toolsets. **With no configuration a client gets `core`**: plans, tasks, notes, plan output and runs, work sessions, the plan inbox, the knowledge base, activity and `health`. That is 42 tools and ~33.8 KB of schemas, against ~58.6 KB for all four toolsets. The other toolsets are opt-in:
+`openthrottle-mcp` serves its tools in named toolsets. **With no configuration a client gets `core`**: plans, tasks, notes, projects (`list_projects`, `get_project` and plan membership), plan output and runs, work sessions, the plan inbox, the knowledge base, activity and `health`. That is 49 tools and ~40.1 KB of schemas, against ~72.5 KB for every toolset. The other toolsets are opt-in:
 
 | Toolset      | What it adds                                                                                                                                                                           |
 | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `admin`      | Skill, plan, task and project tags; tag-action rules; skill availability; `delete_project`                                                                                             |
+| `admin`      | Skill, plan, task and project tags; tag-action rules; skill availability; `create_project`, `update_project`, `delete_project`                                                         |
 | `agents`     | `discover_agent_clis`, `discover_local_models`, `agent_conversation_*` (human JWT)                                                                                                     |
 | `blog`       | Draft-only blog authoring (`list_blog_posts`, `create_blog_post`, …; `blog:draft` service account)                                                                                     |
 | `scheduling` | Scheduled agent jobs (`create_scheduled_job`, `list_scheduled_jobs`, `update_scheduled_job`, `delete_scheduled_job`, `run_scheduled_job_now`); service account acts as its linked user |

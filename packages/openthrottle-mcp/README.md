@@ -118,15 +118,15 @@ Which of these a client sees depends on its [toolsets](#toolsets). GraphQL-only 
 
 ## Toolsets
 
-Tools are grouped into named toolsets so a session only pays for the schemas it uses. With no configuration a client gets **`core`** (42 tools, ~33.8 KB of `tools/list` schemas, against ~58.6 KB for everything).
+Tools are grouped into named toolsets so a session only pays for the schemas it uses. With no configuration a client gets **`core`** (49 tools, ~40.1 KB of `tools/list` schemas, against ~72.5 KB for everything).
 
-| Toolset      | Tools | Contents                                                                                                                                                                   |
-| ------------ | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `core`       | 42    | Plans, tasks, notes, plan output, plan runs, work sessions and the work ledger, plan inbox, knowledge base (`semantic_search`, …), activity, `health`                      |
-| `admin`      | 24    | Skill, plan, task and project tags; tag-action rules; skill availability; `delete_project`                                                                                 |
-| `blog`       | 7     | [Blog authoring tools](#blog-authoring-tools-draft-only)                                                                                                                   |
-| `agents`     | 5     | `discover_agent_clis`, `discover_local_models`, and the [agent conversation read tools](#agent-conversation-read-tools)                                                    |
-| `scheduling` | 5     | [Scheduled agent job tools](#scheduled-job-tools) (`create_scheduled_job`, `list_scheduled_jobs`, `update_scheduled_job`, `delete_scheduled_job`, `run_scheduled_job_now`) |
+| Toolset      | Tools | Contents                                                                                                                                                                                                          |
+| ------------ | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `core`       | 49    | Plans, tasks, notes, projects (`list_projects`, `get_project`, plan membership), plan output, plan runs, work sessions and the work ledger, plan inbox, knowledge base (`semantic_search`, …), activity, `health` |
+| `admin`      | 28    | Skill, plan, task and project tags; tag-action rules; skill availability; `create_project`, `update_project`, `delete_project`                                                                                    |
+| `blog`       | 7     | [Blog authoring tools](#blog-authoring-tools-draft-only)                                                                                                                                                          |
+| `agents`     | 5     | `discover_agent_clis`, `discover_local_models`, and the [agent conversation read tools](#agent-conversation-read-tools)                                                                                           |
+| `scheduling` | 5     | [Scheduled agent job tools](#scheduled-job-tools) (`create_scheduled_job`, `list_scheduled_jobs`, `update_scheduled_job`, `delete_scheduled_job`, `run_scheduled_job_now`)                                        |
 
 Turn more on with a comma list of names, or `all`:
 
