@@ -1,6 +1,6 @@
 import type {
   OAuthService,
-  UsersService,
+  UsersRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -22,12 +22,12 @@ const build = (options: {
   const oauthService: Partial<Record<keyof OAuthService, unknown>> = {
     verifyAccessToken: vi.fn().mockResolvedValue(options.verified),
   };
-  const usersService: Partial<Record<keyof UsersService, unknown>> = {
-    findById: vi.fn().mockResolvedValue(options.user),
+  const usersRepository: Partial<Record<keyof UsersRepository, unknown>> = {
+    findOne: vi.fn().mockResolvedValue(options.user),
   };
   return Reflect.construct(OAuthAccessAuthService, [
     oauthService,
-    usersService,
+    usersRepository,
   ]);
 };
 

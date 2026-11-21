@@ -1,17 +1,15 @@
+import type { DataTableColumnDef } from '@openthrottle/react-router-shadcn';
 import { Badge, cn, DataTable } from '@openthrottle/react-router-shadcn';
-import type { ColumnDef } from '@tanstack/react-table';
 import * as React from 'react';
 
-import type { SettingsConnectionsQuery } from '~/__generated__/graphql';
+import type { OAuthGrantFieldsFragment } from '~/__generated__/graphql';
 import { SettingsConnectionsRevokeCell } from '~/routing/settings/components/SettingsConnectionsRevokeCell';
 import { SETTINGS_CONNECTIONS_COPY as COPY } from '~/routing/settings/data/data.copy';
 import { formatCredentialTimestamp } from '~/routing/settings/utils/settings-keys-credential';
 
-type Connection = SettingsConnectionsQuery['myOAuthGrants'][number];
-
 export interface SettingsConnectionsTableProps {
   className?: string;
-  connections: readonly Connection[];
+  connections: readonly OAuthGrantFieldsFragment[];
 }
 
 export const SettingsConnectionsTable = (
@@ -45,7 +43,7 @@ export const SettingsConnectionsTable = (
       className={cn('ui-border rounded-lg border', className)}
       data-testid="SettingsConnectionsTable"
     >
-      <DataTable<Connection, string | null>
+      <DataTable<OAuthGrantFieldsFragment, string | null>
         columns={columns}
         data={[...connections]}
         emptyState={emptyState}
@@ -55,8 +53,8 @@ export const SettingsConnectionsTable = (
   );
 };
 
-SettingsConnectionsTable.buildTable = (): ColumnDef<
-  Connection,
+SettingsConnectionsTable.buildTable = (): DataTableColumnDef<
+  OAuthGrantFieldsFragment,
   string | null
 >[] => {
   const header = (label: string): React.ReactElement => {

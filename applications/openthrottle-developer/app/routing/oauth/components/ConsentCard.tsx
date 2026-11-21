@@ -14,7 +14,7 @@ import { CheckIcon, PencilIcon, ShieldAlertIcon } from 'lucide-react';
 import * as React from 'react';
 import { Form } from 'react-router';
 
-import type { OAuthConsentRequestQuery } from '~/__generated__/graphql';
+import type { OAuthConsentRequestFieldsFragment } from '~/__generated__/graphql';
 import {
   OAUTH_CONSENT_COPY,
   OAUTH_SCOPES,
@@ -22,15 +22,11 @@ import {
 
 const COPY = OAUTH_CONSENT_COPY;
 
-type ConsentRequest = NonNullable<
-  OAuthConsentRequestQuery['oauthAuthorizationRequest']
->;
-
 export interface ConsentCardProps {
   className?: string;
   error: string | null;
   pendingIntent: 'approve' | 'deny' | null;
-  request: ConsentRequest;
+  request: OAuthConsentRequestFieldsFragment;
 }
 
 export const ConsentCard = (props: ConsentCardProps): React.ReactElement => {

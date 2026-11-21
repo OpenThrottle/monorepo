@@ -14,7 +14,7 @@ import { authPrincipalFromOAuthGrant } from '@openthrottle/nestjs-auth';
 import {
   isOAuthAccessTokenAuthorization,
   OAuthService,
-  UsersService,
+  UsersRepository,
 } from '@openthrottle/nestjs-repositories-server';
 
 import { resolveOAuthServerConfig } from '../../modules/oauth/oauth.utils.ts';
@@ -25,7 +25,7 @@ export class OAuthAccessAuthService {
 
   constructor(
     private readonly oauthService: OAuthService,
-    private readonly usersService: UsersService,
+    private readonly usersRepository: UsersRepository,
   ) {
     const config = resolveOAuthServerConfig(process.env);
     this.resources = config.kind === 'enabled' ? config.config.resources : [];
@@ -63,7 +63,9 @@ export class OAuthAccessAuthService {
       return null;
     }
 
-    const user = await this.usersService.findById(verified.userId);
+    const user = await this.usersRepository.findOne({
+      where: { id: verified.userId },
+    });
     if (user === null || user.disabledAt != null) {
       return null;
     }

@@ -11379,6 +11379,18 @@ export type CreateNoteMutation = {
   };
 };
 
+export type OAuthConsentRequestFieldsFragment = {
+  __typename?: 'OAuthAuthorizationRequestObject';
+  clientHost: string;
+  clientName?: string | null;
+  expiresAt: any;
+  id: string;
+  redirectHost: string;
+  registrationKind: string;
+  requestedScopes: Array<string>;
+  resource: string;
+};
+
 export type OAuthConsentRequestQueryVariables = Exact<{
   id: Scalars['String']['input'];
 }>;
@@ -15161,6 +15173,18 @@ export type AgentSetupChunkAddedSubscription = {
     sortOrder: number;
     stream: string;
   };
+};
+
+export type OAuthGrantFieldsFragment = {
+  __typename?: 'OAuthGrantObject';
+  clientHost: string;
+  clientName?: string | null;
+  createdAt: any;
+  expiresAt: any;
+  id: string;
+  lastUsedAt?: any | null;
+  resource: string;
+  scopes: Array<string>;
 };
 
 export type SettingsConnectionsQueryVariables = Exact<{ [key: string]: never }>;
@@ -19745,6 +19769,32 @@ export const NoteCardFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<NoteCardFragment, unknown>;
+export const OAuthConsentRequestFieldsFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'OAuthConsentRequestFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'OAuthAuthorizationRequestObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'clientHost' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'clientName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'expiresAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'redirectHost' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'registrationKind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'requestedScopes' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'resource' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<OAuthConsentRequestFieldsFragment, unknown>;
 export const HookTaskFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -22035,6 +22085,32 @@ export const AgentSetupChunkFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<AgentSetupChunkFragment, unknown>;
+export const OAuthGrantFieldsFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'OAuthGrantFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'OAuthGrantObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'clientHost' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'clientName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'expiresAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lastUsedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'resource' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scopes' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<OAuthGrantFieldsFragment, unknown>;
 export const ServiceAccountCredentialFieldsFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -29465,26 +29541,34 @@ export const OAuthConsentRequestDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'clientHost' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'clientName' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'expiresAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'redirectHost' },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'OAuthConsentRequestFields' },
                 },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'registrationKind' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'requestedScopes' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'resource' } },
               ],
             },
           },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'OAuthConsentRequestFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'OAuthAuthorizationRequestObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'clientHost' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'clientName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'expiresAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'redirectHost' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'registrationKind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'requestedScopes' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'resource' } },
         ],
       },
     },
@@ -39996,17 +40080,34 @@ export const SettingsConnectionsDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'clientHost' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'clientName' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'expiresAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'lastUsedAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'resource' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'scopes' } },
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'OAuthGrantFields' },
+                },
               ],
             },
           },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'OAuthGrantFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'OAuthGrantObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'clientHost' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'clientName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'expiresAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lastUsedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'resource' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scopes' } },
         ],
       },
     },

@@ -6,12 +6,12 @@ import './oauth.object.ts';
 import './oauth.input.ts';
 
 import { Module } from '@nestjs/common';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories-server';
+import { OAuthModule } from '@openthrottle/nestjs-repositories-server';
 
 import { OAuthResolver } from './oauth.resolver.ts';
 
 @Module({
-  imports: [NestjsRepositoriesModule],
+  imports: [OAuthModule],
   providers: [OAuthResolver],
 })
 export class OAuthGraphqlModule {}

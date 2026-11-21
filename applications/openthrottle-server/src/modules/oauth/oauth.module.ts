@@ -4,14 +4,14 @@
 
 import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { NestjsRepositoriesModule } from '@openthrottle/nestjs-repositories-server';
+import { OAuthModule } from '@openthrottle/nestjs-repositories-server';
 
 import { ClientMetadataService } from './client-metadata/client-metadata.service.ts';
 import { OAuthController } from './oauth.controller.ts';
 
 @Module({
   controllers: [OAuthController],
-  imports: [LoggerModule, NestjsRepositoriesModule],
+  imports: [LoggerModule, OAuthModule],
   providers: [ClientMetadataService],
 })
 export class OAuthRoutesModule {}

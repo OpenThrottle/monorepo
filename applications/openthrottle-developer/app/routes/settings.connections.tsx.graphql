@@ -1,13 +1,17 @@
+fragment OAuthGrantFields on OAuthGrantObject {
+  clientHost
+  clientName
+  createdAt
+  expiresAt
+  id
+  lastUsedAt
+  resource
+  scopes
+}
+
 query SettingsConnections {
   myOAuthGrants {
-    clientHost
-    clientName
-    createdAt
-    expiresAt
-    id
-    lastUsedAt
-    resource
-    scopes
+    ...OAuthGrantFields
   }
 }
 
