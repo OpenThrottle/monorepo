@@ -15,7 +15,7 @@ metadata:
 
 # OpenThrottle plans and MCP traceability
 
-The openthrottle-mcp instructions block and CLAUDE.md are already in context before you read this,
+The openthrottle-mcp instructions block and AGENTS.md are already in context before you read this,
 free and with perfect recall. **This file carries only what neither says.** "Plans live in OT only",
 the atomic batch create, `update_task` takes a UUID, GitHub-username author, the `Plan-Id:` /
 `Task-Id:` footers — all injected already; restating them bills every session for nothing.
@@ -90,7 +90,7 @@ the `ot-loop` skill § The loop; do not restate it here.
 
 ## Follow-ups and session kickoff
 
-CLAUDE.md states the rule (follow-ups are `PENDING` plans tagged `follow-up`; a kickoff brief is `/ot-loop <planUuid>`). What it omits:
+AGENTS.md states the rule (follow-ups are `PENDING` plans tagged `follow-up`; a kickoff brief is `/ot-loop <planUuid>`). What it omits:
 
 - **Evidence goes in the description.** Name the originating plan id (if any) and what motivated the follow-up — the file and line, the failing output, the review comment. A follow-up with no evidence is a hunch, and the next session cannot check it.
 - **`follow-up` is a platform system tag**, accepted from any caller without being in your skill-tag vocabulary — do not `add_skill_tag` it (an agent token lacks `settings:write`). `add_plan_tag(planId, 'follow-up')` after the fact needs the MCP `admin` toolset. Best-effort: a tag that fails comes back in `tagFailures` and never blocks filing.

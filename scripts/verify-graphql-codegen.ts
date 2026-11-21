@@ -5,7 +5,8 @@
  * The guard this replaces was `graphql-codegen && git diff --exit-code --
  * <project>/src/__generated__`, which only measures drift for a project whose
  * generated output is TRACKED. Two of the three projects carrying that target
- * leave the output gitignored (`.gitignore` `**\/__generated__/**\/*`, tracking
+ * left the output gitignored at the time (openthrottle-mcp has since committed
+ * its output, OT plan 74ecccb1) (`.gitignore` `**\/__generated__/**\/*`, tracking
  * only `.gitkeep`), and `git diff` over ignored untracked paths always exits 0
  * — so those guards could never fail, in CI or locally. That is how a shared
  * fragment lost `runConfigJson` without a single gate going red (OT plan
@@ -23,9 +24,9 @@
  * gitignored and built on demand), a regeneration has nothing to disagree with.
  * That run still proves codegen succeeds against the committed schema, and the
  * script says plainly that the comparison was vacuous. The drift itself stays
- * covered in CI by the projects that DO commit their output — notably
- * openthrottle-agentic-ralph, which owns the shared plan/task documents every
- * other consumer spreads.
+ * covered in CI by the projects that DO commit their output — openthrottle-mcp
+ * and openthrottle-agentic-ralph, which owns the shared plan/task documents
+ * every other consumer spreads.
  */
 
 import {

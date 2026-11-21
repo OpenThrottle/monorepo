@@ -299,7 +299,7 @@ template (the source of truth) and the enforcer can never drift.
 
 When the rule fails, **fix the R1/R3 violation** it lists by moving the code
 under `app/routing/<area>/` — do not bypass the hook with `git commit
---no-verify` (CLAUDE.md prohibits `--no-verify` and bypassing Husky).
+--no-verify` (AGENTS.md prohibits `--no-verify` and bypassing Husky).
 
 ## Related conventions
 

@@ -11,7 +11,7 @@ This policy is **non-negotiable** and applies to all AI agent, LLM, and programm
 
 **This doc is the single source of truth for generator selection.** Which generator
 scaffolds what — and the package-vs-application distinction in particular — is decided
-here and nowhere else. `CLAUDE.md` and `AGENTS.md` carry a pointer to
+here and nowhere else. `AGENTS.md` carries a pointer to
 this doc, not a copy of the matrix; `skills/ot-generators/SKILL.md` is the agent entry
 point and states the selection rule once. See CONTRIBUTING.md § Documentation, rule 6.
 
@@ -211,7 +211,7 @@ any more:
 | [`AGENTS.md`](../../../AGENTS.md) § Code style                | **Normative, always-on.** One line per rule, grouped by whether ESLint or the compiler catches it. |
 | [`docs/monorepo/code-style.md`](../../monorepo/code-style.md) | **Reference.** Rationale, code examples, and an explicit enforcement label per rule.               |
 
-`CLAUDE.md` carries the same list in short form and is auto-loaded by Claude Code.
+Claude Code reads it through the `agents-md` setting; `CLAUDE.md` does not restate it.
 Procedural rules live in the skills that own them — `ot-plans` (OT tool selection,
 plans-in-OT-only), `github-commit` / `github-pull-request` / `github-squash` (commits,
 PRs, attribution), `ot-stack` (server and GraphQL conventions), `ot-folders` (placement),

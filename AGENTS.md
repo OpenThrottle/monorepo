@@ -23,11 +23,60 @@
 
 <!-- nx configuration end-->
 
+## What this is
+
+OpenThrottle — an Nx + pnpm workspace monorepo (Node >= 26, pnpm only; `preinstall` blocks npm/yarn). It does both **task running** and **package publishing**. See [MONOREPO.md](./MONOREPO.md) and [CONTRIBUTING.md](./CONTRIBUTING.md) for deeper detail. Code style is normative in § Code style below, with rationale and examples in [docs/monorepo/code-style.md](docs/monorepo/code-style.md).
+
+## Commands
+
+```bash
+./scripts/setup.sh                                  # full environment setup/reset (also seeds the default login user)
+pnpm run worktree:new <name>                        # create + provision a git worktree (the ONE entrypoint; every agent and editor uses it). A plain `git worktree add` self-heals on first `:dev`
+pnpm run worktree:db isolate                        # give THIS worktree its own Postgres/Redis (base+8/+9) + migrate + seed; a shared-DB worktree refuses branch-only migrations until you do. `worktree:new <name> --own-db` does it at create time
+pnpm run worktree:serve <server|developer>          # IN A WORKTREE: run its own server/UI detached, wait for the port, print a probe (`--api-only`, `--stop`; `--orphans` lists servers left running from removed worktrees). See docs/monorepo/worktree-port-allocation.md
+pnpm run database:start                             # Postgres + Redis via docker compose (a worktree reuses the primary's: OT_WORKTREE_DB=shared)
+pnpm run database:migrate                           # apply pending migrations manually (run-once/idempotent via schema_migrations ledger; safe to re-run, no data re-stamp; does NOT back up)
+pnpm nx run openthrottle-server:dev                 # NestJS GraphQL API (auto-applies pending migrations first via monorepo:ensure-migrations; fails fast if Postgres is down)
+pnpm nx run openthrottle-developer:dev              # Developer UI (React Router)
+
+pnpm nx run <project>:test                          # run a project's Vitest tests
+pnpm nx run <project>:test -- path/to/file.test.ts  # single test file (a vitest filter; `--testFile` was the removed Nx executor's option and Vitest rejects it)
+pnpm nx run <project>:test --watch                  # watch mode
+pnpm nx run <project>:lint
+pnpm nx run <project>:typecheck                     # tsc over source AND test files — does NOT execute tests
+
+pnpm nx affected --target=lint --parallel           # affected projects only
+pnpm run check:local                                # full local CI parity (lint, typecheck, tests, codegen, knip)
+pnpm nx:validate-tags                               # validate project tags
+pnpm nx run monorepo:knip                           # dead-code report ONLY — never `knip --fix` on app UI
+pnpm nx sync:check                                  # report tsconfig project-reference drift (`pnpm nx sync` fixes it)
+```
+
+`typecheck` and `test` are not interchangeable: `typecheck` type-checks source and test files (`tsc`, no execution); only `test` executes Vitest assertions. `nx sync` usage is under § Code style › Owned elsewhere.
+
+## Architecture
+
+- **`applications/`** — deployable apps. `openthrottle-server` is the NestJS code-first GraphQL API; `openthrottle-developer`, `openthrottle-admin`, `openthrottle-website` are React Router (v8) + Vite apps; [`openthrottle-app`](applications/openthrottle-app/README.md) is the Electron desktop shell around the developer app.
+- **`packages/`** — `@openthrottle/nestjs-*` (server modules: auth, bullmq, redis, graphql, …; `nestjs-repositories-server` is the `openthrottle` database's TypeORM layer), `@openthrottle/react-router-*` (shared UI/client libs), `openthrottle-agentic-*` (Ralph agentic tooling), `openthrottle-mcp` (the OT MCP server).
+- **`tools/`** — Nx plugins, `@tools/generators` (scaffolding templates), `@tools/workflows` (Ralph CLI).
+- **`databases/`** — the Postgres databases (`openthrottle`, `cms`), one folder and one migration ledger each, sharing one runner and one server; local DB scripts.
+- Every project carries Nx tags (`name:`, `type:`, `production:`, `technology:`) used for filtering and release; validate with `pnpm nx:validate-tags`.
+
+## GraphQL schema + codegen flow
+
+Schema is **code-first** in `openthrottle-server` (NestJS `autoSchemaFile`); consumers read the committed **`applications/openthrottle-server/schema.gql`** (via `@openthrottle/graphql-codegen`'s `defineCodegen`). CI fails on codegen drift. After changing GraphQL types/resolvers/documents:
+
+1. Run `pnpm nx run openthrottle-server:graphql-schema:write` (no Postgres, Redis or running server needed). It is the only producer of the committed `applications/openthrottle-server/schema.gql`: booting the server keeps the schema in memory and never writes the file. `dev` on a codegen consumer runs the equivalent `graphql-schema-write` first, so a new field plus a document selecting it needs no manual step there. It works in one pass even when a server-side client (`openthrottle-mcp`, `openthrottle-agentic-ralph`) already selects or reads the new field: tsc builds never run codegen and the client builds in the server graph are emit-only, so the server builds against the stale generated output and writes the schema that step 2 regenerates from. Do not reach for `--excludeTaskDependencies`.
+2. `pnpm nx affected --target=codegen-graphql,codegen-react-router --parallel`
+3. Commit the app `schema.gql` and all `__generated__` output.
+
+Never remove/change types on existing fields without a migration plan — use `@deprecated(reason: "...")`.
+
 ## Per-project AGENTS.md
 
 Agent context is layered in three tiers, and **each file states only what its parent tier does not** (the delta rule):
 
-1. **This file + [CLAUDE.md](./CLAUDE.md)** — monorepo-wide conventions (Nx, pnpm-only, generators-first, OT plans, GraphQL codegen flow, code style, agent-asset SSOT).
+1. **This file** — monorepo-wide conventions (Nx, pnpm-only, commands, architecture, generators-first, OT plans, GraphQL codegen flow, code style, git rules, agent-asset SSOT). [CLAUDE.md](./CLAUDE.md) carries only what is specific to Claude Code.
 2. **Area files** — [`applications/AGENTS.md`](./applications/AGENTS.md), [`packages/AGENTS.md`](./packages/AGENTS.md), [`tools/AGENTS.md`](./tools/AGENTS.md), [`databases/AGENTS.md`](./databases/AGENTS.md) — facts shared across one family (e.g. the source-first/no-build pattern, React Router app conventions, migration rules).
 3. **Per-project `AGENTS.md`** — one per Nx project, carrying only that project's deltas: non-obvious commands, key paths, invariants/gotchas that break PRs, and boundaries.
 
@@ -180,6 +229,13 @@ and [`packages/agentic-hooks/AGENTS.md`](packages/agentic-hooks/AGENTS.md).
   comment. Never list a commit that changed behavior. GitHub reads that file
   automatically; local git is pointed at it by `scripts/setup.ts` and worktree
   provisioning.
+
+## Git and agent behavior
+
+- Conventional commits, enforced by commitlint + Husky. No agent attribution anywhere — see § No agent attribution.
+- Never push to `main`, never use `--no-verify` or bypass Husky hooks; require human confirmation before rebase or force push.
+- PRs: use `.github/pull_request_template.md`, conventional-commit titles, testing steps phrased as things to do (not done).
+- Plans live in OT only, follow-ups are OT plans, and commit/push cadence and the work ledger are in § Plans in OT only and § Workflow CLI.
 
 ## No agent attribution (any tool, any model)
 

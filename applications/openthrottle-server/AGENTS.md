@@ -58,7 +58,7 @@ apps, `packages/openthrottle-mcp`) consumes its schema through the committed
   Nest's own builder writes the file. The emit is pinned to `AppModule` (PROCESS_ROLE=all):
   field order follows module registration order, and `ApiAppModule` currently orders the
   work-ledger Query fields differently, which is why only this command produces the file.
-- Schema evolution (never remove/change existing fields; `@deprecated(reason)`) — root CLAUDE.md.
+- Schema evolution (never remove/change existing fields; `@deprecated(reason)`) — root AGENTS.md § GraphQL schema + codegen flow.
 - TypeORM entities live in `packages/nestjs-repositories-server`, not here, and so does the default
   DataSource config (`getOpenThrottleTypeOrmOptions()`); this app registers that root once, in
   `src/openthrottle-server.utils.ts`; each entity's JSDoc names

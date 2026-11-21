@@ -14,12 +14,16 @@ Nx project name is the full `@openthrottle/openthrottle-mcp` (not the bare direc
   `node dist/src/bin.js` (no dev server — the `__dev` target is tsc `--watch`, not a runnable MCP).
 - `pnpm nx run @openthrottle/openthrottle-mcp:verify-graphql-codegen` — regenerates GraphQL types
   and fails if `src/__generated__` drifts from the `.graphql` documents. Run after any `.graphql`
-  document change. This output is **gitignored** (only `.gitkeep` is tracked), so the guard
-  byte-compares a snapshot of the on-disk output against a fresh regeneration rather than using
-  `git diff` — which over ignored paths always exits 0, and is why the pre-2026-09 version of this
-  guard could never fail. With no output on disk (fresh clone, CI) there is no baseline, and the
-  guard says so instead of passing silently; drift on the SHARED plan/task documents is caught in
-  CI by `openthrottle-agentic-ralph`, which commits its generated output.
+  document change. This output is **committed** (this package's `.gitignore` negates the root
+  `**/__generated__/**` rule, as `openthrottle-agentic-ralph` does), so the guard has a git
+  baseline in CI too.
+
+- **`build` neither runs codegen nor type-checks.** It compiles `tsconfig.build.json`
+  (`tsconfig.lib.json` + `noCheck`) from the committed `src/__generated__`. This package sits in
+  `openthrottle-server:build`'s graph, so a build that ran codegen or type-checked against the old
+  `schema.gql` broke `graphql-schema:write` whenever a branch added a field this package selects
+  (OT plan 74ecccb1). `typecheck` is the type gate; after a document change run `codegen-graphql`
+  and commit `src/__generated__`.
 
 - `pnpm nx run monorepo:check-model-facing-text` — byte budget over the instructions block and every
   `tools/list` entry (plus skills and prompts). A tool description or input schema that grows fails
