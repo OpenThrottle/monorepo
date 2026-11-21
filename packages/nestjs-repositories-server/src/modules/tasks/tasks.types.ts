@@ -168,9 +168,9 @@ export interface TasksRepositoryMock extends BaseRepositoryMock<
   readonly getSortOrderExtent: Mock<TasksRepository['getSortOrderExtent']>;
   readonly getTaskHooks: Mock<TasksRepository['getTaskHooks']>;
   readonly hasRemainingTasks: Mock<TasksRepository['hasRemainingTasks']>;
-  readonly midpointBesideAnchor: Mock<TasksRepository['midpointBesideAnchor']>;
   readonly rebalancePlanSortOrders: Mock<
     TasksRepository['rebalancePlanSortOrders']
   >;
+  readonly reorderInPlan: Mock<TasksRepository['reorderInPlan']>;
   readonly resolveNextSortOrder: Mock<TasksRepository['resolveNextSortOrder']>;
 }

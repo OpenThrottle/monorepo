@@ -103,8 +103,8 @@ describe('CmsLayoutsService', () => {
         const { layout, layoutsRepository, service } = buildService();
 
         vi.mocked(layoutsRepository.findByPaginated).mockResolvedValue({
-          data: [layout],
-          pageInfo: { currentPage: 1, hasNextPage: false, totalCount: 1 },
+          items: [layout],
+          totalCount: 1,
         });
 
         await expect(
@@ -123,8 +123,8 @@ describe('CmsLayoutsService', () => {
         const { layoutsRepository, service } = buildService();
 
         vi.mocked(layoutsRepository.findByPaginated).mockResolvedValue({
-          data: [],
-          pageInfo: { currentPage: 1, hasNextPage: false, totalCount: 0 },
+          items: [],
+          totalCount: 0,
         });
 
         await service.findPage({ skip: 25, take: 25 }, 'editor');

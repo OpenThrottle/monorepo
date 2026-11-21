@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import type { CreateModelInput } from '@openthrottle/nestjs-postgres';
 import {
   BaseRepository,
+  resolvePagination,
   toLikeContainsPattern,
 } from '@openthrottle/nestjs-postgres';
 import { IsNull, Repository, type SelectQueryBuilder } from 'typeorm';
@@ -154,11 +155,14 @@ const BRANCH_SEARCH_MAX_LIMIT = 50;
 
 /** Clamp a requested branch-search limit into `[1, BRANCH_SEARCH_MAX_LIMIT]`. */
 const resolveBranchSearchLimit = (limit?: number | null): number => {
-  if (limit == null || !Number.isFinite(limit)) {
-    return BRANCH_SEARCH_DEFAULT_LIMIT;
-  }
+  // A non-finite limit falls back to the default rather than clamping to a bound.
+  const finiteLimit =
+    typeof limit === 'number' && Number.isFinite(limit) ? limit : null;
 
-  return Math.min(Math.max(Math.floor(limit), 1), BRANCH_SEARCH_MAX_LIMIT);
+  return resolvePagination(
+    { limit: finiteLimit },
+    { defaultLimit: BRANCH_SEARCH_DEFAULT_LIMIT, max: BRANCH_SEARCH_MAX_LIMIT },
+  ).take;
 };
 
 /**

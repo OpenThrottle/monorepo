@@ -75,7 +75,7 @@ type GetPlanResult = GenericResult<{
 }>;
 
 type ListPlansByStatusResult = GenericResult<{
-  plans: ListPlansByStatusQuery['listPlansByStatus']['plans'];
+  plans: ListPlansByStatusQuery['listPlansByStatus']['items'];
   totalCount: number;
 }>;
 
@@ -136,7 +136,7 @@ export async function listPlansByStatusToolHandler(
   }
 
   return runTool<{
-    plans: ListPlansByStatusQuery['listPlansByStatus']['plans'];
+    plans: ListPlansByStatusQuery['listPlansByStatus']['items'];
     totalCount: number;
   }>('list_plans_by_status', async () => {
     const token = getAuthToken();
@@ -149,7 +149,7 @@ export async function listPlansByStatusToolHandler(
     const listResult = result?.listPlansByStatus;
     if (!listResult) return null;
 
-    const { plans, totalCount } = listResult;
+    const { items: plans, totalCount } = listResult;
     const emptyText = `No plans found (totalCount: ${totalCount}).`;
     const listText = `Plans (${plans.length} of ${totalCount}):\n${JSON.stringify(plans, null, 2)}`;
     const text = plans.length === 0 ? emptyText : listText;

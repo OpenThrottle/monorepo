@@ -179,7 +179,7 @@ export async function listPlansByStatusGraphql(
     }),
   );
 
-  return result.listPlansByStatus.plans.map((plan) => ({
+  return result.listPlansByStatus.items.map((plan) => ({
     createdAt: toIsoString(plan.createdAt),
     id: plan.id,
     status: plan.status,
@@ -205,7 +205,7 @@ export async function listAllPlansGraphql(
     }),
   );
 
-  return result.listPlansByStatus.plans.map((plan) => ({
+  return result.listPlansByStatus.items.map((plan) => ({
     createdAt: toIsoString(plan.createdAt),
     id: plan.id,
     status: plan.status,

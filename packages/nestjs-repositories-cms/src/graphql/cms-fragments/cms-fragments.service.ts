@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
+import { hasNextPage } from '@openthrottle/nestjs-postgres';
 import type { FindOptionsWhere } from 'typeorm';
 import { DataSource, Equal, In, IsNull, Not, Or } from 'typeorm';
 
@@ -97,9 +98,9 @@ export class CmsFragmentsService {
     });
 
     return {
-      hasNextPage: page.pageInfo.hasNextPage,
-      items: page.data.map(toCmsFragmentObject),
-      totalCount: page.pageInfo.totalCount,
+      hasNextPage: hasNextPage(page, options.skip),
+      items: page.items.map(toCmsFragmentObject),
+      totalCount: page.totalCount,
     };
   }
 

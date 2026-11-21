@@ -2,6 +2,7 @@ import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { createQueryBuilderMock } from '@openthrottle/nestjs-postgres/testing';
 import type { Repository, SelectQueryBuilder } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -10,19 +11,13 @@ import { applyBlogPostVisibility } from '../blog-posts/visibility/visibility.uti
 import { BlogTag } from './blog-tag.entity.ts';
 import { blogTagsFactory } from './blog-tags.factory.ts';
 import { BlogTagsRepository } from './blog-tags.repository.ts';
+import type { BlogTagData } from './blog-tags.types.ts';
 
 describe('BlogTagsRepository', () => {
   type GetRepository = Repository<BlogTag>;
 
   const tags = blogTagsFactory.buildList(2);
-  const queryBuilder = {
-    addOrderBy: vi.fn().mockReturnThis(),
-    andWhere: vi.fn().mockReturnThis(),
-    distinct: vi.fn().mockReturnThis(),
-    getMany: vi.fn(),
-    innerJoin: vi.fn().mockReturnThis(),
-    orderBy: vi.fn().mockReturnThis(),
-  };
+  const queryBuilder = createQueryBuilderMock<BlogTagData>();
 
   const find = vi.fn();
   const upsert = vi.fn();

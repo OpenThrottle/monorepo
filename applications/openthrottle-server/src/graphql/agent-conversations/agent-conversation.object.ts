@@ -3,6 +3,7 @@
  */
 
 import { Field, Float, Int, ObjectType } from '@nestjs/graphql';
+import { OffsetPageObject } from '@openthrottle/nestjs-graphql';
 
 @ObjectType()
 export class AgentConversationObject {
@@ -117,20 +118,22 @@ export class AgentConversationMessageObject {
 
 /** Result of listAgentConversations: conversations slice and total count. */
 @ObjectType()
-export class ListAgentConversationsResultObject {
-  @Field(() => [AgentConversationObject])
+export class ListAgentConversationsResultObject extends OffsetPageObject {
+  @Field(() => [AgentConversationObject], { deprecationReason: `Use items` })
   conversations!: AgentConversationObject[];
 
-  @Field(() => Int)
-  totalCount!: number;
+  @Field(() => [AgentConversationObject])
+  items!: AgentConversationObject[];
 }
 
 /** Result of getAgentConversationMessages: messages slice and total count. */
 @ObjectType()
-export class ListAgentConversationMessagesResultObject {
+export class ListAgentConversationMessagesResultObject extends OffsetPageObject {
   @Field(() => [AgentConversationMessageObject])
-  messages!: AgentConversationMessageObject[];
+  items!: AgentConversationMessageObject[];
 
-  @Field(() => Int)
-  totalCount!: number;
+  @Field(() => [AgentConversationMessageObject], {
+    deprecationReason: `Use items`,
+  })
+  messages!: AgentConversationMessageObject[];
 }

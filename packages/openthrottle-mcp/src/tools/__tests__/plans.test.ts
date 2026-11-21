@@ -572,7 +572,7 @@ describe('listPlansByStatusToolHandler', () => {
         },
       ];
       vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
-        listPlansByStatus: { plans, totalCount: 1 },
+        listPlansByStatus: { items: plans, totalCount: 1 },
       });
 
       const result = await listPlansByStatusToolHandler({
@@ -593,7 +593,7 @@ describe('listPlansByStatusToolHandler', () => {
   describe('when GraphQL returns no plans', () => {
     it('returns empty plans with totalCount', async () => {
       vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
-        listPlansByStatus: { plans: [], totalCount: 0 },
+        listPlansByStatus: { items: [], totalCount: 0 },
       });
 
       const result = await listPlansByStatusToolHandler({

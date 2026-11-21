@@ -1,4 +1,4 @@
-import { POSTGRES_DEFAULT_PAGE_SIZE } from '@openthrottle/nestjs-postgres';
+import { PAGINATION_DEFAULT_LIMIT } from '@openthrottle/nestjs-postgres';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -21,7 +21,7 @@ describe('toCmsPageOptions', () => {
   it('defaults skip to 0 and take to the repository page size', () => {
     expect(toCmsPageOptions(null, undefined)).toEqual({
       skip: 0,
-      take: POSTGRES_DEFAULT_PAGE_SIZE,
+      take: PAGINATION_DEFAULT_LIMIT,
     });
     expect(toCmsPageOptions(5, 10)).toEqual({ skip: 5, take: 10 });
   });

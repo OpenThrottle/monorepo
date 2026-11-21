@@ -4,10 +4,15 @@
 
 import { UseGuards } from '@nestjs/common';
 import { Args, Query, Resolver } from '@nestjs/graphql';
+import { assertPagination } from '@openthrottle/nestjs-graphql';
+import { PAGINATION_MAX_LIMIT } from '@openthrottle/nestjs-postgres';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
-import { Get<%= singularPascal %>Input } from './<%= name %>.input.ts';
+import {
+  Get<%= singularPascal %>Input,
+  List<%= pluralPascal %>Input,
+} from './<%= name %>.input.ts';
 import {
   <%= singularPascal %>ListResult,
   <%= singularPascal %>Object,
@@ -26,8 +31,18 @@ export class <%= namePascal %>Resolver {
   })
   // TODO: Replace SETTINGS_READ with the permission this feature actually needs.
   @Permissions(PERMISSIONS.SETTINGS_READ)
-  <%= pluralCamel %>(): Promise<<%= singularPascal %>ListResult> {
-    return this.<%= nameCamel %>Service.findAll();
+  <%= pluralCamel %>(
+    @Args('input', {
+      nullable: true,
+      type: () => List<%= pluralPascal %>Input,
+    })
+    input: List<%= pluralPascal %>Input | null,
+  ): Promise<<%= singularPascal %>ListResult> {
+    const pagination = input ?? {};
+
+    assertPagination(pagination, { max: PAGINATION_MAX_LIMIT });
+
+    return this.<%= nameCamel %>Service.findAll(pagination);
   }
 
   @Query(() => <%= singularPascal %>Object, {

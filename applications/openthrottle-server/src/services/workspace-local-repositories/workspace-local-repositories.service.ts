@@ -9,7 +9,7 @@
 
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import type { ListPaginationInput } from '@openthrottle/nestjs-postgres';
+import type { PaginationInput } from '@openthrottle/nestjs-postgres';
 import type {
   Repository,
   RepositoryCheckout,
@@ -81,11 +81,13 @@ export class WorkspaceLocalRepositoriesService {
    */
   async listByUserId(
     userId: string,
-    pagination?: ListPaginationInput,
+    pagination?: PaginationInput,
   ): Promise<WorkspaceLocalRepository[]> {
     const checkouts = await this.checkoutsRepository.listByUserId(
       userId,
       pagination,
+      // Rendered whole by workspaceSettings / chat options with no pager: keep the pre-25 default.
+      { defaultLimit: 50 },
     );
     return Promise.all(
       checkouts.map(async (checkout) =>

@@ -25,7 +25,7 @@ query getMe {
 
 query getAgentConversationMessages($input: GetAgentConversationMessagesInput!) {
   getAgentConversationMessages(input: $input) {
-    messages {
+    items {
       content
       createdAt
       id
@@ -40,7 +40,7 @@ query getAgentConversationMessages($input: GetAgentConversationMessagesInput!) {
 
 query listAgentConversations($input: ListAgentConversationsInput) {
   listAgentConversations(input: $input) {
-    conversations {
+    items {
       id
       status
       title

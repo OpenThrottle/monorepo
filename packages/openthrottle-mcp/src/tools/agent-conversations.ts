@@ -31,7 +31,7 @@ const MESSAGES_MAX_LIMIT = 500;
 const AGENT_CONVERSATION_BOUNDARY_WARNING = `Web chat threads only — use \`get_plan_output\` for Ralph/plan iteration logs.`;
 
 type ListAgentConversationsResult = GenericResult<{
-  conversations: ListAgentConversationsQuery['listAgentConversations']['conversations'];
+  conversations: ListAgentConversationsQuery['listAgentConversations']['items'];
   totalCount: number;
 }>;
 
@@ -40,7 +40,7 @@ type GetAgentConversationResult = GenericResult<{
 }>;
 
 type GetAgentConversationMessagesResult = GenericResult<{
-  messages: GetAgentConversationMessagesQuery['getAgentConversationMessages']['messages'];
+  messages: GetAgentConversationMessagesQuery['getAgentConversationMessages']['items'];
   totalCount: number;
 }>;
 
@@ -66,14 +66,17 @@ export const getAgentConversationMessagesToolDescription = `List messages for an
  * @description Resolves list pagination with grill-me defaults (20 default, 100 max).
  */
 const resolveListLimit = (limit: number | null | undefined): number => {
-  return Math.min(limit ?? LIST_DEFAULT_LIMIT, LIST_MAX_LIMIT);
+  return Math.max(1, Math.min(limit ?? LIST_DEFAULT_LIMIT, LIST_MAX_LIMIT));
 };
 
 /**
  * @description Resolves message pagination with grill-me defaults (100 default, 500 max).
  */
 const resolveMessagesLimit = (limit: number | null | undefined): number => {
-  return Math.min(limit ?? MESSAGES_DEFAULT_LIMIT, MESSAGES_MAX_LIMIT);
+  return Math.max(
+    1,
+    Math.min(limit ?? MESSAGES_DEFAULT_LIMIT, MESSAGES_MAX_LIMIT),
+  );
 };
 
 export async function listAgentConversationsToolHandler(
@@ -85,11 +88,11 @@ export async function listAgentConversationsToolHandler(
   }
 
   const limit = resolveListLimit(parsed.data.limit);
-  const offset = parsed.data.offset ?? 0;
+  const offset = Math.max(0, parsed.data.offset ?? 0);
   const status = parsed.data.status ?? 'active';
 
   return runTool<{
-    conversations: ListAgentConversationsQuery['listAgentConversations']['conversations'];
+    conversations: ListAgentConversationsQuery['listAgentConversations']['items'];
     totalCount: number;
   }>('agent_conversation_list', async () => {
     const token = getAuthToken();
@@ -104,7 +107,7 @@ export async function listAgentConversationsToolHandler(
     const listResult = result?.listAgentConversations;
     if (!listResult) return null;
 
-    const { conversations, totalCount } = listResult;
+    const { items: conversations, totalCount } = listResult;
     const emptyText = `No conversations found (totalCount: ${totalCount}).`;
     const listText = `Conversations (${conversations.length} of ${totalCount}):\n${JSON.stringify(conversations, null, 2)}`;
     const text = conversations.length === 0 ? emptyText : listText;
@@ -149,10 +152,10 @@ export async function getAgentConversationMessagesToolHandler(
   }
 
   const limit = resolveMessagesLimit(parsed.data.limit);
-  const offset = parsed.data.offset ?? 0;
+  const offset = Math.max(0, parsed.data.offset ?? 0);
 
   return runTool<{
-    messages: GetAgentConversationMessagesQuery['getAgentConversationMessages']['messages'];
+    messages: GetAgentConversationMessagesQuery['getAgentConversationMessages']['items'];
     totalCount: number;
   }>('agent_conversation_get_messages', async () => {
     const token = getAuthToken();
@@ -171,7 +174,7 @@ export async function getAgentConversationMessagesToolHandler(
     const messagesResult = result?.getAgentConversationMessages;
     if (!messagesResult) return null;
 
-    const { messages, totalCount } = messagesResult;
+    const { items: messages, totalCount } = messagesResult;
     const emptyText = `No messages found for conversation ${parsed.data.conversationId} (totalCount: ${totalCount}).`;
     const listText = `Messages (${messages.length} of ${totalCount}):\n${JSON.stringify(messages, null, 2)}`;
     const text = messages.length === 0 ? emptyText : listText;

@@ -160,7 +160,7 @@ export const getRemainingTasksForPlanToolDescription = `Fetch remaining tasks fo
 
 export const listTasksByCategoryToolDescription = `List tasks filtered by category (e.g. infra, documentation). Optional: planId (UUID), status, limit (1–200). Returns tasks ordered by sortOrder ASC within each plan, then createdAt ASC.`;
 
-export const reorderPlanTasksToolDescription = `Reorder tasks within a plan. Requires planId and taskIds (array of task UUIDs in desired order). Renumbers sortOrder to 1000, 2000, … atomically. Prefer this over delete-and-recreate when fixing task execution order.`;
+export const reorderPlanTasksToolDescription = `Reorder tasks within a plan. Requires planId and taskIds (task UUIDs in desired order). Listed tasks reorder among their own positions; unlisted tasks stay put. Atomic. Prefer this over delete-and-recreate when fixing task execution order.`;
 
 export const updateTaskToolDescription = `Update a task by id. Pass id and any of: title, description, status (one of: ${TASK_STATUS_VALUES}; uppercase), category, assignee, planId, project (deprecated free-text label), projectId (deprecated: a task's project is its plan's project), requirements, summary, sortOrder (execution order within plan; gap-based insert e.g. 1500 between 1000 and 2000), wave (coarse concurrency layer >= 1; null clears it back to unassigned; omit to leave unchanged. Not consumed for execution yet.).`;
 

@@ -21,6 +21,9 @@
       "path": "../nestjs-postgres/tsconfig.lib.json"
     },
     {
+      "path": "../nestjs-graphql/tsconfig.lib.json"
+    },
+    {
       "path": "../nestjs-auth/tsconfig.lib.json"
     },
     {

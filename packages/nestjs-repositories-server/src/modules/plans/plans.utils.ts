@@ -1,3 +1,4 @@
+import { SORT_ORDER_GAP } from '@openthrottle/nestjs-postgres';
 import { createBaseRepositoryMock } from '@openthrottle/nestjs-postgres/testing';
 import { vi } from 'vitest';
 
@@ -13,6 +14,9 @@ import type { PlanCreateInput, PlansRepositoryMock } from './plans.types.ts';
 export function createPlansRepositoryMock(): PlansRepositoryMock {
   return {
     ...createBaseRepositoryMock<Plan, PlanCreateInput>('plans'),
+    appendProjectSortOrder: vi.fn(async () => {
+      return SORT_ORDER_GAP;
+    }),
     countByDateRange: vi.fn(async () => {
       return 0;
     }),
@@ -32,7 +36,7 @@ export function createPlansRepositoryMock(): PlansRepositoryMock {
       return [];
     }),
     listFiltered: vi.fn(async () => {
-      return { plans: [], totalCount: 0 };
+      return { items: [], totalCount: 0 };
     }),
     listInProject: vi.fn(async () => {
       return [];
@@ -40,11 +44,14 @@ export function createPlansRepositoryMock(): PlansRepositoryMock {
     maxProjectSortOrders: vi.fn(async () => {
       return new Map<string, number>();
     }),
-    pageInProject: vi.fn(async () => {
-      return { plans: [], totalCount: 0 };
+    moveInProject: vi.fn(async () => {
+      return { kind: 'not-found' as const };
     }),
-    renumberProjectPlans: vi.fn(async () => {
-      return [];
+    pageInProject: vi.fn(async () => {
+      return { items: [], totalCount: 0 };
+    }),
+    reorderInProject: vi.fn(async () => {
+      return { assignments: [], kind: 'reordered' as const };
     }),
   };
 }

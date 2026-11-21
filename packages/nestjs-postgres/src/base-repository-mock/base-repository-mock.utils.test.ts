@@ -1,9 +1,13 @@
 import { NotFoundException } from '@nestjs/common';
+import type { SelectQueryBuilder } from 'typeorm';
 import { describe, expect, it } from 'vitest';
 
 import type { TestHardDeleteRecord } from '../base-repository/testing/test-hard-delete-record/test-hard-delete-record.entity.ts';
 import type { TestRecord } from '../base-repository/testing/test-record/test-record.entity.ts';
-import { createBaseRepositoryMock } from './base-repository-mock.utils.ts';
+import {
+  createBaseRepositoryMock,
+  createQueryBuilderMock,
+} from './base-repository-mock.utils.ts';
 
 /** A fixed timestamp, so the test never reads the real clock. */
 const FIXED_NOW = new Date('2026-11-01T00:00:00.000Z');
@@ -16,8 +20,8 @@ describe('createBaseRepositoryMock', () => {
       await expect(repository.findOne({ where: {} })).resolves.toBeNull();
       await expect(repository.findBy()).resolves.toEqual([]);
       await expect(repository.findByPaginated()).resolves.toEqual({
-        data: [],
-        pageInfo: { currentPage: 1, hasNextPage: false, totalCount: 0 },
+        items: [],
+        totalCount: 0,
       });
     });
 
@@ -103,6 +107,65 @@ describe('createBaseRepositoryMock', () => {
       await expect(repository.removeMany({ quantity: 1 })).resolves.toEqual({
         removedCount: 0,
       });
+    });
+  });
+});
+
+describe('createQueryBuilderMock', () => {
+  const acceptsBuilder = (builder: SelectQueryBuilder<TestRecord>) => {
+    return builder;
+  };
+
+  describe('chaining', () => {
+    it('returns the mock from every builder method and records the calls', () => {
+      const builder = createQueryBuilderMock<TestRecord>();
+
+      const chained = acceptsBuilder(builder)
+        .where('a = :a', { a: 1 })
+        .andWhere('b = 2')
+        .orderBy('a', 'ASC')
+        .skip(5)
+        .take(10);
+
+      expect(chained).toBe(builder);
+      expect(builder.where).toHaveBeenCalledWith('a = :a', { a: 1 });
+      expect(builder.take).toHaveBeenCalledWith(10);
+    });
+  });
+
+  describe('terminal defaults', () => {
+    it('resolve to empty results', async () => {
+      const builder = createQueryBuilderMock<TestRecord>();
+
+      await expect(builder.getMany()).resolves.toEqual([]);
+      await expect(builder.getManyAndCount()).resolves.toEqual([[], 0]);
+      await expect(builder.getOne()).resolves.toBeNull();
+      await expect(builder.getRawMany()).resolves.toEqual([]);
+      await expect(builder.getRawOne()).resolves.toBeNull();
+      await expect(builder.getCount()).resolves.toBe(0);
+      await expect(builder.execute()).resolves.toEqual({
+        affected: 0,
+        raw: [],
+      });
+    });
+  });
+
+  describe('overrides', () => {
+    it('seed results from options', async () => {
+      const builder = createQueryBuilderMock<TestRecord>({
+        count: 3,
+        rawOne: { count: 7 },
+      });
+
+      await expect(builder.getCount()).resolves.toBe(3);
+      await expect(builder.getRawOne()).resolves.toEqual({ count: 7 });
+    });
+
+    it('can be re-stubbed per test', async () => {
+      const builder = createQueryBuilderMock<TestRecord>();
+      builder.getRawMany.mockResolvedValue([{ id: 'x' }]);
+
+      await expect(builder.getRawMany()).resolves.toEqual([{ id: 'x' }]);
     });
   });
 });

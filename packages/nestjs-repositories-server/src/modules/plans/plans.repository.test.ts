@@ -2,14 +2,32 @@ import { createMock } from '@golevelup/ts-vitest';
 import { NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import {
+  appendSortOrder,
+  moveInScope,
+  reorderInScope,
+} from '@openthrottle/nestjs-postgres';
+import { createQueryBuilderMock } from '@openthrottle/nestjs-postgres/testing';
 import type { EntityManager, Repository } from 'typeorm';
-import { And, In, IsNull, LessThan, MoreThanOrEqual } from 'typeorm';
+import { And, IsNull, LessThan, MoreThanOrEqual } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Task } from '../tasks/task.entity.ts';
 import { Plan } from './plan.entity.ts';
+import { PLANS_PROJECT_SORT_ORDER_SCOPE } from './plans.constants.ts';
 import { plansFactory } from './plans.factory.ts';
 import { PlansRepository } from './plans.repository.ts';
+
+vi.mock('@openthrottle/nestjs-postgres', async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>();
+
+  return {
+    ...actual,
+    appendSortOrder: vi.fn(),
+    moveInScope: vi.fn(),
+    reorderInScope: vi.fn(),
+  };
+});
 
 describe('PlansRepository', () => {
   const softDelete = vi.fn();
@@ -21,34 +39,11 @@ describe('PlansRepository', () => {
   const managerFind = vi.fn();
   const managerQuery = vi.fn();
   const managerUpdate = vi.fn();
-  const queryBuilder = {
-    addOrderBy: vi.fn().mockReturnThis(),
-    andWhere: vi.fn().mockReturnThis(),
-    getMany: vi.fn(),
-    getManyAndCount: vi.fn(),
-    limit: vi.fn().mockReturnThis(),
-    orderBy: vi.fn().mockReturnThis(),
-    select: vi.fn().mockReturnThis(),
-    skip: vi.fn().mockReturnThis(),
-    take: vi.fn().mockReturnThis(),
-    where: vi.fn().mockReturnThis(),
-  };
+  const queryBuilder = createQueryBuilderMock<Plan>();
   let repository: PlansRepository;
 
   beforeEach(async () => {
     vi.clearAllMocks();
-    for (const method of [
-      queryBuilder.addOrderBy,
-      queryBuilder.andWhere,
-      queryBuilder.limit,
-      queryBuilder.orderBy,
-      queryBuilder.select,
-      queryBuilder.skip,
-      queryBuilder.take,
-      queryBuilder.where,
-    ]) {
-      method.mockReturnThis();
-    }
     const manager = createMock<EntityManager>({
       find: managerFind,
       findOneOrFail,
@@ -151,11 +146,10 @@ describe('PlansRepository', () => {
       assignees: [],
       orderColumn: 'createdAt',
       orderDirection: 'DESC',
+      pagination: { limit: 10, offset: 20 },
       project: null,
       projectId: null,
-      skip: 20,
       statuses: [],
-      take: 10,
       titleSubstring: null,
     } as const;
 
@@ -165,7 +159,7 @@ describe('PlansRepository', () => {
 
       const result = await repository.listFiltered(base);
 
-      expect(result).toEqual({ plans, totalCount: 41 });
+      expect(result).toEqual({ items: plans, totalCount: 41 });
       expect(queryBuilder.where).toHaveBeenCalledWith('plan.deletedAt IS NULL');
       expect(queryBuilder.andWhere).not.toHaveBeenCalled();
       expect(queryBuilder.orderBy).toHaveBeenCalledWith(
@@ -334,7 +328,7 @@ describe('PlansRepository', () => {
         offset: 50,
       });
 
-      expect(result).toEqual({ plans, totalCount: 94 });
+      expect(result).toEqual({ items: plans, totalCount: 94 });
       expect(queryBuilder.where).toHaveBeenCalledWith(
         'plan.projectId = :projectId',
         { projectId: 'project-1' },
@@ -381,34 +375,50 @@ describe('PlansRepository', () => {
     });
   });
 
-  describe('renumberProjectPlans', () => {
-    it('does nothing for an empty list', async () => {
-      const result = await repository.renumberProjectPlans('project-1', []);
+  describe('project ordering', () => {
+    it('appends through the shared helper, joining a given manager', async () => {
+      const manager = createMock<EntityManager>();
+      vi.mocked(appendSortOrder).mockResolvedValue(4000);
 
-      expect(result).toEqual([]);
-      expect(transaction).not.toHaveBeenCalled();
+      await expect(
+        repository.appendProjectSortOrder('project-1', manager),
+      ).resolves.toBe(4000);
+      expect(appendSortOrder).toHaveBeenCalledWith(
+        manager,
+        PLANS_PROJECT_SORT_ORDER_SCOPE,
+        'project-1',
+      );
     });
 
-    it('clears the positions first, then numbers 1000, 2000, … in the given order, in one transaction', async () => {
-      const plans = plansFactory.buildList(3);
-      managerUpdate.mockResolvedValue({ affected: 1 });
-      managerFind.mockResolvedValue(plans);
-      const ids = ['c', 'a', 'b'];
+    it('reorders and moves through the shared helpers', async () => {
+      vi.mocked(reorderInScope).mockResolvedValue({
+        assignments: [],
+        kind: 'reordered',
+      });
+      vi.mocked(moveInScope).mockResolvedValue({
+        kind: 'at-edge',
+        scopeId: 'project-1',
+      });
 
-      const result = await repository.renumberProjectPlans('project-1', ids);
-
-      expect(result).toBe(plans);
-      expect(transaction).toHaveBeenCalledTimes(1);
-      expect(managerUpdate.mock.calls[0]).toEqual([
-        Plan,
-        { id: In(ids), projectId: 'project-1' },
-        { projectSortOrder: null },
-      ]);
-      expect(managerUpdate.mock.calls.slice(1)).toEqual([
-        [Plan, { id: 'c', projectId: 'project-1' }, { projectSortOrder: 1000 }],
-        [Plan, { id: 'a', projectId: 'project-1' }, { projectSortOrder: 2000 }],
-        [Plan, { id: 'b', projectId: 'project-1' }, { projectSortOrder: 3000 }],
-      ]);
+      await expect(
+        repository.reorderInProject('project-1', ['a', 'b']),
+      ).resolves.toEqual({ assignments: [], kind: 'reordered' });
+      await expect(repository.moveInProject('a', 'UP')).resolves.toEqual({
+        kind: 'at-edge',
+        scopeId: 'project-1',
+      });
+      expect(reorderInScope).toHaveBeenCalledWith(
+        expect.anything(),
+        PLANS_PROJECT_SORT_ORDER_SCOPE,
+        'project-1',
+        ['a', 'b'],
+      );
+      expect(moveInScope).toHaveBeenCalledWith(
+        expect.anything(),
+        PLANS_PROJECT_SORT_ORDER_SCOPE,
+        'a',
+        'UP',
+      );
     });
   });
 });

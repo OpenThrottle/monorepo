@@ -4,7 +4,7 @@ import type { CreateModelInput } from '@openthrottle/nestjs-postgres';
 import {
   BaseRepository,
   isUniqueViolation,
-  resolveListPagination,
+  resolvePagination,
   toLikeContainsPattern,
 } from '@openthrottle/nestjs-postgres';
 import { In, Repository } from 'typeorm';
@@ -12,7 +12,10 @@ import { In, Repository } from 'typeorm';
 import { BlogAuthor } from '../blog-authors/blog-author.entity.ts';
 import { BlogTag } from '../blog-tags/blog-tag.entity.ts';
 import { BlogPost } from './blog-post.entity.ts';
-import { BLOG_POST_STATUS } from './blog-posts.constants.ts';
+import {
+  BLOG_POST_STATUS,
+  BLOG_POSTS_PUBLISHED_MAX_LIMIT,
+} from './blog-posts.constants.ts';
 import type {
   BlogPostDraftInput,
   BlogPostPage,
@@ -140,7 +143,11 @@ export class BlogPostsRepository extends BaseRepository<
   async findPublished(
     input: FindPublishedBlogPostsInput,
   ): Promise<BlogPostPage> {
-    const { take } = resolveListPagination({ limit: input.first });
+    // The website sitemap walks 200 posts per request; keep that cap rather than the global 100.
+    const { take } = resolvePagination(
+      { limit: input.first },
+      { max: BLOG_POSTS_PUBLISHED_MAX_LIMIT },
+    );
     const cursor =
       input.after == null ? null : decodeBlogPostCursor(input.after);
     if (input.after != null && cursor == null) {
@@ -227,7 +234,7 @@ export class BlogPostsRepository extends BaseRepository<
    * @public
    */
   async findAdminPosts(input: FindAdminBlogPostsInput): Promise<BlogPostPage> {
-    const { take } = resolveListPagination({ limit: input.first });
+    const { take } = resolvePagination({ limit: input.first });
     const cursor =
       input.after == null ? null : decodeBlogPostAdminCursor(input.after);
     if (input.after != null && cursor == null) {

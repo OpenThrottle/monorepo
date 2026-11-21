@@ -65,7 +65,10 @@ export class ServiceAccountsResolver {
     @CurrentUser() principal: AuthPrincipal | undefined,
   ): Promise<ServiceAccount[]> {
     assertHumanAuthPrincipal(principal);
-    return this.serviceAccountsRepository.findAll();
+    // The keys list has no pager, so keep the pre-25 default of 50.
+    return this.serviceAccountsRepository.findAll(undefined, {
+      defaultLimit: 50,
+    });
   }
 
   @Query(() => ServiceAccountObject, {

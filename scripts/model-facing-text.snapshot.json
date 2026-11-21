@@ -10,8 +10,8 @@
     "mcp.tool/add_skill_tag": 492,
     "mcp.tool/add_task_tag": 597,
     "mcp.tool/agent_conversation_get": 475,
-    "mcp.tool/agent_conversation_get_messages": 628,
-    "mcp.tool/agent_conversation_list": 639,
+    "mcp.tool/agent_conversation_get_messages": 564,
+    "mcp.tool/agent_conversation_list": 576,
     "mcp.tool/append_plan_output": 626,
     "mcp.tool/attach_session_subject": 878,
     "mcp.tool/auth_status": 697,
@@ -80,8 +80,8 @@
     "mcp.tool/remove_skill_tag": 408,
     "mcp.tool/remove_task_tag": 485,
     "mcp.tool/rename_skill_tag": 483,
-    "mcp.tool/reorder_plan_tasks": 572,
-    "mcp.tool/reorder_project_plans": 766,
+    "mcp.tool/reorder_plan_tasks": 593,
+    "mcp.tool/reorder_project_plans": 716,
     "mcp.tool/run_scheduled_job_now": 543,
     "mcp.tool/semantic_search": 471,
     "mcp.tool/set_blog_post_tags": 961,
@@ -174,8 +174,8 @@
     "mcp.toolDescription/remove_skill_tag": 139,
     "mcp.toolDescription/remove_task_tag": 167,
     "mcp.toolDescription/rename_skill_tag": 170,
-    "mcp.toolDescription/reorder_plan_tasks": 218,
-    "mcp.toolDescription/reorder_project_plans": 403,
+    "mcp.toolDescription/reorder_plan_tasks": 239,
+    "mcp.toolDescription/reorder_project_plans": 353,
     "mcp.toolDescription/run_scheduled_job_now": 269,
     "mcp.toolDescription/semantic_search": 147,
     "mcp.toolDescription/set_blog_post_tags": 605,
@@ -218,7 +218,7 @@
     "skill/ot-postgres": 5269,
     "skill/ot-skill-guide": 11206,
     "skill/ot-skill-sync": 9963,
-    "skill/ot-stack": 6721,
+    "skill/ot-stack": 7333,
     "skill/ot-worktree": 9832,
     "skillDescription/agents-ralph": 323,
     "skillDescription/github-cleanup": 402,
@@ -238,17 +238,17 @@
   },
   "reported": {
     "mcpToolset/admin": 16561,
-    "mcpToolset/agents": 3213,
+    "mcpToolset/agents": 3086,
     "mcpToolset/blog": 7444,
-    "mcpToolset/core": 40089,
+    "mcpToolset/core": 40060,
     "mcpToolset/scheduling": 5256,
-    "mcpToolsFull": 72563
+    "mcpToolsFull": 72407
   },
   "totals": {
-    "alwaysInjected": 48057,
+    "alwaysInjected": 48028,
     "mcpInstructions": 2183,
-    "mcpTools": 40089,
+    "mcpTools": 40060,
     "prompts": 141004,
-    "skills": 154582
+    "skills": 155194
   }
 }

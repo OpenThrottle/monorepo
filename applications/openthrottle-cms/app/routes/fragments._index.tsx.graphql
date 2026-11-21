@@ -8,7 +8,7 @@ fragment CmsFragmentRow on CmsFragmentObject {
 }
 
 query CmsFragments {
-  cmsFragments(take: 100) {
+  cmsFragments(limit: 100) {
     hasNextPage
     items {
       ...CmsFragmentRow

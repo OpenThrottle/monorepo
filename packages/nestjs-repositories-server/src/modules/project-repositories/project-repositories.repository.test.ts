@@ -1,7 +1,8 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import type { Repository } from 'typeorm';
+import { createQueryBuilderMock } from '@openthrottle/nestjs-postgres/testing';
+import type { ObjectLiteral, Repository } from 'typeorm';
 import { QueryFailedError } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -20,12 +21,7 @@ describe('ProjectRepositoriesRepository', () => {
   const create = vi.fn();
   const save = vi.fn();
   const remove = vi.fn();
-  const builder = {
-    getMany: vi.fn(),
-    innerJoinAndSelect: vi.fn(),
-    orderBy: vi.fn(),
-    where: vi.fn(),
-  };
+  const builder = createQueryBuilderMock<ObjectLiteral>();
   let repository: ProjectRepositoriesRepository;
 
   beforeEach(async () => {
@@ -38,10 +34,6 @@ describe('ProjectRepositoriesRepository', () => {
       return entity;
     });
     remove.mockResolvedValue({ affected: 1, raw: [] });
-    builder.getMany.mockResolvedValue([]);
-    builder.innerJoinAndSelect.mockReturnValue(builder);
-    builder.orderBy.mockReturnValue(builder);
-    builder.where.mockReturnValue(builder);
 
     const app = await Test.createTestingModule({
       providers: [

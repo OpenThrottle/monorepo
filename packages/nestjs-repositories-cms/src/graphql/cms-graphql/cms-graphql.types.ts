@@ -11,3 +11,14 @@ export type CmsGraphqlErrorCode =
   | 'FORBIDDEN'
   | 'NOT_FOUND'
   | 'UNAUTHENTICATED';
+
+/**
+ * @description The paging arguments of a cms list query: `limit` / `offset`, plus the
+ * deprecated `take` / `skip` they replace.
+ */
+export interface CmsPageArgs {
+  readonly limit: number | null | undefined;
+  readonly offset: number | null | undefined;
+  readonly skip: number | null | undefined;
+  readonly take: number | null | undefined;
+}

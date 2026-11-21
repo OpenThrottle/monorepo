@@ -3,7 +3,7 @@ export const BLOG_FEED_LIMIT = 20;
 
 /**
  * @description Page size for the sitemap walk. 200 is the API's
- * `LIST_PAGINATION_MAX_LIMIT` (larger values are clamped), so the walk takes
+ * `BLOG_POSTS_PUBLISHED_MAX_LIMIT` (larger values are clamped), so the walk takes
  * one request per 200 posts.
  */
 export const BLOG_SITEMAP_PAGE_SIZE = 200;

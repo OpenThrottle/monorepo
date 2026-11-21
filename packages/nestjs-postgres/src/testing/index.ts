@@ -1,6 +1,6 @@
 /**
  * @description Test-only entry point (`@openthrottle/nestjs-postgres/testing`): the
- * `BaseRepository` mock every repositories package builds its own mocks on. Kept out of
+ * `BaseRepository` mock (and a chainable `createQueryBuilderMock`) every repositories package builds its own mocks on. Kept out of
  * the main barrel because it imports `vitest`, a devDependency the production image does
  * not install.
  */

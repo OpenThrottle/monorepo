@@ -10,8 +10,8 @@ const buildService = () => {
   const schemasRepository = createMock<SchemasRepository>();
 
   vi.mocked(schemasRepository.findByPaginated).mockResolvedValue({
-    data: [],
-    pageInfo: { currentPage: 1, hasNextPage: false, totalCount: 0 },
+    items: [],
+    totalCount: 0,
   });
 
   return {

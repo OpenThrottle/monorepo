@@ -373,7 +373,9 @@ export class TaggingProcessor
    * source=server-llm if the row is missing.
    */
   private async resolveTaggingCaller(): Promise<TagCaller> {
-    const accounts = await this.serviceAccountsRepository.findAll();
+    const accounts = await this.serviceAccountsRepository.findAll(undefined, {
+      defaultLimit: 50, // looked up by name with no pager, so keep the pre-25 default
+    });
     const tagging = accounts.find(
       (account) => account.name === TAGGING_SERVICE_ACCOUNT_NAME,
     );

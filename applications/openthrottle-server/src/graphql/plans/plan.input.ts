@@ -3,6 +3,7 @@
  */
 
 import { Field, ID, InputType, Int, registerEnumType } from '@nestjs/graphql';
+import { OffsetPaginationInput } from '@openthrottle/nestjs-graphql';
 import { PLAN_STATUS_LIST } from '@openthrottle/nestjs-repositories-server';
 
 import { PlanTaskStatus } from './plan-task-status.enum.ts';
@@ -154,18 +155,12 @@ export class UpdatePlanInput {
 }
 
 @InputType()
-export class ListPlansByStatusInput {
+export class ListPlansByStatusInput extends OffsetPaginationInput {
   @Field(() => [String], {
     description: `Filter by author or assignee (any match). Empty means no assignee filter.`,
     nullable: 'itemsAndList',
   })
   assignees?: string[] | null;
-
-  @Field(() => Int, { nullable: true })
-  limit?: number | null;
-
-  @Field(() => Int, { nullable: true })
-  offset?: number | null;
 
   @Field(() => String, {
     deprecationReason: `Free-text label, unrelated to projects and superseded by projectId.`,

@@ -1,10 +1,13 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import type { ListPaginationInput } from '@openthrottle/nestjs-postgres';
+import type {
+  PaginationInput,
+  PaginationOptions,
+} from '@openthrottle/nestjs-postgres';
 import {
   BaseRepository,
   isUniqueViolation,
-  resolveListPagination,
+  resolvePagination,
 } from '@openthrottle/nestjs-postgres';
 import { IsNull, Repository } from 'typeorm';
 
@@ -46,9 +49,10 @@ export class RepositoryCheckoutsRepository extends BaseRepository<
    */
   async listByUserId(
     userId: string,
-    pagination?: ListPaginationInput,
+    pagination?: PaginationInput,
+    options?: PaginationOptions,
   ): Promise<RepositoryCheckout[]> {
-    const { skip, take } = resolveListPagination(pagination);
+    const { skip, take } = resolvePagination(pagination, options);
     return this.findBy({
       order: { createdAt: 'DESC' },
       relations: { repository: true },

@@ -177,7 +177,7 @@ describe.skipIf(!ENABLED)('NestjsRepositoriesCmsModule (live cms DB)', () => {
       .get(repository)
       .findByPaginated({ take: 1 });
 
-    expect(Array.isArray(page.data)).toBe(true);
+    expect(Array.isArray(page.items)).toBe(true);
   });
 
   it('soft deletes through is_deleted and treats NULL as live', async () => {

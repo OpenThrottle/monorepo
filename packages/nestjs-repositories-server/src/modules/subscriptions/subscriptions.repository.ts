@@ -2,11 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type {
   CreateModelInput,
-  ListPaginationInput,
+  PaginationInput,
+  PaginationOptions,
 } from '@openthrottle/nestjs-postgres';
 import {
   BaseRepository,
-  resolveListPagination,
+  resolvePagination,
 } from '@openthrottle/nestjs-postgres';
 import { In, Repository } from 'typeorm';
 
@@ -60,9 +61,10 @@ export class SubscriptionsRepository extends BaseRepository<
    */
   async findByUserId(
     userId: string,
-    pagination?: ListPaginationInput,
+    pagination?: PaginationInput,
+    options?: PaginationOptions,
   ): Promise<Subscription[]> {
-    const { skip, take } = resolveListPagination(pagination);
+    const { skip, take } = resolvePagination(pagination, options);
     return this.findBy({
       order: { createdAt: 'DESC' },
       skip,

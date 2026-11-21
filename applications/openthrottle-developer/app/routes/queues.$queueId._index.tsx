@@ -91,8 +91,8 @@ export default function Component(
 
   // Setup
   const queueBasePath = `/queues/${encodeURIComponent(queue.name)}`;
-  const allJobs = queue.jobs?.jobs ?? [];
-  const total = queue.jobs?.total ?? 0;
+  const allJobs = queue.jobs?.items ?? [];
+  const total = queue.jobs?.totalCount ?? 0;
   const query = readSearchParam(searchParams).toLowerCase();
   const hasQuery = query !== '';
   const matchingJobs = allJobs.filter((job) => {

@@ -6,6 +6,7 @@
  */
 
 import { Args, Query, Resolver } from '@nestjs/graphql';
+import { resolvePagination } from '@openthrottle/nestjs-postgres';
 import type { AgentAssetSearchChunk } from '@openthrottle/node-client';
 import {
   searchAgentAssets as runAgentAssetSearch,
@@ -66,10 +67,10 @@ export class AgentAssetSearchResolver {
     @Args('input', { type: () => AgentAssetSearchInput })
     input: AgentAssetSearchInput,
   ): Promise<AgentAssetSearchResult> {
-    const limit = Math.min(
-      Math.max(1, input.limit ?? DEFAULT_LIMIT),
-      MAX_LIMIT,
-    );
+    const { take: limit } = resolvePagination(input, {
+      defaultLimit: DEFAULT_LIMIT,
+      max: MAX_LIMIT,
+    });
 
     const query = input.query?.trim() ?? '';
     if (!query) {

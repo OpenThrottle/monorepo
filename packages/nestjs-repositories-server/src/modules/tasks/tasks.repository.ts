@@ -1,6 +1,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { BaseRepository } from '@openthrottle/nestjs-postgres';
+import type { SortOrderReorderResult } from '@openthrottle/nestjs-postgres';
+import {
+  appendSortOrder,
+  BaseRepository,
+  edgeSortOrder,
+  insertBeside,
+  rebalanceScope,
+  reorderInScope,
+  SORT_ORDER_EDGE,
+} from '@openthrottle/nestjs-postgres';
 import {
   And,
   In,
@@ -12,11 +21,10 @@ import {
 } from 'typeorm';
 
 import { REMAINING_TASK_STATUSES } from '../../plan-task-status/plan-task-status.constants.ts';
-import { Plan } from '../plans/plan.entity.ts';
 import { Task } from './task.entity.ts';
 import {
   PLAN_TASK_LIST_ORDER,
-  TASK_SORT_ORDER_GAP,
+  TASKS_SORT_ORDER_SCOPE,
 } from './tasks.constants.ts';
 import type {
   CountTasksByDateRangeParams,
@@ -72,167 +80,79 @@ export class TasksRepository extends BaseRepository<Task, TaskCreateInput> {
   }
 
   /**
-   * @description Next sortOrder for a new task when omitted on create: 1000 for first task in plan, otherwise MAX(sort_order) + {@link TASK_SORT_ORDER_GAP}. Reads live tasks only.
+   * @description Next sortOrder for a new task when omitted on create: one gap past the
+   * plan's last live task, or one gap for an empty plan.
    */
   async resolveNextSortOrder(planId: string): Promise<number> {
-    const result = await this.repository
-      .createQueryBuilder('task')
-      .select('MAX(task.sortOrder)', 'max')
-      .where('task.planId = :planId', { planId })
-      .andWhere('task.deletedAt IS NULL')
-      .getRawOne<{ max: string | null }>();
-
-    const max =
-      result?.max != null && result.max !== '' ? Number(result.max) : null;
-
-    return max != null ? max + TASK_SORT_ORDER_GAP : TASK_SORT_ORDER_GAP;
+    return appendSortOrder(
+      this.repository.manager,
+      TASKS_SORT_ORDER_SCOPE,
+      planId,
+    );
   }
 
   /**
-   * @description Midpoint sort_order beside an anchor on the given side, or null
-   * when the integer gap to the neighbor on that side is exhausted (|gap| <= 1)
-   * so the caller must {@link rebalancePlanSortOrders} first. When the anchor is
-   * the plan edge on that side, steps out by {@link TASK_SORT_ORDER_GAP}. Keeps
-   * before-hooks immediately before their anchor and after-hooks immediately
-   * after, so a before/anchor/after group stays adjacent. Neighbors are live tasks only.
-   */
-  async midpointBesideAnchor(
-    planId: string,
-    anchorSortOrder: number,
-    side: HookAdjacencySide,
-    repository: Repository<Task> = this.repository,
-  ): Promise<number | null> {
-    const base = repository
-      .createQueryBuilder('task')
-      .select('task.sortOrder', 'value')
-      .where('task.planId = :planId', { planId })
-      .andWhere('task.deletedAt IS NULL');
-
-    if (side === 'before') {
-      const neighbor = await base
-        .clone()
-        .andWhere('task.sortOrder < :anchor', { anchor: anchorSortOrder })
-        .orderBy('task.sortOrder', 'DESC')
-        .getRawOne<{ value: string }>();
-      if (neighbor?.value == null) {
-        return anchorSortOrder - TASK_SORT_ORDER_GAP;
-      }
-      const lo = Number(neighbor.value);
-      if (anchorSortOrder - lo <= 1) return null;
-      return Math.floor((lo + anchorSortOrder) / 2);
-    }
-
-    const neighbor = await base
-      .clone()
-      .andWhere('task.sortOrder > :anchor', { anchor: anchorSortOrder })
-      .orderBy('task.sortOrder', 'ASC')
-      .getRawOne<{ value: string }>();
-    if (neighbor?.value == null) {
-      return anchorSortOrder + TASK_SORT_ORDER_GAP;
-    }
-    const hi = Number(neighbor.value);
-    if (hi - anchorSortOrder <= 1) return null;
-    return Math.floor((anchorSortOrder + hi) / 2);
-  }
-
-  /**
-   * @description Renumbers every live task in a plan onto a {@link TASK_SORT_ORDER_GAP}
-   * stride (1000, 2000, …) in canonical order (sort_order ASC, created_at ASC),
-   * reclaiming integer room for midpoint insertion. Soft-deleted tasks are neither ranked
-   * nor touched: the `(plan_id, sort_order)` unique index covers live rows only. Two bulk
-   * passes in one transaction — park into a disjoint negative band, then restamp — avoid
-   * transient UNIQUE(plan_id, sort_order) collisions. Optionally reuses a caller
-   * manager to participate in an outer transaction.
+   * @description Renumbers every live task in a plan onto the gap stride (1000, 2000, …) in
+   * canonical order (sort_order, then created_at), reclaiming room for midpoint inserts.
+   * Soft-deleted tasks are neither ranked nor touched. Pass `manager` to join an outer
+   * transaction.
    */
   async rebalancePlanSortOrders(
     planId: string,
     manager = this.repository.manager,
   ): Promise<void> {
-    const run = async (tx: typeof manager): Promise<void> => {
-      await tx.query(
-        `UPDATE tasks AS t
-         SET sort_order = -ranked.rn
-         FROM (
-           SELECT id, ROW_NUMBER() OVER (
-             ORDER BY sort_order ASC, created_at ASC
-           ) AS rn
-           FROM tasks WHERE plan_id = $1 AND deleted_at IS NULL
-         ) AS ranked
-         WHERE t.id = ranked.id`,
-        [planId],
-      );
-      await tx.query(
-        `UPDATE tasks AS t
-         SET sort_order = ranked.rn * $2
-         FROM (
-           SELECT id, ROW_NUMBER() OVER (ORDER BY sort_order DESC) AS rn
-           FROM tasks WHERE plan_id = $1 AND deleted_at IS NULL
-         ) AS ranked
-         WHERE t.id = ranked.id`,
-        [planId, TASK_SORT_ORDER_GAP],
-      );
-    };
-    return manager === this.repository.manager
-      ? this.repository.manager.transaction(run)
-      : run(manager);
+    await rebalanceScope(manager, TASKS_SORT_ORDER_SCOPE, planId);
+  }
+
+  /**
+   * @description Reorders the listed tasks among the sort values they already hold, leaving
+   * every unlisted task where it is. See `reorderInScope`.
+   */
+  async reorderInPlan(
+    planId: string,
+    taskIds: readonly string[],
+  ): Promise<SortOrderReorderResult> {
+    return reorderInScope(
+      this.repository.manager,
+      TASKS_SORT_ORDER_SCOPE,
+      planId,
+      taskIds,
+    );
   }
 
   /**
    * @description Allocates a sort_order immediately before/after an anchor task,
-   * rebalancing the plan and retrying once when the integer gap is exhausted.
-   * Throws when the anchor is not in the plan or no slot exists post-rebalance.
-   * The read + rebalance run under a plan row-lock so concurrent allocations
-   * serialize; the returned slot is intended for an insert within the same flow.
+   * rebalancing the plan and retrying once when the integer gap is exhausted. Runs under the
+   * plan's sort-order lock, so concurrent allocations serialize; the returned slot is
+   * intended for an insert within the same flow.
+   * @throws Error when the anchor is not a live task of the plan, or no slot exists after a
+   * rebalance.
    */
   async allocateSortOrderBesideAnchor(
     planId: string,
     anchorTaskId: string,
     side: HookAdjacencySide,
   ): Promise<number> {
-    return this.repository.manager.transaction(async (manager) => {
-      const taskRepo = manager.getRepository(Task);
-      await manager
-        .getRepository(Plan)
-        .createQueryBuilder('plan')
-        .setLock('pessimistic_write')
-        .where('plan.id = :planId', { planId })
-        .getOne();
+    const result = await insertBeside(
+      this.repository.manager,
+      TASKS_SORT_ORDER_SCOPE,
+      planId,
+      anchorTaskId,
+      side,
+    );
 
-      const anchor = await taskRepo.findOne({
-        where: { id: anchorTaskId, planId },
-      });
-      if (anchor == null) {
-        throw new Error(
-          `anchor task ${anchorTaskId} not found in plan ${planId}`,
-        );
-      }
-
-      const first = await this.midpointBesideAnchor(
-        planId,
-        anchor.sortOrder,
-        side,
-        taskRepo,
+    if (result.kind === 'anchor-not-found') {
+      throw new Error(
+        `anchor task ${anchorTaskId} not found in plan ${planId}`,
       );
-      if (first != null) return first;
-
-      await this.rebalancePlanSortOrders(planId, manager);
-      const fresh = await taskRepo.findOne({
-        select: { sortOrder: true },
-        where: { id: anchorTaskId },
-      });
-      const retried = await this.midpointBesideAnchor(
-        planId,
-        fresh?.sortOrder ?? anchor.sortOrder,
-        side,
-        taskRepo,
+    }
+    if (result.kind === 'no-room') {
+      throw new Error(
+        `no sort_order slot beside anchor ${anchorTaskId} after rebalance`,
       );
-      if (retried == null) {
-        throw new Error(
-          `no sort_order slot beside anchor ${anchorTaskId} after rebalance`,
-        );
-      }
-      return retried;
-    });
+    }
+
+    return result.sortOrder;
   }
 
   /**
@@ -423,31 +343,28 @@ export class TasksRepository extends BaseRepository<Task, TaskCreateInput> {
   }
 
   /**
-   * @description Plan-edge sort_order for a plan-level hook: before → MIN−GAP,
-   * after → MAX+GAP (empty plan starts at {@link TASK_SORT_ORDER_GAP}). Mirrors
-   * the first/last placement bands so plan hooks bookend the task list. Reads live tasks only.
+   * @description Plan-edge sort_order for a plan-level hook: before → one gap below the first
+   * live task, after → one gap past the last (an empty plan starts at one gap), so plan
+   * hooks bookend the task list.
    */
   private async resolvePlanEdgeSortOrder(
     planId: string,
     role: HookAdjacencySide,
   ): Promise<number> {
-    const aggregate = role === 'before' ? 'MIN' : 'MAX';
-    const result = await this.repository
-      .createQueryBuilder('task')
-      .select(`${aggregate}(task.sortOrder)`, 'value')
-      .where('task.planId = :planId', { planId })
-      .andWhere('task.deletedAt IS NULL')
-      .getRawOne<{ value: string | null }>();
-    const hasValue = result?.value != null && result.value !== '';
-    if (!hasValue) return TASK_SORT_ORDER_GAP;
-    const value = Number(result?.value);
-    const isBefore = role === 'before';
-    return isBefore ? value - TASK_SORT_ORDER_GAP : value + TASK_SORT_ORDER_GAP;
+    const edge =
+      role === 'before' ? SORT_ORDER_EDGE.START : SORT_ORDER_EDGE.END;
+
+    return edgeSortOrder(
+      this.repository.manager,
+      TASKS_SORT_ORDER_SCOPE,
+      planId,
+      edge,
+    );
   }
 
   /**
    * @description Atomically create many tasks for one plan in a single transaction. Omitted sortOrders
-   * append MAX+{@link TASK_SORT_ORDER_GAP} stepping in array order (computed once inside the tx, over live tasks);
+   * append one gap past the last live task, stepping in array order (computed once inside the tx, over live tasks);
    * explicit per-item sortOrders are kept. Any failure (e.g. a sortOrder unique violation) rolls back
    * the whole batch — no partially-created plan. Returns the saved tasks in input order.
    */
@@ -460,34 +377,18 @@ export class TasksRepository extends BaseRepository<Task, TaskCreateInput> {
     return this.repository.manager.transaction(async (manager) => {
       const taskRepo = manager.getRepository(Task);
 
-      // Row-lock the parent plan before reading MAX(sort_order) so concurrent
-      // batch creates against the same plan serialize. Under READ COMMITTED the
-      // MAX read alone does not lock the gap, so two writers could otherwise
-      // compute the same existingMax and assign duplicate sort_order values
-      // (which the live (plan_id, sort_order) unique index rejects with a 23505,
-      // rolling back the whole batch). The lock makes the read see committed
-      // prior rows.
-      await manager
-        .getRepository(Plan)
-        .createQueryBuilder('plan')
-        .setLock('pessimistic_write')
-        .where('plan.id = :planId', { planId })
-        .getOne();
-
-      const maxResult = await taskRepo
-        .createQueryBuilder('task')
-        .select('MAX(task.sortOrder)', 'max')
-        .where('task.planId = :planId', { planId })
-        .andWhere('task.deletedAt IS NULL')
-        .getRawOne<{ max: string | null }>();
-      const hasExistingMax = maxResult?.max != null && maxResult.max !== '';
-      const existingMax = hasExistingMax ? Number(maxResult?.max) : 0;
-
-      let nextAuto = existingMax + TASK_SORT_ORDER_GAP;
+      // The append read takes the plan's sort-order lock for the rest of this transaction,
+      // so concurrent batch creates against one plan serialize instead of computing the same
+      // next value and tripping the live (plan_id, sort_order) unique index.
+      let nextAuto = await appendSortOrder(
+        manager,
+        TASKS_SORT_ORDER_SCOPE,
+        planId,
+      );
 
       const entities = items.map((item) => {
         const sortOrder = item.sortOrder != null ? item.sortOrder : nextAuto;
-        if (item.sortOrder == null) nextAuto += TASK_SORT_ORDER_GAP;
+        if (item.sortOrder == null) nextAuto += TASKS_SORT_ORDER_SCOPE.gap;
 
         return taskRepo.create({
           assignee: item.assignee,

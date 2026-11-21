@@ -48,7 +48,9 @@ export class UsersResolver {
   })
   @Permissions(PERMISSIONS.USERS_READ)
   async users(): Promise<User[]> {
-    const entities = await this.usersRepository.findAll();
+    const entities = await this.usersRepository.findAll(undefined, {
+      defaultLimit: 50, // admin users list has no pager, so keep the pre-25 default
+    });
 
     return entities;
   }

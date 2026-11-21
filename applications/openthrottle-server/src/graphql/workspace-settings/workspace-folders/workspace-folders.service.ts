@@ -233,9 +233,11 @@ export class WorkspaceFoldersService {
     const roots = getWorkspaceRoots();
     if (roots.length === 0) return [];
 
-    const checkouts = await this.checkoutsRepository.listByUserId(userId, {
-      limit: 200,
-    });
+    const checkouts = await this.checkoutsRepository.listByUserId(
+      userId,
+      { limit: 200 },
+      { max: 200 }, // sends 200, above the 100 default cap
+    );
     const registeredPaths = new Set(
       checkouts.map((checkout) => checkout.filesystemPath),
     );
@@ -385,9 +387,11 @@ export class WorkspaceFoldersService {
   private async loadRegistrationIndex(
     userId: string,
   ): Promise<{ ids: Set<string>; paths: Set<string> }> {
-    const checkouts = await this.checkoutsRepository.listByUserId(userId, {
-      limit: 200,
-    });
+    const checkouts = await this.checkoutsRepository.listByUserId(
+      userId,
+      { limit: 200 },
+      { max: 200 }, // sends 200, above the 100 default cap
+    );
     return {
       ids: new Set(checkouts.map((checkout) => checkout.id)),
       paths: new Set(checkouts.map((checkout) => checkout.filesystemPath)),
@@ -763,9 +767,11 @@ export class WorkspaceFoldersService {
    * checkouts, with inspection snapshots refreshed on view past the TTL.
    */
   async workspaceRepositories(userId: string): Promise<RepositoryObject[]> {
-    const checkouts = await this.checkoutsRepository.listByUserId(userId, {
-      limit: 200,
-    });
+    const checkouts = await this.checkoutsRepository.listByUserId(
+      userId,
+      { limit: 200 },
+      { max: 200 }, // sends 200, above the 100 default cap
+    );
 
     const groups = new Map<
       string,

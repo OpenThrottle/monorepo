@@ -1,9 +1,13 @@
 import { Args, Int, Query, Resolver } from '@nestjs/graphql';
 import { Public } from '@openthrottle/nestjs-auth';
+import {
+  PAGINATION_DEFAULT_LIMIT,
+  PAGINATION_MAX_LIMIT,
+} from '@openthrottle/nestjs-postgres';
 
 import {
   parseCmsStatus,
-  toCmsPageOptions,
+  resolveCmsPageOptions,
 } from '../cms-graphql/cms-graphql.utils.ts';
 import { CmsSchemaListResult, CmsSchemaObject } from './cms-schemas.object.ts';
 import { CmsSchemasService } from './cms-schemas.service.ts';
@@ -18,18 +22,40 @@ export class CmsSchemasResolver {
   constructor(private readonly cmsSchemasService: CmsSchemasService) {}
 
   @Query(() => CmsSchemaListResult, {
-    description: `One page of live cms schemas, optionally filtered by status (ACTIVE | DISABLED | DRAFT) and typename. take is clamped to 1–100 (default 25).`,
+    description: `One page of live cms schemas, optionally filtered by status (ACTIVE | DISABLED | DRAFT) and typename. limit is 1 to 100 (default 25); take and skip are deprecated aliases of limit and offset.`,
   })
   async cmsSchemas(
-    @Args('skip', { nullable: true, type: () => Int }) skip: number | null,
+    @Args('limit', {
+      description: `Page size, 1 to ${PAGINATION_MAX_LIMIT} (default ${PAGINATION_DEFAULT_LIMIT}). Replaces take.`,
+      nullable: true,
+      type: () => Int,
+    })
+    limit: number | null,
+    @Args('offset', {
+      description: `Rows to skip, 0 or more. Replaces skip.`,
+      nullable: true,
+      type: () => Int,
+    })
+    offset: number | null,
+    @Args('skip', {
+      deprecationReason: `Use offset`,
+      nullable: true,
+      type: () => Int,
+    })
+    skip: number | null,
     @Args('status', { nullable: true, type: () => String })
     status: string | null,
-    @Args('take', { nullable: true, type: () => Int }) take: number | null,
+    @Args('take', {
+      deprecationReason: `Use limit`,
+      nullable: true,
+      type: () => Int,
+    })
+    take: number | null,
     @Args('typename', { nullable: true, type: () => String })
     typename: string | null,
   ): Promise<CmsSchemaListResult> {
     return this.cmsSchemasService.findPage({
-      ...toCmsPageOptions(skip, take),
+      ...resolveCmsPageOptions({ limit, offset, skip, take }),
       status: parseCmsStatus(status),
       typename: typename ?? null,
     });

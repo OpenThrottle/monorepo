@@ -47,9 +47,9 @@ const mockQueue = {
   delayedCount: 0,
   failedCount: 0,
   jobs: {
-    hasNext: false,
-    jobs: emptyJobs,
-    total: 0,
+    hasNextPage: false,
+    items: emptyJobs,
+    totalCount: 0,
   },
   name: 'plans',
   waitingCount: 0,
@@ -182,14 +182,14 @@ describe('routes/queues.$queueId.tsx', () => {
             ...mockLoaderData,
             queue: {
               ...mockQueue,
-              jobs: { hasNext: false, jobs: [mockJob], total: 1 },
+              jobs: { hasNextPage: false, items: [mockJob], totalCount: 1 },
             },
           }}
           matches={buildQueueMatches({
             ...mockLoaderData,
             queue: {
               ...mockQueue,
-              jobs: { hasNext: false, jobs: [mockJob], total: 1 },
+              jobs: { hasNextPage: false, items: [mockJob], totalCount: 1 },
             },
           })}
           params={{ queueId: 'plans' }}

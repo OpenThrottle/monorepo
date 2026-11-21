@@ -3,17 +3,18 @@
  * order, plus the project's total live plan count so a client can render page controls.
  */
 
-import { Field, Int, ObjectType } from '@nestjs/graphql';
+import { Field, ObjectType } from '@nestjs/graphql';
+import { OffsetPageObject } from '@openthrottle/nestjs-graphql';
 
 import { PlanObject } from '../plans/plan.object.ts';
 
 @ObjectType()
-export class ProjectPlansPageResultObject {
-  @Field(() => [PlanObject])
-  plans!: PlanObject[];
-
-  @Field(() => Int, {
-    description: `Live plans in the project, across every page`,
+export class ProjectPlansPageResultObject extends OffsetPageObject {
+  @Field(() => [PlanObject], {
+    description: `This page's plans, in project order`,
   })
-  totalCount!: number;
+  items!: PlanObject[];
+
+  @Field(() => [PlanObject], { deprecationReason: `Use items` })
+  plans!: PlanObject[];
 }

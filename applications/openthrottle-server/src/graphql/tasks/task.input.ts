@@ -3,6 +3,7 @@
  */
 
 import { Field, ID, InputType, Int } from '@nestjs/graphql';
+import { OffsetPaginationInput } from '@openthrottle/nestjs-graphql';
 
 @InputType()
 export class CreateTaskInput {
@@ -199,25 +200,7 @@ export class TasksByPlanIdInput {
 }
 
 @InputType()
-export class TasksByProjectIdInput {
-  /**
-   * Optional limit for pagination. When omitted, all tasks are returned.
-   */
-  @Field(() => Number, {
-    description: `Max number of tasks to return. Omit for no limit.`,
-    nullable: true,
-  })
-  limit!: number | null;
-
-  /**
-   * Optional offset for pagination. Used with limit; ignored when limit is omitted.
-   */
-  @Field(() => Number, {
-    description: `Number of tasks to skip. Omit or 0 for first page.`,
-    nullable: true,
-  })
-  offset!: number | null;
-
+export class TasksByProjectIdInput extends OffsetPaginationInput {
   @Field(() => ID, { description: `Project id (FK) to list tasks for` })
   projectId!: string;
 }

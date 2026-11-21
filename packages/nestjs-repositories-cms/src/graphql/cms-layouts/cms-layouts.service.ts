@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
+import { hasNextPage } from '@openthrottle/nestjs-postgres';
 import { GraphQLError } from 'graphql';
 import type { FindOptionsWhere } from 'typeorm';
 import { DataSource } from 'typeorm';
@@ -66,9 +67,9 @@ export class CmsLayoutsService {
     });
 
     return {
-      hasNextPage: page.pageInfo.hasNextPage,
-      items: page.data.map(toCmsLayoutSummaryObject),
-      totalCount: page.pageInfo.totalCount,
+      hasNextPage: hasNextPage(page, options.skip),
+      items: page.items.map(toCmsLayoutSummaryObject),
+      totalCount: page.totalCount,
     };
   }
 

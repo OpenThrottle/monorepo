@@ -79,8 +79,8 @@ describe('CmsFragmentsService', () => {
       const fragment = fragmentsFactory.build();
 
       vi.mocked(fragmentsRepository.findByPaginated).mockResolvedValue({
-        data: [fragment],
-        pageInfo: { currentPage: 1, hasNextPage: true, totalCount: 3 },
+        items: [fragment],
+        totalCount: 3,
       });
 
       await expect(
@@ -107,8 +107,8 @@ describe('CmsFragmentsService', () => {
       const { fragmentsRepository, service } = buildService();
 
       vi.mocked(fragmentsRepository.findByPaginated).mockResolvedValue({
-        data: [],
-        pageInfo: { currentPage: 1, hasNextPage: false, totalCount: 0 },
+        items: [],
+        totalCount: 0,
       });
 
       await service.findPage({
@@ -130,8 +130,8 @@ describe('CmsFragmentsService', () => {
       const { fragmentsRepository, service } = buildService();
 
       vi.mocked(fragmentsRepository.findByPaginated).mockResolvedValue({
-        data: [],
-        pageInfo: { currentPage: 1, hasNextPage: false, totalCount: 0 },
+        items: [],
+        totalCount: 0,
       });
 
       await service.findPage({
@@ -158,8 +158,8 @@ describe('CmsFragmentsService', () => {
         excluded,
       );
       vi.mocked(fragmentsRepository.findByPaginated).mockResolvedValue({
-        data: [],
-        pageInfo: { currentPage: 1, hasNextPage: false, totalCount: 0 },
+        items: [],
+        totalCount: 0,
       });
 
       await service.findPage({

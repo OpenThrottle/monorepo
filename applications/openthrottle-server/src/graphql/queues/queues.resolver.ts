@@ -90,7 +90,9 @@ export class QueuesResolver {
 
       const jobsResult = new JobsResultObject();
       jobsResult.hasNext = result.hasNext;
+      jobsResult.hasNextPage = result.hasNext;
       jobsResult.total = result.total;
+      jobsResult.totalCount = result.total;
       jobsResult.jobs = result.jobs.map((dto) => {
         const job = new JobObject();
         job.data = dto.data;
@@ -112,6 +114,7 @@ export class QueuesResolver {
         }
         return job;
       });
+      jobsResult.items = jobsResult.jobs;
       details.jobs = jobsResult;
     } else {
       details.jobs = null;

@@ -3,6 +3,7 @@
  */
 
 import { Field, Int, ObjectType } from '@nestjs/graphql';
+import { OffsetPageObject } from '@openthrottle/nestjs-graphql';
 
 import { PlanObject } from '../plans/plan.object.ts';
 import { ProjectObject } from '../projects/project.object.ts';
@@ -120,12 +121,12 @@ export class TaskObject {
 
 /** Result of tasksByProjectId: tasks slice and total count for pagination. */
 @ObjectType()
-export class TasksByProjectIdResultObject {
+export class TasksByProjectIdResultObject extends OffsetPageObject {
   @Field(() => [TaskObject])
-  tasks!: TaskObject[];
+  items!: TaskObject[];
 
-  @Field(() => Int)
-  totalCount!: number;
+  @Field(() => [TaskObject], { deprecationReason: `Use items` })
+  tasks!: TaskObject[];
 }
 
 /** Result of createTasks: the tasks created in the batch and how many. */

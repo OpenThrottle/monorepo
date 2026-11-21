@@ -389,8 +389,8 @@ describe('routes/fragments.$uuid.tsx', () => {
         CmsFragmentChildCandidatesDocument,
         {
           childCandidatesOf: 'fragment-1',
-          skip: 50,
-          take: 25,
+          limit: 25,
+          offset: 50,
           typename: 'Heading',
         },
       );

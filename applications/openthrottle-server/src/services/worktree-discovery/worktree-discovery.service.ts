@@ -201,9 +201,11 @@ export class WorktreeDiscoveryService {
     problems: WorktreeDiscoveryProblem[],
   ): Promise<RepositoryCheckout[]> {
     try {
-      return await this.checkoutsRepository.listByUserId(userId, {
-        limit: CHECKOUT_LIST_LIMIT,
-      });
+      return await this.checkoutsRepository.listByUserId(
+        userId,
+        { limit: CHECKOUT_LIST_LIMIT },
+        { max: CHECKOUT_LIST_LIMIT }, // above the 100 default cap
+      );
     } catch (error) {
       problems.push(
         problem(

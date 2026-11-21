@@ -20,7 +20,13 @@ describe('<%= namePascal %>Resolver', () => {
         {
           provide: <%= namePascal %>Service,
           useValue: {
-            findAll: () => Promise.resolve({ items: [], totalCount: 0 }),
+            findAll: () => {
+              return Promise.resolve({
+                hasNextPage: false,
+                items: [],
+                totalCount: 0,
+              });
+            },
             findById: () => Promise.resolve(null),
           },
         },
@@ -38,7 +44,13 @@ describe('<%= namePascal %>Resolver', () => {
   });
 
   it('returns an empty list envelope from <%= pluralCamel %>', async () => {
-    const result = await resolver.<%= pluralCamel %>();
-    expect(result).toEqual({ items: [], totalCount: 0 });
+    const result = await resolver.<%= pluralCamel %>(null);
+    expect(result).toEqual({ hasNextPage: false, items: [], totalCount: 0 });
+  });
+
+  it('rejects a limit above the shared max', () => {
+    expect(() => resolver.<%= pluralCamel %>({ limit: 1000 })).toThrow(
+      'limit must be between 1',
+    );
   });
 });

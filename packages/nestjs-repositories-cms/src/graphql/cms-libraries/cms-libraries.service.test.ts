@@ -32,8 +32,8 @@ describe('CmsLibrariesService', () => {
       if (!first || !second) throw new Error('factory built too few');
 
       vi.mocked(librariesRepository.findByPaginated).mockResolvedValue({
-        data: [first, second],
-        pageInfo: { currentPage: 1, hasNextPage: true, totalCount: 7 },
+        items: [first, second],
+        totalCount: 7,
       });
       vi.mocked(libraryComponentsRepository.findBy).mockResolvedValue([
         libraryComponentsFactory.build({ libraryUuid: second.uuid }),
@@ -61,8 +61,8 @@ describe('CmsLibrariesService', () => {
         buildService();
 
       vi.mocked(librariesRepository.findByPaginated).mockResolvedValue({
-        data: [],
-        pageInfo: { currentPage: 1, hasNextPage: false, totalCount: 0 },
+        items: [],
+        totalCount: 0,
       });
 
       await expect(service.findPage({ skip: 0, take: 25 })).resolves.toEqual({

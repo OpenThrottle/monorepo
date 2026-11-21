@@ -35,7 +35,7 @@ describe('CmsLayoutsResolver', () => {
 
       await resolver.cmsLayout('home', REQUEST);
       await resolver.cmsLayoutByUuid('uuid-1', REQUEST);
-      await resolver.cmsLayouts(null, null, REQUEST);
+      await resolver.cmsLayouts(null, null, null, null, REQUEST);
 
       expect(cmsWriteAccessService.canWrite).toHaveBeenCalledWith(REQUEST);
       expect(cmsLayoutsService.findBySlug).toHaveBeenCalledWith(
@@ -59,7 +59,7 @@ describe('CmsLayoutsResolver', () => {
 
       await resolver.cmsLayout('home', REQUEST);
       await resolver.cmsLayoutByUuid('uuid-1', REQUEST);
-      await resolver.cmsLayouts(null, null, REQUEST);
+      await resolver.cmsLayouts(null, null, null, null, REQUEST);
 
       expect(cmsLayoutsService.findBySlug).toHaveBeenCalledWith(
         'home',

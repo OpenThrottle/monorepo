@@ -55,7 +55,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     page,
     pageOffset: offset,
     project,
-    projectPlans: projectPlansPage.plans,
+    projectPlans: projectPlansPage.items,
     projectPlansTotal: projectPlansPage.totalCount,
     tagVocabulary: skillTagVocabulary.tags ?? [],
   };

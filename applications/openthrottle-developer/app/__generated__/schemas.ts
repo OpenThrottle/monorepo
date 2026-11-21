@@ -1076,8 +1076,8 @@ export function GetAgentConversationMessagesInputSchema(): z.ZodObject<
 > {
   return z.object({
     conversationId: z.string().min(1),
-    limit: z.number().default(100).nullish(),
-    offset: z.number().default(0).nullish(),
+    limit: z.number().nullish(),
+    offset: z.number().nullish(),
   });
 }
 
@@ -1186,8 +1186,8 @@ export function ListAgentConversationsInputSchema(): z.ZodObject<
   Properties<ListAgentConversationsInput>
 > {
   return z.object({
-    limit: z.number().default(20).nullish(),
-    offset: z.number().default(0).nullish(),
+    limit: z.number().nullish(),
+    offset: z.number().nullish(),
     status: z.string().default('active').nullish(),
   });
 }
@@ -1327,8 +1327,8 @@ export function ProjectPlansPageInputSchema(): z.ZodObject<
   Properties<ProjectPlansPageInput>
 > {
   return z.object({
-    limit: z.number(),
-    offset: z.number(),
+    limit: z.number().nullish(),
+    offset: z.number().nullish(),
     projectId: z.string().min(1),
   });
 }

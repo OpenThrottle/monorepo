@@ -894,8 +894,10 @@ export type CmsFragmentChildObject = {
 /** One page of live cms fragments, oldest first. */
 export type CmsFragmentListResult = {
   __typename?: 'CmsFragmentListResult';
+  /** Whether rows remain after this page */
   hasNextPage: Scalars['Boolean']['output'];
   items: Array<CmsFragmentObject>;
+  /** Rows across every page */
   totalCount: Scalars['Int']['output'];
 };
 
@@ -948,8 +950,10 @@ export type CmsFragmentObject = {
 /** One page of live cms layouts, oldest first. */
 export type CmsLayoutListResult = {
   __typename?: 'CmsLayoutListResult';
+  /** Whether rows remain after this page */
   hasNextPage: Scalars['Boolean']['output'];
   items: Array<CmsLayoutSummaryObject>;
+  /** Rows across every page */
   totalCount: Scalars['Int']['output'];
 };
 
@@ -992,8 +996,10 @@ export type CmsLayoutSummaryObject = {
 /** One page of live cms library components, across every library, by typename. */
 export type CmsLibraryComponentListResult = {
   __typename?: 'CmsLibraryComponentListResult';
+  /** Whether rows remain after this page */
   hasNextPage: Scalars['Boolean']['output'];
   items: Array<CmsLibraryComponentObject>;
+  /** Rows across every page */
   totalCount: Scalars['Int']['output'];
 };
 
@@ -1015,8 +1021,10 @@ export type CmsLibraryComponentObject = {
 /** One page of live cms libraries, oldest first. */
 export type CmsLibraryListResult = {
   __typename?: 'CmsLibraryListResult';
+  /** Whether rows remain after this page */
   hasNextPage: Scalars['Boolean']['output'];
   items: Array<CmsLibraryObject>;
+  /** Rows across every page */
   totalCount: Scalars['Int']['output'];
 };
 
@@ -1037,8 +1045,10 @@ export type CmsLibraryObject = {
 /** One page of live cms schemas, newest first, then by typename. */
 export type CmsSchemaListResult = {
   __typename?: 'CmsSchemaListResult';
+  /** Whether rows remain after this page */
   hasNextPage: Scalars['Boolean']['output'];
   items: Array<CmsSchemaObject>;
+  /** Rows across every page */
   totalCount: Scalars['Int']['output'];
 };
 
@@ -2366,9 +2376,9 @@ export type GeneratorObject = {
 
 export type GetAgentConversationMessagesInput = {
   conversationId: Scalars['ID']['input'];
-  /** Page size (default 100, max 500) */
+  /** Page size. Omitted means the list's default; out of range is rejected */
   limit?: InputMaybe<Scalars['Int']['input']>;
-  /** Offset for pagination */
+  /** Rows to skip, 0 or more. Omitted means 0 */
   offset?: InputMaybe<Scalars['Int']['input']>;
 };
 
@@ -2494,12 +2504,27 @@ export type JobObject = {
 
 export type JobsResultObject = {
   __typename?: 'JobsResultObject';
-  /** Whether more jobs exist after this page. */
+  /**
+   * Whether more jobs exist after this page.
+   * @deprecated Use hasNextPage
+   */
   hasNext: Scalars['Boolean']['output'];
+  /** Whether rows remain after this page */
+  hasNextPage: Scalars['Boolean']['output'];
   /** Paginated list of jobs for the queue. */
+  items: Array<JobObject>;
+  /**
+   * Paginated list of jobs for the queue.
+   * @deprecated Use items
+   */
   jobs: Array<JobObject>;
-  /** Total jobs across the requested states (state-filtered), for accurate pagination. */
+  /**
+   * Total jobs across the requested states (state-filtered), for accurate pagination.
+   * @deprecated Use totalCount
+   */
   total: Scalars['Int']['output'];
+  /** Rows across every page */
+  totalCount: Scalars['Int']['output'];
 };
 
 export type LabelAgentTrajectoryInput = {
@@ -2593,14 +2618,19 @@ export type LinkProjectRepositoryInput = {
 
 export type ListAgentConversationMessagesResultObject = {
   __typename?: 'ListAgentConversationMessagesResultObject';
+  /** Whether rows remain after this page */
+  hasNextPage: Scalars['Boolean']['output'];
+  items: Array<AgentConversationMessageObject>;
+  /** @deprecated Use items */
   messages: Array<AgentConversationMessageObject>;
+  /** Rows across every page */
   totalCount: Scalars['Int']['output'];
 };
 
 export type ListAgentConversationsInput = {
-  /** Page size (default 20, max 100) */
+  /** Page size. Omitted means the list's default; out of range is rejected */
   limit?: InputMaybe<Scalars['Int']['input']>;
-  /** Offset for pagination */
+  /** Rows to skip, 0 or more. Omitted means 0 */
   offset?: InputMaybe<Scalars['Int']['input']>;
   /** Filter by status: active or archived (default active) */
   status?: InputMaybe<Scalars['String']['input']>;
@@ -2608,7 +2638,12 @@ export type ListAgentConversationsInput = {
 
 export type ListAgentConversationsResultObject = {
   __typename?: 'ListAgentConversationsResultObject';
+  /** @deprecated Use items */
   conversations: Array<AgentConversationObject>;
+  /** Whether rows remain after this page */
+  hasNextPage: Scalars['Boolean']['output'];
+  items: Array<AgentConversationObject>;
+  /** Rows across every page */
   totalCount: Scalars['Int']['output'];
 };
 
@@ -2659,7 +2694,9 @@ export type ListPlanSourceObject = {
 export type ListPlansByStatusInput = {
   /** Filter by author or assignee (any match). Empty means no assignee filter. */
   assignees?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
+  /** Page size. Omitted means the list's default; out of range is rejected */
   limit?: InputMaybe<Scalars['Int']['input']>;
+  /** Rows to skip, 0 or more. Omitted means 0 */
   offset?: InputMaybe<Scalars['Int']['input']>;
   /** @deprecated Free-text label, unrelated to projects and superseded by projectId. */
   project?: InputMaybe<Scalars['String']['input']>;
@@ -2681,7 +2718,12 @@ export type ListPlansByStatusInput = {
 
 export type ListPlansByStatusResultObject = {
   __typename?: 'ListPlansByStatusResultObject';
+  /** Whether rows remain after this page */
+  hasNextPage: Scalars['Boolean']['output'];
+  items: Array<PlanObject>;
+  /** @deprecated Use items */
   plans: Array<PlanObject>;
+  /** Rows across every page */
   totalCount: Scalars['Int']['output'];
 };
 
@@ -3044,7 +3086,7 @@ export type Mutation = {
   login: LoginResultObject;
   /** Mint a short-lived token (scoped to the current user) for authenticating a graphql-ws subscription connection via connectionParams.authToken. */
   mintSubscriptionToken: Scalars['String']['output'];
-  /** Swap a plan with its neighbour in its project's full order (UP = earlier, DOWN = later), so a move works across any page boundary. A plan already at that end stays put. Returns every live plan of the project in the resulting order. Fails when the plan does not exist or is in no project. */
+  /** Swap a plan's projectSortOrder with its neighbour's in its project's full order (UP = earlier, DOWN = later), touching only those two plans, so a move works across any page boundary. A plan already at that end stays put. Returns every live plan of the project in the resulting order. Fails when the plan does not exist or is in no project. */
   moveProjectPlan: Array<PlanObject>;
   /** Pause a queue: workers stop picking up new jobs while in-flight jobs finish. Reversible via resumeQueue. */
   pauseQueue: QueueControlResultObject;
@@ -3121,9 +3163,9 @@ export type Mutation = {
   renameSkillTag: SkillTagObject;
   /** Reorder a parent's children. childUuids must list exactly the current children. */
   reorderCmsFragmentChildren: Array<CmsFragmentChildObject>;
-  /** Reorder tasks within a plan. Renumbers sortOrder 1000, 2000, … in taskIds order atomically. */
+  /** Reorder tasks within a plan. The listed tasks take the sortOrder values they already hold, in taskIds order; tasks not listed keep their place. A full list reorders the whole plan; a partial list reorders only itself, in place. Atomic. Fails on a duplicate id or an id that is not a task of the plan. */
   reorderPlanTasks: Array<TaskObject>;
-  /** Reorder the plans of a project. Renumbers projectSortOrder 1000, 2000, … in planIds order atomically; unlisted plans of the project follow in their existing order. Returns every live plan of the project in the new order. */
+  /** Reorder the plans of a project. The listed plans take the projectSortOrder values they already hold, in planIds order; plans not listed keep their place. A full list reorders the whole project; a partial list (e.g. one page) reorders only itself, in place. Atomic. Returns every live plan of the project in the new order. */
   reorderProjectPlans: Array<PlanObject>;
   /** Replace the ATIF document on an existing trajectory in place, keeping its id so human labels keyed by trajectory id survive. Used by the session re-segment operator when a task's boundaries change. The document is validated and capped the same way as recordAgentTrajectory. */
   replaceAgentTrajectory: AgentTrajectory;
@@ -4559,18 +4601,23 @@ export const ProjectPlanMoveDirection = {
 export type ProjectPlanMoveDirection =
   (typeof ProjectPlanMoveDirection)[keyof typeof ProjectPlanMoveDirection];
 export type ProjectPlansPageInput = {
-  /** Page size, 1 to 200 */
-  limit: Scalars['Int']['input'];
-  /** Rows to skip; 0 or more */
-  offset: Scalars['Int']['input'];
+  /** Page size. Omitted means the list's default; out of range is rejected */
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  /** Rows to skip, 0 or more. Omitted means 0 */
+  offset?: InputMaybe<Scalars['Int']['input']>;
   /** Project whose plans are listed */
   projectId: Scalars['ID']['input'];
 };
 
 export type ProjectPlansPageResultObject = {
   __typename?: 'ProjectPlansPageResultObject';
+  /** Whether rows remain after this page */
+  hasNextPage: Scalars['Boolean']['output'];
+  /** This page's plans, in project order */
+  items: Array<PlanObject>;
+  /** @deprecated Use items */
   plans: Array<PlanObject>;
-  /** Live plans in the project, across every page */
+  /** Rows across every page */
   totalCount: Scalars['Int']['output'];
 };
 
@@ -4787,27 +4834,27 @@ export type Query = {
   captureHealth: Array<CaptureHealthRowObject>;
   /** A live cms fragment by uuid; null when none matches. */
   cmsFragment?: Maybe<CmsFragmentObject>;
-  /** One page of live cms fragments, oldest first, optionally narrowed by typename and isSystem (false also matches an unset flag). take is clamped to 1–100 (default 25). */
+  /** One page of live cms fragments, oldest first, optionally narrowed by typename and isSystem (false also matches an unset flag). limit is 1 to 100 (default 25); take and skip are deprecated aliases of limit and offset. */
   cmsFragments: CmsFragmentListResult;
   /** A live cms layout by slug, with its fragment tree; null when none matches. A DRAFT or DISABLED layout is null unless the caller may write cms content. */
   cmsLayout?: Maybe<CmsLayoutObject>;
   /** A live cms layout by uuid, with its fragment tree; null when none matches. A DRAFT or DISABLED layout is null unless the caller may write cms content. */
   cmsLayoutByUuid?: Maybe<CmsLayoutObject>;
-  /** One page of live cms layouts, without their trees: ACTIVE ones only, unless the caller may write cms content. take is clamped to 1–100 (default 25). */
+  /** One page of live cms layouts, without their trees: ACTIVE ones only, unless the caller may write cms content. limit is 1 to 100 (default 25); take and skip are deprecated aliases of limit and offset. */
   cmsLayouts: CmsLayoutListResult;
-  /** One page of live cms libraries with their components. take is clamped to 1–100 (default 25). */
+  /** One page of live cms libraries with their components. limit is 1 to 100 (default 25); take and skip are deprecated aliases of limit and offset. */
   cmsLibraries: CmsLibraryListResult;
   /** A live cms library by uuid, with its components; null when none matches. */
   cmsLibrary?: Maybe<CmsLibraryObject>;
   /** A live cms library component by uuid; null when none matches. */
   cmsLibraryComponent?: Maybe<CmsLibraryComponentObject>;
-  /** One page of live cms library components across every library, by typename. take is clamped to 1–100 (default 25). */
+  /** One page of live cms library components across every library, by typename. limit is 1 to 100 (default 25); take and skip are deprecated aliases of limit and offset. */
   cmsLibraryComponents: CmsLibraryComponentListResult;
   /** A live cms schema by uuid; null when none matches. */
   cmsSchema?: Maybe<CmsSchemaObject>;
   /** The live cms schema for a typename at a version; without a version, its newest ACTIVE version. Null when none matches. */
   cmsSchemaByTypename?: Maybe<CmsSchemaObject>;
-  /** One page of live cms schemas, optionally filtered by status (ACTIVE | DISABLED | DRAFT) and typename. take is clamped to 1–100 (default 25). */
+  /** One page of live cms schemas, optionally filtered by status (ACTIVE | DISABLED | DRAFT) and typename. limit is 1 to 100 (default 25); take and skip are deprecated aliases of limit and offset. */
   cmsSchemas: CmsSchemaListResult;
   /** Index status for a registered repository: unavailable, hostedOptInRequired, indexing, ready, or notIndexed. */
   codeIndexStatus: CodeIndexStatusObject;
@@ -4942,7 +4989,7 @@ export type Query = {
   project?: Maybe<ProjectObject>;
   /** The live plans of a project in project order (projectSortOrder ascending) */
   projectPlans: Array<PlanObject>;
-  /** One page of a project's live plans in project order (projectSortOrder ascending), plus the project's total live plan count. limit is 1 to 200; offset is 0 or more. */
+  /** One page of a project's live plans in project order (projectSortOrder ascending), plus the project's total live plan count. limit is 1 to 100 (default 25); offset is 0 or more. */
   projectPlansPage: ProjectPlansPageResultObject;
   /** A project's ingested skill universe: slug, static frontmatter tags, and the tri-state static disable-model-invocation flag. Omit projectId to resolve the dogfood monorepo project (nx_project_name = 'monorepo'); returns an empty list when the project or its ingested rows are absent. Display-only in v1 — no per-context effective availability. */
   projectSkills: ProjectSkillsResult;
@@ -5049,7 +5096,7 @@ export type Query = {
   tasks: Array<TaskObject>;
   /** List tasks for a plan by plan ID, ordered by sortOrder then createdAt ascending */
   tasksByPlanId: Array<TaskObject>;
-  /** List tasks for a project by project ID (FK). Optional limit/offset for pagination; when omitted returns all tasks and totalCount. */
+  /** List tasks for a project by project ID (FK), ordered by planId then sortOrder then createdAt ascending. limit is 1 to 100 (default 25); offset is 0 or more. */
   tasksByProjectId: TasksByProjectIdResultObject;
   /** Telemetry coverage for the requesting user: per machine, the repos and delivery legs seen in the window, the newest buffer snapshot, and coverage warnings. Machines are ordered by lastSeenAt descending. */
   telemetryCoverage: TelemetryCoverageObject;
@@ -5145,6 +5192,8 @@ export type QueryCmsFragmentArgs = {
 export type QueryCmsFragmentsArgs = {
   childCandidatesOf?: InputMaybe<Scalars['String']['input']>;
   isSystem?: InputMaybe<Scalars['Boolean']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
   skip?: InputMaybe<Scalars['Int']['input']>;
   take?: InputMaybe<Scalars['Int']['input']>;
   typename?: InputMaybe<Scalars['String']['input']>;
@@ -5159,11 +5208,15 @@ export type QueryCmsLayoutByUuidArgs = {
 };
 
 export type QueryCmsLayoutsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
   skip?: InputMaybe<Scalars['Int']['input']>;
   take?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type QueryCmsLibrariesArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
   skip?: InputMaybe<Scalars['Int']['input']>;
   take?: InputMaybe<Scalars['Int']['input']>;
 };
@@ -5177,6 +5230,8 @@ export type QueryCmsLibraryComponentArgs = {
 };
 
 export type QueryCmsLibraryComponentsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
   skip?: InputMaybe<Scalars['Int']['input']>;
   take?: InputMaybe<Scalars['Int']['input']>;
 };
@@ -5191,6 +5246,8 @@ export type QueryCmsSchemaByTypenameArgs = {
 };
 
 export type QueryCmsSchemasArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
   skip?: InputMaybe<Scalars['Int']['input']>;
   status?: InputMaybe<Scalars['String']['input']>;
   take?: InputMaybe<Scalars['Int']['input']>;
@@ -7717,17 +7774,22 @@ export type TasksByPlanIdInput = {
 };
 
 export type TasksByProjectIdInput = {
-  /** Max number of tasks to return. Omit for no limit. */
-  limit?: InputMaybe<Scalars['Float']['input']>;
-  /** Number of tasks to skip. Omit or 0 for first page. */
-  offset?: InputMaybe<Scalars['Float']['input']>;
+  /** Page size. Omitted means the list's default; out of range is rejected */
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  /** Rows to skip, 0 or more. Omitted means 0 */
+  offset?: InputMaybe<Scalars['Int']['input']>;
   /** Project id (FK) to list tasks for */
   projectId: Scalars['ID']['input'];
 };
 
 export type TasksByProjectIdResultObject = {
   __typename?: 'TasksByProjectIdResultObject';
+  /** Whether rows remain after this page */
+  hasNextPage: Scalars['Boolean']['output'];
+  items: Array<TaskObject>;
+  /** @deprecated Use items */
   tasks: Array<TaskObject>;
+  /** Rows across every page */
   totalCount: Scalars['Int']['output'];
 };
 
@@ -9074,7 +9136,7 @@ export type ListAgentConversationsQuery = {
   listAgentConversations: {
     __typename?: 'ListAgentConversationsResultObject';
     totalCount: number;
-    conversations: Array<{
+    items: Array<{
       __typename?: 'AgentConversationObject';
       id: string;
       status: string;
@@ -9123,7 +9185,7 @@ export type GetAgentConversationMessagesQuery = {
   getAgentConversationMessages: {
     __typename?: 'ListAgentConversationMessagesResultObject';
     totalCount: number;
-    messages: Array<{
+    items: Array<{
       __typename?: 'AgentConversationMessageObject';
       content: string;
       createdAt: any;
@@ -12472,7 +12534,7 @@ export type GetPlansByStatusQuery = {
   listPlansByStatus: {
     __typename?: 'ListPlansByStatusResultObject';
     totalCount: number;
-    plans: Array<{
+    items: Array<{
       __typename?: 'PlanObject';
       assignee?: string | null;
       author: string;
@@ -12582,7 +12644,7 @@ export type GetProjectByIdQuery = {
   projectPlansPage: {
     __typename?: 'ProjectPlansPageResultObject';
     totalCount: number;
-    plans: Array<{
+    items: Array<{
       __typename?: 'PlanObject';
       id: string;
       projectSortOrder?: number | null;
@@ -13199,9 +13261,9 @@ export type QueueDetailsFragment = {
   waitingCount: number;
   jobs?: {
     __typename?: 'JobsResultObject';
-    hasNext: boolean;
-    total: number;
-    jobs: Array<{
+    hasNextPage: boolean;
+    totalCount: number;
+    items: Array<{
       __typename?: 'JobObject';
       data?: string | null;
       failedReason?: string | null;
@@ -13233,9 +13295,9 @@ export type GetQueueQuery = {
     waitingCount: number;
     jobs?: {
       __typename?: 'JobsResultObject';
-      hasNext: boolean;
-      total: number;
-      jobs: Array<{
+      hasNextPage: boolean;
+      totalCount: number;
+      items: Array<{
         __typename?: 'JobObject';
         data?: string | null;
         failedReason?: string | null;
@@ -20608,10 +20670,10 @@ export const QueueDetailsFragmentDoc = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'hasNext' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'hasNextPage' } },
                 {
                   kind: 'Field',
-                  name: { kind: 'Name', value: 'jobs' },
+                  name: { kind: 'Name', value: 'items' },
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
@@ -20622,7 +20684,7 @@ export const QueueDetailsFragmentDoc = {
                     ],
                   },
                 },
-                { kind: 'Field', name: { kind: 'Name', value: 'total' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
               ],
             },
           },
@@ -24016,7 +24078,7 @@ export const ListAgentConversationsDocument = {
               selections: [
                 {
                   kind: 'Field',
-                  name: { kind: 'Name', value: 'conversations' },
+                  name: { kind: 'Name', value: 'items' },
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
@@ -24209,7 +24271,7 @@ export const GetAgentConversationMessagesDocument = {
               selections: [
                 {
                   kind: 'Field',
-                  name: { kind: 'Name', value: 'messages' },
+                  name: { kind: 'Name', value: 'items' },
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
@@ -32490,7 +32552,7 @@ export const GetPlansByStatusDocument = {
               selections: [
                 {
                   kind: 'Field',
-                  name: { kind: 'Name', value: 'plans' },
+                  name: { kind: 'Name', value: 'items' },
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
@@ -32757,7 +32819,7 @@ export const GetProjectByIdDocument = {
               selections: [
                 {
                   kind: 'Field',
-                  name: { kind: 'Name', value: 'plans' },
+                  name: { kind: 'Name', value: 'items' },
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
@@ -34680,10 +34742,10 @@ export const GetQueueDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'hasNext' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'hasNextPage' } },
                 {
                   kind: 'Field',
-                  name: { kind: 'Name', value: 'jobs' },
+                  name: { kind: 'Name', value: 'items' },
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
@@ -34694,7 +34756,7 @@ export const GetQueueDocument = {
                     ],
                   },
                 },
-                { kind: 'Field', name: { kind: 'Name', value: 'total' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
               ],
             },
           },

@@ -7,7 +7,7 @@ fragment CmsLibraryRow on CmsLibraryObject {
 }
 
 query CmsLibraries {
-  cmsLibraries(take: 100) {
+  cmsLibraries(limit: 100) {
     hasNextPage
     items {
       ...CmsLibraryRow

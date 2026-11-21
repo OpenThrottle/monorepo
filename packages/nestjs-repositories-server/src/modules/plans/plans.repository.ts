@@ -1,27 +1,34 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { BaseRepository } from '@openthrottle/nestjs-postgres';
-import type { EntityManager } from 'typeorm';
+import type {
+  OffsetPage,
+  PaginationInput,
+  SortOrderDirection,
+  SortOrderMoveResult,
+  SortOrderReorderResult,
+} from '@openthrottle/nestjs-postgres';
 import {
-  And,
-  In,
-  IsNull,
-  LessThan,
-  MoreThanOrEqual,
-  Repository,
-} from 'typeorm';
+  appendSortOrder,
+  BaseRepository,
+  moveInScope,
+  paginate,
+  reorderInScope,
+} from '@openthrottle/nestjs-postgres';
+import type { EntityManager } from 'typeorm';
+import { And, IsNull, LessThan, MoreThanOrEqual, Repository } from 'typeorm';
 
 import { Task } from '../tasks/task.entity.ts';
 import { Plan } from './plan.entity.ts';
-import { PROJECT_PLAN_SORT_ORDER_GAP } from './plans.constants.ts';
+import {
+  LIST_PLANS_FILTERED_DEFAULT_LIMIT,
+  LIST_PLANS_FILTERED_MAX_LIMIT,
+  PLANS_PROJECT_SORT_ORDER_SCOPE,
+} from './plans.constants.ts';
 import type {
   CountPlansByDateRangeParams,
   ListPlansFilteredParams,
-  ListPlansFilteredResult,
   PlanCreateInput,
   PlanStatusCountRow,
-  ProjectPlansPage,
-  ProjectPlansPageResult,
 } from './plans.types.ts';
 
 /**
@@ -91,7 +98,7 @@ export class PlansRepository extends BaseRepository<Plan, PlanCreateInput> {
    */
   async listFiltered(
     params: ListPlansFilteredParams,
-  ): Promise<ListPlansFilteredResult> {
+  ): Promise<OffsetPage<Plan>> {
     const qb = this.repository
       .createQueryBuilder('plan')
       .select([
@@ -109,9 +116,7 @@ export class PlansRepository extends BaseRepository<Plan, PlanCreateInput> {
         'plan.updatedAt',
       ])
       .where('plan.deletedAt IS NULL')
-      .orderBy(`plan.${params.orderColumn}`, params.orderDirection)
-      .take(params.take)
-      .skip(params.skip);
+      .orderBy(`plan.${params.orderColumn}`, params.orderDirection);
 
     // Explicit param names (status_0, status_1) instead of :...statuses so TypeORM binds arrays correctly.
     if (params.statuses.length > 0) {
@@ -169,9 +174,11 @@ export class PlansRepository extends BaseRepository<Plan, PlanCreateInput> {
       });
     }
 
-    const [plans, totalCount] = await qb.getManyAndCount();
-
-    return { plans, totalCount };
+    // No cap today (the plans list UI and MCP page through it freely): only the default is pinned.
+    return paginate(qb, params.pagination, {
+      defaultLimit: LIST_PLANS_FILTERED_DEFAULT_LIMIT,
+      max: LIST_PLANS_FILTERED_MAX_LIMIT,
+    });
   }
 
   /**
@@ -272,18 +279,15 @@ export class PlansRepository extends BaseRepository<Plan, PlanCreateInput> {
    */
   async pageInProject(
     projectId: string,
-    page: ProjectPlansPage,
-  ): Promise<ProjectPlansPageResult> {
-    const [plans, totalCount] = await this.repository
+    page: PaginationInput,
+  ): Promise<OffsetPage<Plan>> {
+    const qb = this.repository
       .createQueryBuilder('plan')
       .where('plan.projectId = :projectId', { projectId })
       .orderBy('plan.projectSortOrder', 'ASC', 'NULLS LAST')
-      .addOrderBy('plan.createdAt', 'ASC')
-      .skip(page.offset)
-      .take(page.limit)
-      .getManyAndCount();
+      .addOrderBy('plan.createdAt', 'ASC');
 
-    return { plans, totalCount };
+    return paginate(qb, page);
   }
 
   /**
@@ -314,41 +318,50 @@ export class PlansRepository extends BaseRepository<Plan, PlanCreateInput> {
   }
 
   /**
-   * @description Renumbers the given plans 1000, 2000, … in `orderedPlanIds` order in one
-   * transaction and returns them in that order. The positions are cleared first so the
-   * per-project partial unique index never sees two plans on one slot mid-update. Callers
-   * validate that every id is a live plan of `projectId`.
+   * @description The position that appends a plan to the end of `projectId`: one gap past the
+   * last live plan, or one gap for an empty project. Pass `manager` to read inside the
+   * transaction that writes it, so the project's sort-order lock covers the write.
    */
-  async renumberProjectPlans(
+  async appendProjectSortOrder(
     projectId: string,
-    orderedPlanIds: readonly string[],
-  ): Promise<Plan[]> {
-    if (orderedPlanIds.length === 0) {
-      return [];
-    }
+    manager?: EntityManager,
+  ): Promise<number> {
+    return appendSortOrder(
+      manager ?? this.repository.manager,
+      PLANS_PROJECT_SORT_ORDER_SCOPE,
+      projectId,
+    );
+  }
 
-    return this.repository.manager.transaction(async (manager) => {
-      await manager.update(
-        Plan,
-        { id: In([...orderedPlanIds]), projectId },
-        { projectSortOrder: null },
-      );
-      await Promise.all(
-        orderedPlanIds.map((id, index) => {
-          return manager.update(
-            Plan,
-            { id, projectId },
-            {
-              projectSortOrder: (index + 1) * PROJECT_PLAN_SORT_ORDER_GAP,
-            },
-          );
-        }),
-      );
+  /**
+   * @description Reorders the listed plans among the positions they already hold in
+   * `projectId`, leaving every unlisted plan where it is. See `reorderInScope`.
+   */
+  async reorderInProject(
+    projectId: string,
+    planIds: readonly string[],
+  ): Promise<SortOrderReorderResult> {
+    return reorderInScope(
+      this.repository.manager,
+      PLANS_PROJECT_SORT_ORDER_SCOPE,
+      projectId,
+      planIds,
+    );
+  }
 
-      return manager.find(Plan, {
-        order: { projectSortOrder: 'ASC' },
-        where: { id: In([...orderedPlanIds]) },
-      });
-    });
+  /**
+   * @description Swaps a plan's position with its neighbour in its project (`UP` = earlier),
+   * touching only those two plans. See `moveInScope`.
+   */
+  async moveInProject(
+    planId: string,
+    direction: SortOrderDirection,
+  ): Promise<SortOrderMoveResult> {
+    return moveInScope(
+      this.repository.manager,
+      PLANS_PROJECT_SORT_ORDER_SCOPE,
+      planId,
+      direction,
+    );
   }
 }

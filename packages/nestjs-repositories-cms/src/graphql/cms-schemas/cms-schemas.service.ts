@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { hasNextPage } from '@openthrottle/nestjs-postgres';
 import type { FindOptionsWhere } from 'typeorm';
 
 import { CMS_STATUS } from '../../config/config.constants.ts';
@@ -43,9 +44,9 @@ export class CmsSchemasService {
     });
 
     return {
-      hasNextPage: page.pageInfo.hasNextPage,
-      items: page.data.map(toCmsSchemaObject),
-      totalCount: page.pageInfo.totalCount,
+      hasNextPage: hasNextPage(page, skip),
+      items: page.items.map(toCmsSchemaObject),
+      totalCount: page.totalCount,
     };
   }
 

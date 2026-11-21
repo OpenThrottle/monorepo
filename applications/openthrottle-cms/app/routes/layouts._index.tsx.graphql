@@ -9,7 +9,7 @@ fragment CmsLayoutRow on CmsLayoutSummaryObject {
 }
 
 query CmsLayouts {
-  cmsLayouts(take: 100) {
+  cmsLayouts(limit: 100) {
     hasNextPage
     items {
       ...CmsLayoutRow

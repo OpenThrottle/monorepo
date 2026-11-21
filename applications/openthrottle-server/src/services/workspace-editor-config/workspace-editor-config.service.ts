@@ -82,7 +82,13 @@ export class WorkspaceEditorConfigService {
       return [];
     }
 
-    const checkouts = await this.checkoutsRepository.listByUserId(userId);
+    const checkouts = await this.checkoutsRepository.listByUserId(
+      userId,
+      undefined,
+      {
+        defaultLimit: 50, // no pager: keep the pre-25 default
+      },
+    );
     const { repositoryIds } = options;
     const hasFilter = repositoryIds != null && repositoryIds.length > 0;
     const filtered = checkouts.filter((checkout) => {

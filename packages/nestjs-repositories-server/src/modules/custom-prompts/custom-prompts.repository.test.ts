@@ -1,6 +1,7 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { createQueryBuilderMock } from '@openthrottle/nestjs-postgres/testing';
 import type { Repository } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -25,13 +26,7 @@ describe('CustomPromptsRepository', () => {
   const softDelete = vi.fn();
   const restore = vi.fn();
   const deleteRows = vi.fn();
-  const getMany = vi.fn();
-  const queryBuilder = {
-    andWhere: vi.fn().mockReturnThis(),
-    getMany,
-    orderBy: vi.fn().mockReturnThis(),
-    withDeleted: vi.fn().mockReturnThis(),
-  };
+  const queryBuilder = createQueryBuilderMock<CustomPrompt>();
   let repository: CustomPromptsRepository;
 
   beforeEach(async () => {
@@ -40,7 +35,6 @@ describe('CustomPromptsRepository', () => {
     softDelete.mockResolvedValue({ affected: 0 });
     restore.mockResolvedValue({ affected: 0 });
     deleteRows.mockResolvedValue({ affected: 0 });
-    getMany.mockResolvedValue([]);
 
     const app = await Test.createTestingModule({
       providers: [
@@ -65,7 +59,7 @@ describe('CustomPromptsRepository', () => {
   describe('listFiltered', () => {
     it('lists only live prompts newest first by default', async () => {
       const rows = customPromptsFactory.buildList(2);
-      getMany.mockResolvedValue(rows);
+      queryBuilder.getMany.mockResolvedValue(rows);
 
       await expect(repository.listFiltered(emptyFilter)).resolves.toEqual(rows);
       expect(queryBuilder.withDeleted).not.toHaveBeenCalled();

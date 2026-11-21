@@ -9,6 +9,7 @@ import {
   resolveRedisConnection,
 } from '@openthrottle/nestjs-bullmq';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { resolvePagination } from '@openthrottle/nestjs-postgres';
 import { isRecord } from '@openthrottle/nodejs-utils';
 import type { Job, JobState, Queue } from 'bullmq';
 import { Queue as BullQueue } from 'bullmq';
@@ -372,7 +373,7 @@ export class QueuesService implements OnModuleDestroy, OnModuleInit {
       return [];
     }
 
-    const cappedLimit = Math.min(Math.max(1, Math.floor(limit)), 500);
+    const cappedLimit = resolvePagination({ limit }, { max: 500 }).take;
     const fetchSize = 500;
     const result = await this.getJobs(
       PLANS_QUEUE_NAME,

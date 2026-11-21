@@ -51,7 +51,7 @@ query getPlansByStatus($input: ListPlansByStatusInput!) {
   # }
 
   listPlansByStatus(input: $input) {
-    plans {
+    items {
       ...PlanCard
     }
 

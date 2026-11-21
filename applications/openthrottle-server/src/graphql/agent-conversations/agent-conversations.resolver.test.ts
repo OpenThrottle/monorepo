@@ -112,9 +112,21 @@ describe('AgentConversationsResolver', () => {
         status: 'active',
       });
 
-      expect(result.conversations).toHaveLength(1);
-      expect(result.conversations[0]?.id).toBe(mockConversation.id);
+      expect(result.items).toHaveLength(1);
+      expect(result.conversations).toEqual(result.items);
+      expect(result.items[0]?.id).toBe(mockConversation.id);
       expect(result.totalCount).toBe(1);
+      expect(result.hasNextPage).toBe(false);
+    });
+
+    test('rejects a limit above 100 as BAD_USER_INPUT', async () => {
+      await expect(
+        resolver.listAgentConversations(humanPrincipal, {
+          limit: 101,
+          offset: null,
+          status: null,
+        }),
+      ).rejects.toThrow('limit must be between 1 and 100');
     });
 
     test('rejects service account principal', async () => {

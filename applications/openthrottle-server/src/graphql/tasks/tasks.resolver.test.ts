@@ -24,12 +24,15 @@ import { NotificationsService } from '../../notifications/notifications.service.
 import { PlanRulesEvaluationService } from '../../queues/plan-rules/evaluation/evaluation.service.ts';
 import { TaggingEnqueueService } from '../../queues/tagging/enqueue/enqueue.service.ts';
 import { TaskPromotionEnqueueService } from '../../queues/task-promotion/enqueue/enqueue.service.ts';
+import { PlanTaskOrderService } from '../../services/plan-task-order/plan-task-order.service.ts';
 import { PlanStatusService } from '../plans/plan-status/plan-status.service.ts';
 import { WorkLedgerCaptureService } from '../work-ledger/work-ledger-capture/work-ledger-capture.service.ts';
 import { TasksLoaders } from './loaders/loaders.service.ts';
 import { TasksResolver } from './tasks.resolver.ts';
 
 const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
+
+const mockPlanTaskOrderService = createMock<PlanTaskOrderService>();
 
 describe('TasksResolver', () => {
   let resolver: TasksResolver;
@@ -185,6 +188,7 @@ describe('TasksResolver', () => {
           useValue: mockNotificationsService,
         },
         { provide: PlanStatusService, useValue: mockPlanStatusService },
+        { provide: PlanTaskOrderService, useValue: mockPlanTaskOrderService },
         { provide: TasksRepository, useValue: mockTasksRepository },
         { provide: DataSource, useValue: mockDataSource },
         {
@@ -403,9 +407,10 @@ describe('TasksResolver', () => {
   describe('tasksByProjectId', () => {
     const projectId = 'd232d811-6-4184a847c4f4';
 
-    test('returns all tasks and totalCount when limit/offset omitted', async () => {
+    test('defaults to one page of 25 when limit/offset omitted', async () => {
       const tasks = [mockTask, { ...mockTask, id: 'task-2' }];
       vi.mocked(repo.find).mockResolvedValue(tasks);
+      vi.mocked(repo.count).mockResolvedValue(2);
 
       const result = await resolver.tasksByProjectId({
         limit: null,
@@ -413,13 +418,23 @@ describe('TasksResolver', () => {
         projectId,
       });
 
-      expect(result.tasks).toHaveLength(2);
+      expect(result.items).toHaveLength(2);
+      expect(result.tasks).toEqual(result.items);
       expect(result.totalCount).toBe(2);
+      expect(result.hasNextPage).toBe(false);
       expect(repo.find).toHaveBeenCalledWith({
         order: { ...CROSS_PLAN_TASK_LIST_ORDER },
+        skip: 0,
+        take: 25,
         where: { projectId },
       });
-      expect(repo.count).not.toHaveBeenCalled();
+    });
+
+    test('rejects a limit above 100 as BAD_USER_INPUT', async () => {
+      await expect(
+        resolver.tasksByProjectId({ limit: 101, offset: 0, projectId }),
+      ).rejects.toThrow('limit must be between 1 and 100');
+      expect(repo.find).not.toHaveBeenCalled();
     });
 
     test('returns paginated slice and totalCount when limit provided', async () => {
@@ -433,7 +448,8 @@ describe('TasksResolver', () => {
         projectId,
       });
 
-      expect(result.tasks).toHaveLength(1);
+      expect(result.items).toHaveLength(1);
+      expect(result.hasNextPage).toBe(true);
       expect(result.totalCount).toBe(42);
       expect(repo.find).toHaveBeenCalledWith({
         order: { ...CROSS_PLAN_TASK_LIST_ORDER },
@@ -540,6 +556,7 @@ describe('TasksResolver', () => {
             provide: PlanStatusService,
             useValue: createMock<PlanStatusService>(),
           },
+          { provide: PlanTaskOrderService, useValue: mockPlanTaskOrderService },
           {
             provide: TasksRepository,
             useValue: createTasksRepositoryMock(),
@@ -619,6 +636,7 @@ describe('TasksResolver', () => {
             provide: PlanStatusService,
             useValue: createMock<PlanStatusService>(),
           },
+          { provide: PlanTaskOrderService, useValue: mockPlanTaskOrderService },
           {
             provide: TasksRepository,
             useValue: createTasksRepositoryMock(),
@@ -1398,68 +1416,21 @@ describe('TasksResolver', () => {
   });
 
   describe('reorderPlanTasks', () => {
-    const planId = mockTask.planId;
-    const taskA = { ...mockTask, id: 'task-a', sortOrder: 2000, title: 'A' };
-    const taskB = {
-      ...mockTask,
-      createdAt: new Date('2026-02-02T21:33:51.891Z'),
-      id: 'task-b',
-      sortOrder: 1000,
-      title: 'B',
-    };
-
-    test('returns empty array when taskIds is empty', async () => {
-      const result = await resolver.reorderPlanTasks({ planId, taskIds: [] });
-
-      expect(result).toEqual([]);
-      expect(repo.find).not.toHaveBeenCalled();
-    });
-
-    test('throws when taskIds contain duplicates', async () => {
-      await expect(
-        resolver.reorderPlanTasks({
-          planId,
-          taskIds: [taskA.id, taskA.id],
-        }),
-      ).rejects.toBeInstanceOf(BadRequestException);
-    });
-
-    test('throws when a taskId does not belong to the plan', async () => {
-      vi.mocked(repo.find).mockResolvedValue([taskA]);
-
-      await expect(
-        resolver.reorderPlanTasks({
-          planId,
-          taskIds: [taskA.id, taskB.id],
-        }),
-      ).rejects.toBeInstanceOf(BadRequestException);
-    });
-
-    test('renumbers sortOrder 1000, 2000 in taskIds order inside a transaction', async () => {
-      vi.mocked(repo.find).mockResolvedValue([taskA, taskB]);
-
-      const result = await resolver.reorderPlanTasks({
-        planId,
-        taskIds: [taskA.id, taskB.id],
-      });
-
-      expect(repo.manager.transaction).toHaveBeenCalledTimes(1);
-      expect(transactionTaskRepo.update).toHaveBeenCalledWith(taskA.id, {
-        sortOrder: 1_000_000,
-      });
-      expect(transactionTaskRepo.update).toHaveBeenCalledWith(taskB.id, {
-        sortOrder: 1_000_001,
-      });
-      expect(transactionTaskRepo.update).toHaveBeenCalledWith(taskA.id, {
-        sortOrder: 1000,
-      });
-      expect(transactionTaskRepo.update).toHaveBeenCalledWith(taskB.id, {
-        sortOrder: 2000,
-      });
-      expect(result).toEqual([
-        { ...taskA, sortOrder: 1000 },
-        { ...taskB, sortOrder: 2000 },
+    test('delegates to the plan task order service', async () => {
+      vi.mocked(mockPlanTaskOrderService.reorderTasks).mockResolvedValue([
+        mockTask,
       ]);
+
+      await expect(
+        resolver.reorderPlanTasks({
+          planId: mockTask.planId,
+          taskIds: [mockTask.id],
+        }),
+      ).resolves.toEqual([mockTask]);
+      expect(mockPlanTaskOrderService.reorderTasks).toHaveBeenCalledWith(
+        mockTask.planId,
+        [mockTask.id],
+      );
     });
   });
 

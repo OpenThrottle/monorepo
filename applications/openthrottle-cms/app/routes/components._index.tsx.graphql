@@ -7,7 +7,7 @@ fragment CmsLibraryComponentRow on CmsLibraryComponentObject {
 }
 
 query CmsLibraryComponents {
-  cmsLibraryComponents(take: 100) {
+  cmsLibraryComponents(limit: 100) {
     hasNextPage
     items {
       ...CmsLibraryComponentRow

@@ -126,7 +126,7 @@ export interface AgentConversationsDocuments {
   readonly getMessagesDocument: TypedDocumentNode<
     {
       getAgentConversationMessages: {
-        messages: readonly PersistedAgentMessageRow[];
+        items: readonly PersistedAgentMessageRow[];
       };
     },
     { input: { conversationId: string; limit: number } }
@@ -134,7 +134,7 @@ export interface AgentConversationsDocuments {
   readonly listDocument: TypedDocumentNode<
     {
       listAgentConversations: {
-        conversations: readonly AgentConversationRow[];
+        items: readonly AgentConversationRow[];
         totalCount: number;
       };
     },
@@ -205,7 +205,7 @@ export function createAgentConversationsApi(
     );
 
     const messages = mapPersistedAgentConversationMessages(
-      data.getAgentConversationMessages.messages.map((message) => ({
+      data.getAgentConversationMessages.items.map((message) => ({
         content: message.content,
         createdAt: message.createdAt,
         id: message.id,
@@ -237,7 +237,7 @@ export function createAgentConversationsApi(
     const list = data.listAgentConversations;
 
     return emptyListAgentConversationsResult({
-      conversations: list.conversations.map(toAgentConversationListItem),
+      conversations: list.items.map(toAgentConversationListItem),
       totalCount: list.totalCount,
     });
   };

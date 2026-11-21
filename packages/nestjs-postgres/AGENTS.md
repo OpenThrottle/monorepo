@@ -31,12 +31,27 @@ append-only, log and derived rows, where `remove` / `removeMany` delete for real
   until stubbed. Repositories packages extend it with their custom methods; see
   [`nestjs-repositories-server`](../nestjs-repositories-server/AGENTS.md). Add a new
   `BaseRepository` method to `BaseRepositoryMethod` and the mock in the same change.
+  `createQueryBuilderMock<T>()` is the shared chainable `SelectQueryBuilder` mock (every method a
+  typed `vi.fn`, empty terminal defaults); it needs `@golevelup/ts-vitest`, a devDependency like
+  `vitest`.
 - `src/model-convention/` — the key / soft-delete convention union and the three constants each base
   declares as its static `modelConvention`.
-- `src/entity-loaders/`, `src/like-pattern/`, `src/list-pagination/`, `src/unique-violation/`,
+- `src/entity-loaders/`, `src/like-pattern/`, `src/pagination/`, `src/unique-violation/`,
   `src/vector-transformer/` — domain-free TypeORM helpers (DataLoaders over a repository, `LIKE`
-  escaping, list limits, the 23505 check, the pgvector transformer), moved here from
+  escaping, offset-pagination clamps and the `OffsetPage` shape, the 23505 check, the pgvector transformer), moved here from
   `nestjs-repositories` so moved repositories can share them.
+- `src/pagination/` — the one offset-pagination policy: `PAGINATION_DEFAULT_LIMIT` 25,
+  `PAGINATION_MAX_LIMIT` 100, `resolvePagination(input, { defaultLimit?, max? })` (always clamps,
+  never throws), `paginate(qb, input, options)` for a query builder with its own order or joins,
+  `OffsetPage<T>` (`{ items, totalCount }`) and `hasNextPage(page, skip)`.
+  `BaseRepository.findByPaginated` goes through the same clamp. Rejecting bad input is the
+  GraphQL boundary's job (`assertPagination` in `nestjs-graphql`), not this package's.
+- `src/sort-order/` — gapped sort orders unique per scope among live rows (`tasks` in a plan,
+  `plans` in a project): append, insert-beside, rebalance, partial-list reorder (in place) and
+  two-row move. Each takes an `EntityManager` + a `SortOrderScope` constant, holds a
+  per-scope `pg_advisory_xact_lock`, parks rows in a negative band so no step trips the partial
+  unique index, and returns a discriminated union instead of throwing. Its real proof is the
+  gated `sort-order.utils.integration.test.ts` (run command in its header; CI does not run it).
 - `src/postgres-profiling/` — the decorator plus one sub-folder per concern (settings, query
   capture, explain planning/dedupe/sink/runner, the TypeORM query-logger wrapper).
 

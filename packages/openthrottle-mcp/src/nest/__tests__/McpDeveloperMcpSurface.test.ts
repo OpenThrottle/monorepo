@@ -72,7 +72,7 @@ describe('McpDeveloperMcpSurface', () => {
         },
       ];
       vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
-        listAgentConversations: { conversations, totalCount: 1 },
+        listAgentConversations: { items: conversations, totalCount: 1 },
       });
 
       const result = await surface.agentConversationList({});

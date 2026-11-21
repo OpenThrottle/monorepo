@@ -1,4 +1,7 @@
-import type { CreateModelInput } from '@openthrottle/nestjs-postgres';
+import type {
+  CreateModelInput,
+  PaginationInput,
+} from '@openthrottle/nestjs-postgres';
 import type { BaseRepositoryMock } from '@openthrottle/nestjs-postgres/testing';
 import type { Mock } from 'vitest';
 
@@ -75,40 +78,11 @@ export interface ListPlansFilteredParams {
   readonly assignees: readonly string[];
   readonly orderColumn: 'createdAt' | 'updatedAt';
   readonly orderDirection: 'ASC' | 'DESC';
+  readonly pagination: PaginationInput;
   readonly project: string | null;
   readonly projectId: string | null;
-  readonly skip: number;
   readonly statuses: readonly string[];
-  readonly take: number;
   readonly titleSubstring: string | null;
-}
-
-/**
- * @description One page of {@link PlansRepository.listFiltered}: the plans without their
- * description, plus the unpaged total.
- * @public
- */
-export interface ListPlansFilteredResult {
-  readonly plans: Plan[];
-  readonly totalCount: number;
-}
-
-/**
- * @description The window {@link PlansRepository.pageInProject} reads.
- * @public
- */
-export interface ProjectPlansPage {
-  readonly limit: number;
-  readonly offset: number;
-}
-
-/**
- * @description A page of a project's plans, plus the project's total live plan count.
- * @public
- */
-export interface ProjectPlansPageResult {
-  readonly plans: Plan[];
-  readonly totalCount: number;
 }
 
 /**
@@ -129,6 +103,9 @@ export interface PlansRepositoryMock extends BaseRepositoryMock<
   Plan,
   PlanCreateInput
 > {
+  readonly appendProjectSortOrder: Mock<
+    PlansRepository['appendProjectSortOrder']
+  >;
   readonly countByDateRange: Mock<PlansRepository['countByDateRange']>;
   readonly countByStatus: Mock<PlansRepository['countByStatus']>;
   readonly findByIdPrefix: Mock<PlansRepository['findByIdPrefix']>;
@@ -140,6 +117,7 @@ export interface PlansRepositoryMock extends BaseRepositoryMock<
   readonly listFiltered: Mock<PlansRepository['listFiltered']>;
   readonly listInProject: Mock<PlansRepository['listInProject']>;
   readonly maxProjectSortOrders: Mock<PlansRepository['maxProjectSortOrders']>;
+  readonly moveInProject: Mock<PlansRepository['moveInProject']>;
   readonly pageInProject: Mock<PlansRepository['pageInProject']>;
-  readonly renumberProjectPlans: Mock<PlansRepository['renumberProjectPlans']>;
+  readonly reorderInProject: Mock<PlansRepository['reorderInProject']>;
 }
