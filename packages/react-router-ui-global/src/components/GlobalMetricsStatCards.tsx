@@ -1,11 +1,11 @@
-import type { GetRootMetricsQuery } from '@openthrottle/openthrottle-developer-codegen';
+import type { RootMetricsFragment } from '@openthrottle/openthrottle-developer-codegen';
 import { OpenThrottleStatCard } from '@openthrottle/react-router-ui';
 import * as React from 'react';
 
 import { formatCpuMs, formatMb } from '../utils/utils.global';
 
 export interface GlobalMetricsStatCardsProps {
-  readonly serverMetrics: GetRootMetricsQuery['serverMetrics'];
+  readonly serverMetrics: RootMetricsFragment;
 }
 
 /**

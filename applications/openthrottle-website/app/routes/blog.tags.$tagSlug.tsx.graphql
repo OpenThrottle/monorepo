@@ -2,15 +2,9 @@
 # unknown or hidden tag slug can 404 without a second request.
 query BlogTag($after: String, $first: Int! = 9, $tagSlug: String!) {
   blogPosts(after: $after, first: $first, tagSlug: $tagSlug) {
-    endCursor
-    hasNextPage
-    items {
-      ...BlogPostSummary
-    }
+    ...BlogPostSummaryPage
   }
   blogTags {
-    description
-    name
-    slug
+    ...BlogTagDetail
   }
 }

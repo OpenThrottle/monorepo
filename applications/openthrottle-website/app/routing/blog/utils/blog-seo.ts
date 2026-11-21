@@ -5,7 +5,10 @@ import {
 } from '@openthrottle/react-router-utils';
 import type { MetaDescriptor } from 'react-router';
 
-import type { BlogPostQuery, BlogTagQuery } from '~/__generated__/graphql';
+import type {
+  BlogPostDetailFragment,
+  BlogTagDetailFragment,
+} from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import { BLOG_COPY } from '~/routing/blog/data/data.copy';
 
@@ -17,8 +20,8 @@ import {
   buildBlogTagPath,
 } from './blog-urls';
 
-type BlogPost = NonNullable<BlogPostQuery['blogPost']>;
-type BlogTag = BlogTagQuery['blogTags'][number];
+type BlogPost = BlogPostDetailFragment;
+type BlogTag = BlogTagDetailFragment;
 
 interface BlogPageMetaConfig {
   readonly description: string;

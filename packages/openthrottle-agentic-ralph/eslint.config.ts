@@ -1,12 +1,3 @@
-import {
-  eslintConfig,
-  preferGraphqlFragmentWarningsEslintConfig,
-} from '@tools/dotfiles';
+import { eslintConfig } from '@tools/dotfiles';
 
-export default [
-  { ignores: ['!**/*'] },
-  ...eslintConfig,
-
-  // Has prefer-graphql-fragment violations; drop this once they are fixed.
-  ...preferGraphqlFragmentWarningsEslintConfig,
-];
+export default [{ ignores: ['!**/*'] }, ...eslintConfig];

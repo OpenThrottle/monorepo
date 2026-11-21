@@ -9,12 +9,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   AppendPlanOutputDocument,
   GetPlanDocument,
-  type GetPlanQuery,
   GetServerHealthDocument,
   GetTaskDocument,
   GetTasksByPlanIdDocument,
-  type GetTasksByPlanIdQuery,
+  type PlanWithTagsFragment,
   RecordAgentTrajectoryDocument,
+  type TaskFragment,
   UpdatePlanDocument,
   UpdateTaskDocument,
 } from '../../__generated__/graphql.ts';
@@ -44,8 +44,8 @@ const TASK_A = 'a64424d1-4bb0-4b08-ade3-b9822411d05c';
 const TASK_B = 'b64424d1-4bb0-4b08-ade3-b9822411d05c';
 const ISO = '2026-04-01T12:00:00.000Z';
 
-type PlanRow = NonNullable<GetPlanQuery['plan']>;
-type TaskRow = GetTasksByPlanIdQuery['tasksByPlanId'][number];
+type PlanRow = PlanWithTagsFragment;
+type TaskRow = TaskFragment;
 
 const serverHealthOk = {
   __typename: 'ServerHealthObject' as const,
@@ -121,7 +121,7 @@ const readUpdateInput = (
 };
 
 const createMockExecute = (opts: {
-  readonly getTasksByPlanId?: () => GetTasksByPlanIdQuery['tasksByPlanId'];
+  readonly getTasksByPlanId?: () => TaskRow[];
   readonly onRecordTrajectory?: (variables: unknown) => void;
 }): WorkflowExecuteGraphqlV2 => {
   return asExecuteGraphqlV2(async (document, variables) => {
@@ -154,7 +154,7 @@ const FINAL_ITERATION_FLAG = 'OT_FINAL_ITERATION=1';
 const runOnceCapturingPrompt = async (params: {
   readonly mode: 'plan' | 'task';
   readonly taskId: string;
-  readonly tasks: GetTasksByPlanIdQuery['tasksByPlanId'];
+  readonly tasks: TaskRow[];
 }): Promise<string> => {
   const prompts: string[] = [];
   const run = vi.fn(async ({ agentPrompt }: { agentPrompt: string }) => {

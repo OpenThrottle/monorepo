@@ -1,8 +1,4 @@
-import {
-  dataFolderEslintConfig,
-  eslintConfig,
-  preferGraphqlFragmentWarningsEslintConfig,
-} from '@tools/dotfiles';
+import { dataFolderEslintConfig, eslintConfig } from '@tools/dotfiles';
 
 export default [
   { ignores: ['!**/*'] },
@@ -27,7 +23,4 @@ export default [
       'openthrottle/component-primitive-shape': 'error',
     },
   },
-
-  // Has prefer-graphql-fragment violations; drop this once they are fixed.
-  ...preferGraphqlFragmentWarningsEslintConfig,
 ];

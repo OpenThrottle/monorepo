@@ -2,21 +2,25 @@
 # the sitemap (`sitemap[.]xml`). Public, server-side only, run through
 # `fetchPublicGraphql` from `app/routing/blog/utils/blog-feeds.server.ts`.
 
+fragment BlogFeedPost on BlogPostObject {
+  author {
+    displayName
+  }
+  excerpt
+  publishedAt
+  seoDescription
+  slug
+  tags {
+    name
+  }
+  title
+  updatedAt
+}
+
 query BlogFeed($first: Int! = 20) {
   blogPosts(first: $first) {
     items {
-      author {
-        displayName
-      }
-      excerpt
-      publishedAt
-      seoDescription
-      slug
-      tags {
-        name
-      }
-      title
-      updatedAt
+      ...BlogFeedPost
     }
   }
 }

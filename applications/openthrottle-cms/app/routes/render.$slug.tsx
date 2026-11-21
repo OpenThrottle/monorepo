@@ -5,7 +5,7 @@ import * as React from 'react';
 import { data } from 'react-router';
 
 import type { Route } from '@/app/routes/+types/render.$slug';
-import type { RenderCmsLayoutQuery } from '~/__generated__/graphql';
+import type { RenderedCmsLayoutFragment } from '~/__generated__/graphql';
 import { RenderCmsLayoutDocument } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import { fetchAuthGraphql } from '~/global/utils/graphql.server';
@@ -30,7 +30,7 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
  */
 export const loader = async (args: Route.LoaderArgs) => {
   const { params, request } = args;
-  let layout: RenderCmsLayoutQuery['cmsLayout'];
+  let layout: RenderedCmsLayoutFragment | null | undefined;
 
   try {
     const result = await fetchAuthGraphql(request, RenderCmsLayoutDocument, {

@@ -1,12 +1,12 @@
 import { buildCanonicalUrl } from '@openthrottle/react-router-utils';
 
-import type { BlogFeedQuery } from '~/__generated__/graphql';
+import type { BlogFeedPostFragment } from '~/__generated__/graphql';
 import { BLOG_COPY } from '~/routing/blog/data/data.copy';
 
 import { toBlogIsoDate } from './blog-format';
 import { BLOG_BASE_PATH, BLOG_FEED_PATH, buildBlogPostPath } from './blog-urls';
 
-export type BlogFeedPost = BlogFeedQuery['blogPosts']['items'][number];
+export type BlogFeedPost = BlogFeedPostFragment;
 
 const XML_ENTITIES: Readonly<Record<string, string>> = {
   '"': '&quot;',
