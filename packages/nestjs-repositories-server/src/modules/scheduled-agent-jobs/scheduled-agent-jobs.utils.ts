@@ -26,6 +26,13 @@ export function createScheduledAgentJobsRepositoryMock(): ScheduledAgentJobsRepo
         new Error('scheduled_agent_jobs.createJob is not stubbed in this test'),
       );
     }),
+    createJobWithinOwnerCaps: vi.fn(async () => {
+      return Promise.reject(
+        new Error(
+          'scheduled_agent_jobs.createJobWithinOwnerCaps is not stubbed in this test',
+        ),
+      );
+    }),
     deleteJob: vi.fn(async () => {
       return false;
     }),

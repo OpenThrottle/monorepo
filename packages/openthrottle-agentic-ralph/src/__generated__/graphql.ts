@@ -2923,7 +2923,7 @@ export type Mutation = {
   appendPlanOutput: PlanOutputStreamChunkObject;
   /** Apply enabled editor configuration (MCP, skills paths, rules dirs) to linked local repositories. */
   applyWorkspaceEditorConfiguration: ApplyWorkspaceEditorConfigurationResultObject;
-  /** Approve an agent-created scheduled job that is awaiting approval (owner only): marks it approved and enables it. The only way to arm a pending job. */
+  /** Approve an agent-created scheduled job that is awaiting approval (owner only, signed-in users only: a service-account token is refused): marks it approved and enables it. The only way to arm a pending job. */
   approveScheduledAgentJob: ScheduledAgentJobObject;
   /** Archive an owned agent conversation (no hard delete in v1). */
   archiveAgentConversation: AgentConversationObject;
@@ -3187,7 +3187,7 @@ export type Mutation = {
   revokeServiceAccountCredential: Scalars['Boolean']['output'];
   /** Rotate a webhook trigger (owner only): the token and secret are replaced together and the old URL stops working immediately. Returns the new URL path and secret ONCE. */
   rotateScheduledAgentJobWebhookTrigger: ScheduledAgentJobWebhookTriggerCredentialsObject;
-  /** Enqueue an immediate one-off run (owner only); allowed even when the schedule is disabled. */
+  /** Enqueue an immediate one-off run (owner only); allowed even when the schedule is disabled, but refused (SCHEDULED_AGENT_JOB_APPROVAL_PENDING) while the job awaits approval. */
   runScheduledAgentJobNow: ScheduledAgentJobRunObject;
   /** Enqueue an immediate run of one of the caller's own jobs (agent- or human-created). Refused while the job awaits approval. */
   runScheduledAgentJobNowAsAgent: ScheduledAgentJobRunObject;

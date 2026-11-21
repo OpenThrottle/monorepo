@@ -157,6 +157,38 @@ export interface CreateScheduledAgentJobInput {
 }
 
 /**
+ * @description A create that the per-owner caps apply to: the owner is required.
+ * @public
+ */
+export interface CreateOwnedScheduledAgentJobInput extends CreateScheduledAgentJobInput {
+  readonly ownerUserId: string;
+}
+
+/**
+ * @description The per-owner job caps `createJobWithinOwnerCaps` enforces: every live job, and the
+ * live jobs created through the agent (`mcp`) path.
+ * @public
+ */
+export interface ScheduledAgentJobOwnerCaps {
+  readonly maxMcpPerOwner: number;
+  readonly maxPerOwner: number;
+}
+
+/**
+ * @description Outcome of `createJobWithinOwnerCaps`: the new job, or which cap refused it with the
+ * owner's count at the time.
+ * @public
+ */
+export type CreateScheduledAgentJobWithinCapsResult =
+  | {
+      readonly count: number;
+      readonly limit: number;
+      readonly ok: false;
+      readonly scope: 'all' | 'mcp';
+    }
+  | { readonly job: ScheduledAgentJob; readonly ok: true };
+
+/**
  * @description Mutable fields of a schedule; omitted fields are left unchanged.
  * @public
  */
@@ -174,6 +206,7 @@ export type UpdateScheduledAgentJobInput = Partial<
 export type ScheduledAgentJobsRepositoryMethod =
   | 'countJobsForOwner'
   | 'createJob'
+  | 'createJobWithinOwnerCaps'
   | 'deleteJob'
   | 'findJobByIdempotencyKey'
   | 'findJobById'

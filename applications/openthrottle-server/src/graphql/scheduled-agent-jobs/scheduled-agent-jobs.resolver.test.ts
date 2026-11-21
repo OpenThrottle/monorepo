@@ -109,6 +109,66 @@ describe('ScheduledAgentJobsResolver.createScheduledAgentJob', () => {
   });
 });
 
+describe('ScheduledAgentJobsResolver.approveScheduledAgentJob', () => {
+  const buildApprove = () => {
+    const pending = createMock<ScheduledAgentJob>({
+      approvalState: 'pending',
+      id: 'job-1',
+      ownerUserId: 'user-1',
+    });
+    const approve = vi.fn().mockResolvedValue(
+      createMock<ScheduledAgentJob>({
+        approvalState: 'approved',
+        id: 'job-1',
+        ownerUserId: 'user-1',
+      }),
+    );
+    const get = vi.fn().mockResolvedValue(pending);
+    const service = createMock<ScheduledAgentJobsGraphqlService>({
+      approve,
+      get,
+    });
+    const resolver = new ScheduledAgentJobsResolver(
+      createMock<UserDisabledAgentClisRepository>(),
+      createMock<ScheduledAgentJobsLoaders>(),
+      createMock<LoggerService>(),
+      service,
+    );
+    return { approve, get, resolver };
+  };
+
+  it('lets the signed-in owner approve a pending job', async () => {
+    const { approve, resolver } = buildApprove();
+
+    await resolver.approveScheduledAgentJob(human, 'job-1');
+
+    expect(approve).toHaveBeenCalledWith('job-1');
+  });
+
+  it('refuses a service-account token, even one holding settings:write, before touching the job', async () => {
+    const { approve, get, resolver } = buildApprove();
+
+    await expect(
+      resolver.approveScheduledAgentJob(serviceAccount, 'job-1'),
+    ).rejects.toThrow(/Only a signed-in user can approve/);
+    expect(get).not.toHaveBeenCalled();
+    expect(approve).not.toHaveBeenCalled();
+  });
+
+  it('refuses a signed-in user who does not own the job', async () => {
+    const { approve, resolver } = buildApprove();
+    const stranger: AuthPrincipal = {
+      kind: AUTH_PRINCIPAL_KIND_USER,
+      sub: 'user-2',
+    };
+
+    await expect(
+      resolver.approveScheduledAgentJob(stranger, 'job-1'),
+    ).rejects.toThrow(/owned by another user/);
+    expect(approve).not.toHaveBeenCalled();
+  });
+});
+
 describe('cross-job run reads', () => {
   const runsResolver = (
     service: ScheduledAgentJobsGraphqlService,

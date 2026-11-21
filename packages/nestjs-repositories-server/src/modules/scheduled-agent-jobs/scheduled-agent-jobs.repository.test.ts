@@ -3,6 +3,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { IsNull } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { ScheduledAgentJobWebhookTrigger } from '../scheduled-agent-job-webhook-triggers/scheduled-agent-job-webhook-trigger.entity.ts';
 import { ScheduledAgentJob } from './scheduled-agent-job.entity.ts';
 import { ScheduledAgentJobsRepository } from './scheduled-agent-jobs.repository.ts';
 import { schedulerKeyForJob } from './scheduler-key/scheduler-key.utils.ts';
@@ -12,6 +13,13 @@ type JobRepo = {
   create: ReturnType<typeof vi.fn>;
   find: ReturnType<typeof vi.fn>;
   findOne: ReturnType<typeof vi.fn>;
+  manager: {
+    count: ReturnType<typeof vi.fn>;
+    create: ReturnType<typeof vi.fn>;
+    query: ReturnType<typeof vi.fn>;
+    save: ReturnType<typeof vi.fn>;
+    transaction: ReturnType<typeof vi.fn>;
+  };
   merge: ReturnType<typeof vi.fn>;
   save: ReturnType<typeof vi.fn>;
   softDelete: ReturnType<typeof vi.fn>;
@@ -24,18 +32,32 @@ describe('ScheduledAgentJobsRepository', () => {
   let jobRepo: JobRepo;
 
   beforeEach(async () => {
+    const create = vi.fn((input: Partial<ScheduledAgentJob>) => ({ ...input }));
+    // First save assigns an id (simulating INSERT); later saves echo the row.
+    const save = vi.fn((row: ScheduledAgentJob) =>
+      Promise.resolve(row.id ? row : { ...row, id: 'job-1' }),
+    );
     jobRepo = {
       count: vi.fn().mockResolvedValue(0),
-      create: vi.fn((input: Partial<ScheduledAgentJob>) => ({ ...input })),
+      create,
       find: vi.fn().mockResolvedValue([]),
       findOne: vi.fn().mockResolvedValue(null),
+      // The manager writes through the same create/save mocks, so createJob assertions read them.
+      manager: {
+        count: vi.fn().mockResolvedValue(0),
+        create: vi.fn((_entity: unknown, input: Partial<ScheduledAgentJob>) => {
+          return create(input);
+        }),
+        query: vi.fn().mockResolvedValue([]),
+        save: vi.fn((row: ScheduledAgentJob) => {
+          return save(row);
+        }),
+        transaction: vi.fn(),
+      },
       merge: vi.fn((target: object, patch: object) =>
         Object.assign(target, patch),
       ),
-      // First save assigns an id (simulating INSERT); later saves echo the row.
-      save: vi.fn((row: ScheduledAgentJob) =>
-        Promise.resolve(row.id ? row : { ...row, id: 'job-1' }),
-      ),
+      save,
       softDelete: vi.fn().mockResolvedValue({ affected: 1 }),
       target: ScheduledAgentJob,
       update: vi.fn().mockResolvedValue({ affected: 1 }),
@@ -49,6 +71,86 @@ describe('ScheduledAgentJobsRepository', () => {
     }).compile();
 
     repository = moduleRef.get(ScheduledAgentJobsRepository);
+  });
+
+  describe('createJobWithinOwnerCaps', () => {
+    const input = {
+      createdVia: 'mcp' as const,
+      cronPattern: '0 * * * *',
+      driverId: 'claude' as const,
+      name: 'n',
+      ownerUserId: 'user-1',
+      prompt: 'p',
+    };
+    const caps = { maxMcpPerOwner: 10, maxPerOwner: 25 };
+
+    beforeEach(() => {
+      jobRepo.manager.transaction.mockImplementation(
+        async (work: (m: typeof jobRepo.manager) => Promise<unknown>) => {
+          return work(jobRepo.manager);
+        },
+      );
+    });
+
+    it('takes the owner’s advisory lock before it counts', async () => {
+      await repository.createJobWithinOwnerCaps(input, caps);
+
+      expect(jobRepo.manager.query).toHaveBeenCalledWith(
+        `SELECT pg_advisory_xact_lock(hashtext($1), hashtext($2))`,
+        ['scheduled_agent_jobs.owner_caps', 'user-1'],
+      );
+      const lockOrder = jobRepo.manager.query.mock.invocationCallOrder[0] ?? 0;
+      const countOrder = jobRepo.manager.count.mock.invocationCallOrder[0] ?? 0;
+      expect(lockOrder).toBeLessThan(countOrder);
+    });
+
+    it('inserts in the same transaction when under both caps', async () => {
+      jobRepo.manager.count.mockResolvedValueOnce(24).mockResolvedValueOnce(9);
+
+      const result = await repository.createJobWithinOwnerCaps(input, caps);
+
+      expect(result).toMatchObject({ job: { id: 'job-1' }, ok: true });
+      expect(jobRepo.manager.save).toHaveBeenCalled();
+    });
+
+    it('refuses at the total cap without inserting', async () => {
+      jobRepo.manager.count.mockResolvedValueOnce(25);
+
+      await expect(
+        repository.createJobWithinOwnerCaps(input, caps),
+      ).resolves.toStrictEqual({
+        count: 25,
+        limit: 25,
+        ok: false,
+        scope: 'all',
+      });
+      expect(jobRepo.manager.save).not.toHaveBeenCalled();
+    });
+
+    it('refuses an agent-created job at the mcp cap', async () => {
+      jobRepo.manager.count.mockResolvedValueOnce(12).mockResolvedValueOnce(10);
+
+      await expect(
+        repository.createJobWithinOwnerCaps(input, caps),
+      ).resolves.toStrictEqual({
+        count: 10,
+        limit: 10,
+        ok: false,
+        scope: 'mcp',
+      });
+    });
+
+    it('does not apply the mcp cap to a UI create', async () => {
+      jobRepo.manager.count.mockResolvedValueOnce(12);
+
+      const result = await repository.createJobWithinOwnerCaps(
+        { ...input, createdVia: 'ui' },
+        caps,
+      );
+
+      expect(result.ok).toBe(true);
+      expect(jobRepo.manager.count).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('countJobsForOwner', () => {
@@ -286,19 +388,43 @@ describe('ScheduledAgentJobsRepository', () => {
   });
 
   describe('deleteJob', () => {
-    it('soft deletes a live row and reports it', async () => {
+    const buildManager = (affected: number) => {
+      return {
+        delete: vi.fn().mockResolvedValue({ affected: 1 }),
+        softDelete: vi.fn().mockResolvedValue({ affected }),
+      };
+    };
+
+    const useManager = (manager: ReturnType<typeof buildManager>) => {
+      jobRepo.manager.transaction.mockImplementation(
+        async (work: (m: typeof manager) => Promise<unknown>) => {
+          return work(manager);
+        },
+      );
+    };
+
+    it('soft deletes a live row and removes its webhook trigger in one transaction', async () => {
+      const manager = buildManager(1);
+      useManager(manager);
+
       await expect(repository.deleteJob('job-1')).resolves.toBe(true);
-      expect(jobRepo.softDelete).toHaveBeenCalledWith({
+      expect(jobRepo.manager.transaction).toHaveBeenCalledTimes(1);
+      expect(manager.softDelete).toHaveBeenCalledWith(ScheduledAgentJob, {
         deletedAt: IsNull(),
         id: 'job-1',
       });
-      expect(jobRepo.softDelete).toHaveBeenCalledTimes(1);
+      expect(manager.delete).toHaveBeenCalledWith(
+        ScheduledAgentJobWebhookTrigger,
+        { scheduledAgentJobId: 'job-1' },
+      );
     });
 
-    it('reports false when no live row matched (absent or already deleted)', async () => {
-      jobRepo.softDelete.mockResolvedValueOnce({ affected: 0 });
+    it('reports false and touches no trigger when no live row matched (absent or already deleted)', async () => {
+      const manager = buildManager(0);
+      useManager(manager);
 
       await expect(repository.deleteJob('missing')).resolves.toBe(false);
+      expect(manager.delete).not.toHaveBeenCalled();
     });
   });
 });

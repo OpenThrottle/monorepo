@@ -140,6 +140,7 @@ refused) and target one of the user's own repository checkouts.
   you made in the UI can only be listed and run.
 - With `SCHEDULED_AGENT_JOBS_MCP_REQUIRE_APPROVAL=true`, an agent-created job stays disabled
   (`approvalState: pending`) until you approve it (`approveScheduledAgentJob`); it cannot be run before.
+  Approval takes a signed-in user: a service-account token (the MCP's included) is refused.
 - Agent tools cannot create or change webhook triggers, `cwd`, or custom endpoint settings.
   Design and threat model: [webhook-triggered-agent-jobs.md](./webhook-triggered-agent-jobs.md#mcp-scheduling-tools-task-4-guardrails).
 
@@ -188,7 +189,7 @@ lock at all — pin `SCHEDULED_AGENT_JOBS_CONCURRENCY=1` there.
 ## Known follow-ups
 
 - Dedicated `scheduled-jobs:{read,manage,run}` permissions (currently reuses `settings:*`), which need
-  a role-seed migration.
+  a role-seed migration. Approval does not wait on them: it is human-only by principal kind already.
 - Cross-process run cancellation (a pub/sub channel); today `cancelScheduledAgentJobRun` sets a
   durable marker + best-effort in-process abort.
 - UI polish: a live-tail log console, the chat model-picker rail, and a visual cron builder.

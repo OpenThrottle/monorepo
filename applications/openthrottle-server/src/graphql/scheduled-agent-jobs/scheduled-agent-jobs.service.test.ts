@@ -57,6 +57,13 @@ describe('ScheduledAgentJobsGraphqlService', () => {
   beforeEach(() => {
     jobsRepository = createScheduledAgentJobsRepositoryMock();
     jobsRepository.createJob.mockResolvedValue(jobFixture());
+    // Under the caps by default: the locked create delegates to the plain insert mock, so the
+    // createJob assertions below hold for owned and unowned creates alike.
+    jobsRepository.createJobWithinOwnerCaps.mockImplementation(
+      async (input) => {
+        return { job: await jobsRepository.createJob(input), ok: true };
+      },
+    );
     jobsRepository.deleteJob.mockResolvedValue(true);
     jobsRepository.findJobById.mockResolvedValue(jobFixture());
     jobsRepository.updateJob.mockResolvedValue(jobFixture());
@@ -355,6 +362,17 @@ describe('ScheduledAgentJobsGraphqlService', () => {
     );
   });
 
+  it('runNow refuses a job awaiting approval and enqueues nothing', async () => {
+    jobsRepository.findJobById.mockResolvedValue(
+      jobFixture({ approvalState: 'pending', enabled: false }),
+    );
+
+    await expect(service.runNow('j1')).rejects.toMatchObject({
+      extensions: { code: 'SCHEDULED_AGENT_JOB_APPROVAL_PENDING' },
+    });
+    expect(runsRepository.createRun).not.toHaveBeenCalled();
+  });
+
   it('runNow pre-creates a manual run and enqueues with jobId = runId', async () => {
     const run = await service.runNow('j1');
 
@@ -569,63 +587,62 @@ describe('ScheduledAgentJobsGraphqlService', () => {
       vi.unstubAllEnvs();
     });
 
-    it('refuses a create at the default cap of 25 jobs, loudly and with a code', async () => {
-      jobsRepository.countJobsForOwner.mockResolvedValue(25);
-
-      await expect(service.create(request)).rejects.toMatchObject({
-        extensions: { code: 'SCHEDULED_AGENT_JOB_LIMIT_REACHED' },
-      });
-      expect(jobsRepository.createJob).not.toHaveBeenCalled();
-    });
-
-    it('allows a create one under the cap', async () => {
-      jobsRepository.countJobsForOwner.mockResolvedValue(24);
-
+    it('passes the default caps (25 jobs, 10 agent-created) to the locked create', async () => {
       await service.create(request);
 
-      expect(jobsRepository.createJob).toHaveBeenCalled();
+      expect(jobsRepository.createJobWithinOwnerCaps).toHaveBeenCalledWith(
+        expect.objectContaining({ ownerUserId: 'user-1' }),
+        { maxMcpPerOwner: 10, maxPerOwner: 25 },
+      );
     });
 
     it('honors SCHEDULED_AGENT_JOBS_MAX_PER_OWNER', async () => {
       vi.stubEnv('SCHEDULED_AGENT_JOBS_MAX_PER_OWNER', '3');
-      jobsRepository.countJobsForOwner.mockResolvedValue(3);
+
+      await service.create(request);
+
+      expect(jobsRepository.createJobWithinOwnerCaps).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ maxPerOwner: 3 }),
+      );
+    });
+
+    it('refuses a create the total cap turned away, loudly and with a code', async () => {
+      jobsRepository.createJobWithinOwnerCaps.mockResolvedValue({
+        count: 25,
+        limit: 25,
+        ok: false,
+        scope: 'all',
+      });
 
       await expect(service.create(request)).rejects.toMatchObject({
         extensions: { code: 'SCHEDULED_AGENT_JOB_LIMIT_REACHED' },
+        message: expect.stringContaining('25 scheduled jobs (limit 25)'),
       });
+      expect(scheduler.upsertScheduler).not.toHaveBeenCalled();
     });
 
-    it('refuses an agent-created job at 10 agent-created jobs even under the total cap', async () => {
-      jobsRepository.countJobsForOwner.mockImplementation(
-        async (_owner, createdVia) => {
-          return createdVia === 'mcp' ? 10 : 12;
-        },
-      );
+    it('names the agent-created cap when that one refused', async () => {
+      jobsRepository.createJobWithinOwnerCaps.mockResolvedValue({
+        count: 10,
+        limit: 10,
+        ok: false,
+        scope: 'mcp',
+      });
 
       await expect(
         service.create({ ...request, createdVia: 'mcp' }),
       ).rejects.toMatchObject({
         extensions: { code: 'SCHEDULED_AGENT_JOB_LIMIT_REACHED' },
+        message: expect.stringContaining('10 agent-created scheduled jobs'),
       });
-      expect(jobsRepository.createJob).not.toHaveBeenCalled();
-    });
-
-    it('does not apply the agent-created cap to a UI create', async () => {
-      jobsRepository.countJobsForOwner.mockImplementation(
-        async (_owner, createdVia) => {
-          return createdVia === 'mcp' ? 10 : 12;
-        },
-      );
-
-      await service.create(request);
-
-      expect(jobsRepository.createJob).toHaveBeenCalled();
     });
 
     it('does not count jobs of a null owner', async () => {
       await service.create({ ...request, ownerUserId: null });
 
-      expect(jobsRepository.countJobsForOwner).not.toHaveBeenCalled();
+      expect(jobsRepository.createJobWithinOwnerCaps).not.toHaveBeenCalled();
+      expect(jobsRepository.createJob).toHaveBeenCalled();
     });
   });
 

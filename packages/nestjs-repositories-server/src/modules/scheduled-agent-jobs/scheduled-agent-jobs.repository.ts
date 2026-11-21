@@ -4,15 +4,23 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { CreateModelInput } from '@openthrottle/nestjs-postgres';
 import { BaseRepository } from '@openthrottle/nestjs-postgres';
-import { Repository } from 'typeorm';
+import type { EntityManager } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 
+import { ScheduledAgentJobWebhookTrigger } from '../scheduled-agent-job-webhook-triggers/scheduled-agent-job-webhook-trigger.entity.ts';
 import { ScheduledAgentJob } from './scheduled-agent-job.entity.ts';
 import type {
+  CreateOwnedScheduledAgentJobInput,
   CreateScheduledAgentJobInput,
+  CreateScheduledAgentJobWithinCapsResult,
   ScheduledAgentJobCreatedVia,
+  ScheduledAgentJobOwnerCaps,
   UpdateScheduledAgentJobInput,
 } from './scheduled-agent-jobs.types.ts';
 import { schedulerKeyForJob } from './scheduler-key/scheduler-key.utils.ts';
+
+/** First key of the per-owner cap advisory lock, so it cannot collide with another lock user. */
+const OWNER_CAP_LOCK_NAMESPACE = 'scheduled_agent_jobs.owner_caps';
 
 /**
  * @description Data access for the openthrottle `scheduled_agent_jobs` table on the default
@@ -39,49 +47,62 @@ export class ScheduledAgentJobsRepository extends BaseRepository<
   /**
    * @description Create a schedule row, deriving the stable scheduler key from the generated id.
    * The first save carries a unique placeholder key, so two concurrent creates cannot collide on
-   * the live-only unique index before the id-derived key lands.
+   * the live-only unique index before the id-derived key lands. Enforces no cap: an owned job that
+   * must respect the per-owner caps goes through {@link createJobWithinOwnerCaps}.
    */
   async createJob(
     input: CreateScheduledAgentJobInput,
   ): Promise<ScheduledAgentJob> {
-    const draft = this.repository.create({
-      ...(input.approvalState === undefined
-        ? {}
-        : { approvalState: input.approvalState }),
-      ...(input.createdVia === undefined
-        ? {}
-        : { createdVia: input.createdVia }),
-      cronPattern: input.cronPattern,
-      cwd: input.cwd ?? null,
-      driverId: input.driverId,
-      enabled: input.enabled ?? true,
-      idempotencyKey: input.idempotencyKey ?? null,
-      intervalMs: input.intervalMs ?? null,
-      ...(input.misfirePolicy === undefined
-        ? {}
-        : { misfirePolicy: input.misfirePolicy }),
-      ...(input.misfireThresholdMs === undefined
-        ? {}
-        : { misfireThresholdMs: input.misfireThresholdMs }),
-      model: input.model ?? null,
-      name: input.name,
-      ownerUserId: input.ownerUserId ?? null,
-      prompt: input.prompt,
-      repositoryCheckoutId: input.repositoryCheckoutId ?? null,
-      runAt: input.runAt ?? null,
-      ...(input.scheduleKind === undefined
-        ? {}
-        : { scheduleKind: input.scheduleKind }),
-      // Temporary placeholder; replaced with the id-derived key after insert.
-      schedulerKey: `pending:${randomUUID()}`,
-      settings: input.settings ?? {},
-      timeoutMs: input.timeoutMs ?? null,
-      timezone: input.timezone ?? null,
-    });
+    return this.insertJob(this.repository.manager, input);
+  }
 
-    const saved = await this.repository.save(draft);
-    saved.schedulerKey = schedulerKeyForJob(saved.id);
-    return this.repository.save(saved);
+  /**
+   * @description Create an owned schedule only if the owner is under `caps`, race-free. A
+   * transaction-scoped advisory lock keyed on the owner serialises every capped create for that
+   * owner, so the count and the insert are one atomic step: two simultaneous creates at
+   * `limit - 1` produce exactly one job. Different owners never wait on each other. The `mcp` cap is
+   * checked only for an input with `createdVia: 'mcp'`.
+   */
+  async createJobWithinOwnerCaps(
+    input: CreateOwnedScheduledAgentJobInput,
+    caps: ScheduledAgentJobOwnerCaps,
+  ): Promise<CreateScheduledAgentJobWithinCapsResult> {
+    return this.repository.manager.transaction(async (manager) => {
+      await manager.query(
+        `SELECT pg_advisory_xact_lock(hashtext($1), hashtext($2))`,
+        [OWNER_CAP_LOCK_NAMESPACE, input.ownerUserId],
+      );
+
+      const total = await manager.count(ScheduledAgentJob, {
+        where: { ownerUserId: input.ownerUserId },
+      });
+      if (total >= caps.maxPerOwner) {
+        return {
+          count: total,
+          limit: caps.maxPerOwner,
+          ok: false,
+          scope: 'all',
+        } as const;
+      }
+
+      if (input.createdVia === 'mcp') {
+        const viaMcp = await manager.count(ScheduledAgentJob, {
+          where: { createdVia: 'mcp', ownerUserId: input.ownerUserId },
+        });
+        if (viaMcp >= caps.maxMcpPerOwner) {
+          return {
+            count: viaMcp,
+            limit: caps.maxMcpPerOwner,
+            ok: false,
+            scope: 'mcp',
+          } as const;
+        }
+      }
+
+      const job = await this.insertJob(manager, input);
+
+      return { job, ok: true } as const;
+    });
   }
 
   /**
@@ -165,10 +186,72 @@ export class ScheduledAgentJobsRepository extends BaseRepository<
   /**
    * @description Soft delete a live schedule. Its runs are kept as history (a soft delete fires no
    * foreign key cascade); the run lists that span schedules skip runs of a deleted schedule.
-   * Returns whether a live row was deleted.
+   *
+   * Because the soft delete cascades nothing, the job's webhook trigger is hard deleted in the same
+   * transaction (its deliveries cascade with it): otherwise the row, its encrypted HMAC secret and
+   * its token hash would outlive the job. Nothing is removed unless a live job matched. Returns
+   * whether a live row was deleted.
    */
   async deleteJob(id: string): Promise<boolean> {
-    const { removedCount } = await this.removeMany({ id });
-    return removedCount > 0;
+    return this.repository.manager.transaction(async (manager) => {
+      const result = await manager.softDelete(ScheduledAgentJob, {
+        deletedAt: IsNull(),
+        id,
+      });
+      if (!result.affected) {
+        return false;
+      }
+
+      await manager.delete(ScheduledAgentJobWebhookTrigger, {
+        scheduledAgentJobId: id,
+      });
+
+      return true;
+    });
+  }
+
+  /** @description The two-save insert behind {@link createJob}, on whichever manager is in scope. */
+  private async insertJob(
+    manager: EntityManager,
+    input: CreateScheduledAgentJobInput,
+  ): Promise<ScheduledAgentJob> {
+    const draft = manager.create(ScheduledAgentJob, {
+      ...(input.approvalState === undefined
+        ? {}
+        : { approvalState: input.approvalState }),
+      ...(input.createdVia === undefined
+        ? {}
+        : { createdVia: input.createdVia }),
+      cronPattern: input.cronPattern,
+      cwd: input.cwd ?? null,
+      driverId: input.driverId,
+      enabled: input.enabled ?? true,
+      idempotencyKey: input.idempotencyKey ?? null,
+      intervalMs: input.intervalMs ?? null,
+      ...(input.misfirePolicy === undefined
+        ? {}
+        : { misfirePolicy: input.misfirePolicy }),
+      ...(input.misfireThresholdMs === undefined
+        ? {}
+        : { misfireThresholdMs: input.misfireThresholdMs }),
+      model: input.model ?? null,
+      name: input.name,
+      ownerUserId: input.ownerUserId ?? null,
+      prompt: input.prompt,
+      repositoryCheckoutId: input.repositoryCheckoutId ?? null,
+      runAt: input.runAt ?? null,
+      ...(input.scheduleKind === undefined
+        ? {}
+        : { scheduleKind: input.scheduleKind }),
+      // Temporary placeholder; replaced with the id-derived key after insert.
+      schedulerKey: `pending:${randomUUID()}`,
+      settings: input.settings ?? {},
+      timeoutMs: input.timeoutMs ?? null,
+      timezone: input.timezone ?? null,
+    });
+
+    const saved = await manager.save(draft);
+    saved.schedulerKey = schedulerKeyForJob(saved.id);
+    return manager.save(saved);
   }
 }

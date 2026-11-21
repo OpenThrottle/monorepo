@@ -42,6 +42,7 @@ import {
 } from './scheduled-agent-jobs.mapper.ts';
 import { ScheduledAgentJobsGraphqlService } from './scheduled-agent-jobs.service.ts';
 import {
+  assertHumanApprover,
   assertScheduledAgentEnabled,
   assertScheduledAgentJobOwner,
   ownerUserIdFor,
@@ -201,20 +202,21 @@ export class ScheduledAgentJobsResolver {
   }
 
   @Mutation(() => ScheduledAgentJobObject, {
-    description: `Approve an agent-created scheduled job that is awaiting approval (owner only): marks it approved and enables it. The only way to arm a pending job.`,
+    description: `Approve an agent-created scheduled job that is awaiting approval (owner only, signed-in users only: a service-account token is refused): marks it approved and enables it. The only way to arm a pending job.`,
   })
   @Permissions(PERMISSIONS.SETTINGS_WRITE)
   async approveScheduledAgentJob(
     @CurrentUser() principal: AuthPrincipal,
     @Args('id', { type: () => ID }) id: string,
   ): Promise<ScheduledAgentJobObject> {
+    assertHumanApprover(principal);
     await this.assertOwner(id, principal);
     const job = await this.service.approve(id);
     return toScheduledAgentJobObject(job);
   }
 
   @Mutation(() => ScheduledAgentJobRunObject, {
-    description: `Enqueue an immediate one-off run (owner only); allowed even when the schedule is disabled.`,
+    description: `Enqueue an immediate one-off run (owner only); allowed even when the schedule is disabled, but refused (SCHEDULED_AGENT_JOB_APPROVAL_PENDING) while the job awaits approval.`,
   })
   @Permissions(PERMISSIONS.SETTINGS_WRITE)
   async runScheduledAgentJobNow(
