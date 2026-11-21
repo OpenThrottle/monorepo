@@ -3,7 +3,7 @@ import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { Link } from 'react-router';
 
-import type { BlogPostQuery } from '~/__generated__/graphql';
+import type { BlogPostDetailFragment } from '~/__generated__/graphql';
 import { BLOG_COPY } from '~/routing/blog/data/data.copy';
 import { formatBlogDate } from '~/routing/blog/utils/blog-format';
 import { BLOG_BASE_PATH } from '~/routing/blog/utils/blog-urls';
@@ -13,7 +13,7 @@ import { BlogTagList } from './BlogTagList';
 
 export interface BlogDetailsProps {
   readonly className?: string;
-  readonly post: NonNullable<BlogPostQuery['blogPost']>;
+  readonly post: BlogPostDetailFragment;
 }
 
 export const BlogDetails = (props: BlogDetailsProps): React.ReactElement => {

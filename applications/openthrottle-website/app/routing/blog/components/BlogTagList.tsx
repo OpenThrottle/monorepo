@@ -2,13 +2,13 @@ import { Badge, cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { Link } from 'react-router';
 
-import type { BlogPostSummaryFragment } from '~/__generated__/graphql';
+import type { BlogTagChipFragment } from '~/__generated__/graphql';
 import { BLOG_COPY } from '~/routing/blog/data/data.copy';
 import { buildBlogTagPath } from '~/routing/blog/utils/blog-urls';
 
 export interface BlogTagListProps {
   readonly className?: string;
-  readonly tags: BlogPostSummaryFragment['tags'];
+  readonly tags: BlogTagChipFragment[];
 }
 
 export const BlogTagList = (

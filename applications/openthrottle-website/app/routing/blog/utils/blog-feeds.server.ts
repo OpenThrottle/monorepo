@@ -1,6 +1,7 @@
 import type { SitemapEntry } from '@openthrottle/react-router-utils';
 import { logger } from '@openthrottle/react-router-utils';
 
+import type { BlogFeedPostFragment } from '~/__generated__/graphql';
 import {
   BlogFeedDocument,
   BlogSitemapPageDocument,
@@ -14,7 +15,6 @@ import {
   BLOG_SITEMAP_PAGE_SIZE,
 } from '../config/blog-discovery';
 import { toBlogIsoDate } from './blog-format';
-import type { BlogFeedPost } from './blog-rss';
 import {
   BLOG_BASE_PATH,
   buildBlogPostPath,
@@ -33,7 +33,9 @@ export interface BlogSitemapResult {
 }
 
 /** @description The latest visible posts for the RSS feed. */
-export const loadBlogFeedPosts = async (): Promise<readonly BlogFeedPost[]> => {
+export const loadBlogFeedPosts = async (): Promise<
+  readonly BlogFeedPostFragment[]
+> => {
   const { blogPosts } = await fetchPublicGraphql(BlogFeedDocument, {
     first: BLOG_FEED_LIMIT,
   });

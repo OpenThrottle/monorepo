@@ -29,6 +29,16 @@ fragment Plan on PlanObject {
   updatedAt
 }
 
+# The plan plus its tags: what getPlan returns.
+fragment PlanWithTags on PlanObject {
+  ...Plan
+  tags {
+    dimension
+    source
+    tag
+  }
+}
+
 # Spread by every task-shaped operation, with the same reach as the Plan
 # fragment above. Coverage of both is enforced by
 # ../__tests__/fragment-coverage.test.ts.

@@ -6,7 +6,10 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import type { BlogPostSummaryFragment } from '~/__generated__/graphql';
+import type {
+  BlogAuthorSummaryFragment,
+  Scalars,
+} from '~/__generated__/graphql';
 import { BLOG_COPY } from '~/routing/blog/data/data.copy';
 import {
   formatBlogDate,
@@ -15,10 +18,10 @@ import {
 } from '~/routing/blog/utils/blog-format';
 
 export interface BlogMetaProps {
-  readonly author: BlogPostSummaryFragment['author'];
+  readonly author: BlogAuthorSummaryFragment | null | undefined;
   readonly className?: string;
-  readonly publishedAt: BlogPostSummaryFragment['publishedAt'];
-  readonly readingTimeMinutes: BlogPostSummaryFragment['readingTimeMinutes'];
+  readonly publishedAt: Scalars['DateTime']['output'] | null | undefined;
+  readonly readingTimeMinutes: number;
 }
 
 export const BlogMeta = (props: BlogMetaProps): React.ReactElement => {

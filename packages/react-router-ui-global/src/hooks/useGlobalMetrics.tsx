@@ -1,4 +1,4 @@
-import type { GetRootMetricsQuery } from '@openthrottle/openthrottle-developer-codegen';
+import type { RootMetricsFragment } from '@openthrottle/openthrottle-developer-codegen';
 import { GetRootMetricsDocument } from '@openthrottle/openthrottle-developer-codegen';
 import { usePollServerMetrics } from '@openthrottle/react-router-ui';
 import { ENV_SOURCE } from '@openthrottle/react-router-utils';
@@ -36,7 +36,7 @@ export interface UseGlobalMetricsResult {
   readonly intervalMs: number;
   readonly isOpen: boolean;
   readonly loading: boolean;
-  readonly serverMetrics: GetRootMetricsQuery['serverMetrics'] | null;
+  readonly serverMetrics: RootMetricsFragment | null;
   readonly showGlobalLoadingBanner: boolean;
   readonly showMetricsChart: boolean;
   readonly showStatCards: boolean;
@@ -105,9 +105,8 @@ export const useGlobalMetrics = (
   // Markup
 
   // Life Cycle
-  const { error, loading, serverMetrics } = usePollServerMetrics<
-    GetRootMetricsQuery['serverMetrics']
-  >({ intervalMs, query, url });
+  const { error, loading, serverMetrics } =
+    usePollServerMetrics<RootMetricsFragment>({ intervalMs, query, url });
 
   React.useEffect(() => {
     if (serverMetrics == null) return;

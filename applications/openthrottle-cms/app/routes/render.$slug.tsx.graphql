@@ -1,16 +1,20 @@
+fragment RenderedCmsLayout on CmsLayoutObject {
+  fragments {
+    childKeys
+    key
+    parentKey
+    propertiesJson
+    typename
+    uuid
+  }
+  name
+  slug
+  status
+  uuid
+}
+
 query RenderCmsLayout($slug: String!) {
   cmsLayout(slug: $slug) {
-    fragments {
-      childKeys
-      key
-      parentKey
-      propertiesJson
-      typename
-      uuid
-    }
-    name
-    slug
-    status
-    uuid
+    ...RenderedCmsLayout
   }
 }
