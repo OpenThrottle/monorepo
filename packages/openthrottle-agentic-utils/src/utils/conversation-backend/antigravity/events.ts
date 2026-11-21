@@ -32,6 +32,8 @@ import type { ConversationStreamChunk } from '../types.ts';
 import {
   CONVERSATION_DENIED_ACTIONS_KEY,
   CONVERSATION_STREAM_CHUNK_KINDS,
+  CONVERSATION_TOOL_DENIED_ERROR,
+  CONVERSATION_TOOL_NOT_RUN_KEY,
 } from '../types.ts';
 
 /** Terminal step states: the step is finished, successfully or not. */
@@ -121,9 +123,20 @@ const toolErrorOf = (payload: Record<string, unknown>): string => {
 };
 
 /**
+ * True for agy's own refusal text on an ERROR step, e.g. `permission check failed for mcp "…": user
+ * denied permission for mcp(…)` (agy 1.5.13).
+ */
+const isPermissionDenial = (message: string): boolean => {
+  return /permission check failed|user denied permission/i.test(message);
+};
+
+/**
  * Create a stateful mapper for one agy run. It remembers the `init` model so the terminal usage
  * chunk can attribute tokens to it, and the tool name per `step_index` so a terminal tool step can
- * report the name that its `ACTIVE` event introduced.
+ * report the name that its `ACTIVE` event introduced. It also remembers whether a step was refused
+ * permission: agy then cancels the rest of the turn (`CancelCascadeInvocation`), and a step it had
+ * batched comes back `DONE` with no output without having run, so such a step is reported not run
+ * (see {@link CONVERSATION_TOOL_NOT_RUN_KEY}). A step that reports output did run, and keeps it.
  *
  * @public
  */
@@ -132,6 +145,7 @@ export function createAntigravityEventMapper(): (
 ) => ConversationStreamChunk[] {
   let model: string | undefined;
   const toolNameByStep = new Map<number, string>();
+  let refusedPermission = false;
 
   const mapStepUpdate = (
     payload: Record<string, unknown>,
@@ -189,6 +203,15 @@ export function createAntigravityEventMapper(): (
       // decides the turn. The fold marks a card failed only on `isError`, and reads the failure
       // text from `toolCall` — the same contract as the opencode mapper.
       if (state === 'ERROR') {
+        const reported = toolErrorOf(payload);
+        // agy's own refusal text is long and instructs the model; the card says what happened,
+        // in the same words as the ACP path.
+        const isDenial = isPermissionDenial(reported);
+        if (isDenial) {
+          refusedPermission = true;
+        }
+        const error = isDenial ? CONVERSATION_TOOL_DENIED_ERROR : reported;
+
         return [
           {
             delta: '',
@@ -197,7 +220,25 @@ export function createAntigravityEventMapper(): (
             metadata: {
               callId,
               isError: true,
-              toolCall: toolErrorOf(payload),
+              toolCall: error,
+              toolName: name,
+            },
+          },
+        ];
+      }
+
+      const output = toolOutputOf(payload.tool_info);
+      if (refusedPermission && output === null) {
+        return [
+          {
+            delta: '',
+            done: false,
+            kind: CONVERSATION_STREAM_CHUNK_KINDS.toolResult,
+            metadata: {
+              [CONVERSATION_TOOL_NOT_RUN_KEY]: true,
+              callId,
+              isError: false,
+              toolCall: null,
               toolName: name,
             },
           },
@@ -214,7 +255,7 @@ export function createAntigravityEventMapper(): (
             isError: false,
             // The output alone: the card already shows the status, so a `{error, output, status}`
             // wrapper only buried the one field worth reading.
-            toolCall: toolOutputOf(payload.tool_info),
+            toolCall: output,
             toolName: name,
           },
         },

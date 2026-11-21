@@ -193,6 +193,25 @@ export const CONVERSATION_STREAM_CHUNK_KINDS = {
 export const CONVERSATION_DENIED_ACTIONS_KEY = 'deniedActions';
 
 /**
+ * `tool_result` metadata key, set to `true` when the call never ran. After a refused permission agy
+ * cancels the rest of the turn (`CancelCascadeInvocation`), so calls it had already batched come
+ * back `failed` (ACP) or `DONE` with no output (stream-json) without running. The chat renders
+ * such a card as "not run" rather than as a failure or a success.
+ *
+ * @public
+ */
+export const CONVERSATION_TOOL_NOT_RUN_KEY = 'notRun';
+
+/**
+ * Error text on a `tool_result` card for a call that was refused permission, the same on every
+ * path: agy's ACP path sends no text of its own for one, and its stream-json path sends a raw
+ * `permission check failed … user denied permission` message.
+ *
+ * @public
+ */
+export const CONVERSATION_TOOL_DENIED_ERROR = `Permission denied: the tool call was refused.`;
+
+/**
  * One of the {@link CONVERSATION_STREAM_CHUNK_KINDS} values.
  *
  * @public

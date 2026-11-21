@@ -295,6 +295,14 @@ export const parseChunkMetadataRecord = (
  */
 const PAYLOAD_TRUNCATED_KEY = 'payloadTruncated';
 
+/**
+ * Key a backend sets to `true` on a `tool_result` chunk's metadata when the
+ * call never ran (agy cancels its batched calls after a refused permission).
+ * Mirrors `CONVERSATION_TOOL_NOT_RUN_KEY` in `@openthrottle/agentic-utils`,
+ * which this client package cannot import.
+ */
+const TOOL_NOT_RUN_KEY = 'notRun';
+
 /** Spread into a tool event: the truncation flag when set, nothing otherwise. */
 const payloadTruncatedField = (
   payloadTruncated: boolean,
@@ -383,6 +391,8 @@ export interface ParsedChunkMetadata {
   readonly hasToolIdentity: boolean;
   /** True when a `tool_result` chunk reports a failed call. */
   readonly isError: boolean;
+  /** True when a `tool_result` chunk reports a call that never ran. */
+  readonly notRun: boolean;
   /** A legacy claude argument fragment, appended to the open call's args. */
   readonly partialJson: string | null;
   /** True when the server clipped this chunk's payload to fit the persisted cap. */
@@ -411,6 +421,7 @@ const EMPTY_METADATA: ParsedChunkMetadata = {
   callId: null,
   hasToolIdentity: false,
   isError: false,
+  notRun: false,
   partialJson: null,
   payloadTruncated: false,
   resultArgsJson: null,
@@ -489,6 +500,7 @@ const normalizeMetadata = (
     callId,
     hasToolIdentity: toolName !== null || callId !== null,
     isError: parsed.isError === true || codex?.isError === true,
+    notRun: parsed[TOOL_NOT_RUN_KEY] === true,
     partialJson: asString(parsed.partialJson),
     payloadTruncated: parsed[PAYLOAD_TRUNCATED_KEY] === true,
     resultArgsJson: codex?.argsJson ?? null,
@@ -655,6 +667,8 @@ interface ToolResultInput {
   readonly isError: boolean;
   /** An id-less result names a tool, so it must not adopt another's card. */
   readonly namesTool: boolean;
+  /** True when the backend reports the call never ran. */
+  readonly notRun: boolean;
   /** True when the server clipped this result to fit the persisted cap. */
   readonly payloadTruncated: boolean;
   /**
@@ -665,6 +679,15 @@ interface ToolResultInput {
   readonly resultJson: string | null;
   readonly toolName: string;
 }
+
+/** A resolved call's status: a call that never ran outranks its error flag. */
+const toolResultStatusOf = (input: ToolResultInput): ChatToolStatus => {
+  if (input.notRun) {
+    return ChatToolStatus.notRun;
+  }
+
+  return input.isError ? ChatToolStatus.failed : ChatToolStatus.succeeded;
+};
 
 const resolveToolResult = (
   events: readonly ChatTurnEvent[],
@@ -679,8 +702,8 @@ const resolveToolResult = (
   const resolved = {
     error: input.isError ? (input.resultJson ?? 'Tool call failed.') : null,
     ...payloadTruncatedField(input.payloadTruncated),
-    resultJson: input.isError ? null : input.resultJson,
-    status: input.isError ? ChatToolStatus.failed : ChatToolStatus.succeeded,
+    resultJson: input.isError || input.notRun ? null : input.resultJson,
+    status: toolResultStatusOf(input),
   };
 
   if (index >= 0) {
@@ -727,6 +750,7 @@ export const applyTurnToolResult = (
             ...block,
             argsJson: null,
             namesTool: false,
+            notRun: false,
             payloadTruncated: false,
             positionalFallback: true,
             toolName: FALLBACK_TOOL_NAME,
@@ -744,6 +768,7 @@ export const applyTurnToolResult = (
       callId: meta.callId,
       isError: meta.isError,
       namesTool: meta.hasToolIdentity,
+      notRun: meta.notRun,
       payloadTruncated: meta.payloadTruncated,
       positionalFallback: false,
       resultJson: meta.toolCallJson,

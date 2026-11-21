@@ -1,11 +1,11 @@
-import { Check, Loader2, X } from 'lucide-react';
+import { Ban, Check, Loader2, X } from 'lucide-react';
 
 import type { ChatToolStatus as ChatToolStatusType } from '../types';
 import { ChatToolStatus } from '../types';
 
 interface StatusConfig {
   readonly Icon: typeof Check;
-  readonly color: 'amber' | 'green' | 'red';
+  readonly color: 'amber' | 'green' | 'red' | 'slate';
   readonly label: string;
   readonly spin: boolean;
 }
@@ -20,6 +20,12 @@ export const STATUS_CONFIG: Record<ChatToolStatusType, StatusConfig> = {
     Icon: X,
     color: 'red',
     label: 'failed',
+    spin: false,
+  },
+  [ChatToolStatus.notRun]: {
+    Icon: Ban,
+    color: 'slate',
+    label: 'not run',
     spin: false,
   },
   [ChatToolStatus.running]: {

@@ -11,7 +11,10 @@
  *   A `failed` result carries `metadata.isError` and a readable error text
  *   (the update's content text, else a string `rawOutput`, else — for a call
  *   this client refused permission for — a denial message) — the chat
- *   timeline marks a card failed on `isError` alone. A `completed` result
+ *   timeline marks a card failed on `isError` alone. Once this client has
+ *   refused a call, agy cancels the rest of the batch unrun, so a later
+ *   `failed` call with no reason of its own is reported not run instead
+ *   (see {@link CONVERSATION_TOOL_NOT_RUN_KEY}). A `completed` result
  *   carries the tool's output alone (see {@link completedOutputOf}), never a
  *   `{ output, status }` wrapper and never the call's arguments.
  * - Everything else (`plan`, mode/config/command updates, `session_info_update`,
@@ -28,6 +31,8 @@ import { isRecord } from '@openthrottle/nodejs-utils';
 import {
   CONVERSATION_DENIED_ACTIONS_KEY,
   CONVERSATION_STREAM_CHUNK_KINDS,
+  CONVERSATION_TOOL_DENIED_ERROR,
+  CONVERSATION_TOOL_NOT_RUN_KEY,
   type ConversationStreamChunk,
   type ConversationStreamChunkKind,
 } from '../types.ts';
@@ -84,23 +89,10 @@ function contentTextOf(content: unknown): string {
 }
 
 /**
- * Error text for a failed call this client refused permission for. agy 1.5.9
- * reports such a call `failed` with an empty content text and
- * `rawOutput: { output: '' }`, so without this the card reads only as a
- * generic failure.
+ * A failed call's own reason: its content text, else a string rawOutput, else
+ * `null` when it reported none.
  */
-const DENIED_TOOL_CALL_ERROR = 'Permission denied: the tool call was refused.';
-
-/**
- * Readable error text for a failed call: content text, else a string
- * rawOutput, else the denial message when the call was refused, else a
- * generic message.
- */
-function failedErrorText(
-  rawOutput: unknown,
-  content: unknown,
-  denied: boolean,
-): string {
+function failedReasonOf(rawOutput: unknown, content: unknown): string | null {
   const contentText = contentTextOf(content);
   if (contentText.trim() !== '') {
     return contentText;
@@ -108,11 +100,8 @@ function failedErrorText(
   if (typeof rawOutput === 'string' && rawOutput.trim() !== '') {
     return rawOutput;
   }
-  if (denied) {
-    return DENIED_TOOL_CALL_ERROR;
-  }
 
-  return FAILED_TOOL_CALL_ERROR;
+  return null;
 }
 
 /**
@@ -198,11 +187,40 @@ export function createAcpUpdateMapper(
     fields: { readonly content?: unknown; readonly rawOutput?: unknown },
   ): ConversationStreamChunk => {
     state.emittedResult = true;
-    const isError = status === 'failed';
+    const failed = status === 'failed';
     const denied = options.deniedCallIds.has(callId);
-    const errorText = isError
-      ? failedErrorText(fields.rawOutput, fields.content, denied)
+    const reason = failed
+      ? failedReasonOf(fields.rawOutput, fields.content)
       : null;
+
+    // agy cancels the rest of the batch after a refusal: those calls come
+    // back `failed` with no reason and never ran. A call that did run and
+    // failed says why, so it keeps its failure.
+    const cancelledAfterRefusal =
+      failed && reason === null && !denied && options.deniedCallIds.size > 0;
+    if (cancelledAfterRefusal) {
+      return {
+        delta: '',
+        done: false,
+        error: null,
+        kind: CONVERSATION_STREAM_CHUNK_KINDS.toolResult,
+        metadata: {
+          [CONVERSATION_TOOL_NOT_RUN_KEY]: true,
+          callId,
+          isError: false,
+          toolCall: null,
+          toolName: state.toolName,
+        },
+      };
+    }
+
+    // agy 1.5.9 reports a refused call `failed` with an empty content text
+    // and `rawOutput: { output: '' }`, so without the denial text the card
+    // reads only as a generic failure.
+    const fallbackError = denied
+      ? CONVERSATION_TOOL_DENIED_ERROR
+      : FAILED_TOOL_CALL_ERROR;
+    const errorText = failed ? (reason ?? fallbackError) : null;
 
     // The chat timeline marks a card failed only on `metadata.isError`; the
     // chunk-level `error` is read on the terminal `done` chunk alone.
@@ -213,7 +231,7 @@ export function createAcpUpdateMapper(
       kind: CONVERSATION_STREAM_CHUNK_KINDS.toolResult,
       metadata: {
         callId,
-        isError,
+        isError: failed,
         toolCall:
           errorText ?? completedOutputOf(fields.rawOutput, fields.content),
         toolName: state.toolName,

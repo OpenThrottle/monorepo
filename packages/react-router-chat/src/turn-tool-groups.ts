@@ -54,7 +54,8 @@ export const buildTurnTimeline = (
 /**
  * Aggregate status for a folded tool group, in precedence order: any still
  * `running` → running (the group is live), else any `failed` → failed, else
- * `succeeded`. Empty groups report `succeeded`. Drives the group's summary pill.
+ * any `notRun` → not run, else `succeeded`. Empty groups report `succeeded`.
+ * Drives the group's summary pill.
  *
  * @public
  */
@@ -66,6 +67,9 @@ export const aggregateToolStatus = (
   }
   if (tools.some((tool) => tool.status === ChatToolStatus.failed)) {
     return ChatToolStatus.failed;
+  }
+  if (tools.some((tool) => tool.status === ChatToolStatus.notRun)) {
+    return ChatToolStatus.notRun;
   }
   return ChatToolStatus.succeeded;
 };

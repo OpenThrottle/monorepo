@@ -129,6 +129,24 @@ describe('aggregateToolStatus', () => {
     ).toBe('failed');
   });
 
+  test('failed outranks not run', () => {
+    expect(
+      aggregateToolStatus([
+        tool({ status: 'not_run' }),
+        tool({ status: 'failed' }),
+      ]),
+    ).toBe('failed');
+  });
+
+  test('not run when none failed but one never ran', () => {
+    expect(
+      aggregateToolStatus([
+        tool({ status: 'succeeded' }),
+        tool({ status: 'not_run' }),
+      ]),
+    ).toBe('not_run');
+  });
+
   test('succeeded when all succeeded', () => {
     expect(
       aggregateToolStatus([

@@ -28,12 +28,15 @@ export type ChatTurnEventKind =
 /**
  * Lifecycle of a single tool invocation. `running` once the tool_call is seen,
  * `succeeded` once its tool_result arrives, `failed` if the turn errors while
- * the call is still outstanding.
+ * the call is still outstanding. `notRun` when the backend reports the call
+ * never ran — agy cancels the calls it had batched once a permission is
+ * refused, and those are neither failures nor successes.
  *
  * @public
  */
 export const ChatToolStatus = {
   failed: 'failed',
+  notRun: 'not_run',
   running: 'running',
   succeeded: 'succeeded',
 } as const;
