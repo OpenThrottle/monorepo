@@ -7,7 +7,7 @@ import {
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import * as React from 'react';
 
-import type { GetUsageTelemetryCoverageQuery } from '~/__generated__/graphql';
+import type { UsageTelemetryCoverageReportFragment } from '~/__generated__/graphql';
 import {
   TELEMETRY_COVERAGE_COMMANDS,
   TELEMETRY_COVERAGE_COPY,
@@ -20,7 +20,7 @@ import { UsageTelemetryCoverageWarnings } from './UsageTelemetryCoverageWarnings
 export interface UsageTelemetryCoverageProps {
   readonly className?: string;
   /** The `telemetryCoverage` result, or `null` when the query failed. */
-  readonly coverage: GetUsageTelemetryCoverageQuery['telemetryCoverage'] | null;
+  readonly coverage: UsageTelemetryCoverageReportFragment | null;
   /** Loader clock (ISO), so relative labels match across SSR and hydration. */
   readonly nowIso: string;
 }

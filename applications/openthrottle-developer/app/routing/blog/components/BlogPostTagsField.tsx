@@ -1,13 +1,13 @@
 import { Label, MultiSelect } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import type { GetBlogPostEditorQuery } from '~/__generated__/graphql';
+import type { BlogEditorTagFragment } from '~/__generated__/graphql';
 import { BLOG_EDITOR_COPY } from '~/routing/blog/data/data.copy';
 
 export interface BlogPostTagsFieldProps {
   readonly error: string | undefined;
   readonly onChange: (tagSlugs: readonly string[]) => void;
-  readonly tags: GetBlogPostEditorQuery['blogAdminTags'];
+  readonly tags: BlogEditorTagFragment[];
   /** Selected tag slugs. */
   readonly value: readonly string[];
 }

@@ -9,7 +9,7 @@ import { FolderGit2Icon } from 'lucide-react';
 import * as React from 'react';
 
 import type {
-  AddWorkspaceFolderMutation,
+  AddWorkspaceFolderResultFragment,
   WorkspacePickerCapabilitiesObject,
 } from '~/__generated__/graphql';
 import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
@@ -37,7 +37,7 @@ import type {
 
 export interface RepositoriesSectionProps {
   actionError?: string | null;
-  addedFolder?: AddWorkspaceFolderMutation['addWorkspaceFolder'] | null;
+  addedFolder?: AddWorkspaceFolderResultFragment | null;
   className?: string;
   /** Empty until the deferred scan resolves; see {@link discoveryStatus}. */
   discoveredFolders: readonly DiscoveredFolder[];

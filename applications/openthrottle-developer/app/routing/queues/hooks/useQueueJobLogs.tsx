@@ -10,7 +10,7 @@ import * as React from 'react';
 import { useFetcher } from 'react-router';
 
 import type {
-  QueueJobLogsQuery,
+  QueueJobLogsPageFragment,
   QueueJobLogTailSubscription,
 } from '~/__generated__/graphql';
 import { QueueJobLogTailDocument } from '~/__generated__/graphql';
@@ -22,7 +22,7 @@ import type {
 import { compareQueueJobLogEvents } from '~/routing/queues/utils/compareQueueJobLogEvents';
 import { getGraphqlWsClient } from '~/services/getGraphqlWsClient';
 
-type QueueJobLogsPage = QueueJobLogsQuery['queueJobLogs'];
+type QueueJobLogsPage = QueueJobLogsPageFragment;
 
 export interface UseQueueJobLogsOptions {
   enabled?: boolean;

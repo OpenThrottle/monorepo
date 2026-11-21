@@ -7,10 +7,10 @@ import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 
 import type {
   AgentTrajectorySummaryFragment,
-  GetPlanByIdQuery,
+  LinkedArtifactFragment,
+  PlanDetailsFragment,
+  PlanOutputChunkFragment,
   TaskDetailsFragment,
-  TaskLinkedArtifactsQuery,
-  TaskOutputStreamChunksQuery,
 } from '~/__generated__/graphql';
 import {
   GetPlanByIdDocument,
@@ -20,9 +20,9 @@ import {
 import { loadTaskTrajectories } from '~/routing/evals/utils/loadTaskTrajectories';
 
 export interface TaskDetailRelations {
-  readonly linkedArtifacts: TaskLinkedArtifactsQuery['workArtifactsByTask']['artifacts'];
-  readonly plan: NonNullable<GetPlanByIdQuery['plan']> | null;
-  readonly planOutputChunks: TaskOutputStreamChunksQuery['planOutputStreamChunks'];
+  readonly linkedArtifacts: LinkedArtifactFragment[];
+  readonly plan: PlanDetailsFragment | null;
+  readonly planOutputChunks: PlanOutputChunkFragment[];
   readonly trajectories: readonly AgentTrajectorySummaryFragment[];
 }
 

@@ -27,8 +27,8 @@
  * the visit instead of vanishing mid-session.
  */
 import type {
-  PlanDetailOutputChunksQuery,
   PlanOutputChunkAddedSubscription,
+  PlanOutputChunkFragment,
 } from '@openthrottle/openthrottle-developer-codegen';
 import { useSubscription } from '@openthrottle/react-router-graphql';
 import * as React from 'react';
@@ -37,7 +37,7 @@ import { PlanOutputChunkAddedDocument } from '~/__generated__/graphql';
 import { comparePlanOutputChunks } from '~/routing/plans/utils/comparePlanOutputChunks';
 import { getGraphqlWsClient } from '~/services/getGraphqlWsClient';
 
-type Chunk = PlanDetailOutputChunksQuery['planOutputStreamChunks'][number];
+type Chunk = PlanOutputChunkFragment;
 
 export function usePlanOutputStream(
   planId: string,

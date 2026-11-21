@@ -1,6 +1,6 @@
-import type { PlanDetailCancelPlanRunMutation } from '~/__generated__/graphql';
+import type { CancelPlanRunResultFragment } from '~/__generated__/graphql';
 
-type CancelPayload = PlanDetailCancelPlanRunMutation['cancelPlanRun'];
+type CancelPayload = CancelPlanRunResultFragment;
 
 /**
  * @description Toast tone for a cancel outcome. Only NO_ACTIVE_RUN is a no-op (nothing was

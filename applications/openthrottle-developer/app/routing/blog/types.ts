@@ -1,8 +1,9 @@
 import type {
+  BlogEditorAuthorFragment,
+  BlogEditorTagFragment,
   BlogPostEditorPostFragment,
   BlogPostState,
   BlogReferenceEntity,
-  GetBlogPostEditorQuery,
   UpdateBlogPostInput,
 } from '~/__generated__/graphql';
 import type { BLOG_POST_SAVE_INTENT } from '~/routing/blog/config/defaults';
@@ -12,11 +13,11 @@ export type BlogEditorPost = BlogPostEditorPostFragment;
 
 /** What the `/blog/:postId` loader returns. */
 export interface BlogPostEditorLoaderData {
-  readonly authors: GetBlogPostEditorQuery['blogAdminAuthors'];
+  readonly authors: BlogEditorAuthorFragment[];
   /** The caller holds `blog:write`, so may edit posts that are not drafts. */
   readonly canWrite: boolean;
   readonly post: BlogEditorPost;
-  readonly tags: GetBlogPostEditorQuery['blogAdminTags'];
+  readonly tags: BlogEditorTagFragment[];
 }
 
 /**

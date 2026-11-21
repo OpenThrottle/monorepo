@@ -4,11 +4,11 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { PlanDetailCancelPlanRunMutation } from '~/__generated__/graphql';
+import type { CancelPlanRunResultFragment } from '~/__generated__/graphql';
 
 import { KillPlanRunButton } from '../KillPlanRunButton';
 
-type CancelPlanRunPayload = PlanDetailCancelPlanRunMutation['cancelPlanRun'];
+type CancelPlanRunPayload = CancelPlanRunResultFragment;
 
 const { toastError, toastInfo, toastSuccess } = vi.hoisted(() => ({
   toastError: vi.fn(),

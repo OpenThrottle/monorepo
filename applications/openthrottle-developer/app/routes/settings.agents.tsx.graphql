@@ -68,15 +68,19 @@ mutation SetAgentModelFavorite(
   }
 }
 
+fragment AgentSetupChunk on AgentSetupStreamChunkObject {
+  data
+  done
+  error
+  exitCode
+  id
+  runId
+  sortOrder
+  stream
+}
+
 subscription AgentSetupChunkAdded($runId: ID!) {
   agentSetupChunkAdded(runId: $runId) {
-    data
-    done
-    error
-    exitCode
-    id
-    runId
-    sortOrder
-    stream
+    ...AgentSetupChunk
   }
 }

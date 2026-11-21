@@ -2,9 +2,9 @@ import type { PlanRunConfigRunner } from '@openthrottle/openthrottle-plan-config
 import type { useRouteLoaderData } from 'react-router';
 
 import type {
-  PlanDetailEnqueuePlanRunMutation,
-  PlanDetailSchedulePlanRunMutation,
+  EnqueuePlanRunResultFragment,
   PlanTaskStatus,
+  SchedulePlanRunResultFragment,
 } from '~/__generated__/graphql';
 import type { loader } from '~/routes/plans.$planId._index';
 import type { WorkflowRalphExecutionBackendUi } from '~/routing/plans/utils/workflow-ralph-config';
@@ -90,11 +90,11 @@ export interface PlanRunDialogDraft {
 export type PlanRunDialogSubmission =
   | {
       readonly mode: 'run';
-      readonly result: PlanDetailEnqueuePlanRunMutation['enqueuePlanRun'];
+      readonly result: EnqueuePlanRunResultFragment;
     }
   | {
       readonly mode: 'schedule';
-      readonly result: PlanDetailSchedulePlanRunMutation['schedulePlanRun'];
+      readonly result: SchedulePlanRunResultFragment;
     };
 
 /**

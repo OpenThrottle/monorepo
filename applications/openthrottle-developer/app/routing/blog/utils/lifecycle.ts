@@ -2,9 +2,9 @@ import { toast } from '@openthrottle/react-router-shadcn';
 import { z } from 'zod/v3';
 
 import type {
-  ArchiveBlogPostEditorMutation,
-  PublishBlogPostEditorMutation,
-  UnpublishBlogPostEditorMutation,
+  ArchiveBlogPostOutcomeFragment,
+  PublishBlogPostOutcomeFragment,
+  UnpublishBlogPostOutcomeFragment,
 } from '~/__generated__/graphql';
 import { BlogPostState } from '~/__generated__/graphql';
 import {
@@ -66,7 +66,7 @@ export const parseBlogPostLifecycleRequest = (
 
 /** @description Maps the `publishBlogPost` union onto a lifecycle result. */
 export const toBlogPostPublishResult = (
-  result: PublishBlogPostEditorMutation['publishBlogPost'],
+  result: PublishBlogPostOutcomeFragment,
 ): BlogPostLifecycleResult => {
   switch (result.__typename) {
     case 'BlogPostAdminObject': {
@@ -83,7 +83,7 @@ export const toBlogPostPublishResult = (
 
 /** @description Maps the `unpublishBlogPost` union onto a lifecycle result. */
 export const toBlogPostUnpublishResult = (
-  result: UnpublishBlogPostEditorMutation['unpublishBlogPost'],
+  result: UnpublishBlogPostOutcomeFragment,
 ): BlogPostLifecycleResult => {
   switch (result.__typename) {
     case 'BlogPostAdminObject':
@@ -95,7 +95,7 @@ export const toBlogPostUnpublishResult = (
 
 /** @description Maps the `archiveBlogPost` union onto a lifecycle result. */
 export const toBlogPostArchiveResult = (
-  result: ArchiveBlogPostEditorMutation['archiveBlogPost'],
+  result: ArchiveBlogPostOutcomeFragment,
 ): BlogPostLifecycleResult => {
   switch (result.__typename) {
     case 'BlogPostAdminObject':

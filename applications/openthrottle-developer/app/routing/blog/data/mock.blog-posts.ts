@@ -1,6 +1,7 @@
 import type {
+  BlogEditorAuthorFragment,
+  BlogEditorTagFragment,
   BlogPostListRowFragment,
-  GetBlogPostEditorQuery,
 } from '~/__generated__/graphql';
 import { BlogPostState } from '~/__generated__/graphql';
 import type { BlogEditorPost } from '~/routing/blog/types';
@@ -53,7 +54,7 @@ export const MOCK_SCHEDULED_POST: BlogPostListRowFragment = {
 };
 
 /** Every author the editor's author select offers. */
-export const MOCK_BLOG_AUTHORS: GetBlogPostEditorQuery['blogAdminAuthors'] = [
+export const MOCK_BLOG_AUTHORS: BlogEditorAuthorFragment[] = [
   { __typename: 'BlogAuthorObject', displayName: 'Ada Lovelace', slug: 'ada' },
   {
     __typename: 'BlogAuthorObject',
@@ -63,7 +64,7 @@ export const MOCK_BLOG_AUTHORS: GetBlogPostEditorQuery['blogAdminAuthors'] = [
 ];
 
 /** Every tag the editor's tag multi-select offers. */
-export const MOCK_BLOG_TAGS: GetBlogPostEditorQuery['blogAdminTags'] = [
+export const MOCK_BLOG_TAGS: BlogEditorTagFragment[] = [
   { __typename: 'BlogTagObject', name: 'Engineering', slug: 'engineering' },
   { __typename: 'BlogTagObject', name: 'Releases', slug: 'releases' },
 ];

@@ -17,8 +17,8 @@ import {
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 
 import type {
-  DiscoverAgentClisQuery,
-  DiscoverLocalModelsQuery,
+  AgentClisDiscoveryFragment,
+  LocalModelsDiscoveryFragment,
 } from '~/__generated__/graphql';
 import {
   DiscoverAgentClisDocument,
@@ -36,8 +36,8 @@ import type { ComposerDefaultAgent } from '~/routing/home/utils/seedComposerDefa
  */
 export type { RepositoryOption };
 
-type AgentClisPayload = DiscoverAgentClisQuery['discoverAgentClis'];
-type LocalModelsPayload = DiscoverLocalModelsQuery['discoverLocalModels'];
+type AgentClisPayload = AgentClisDiscoveryFragment;
+type LocalModelsPayload = LocalModelsDiscoveryFragment;
 
 /**
  * Fetch the agent-CLI discovery payload once. Returns `null` on failure so each
