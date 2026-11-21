@@ -1,15 +1,15 @@
 import { describe, expect, test } from 'vitest';
 
-import type { PlanDetailCancelPlanRunMutation } from '~/__generated__/graphql';
+import type { CancelPlanRunResultFragment } from '~/__generated__/graphql';
 
 import {
   cancelPlanRunToastTone,
   describeCancelPlanRunResult,
 } from '../describeCancelPlanRunResult';
 
-type CancelPayload = PlanDetailCancelPlanRunMutation['cancelPlanRun'];
-
-const basePayload = (overrides: Partial<CancelPayload> = {}): CancelPayload => {
+const basePayload = (
+  overrides: Partial<CancelPlanRunResultFragment> = {},
+): CancelPlanRunResultFragment => {
   return {
     __typename: 'CancelPlanRunResultObject',
     activeJobIdsCouldNotCancel: [],

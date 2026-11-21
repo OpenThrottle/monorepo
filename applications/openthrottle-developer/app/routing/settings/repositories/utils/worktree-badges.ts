@@ -1,12 +1,10 @@
+import type { DiscoveredWorktreeRemovalFragment } from '~/__generated__/graphql';
 import { MissingWorktreeCheckoutReason } from '~/__generated__/graphql';
 import {
   REPOSITORIES_TABLE_COPY,
   WORKTREE_REMOVAL_OUTCOME_COPY,
 } from '~/routing/settings/repositories/data/data.copy';
-import type {
-  RepositoryCheckoutRow,
-  WorktreeRemoval,
-} from '~/routing/settings/repositories/types';
+import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/types';
 
 /** One badge to render: a label plus the hover text that explains what it means. */
 export interface WorktreeBadge {
@@ -78,7 +76,9 @@ const labelled = (
 };
 
 /** The hover text for a removal badge: one fact per line, only the ones that were reported. */
-const describeRemoval = (removal: WorktreeRemoval): string => {
+const describeRemoval = (
+  removal: DiscoveredWorktreeRemovalFragment,
+): string => {
   const outcome =
     WORKTREE_REMOVAL_OUTCOME_COPY[removal.outcome] ?? removal.outcome;
   const lines = [
@@ -93,7 +93,7 @@ const describeRemoval = (removal: WorktreeRemoval): string => {
 
 /** The removal badge for a missing row, or null when no usable removal was reported. */
 const removalBadge = (
-  removal: WorktreeRemoval | null,
+  removal: DiscoveredWorktreeRemovalFragment | null,
 ): WorktreeBadge | null => {
   if (removal === null) return null;
   const when = formatUtcMinute(removal.removedAt ?? removal.createdAt);

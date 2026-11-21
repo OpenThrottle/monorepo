@@ -1,12 +1,12 @@
 import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
+import type { TimelineSpanRowFragment } from '~/__generated__/graphql';
 import {
   TIMELINE_SPAN_FILL_CLASS,
   TIMELINE_SPAN_KIND_LABEL,
 } from '~/routing/timeline/config/kinds';
 import { TIMELINE_SPAN_TOOLTIP_COPY } from '~/routing/timeline/data/data.copy';
-import type { TimelineSpan } from '~/routing/timeline/types';
 import {
   formatTimelineDuration,
   formatTimelineTimestamp,
@@ -15,9 +15,9 @@ import type { TimelineSpanRect } from '~/routing/timeline/utils/span-geometry';
 import { spanStatusOpacity } from '~/routing/timeline/utils/span-geometry';
 
 export interface TimelineSpanBarProps {
-  readonly onSelect?: (span: TimelineSpan) => void;
+  readonly onSelect?: (span: TimelineSpanRowFragment) => void;
   readonly rect: TimelineSpanRect;
-  readonly span: TimelineSpan;
+  readonly span: TimelineSpanRowFragment;
 }
 
 /** Hatch pattern id for derived ends; one definition serves every bar. */

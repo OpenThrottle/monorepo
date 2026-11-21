@@ -8,9 +8,8 @@ import { z } from 'zod/v3';
 
 import type { Route } from '@/app/routes/+types/plans.$planId._index';
 import type {
-  PlanDetailForceSettlePlanRunMutation,
-  PlanDetailPostPlanMessageMutation,
-  PlanDetailWithdrawPlanMessageMutation,
+  ForceSettledPlanRunFragment,
+  PlanInboxMessageFragment,
 } from '~/__generated__/graphql';
 import {
   PlanDetailAddHookDocument,
@@ -115,9 +114,7 @@ export const forceSettlePlanRun = async (
   formData: FormData,
 ): Promise<
   | {
-      forceSettlePlanRun: NonNullable<
-        PlanDetailForceSettlePlanRunMutation['forceSettlePlanRun']
-      >;
+      forceSettlePlanRun: ForceSettledPlanRunFragment;
     }
   | { forceSettlePlanRunError: string }
 > => {
@@ -165,7 +162,7 @@ export const postPlanMessage = async (
   formData: FormData,
 ): Promise<
   | {
-      postPlanMessage: PlanDetailPostPlanMessageMutation['postPlanMessage'];
+      postPlanMessage: PlanInboxMessageFragment;
     }
   | { postPlanMessageError: string }
 > => {
@@ -199,7 +196,7 @@ export const withdrawPlanMessage = async (
   formData: FormData,
 ): Promise<
   | {
-      withdrawPlanMessage: PlanDetailWithdrawPlanMessageMutation['withdrawPlanMessage'];
+      withdrawPlanMessage: PlanInboxMessageFragment;
     }
   | { withdrawPlanMessageError: string }
 > => {

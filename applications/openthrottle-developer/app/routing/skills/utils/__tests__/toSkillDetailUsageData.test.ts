@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import type { GetSkillDetailUsageQuery } from '~/__generated__/graphql';
+import type {
+  SkillDetailUsageByDayFragment,
+  SkillDetailUsageBySkillFragment,
+} from '~/__generated__/graphql';
 
 import { toSkillDetailUsageData } from '../toSkillDetailUsageData';
 
-type SkillUsage = GetSkillDetailUsageQuery['skillUsage'];
-
-const byDay: SkillUsage['byDay'] = [
+const byDay: SkillDetailUsageByDayFragment[] = [
   {
     date: '2026-08-01',
     injectedCount: 7,
@@ -17,7 +18,7 @@ const byDay: SkillUsage['byDay'] = [
   },
 ];
 
-const row: SkillUsage['bySkill'][number] = {
+const row: SkillDetailUsageBySkillFragment = {
   abandonedCount: 1,
   avgDurationMs: 1200,
   count: 10,

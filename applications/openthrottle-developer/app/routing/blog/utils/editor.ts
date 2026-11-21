@@ -1,8 +1,9 @@
 import { z } from 'zod/v3';
 
 import type {
-  SetBlogPostEditorTagsMutation,
-  UpdateBlogPostEditorMutation,
+  BlogPostEditorPostFragment,
+  SetBlogPostTagsOutcomeFragment,
+  UpdateBlogPostOutcomeFragment,
 } from '~/__generated__/graphql';
 import { BlogReferenceEntity } from '~/__generated__/graphql';
 import { UpdateBlogPostInputSchema } from '~/__generated__/schemas';
@@ -13,7 +14,6 @@ import {
 } from '~/routing/blog/config/defaults';
 import { BLOG_EDITOR_COPY } from '~/routing/blog/data/data.copy';
 import type {
-  BlogEditorPost,
   BlogPostChanges,
   BlogPostEditorValues,
   BlogPostFieldErrors,
@@ -35,7 +35,7 @@ const SAVE_REQUEST_SCHEMA = z.object({
  * string (`''` for unset) and the tag list as slugs.
  */
 export const toBlogPostEditorValues = (
-  post: BlogEditorPost,
+  post: BlogPostEditorPostFragment,
 ): BlogPostEditorValues => {
   return {
     authorSlug: post.author?.slug ?? '',
@@ -76,7 +76,7 @@ const toNullable = (value: string): string | null => {
  * when it changed, or `null` when it did not.
  */
 export const diffBlogPostEditorValues = (
-  post: BlogEditorPost,
+  post: BlogPostEditorPostFragment,
   values: BlogPostEditorValues,
 ): {
   readonly changes: BlogPostChanges;
@@ -115,7 +115,7 @@ export const diffBlogPostEditorValues = (
 
 /** @description True when `values` differ from the loaded `post` at all. */
 export const isBlogPostEditorDirty = (
-  post: BlogEditorPost,
+  post: BlogPostEditorPostFragment,
   values: BlogPostEditorValues,
 ): boolean => {
   const { changes, tagSlugs } = diffBlogPostEditorValues(post, values);
@@ -164,7 +164,7 @@ export const parseBlogPostSaveRequest = (
  * {@link BlogPostSaveResult}. A written post is `saved`.
  */
 export const toBlogPostUpdateResult = (
-  result: UpdateBlogPostEditorMutation['updateBlogPost'],
+  result: UpdateBlogPostOutcomeFragment,
 ): BlogPostSaveResult => {
   switch (result.__typename) {
     case 'BlogCoverAltRequiredError':
@@ -203,7 +203,7 @@ export const toBlogPostUpdateResult = (
  * publish permission, which the editor shows as its read-only notice.
  */
 export const toBlogPostTagsResult = (
-  result: SetBlogPostEditorTagsMutation['setBlogPostTags'],
+  result: SetBlogPostTagsOutcomeFragment,
 ): BlogPostSaveResult => {
   switch (result.__typename) {
     case 'BlogPostAdminObject':

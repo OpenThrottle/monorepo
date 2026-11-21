@@ -1,6 +1,4 @@
-import type { PlanDetailCancelPlanRunMutation } from '~/__generated__/graphql';
-
-type CancelPayload = PlanDetailCancelPlanRunMutation['cancelPlanRun'];
+import type { CancelPlanRunResultFragment } from '~/__generated__/graphql';
 
 /**
  * @description Toast tone for a cancel outcome. Only NO_ACTIVE_RUN is a no-op (nothing was
@@ -8,7 +6,7 @@ type CancelPayload = PlanDetailCancelPlanRunMutation['cancelPlanRun'];
  * did something (removed a job, or signaled/requested a stop) and is a `success`.
  */
 export const cancelPlanRunToastTone = (
-  payload: CancelPayload,
+  payload: CancelPlanRunResultFragment,
 ): 'info' | 'success' => {
   return payload.outcome === 'NO_ACTIVE_RUN' ? 'info' : 'success';
 };
@@ -18,7 +16,9 @@ export const cancelPlanRunToastTone = (
  * server's machine-readable `outcome` so the message always reflects the path that actually fired
  * (kill-semantics matrix, OT plan 2ab62876) — never an ambiguous "success" on a no-op.
  */
-export const describeCancelPlanRunResult = (payload: CancelPayload): string => {
+export const describeCancelPlanRunResult = (
+  payload: CancelPlanRunResultFragment,
+): string => {
   switch (payload.outcome) {
     case 'RUN_CANCELLED': {
       const count = payload.removedJobIds.length;

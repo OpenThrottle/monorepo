@@ -1,38 +1,45 @@
+fragment AgentClisDiscovery on DiscoverAgentClisResult {
+  agents {
+    authState {
+      status
+    }
+    backend
+    capabilities {
+      approvals
+      editApprovals
+    }
+    chatCapable
+    enabled
+    label
+    modelOptions {
+      enabled
+      favorite
+      model
+    }
+    supportsCustomBaseUrl
+    version
+  }
+  totalCount
+}
+
 query DiscoverAgentClis {
   discoverAgentClis {
-    agents {
-      authState {
-        status
-      }
-      backend
-      capabilities {
-        approvals
-        editApprovals
-      }
-      chatCapable
-      enabled
-      label
-      modelOptions {
-        enabled
-        favorite
-        model
-      }
-      supportsCustomBaseUrl
-      version
-    }
-    totalCount
+    ...AgentClisDiscovery
   }
+}
+fragment LocalModelsDiscovery on DiscoverLocalModelsResult {
+  endpoints {
+    baseUrl
+    host
+    models
+    provider
+  }
+  totalCount
 }
 
 query DiscoverLocalModels {
   discoverLocalModels {
-    endpoints {
-      baseUrl
-      host
-      models
-      provider
-    }
-    totalCount
+    ...LocalModelsDiscovery
   }
 }
 
@@ -120,14 +127,17 @@ mutation SendTranscriptionAudioChunk(
 mutation StopTranscriptionStream($sessionId: ID!) {
   stopTranscriptionStream(sessionId: $sessionId)
 }
+fragment TranscriptionStreamChunk on TranscriptionStreamChunkObject {
+  done
+  error
+  sessionId
+  sortOrder
+  transcript
+}
 
 subscription TranscriptionStreamChunkAdded($sessionId: ID!) {
   transcriptionStreamChunkAdded(sessionId: $sessionId) {
-    done
-    error
-    sessionId
-    sortOrder
-    transcript
+    ...TranscriptionStreamChunk
   }
 }
 

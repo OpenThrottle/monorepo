@@ -1,10 +1,8 @@
 import { Sheet, SheetContent } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import type {
-  TimelineMarkerCluster,
-  TimelineSpan,
-} from '~/routing/timeline/types';
+import type { TimelineSpanRowFragment } from '~/__generated__/graphql';
+import type { TimelineMarkerCluster } from '~/routing/timeline/types';
 
 import { TimelineClusterDetail } from './TimelineClusterDetail';
 import { TimelineSpanDetail } from './TimelineSpanDetail';
@@ -12,7 +10,7 @@ import { TimelineSpanDetail } from './TimelineSpanDetail';
 export interface TimelineDetailPopoverProps {
   readonly cluster: TimelineMarkerCluster | null;
   readonly onOpenChange: (open: boolean) => void;
-  readonly span: TimelineSpan | null;
+  readonly span: TimelineSpanRowFragment | null;
 }
 
 export const TimelineDetailPopover = (

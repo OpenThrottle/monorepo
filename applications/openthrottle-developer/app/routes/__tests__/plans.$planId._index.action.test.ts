@@ -7,12 +7,14 @@ import { createTestRouterContext } from '@openthrottle/react-router-testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { z } from 'zod/v3';
 
+import type {
+  CancelPlanRunResultFragment,
+  ForceSettledPlanRunFragment,
+} from '~/__generated__/graphql';
 import {
   PlanDetailCancelPlanRunDocument,
-  type PlanDetailCancelPlanRunMutation,
   PlanDetailEnqueuePlanRunDocument,
   PlanDetailForceSettlePlanRunDocument,
-  type PlanDetailForceSettlePlanRunMutation,
   PlanDetailRunConfigDocument,
   PlanDetailSchedulePlanRunDocument,
   PlanDetailUpdatePlanRunConfigDocument,
@@ -390,7 +392,7 @@ describe('routes/plans.$planId._index action (cancelPlanRun)', () => {
   });
 
   test('calls cancelPlanRun with plan id', async () => {
-    const cancelPayload: PlanDetailCancelPlanRunMutation['cancelPlanRun'] = {
+    const cancelPayload: CancelPlanRunResultFragment = {
       __typename: 'CancelPlanRunResultObject',
       activeJobIdsCouldNotCancel: [],
       cancelRequested: false,
@@ -512,14 +514,13 @@ describe('routes/plans.$planId._index action (forceSettlePlanRun)', () => {
   });
 
   test('calls forceSettlePlanRun with the submitted planRunId, not the plan id', async () => {
-    const settled: PlanDetailForceSettlePlanRunMutation['forceSettlePlanRun'] =
-      {
-        __typename: 'PlanRunObject',
-        heartbeatExpected: false,
-        id: planRunId,
-        isStale: false,
-        status: 'STALE',
-      };
+    const settled: ForceSettledPlanRunFragment = {
+      __typename: 'PlanRunObject',
+      heartbeatExpected: false,
+      id: planRunId,
+      isStale: false,
+      status: 'STALE',
+    };
     mockExecuteGraphqlWithAuth.mockResolvedValue({
       forceSettlePlanRun: settled,
     });
@@ -584,7 +585,7 @@ describe('routes/plans.$planId._index action (cancelPlanRun with planRunId)', ()
   });
 
   test('passes planRunId through so only that scheduled run is cancelled', async () => {
-    const cancelPayload: PlanDetailCancelPlanRunMutation['cancelPlanRun'] = {
+    const cancelPayload: CancelPlanRunResultFragment = {
       __typename: 'CancelPlanRunResultObject',
       activeJobIdsCouldNotCancel: [],
       cancelRequested: false,

@@ -1,10 +1,9 @@
-import type { PullRequestCardFragment } from '@openthrottle/openthrottle-developer-codegen';
 import { cn } from '@openthrottle/react-router-shadcn';
 import { CircleIcon } from 'lucide-react';
 import * as React from 'react';
 
 export interface PullRequestStatusProps {
-  state: PullRequestCardFragment['state'];
+  state: string;
 }
 
 export const PullRequestStatus = (

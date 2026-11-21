@@ -17,6 +17,7 @@ import * as React from 'react';
 import { useFetcher, useSearchParams } from 'react-router';
 
 import type { Route } from '@/app/routes/+types/rules._index';
+import type { TagActionRuleRowFragment } from '~/__generated__/graphql';
 import {
   RulesDeleteTagActionRuleDocument,
   RulesIndexLoaderDocument,
@@ -25,10 +26,7 @@ import {
 import { SITE_TITLE } from '~/global/config/settings';
 import { RulesIntroduction } from '~/routing/rules/components/RulesIntroduction';
 import { RulesStats } from '~/routing/rules/components/RulesStats';
-import {
-  RulesTable,
-  type TagActionRuleRowData,
-} from '~/routing/rules/components/RulesTable';
+import { RulesTable } from '~/routing/rules/components/RulesTable';
 import { RulesToolbar } from '~/routing/rules/components/RulesToolbar';
 import { RULES_COPY, RULES_ONBOARDING } from '~/routing/rules/data/data.copy';
 import {
@@ -86,7 +84,7 @@ export default function Component(
   const isNewUser = totalCount === 0 && !isFiltered;
 
   // Handlers
-  const handleToggleEnabled = (rule: TagActionRuleRowData): void => {
+  const handleToggleEnabled = (rule: TagActionRuleRowFragment): void => {
     fetcher.submit(
       { intent: 'toggleEnabled', rule: JSON.stringify(rule) },
       { method: 'post' },

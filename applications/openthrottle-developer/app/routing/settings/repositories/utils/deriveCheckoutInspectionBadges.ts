@@ -1,7 +1,4 @@
-import type { RepositoryCheckoutFieldsFragment } from '~/__generated__/graphql';
-
-/** The inspection payload carried by a repository checkout, or null. */
-type CheckoutInspection = RepositoryCheckoutFieldsFragment['inspection'];
+import type { RepositoryCheckoutInspectionFragment } from '~/__generated__/graphql';
 
 export interface CheckoutInspectionBadges {
   detectedAgentConfig: string[];
@@ -15,7 +12,7 @@ export interface CheckoutInspectionBadges {
  * `RepositoryDetail` so both surfaces show identical badges.
  */
 export const deriveCheckoutInspectionBadges = (
-  inspection: CheckoutInspection,
+  inspection: RepositoryCheckoutInspectionFragment | null | undefined,
 ): CheckoutInspectionBadges => {
   if (inspection == null) {
     return { detectedAgentConfig: [], detectedStack: [] };

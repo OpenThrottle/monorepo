@@ -3,12 +3,12 @@ import { GlobalPopover } from '@openthrottle/react-router-ui-global';
 import * as React from 'react';
 import { useNavigation } from 'react-router';
 
+import type { RepositoryCheckoutFieldsFragment } from '~/__generated__/graphql';
 import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
 import {
   REMOVE_PLAN_RUN_WORKTREE_COPY,
   REPOSITORIES_ROW_ACTIONS_COPY,
 } from '~/routing/settings/repositories/data/data.copy';
-import type { RepositoryCheckout } from '~/routing/settings/repositories/types';
 import { REMOVE_PLAN_RUN_WORKTREE_INTENT } from '~/routing/settings/repositories/utils/missing-rows';
 
 /** The worktree on disk behind a checkout the server says is safe to remove. */
@@ -18,7 +18,7 @@ export interface RemovableWorktree {
 }
 
 export interface RepositoryCheckoutActionsProps {
-  checkout: RepositoryCheckout;
+  checkout: RepositoryCheckoutFieldsFragment;
   className?: string;
   /** Set only for a plan-run worktree whose teardown guards pass; adds "Remove worktree". */
   removableWorktree: RemovableWorktree | null;

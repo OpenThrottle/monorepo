@@ -1,8 +1,12 @@
+fragment UserPreferencesDefaultAgent on UserPreferencesAgentObject {
+  backend
+  effort
+  model
+}
+
 fragment UserPreferencesFields on UserPreferencesObject {
   defaultAgent {
-    backend
-    effort
-    model
+    ...UserPreferencesDefaultAgent
   }
   defaultEditor
 }

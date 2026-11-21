@@ -1,7 +1,10 @@
 import { readSearchParam } from '@openthrottle/react-router-ui-global';
 import { parsePagination } from '@openthrottle/react-router-utils';
 
-import type { WorkspaceRepositoryFieldsFragment } from '~/__generated__/graphql';
+import type {
+  DiscoveredWorktreesScanFragment,
+  WorkspaceRepositoryFieldsFragment,
+} from '~/__generated__/graphql';
 import {
   isRepositoriesSortBy,
   isRepositoriesSortOrder,
@@ -9,10 +12,7 @@ import {
   REPOSITORIES_DEFAULT_SORT_BY,
   REPOSITORIES_DEFAULT_SORT_ORDER,
 } from '~/routing/settings/repositories/config/repositories.defaults';
-import type {
-  DiscoveredWorktreesResult,
-  RepositoriesView,
-} from '~/routing/settings/repositories/types';
+import type { RepositoriesView } from '~/routing/settings/repositories/types';
 import {
   hideMissingRows,
   SHOW_MISSING_PARAM,
@@ -27,7 +27,7 @@ const MAX_LIMIT = 100;
 
 export interface BuildRepositoriesViewParams {
   /** The worktree scan, or null while it is still streaming in (or failed). */
-  readonly discoveredWorktrees: DiscoveredWorktreesResult | null;
+  readonly discoveredWorktrees: DiscoveredWorktreesScanFragment | null;
   readonly repositories: WorkspaceRepositoryFieldsFragment[];
   readonly searchParams: URLSearchParams;
 }

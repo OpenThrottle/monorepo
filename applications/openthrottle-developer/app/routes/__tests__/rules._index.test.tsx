@@ -5,13 +5,13 @@ import { createRoutesStub } from 'react-router';
 import { afterEach, describe, expect, test } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/rules._index';
-import type { TagActionRuleRowData } from '~/routing/rules/components/RulesTable';
+import type { TagActionRuleRowFragment } from '~/__generated__/graphql';
 import { RULES_COPY, RULES_ONBOARDING } from '~/routing/rules/data/data.copy';
 import { buildRootMatch } from '~/testing/buildRootMatch';
 
 import Index from '../rules._index';
 
-const enabledRule: TagActionRuleRowData = {
+const enabledRule: TagActionRuleRowFragment = {
   actionPayloadJson: '{"placement":"first","skillSlug":"grilling"}',
   actionType: 'inject-task',
   createdAt: '2026-01-01T00:00:00.000Z',
@@ -25,7 +25,7 @@ const enabledRule: TagActionRuleRowData = {
   userId: 'user-1',
 };
 
-const disabledRule: TagActionRuleRowData = {
+const disabledRule: TagActionRuleRowFragment = {
   actionPayloadJson: '{"skillSlug":"docs"}',
   actionType: 'availability-exception',
   createdAt: '2026-01-02T00:00:00.000Z',
@@ -40,7 +40,7 @@ const disabledRule: TagActionRuleRowData = {
 };
 
 const matchesFor = (
-  rules: TagActionRuleRowData[],
+  rules: TagActionRuleRowFragment[],
 ): Route.ComponentProps['matches'] => {
   return [
     buildRootMatch(),
@@ -55,7 +55,7 @@ const matchesFor = (
 };
 
 const renderIndex = (
-  rules: TagActionRuleRowData[],
+  rules: TagActionRuleRowFragment[],
   initialEntry = '/rules',
 ): ReturnType<typeof render> => {
   // useFetcher + useSearchParams require a data router.

@@ -7,7 +7,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import type { PlanRunAuditRow } from '~/routing/plans/components/PlanWorkflowRunTransparencyAuditTable';
+import type { PlanRunHistoryEntryFragment } from '~/__generated__/graphql';
 import { PlanWorkflowRunUpcoming } from '~/routing/plans/components/PlanWorkflowRunUpcoming';
 import { PLAN_SCHEDULED_RUNS_CARD_COPY } from '~/routing/plans/data/data.copy';
 import type { PlanScheduledRunRef } from '~/routing/plans/utils/plan-run-sections';
@@ -15,7 +15,7 @@ import { selectUpcomingRuns } from '~/routing/plans/utils/plan-run-sections';
 
 export interface PlanScheduledRunsCardProps {
   readonly planId: string;
-  readonly planRunAuditRows: readonly PlanRunAuditRow[];
+  readonly planRunAuditRows: readonly PlanRunHistoryEntryFragment[];
   /** `plan.scheduledRunId` / `plan.scheduledRunAt`, the backstop for a run outside the history. */
   readonly scheduledRun: PlanScheduledRunRef;
 }

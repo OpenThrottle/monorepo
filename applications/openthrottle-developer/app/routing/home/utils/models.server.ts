@@ -17,8 +17,8 @@ import {
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 
 import type {
-  DiscoverAgentClisQuery,
-  DiscoverLocalModelsQuery,
+  AgentClisDiscoveryFragment,
+  LocalModelsDiscoveryFragment,
 } from '~/__generated__/graphql';
 import {
   DiscoverAgentClisDocument,
@@ -36,16 +36,13 @@ import type { ComposerDefaultAgent } from '~/routing/home/utils/seedComposerDefa
  */
 export type { RepositoryOption };
 
-type AgentClisPayload = DiscoverAgentClisQuery['discoverAgentClis'];
-type LocalModelsPayload = DiscoverLocalModelsQuery['discoverLocalModels'];
-
 /**
  * Fetch the agent-CLI discovery payload once. Returns `null` on failure so each
  * derived list degrades to `[]` independently and the composer still renders.
  */
 async function fetchAgentClis(
   request: Request,
-): Promise<AgentClisPayload | null> {
+): Promise<AgentClisDiscoveryFragment | null> {
   try {
     const data = await executeGraphqlWithAuth(
       request,
@@ -61,7 +58,7 @@ async function fetchAgentClis(
 /** Fetch the local-model discovery payload once. `null` on failure (see above). */
 async function fetchLocalModels(
   request: Request,
-): Promise<LocalModelsPayload | null> {
+): Promise<LocalModelsDiscoveryFragment | null> {
   try {
     const data = await executeGraphqlWithAuth(
       request,

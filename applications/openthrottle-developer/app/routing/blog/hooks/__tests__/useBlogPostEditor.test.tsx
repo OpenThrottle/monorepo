@@ -3,17 +3,17 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
+import type { BlogPostEditorPostFragment } from '~/__generated__/graphql';
 import {
   MOCK_EDITOR_DRAFT,
   MOCK_EDITOR_LIVE,
 } from '~/routing/blog/data/mock.blog-posts';
-import type { BlogEditorPost } from '~/routing/blog/types';
 
 import { useBlogPostEditor } from '../useBlogPostEditor';
 
 const Probe = (props: {
   readonly canWrite: boolean;
-  readonly post: BlogEditorPost;
+  readonly post: BlogPostEditorPostFragment;
 }): React.ReactElement => {
   const editor = useBlogPostEditor(props);
 
@@ -24,7 +24,7 @@ const Probe = (props: {
   );
 };
 
-const renderProbe = (canWrite: boolean, post: BlogEditorPost) => {
+const renderProbe = (canWrite: boolean, post: BlogPostEditorPostFragment) => {
   const Stub = createRoutesStub([
     // eslint-disable-next-line react/no-multi-comp -- inline route stub component, createRoutesStub needs a Component per route
     { Component: () => <Probe canWrite={canWrite} post={post} />, path: '/' },

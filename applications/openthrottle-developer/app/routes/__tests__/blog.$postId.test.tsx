@@ -8,6 +8,7 @@ import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/blog.$postId';
+import type { BlogPostEditorPostFragment } from '~/__generated__/graphql';
 import {
   MOCK_BLOG_AUTHORS,
   MOCK_BLOG_TAGS,
@@ -17,7 +18,6 @@ import {
   MOCK_EDITOR_SCHEDULED,
 } from '~/routing/blog/data/mock.blog-posts';
 import type {
-  BlogEditorPost,
   BlogPostLifecycleRequest,
   BlogPostLifecycleResult,
   BlogPostSaveRequest,
@@ -69,7 +69,10 @@ const STALE: BlogPostSaveResult = {
   outcome: 'staleWrite',
 };
 
-const loaderDataFor = (post: BlogEditorPost, canWrite: boolean): LoaderData => {
+const loaderDataFor = (
+  post: BlogPostEditorPostFragment,
+  canWrite: boolean,
+): LoaderData => {
   return {
     authors: MOCK_BLOG_AUTHORS,
     canWrite,
@@ -81,7 +84,7 @@ const loaderDataFor = (post: BlogEditorPost, canWrite: boolean): LoaderData => {
 const renderEditor = (options: {
   readonly canWrite?: boolean;
   readonly lifecycleResult?: BlogPostLifecycleResult;
-  readonly post?: BlogEditorPost;
+  readonly post?: BlogPostEditorPostFragment;
   readonly results?: readonly BlogPostSaveResult[];
 }): Harness => {
   const {

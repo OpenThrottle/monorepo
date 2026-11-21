@@ -3,16 +3,19 @@ import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
-import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/graphql';
+import type {
+  PlanRunConfigCheckoutFragment,
+  PlanRunConfigRepositoryFieldsFragment,
+} from '~/__generated__/graphql';
 import { PLAN_CHECKOUT_SELECTOR_COPY } from '~/routing/plans/data/data.copy';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 
 import type { PlanCheckoutSelectorProps } from '../PlanCheckoutSelector';
 import { PlanCheckoutSelector } from '../PlanCheckoutSelector';
 
-type Checkout = PlanRunConfigRepositoryFieldsFragment['checkouts'][number];
-
-const buildCheckout = (overrides: Partial<Checkout> = {}): Checkout => {
+const buildCheckout = (
+  overrides: Partial<PlanRunConfigCheckoutFragment> = {},
+): PlanRunConfigCheckoutFragment => {
   return {
     displayName: 'monorepo',
     filesystemPath: '/Users/me/monorepo',

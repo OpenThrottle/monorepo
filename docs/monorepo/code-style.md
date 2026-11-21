@@ -307,11 +307,40 @@ export interface PlanHeaderProps {
 }
 ```
 
+The fragment type is then **used directly at the call site**. Two more shapes are reported:
+
+- **Reaching into a fragment** (`XFragment['items'][number]`, `XFragment['field']`). A child
+  structure is a contract of its own: put a fragment on the child type, spread it inside the
+  parent fragment, and use the child's `*Fragment` type. A scalar or enum field uses its generated
+  scalar or enum type (`PlanStatus`, `string`).
+- **Aliasing a fragment** — `type Plan = PlanHeaderPlanFragment`, the same wrapped in
+  `NonNullable` / `Exclude` / an array / `readonly` / `| null | undefined`, or
+  `import { PlanHeaderPlanFragment as Plan }`. An alias hides which contract a call site depends
+  on; import the fragment under its own name wherever it is used.
+
+```graphql
+# ❌ PlanHeaderTasks reaches into PlanHeaderPlanFragment['tasks'][number]
+# ✅ the child gets its own fragment
+fragment PlanHeaderTask on Task {
+  id
+  title
+}
+
+fragment PlanHeaderPlan on Plan {
+  status
+  tasks {
+    ...PlanHeaderTask
+  }
+  title
+}
+```
+
 The rule is syntax-only: it counts an identifier whose imported name ends in `Query`,
-`Mutation` or `Subscription` and that comes from a `*-codegen` package or a `__generated__`
-path (aliases included), and it looks through `NonNullable<…>` and `Exclude<…>`. Indexing into
-a `*Fragment` type, and using a whole operation type, are fine. There is no autofix: the fix is
-a `.graphql` fragment plus a codegen run.
+`Mutation`, `Subscription` or `Fragment` and that comes from a `*-codegen` package or a
+`__generated__` path (renamed imports included), and it looks through `NonNullable<…>` and
+`Exclude<…>`. Using a whole operation type is fine, and so is a type that says more than the
+fragment (`Record<string, XFragment>`, `XFragment | OtherType`). There is no autofix: the fix is a
+`.graphql` fragment plus a codegen run.
 
 A project that still has violations spreads `preferGraphqlFragmentWarningsEslintConfig` from
 `@tools/dotfiles` **last** in its `eslint.config.ts`, with a comment saying it goes once the

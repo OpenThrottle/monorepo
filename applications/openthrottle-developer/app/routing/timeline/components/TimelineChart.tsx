@@ -1,14 +1,16 @@
 import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
+import type {
+  TimelineMarkerRowFragment,
+  TimelineSpanRowFragment,
+} from '~/__generated__/graphql';
 import { TIMELINE_LANE_ROW_HEIGHT } from '~/routing/timeline/config/layout';
 import { useTimelinePan } from '~/routing/timeline/hooks/useTimelinePan';
 import { useTimelineWidth } from '~/routing/timeline/hooks/useTimelineWidth';
 import type {
   TimelineLane,
-  TimelineMarker,
   TimelineMarkerCluster,
-  TimelineSpan,
 } from '~/routing/timeline/types';
 import { buildTimelineLanes } from '~/routing/timeline/utils/lanes';
 import type { TimelineScale } from '~/routing/timeline/utils/scale';
@@ -23,15 +25,15 @@ export interface TimelineChartProps {
   readonly className?: string;
   /** Passed through to the axis; true when the window's end is "now". */
   readonly isLiveWindow?: boolean;
-  readonly markers: readonly TimelineMarker[];
+  readonly markers: readonly TimelineMarkerRowFragment[];
   readonly onSelectMarkerCluster?: (cluster: TimelineMarkerCluster) => void;
-  readonly onSelectSpan?: (span: TimelineSpan) => void;
+  readonly onSelectSpan?: (span: TimelineSpanRowFragment) => void;
   /** Drawn over each lane's plot area, on top of the span layer. */
   readonly renderLane?: (args: {
     readonly lane: TimelineLane;
     readonly scale: TimelineScale;
   }) => React.ReactNode;
-  readonly spans: readonly TimelineSpan[];
+  readonly spans: readonly TimelineSpanRowFragment[];
   readonly windowFromIso: string;
   readonly windowToIso: string;
 }

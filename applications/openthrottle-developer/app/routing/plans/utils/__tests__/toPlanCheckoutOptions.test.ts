@@ -1,12 +1,15 @@
 import { describe, expect, test } from 'vitest';
 
-import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/graphql';
+import type {
+  PlanRunConfigCheckoutFragment,
+  PlanRunConfigRepositoryFieldsFragment,
+} from '~/__generated__/graphql';
 
 import { toPlanCheckoutOptions } from '../toPlanCheckoutOptions';
 
-type Checkout = PlanRunConfigRepositoryFieldsFragment['checkouts'][number];
-
-const buildCheckout = (overrides: Partial<Checkout> = {}): Checkout => {
+const buildCheckout = (
+  overrides: Partial<PlanRunConfigCheckoutFragment> = {},
+): PlanRunConfigCheckoutFragment => {
   return {
     displayName: 'monorepo',
     filesystemPath: '/Users/me/monorepo',

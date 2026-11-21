@@ -1,13 +1,13 @@
-import type { WorkspaceRepositoryFieldsFragment } from '~/__generated__/graphql';
+import type {
+  DiscoveredWorktreeFieldsFragment,
+  DiscoveredWorktreeMissingCheckoutFragment,
+  DiscoveredWorktreeProblemFragment,
+  RepositoryCheckoutFieldsFragment,
+  WorkspaceRepositoryFieldsFragment,
+} from '~/__generated__/graphql';
 import { WorktreeDiscoveryProblemKind } from '~/__generated__/graphql';
 import { REPOSITORIES_TABLE_COPY } from '~/routing/settings/repositories/data/data.copy';
-import type {
-  DiscoveredWorktree,
-  DiscoveredWorktreesResult,
-  MissingWorktreeCheckout,
-  RepositoryCheckout,
-  RepositoryCheckoutRow,
-} from '~/routing/settings/repositories/types';
+import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/types';
 
 /** The `kind` discriminator the server writes for worktree checkouts. */
 const WORKTREE_CHECKOUT_KIND = 'worktree';
@@ -17,10 +17,10 @@ const UNREGISTERED_ROW_ID_PREFIX = 'worktree:';
 
 const toRow = (
   repository: WorkspaceRepositoryFieldsFragment,
-  checkout: RepositoryCheckout,
+  checkout: RepositoryCheckoutFieldsFragment,
   foreignSkillInjectionEnabled: boolean,
-  discovered: DiscoveredWorktree | null,
-  missing: MissingWorktreeCheckout | null,
+  discovered: DiscoveredWorktreeFieldsFragment | null,
+  missing: DiscoveredWorktreeMissingCheckoutFragment | null,
   notAGitRepository: boolean,
   children: RepositoryCheckoutRow[] = [],
 ): RepositoryCheckoutRow => {
@@ -59,7 +59,7 @@ const toRow = (
  * carry, so the row stands on the discovery payload alone.
  */
 const toDiscoveredRow = (
-  discovered: DiscoveredWorktree,
+  discovered: DiscoveredWorktreeFieldsFragment,
   repository: WorkspaceRepositoryFieldsFragment | null,
   foreignSkillInjectionEnabled: boolean,
   children: RepositoryCheckoutRow[] = [],
@@ -121,9 +121,9 @@ const toDiscoveredRow = (
  */
 export function buildRepositoryRows(
   repositories: WorkspaceRepositoryFieldsFragment[],
-  discoveredWorktrees: readonly DiscoveredWorktree[] = [],
-  problems: DiscoveredWorktreesResult['problems'] = [],
-  missingCheckouts: readonly MissingWorktreeCheckout[] = [],
+  discoveredWorktrees: readonly DiscoveredWorktreeFieldsFragment[] = [],
+  problems: DiscoveredWorktreeProblemFragment[] = [],
+  missingCheckouts: readonly DiscoveredWorktreeMissingCheckoutFragment[] = [],
 ): RepositoryCheckoutRow[] {
   const missingByCheckoutId = new Map(
     missingCheckouts.map((missing) => [missing.checkoutId, missing]),
@@ -142,9 +142,15 @@ export function buildRepositoryRows(
 
   // Match on checkoutId, not on the path: the server already resolved symlinks when
   // it indexed the user's checkouts, so this is the authoritative pairing.
-  const discoveredByCheckoutId = new Map<string, DiscoveredWorktree>();
-  const unregisteredByRepositoryId = new Map<string, DiscoveredWorktree[]>();
-  const unlinked: DiscoveredWorktree[] = [];
+  const discoveredByCheckoutId = new Map<
+    string,
+    DiscoveredWorktreeFieldsFragment
+  >();
+  const unregisteredByRepositoryId = new Map<
+    string,
+    DiscoveredWorktreeFieldsFragment[]
+  >();
+  const unlinked: DiscoveredWorktreeFieldsFragment[] = [];
 
   for (const worktree of discoveredWorktrees) {
     if (worktree.checkoutId != null) {
@@ -181,7 +187,7 @@ export function buildRepositoryRows(
     );
 
     const row = (
-      checkout: RepositoryCheckout,
+      checkout: RepositoryCheckoutFieldsFragment,
       children: RepositoryCheckoutRow[] = [],
     ): RepositoryCheckoutRow => {
       return toRow(

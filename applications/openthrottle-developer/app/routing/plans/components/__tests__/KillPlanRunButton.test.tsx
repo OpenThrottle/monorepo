@@ -4,11 +4,9 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { PlanDetailCancelPlanRunMutation } from '~/__generated__/graphql';
+import type { CancelPlanRunResultFragment } from '~/__generated__/graphql';
 
 import { KillPlanRunButton } from '../KillPlanRunButton';
-
-type CancelPlanRunPayload = PlanDetailCancelPlanRunMutation['cancelPlanRun'];
 
 const { toastError, toastInfo, toastSuccess } = vi.hoisted(() => ({
   toastError: vi.fn(),
@@ -148,7 +146,7 @@ describe('KillPlanRunButton', () => {
 
   test('opens dialog with copy and submits cancelPlanRun to route action', async () => {
     const user = userEvent.setup();
-    const cancelPayload: CancelPlanRunPayload = {
+    const cancelPayload: CancelPlanRunResultFragment = {
       __typename: 'CancelPlanRunResultObject',
       activeJobIdsCouldNotCancel: [],
       cancelRequested: true,
@@ -200,7 +198,7 @@ describe('KillPlanRunButton', () => {
 
   test('shows an info (not success) toast on a no-op cancel (NO_ACTIVE_RUN)', async () => {
     const user = userEvent.setup();
-    const cancelPayload: CancelPlanRunPayload = {
+    const cancelPayload: CancelPlanRunResultFragment = {
       __typename: 'CancelPlanRunResultObject',
       activeJobIdsCouldNotCancel: [],
       cancelRequested: false,
@@ -294,7 +292,7 @@ describe('KillPlanRunButton', () => {
 
   test('shows Stopping… on trigger and confirm while cancel request is in flight', async () => {
     const user = userEvent.setup();
-    const cancelPayload: CancelPlanRunPayload = {
+    const cancelPayload: CancelPlanRunResultFragment = {
       __typename: 'CancelPlanRunResultObject',
       activeJobIdsCouldNotCancel: [],
       cancelRequested: true,
@@ -394,7 +392,7 @@ describe('KillPlanRunButton', () => {
 
   test('does not submit cancelPlanRun twice while the first request is in flight', async () => {
     const user = userEvent.setup();
-    const cancelPayload: CancelPlanRunPayload = {
+    const cancelPayload: CancelPlanRunResultFragment = {
       __typename: 'CancelPlanRunResultObject',
       activeJobIdsCouldNotCancel: [],
       cancelRequested: true,

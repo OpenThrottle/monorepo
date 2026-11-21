@@ -6,15 +6,17 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
+import type {
+  PlanRunHistoryEntryFragment,
+  PlanRunJobMetricsEntryFragment,
+} from '~/__generated__/graphql';
 import { PLAN_RUN_TRANSPARENCY_COPY } from '~/routing/plans/data/data.copy';
 import {
   PLAN_RUN_HISTORY_FETCH_LIMIT,
   PLAN_RUN_HISTORY_INITIAL_ROWS,
 } from '~/routing/plans/data/data.plan-run-history';
 import { getDefaultWorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
-import type { PlanRunMetricsEntry } from '~/routing/plans/utils/joinPlanRunJobMetrics';
 
-import type { PlanRunAuditRow } from '../PlanWorkflowRunTransparencyAuditTable';
 import { PlanWorkflowRunTransparencyAuditTable } from '../PlanWorkflowRunTransparencyAuditTable';
 
 const planId = '0c2720a9-920f-4b16-865a-f803eb444e18';
@@ -22,8 +24,8 @@ const workflowInput = getDefaultWorkflowRalphRunOptionsInput({ planId });
 const copy = PLAN_RUN_TRANSPARENCY_COPY.history;
 
 const auditRow = (
-  overrides: Partial<PlanRunAuditRow> = {},
-): PlanRunAuditRow => {
+  overrides: Partial<PlanRunHistoryEntryFragment> = {},
+): PlanRunHistoryEntryFragment => {
   return {
     __typename: 'PlanRunObject',
     bullmqJobId: 'job-1',
@@ -42,7 +44,7 @@ const auditRow = (
 };
 
 /** `count` COMPLETED runs, one minute apart, newest first. */
-const manyRows = (count: number): PlanRunAuditRow[] => {
+const manyRows = (count: number): PlanRunHistoryEntryFragment[] => {
   return Array.from({ length: count }, (_, index) =>
     auditRow({
       bullmqJobId: `job-${index}`,
@@ -53,8 +55,8 @@ const manyRows = (count: number): PlanRunAuditRow[] => {
 };
 
 const renderTable = (
-  rows: PlanRunAuditRow[],
-  metrics: readonly PlanRunMetricsEntry[] = [],
+  rows: PlanRunHistoryEntryFragment[],
+  metrics: readonly PlanRunJobMetricsEntryFragment[] = [],
 ): RenderResult => {
   const Component = () => {
     return (

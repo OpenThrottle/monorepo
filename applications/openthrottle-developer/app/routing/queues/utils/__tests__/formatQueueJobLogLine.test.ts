@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'vitest';
 
+import type { QueueJobLogEventFragment } from '~/__generated__/graphql';
 import { QueueJobLogLevel } from '~/__generated__/graphql';
-import type { QueueJobLogEvent } from '~/routing/queues/types';
 
 import { formatQueueJobLogLine } from '../formatQueueJobLogLine';
 
-const baseEvent: QueueJobLogEvent = {
+const baseEvent: QueueJobLogEventFragment = {
   cursor: 'cursor-1',
   jobId: 'job-1',
   level: QueueJobLogLevel.Info,
@@ -23,7 +23,7 @@ describe('formatQueueJobLogLine', () => {
   });
 
   test('pads short level names to a fixed width of 5', () => {
-    const event: QueueJobLogEvent = {
+    const event: QueueJobLogEventFragment = {
       ...baseEvent,
       level: QueueJobLogLevel.Warn,
     };
@@ -33,7 +33,7 @@ describe('formatQueueJobLogLine', () => {
   });
 
   test('does not truncate level names longer than the pad width', () => {
-    const event: QueueJobLogEvent = {
+    const event: QueueJobLogEventFragment = {
       ...baseEvent,
       level: QueueJobLogLevel.Error,
     };
@@ -43,14 +43,17 @@ describe('formatQueueJobLogLine', () => {
   });
 
   test('renders an empty timestamp segment when the timestamp is not a valid date', () => {
-    const event: QueueJobLogEvent = { ...baseEvent, timestamp: 'not-a-date' };
+    const event: QueueJobLogEventFragment = {
+      ...baseEvent,
+      timestamp: 'not-a-date',
+    };
     expect(formatQueueJobLogLine(event)).toBe(
       ' INFO  worker  started processing',
     );
   });
 
   test('renders an empty timestamp segment when the timestamp is neither a string nor a number', () => {
-    const event: QueueJobLogEvent = {
+    const event: QueueJobLogEventFragment = {
       ...baseEvent,
       timestamp: { iso: '2026-08-12T09:00:00.000Z' },
     };
@@ -60,7 +63,7 @@ describe('formatQueueJobLogLine', () => {
   });
 
   test('accepts a numeric epoch timestamp', () => {
-    const event: QueueJobLogEvent = {
+    const event: QueueJobLogEventFragment = {
       ...baseEvent,
       timestamp: Date.parse('2026-08-12T09:00:00.000Z'),
     };

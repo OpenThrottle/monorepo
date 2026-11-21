@@ -9,16 +9,16 @@ import { RefreshCwIcon } from 'lucide-react';
 import * as React from 'react';
 import { Link } from 'react-router';
 
+import type { DiscoveredWorktreesScanFragment } from '~/__generated__/graphql';
 import { WORKTREE_DISCOVERY_COPY } from '~/routing/settings/repositories/data/data.copy';
 import { useRescanWorktrees } from '~/routing/settings/repositories/hooks/useRescanWorktrees';
-import type { DiscoveredWorktreesResult } from '~/routing/settings/repositories/types';
 import { configuredRoots } from '~/routing/settings/repositories/utils/configuredRoots';
 import { summarizeDiscovery } from '~/routing/settings/repositories/utils/discovery-problems';
 import { pluralSuffix } from '~/routing/settings/repositories/utils/pluralSuffix';
 
 export interface WorktreeDiscoveryNoticeProps {
   className?: string;
-  discoveredWorktrees: DiscoveredWorktreesResult;
+  discoveredWorktrees: DiscoveredWorktreesScanFragment;
 }
 
 /**

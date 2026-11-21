@@ -1,12 +1,12 @@
-import type { QueueJobLogEvent } from '~/routing/queues/types';
+import type { QueueJobLogEventFragment } from '~/__generated__/graphql';
 
 /**
  * @description Stable order: by timestamp, then cursor, so renders don't jump
  * on arrival order.
  */
 export const compareQueueJobLogEvents = (
-  a: QueueJobLogEvent,
-  b: QueueJobLogEvent,
+  a: QueueJobLogEventFragment,
+  b: QueueJobLogEventFragment,
 ): number => {
   const at = String(a.timestamp);
   const bt = String(b.timestamp);

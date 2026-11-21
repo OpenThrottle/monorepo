@@ -6,13 +6,13 @@
 
 import { describe, expect, it } from 'vitest';
 
+import type { TimelineSpanRowFragment } from '~/__generated__/graphql';
 import { TimelineSpanKind } from '~/__generated__/graphql';
 
 import {
   TIMELINE_LANE_ROW_HEIGHT,
   TIMELINE_MIN_SPAN_WIDTH,
 } from '../../config/layout';
-import type { TimelineSpan } from '../../types';
 import { createTimelineScale } from '../scale';
 import { spanRect, spanStatusOpacity } from '../span-geometry';
 
@@ -24,8 +24,8 @@ const scale = createTimelineScale({ from: FROM, to: TO, width: 1440 });
 const span = (
   startsAt: string,
   endsAt: string,
-  overrides: Partial<TimelineSpan> = {},
-): TimelineSpan => {
+  overrides: Partial<TimelineSpanRowFragment> = {},
+): TimelineSpanRowFragment => {
   return {
     backend: null,
     branch: null,

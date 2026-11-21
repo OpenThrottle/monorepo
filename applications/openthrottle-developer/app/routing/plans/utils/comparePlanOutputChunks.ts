@@ -1,6 +1,4 @@
-import type { PlanDetailOutputChunksQuery } from '@openthrottle/openthrottle-developer-codegen';
-
-type Chunk = PlanDetailOutputChunksQuery['planOutputStreamChunks'][number];
+import type { PlanOutputChunkFragment } from '@openthrottle/openthrottle-developer-codegen';
 
 /**
  * Order by iteration, then createdAt, then id, so renders are stable regardless
@@ -13,7 +11,10 @@ type Chunk = PlanDetailOutputChunksQuery['planOutputStreamChunks'][number];
  * tiebreak so two chunks written in the same millisecond never swap between
  * renders.
  */
-export const comparePlanOutputChunks = (a: Chunk, b: Chunk): number => {
+export const comparePlanOutputChunks = (
+  a: PlanOutputChunkFragment,
+  b: PlanOutputChunkFragment,
+): number => {
   if (
     typeof a.iteration === 'number' &&
     typeof b.iteration === 'number' &&

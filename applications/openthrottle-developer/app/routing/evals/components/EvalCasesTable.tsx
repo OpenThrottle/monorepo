@@ -10,7 +10,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import type { EvalRunReportFieldsFragment } from '~/__generated__/graphql';
+import type { EvalRunReportCaseFragment } from '~/__generated__/graphql';
 import { EVAL_REPORT_COPY } from '~/routing/evals/data/data.copy';
 import {
   caseResultRank,
@@ -19,7 +19,7 @@ import {
 } from '~/routing/evals/utils/report-format';
 
 export interface EvalCasesTableProps {
-  readonly cases: EvalRunReportFieldsFragment['cases'];
+  readonly cases: EvalRunReportCaseFragment[];
   readonly className?: string;
 }
 

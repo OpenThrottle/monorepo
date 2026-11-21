@@ -6,12 +6,12 @@ import {
 import * as React from 'react';
 import { Link } from 'react-router';
 
+import type { TimelineSpanRowFragment } from '~/__generated__/graphql';
 import { TIMELINE_SPAN_KIND_LABEL } from '~/routing/timeline/config/kinds';
 import {
   TIMELINE_DETAIL_COPY,
   TIMELINE_SPAN_TOOLTIP_COPY,
 } from '~/routing/timeline/data/data.copy';
-import type { TimelineSpan } from '~/routing/timeline/types';
 import {
   formatTimelineDuration,
   formatTimelineTimestamp,
@@ -20,7 +20,7 @@ import {
 import { TimelineDetailRow } from './TimelineDetailRow';
 
 export interface TimelineSpanDetailProps {
-  readonly span: TimelineSpan;
+  readonly span: TimelineSpanRowFragment;
 }
 
 /** @description Detail sheet body for one selected span. */

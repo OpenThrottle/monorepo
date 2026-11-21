@@ -11,7 +11,7 @@ import * as React from 'react';
 import type { FetcherWithComponents } from 'react-router';
 import { useFetcher } from 'react-router';
 
-import type { UserPreferencesFieldsFragment } from '~/__generated__/graphql';
+import type { UserPreferencesDefaultAgentFragment } from '~/__generated__/graphql';
 import {
   filterPlanRunnableModels,
   parsePlanRunModelOptionId,
@@ -31,7 +31,7 @@ import {
 
 export interface UseSettingsPreferencesAgentFormOptions {
   /** The stored default agent, or null for the system default. */
-  readonly defaultAgent: UserPreferencesFieldsFragment['defaultAgent'];
+  readonly defaultAgent: UserPreferencesDefaultAgentFragment | null | undefined;
   /** Discovered agent options; disabled agents and models are already excluded. */
   readonly models: readonly ChatModelOption[];
 }

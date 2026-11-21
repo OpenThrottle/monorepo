@@ -39,6 +39,13 @@ fragment ScheduledJobDetail on ScheduledAgentJobObject {
   timeoutMs
 }
 
+fragment ScheduleWebhookFilter on ScheduledAgentJobWebhookFilterObject {
+  op
+  path
+  value
+  values
+}
+
 # The webhook trigger as the UI shows it after setup. It never carries the URL
 # token or the secret; only `tokenPrefix` identifies the token.
 fragment ScheduleWebhookTrigger on ScheduledAgentJobWebhookTriggerObject {
@@ -47,10 +54,7 @@ fragment ScheduleWebhookTrigger on ScheduledAgentJobWebhookTriggerObject {
   deliveryIdHeader
   enabled
   filters {
-    op
-    path
-    value
-    values
+    ...ScheduleWebhookFilter
   }
   id
   maxInFlight

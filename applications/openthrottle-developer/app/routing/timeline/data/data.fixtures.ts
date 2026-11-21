@@ -9,9 +9,11 @@
  * start, and a tight marker cluster — the cases the chart must not get wrong.
  */
 
+import type {
+  TimelineMarkerRowFragment,
+  TimelineSpanRowFragment,
+} from '~/__generated__/graphql';
 import { TimelineMarkerKind, TimelineSpanKind } from '~/__generated__/graphql';
-
-import type { TimelineMarker, TimelineSpan } from '../types';
 
 const HOUR = 60 * 60 * 1000;
 
@@ -25,7 +27,7 @@ const hoursAgo = (hours: number): string => {
   return new Date(FIXTURE_WINDOW_TO.getTime() - hours * HOUR).toISOString();
 };
 
-export const TIMELINE_FIXTURE_SPANS: readonly TimelineSpan[] = [
+export const TIMELINE_FIXTURE_SPANS: readonly TimelineSpanRowFragment[] = [
   // Three overlapping runs in one lane — the case the whole view exists for.
   {
     backend: 'claude',
@@ -133,7 +135,7 @@ export const TIMELINE_FIXTURE_SPANS: readonly TimelineSpan[] = [
   },
 ];
 
-export const TIMELINE_FIXTURE_MARKERS: readonly TimelineMarker[] = [
+export const TIMELINE_FIXTURE_MARKERS: readonly TimelineMarkerRowFragment[] = [
   // A task added while run-a was already in flight — the exact reading the
   // plan asks the chart to make legible.
   {

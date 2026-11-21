@@ -8,16 +8,15 @@
 import { useSubscription } from '@openthrottle/react-router-graphql';
 import * as React from 'react';
 
-import {
-  AgentSetupChunkAddedDocument,
-  type AgentSetupChunkAddedSubscription,
+import type {
+  AgentSetupChunkAddedSubscription,
+  AgentSetupChunkFragment,
 } from '~/__generated__/graphql';
+import { AgentSetupChunkAddedDocument } from '~/__generated__/graphql';
 import { getGraphqlWsClient } from '~/services/getGraphqlWsClient';
 
-type Chunk = AgentSetupChunkAddedSubscription['agentSetupChunkAdded'];
-
 export interface UseAgentSetupStreamResult {
-  readonly chunks: readonly Chunk[];
+  readonly chunks: readonly AgentSetupChunkFragment[];
   readonly done: boolean;
   readonly error: string | null;
 }
@@ -27,9 +26,9 @@ export function useAgentSetupStream(
   runId: string | null,
 ): UseAgentSetupStreamResult {
   // Hooks
-  const [byId, setById] = React.useState<ReadonlyMap<string, Chunk>>(
-    () => new Map(),
-  );
+  const [byId, setById] = React.useState<
+    ReadonlyMap<string, AgentSetupChunkFragment>
+  >(() => new Map());
 
   // Setup
   const client = React.useMemo(() => getGraphqlWsClient(), []);

@@ -1,7 +1,7 @@
 import * as React from 'react';
 
+import type { BlogPostEditorPostFragment } from '~/__generated__/graphql';
 import type {
-  BlogEditorPost,
   BlogPostEditorValues,
   BlogPostFieldChangeHandler,
 } from '~/routing/blog/types';
@@ -28,7 +28,7 @@ export interface UseBlogPostDraftResult {
  * form shows exactly what was saved and is clean again.
  */
 export const useBlogPostDraft = (
-  post: BlogEditorPost,
+  post: BlogPostEditorPostFragment,
 ): UseBlogPostDraftResult => {
   // Hooks
   const [values, setValues] = React.useState<BlogPostEditorValues>(() =>

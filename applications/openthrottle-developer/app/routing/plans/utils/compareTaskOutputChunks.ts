@@ -1,9 +1,10 @@
-import type { TaskOutputStreamChunksQuery } from '@openthrottle/openthrottle-developer-codegen';
-
-type Chunk = TaskOutputStreamChunksQuery['planOutputStreamChunks'][number];
+import type { PlanOutputChunkFragment } from '@openthrottle/openthrottle-developer-codegen';
 
 /** Order by createdAt, then id, so renders are stable regardless of arrival order. */
-export const compareTaskOutputChunks = (a: Chunk, b: Chunk): number => {
+export const compareTaskOutputChunks = (
+  a: PlanOutputChunkFragment,
+  b: PlanOutputChunkFragment,
+): number => {
   const at = String(a.createdAt);
   const bt = String(b.createdAt);
 

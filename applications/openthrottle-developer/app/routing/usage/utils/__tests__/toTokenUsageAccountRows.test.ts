@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
 import type {
-  UsageTokenUsageByAccountFragment,
+  UsageTokenUsageAccountFragment,
   UsageTokenUsageTotalsFragment,
 } from '~/__generated__/graphql';
 import {
@@ -28,8 +28,8 @@ const totals = (
 };
 
 const account = (
-  overrides: Partial<NonNullable<UsageTokenUsageByAccountFragment['account']>>,
-): NonNullable<UsageTokenUsageByAccountFragment['account']> => {
+  overrides: Partial<UsageTokenUsageAccountFragment>,
+): UsageTokenUsageAccountFragment => {
   return {
     credentialKind: 'subscription',
     email: 'dev@example.com',

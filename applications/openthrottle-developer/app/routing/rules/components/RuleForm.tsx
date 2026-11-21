@@ -14,9 +14,9 @@ import { WandSparklesIcon } from 'lucide-react';
 import * as React from 'react';
 import { Form, Link } from 'react-router';
 
+import type { TagActionRuleRowFragment } from '~/__generated__/graphql';
 import { RuleFormActionSection } from '~/routing/rules/components/RuleFormActionSection';
 import { RuleFormMatchSection } from '~/routing/rules/components/RuleFormMatchSection';
-import type { TagActionRuleRowData } from '~/routing/rules/components/RulesTable';
 import { RULES_COPY } from '~/routing/rules/data/data.copy';
 import { ANY } from '~/routing/rules/data/data.rule-form-options';
 import { useRuleForm } from '~/routing/rules/hooks/useRuleForm';
@@ -39,7 +39,7 @@ export interface RuleFormValue {
 
 export interface RuleFormProps {
   actionData?: { error?: string } | null;
-  initialRule?: TagActionRuleRowData | null;
+  initialRule?: TagActionRuleRowFragment | null;
   skillSlugs: string[];
   vocabulary: RuleFormVocabularyOption[];
 }

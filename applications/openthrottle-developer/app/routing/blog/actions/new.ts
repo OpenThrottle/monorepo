@@ -3,19 +3,17 @@ import {
   redirectOnAuthError,
 } from '@openthrottle/react-router-graphql';
 
-import type { CreateBlogPostDraftMutation } from '~/__generated__/graphql';
+import type { CreateBlogPostOutcomeFragment } from '~/__generated__/graphql';
 import { CreateBlogPostDraftDocument } from '~/__generated__/graphql';
 import { BLOG_DRAFT_SLUG_ATTEMPTS } from '~/routing/blog/config/defaults';
 import { BLOG_NEW_COPY } from '~/routing/blog/data/data.copy';
 import type { BlogPostCreateResult } from '~/routing/blog/types';
 import { generateBlogDraftSlug } from '~/routing/blog/utils/posts';
 
-type CreateResult = CreateBlogPostDraftMutation['createBlogPost'];
-
 const createDraft = async (
   request: Request,
   slug: string,
-): Promise<CreateResult> => {
+): Promise<CreateBlogPostOutcomeFragment> => {
   const { createBlogPost } = await executeGraphqlWithAuth(
     request,
     CreateBlogPostDraftDocument,
@@ -35,7 +33,7 @@ const createDraft = async (
 const createWithFreshSlug = async (
   request: Request,
   attemptsLeft: number,
-): Promise<CreateResult> => {
+): Promise<CreateBlogPostOutcomeFragment> => {
   const result = await createDraft(
     request,
     generateBlogDraftSlug(Date.now(), Math.random),

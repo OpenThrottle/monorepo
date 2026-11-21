@@ -77,6 +77,11 @@ query getDashboard(
   # }
 }
 
+fragment PlanStatusCount on PlanStatusCountObject {
+  count
+  status
+}
+
 # First-run onboarding signals for the dashboard "Get Started" checklist.
 # Kept in its own query/promise so it streams independently and never blocks
 # the activity chart. All fields are cheap counts/booleans — never full lists.
@@ -88,8 +93,7 @@ query getDashboardOnboarding {
   githubTokenConfigured
 
   planCountsByStatus {
-    count
-    status
+    ...PlanStatusCount
   }
 
   workspaceLocalRepositories {

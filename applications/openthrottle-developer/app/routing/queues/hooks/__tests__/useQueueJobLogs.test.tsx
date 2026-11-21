@@ -3,8 +3,8 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
+import type { QueueJobLogEventFragment } from '~/__generated__/graphql';
 import { QueueJobLogLevel } from '~/__generated__/graphql';
-import type { QueueJobLogEvent } from '~/routing/queues/types';
 
 import { useQueueJobLogs } from '../useQueueJobLogs';
 
@@ -31,7 +31,7 @@ vi.mock('~/services/getGraphqlWsClient', () => ({
   getGraphqlWsClient: () => shared.client,
 }));
 
-const event = (cursor: string, timestamp: string): QueueJobLogEvent => {
+const event = (cursor: string, timestamp: string): QueueJobLogEventFragment => {
   return {
     __typename: 'QueueJobLogEventObject',
     cursor,
@@ -45,7 +45,7 @@ const event = (cursor: string, timestamp: string): QueueJobLogEvent => {
 };
 
 interface HistoryPage {
-  events: QueueJobLogEvent[];
+  events: QueueJobLogEventFragment[];
   hasMore: boolean;
   nextCursor: string | null;
 }

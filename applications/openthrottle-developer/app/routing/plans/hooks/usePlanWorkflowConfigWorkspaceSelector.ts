@@ -7,7 +7,10 @@
  */
 import * as React from 'react';
 
-import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/graphql';
+import type {
+  PlanRunConfigCheckoutFragment,
+  PlanRunConfigRepositoryFieldsFragment,
+} from '~/__generated__/graphql';
 import {
   CHECKOUT_PREFIX,
   CUSTOM_VALUE,
@@ -29,8 +32,7 @@ export interface UsePlanWorkflowConfigWorkspaceSelectorOptions {
 
 export interface UsePlanWorkflowConfigWorkspaceSelectorResult {
   readonly handleValueChange: (value: string) => void;
-  readonly selectedCheckout:
-    PlanRunConfigRepositoryFieldsFragment['checkouts'][number] | undefined;
+  readonly selectedCheckout: PlanRunConfigCheckoutFragment | undefined;
   /**
    * @description A `checkoutId` is recorded but is not among the loaded repositories — the
    * checkout has been de-registered since the plan was created. Deliberately false while

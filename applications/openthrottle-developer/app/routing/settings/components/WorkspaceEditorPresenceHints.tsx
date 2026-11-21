@@ -1,7 +1,7 @@
 import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import type { GetEditorPresenceQuery } from '~/__generated__/graphql';
+import type { EditorPresenceReportFragment } from '~/__generated__/graphql';
 import { EditorPresenceState } from '~/__generated__/graphql';
 import { WorkspaceEditorPresenceChip } from '~/routing/settings/components/WorkspaceEditorPresenceChip';
 import { WORKSPACE_EDITOR_LABELS } from '~/routing/settings/config/workspace-editors';
@@ -10,7 +10,7 @@ import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/data.copy';
 export interface WorkspaceEditorPresenceHintsProps {
   className?: string;
   /** The probe result, or null when the query failed — null renders nothing at all. */
-  presence?: GetEditorPresenceQuery['editorPresence'] | null;
+  presence?: EditorPresenceReportFragment | null;
 }
 
 /**

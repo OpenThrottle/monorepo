@@ -1,4 +1,4 @@
-import type { PlanDetailOutputChunksQuery } from '@openthrottle/openthrottle-developer-codegen';
+import type { PlanOutputChunkFragment } from '@openthrottle/openthrottle-developer-codegen';
 import { TabsContent } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 import { GlobalHeading } from '@openthrottle/react-router-ui-global';
@@ -15,10 +15,8 @@ import {
 } from '~/routing/plans/data/data.copy';
 import { usePlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
 
-type Chunk = PlanDetailOutputChunksQuery['planOutputStreamChunks'][number];
-
 export interface PlanTabOutputProps {
-  chunks: Chunk[];
+  chunks: PlanOutputChunkFragment[];
   className?: string;
 }
 

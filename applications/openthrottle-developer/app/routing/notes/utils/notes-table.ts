@@ -1,6 +1,6 @@
 import { formatDate } from 'date-fns';
 
-import type { NoteCardFragment } from '~/__generated__/graphql';
+import type { Scalars } from '~/__generated__/graphql';
 
 /** First non-empty line of a note (heading markers stripped), truncated to 80. */
 export const notePreviewLabel = (content: string): string => {
@@ -21,7 +21,7 @@ export const notePreviewLabel = (content: string): string => {
 };
 
 /** Formats a note's timestamp as MM/dd/yyyy, or "—" when absent/invalid. */
-export const formatNoteDate = (raw: NoteCardFragment['updatedAt']): string => {
+export const formatNoteDate = (raw: Scalars['DateTime']['output']): string => {
   if (raw == null) {
     return '—';
   }

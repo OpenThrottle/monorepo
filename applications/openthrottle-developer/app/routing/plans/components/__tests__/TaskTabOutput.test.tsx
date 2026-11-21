@@ -3,18 +3,18 @@ import type { RenderResult } from '@testing-library/react';
 import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import type { TaskOutputStreamChunksQuery } from '~/__generated__/graphql';
+import type { PlanOutputChunkFragment } from '~/__generated__/graphql';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 
 import type { TaskTabOutputProps } from '../TaskTabOutput';
 import { TaskTabOutput } from '../TaskTabOutput';
 
-type Chunk = TaskOutputStreamChunksQuery['planOutputStreamChunks'][number];
-
-const chunk = (overrides: Partial<Chunk>): Chunk => {
+const chunk = (
+  overrides: Partial<PlanOutputChunkFragment>,
+): PlanOutputChunkFragment => {
   return {
     __typename: 'PlanOutputStreamChunkObject',
-    content: 'Chunk content',
+    content: 'PlanOutputChunkFragment content',
     createdAt: '2026-02-01T22:00:00.000Z',
     id: 'chunk-1',
     iteration: 1,

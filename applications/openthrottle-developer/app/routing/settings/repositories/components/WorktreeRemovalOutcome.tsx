@@ -1,14 +1,14 @@
 import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
+import type { RemovePlanRunWorktreeResultFragment } from '~/__generated__/graphql';
 import { PlanRunWorktreeTeardownOutcome } from '~/__generated__/graphql';
 import { REMOVE_PLAN_RUN_WORKTREE_COPY } from '~/routing/settings/repositories/data/data.copy';
-import type { RemovePlanRunWorktreeResult } from '~/routing/settings/repositories/types';
 
 export interface WorktreeRemovalOutcomeProps {
   className?: string;
   /** What `removePlanRunWorktree` answered for the row the user acted on. */
-  result: RemovePlanRunWorktreeResult;
+  result: RemovePlanRunWorktreeResultFragment;
 }
 
 /**

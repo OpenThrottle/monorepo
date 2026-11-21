@@ -1,14 +1,15 @@
 import { describe, expect, test } from 'vitest';
 
-import type { PlanRunMetricsEntry } from '../joinPlanRunJobMetrics';
+import type { PlanRunJobMetricsEntryFragment } from '~/__generated__/graphql';
+
 import { joinPlanRunJobMetrics } from '../joinPlanRunJobMetrics';
 
 const FINISHED_ON = Date.UTC(2026, 2, 14, 12, 0, 0);
 
 const entry = (
   jobId: string,
-  overrides: Partial<PlanRunMetricsEntry> = {},
-): PlanRunMetricsEntry => {
+  overrides: Partial<PlanRunJobMetricsEntryFragment> = {},
+): PlanRunJobMetricsEntryFragment => {
   return {
     executionBackend: 'local',
     finishedOn: FINISHED_ON,

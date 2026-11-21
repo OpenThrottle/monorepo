@@ -6,15 +6,11 @@ import {
 } from 'lucide-react';
 
 import type {
-  GetEditorPresenceQuery,
+  EditorPresenceEditorFragment,
   WorkspaceEditorId,
 } from '~/__generated__/graphql';
 import { EditorPresenceState } from '~/__generated__/graphql';
 import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/data.copy';
-
-/** One probed editor as it arrives from the `editorPresence` query. */
-type EditorPresenceEntry =
-  GetEditorPresenceQuery['editorPresence']['editors'][number];
 
 /**
  * @description How loudly a presence state is allowed to speak. `positive` makes a claim,
@@ -104,7 +100,7 @@ export const getEditorPresenceStatus = (
  * @public
  */
 export const buildEditorPresenceIndex = (
-  editors?: readonly EditorPresenceEntry[] | null,
+  editors?: readonly EditorPresenceEditorFragment[] | null,
 ): Map<WorkspaceEditorId, EditorPresenceState> => {
   const index = new Map<WorkspaceEditorId, EditorPresenceState>();
 

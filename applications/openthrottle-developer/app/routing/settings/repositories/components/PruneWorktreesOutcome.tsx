@@ -1,14 +1,14 @@
 import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
+import type { PruneWorktreeCheckoutResultFragment } from '~/__generated__/graphql';
 import { PruneWorktreeCheckoutOutcome } from '~/__generated__/graphql';
 import { MISSING_WORKTREES_COPY } from '~/routing/settings/repositories/data/data.copy';
-import type { PruneWorktreeCheckoutResult } from '~/routing/settings/repositories/types';
 
 export interface PruneWorktreesOutcomeProps {
   className?: string;
   /** One entry per requested checkout id, straight from `pruneWorktreeCheckouts`. */
-  results: readonly PruneWorktreeCheckoutResult[];
+  results: readonly PruneWorktreeCheckoutResultFragment[];
 }
 
 /**

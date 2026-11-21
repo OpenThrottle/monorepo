@@ -39,15 +39,18 @@ fragment UsageTelemetryCoverageMachine on TelemetryMachineCoverageObject {
     message
   }
 }
+fragment UsageTelemetryCoverageReport on TelemetryCoverageObject {
+  currentPluginVersion
+  generatedAt
+  machines {
+    ...UsageTelemetryCoverageMachine
+  }
+  windowDays
+}
 
 query getUsageTelemetryCoverage {
   telemetryCoverage {
-    currentPluginVersion
-    generatedAt
-    machines {
-      ...UsageTelemetryCoverageMachine
-    }
-    windowDays
+    ...UsageTelemetryCoverageReport
   }
 }
 

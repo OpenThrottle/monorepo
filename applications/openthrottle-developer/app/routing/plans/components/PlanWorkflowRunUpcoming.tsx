@@ -1,5 +1,6 @@
 import * as React from 'react';
 
+import type { PlanRunHistoryEntryFragment } from '~/__generated__/graphql';
 import { parseDate } from '~/global/utils/dates';
 import { PlanRunCancelScheduledButton } from '~/routing/plans/components/PlanRunCancelScheduledButton';
 import { PlanRunMetaList } from '~/routing/plans/components/PlanRunMetaList';
@@ -7,7 +8,6 @@ import { PlanRunRescheduleButton } from '~/routing/plans/components/PlanRunResch
 import { PlanRunStatusBadge } from '~/routing/plans/components/PlanRunStatusBadge';
 import { PlanRunTime } from '~/routing/plans/components/PlanRunTime';
 import { PlanWorkflowRunSection } from '~/routing/plans/components/PlanWorkflowRunSection';
-import type { PlanRunAuditRow } from '~/routing/plans/components/PlanWorkflowRunTransparencyAuditTable';
 import { PLAN_RUN_TRANSPARENCY_COPY } from '~/routing/plans/data/data.copy';
 import { PLAN_RUN_UPCOMING_META_FIELDS } from '~/routing/plans/data/data.plan-run-history';
 import type { PlanScheduledRunRef } from '~/routing/plans/utils/plan-run-sections';
@@ -18,7 +18,7 @@ import {
 
 export interface PlanWorkflowRunUpcomingProps {
   readonly planId: string;
-  readonly planRunAuditRows: readonly PlanRunAuditRow[];
+  readonly planRunAuditRows: readonly PlanRunHistoryEntryFragment[];
   /** `plan.scheduledRunId` / `plan.scheduledRunAt`: the backstop when that run is outside the fetched history. */
   readonly scheduledRun: PlanScheduledRunRef;
 }

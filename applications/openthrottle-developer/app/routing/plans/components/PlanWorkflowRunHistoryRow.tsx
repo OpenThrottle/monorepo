@@ -7,13 +7,13 @@ import {
 import { ChevronRightIcon } from 'lucide-react';
 import * as React from 'react';
 
+import type { PlanRunHistoryEntryFragment } from '~/__generated__/graphql';
 import { PlanRunMetaList } from '~/routing/plans/components/PlanRunMetaList';
 import { PlanRunProvenanceCell } from '~/routing/plans/components/PlanRunProvenanceCell';
 import { PlanRunStatusCell } from '~/routing/plans/components/PlanRunStatusCell';
 import { PlanRunTime } from '~/routing/plans/components/PlanRunTime';
 import { PlanWorkflowRunHistoryDetail } from '~/routing/plans/components/PlanWorkflowRunHistoryDetail';
 import { PlanWorkflowRunHistoryRowActions } from '~/routing/plans/components/PlanWorkflowRunHistoryRowActions';
-import type { PlanRunAuditRow } from '~/routing/plans/components/PlanWorkflowRunTransparencyAuditTable';
 import { PLAN_RUN_TRANSPARENCY_COPY } from '~/routing/plans/data/data.copy';
 import {
   PLAN_RUN_HISTORY_COLUMN_COUNT,
@@ -28,7 +28,7 @@ export interface PlanWorkflowRunHistoryRowProps {
   readonly metrics: PlanRunJobMetrics | null;
   /** A continuation run exists for this run (see `collectResumedRunIds`). */
   readonly resumeScheduled: boolean;
-  readonly row: PlanRunAuditRow;
+  readonly row: PlanRunHistoryEntryFragment;
   readonly workflowInput: WorkflowRalphRunOptionsInput;
   readonly workingDirectory: string;
 }

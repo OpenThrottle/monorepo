@@ -1,10 +1,14 @@
+fragment IdRefMatch on IdRefObject {
+  id
+  kind
+  planId
+  planTitle
+  status
+  title
+}
+
 query resolveIdRef($ref: String!) {
   resolveIdRef(ref: $ref) {
-    id
-    kind
-    planId
-    planTitle
-    status
-    title
+    ...IdRefMatch
   }
 }

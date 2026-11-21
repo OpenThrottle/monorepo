@@ -1,3 +1,43 @@
+fragment RepositoryHookTelemetry on RepositoryInspectionHookTelemetryObject {
+  authTokenConfigured
+  endpointConfigured
+  endpointSource
+  producers
+  reason
+  status
+  telemetryDir
+}
+
+fragment RepositoryCheckoutInspection on RepositoryInspectionObject {
+  agentConfig {
+    agentsMd
+    claudeMd
+    cursorRules
+    mcpJson
+    skillsDir
+  }
+  git {
+    currentBranch
+    defaultBranch
+    dirty
+    isRepo
+    linkedWorktrees
+    normalizedRemoteUrl
+  }
+  hookTelemetry {
+    ...RepositoryHookTelemetry
+  }
+  scannedAt
+  stack {
+    languages
+    nxWorkspace
+    packageManager
+    pnpmWorkspace
+    turbo
+  }
+  warnings
+}
+
 fragment RepositoryCheckoutFields on RepositoryCheckoutObject {
   createdAt
   displayName
@@ -5,39 +45,7 @@ fragment RepositoryCheckoutFields on RepositoryCheckoutObject {
   foreignSkillInjectionEnabled
   id
   inspection {
-    agentConfig {
-      agentsMd
-      claudeMd
-      cursorRules
-      mcpJson
-      skillsDir
-    }
-    git {
-      currentBranch
-      defaultBranch
-      dirty
-      isRepo
-      linkedWorktrees
-      normalizedRemoteUrl
-    }
-    hookTelemetry {
-      authTokenConfigured
-      endpointConfigured
-      endpointSource
-      producers
-      reason
-      status
-      telemetryDir
-    }
-    scannedAt
-    stack {
-      languages
-      nxWorkspace
-      packageManager
-      pnpmWorkspace
-      turbo
-    }
-    warnings
+    ...RepositoryCheckoutInspection
   }
   isForeign
   kind
@@ -90,6 +98,55 @@ query getSettingsRepositories {
     ...WorkspaceRepositoryFields
   }
 }
+fragment DiscoveredWorktreeRemoval on WorktreeRemovalObject {
+  agentSession
+  createdAt
+  id
+  outcome
+  parentCommand
+  removedAt
+  result
+}
+
+fragment DiscoveredWorktreeMissingCheckout on MissingWorktreeCheckoutObject {
+  checkoutId
+  lastRemoval {
+    ...DiscoveredWorktreeRemoval
+  }
+  path
+  reason
+  repositoryId
+}
+fragment DiscoveredWorktreeProblem on WorktreeDiscoveryProblemObject {
+  detail
+  kind
+  path
+  repositoryId
+}
+fragment DiscoveredWorktreeScannedRoot on ScannedWorktreeRootObject {
+  baseRoot
+  exists
+  path
+  source
+  worktreeCount
+}
+
+fragment DiscoveredWorktreesScan on DiscoveredWorktreesObject {
+  droppedCount
+  missingCheckouts {
+    ...DiscoveredWorktreeMissingCheckout
+  }
+  problems {
+    ...DiscoveredWorktreeProblem
+  }
+  scannedAt
+  scannedRoots {
+    ...DiscoveredWorktreeScannedRoot
+  }
+  worktrees {
+    ...DiscoveredWorktreeFields
+  }
+}
 
 query getSettingsRepositoriesDiscovery {
   discoveredFolders {
@@ -98,39 +155,7 @@ query getSettingsRepositoriesDiscovery {
     path
   }
   discoveredWorktrees {
-    droppedCount
-    missingCheckouts {
-      checkoutId
-      lastRemoval {
-        agentSession
-        createdAt
-        id
-        outcome
-        parentCommand
-        removedAt
-        result
-      }
-      path
-      reason
-      repositoryId
-    }
-    problems {
-      detail
-      kind
-      path
-      repositoryId
-    }
-    scannedAt
-    scannedRoots {
-      baseRoot
-      exists
-      path
-      source
-      worktreeCount
-    }
-    worktrees {
-      ...DiscoveredWorktreeFields
-    }
+    ...DiscoveredWorktreesScan
   }
 }
 
@@ -154,20 +179,24 @@ mutation pickFolderNative {
   }
 }
 
+fragment AddWorkspaceFolderResult on AddWorkspaceFolderPayloadObject {
+  checkout {
+    ...RepositoryCheckoutFields
+  }
+  project {
+    id
+    name
+  }
+  projectCreated
+  reconciliation
+  repository {
+    ...WorkspaceRepositoryFields
+  }
+}
+
 mutation addWorkspaceFolder($input: AddWorkspaceFolderInput!) {
   addWorkspaceFolder(input: $input) {
-    checkout {
-      ...RepositoryCheckoutFields
-    }
-    project {
-      id
-      name
-    }
-    projectCreated
-    reconciliation
-    repository {
-      ...WorkspaceRepositoryFields
-    }
+    ...AddWorkspaceFolderResult
   }
 }
 
@@ -206,23 +235,31 @@ mutation refreshCheckout($input: RefreshCheckoutInput!) {
   }
 }
 
+fragment PruneWorktreeCheckoutResult on PruneWorktreeCheckoutResultObject {
+  checkoutId
+  outcome
+  path
+}
+
 mutation pruneWorktreeCheckouts($input: PruneWorktreeCheckoutsInput!) {
   pruneWorktreeCheckouts(input: $input) {
     results {
-      checkoutId
-      outcome
-      path
+      ...PruneWorktreeCheckoutResult
     }
   }
 }
 
+fragment RemovePlanRunWorktreeResult on RemovePlanRunWorktreePayloadObject {
+  branch
+  checkoutId
+  detail
+  outcome
+  path
+}
+
 mutation removePlanRunWorktree($checkoutId: ID!) {
   removePlanRunWorktree(checkoutId: $checkoutId) {
-    branch
-    checkoutId
-    detail
-    outcome
-    path
+    ...RemovePlanRunWorktreeResult
   }
 }
 

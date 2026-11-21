@@ -1,3 +1,99 @@
+fragment BlogEditorAuthor on BlogAuthorObject {
+  displayName
+  slug
+}
+
+fragment BlogEditorTag on BlogTagObject {
+  name
+  slug
+}
+
+fragment UpdateBlogPostOutcome on UpdateBlogPostResult {
+  __typename
+  ... on BlogCoverAltRequiredError {
+    message
+  }
+  ... on BlogPostAdminObject {
+    id
+    updatedAt
+  }
+  ... on BlogPostNotFoundError {
+    message
+  }
+  ... on BlogPostPublishPermissionRequiredError {
+    message
+  }
+  ... on BlogPostStaleWriteError {
+    currentUpdatedAt
+    message
+  }
+  ... on BlogReferenceNotFoundError {
+    entity
+    key
+    message
+  }
+  ... on BlogSlugConflictError {
+    message
+    slug
+  }
+}
+
+fragment SetBlogPostTagsOutcome on SetBlogPostTagsResult {
+  __typename
+  ... on BlogPostAdminObject {
+    id
+    updatedAt
+  }
+  ... on BlogPostNotFoundError {
+    message
+  }
+  ... on BlogPostPublishPermissionRequiredError {
+    message
+  }
+  ... on BlogReferenceNotFoundError {
+    entity
+    key
+    message
+  }
+}
+
+fragment PublishBlogPostOutcome on PublishBlogPostResult {
+  __typename
+  ... on BlogPostAdminObject {
+    id
+    publishedAt
+    state
+    updatedAt
+  }
+  ... on BlogPostNotFoundError {
+    message
+  }
+}
+
+fragment UnpublishBlogPostOutcome on UnpublishBlogPostResult {
+  __typename
+  ... on BlogPostAdminObject {
+    id
+    state
+    updatedAt
+  }
+  ... on BlogPostNotFoundError {
+    message
+  }
+}
+
+fragment ArchiveBlogPostOutcome on ArchiveBlogPostResult {
+  __typename
+  ... on BlogPostAdminObject {
+    id
+    state
+    updatedAt
+  }
+  ... on BlogPostNotFoundError {
+    message
+  }
+}
+
 fragment BlogPostEditorPost on BlogPostAdminObject {
   author {
     displayName
@@ -24,8 +120,7 @@ fragment BlogPostEditorPost on BlogPostAdminObject {
 
 query getBlogPostEditor($id: ID!) {
   blogAdminAuthors {
-    displayName
-    slug
+    ...BlogEditorAuthor
   }
   blogAdminPost(id: $id) {
     __typename
@@ -37,103 +132,36 @@ query getBlogPostEditor($id: ID!) {
     }
   }
   blogAdminTags {
-    name
-    slug
+    ...BlogEditorTag
   }
 }
 
 mutation updateBlogPostEditor($input: UpdateBlogPostInput!) {
   updateBlogPost(input: $input) {
-    __typename
-    ... on BlogCoverAltRequiredError {
-      message
-    }
-    ... on BlogPostAdminObject {
-      id
-      updatedAt
-    }
-    ... on BlogPostNotFoundError {
-      message
-    }
-    ... on BlogPostPublishPermissionRequiredError {
-      message
-    }
-    ... on BlogPostStaleWriteError {
-      currentUpdatedAt
-      message
-    }
-    ... on BlogReferenceNotFoundError {
-      entity
-      key
-      message
-    }
-    ... on BlogSlugConflictError {
-      message
-      slug
-    }
+    ...UpdateBlogPostOutcome
   }
 }
 
 mutation setBlogPostEditorTags($input: SetBlogPostTagsInput!) {
   setBlogPostTags(input: $input) {
-    __typename
-    ... on BlogPostAdminObject {
-      id
-      updatedAt
-    }
-    ... on BlogPostNotFoundError {
-      message
-    }
-    ... on BlogPostPublishPermissionRequiredError {
-      message
-    }
-    ... on BlogReferenceNotFoundError {
-      entity
-      key
-      message
-    }
+    ...SetBlogPostTagsOutcome
   }
 }
 
 mutation publishBlogPostEditor($input: PublishBlogPostInput!) {
   publishBlogPost(input: $input) {
-    __typename
-    ... on BlogPostAdminObject {
-      id
-      publishedAt
-      state
-      updatedAt
-    }
-    ... on BlogPostNotFoundError {
-      message
-    }
+    ...PublishBlogPostOutcome
   }
 }
 
 mutation unpublishBlogPostEditor($id: ID!) {
   unpublishBlogPost(id: $id) {
-    __typename
-    ... on BlogPostAdminObject {
-      id
-      state
-      updatedAt
-    }
-    ... on BlogPostNotFoundError {
-      message
-    }
+    ...UnpublishBlogPostOutcome
   }
 }
 
 mutation archiveBlogPostEditor($id: ID!) {
   archiveBlogPost(id: $id) {
-    __typename
-    ... on BlogPostAdminObject {
-      id
-      state
-      updatedAt
-    }
-    ... on BlogPostNotFoundError {
-      message
-    }
+    ...ArchiveBlogPostOutcome
   }
 }

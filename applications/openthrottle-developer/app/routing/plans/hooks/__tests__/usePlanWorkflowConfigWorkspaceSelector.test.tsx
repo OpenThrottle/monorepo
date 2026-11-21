@@ -1,7 +1,10 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
-import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/graphql';
+import type {
+  PlanRunConfigCheckoutFragment,
+  PlanRunConfigRepositoryFieldsFragment,
+} from '~/__generated__/graphql';
 import {
   CHECKOUT_PREFIX,
   CUSTOM_VALUE,
@@ -14,9 +17,10 @@ import {
   type UsePlanWorkflowConfigWorkspaceSelectorOptions,
 } from '../usePlanWorkflowConfigWorkspaceSelector';
 
-type Checkout = PlanRunConfigRepositoryFieldsFragment['checkouts'][number];
-
-const checkout = (id: string, displayName: string): Checkout => {
+const checkout = (
+  id: string,
+  displayName: string,
+): PlanRunConfigCheckoutFragment => {
   return {
     __typename: 'RepositoryCheckoutObject',
     displayName,
@@ -29,7 +33,7 @@ const checkout = (id: string, displayName: string): Checkout => {
 
 const repository = (
   id: string,
-  checkouts: readonly Checkout[],
+  checkouts: readonly PlanRunConfigCheckoutFragment[],
   projectId?: string | null,
 ): PlanRunConfigRepositoryFieldsFragment => {
   return {

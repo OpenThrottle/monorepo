@@ -10,7 +10,7 @@ import {
 import { PlusIcon, Trash2Icon } from 'lucide-react';
 import * as React from 'react';
 
-import type { ScheduleWebhookTriggerFragment } from '~/__generated__/graphql';
+import type { ScheduleWebhookFilterFragment } from '~/__generated__/graphql';
 import { SCHEDULE_WEBHOOK_COPY } from '~/routing/schedule/data/data.copy';
 import {
   WEBHOOK_FILTER_NO_VALUE_OPS,
@@ -21,7 +21,7 @@ import {
 
 export interface ScheduleWebhookFilterRowsProps {
   /** The saved filters to start from; empty on create. */
-  readonly filters: ScheduleWebhookTriggerFragment['filters'];
+  readonly filters: ScheduleWebhookFilterFragment[];
 }
 
 interface FilterRow {

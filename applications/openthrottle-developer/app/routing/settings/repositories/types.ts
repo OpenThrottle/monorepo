@@ -1,36 +1,15 @@
 import type {
-  DiscoveredWorktreeFieldsFragment,
+  DiscoveredWorktreeRemovalFragment,
   GetSettingsRepositoriesDiscoveryQuery,
-  PruneWorktreeCheckoutsMutation,
-  RemovePlanRunWorktreeMutation,
-  WorkspaceRepositoryFieldsFragment,
+  MissingWorktreeCheckoutReason,
+  RepositoryCheckoutFieldsFragment,
+  WorktreeActivity,
 } from '~/__generated__/graphql';
 import type {
   RepositoriesSortBy,
   RepositoriesSortOrder,
 } from '~/routing/settings/repositories/config/repositories.defaults';
 import type { CheckoutDrift } from '~/routing/settings/utils/driftLabels';
-
-/**
- * @description A single checkout as it arrives on the repositories index query.
- * Derived from the workspace-repository fragment rather than
- * `RepositoryCheckoutFieldsFragment` so the row model stays exactly in step with
- * the fields this route actually selects.
- */
-export type RepositoryCheckout =
-  WorkspaceRepositoryFieldsFragment['checkouts'][number];
-
-/**
- * @description One worktree the server found on disk, registered or not.
- */
-export type DiscoveredWorktree = DiscoveredWorktreeFieldsFragment;
-
-/**
- * @description The whole worktree-scan payload: the worktrees plus the scan-level
- * facts (where it looked, what it could not read, what the cap dropped).
- */
-export type DiscoveredWorktreesResult =
-  GetSettingsRepositoriesDiscoveryQuery['discoveredWorktrees'];
 
 /**
  * @description The deferred half of the repositories loader: both on-disk scans (worktrees and
@@ -75,40 +54,12 @@ export interface RepositoriesView {
   readonly totalCount: number;
 }
 
-/**
- * @description A registered worktree checkout with no live worktree behind it — the row
- * outlived the directory (removed outside OpenThrottle, or by a teardown that predates
- * deregistration).
- */
-export type MissingWorktreeCheckout =
-  DiscoveredWorktreesResult['missingCheckouts'][number];
-
-/** @description One reported worktree removal, as attached to a missing checkout. */
-export type WorktreeRemoval = NonNullable<
-  MissingWorktreeCheckout['lastRemoval']
->;
-
-/**
- * @description One directory the scan looked in — a repository's `<root>/<org>/<repo>`
- * folder — carrying the configured `baseRoot` above it and the rung that set it.
- */
-export type ScannedWorktreeRoot =
-  DiscoveredWorktreesResult['scannedRoots'][number];
-
-/** @description One per-id outcome from the `pruneWorktreeCheckouts` mutation. */
-export type PruneWorktreeCheckoutResult =
-  PruneWorktreeCheckoutsMutation['pruneWorktreeCheckouts']['results'][number];
-
 /** @description The last `refreshCheckout` result the page reports drift and merges from. */
 export interface RefreshedCheckout {
   checkoutId: string;
   drift: CheckoutDrift;
   merged: boolean;
 }
-
-/** @description What `removePlanRunWorktree` answered for one worktree. */
-export type RemovePlanRunWorktreeResult =
-  RemovePlanRunWorktreeMutation['removePlanRunWorktree'];
 
 /**
  * @description One table row = one thing on disk, carrying enough of its parent
@@ -126,10 +77,10 @@ export interface RepositoryCheckoutRow {
    * discovered worktree (a primary checkout, or a registered worktree that is no
    * longer on disk).
    */
-  activity: DiscoveredWorktree['activity'] | null;
+  activity: WorktreeActivity | null;
   branch: string | null;
   /** The registered checkout, or null for a worktree found on disk but never registered. */
-  checkout: RepositoryCheckout | null;
+  checkout: RepositoryCheckoutFieldsFragment | null;
   children?: RepositoryCheckoutRow[];
   /** Label for the row: the checkout's display name, or the worktree's directory name. */
   displayName: string;
@@ -146,14 +97,14 @@ export interface RepositoryCheckoutRow {
    * The latest removal ot-worktree reported for a {@link missing} row's path — who removed it and
    * how — or null when none was reported (or the row is not missing).
    */
-  lastRemoval: WorktreeRemoval | null;
+  lastRemoval: DiscoveredWorktreeRemovalFragment | null;
   /**
    * A registered worktree checkout the last scan could not match to a live worktree — the row
    * outlived the directory. Hidden by default and prunable; always false for a primary checkout.
    */
   missing: boolean;
   /** Why {@link missing} is set, or null when it is not. */
-  missingReason: MissingWorktreeCheckout['reason'] | null;
+  missingReason: MissingWorktreeCheckoutReason | null;
   /**
    * The registered folder is not a git checkout at all. Reported per repository by
    * discovery, so it belongs on the row rather than in a page-level list.

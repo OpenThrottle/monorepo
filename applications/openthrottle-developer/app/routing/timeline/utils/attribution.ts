@@ -10,15 +10,16 @@
  * the data.
  */
 
+import type { TimelineMarkerRowFragment } from '~/__generated__/graphql';
+
 import { TimelineMarkerKind } from '../config/kinds';
-import type { TimelineMarker } from '../types';
 
 /**
  * TRUE when at least one GRILLING marker in `markers` carries no `userId` and
  * is therefore placed by branch rather than by who ran it.
  */
 export const hasUnattributedGrilling = (
-  markers: readonly TimelineMarker[],
+  markers: readonly TimelineMarkerRowFragment[],
 ): boolean => {
   return markers.some(
     (marker) =>

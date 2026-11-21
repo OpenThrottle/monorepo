@@ -1,4 +1,4 @@
-import type { QueueJobLogEvent } from '~/routing/queues/types';
+import type { QueueJobLogEventFragment } from '~/__generated__/graphql';
 
 const formatTimestamp = (value: unknown): string => {
   if (typeof value !== 'string' && typeof value !== 'number') {
@@ -12,7 +12,9 @@ const formatTimestamp = (value: unknown): string => {
  * @description Render one job-log event as a single fixed-width console line
  * (`<timestamp> <LEVEL> <source>  <message>`) for display and clipboard copy.
  */
-export const formatQueueJobLogLine = (event: QueueJobLogEvent): string => {
+export const formatQueueJobLogLine = (
+  event: QueueJobLogEventFragment,
+): string => {
   const ts = formatTimestamp(event.timestamp);
   return `${ts} ${event.level.toUpperCase().padEnd(5)} ${event.source}  ${event.message}`;
 };

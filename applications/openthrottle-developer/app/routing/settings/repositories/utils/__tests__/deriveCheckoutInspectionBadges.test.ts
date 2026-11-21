@@ -1,12 +1,12 @@
 import { describe, expect, test } from 'vitest';
 
-import type { RepositoryCheckoutFieldsFragment } from '~/__generated__/graphql';
+import type { RepositoryCheckoutInspectionFragment } from '~/__generated__/graphql';
 
 import { deriveCheckoutInspectionBadges } from '../deriveCheckoutInspectionBadges';
 
-type CheckoutInspection = RepositoryCheckoutFieldsFragment['inspection'];
-
-const inspection: NonNullable<CheckoutInspection> = {
+const inspection: NonNullable<
+  RepositoryCheckoutInspectionFragment | null | undefined
+> = {
   agentConfig: {
     agentsMd: true,
     claudeMd: true,

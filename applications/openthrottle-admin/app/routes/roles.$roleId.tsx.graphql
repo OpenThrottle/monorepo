@@ -1,13 +1,17 @@
+fragment RoleDetailsPermission on PermissionObject {
+  createdAt
+  description
+  id
+  name
+}
+
 fragment RoleDetails on RoleObject {
   createdAt
   description
   id
   name
   permissions {
-    createdAt
-    description
-    id
-    name
+    ...RoleDetailsPermission
   }
   updatedAt
 }

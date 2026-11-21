@@ -3,7 +3,11 @@ import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { ActivityIcon } from 'lucide-react';
 import * as React from 'react';
 
-import type { TimelineLaneGrouping } from '~/__generated__/graphql';
+import type {
+  TimelineLaneGrouping,
+  TimelineMarkerRowFragment,
+  TimelineSpanRowFragment,
+} from '~/__generated__/graphql';
 import type { TimelineWindowPreset } from '~/routing/timeline/config/defaults';
 import {
   TIMELINE_EMPTY_COPY,
@@ -11,9 +15,7 @@ import {
   TIMELINE_TRUNCATION_COPY,
 } from '~/routing/timeline/data/data.copy';
 import type {
-  TimelineMarker,
   TimelineMarkerCluster,
-  TimelineSpan,
   TimelineTruncation,
 } from '~/routing/timeline/types';
 import { hasUnattributedGrilling } from '~/routing/timeline/utils/attribution';
@@ -25,11 +27,11 @@ import { TimelineLegend } from './TimelineLegend';
 
 export interface TimelineScreenProps {
   readonly grouping: TimelineLaneGrouping;
-  readonly markers: readonly TimelineMarker[];
+  readonly markers: readonly TimelineMarkerRowFragment[];
   readonly selectedBranch: string | null;
   readonly selectedMarkerKinds: readonly string[] | null;
   readonly selectedSpanKinds: readonly string[] | null;
-  readonly spans: readonly TimelineSpan[];
+  readonly spans: readonly TimelineSpanRowFragment[];
   readonly truncation: readonly TimelineTruncation[];
   readonly windowFromIso: string;
   readonly windowPreset: TimelineWindowPreset;
@@ -53,9 +55,8 @@ export const TimelineScreen = (
   } = props;
 
   // Hooks
-  const [selectedSpan, setSelectedSpan] = React.useState<TimelineSpan | null>(
-    null,
-  );
+  const [selectedSpan, setSelectedSpan] =
+    React.useState<TimelineSpanRowFragment | null>(null);
   const [selectedCluster, setSelectedCluster] =
     React.useState<TimelineMarkerCluster | null>(null);
 
@@ -65,7 +66,7 @@ export const TimelineScreen = (
   const hasTruncation = truncatedKinds.length > 0;
 
   // Handlers
-  const handleSelectSpan = (span: TimelineSpan): void => {
+  const handleSelectSpan = (span: TimelineSpanRowFragment): void => {
     setSelectedCluster(null);
     setSelectedSpan(span);
   };

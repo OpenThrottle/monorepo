@@ -1,17 +1,18 @@
-import type { WorkspaceRepositoryFieldsFragment } from '~/__generated__/graphql';
+import type {
+  DiscoveredWorktreeFieldsFragment,
+  DiscoveredWorktreeMissingCheckoutFragment,
+  DiscoveredWorktreeRemovalFragment,
+  DiscoveredWorktreeScannedRootFragment,
+  DiscoveredWorktreesScanFragment,
+  RepositoryCheckoutFieldsFragment,
+  RepositoryCheckoutInspectionFragment,
+  WorkspaceRepositoryFieldsFragment,
+} from '~/__generated__/graphql';
 import {
   MissingWorktreeCheckoutReason,
   WorktreeActivity,
   WorktreeRootSource,
 } from '~/__generated__/graphql';
-import type {
-  DiscoveredWorktree,
-  DiscoveredWorktreesResult,
-  MissingWorktreeCheckout,
-  RepositoryCheckout,
-  ScannedWorktreeRoot,
-  WorktreeRemoval,
-} from '~/routing/settings/repositories/types';
 
 export interface MockCheckoutOverrides {
   branch?: string | null;
@@ -28,7 +29,7 @@ export interface MockCheckoutOverrides {
 }
 
 export interface MockDiscoveredWorktreeOverrides {
-  activity?: DiscoveredWorktree['activity'];
+  activity?: WorktreeActivity;
   branch?: string | null;
   checkoutId?: string | null;
   name: string;
@@ -42,7 +43,7 @@ export interface MockDiscoveredWorktreeOverrides {
 }
 
 export interface MockRepositoryOverrides {
-  checkouts?: RepositoryCheckout[];
+  checkouts?: RepositoryCheckoutFieldsFragment[];
   defaultBranch?: string | null;
   id: string;
   name?: string;
@@ -52,7 +53,7 @@ export interface MockRepositoryOverrides {
 
 const mockInspection = (
   branch: string | null,
-): RepositoryCheckout['inspection'] => {
+): RepositoryCheckoutInspectionFragment | null | undefined => {
   if (!branch) {
     return null;
   }
@@ -92,7 +93,7 @@ const mockInspection = (
  */
 export const mockCheckout = (
   overrides: MockCheckoutOverrides,
-): RepositoryCheckout => {
+): RepositoryCheckoutFieldsFragment => {
   const {
     branch = null,
     displayName = overrides.id,
@@ -157,7 +158,7 @@ export const mockRepository = (
  */
 export const mockDiscoveredWorktree = (
   overrides: MockDiscoveredWorktreeOverrides,
-): DiscoveredWorktree => {
+): DiscoveredWorktreeFieldsFragment => {
   const {
     activity = WorktreeActivity.Idle,
     branch = `openthrottle/${overrides.name}`,
@@ -192,8 +193,8 @@ export const mockDiscoveredWorktree = (
  * common case: `worktree-1` of `repo-1`, its folder gone entirely.
  */
 export const mockMissingCheckout = (
-  overrides: Partial<MissingWorktreeCheckout> = {},
-): MissingWorktreeCheckout => {
+  overrides: Partial<DiscoveredWorktreeMissingCheckoutFragment> = {},
+): DiscoveredWorktreeMissingCheckoutFragment => {
   return {
     checkoutId: 'worktree-1',
     lastRemoval: null,
@@ -209,8 +210,8 @@ export const mockMissingCheckout = (
  * the default configured root, existing and empty.
  */
 export const mockScannedRoot = (
-  overrides: Partial<ScannedWorktreeRoot> = {},
-): ScannedWorktreeRoot => {
+  overrides: Partial<DiscoveredWorktreeScannedRootFragment> = {},
+): DiscoveredWorktreeScannedRootFragment => {
   return {
     baseRoot: '/Users/dev/.openthrottle/worktrees',
     exists: true,
@@ -227,8 +228,8 @@ export const mockScannedRoot = (
  * to model the "no root to scan" state and `problems` to model a partial scan.
  */
 export const mockDiscoveredWorktrees = (
-  overrides: Partial<DiscoveredWorktreesResult> = {},
-): DiscoveredWorktreesResult => {
+  overrides: Partial<DiscoveredWorktreesScanFragment> = {},
+): DiscoveredWorktreesScanFragment => {
   return {
     droppedCount: 0,
     missingCheckouts: [],
@@ -245,8 +246,8 @@ export const mockDiscoveredWorktrees = (
  * session, record kept because a plan run still pointed at it.
  */
 export const mockWorktreeRemoval = (
-  overrides: Partial<WorktreeRemoval> = {},
-): WorktreeRemoval => {
+  overrides: Partial<DiscoveredWorktreeRemovalFragment> = {},
+): DiscoveredWorktreeRemovalFragment => {
   return {
     agentSession: 'session-1',
     createdAt: '2026-11-15T17:00:05.000Z',

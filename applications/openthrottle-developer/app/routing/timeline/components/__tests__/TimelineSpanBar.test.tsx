@@ -5,9 +5,9 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
 
+import type { TimelineSpanRowFragment } from '~/__generated__/graphql';
 import { TimelineSpanKind } from '~/__generated__/graphql';
 import { TIMELINE_SPAN_TOOLTIP_COPY } from '~/routing/timeline/data/data.copy';
-import type { TimelineSpan } from '~/routing/timeline/types';
 import { createTimelineScale } from '~/routing/timeline/utils/scale';
 import { spanRect } from '~/routing/timeline/utils/span-geometry';
 
@@ -19,7 +19,9 @@ const scale = createTimelineScale({
   width: 1440,
 });
 
-const span = (overrides: Partial<TimelineSpan> = {}): TimelineSpan => {
+const span = (
+  overrides: Partial<TimelineSpanRowFragment> = {},
+): TimelineSpanRowFragment => {
   return {
     backend: 'claude',
     branch: null,
@@ -41,8 +43,8 @@ const span = (overrides: Partial<TimelineSpan> = {}): TimelineSpan => {
 };
 
 const renderBar = (
-  value: TimelineSpan,
-  onSelect?: (selected: TimelineSpan) => void,
+  value: TimelineSpanRowFragment,
+  onSelect?: (selected: TimelineSpanRowFragment) => void,
 ): RenderResult => {
   const Component = () => {
     return (

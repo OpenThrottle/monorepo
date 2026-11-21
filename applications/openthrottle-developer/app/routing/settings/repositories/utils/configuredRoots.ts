@@ -1,6 +1,6 @@
+import type { DiscoveredWorktreeScannedRootFragment } from '~/__generated__/graphql';
 import { WorktreeRootSource } from '~/__generated__/graphql';
 import { WORKTREE_DISCOVERY_COPY } from '~/routing/settings/repositories/data/data.copy';
-import type { ScannedWorktreeRoot } from '~/routing/settings/repositories/types';
 
 /** One configured worktree root, as a person set it, plus where the value came from. */
 export interface ConfiguredWorktreeRoot {
@@ -31,7 +31,7 @@ const sourceLabel = (source: WorktreeRootSource): string => {
  * every source, because the path alone cannot say which one was read.
  */
 export const configuredRoots = (
-  scannedRoots: readonly ScannedWorktreeRoot[],
+  scannedRoots: readonly DiscoveredWorktreeScannedRootFragment[],
 ): readonly ConfiguredWorktreeRoot[] => {
   const sourcesByRoot = new Map<string, WorktreeRootSource[]>();
 

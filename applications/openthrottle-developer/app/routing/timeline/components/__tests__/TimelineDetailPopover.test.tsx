@@ -4,6 +4,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
+import type { TimelineSpanRowFragment } from '~/__generated__/graphql';
 import { TimelineMarkerKind } from '~/__generated__/graphql';
 import {
   TIMELINE_DETAIL_COPY,
@@ -13,12 +14,11 @@ import {
   TIMELINE_FIXTURE_MARKERS,
   TIMELINE_FIXTURE_SPANS,
 } from '~/routing/timeline/data/data.fixtures';
-import type { TimelineSpan } from '~/routing/timeline/types';
 
 import type { TimelineDetailPopoverProps } from '../TimelineDetailPopover';
 import { TimelineDetailPopover } from '../TimelineDetailPopover';
 
-const spanById = (id: string): TimelineSpan => {
+const spanById = (id: string): TimelineSpanRowFragment => {
   const span = TIMELINE_FIXTURE_SPANS.find((entry) => entry.id === id);
   if (span === undefined) throw new Error(`fixture span ${id} is missing`);
 

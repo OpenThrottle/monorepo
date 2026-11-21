@@ -1,11 +1,14 @@
 import { describe, expect, test } from 'vitest';
 
+import type {
+  DiscoveredWorktreeProblemFragment,
+  DiscoveredWorktreeScannedRootFragment,
+} from '~/__generated__/graphql';
 import {
   WorktreeDiscoveryProblemKind,
   WorktreeRootSource,
 } from '~/__generated__/graphql';
 import { mockDiscoveredWorktrees } from '~/routing/settings/repositories/testing/mock-repositories';
-import type { DiscoveredWorktreesResult } from '~/routing/settings/repositories/types';
 
 import {
   summarizeDiscovery,
@@ -14,8 +17,8 @@ import {
 
 const problem = (
   kind: WorktreeDiscoveryProblemKind,
-  overrides: Partial<DiscoveredWorktreesResult['problems'][number]> = {},
-): DiscoveredWorktreesResult['problems'][number] => {
+  overrides: Partial<DiscoveredWorktreeProblemFragment> = {},
+): DiscoveredWorktreeProblemFragment => {
   return {
     detail: 'something happened',
     kind,
@@ -26,8 +29,8 @@ const problem = (
 };
 
 const root = (
-  overrides: Partial<DiscoveredWorktreesResult['scannedRoots'][number]> = {},
-): DiscoveredWorktreesResult['scannedRoots'][number] => {
+  overrides: Partial<DiscoveredWorktreeScannedRootFragment> = {},
+): DiscoveredWorktreeScannedRootFragment => {
   return {
     baseRoot: '/srv/worktrees',
     exists: true,

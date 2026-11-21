@@ -12,20 +12,22 @@ import {
 import { HistoryIcon } from 'lucide-react';
 import * as React from 'react';
 
+import type {
+  PlanRunHistoryEntryFragment,
+  PlanRunJobMetricsEntryFragment,
+} from '~/__generated__/graphql';
 import { PlanWorkflowRunCliDebug } from '~/routing/plans/components/PlanWorkflowRunCliDebug';
 import { PlanWorkflowRunLatest } from '~/routing/plans/components/PlanWorkflowRunLatest';
-import type { PlanRunAuditRow } from '~/routing/plans/components/PlanWorkflowRunTransparencyAuditTable';
 import { PlanWorkflowRunTransparencyAuditTable } from '~/routing/plans/components/PlanWorkflowRunTransparencyAuditTable';
 import { PlanWorkflowRunUpcoming } from '~/routing/plans/components/PlanWorkflowRunUpcoming';
 import { PLAN_RUN_TRANSPARENCY_COPY } from '~/routing/plans/data/data.copy';
 import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
-import type { PlanRunMetricsEntry } from '~/routing/plans/utils/joinPlanRunJobMetrics';
 
 export interface PlanWorkflowRunTransparencyProps {
   readonly planId: string;
-  readonly planRunAuditRows: PlanRunAuditRow[];
+  readonly planRunAuditRows: PlanRunHistoryEntryFragment[];
   /** Completed-job metrics; Run history joins them onto rows by job id. */
-  readonly planRunMetrics: readonly PlanRunMetricsEntry[];
+  readonly planRunMetrics: readonly PlanRunJobMetricsEntryFragment[];
   /** `plan.scheduledRunAt`: the fire time of {@link scheduledRunId}. */
   readonly scheduledRunAt: string | null;
   /** `plan.scheduledRunId`: a scheduled run can exist outside the fetched history window. */

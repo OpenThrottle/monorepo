@@ -12,12 +12,6 @@ import type {
 
 import type { TimelineMarkerKind, TimelineSpanKind } from './config/kinds';
 
-/** A duration row exactly as the server returned it. */
-export type TimelineSpan = TimelineSpanRowFragment;
-
-/** An instant row exactly as the server returned it. */
-export type TimelineMarker = TimelineMarkerRowFragment;
-
 /** Per-kind row count and truncation flag. */
 export type TimelineTruncation = {
   readonly kind: string;
@@ -27,7 +21,7 @@ export type TimelineTruncation = {
 
 /** A span placed into a lane sub-row by the interval packer. */
 export type PlacedTimelineSpan = {
-  readonly span: TimelineSpan;
+  readonly span: TimelineSpanRowFragment;
   /** Zero-based sub-row within the lane; grows only when spans overlap. */
   readonly subRow: number;
 };
@@ -37,7 +31,7 @@ export type TimelineMarkerCluster = {
   /** Representative timestamp — the earliest in the cluster. */
   readonly at: string;
   readonly kind: TimelineMarkerKind;
-  readonly markers: readonly TimelineMarker[];
+  readonly markers: readonly TimelineMarkerRowFragment[];
 };
 
 /** One lane's fully-laid-out contents. */

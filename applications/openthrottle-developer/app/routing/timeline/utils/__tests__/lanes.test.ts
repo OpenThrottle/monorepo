@@ -6,9 +6,12 @@
 
 import { describe, expect, it } from 'vitest';
 
+import type {
+  TimelineMarkerRowFragment,
+  TimelineSpanRowFragment,
+} from '~/__generated__/graphql';
 import { TimelineMarkerKind, TimelineSpanKind } from '~/__generated__/graphql';
 
-import type { TimelineMarker, TimelineSpan } from '../../types';
 import {
   buildTimelineLanes,
   clusterMarkers,
@@ -24,8 +27,8 @@ const span = (
   id: string,
   startsAt: string,
   endsAt: string,
-  overrides: Partial<TimelineSpan> = {},
-): TimelineSpan => {
+  overrides: Partial<TimelineSpanRowFragment> = {},
+): TimelineSpanRowFragment => {
   return {
     backend: null,
     branch: null,
@@ -49,8 +52,8 @@ const span = (
 const marker = (
   id: string,
   at: string,
-  overrides: Partial<TimelineMarker> = {},
-): TimelineMarker => {
+  overrides: Partial<TimelineMarkerRowFragment> = {},
+): TimelineMarkerRowFragment => {
   return {
     at,
     branch: null,
