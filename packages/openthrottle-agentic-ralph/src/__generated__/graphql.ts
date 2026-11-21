@@ -8852,6 +8852,32 @@ export type PlanFragment = {
   updatedAt: any;
 };
 
+export type PlanWithTagsFragment = {
+  __typename?: 'PlanObject';
+  assignee?: string | null;
+  author: string;
+  category: string;
+  completedAt?: any | null;
+  createdAt: any;
+  description?: string | null;
+  id: string;
+  jobRunHooksJson: string;
+  project?: string | null;
+  projectId?: string | null;
+  projectSortOrder?: number | null;
+  runConfigJson: string;
+  status: string;
+  summary?: string | null;
+  title: string;
+  updatedAt: any;
+  tags: Array<{
+    __typename?: 'PlanTagObject';
+    dimension: string;
+    source: string;
+    tag: string;
+  }>;
+};
+
 export type TaskFragment = {
   __typename?: 'TaskObject';
   assignee?: string | null;
@@ -10077,6 +10103,66 @@ export const PlanFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<PlanFragment, unknown>;
+export const PlanWithTagsFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanWithTags' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'FragmentSpread', name: { kind: 'Name', value: 'Plan' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'tags' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'dimension' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'Plan' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'author' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'completedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'jobRunHooksJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'project' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectSortOrder' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<PlanWithTagsFragment, unknown>;
 export const TaskFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -12256,25 +12342,7 @@ export const GetPlanDocument = {
               selections: [
                 {
                   kind: 'FragmentSpread',
-                  name: { kind: 'Name', value: 'Plan' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'tags' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'dimension' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'source' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
-                    ],
-                  },
+                  name: { kind: 'Name', value: 'PlanWithTags' },
                 },
               ],
             },
@@ -12308,6 +12376,32 @@ export const GetPlanDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
           { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanWithTags' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'FragmentSpread', name: { kind: 'Name', value: 'Plan' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'tags' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'dimension' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+              ],
+            },
+          },
         ],
       },
     },

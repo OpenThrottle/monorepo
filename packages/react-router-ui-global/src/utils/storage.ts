@@ -1,5 +1,5 @@
 import { isRecord } from '@openthrottle/nodejs-utils';
-import type { GetRootMetricsQuery } from '@openthrottle/openthrottle-developer-codegen';
+import type { RootMetricsFragment } from '@openthrottle/openthrottle-developer-codegen';
 import { APP_NAME } from '@openthrottle/react-router-utils';
 
 import {
@@ -8,7 +8,7 @@ import {
   GLOBAL_METRICS_VALID_INTERVALS,
 } from '../config/index';
 
-type ServerMetricsSnapshot = GetRootMetricsQuery['serverMetrics'];
+type ServerMetricsSnapshot = RootMetricsFragment;
 
 /**
  * @description Namespaced storage key; bump suffix when the on-disk JSON shape changes.

@@ -5,7 +5,7 @@
 // import { ADMIN_PATHS, dataNavigation } from '~/global/data/data.navigation';
 
 import type {
-  GetRootMetricsQuery,
+  RootMetricsFragment,
   ServerHealthObject,
 } from '@openthrottle/openthrottle-developer-codegen';
 import type { LinkProps } from 'react-router';
@@ -117,7 +117,7 @@ export const formatCpuMs = (value: number): number => {
  * 12340 ms`). Returns an em-dash placeholder when no sample is available yet.
  */
 export const formatMetricsSummary = (
-  metrics: GetRootMetricsQuery['serverMetrics'] | null | undefined,
+  metrics: RootMetricsFragment | null | undefined,
 ): string => {
   if (metrics == null) return '—';
 

@@ -22,3 +22,28 @@ fragment BlogPostSummary on BlogPostObject {
   }
   title
 }
+
+fragment BlogPostDetail on BlogPostObject {
+  author {
+    bio
+  }
+  ...BlogPostSummary
+  bodyMarkdown
+  seoDescription
+  seoTitle
+  updatedAt
+}
+
+fragment BlogPostSummaryPage on BlogPostListResult {
+  endCursor
+  hasNextPage
+  items {
+    ...BlogPostSummary
+  }
+}
+
+fragment BlogTagDetail on BlogTagObject {
+  description
+  name
+  slug
+}

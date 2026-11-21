@@ -1,7 +1,7 @@
 import type {
-  BlogPostQuery,
+  BlogPostDetailFragment,
   BlogPostSummaryFragment,
-  BlogTagQuery,
+  BlogTagDetailFragment,
 } from '~/__generated__/graphql';
 
 export const MOCK_BLOG_POST_SUMMARY: BlogPostSummaryFragment = {
@@ -20,7 +20,7 @@ export const MOCK_BLOG_POST_SUMMARY: BlogPostSummaryFragment = {
   title: 'From plans to commits',
 };
 
-export const MOCK_BLOG_POST_DETAIL: NonNullable<BlogPostQuery['blogPost']> = {
+export const MOCK_BLOG_POST_DETAIL: BlogPostDetailFragment = {
   ...MOCK_BLOG_POST_SUMMARY,
   author: {
     avatarUrl: null,
@@ -34,7 +34,7 @@ export const MOCK_BLOG_POST_DETAIL: NonNullable<BlogPostQuery['blogPost']> = {
   updatedAt: '2026-03-06T10:00:00.000Z',
 };
 
-export const MOCK_BLOG_TAG: BlogTagQuery['blogTags'][number] = {
+export const MOCK_BLOG_TAG: BlogTagDetailFragment = {
   description: 'Writing about agents.',
   name: 'Agents',
   slug: 'agents',

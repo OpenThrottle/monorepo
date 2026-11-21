@@ -8925,6 +8925,18 @@ export type BlogTagQuery = {
   }>;
 };
 
+export type BlogFeedPostFragment = {
+  __typename?: 'BlogPostObject';
+  excerpt?: string | null;
+  publishedAt?: any | null;
+  seoDescription?: string | null;
+  slug: string;
+  title: string;
+  updatedAt: any;
+  author?: { __typename?: 'BlogAuthorObject'; displayName: string } | null;
+  tags: Array<{ __typename?: 'BlogTagObject'; name: string }>;
+};
+
 export type BlogFeedQueryVariables = Exact<{
   first?: Scalars['Int']['input'];
 }>;
@@ -8992,6 +9004,105 @@ export type BlogPostSummaryFragment = {
   tags: Array<{ __typename?: 'BlogTagObject'; name: string; slug: string }>;
 };
 
+export type BlogPostDetailFragment = {
+  __typename?: 'BlogPostObject';
+  bodyMarkdown: string;
+  seoDescription?: string | null;
+  seoTitle?: string | null;
+  updatedAt: any;
+  coverImageAlt?: string | null;
+  coverImageUrl?: string | null;
+  excerpt?: string | null;
+  id: string;
+  publishedAt?: any | null;
+  readingTimeMinutes: number;
+  slug: string;
+  title: string;
+  author?: {
+    __typename?: 'BlogAuthorObject';
+    bio?: string | null;
+    avatarUrl?: string | null;
+    displayName: string;
+    slug: string;
+  } | null;
+  tags: Array<{ __typename?: 'BlogTagObject'; name: string; slug: string }>;
+};
+
+export type BlogPostSummaryPageFragment = {
+  __typename?: 'BlogPostListResult';
+  endCursor?: string | null;
+  hasNextPage: boolean;
+  items: Array<{
+    __typename?: 'BlogPostObject';
+    coverImageAlt?: string | null;
+    coverImageUrl?: string | null;
+    excerpt?: string | null;
+    id: string;
+    publishedAt?: any | null;
+    readingTimeMinutes: number;
+    slug: string;
+    title: string;
+    author?: {
+      __typename?: 'BlogAuthorObject';
+      avatarUrl?: string | null;
+      displayName: string;
+      slug: string;
+    } | null;
+    tags: Array<{ __typename?: 'BlogTagObject'; name: string; slug: string }>;
+  }>;
+};
+
+export type BlogTagDetailFragment = {
+  __typename?: 'BlogTagObject';
+  description?: string | null;
+  name: string;
+  slug: string;
+};
+
+export const BlogFeedPostFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'BlogFeedPost' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'BlogPostObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'author' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'excerpt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'publishedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'seoDescription' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'tags' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<BlogFeedPostFragment, unknown>;
 export const BlogPostSummaryFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -9044,69 +9155,114 @@ export const BlogPostSummaryFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<BlogPostSummaryFragment, unknown>;
-export const BlogPostDocument = {
+export const BlogPostDetailFragmentDoc = {
   kind: 'Document',
   definitions: [
     {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'BlogPost' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: { kind: 'Variable', name: { kind: 'Name', value: 'slug' } },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'String' },
-            },
-          },
-        },
-      ],
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'BlogPostDetail' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'BlogPostObject' },
+      },
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
           {
             kind: 'Field',
-            name: { kind: 'Name', value: 'blogPost' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'slug' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'slug' },
-                },
-              },
-            ],
+            name: { kind: 'Name', value: 'author' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'bio' } },
+              ],
+            },
+          },
+          {
+            kind: 'FragmentSpread',
+            name: { kind: 'Name', value: 'BlogPostSummary' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'bodyMarkdown' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'seoDescription' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'seoTitle' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'BlogPostSummary' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'BlogPostObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'author' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'avatarUrl' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'coverImageAlt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'coverImageUrl' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'excerpt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'publishedAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'readingTimeMinutes' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'tags' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<BlogPostDetailFragment, unknown>;
+export const BlogPostSummaryPageFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'BlogPostSummaryPage' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'BlogPostListResult' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'endCursor' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hasNextPage' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'items' },
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'author' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'bio' } },
-                    ],
-                  },
-                },
-                {
                   kind: 'FragmentSpread',
                   name: { kind: 'Name', value: 'BlogPostSummary' },
                 },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'bodyMarkdown' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'seoDescription' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'seoTitle' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
               ],
             },
           },
@@ -9157,6 +9313,156 @@ export const BlogPostDocument = {
             },
           },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<BlogPostSummaryPageFragment, unknown>;
+export const BlogTagDetailFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'BlogTagDetail' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'BlogTagObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<BlogTagDetailFragment, unknown>;
+export const BlogPostDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'BlogPost' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'slug' } },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'blogPost' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'slug' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'slug' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'BlogPostDetail' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'BlogPostSummary' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'BlogPostObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'author' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'avatarUrl' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'coverImageAlt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'coverImageUrl' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'excerpt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'publishedAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'readingTimeMinutes' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'tags' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'BlogPostDetail' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'BlogPostObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'author' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'bio' } },
+              ],
+            },
+          },
+          {
+            kind: 'FragmentSpread',
+            name: { kind: 'Name', value: 'BlogPostSummary' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'bodyMarkdown' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'seoDescription' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'seoTitle' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
         ],
       },
     },
@@ -9218,20 +9524,9 @@ export const BlogIndexDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'endCursor' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'hasNextPage' } },
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'items' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'FragmentSpread',
-                        name: { kind: 'Name', value: 'BlogPostSummary' },
-                      },
-                    ],
-                  },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'BlogPostSummaryPage' },
                 },
               ],
             },
@@ -9283,6 +9578,34 @@ export const BlogIndexDocument = {
             },
           },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'BlogPostSummaryPage' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'BlogPostListResult' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'endCursor' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hasNextPage' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'items' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'BlogPostSummary' },
+                },
+              ],
+            },
+          },
         ],
       },
     },
@@ -9366,20 +9689,9 @@ export const BlogTagDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'endCursor' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'hasNextPage' } },
                 {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'items' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'FragmentSpread',
-                        name: { kind: 'Name', value: 'BlogPostSummary' },
-                      },
-                    ],
-                  },
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'BlogPostSummaryPage' },
                 },
               ],
             },
@@ -9390,9 +9702,10 @@ export const BlogTagDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'BlogTagDetail' },
+                },
               ],
             },
           },
@@ -9446,6 +9759,50 @@ export const BlogTagDocument = {
         ],
       },
     },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'BlogPostSummaryPage' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'BlogPostListResult' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'endCursor' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hasNextPage' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'items' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'BlogPostSummary' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'BlogTagDetail' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'BlogTagObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+        ],
+      },
+    },
   ],
 } as unknown as DocumentNode<BlogTagQuery, BlogTagQueryVariables>;
 export const BlogFeedDocument = {
@@ -9495,48 +9852,8 @@ export const BlogFeedDocument = {
                     kind: 'SelectionSet',
                     selections: [
                       {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'author' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'displayName' },
-                            },
-                          ],
-                        },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'excerpt' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'publishedAt' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'seoDescription' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'tags' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'name' },
-                            },
-                          ],
-                        },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'updatedAt' },
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'BlogFeedPost' },
                       },
                     ],
                   },
@@ -9544,6 +9861,45 @@ export const BlogFeedDocument = {
               ],
             },
           },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'BlogFeedPost' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'BlogPostObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'author' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'excerpt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'publishedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'seoDescription' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'tags' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
         ],
       },
     },

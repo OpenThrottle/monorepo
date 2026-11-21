@@ -1,9 +1,9 @@
 import { data, redirect } from 'react-router';
 
 import type {
-  BlogIndexQuery,
-  BlogPostQuery,
-  BlogTagQuery,
+  BlogPostDetailFragment,
+  BlogPostSummaryPageFragment,
+  BlogTagDetailFragment,
 } from '~/__generated__/graphql';
 import {
   BlogIndexDocument,
@@ -51,17 +51,17 @@ const redirectOnInvalidCursor = async <T>(config: {
 
 export interface BlogIndexData {
   readonly after: string | null;
-  readonly page: BlogIndexQuery['blogPosts'];
+  readonly page: BlogPostSummaryPageFragment;
 }
 
 export interface BlogPostData {
-  readonly post: NonNullable<BlogPostQuery['blogPost']>;
+  readonly post: BlogPostDetailFragment;
 }
 
 export interface BlogTagData {
   readonly after: string | null;
-  readonly page: BlogTagQuery['blogPosts'];
-  readonly tag: BlogTagQuery['blogTags'][number];
+  readonly page: BlogPostSummaryPageFragment;
+  readonly tag: BlogTagDetailFragment;
 }
 
 /** @description Reads the `after` cursor from a list request URL. */
