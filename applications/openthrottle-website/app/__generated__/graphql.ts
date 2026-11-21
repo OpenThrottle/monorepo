@@ -7775,9 +7775,9 @@ export type TasksByPlanIdInput = {
 
 export type TasksByProjectIdInput = {
   /** Page size. Omitted means the list's default; out of range is rejected */
-  limit?: InputMaybe<Scalars['Int']['input']>;
+  limit?: InputMaybe<Scalars['Float']['input']>;
   /** Rows to skip, 0 or more. Omitted means 0 */
-  offset?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Float']['input']>;
   /** Project id (FK) to list tasks for */
   projectId: Scalars['ID']['input'];
 };

@@ -7441,10 +7441,10 @@ input TasksByPlanIdInput {
 
 input TasksByProjectIdInput {
   """Page size. Omitted means the list's default; out of range is rejected"""
-  limit: Int
+  limit: Float
 
   """Rows to skip, 0 or more. Omitted means 0"""
-  offset: Int
+  offset: Float
 
   """Project id (FK) to list tasks for"""
   projectId: ID!

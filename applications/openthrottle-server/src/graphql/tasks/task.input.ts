@@ -3,7 +3,6 @@
  */
 
 import { Field, ID, InputType, Int } from '@nestjs/graphql';
-import { OffsetPaginationInput } from '@openthrottle/nestjs-graphql';
 
 @InputType()
 export class CreateTaskInput {
@@ -199,8 +198,25 @@ export class TasksByPlanIdInput {
   planId!: string;
 }
 
+/**
+ * @description Does not extend `OffsetPaginationInput` from `@openthrottle/nestjs-graphql`: this input shipped `limit` and
+ * `offset` as `Float`, and narrowing an input field to `Int` breaks any client whose
+ * variables are typed `Float`. Same validation (`assertPagination`), legacy wire type.
+ */
 @InputType()
-export class TasksByProjectIdInput extends OffsetPaginationInput {
+export class TasksByProjectIdInput {
+  @Field(() => Number, {
+    description: `Page size. Omitted means the list's default; out of range is rejected`,
+    nullable: true,
+  })
+  limit?: number | null;
+
+  @Field(() => Number, {
+    description: `Rows to skip, 0 or more. Omitted means 0`,
+    nullable: true,
+  })
+  offset?: number | null;
+
   @Field(() => ID, { description: `Project id (FK) to list tasks for` })
   projectId!: string;
 }
