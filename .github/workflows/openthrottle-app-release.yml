@@ -1,0 +1,108 @@
+################################################################################
+#
+#   OpenThrottle desktop app release build (OT plan 333b0695, task 6).
+#
+#   Builds ONE universal (arm64 + x64) OpenThrottle.app, smoke-tests the
+#   packaged bundle, and uploads the zip as a workflow artifact.
+#
+#   Not yet:
+#     - Signing and notarization (tasks 2-3). The bundle is still ad-hoc signed
+#       (`mac.identity: '-'` in electron-builder.yml). When those land, this job
+#       gains `environment: release` (a protected environment holding the
+#       Developer ID p12 and the App Store Connect API key) and drops
+#       CSC_IDENTITY_AUTO_DISCOVERY.
+#     - Publishing (task 5). The approved channel is GitHub Releases in a
+#       dedicated OpenThrottle/openthrottle-app-releases repo; until it exists
+#       the zip is a workflow artifact only.
+#
+#   Run it: push a tag `openthrottle-app@<version>` (it must match
+#   applications/openthrottle-app/package.json `version`), or dispatch it from
+#   the Actions tab. The same steps run locally; see
+#   applications/openthrottle-app/AGENTS.md § Release.
+#
+################################################################################
+
+name: '🍎 OpenThrottle App Release'
+
+on:
+  push:
+    tags:
+      - 'openthrottle-app@*'
+  workflow_dispatch:
+
+# Never cancel a release build half-way; a second run on the same ref queues.
+concurrency:
+  cancel-in-progress: false
+  group: openthrottle-app-release-${{ github.ref }}
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: '📦 Package universal macOS app'
+    # 💰 A macOS runner, deliberately, on the STANDARD label. electron-builder
+    # can only produce, sign and notarize a .app on macOS, and the smoke test
+    # launches it. Standard GitHub-hosted runners are free for this public repo;
+    # if it ever went private, macos-15 bills at the macOS per-minute rate (about
+    # $0.93 for one ~15 minute release). Tag/dispatch only — never on PRs or
+    # pushes to main. See docs/monorepo/ci-cost.md § macOS release runner.
+    runs-on: macos-15
+    timeout-minutes: 45
+    env:
+      # No signing identity yet: stop electron-builder searching the keychain.
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    steps:
+      - name: '📦 Checkout the code'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+
+      - name: '🏷️ Check the tag matches the app version'
+        if: github.ref_type == 'tag'
+        run: |
+          version="$(node -p "require('./applications/openthrottle-app/package.json').version")"
+          if [ "${GITHUB_REF_NAME}" != "openthrottle-app@${version}" ]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} does not match openthrottle-app@${version} (applications/openthrottle-app/package.json)."
+            exit 1
+          fi
+
+      # Restore-only: a tag ref's cache saves can never be restored by anything
+      # else, and Linux entries miss on macOS anyway (runner.os is in the key).
+      - name: '🤖 Node Setup'
+        uses: ./.github/actions/node-setup
+        with:
+          save-cache: 'false'
+
+      # pnpm installs only the host's platform packages. A universal stage
+      # needs both @vscode/ripgrep-darwin-arm64 and -darwin-x64.
+      - name: '📦 Install both macOS arches'
+        run: pnpm install --frozen-lockfile --cpu=arm64 --cpu=x64
+
+      - name: '🏗️ Package (universal)'
+        run: pnpm nx run openthrottle-app:package --configuration=universal
+
+      # Gate: the packaged app must boot its embedded server and answer
+      # /__shell/health, /auth and /graphql (scripts/smoke-packaged-app.ts).
+      - name: '💨 Smoke-test the packaged app'
+        run: pnpm nx run openthrottle-app:smoke-package --configuration=universal
+
+      # The same checks against the x64 slice, under Rosetta. Installed here
+      # only if the arm64 image lacks it. Slow on a cold translation cache; see
+      # SMOKE_TIMEOUTS_ROSETTA (scripts/data/data.smoke.ts).
+      - name: '🔁 Ensure Rosetta 2'
+        run: arch -x86_64 /usr/bin/true 2>/dev/null || sudo softwareupdate --install-rosetta --agree-to-license
+
+      - name: '💨 Smoke-test the x64 slice (Rosetta)'
+        run: pnpm nx run openthrottle-app:smoke-package --configuration=universal-x64
+
+      # 14 days: long enough to download and hand-test a build, short enough
+      # not to pile up ~250 MB artifacts. Releases get a permanent home in
+      # task 5 (GitHub Releases), not here.
+      - name: '⬆️ Upload the zip'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          if-no-files-found: error
+          name: openthrottle-app-universal-${{ github.sha }}
+          path: applications/openthrottle-app/dist/release/*.zip
+          retention-days: 14
