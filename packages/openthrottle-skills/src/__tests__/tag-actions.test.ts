@@ -189,6 +189,20 @@ describe('evaluateTagActionRules', () => {
     expect(result[0]?.matchedTags).toEqual(['breakdown', 'github']);
   });
 
+  test('carries the rule scope, project included, for ranking', () => {
+    const result = evaluateTagActionRules(baseContext, [
+      { ...baseRule, projectId: 'project-1', repositoryId: 'repo-1' },
+    ]);
+
+    expect(result[0]?.scope).toEqual({
+      environment: null,
+      projectId: 'project-1',
+      repositoryId: 'repo-1',
+      status: null,
+      tagAll: ['breakdown'],
+    });
+  });
+
   test('is pure: does not mutate its inputs', () => {
     const rules = [{ ...baseRule }];
     const context = { ...baseContext, effectiveTags: ['breakdown'] };

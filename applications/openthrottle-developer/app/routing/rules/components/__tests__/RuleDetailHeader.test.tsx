@@ -17,6 +17,7 @@ const rule = {
   enabled: true,
   environment: null,
   id: 'rule-1',
+  projectId: null,
   repositoryId: 'repo-1',
   status: 'PENDING',
   tagAll: ['breakdown'],
@@ -31,6 +32,7 @@ const renderHeader = (
   const props: RuleDetailHeaderProps = {
     onToggleEnabled: vi.fn(),
     pending: false,
+    projectNames: new Map([['proj-1', 'Platform']]),
     repositoryNames: new Map([['repo-1', 'monorepo']]),
     rule,
     ...overrides,
@@ -62,6 +64,16 @@ describe('RuleDetailHeader', () => {
     );
     expect(component.getByTestId('RuleDetailActionSummary')).toHaveTextContent(
       'grilling',
+    );
+  });
+
+  test('shows the project in the scope trail', () => {
+    const component = renderHeader({
+      rule: { ...rule, projectId: 'proj-1' },
+    });
+
+    expect(component.getByTestId('RulesScopeBadges')).toHaveTextContent(
+      'Platform',
     );
   });
 

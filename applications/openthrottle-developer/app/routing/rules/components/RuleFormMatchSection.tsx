@@ -10,9 +10,11 @@ import {
 import * as React from 'react';
 
 import type {
+  RuleFormProjectOption,
   RuleFormRepositoryOption,
   RuleFormVocabularyOption,
 } from '~/routing/rules/components/RuleForm';
+import { RuleFormScopeSelects } from '~/routing/rules/components/RuleFormScopeSelects';
 import { RULES_COPY } from '~/routing/rules/data/data.copy';
 import {
   ANY,
@@ -23,9 +25,12 @@ import {
 export interface RuleFormMatchSectionProps {
   environment: string;
   onEnvironmentChange: (environment: string) => void;
+  onProjectChange: (projectId: string) => void;
   onRepositoryChange: (repositoryId: string) => void;
   onStatusChange: (status: string) => void;
   onToggleTag: (tag: string) => void;
+  projectId: string;
+  projects: RuleFormProjectOption[];
   repositories: RuleFormRepositoryOption[];
   repositoryId: string;
   status: string;
@@ -44,9 +49,12 @@ export const RuleFormMatchSection = (
   const {
     environment,
     onEnvironmentChange,
+    onProjectChange,
     onRepositoryChange,
     onStatusChange,
     onToggleTag,
+    projectId,
+    projects,
     repositories,
     repositoryId,
     status,
@@ -64,13 +72,7 @@ export const RuleFormMatchSection = (
     (option) => option.dimension === 'phase',
   );
   // Select labels render as SelectValue children, so they are present in the SSR markup.
-  const isAnyRepository = repositoryId === ANY;
-  const selectedRepository = repositories.find(
-    (repository) => repository.id === repositoryId,
-  );
-  const repositoryLabel = isAnyRepository
-    ? RULES_COPY.anyOption
-    : selectedRepository?.name;
+  // Select labels render as SelectValue children, so they are present in the SSR markup.
   const statusLabel = status === ANY ? RULES_COPY.anyOption : status;
   const environmentLabel =
     environment === ANY ? RULES_COPY.anyOption : environment;
@@ -129,33 +131,14 @@ export const RuleFormMatchSection = (
         </p>
       )}
 
-      <div className="space-y-1.5">
-        <input
-          name="repositoryId"
-          type="hidden"
-          value={repositoryId === ANY ? '' : repositoryId}
-        />
-        <Label htmlFor="rule-repository">{RULES_COPY.repositoryLabel}</Label>
-        <Select onValueChange={onRepositoryChange} value={repositoryId}>
-          <SelectTrigger
-            aria-label={RULES_COPY.repositoryLabel}
-            id="rule-repository"
-          >
-            <SelectValue>{repositoryLabel}</SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ANY}>{RULES_COPY.anyOption}</SelectItem>
-            {repositories.map((repository) => (
-              <SelectItem key={repository.id} value={repository.id}>
-                {repository.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <p className="text-muted-foreground text-xs">
-          {RULES_COPY.repositoryAnyHint}
-        </p>
-      </div>
+      <RuleFormScopeSelects
+        onProjectChange={onProjectChange}
+        onRepositoryChange={onRepositoryChange}
+        projectId={projectId}
+        projects={projects}
+        repositories={repositories}
+        repositoryId={repositoryId}
+      />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">

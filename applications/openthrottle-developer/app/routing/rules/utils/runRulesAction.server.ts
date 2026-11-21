@@ -35,6 +35,7 @@ export const runRulesAction = async (
         enabled: !value.enabled,
         environment: value.environment,
         id: value.id,
+        projectId: value.projectId ?? null,
         repositoryId: value.repositoryId ?? null,
         status: value.status,
         tagAll: value.tagAll,

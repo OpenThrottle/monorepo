@@ -37,6 +37,7 @@ describe('loadRulePreview', () => {
       match: {
         actionType: 'inject-task',
         environment: null,
+        projectId: 'proj-1',
         repositoryId: 'repo-1',
         status: null,
         tagAll: ['spike'],
@@ -52,6 +53,7 @@ describe('loadRulePreview', () => {
         input: expect.objectContaining({
           actionPayloadJson: '{}',
           actionType: 'inject-task',
+          projectId: 'proj-1',
           repositoryId: 'repo-1',
           tagAll: ['spike'],
         }),
@@ -67,6 +69,7 @@ describe('loadRulePreview', () => {
       match: {
         actionType: 'inject-task',
         environment: null,
+        projectId: null,
         repositoryId: null,
         status: null,
         tagAll: [],

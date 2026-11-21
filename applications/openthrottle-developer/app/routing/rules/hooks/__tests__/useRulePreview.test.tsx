@@ -13,6 +13,7 @@ import { useRulePreview } from '../useRulePreview';
 const BASE_MATCH: RulePreviewMatch = {
   actionType: 'inject-task',
   environment: null,
+  projectId: null,
   repositoryId: null,
   status: null,
   tagAll: [],
@@ -146,5 +147,26 @@ describe('useRulePreview', () => {
       expect(loaderCalls).toHaveLength(2);
     });
     expect(loaderCalls[1]).toContain('status=PENDING');
+  });
+
+  test('refetches with projectId when the project changes', async () => {
+    const { loaderCalls, rerender, value } = renderPreview(BASE_MATCH);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(30);
+    });
+    await waitFor(() => {
+      expect(value.current?.state?.kind).toBe('ready');
+    });
+
+    rerender({ ...BASE_MATCH, projectId: 'proj-1' });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(30);
+    });
+
+    await waitFor(() => {
+      expect(loaderCalls).toHaveLength(2);
+    });
+    expect(loaderCalls[1]).toContain('projectId=proj-1');
   });
 });

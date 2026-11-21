@@ -18,6 +18,7 @@ const { action, loader } = await import('../rules.new');
 
 const mockExecuteGraphqlWithAuth = vi.mocked(executeGraphqlWithAuth);
 
+const PROJECT_ID = '22222222-2222-4222-8222-222222222222';
 const REPOSITORY_ID = '11111111-1111-4111-8111-111111111111';
 
 function asMock<T>(value: unknown): T;
@@ -59,6 +60,7 @@ describe('routes/rules.new loader', () => {
     mockExecuteGraphqlWithAuth.mockResolvedValue(
       asMock<Awaited<ReturnType<typeof executeGraphqlWithAuth>>>({
         personas: [{ id: 'persona-1', title: 'Reviewer', userId: null }],
+        projects: [{ id: 'proj-1', name: 'Platform' }],
         prompts: [{ id: 'prompt-1', title: 'Checklist', userId: 'user-1' }],
         skillAvailability: {
           skills: [
@@ -77,6 +79,7 @@ describe('routes/rules.new loader', () => {
     const result = await loader(loaderArgs());
 
     expect(result.repositories).toEqual([{ id: 'repo-1', name: 'monorepo' }]);
+    expect(result.projects).toEqual([{ id: 'proj-1', name: 'Platform' }]);
     expect(result.skillSlugs).toEqual(['grilling']);
     expect(result.promptOptions).toEqual([
       {
@@ -138,6 +141,7 @@ describe('routes/rules.new action', () => {
           actionType: 'inject-task',
           enabled: true,
           environment: null,
+          projectId: null,
           repositoryId: null,
           status: null,
           tagAll: ['breakdown'],
@@ -197,6 +201,7 @@ describe('routes/rules.new action', () => {
           actionType: 'inject-task',
           enabled: true,
           environment: null,
+          projectId: null,
           repositoryId: null,
           status: null,
           tagAll: [],
@@ -228,6 +233,63 @@ describe('routes/rules.new action', () => {
         input: expect.objectContaining({ repositoryId: REPOSITORY_ID }),
       },
     );
+  });
+
+  test('forwards a selected project id', async () => {
+    mockExecuteGraphqlWithAuth.mockResolvedValue(
+      asMock<Awaited<ReturnType<typeof executeGraphqlWithAuth>>>({
+        upsertTagActionRule: { id: 'rule-1' },
+      }),
+    );
+
+    const formData = new FormData();
+    formData.set('title', 'Project scoped');
+    formData.set('actionType', 'inject-task');
+    formData.set('actionPayloadJson', '{}');
+    formData.set('projectId', PROJECT_ID);
+
+    await action(actionArgs(formData));
+
+    expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledWith(
+      expect.any(Request),
+      RulesUpsertTagActionRuleDocument,
+      { input: expect.objectContaining({ projectId: PROJECT_ID }) },
+    );
+  });
+
+  test('treats a blank project as all projects', async () => {
+    mockExecuteGraphqlWithAuth.mockResolvedValue(
+      asMock<Awaited<ReturnType<typeof executeGraphqlWithAuth>>>({
+        upsertTagActionRule: { id: 'rule-1' },
+      }),
+    );
+
+    const formData = new FormData();
+    formData.set('title', 'All projects');
+    formData.set('actionType', 'inject-task');
+    formData.set('actionPayloadJson', '{}');
+    formData.set('projectId', '');
+
+    await action(actionArgs(formData));
+
+    expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledWith(
+      expect.any(Request),
+      RulesUpsertTagActionRuleDocument,
+      { input: expect.objectContaining({ projectId: null }) },
+    );
+  });
+
+  test('rejects a project id that is not a UUID', async () => {
+    const formData = new FormData();
+    formData.set('title', 'Bad project');
+    formData.set('actionType', 'inject-task');
+    formData.set('actionPayloadJson', '{}');
+    formData.set('projectId', 'not-a-uuid');
+
+    const result = await action(actionArgs(formData));
+
+    expect(result).toEqual({ error: 'Project must be a valid id.' });
+    expect(mockExecuteGraphqlWithAuth).not.toHaveBeenCalled();
   });
 
   test('treats a blank repository as all repositories', async () => {

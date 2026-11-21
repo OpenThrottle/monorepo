@@ -13,8 +13,7 @@ export class UpsertTagActionRuleInput {
   id?: string | null;
 
   @Field(() => ID, {
-    deprecationReason: `Reserved for cross-repo Projects; use repositoryId`,
-    description: `Reserved for cross-repo Projects; not matched today.`,
+    description: `Optional project scope; null matches plans in every project. Matched against the plan's project, independently of repositoryId (the two scopes do not nest).`,
     nullable: true,
   })
   projectId?: string | null;

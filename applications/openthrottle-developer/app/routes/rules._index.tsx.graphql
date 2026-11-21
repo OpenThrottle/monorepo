@@ -5,6 +5,7 @@ fragment TagActionRuleRow on TagActionRuleObject {
   enabled
   environment
   id
+  projectId
   repositoryId
   status
   tagAll
@@ -14,6 +15,10 @@ fragment TagActionRuleRow on TagActionRuleObject {
 }
 
 query RulesIndexLoader {
+  projects {
+    id
+    name
+  }
   skillAvailability {
     skills {
       effectiveDisableModelInvocation

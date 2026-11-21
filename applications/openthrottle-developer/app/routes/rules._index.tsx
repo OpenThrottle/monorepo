@@ -49,6 +49,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   );
 
   return {
+    projects: page.projects ?? [],
     repositories: page.workspaceRepositories ?? [],
     rules: attachRuleSpecificity(page.tagActionRules ?? []),
   };
@@ -62,7 +63,7 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { loaderData } = props;
-  const { repositories, rules } = loaderData;
+  const { projects, repositories, rules } = loaderData;
 
   // Hooks
   const fetcher = useFetcher<typeof action>();
@@ -116,6 +117,7 @@ export default function Component(
           disabledCount={disabledCount}
           enabledCount={enabledCount}
           globalCount={scopeCounts.global}
+          projectCount={scopeCounts.project}
           repositoryCount={scopeCounts.repository}
           totalCount={totalCount}
         />
@@ -129,6 +131,7 @@ export default function Component(
           isFiltered={isFiltered}
           onToggleEnabled={handleToggleEnabled}
           pending={pending}
+          projects={projects}
           repositories={repositories}
           rules={filteredRules}
         />

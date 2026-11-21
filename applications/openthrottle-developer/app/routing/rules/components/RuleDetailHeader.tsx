@@ -16,6 +16,7 @@ export interface RuleDetailHeaderProps {
   readonly className?: string;
   readonly onToggleEnabled: (rule: TagActionRuleRowFragment) => void;
   readonly pending: boolean;
+  readonly projectNames: ReadonlyMap<string, string>;
   readonly repositoryNames: ReadonlyMap<string, string>;
   readonly rule: TagActionRuleRowFragment;
 }
@@ -28,12 +29,19 @@ export interface RuleDetailHeaderProps {
 export const RuleDetailHeader = (
   props: RuleDetailHeaderProps,
 ): React.ReactElement => {
-  const { className, onToggleEnabled, pending, repositoryNames, rule } = props;
+  const {
+    className,
+    onToggleEnabled,
+    pending,
+    projectNames,
+    repositoryNames,
+    rule,
+  } = props;
 
   // Hooks
 
   // Setup
-  const trail = buildRuleScopeTrail(rule, repositoryNames);
+  const trail = buildRuleScopeTrail(rule, repositoryNames, projectNames);
 
   // Handlers
   const handleCheckedChange = (): void => {

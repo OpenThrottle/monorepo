@@ -20,6 +20,7 @@ import { RuleFormPreview } from '~/routing/rules/components/RuleFormPreview';
 import { RULES_COPY } from '~/routing/rules/data/data.copy';
 import { ANY } from '~/routing/rules/data/data.rule-form-options';
 import { useRuleForm } from '~/routing/rules/hooks/useRuleForm';
+import type { RuleFormScopeOption } from '~/routing/rules/types';
 import type { RuleFormPromptOption } from '~/routing/rules/utils/rule-prompt-options';
 
 export interface RuleFormVocabularyOption {
@@ -38,14 +39,14 @@ export interface RuleFormValue {
   title: string;
 }
 
-export interface RuleFormRepositoryOption {
-  id: string;
-  name: string;
-}
+export type RuleFormProjectOption = RuleFormScopeOption;
+
+export type RuleFormRepositoryOption = RuleFormScopeOption;
 
 export interface RuleFormProps {
   actionData?: { error?: string } | null;
   initialRule?: TagActionRuleRowFragment | null;
+  projects: RuleFormProjectOption[];
   promptOptions: RuleFormPromptOption[];
   repositories: RuleFormRepositoryOption[];
   skillSlugs: string[];
@@ -56,6 +57,7 @@ export const RuleForm = (props: RuleFormProps): React.ReactElement => {
   const {
     actionData,
     initialRule,
+    projects,
     promptOptions,
     repositories,
     skillSlugs,
@@ -143,9 +145,12 @@ export const RuleForm = (props: RuleFormProps): React.ReactElement => {
             <RuleFormMatchSection
               environment={form.environment}
               onEnvironmentChange={form.setEnvironment}
+              onProjectChange={form.setProjectId}
               onRepositoryChange={form.setRepositoryId}
               onStatusChange={form.setStatus}
               onToggleTag={form.handleToggleTag}
+              projectId={form.projectId}
+              projects={projects}
               repositories={repositories}
               repositoryId={form.repositoryId}
               status={form.status}

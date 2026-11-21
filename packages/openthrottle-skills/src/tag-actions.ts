@@ -240,6 +240,8 @@ export const isTagActionType = (value: string): value is TagActionType => {
 export interface TagActionRuleScope {
   /** NULL applies to every environment. */
   readonly environment: string | null;
+  /** NULL matches every project; otherwise matched against the plan's project. */
+  readonly projectId: string | null;
   /** NULL matches every repository. */
   readonly repositoryId: string | null;
   /** NULL matches every plan status. */
@@ -259,8 +261,6 @@ export interface TagActionRuleInput extends TagActionRuleScope {
   readonly createdAt: Date;
   readonly enabled: boolean;
   readonly id: string;
-  /** NULL matches every project. Reserved for cross-repo Projects; not ranked. */
-  readonly projectId: string | null;
 }
 
 /**
@@ -330,6 +330,7 @@ export const evaluateTagActionRules = (
       ruleId: rule.id,
       scope: {
         environment: rule.environment,
+        projectId: rule.projectId,
         repositoryId: rule.repositoryId,
         status: rule.status,
         tagAll: [...rule.tagAll],

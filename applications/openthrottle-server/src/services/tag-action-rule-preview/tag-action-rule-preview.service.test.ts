@@ -121,6 +121,30 @@ describe('TagActionRulePreviewService', () => {
       ]);
     });
 
+    it('scores and matches a project scope, explaining the project condition on a miss', async () => {
+      const inProject = plansFactory.build({ projectId: 'project-1' });
+      const elsewhere = plansFactory.build({ projectId: 'project-2' });
+      plans.listRecentForAuthor.mockResolvedValue([inProject, elsewhere]);
+
+      const result = await service.preview(
+        userId,
+        rule({ projectId: 'project-1' }),
+        null,
+      );
+
+      expect(result.specificity).toBe(2);
+      expect(result.matched).toEqual([
+        expect.objectContaining({ id: inProject.id, projectId: 'project-1' }),
+      ]);
+      expect(result.nonMatching[0]?.projectId).toBe('project-2');
+      expect(result.nonMatching[0]?.explanation.conditions).toContainEqual({
+        actual: 'project-2',
+        condition: 'project',
+        expected: 'project-1',
+        passed: false,
+      });
+    });
+
     it('flags an environment-only miss and matches once an environment is supplied', async () => {
       const plan = plansFactory.build();
       plans.listRecentForAuthor.mockResolvedValue([plan]);

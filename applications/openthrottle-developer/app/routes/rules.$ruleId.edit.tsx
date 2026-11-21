@@ -16,6 +16,7 @@ import { z } from 'zod/v3';
 import type { Route } from '@/app/routes/+types/rules.$ruleId.edit';
 import {
   RuleEditLoaderDocument,
+  RuleEditProjectsDocument,
   RuleEditPromptsDocument,
   RuleEditRepositoriesDocument,
   RulesUpsertTagActionRuleDocument,
@@ -46,6 +47,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   const { ruleId } = args.params;
   if (ruleId == null || ruleId === '') {
     return {
+      projects: [],
       promptOptions: [],
       repositories: [],
       rule: null,
@@ -53,20 +55,19 @@ export const loader = async (args: Route.LoaderArgs) => {
       vocabulary: [],
     };
   }
-
-  const [page, workspace, prompts] = await Promise.all([
+  const [page, workspace, projects, prompts] = await Promise.all([
     executeGraphqlWithAuth(args.request, RuleEditLoaderDocument, {
       id: ruleId,
     }),
     executeGraphqlWithAuth(args.request, RuleEditRepositoriesDocument, {}),
+    executeGraphqlWithAuth(args.request, RuleEditProjectsDocument, {}),
     executeGraphqlWithAuth(args.request, RuleEditPromptsDocument, {}),
   ]);
 
   return {
+    projects: projects.projects,
     promptOptions: buildRulePromptOptions(prompts.personas, prompts.prompts),
-    repositories: workspace.workspaceRepositories.map((repository) => {
-      return { id: repository.id, name: repository.name };
-    }),
+    repositories: workspace.workspaceRepositories,
     rule: page.tagActionRule ?? null,
     skillSlugs: (page.skillAvailability.skills ?? [])
       .filter((skill) => !skill.effectiveDisableModelInvocation)
@@ -90,8 +91,14 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData, loaderData } = props;
-  const { promptOptions, repositories, rule, skillSlugs, vocabulary } =
-    loaderData;
+  const {
+    projects,
+    promptOptions,
+    repositories,
+    rule,
+    skillSlugs,
+    vocabulary,
+  } = loaderData;
 
   // Hooks
 
@@ -120,6 +127,7 @@ export default function Component(
       <RuleForm
         actionData={actionData}
         initialRule={rule}
+        projects={projects}
         promptOptions={promptOptions}
         repositories={repositories}
         skillSlugs={skillSlugs}
@@ -139,22 +147,24 @@ export const action = async (args: Route.ActionArgs) => {
 
   const parsed = parseFormData(
     formData,
-    UpsertTagActionRuleInputSchema()
-      .omit({ projectId: true })
-      .extend({
-        enabled: coerceBoolean(z.boolean().default(true)),
-        // Absent `tagAll` (a rule with no tags) is valid — default to `[]` so it
-        // does not fail the generated required-array field.
-        // Blank (all repositories) is dropped by parseFormData; a value must be a UUID.
-        repositoryId: z.string().uuid().nullish(),
-        tagAll: z.array(z.string().min(1)).default([]),
-      }),
+    UpsertTagActionRuleInputSchema().extend({
+      enabled: coerceBoolean(z.boolean().default(true)),
+      // Absent `tagAll` (a rule with no tags) is valid — default to `[]` so it
+      // does not fail the generated required-array field.
+      // Blank (any) is dropped by parseFormData; a value must be a UUID.
+      projectId: z.string().uuid().nullish(),
+      repositoryId: z.string().uuid().nullish(),
+      tagAll: z.array(z.string().min(1)).default([]),
+    }),
     { lists: ['tagAll'], strict: false },
   );
   if (!parsed.success) {
     if (parsed.fieldErrors.title) return { error: 'Title is required.' };
     if (parsed.fieldErrors.actionType) {
       return { error: 'Action type is required.' };
+    }
+    if (parsed.fieldErrors.projectId) {
+      return { error: 'Project must be a valid id.' };
     }
     if (parsed.fieldErrors.repositoryId) {
       return { error: 'Repository must be a valid id.' };
@@ -174,6 +184,7 @@ export const action = async (args: Route.ActionArgs) => {
     enabled: parsed.data.enabled,
     environment: parsed.data.environment ?? null,
     id: ruleId,
+    projectId: parsed.data.projectId ?? null,
     repositoryId: parsed.data.repositoryId ?? null,
     status: parsed.data.status ?? null,
     tagAll: parsed.data.tagAll,

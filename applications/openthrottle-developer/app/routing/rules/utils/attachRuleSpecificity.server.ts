@@ -2,6 +2,7 @@ import { scoreTagActionSpecificity } from '@openthrottle/openthrottle-skills';
 
 export interface SpecificityScorable {
   readonly environment?: string | null;
+  readonly projectId?: string | null;
   readonly repositoryId?: string | null;
   readonly status?: string | null;
   readonly tagAll: readonly string[];
@@ -19,6 +20,7 @@ export const attachRuleSpecificity = <T extends SpecificityScorable>(
   return rules.map((rule) => {
     const specificity = scoreTagActionSpecificity({
       environment: rule.environment ?? null,
+      projectId: rule.projectId ?? null,
       repositoryId: rule.repositoryId ?? null,
       status: rule.status ?? null,
       tagAll: rule.tagAll,

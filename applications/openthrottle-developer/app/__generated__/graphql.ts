@@ -5010,7 +5010,7 @@ export type Query = {
   prCountByLabel: Array<PrCountByLabelObject>;
   /** PR time-in-state summary (count and avg days per state: open, closed, merged). Paginates PRs up to 1000 (10 pages); repos with more PRs are truncated to the most recent window. */
   prTimeInStateSummary: Array<PrTimeInStateSummaryObject>;
-  /** Dry run: which of the caller's plans a rule would match, and why the rest do not, by the same evaluator the worker uses. Read-only: writes no ledger row and dispatches nothing. Only the match fields (repositoryId, status, environment, tagAll, actionType) are read, so a half-written actionPayloadJson never blocks it; the rule is evaluated as enabled. `environment` is the environment to evaluate plans in (ci | interactive | ralph); omit it for none — a pass triggered by a developer-app edit or a background job — so an environment-qualified rule then matches nothing. At most the newest 500 plans are evaluated; truncated says so. */
+  /** Dry run: which of the caller's plans a rule would match, and why the rest do not, by the same evaluator the worker uses. Read-only: writes no ledger row and dispatches nothing. Only the match fields (projectId, repositoryId, status, environment, tagAll, actionType) are read, so a half-written actionPayloadJson never blocks it; the rule is evaluated as enabled. `environment` is the environment to evaluate plans in (ci | interactive | ralph); omit it for none — a pass triggered by a developer-app edit or a background job — so an environment-qualified rule then matches nothing. At most the newest 500 plans are evaluated; truncated says so. */
   previewTagActionRule: TagActionRulePreviewObject;
   /** Get a project by ID */
   project?: Maybe<ProjectObject>;
@@ -7677,10 +7677,7 @@ export type TagActionRuleObject = {
   /** Optional environment qualifier (ci | interactive | ralph); null applies everywhere. */
   environment?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
-  /**
-   * Reserved for cross-repo Projects; not matched today.
-   * @deprecated Reserved for cross-repo Projects; use repositoryId
-   */
+  /** Optional project scope; null matches plans in every project. Matched against the plan's project, independently of repositoryId (the two scopes do not nest). */
   projectId?: Maybe<Scalars['ID']['output']>;
   /** Optional repository scope; null matches plans in every repository. */
   repositoryId?: Maybe<Scalars['ID']['output']>;
@@ -7703,6 +7700,7 @@ export type TagActionRulePreviewNonMatchObject = {
   id: Scalars['ID']['output'];
   /** The rule's tags the plan's effective tag set lacks. */
   missingTags: Array<Scalars['String']['output']>;
+  projectId?: Maybe<Scalars['ID']['output']>;
   repositoryId?: Maybe<Scalars['ID']['output']>;
   status: Scalars['String']['output'];
   title: Scalars['String']['output'];
@@ -7730,6 +7728,7 @@ export type TagActionRulePreviewObject = {
 export type TagActionRulePreviewPlanObject = {
   __typename?: 'TagActionRulePreviewPlanObject';
   id: Scalars['ID']['output'];
+  projectId?: Maybe<Scalars['ID']['output']>;
   repositoryId?: Maybe<Scalars['ID']['output']>;
   status: Scalars['String']['output'];
   title: Scalars['String']['output'];
@@ -8553,10 +8552,7 @@ export type UpsertTagActionRuleInput = {
   environment?: InputMaybe<Scalars['String']['input']>;
   /** When present, updates the existing rule (must belong to the caller). */
   id?: InputMaybe<Scalars['ID']['input']>;
-  /**
-   * Reserved for cross-repo Projects; not matched today.
-   * @deprecated Reserved for cross-repo Projects; use repositoryId
-   */
+  /** Optional project scope; null matches plans in every project. Matched against the plan's project, independently of repositoryId (the two scopes do not nest). */
   projectId?: InputMaybe<Scalars['ID']['input']>;
   /** Optional repository scope; null matches plans in every repository. */
   repositoryId?: InputMaybe<Scalars['ID']['input']>;
@@ -13620,6 +13616,7 @@ export type RulePreviewNonMatchFragment = {
   failedOnlyOnEnvironment: boolean;
   id: string;
   missingTags: Array<string>;
+  projectId?: string | null;
   repositoryId?: string | null;
   status: string;
   title: string;
@@ -13643,6 +13640,7 @@ export type RulePreviewFragment = {
   matched: Array<{
     __typename?: 'TagActionRulePreviewPlanObject';
     id: string;
+    projectId?: string | null;
     repositoryId?: string | null;
     status: string;
     title: string;
@@ -13652,6 +13650,7 @@ export type RulePreviewFragment = {
     failedOnlyOnEnvironment: boolean;
     id: string;
     missingTags: Array<string>;
+    projectId?: string | null;
     repositoryId?: string | null;
     status: string;
     title: string;
@@ -13683,6 +13682,7 @@ export type RulePreviewQuery = {
     matched: Array<{
       __typename?: 'TagActionRulePreviewPlanObject';
       id: string;
+      projectId?: string | null;
       repositoryId?: string | null;
       status: string;
       title: string;
@@ -13692,6 +13692,7 @@ export type RulePreviewQuery = {
       failedOnlyOnEnvironment: boolean;
       id: string;
       missingTags: Array<string>;
+      projectId?: string | null;
       repositoryId?: string | null;
       status: string;
       title: string;
@@ -13738,6 +13739,7 @@ export type RuleDetailLoaderQueryVariables = Exact<{
 
 export type RuleDetailLoaderQuery = {
   __typename?: 'Query';
+  projects: Array<{ __typename?: 'ProjectObject'; id: string; name: string }>;
   ruleApplicationsForRule: Array<{
     __typename?: 'RuleApplicationObject';
     createdAt: any;
@@ -13758,6 +13760,7 @@ export type RuleDetailLoaderQuery = {
     enabled: boolean;
     environment?: string | null;
     id: string;
+    projectId?: string | null;
     repositoryId?: string | null;
     status?: string | null;
     tagAll: Array<string>;
@@ -13770,6 +13773,13 @@ export type RuleDetailLoaderQuery = {
     id: string;
     name: string;
   }>;
+};
+
+export type RuleEditProjectsQueryVariables = Exact<{ [key: string]: never }>;
+
+export type RuleEditProjectsQuery = {
+  __typename?: 'Query';
+  projects: Array<{ __typename?: 'ProjectObject'; id: string; name: string }>;
 };
 
 export type RuleEditRepositoriesQueryVariables = Exact<{
@@ -13811,6 +13821,7 @@ export type TagActionRuleRowFragment = {
   enabled: boolean;
   environment?: string | null;
   id: string;
+  projectId?: string | null;
   repositoryId?: string | null;
   status?: string | null;
   tagAll: Array<string>;
@@ -13823,6 +13834,7 @@ export type RulesIndexLoaderQueryVariables = Exact<{ [key: string]: never }>;
 
 export type RulesIndexLoaderQuery = {
   __typename?: 'Query';
+  projects: Array<{ __typename?: 'ProjectObject'; id: string; name: string }>;
   skillAvailability: {
     __typename?: 'SkillAvailabilityResolutionResult';
     totalCount: number;
@@ -13851,6 +13863,7 @@ export type RulesIndexLoaderQuery = {
     enabled: boolean;
     environment?: string | null;
     id: string;
+    projectId?: string | null;
     repositoryId?: string | null;
     status?: string | null;
     tagAll: Array<string>;
@@ -13899,6 +13912,7 @@ export type RuleEditLoaderQuery = {
     enabled: boolean;
     environment?: string | null;
     id: string;
+    projectId?: string | null;
     repositoryId?: string | null;
     status?: string | null;
     tagAll: Array<string>;
@@ -13922,6 +13936,7 @@ export type RulesUpsertTagActionRuleMutation = {
     enabled: boolean;
     environment?: string | null;
     id: string;
+    projectId?: string | null;
     repositoryId?: string | null;
     status?: string | null;
     tagAll: Array<string>;
@@ -13938,6 +13953,13 @@ export type RulesDeleteTagActionRuleMutationVariables = Exact<{
 export type RulesDeleteTagActionRuleMutation = {
   __typename?: 'Mutation';
   deleteTagActionRule: boolean;
+};
+
+export type RuleNewProjectsQueryVariables = Exact<{ [key: string]: never }>;
+
+export type RuleNewProjectsQuery = {
+  __typename?: 'Query';
+  projects: Array<{ __typename?: 'ProjectObject'; id: string; name: string }>;
 };
 
 export type RuleNewRepositoriesQueryVariables = Exact<{ [key: string]: never }>;
@@ -21130,6 +21152,7 @@ export const RulePreviewNonMatchFragmentDoc = {
           },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'missingTags' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
@@ -21178,6 +21201,7 @@ export const RulePreviewFragmentDoc = {
               kind: 'SelectionSet',
               selections: [
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'repositoryId' },
@@ -21252,6 +21276,7 @@ export const RulePreviewFragmentDoc = {
           },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'missingTags' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
@@ -21299,6 +21324,7 @@ export const TagActionRuleRowFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
           { kind: 'Field', name: { kind: 'Name', value: 'environment' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'tagAll' } },
@@ -36002,6 +36028,7 @@ export const RulePreviewDocument = {
           },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'missingTags' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'title' } },
@@ -36028,6 +36055,7 @@ export const RulePreviewDocument = {
               kind: 'SelectionSet',
               selections: [
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'repositoryId' },
@@ -36213,6 +36241,17 @@ export const RuleDetailLoaderDocument = {
         selections: [
           {
             kind: 'Field',
+            name: { kind: 'Name', value: 'projects' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
             name: { kind: 'Name', value: 'ruleApplicationsForRule' },
             arguments: [
               {
@@ -36292,6 +36331,7 @@ export const RuleDetailLoaderDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
           { kind: 'Field', name: { kind: 'Name', value: 'environment' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'tagAll' } },
@@ -36305,6 +36345,35 @@ export const RuleDetailLoaderDocument = {
 } as unknown as DocumentNode<
   RuleDetailLoaderQuery,
   RuleDetailLoaderQueryVariables
+>;
+export const RuleEditProjectsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'RuleEditProjects' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'projects' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  RuleEditProjectsQuery,
+  RuleEditProjectsQueryVariables
 >;
 export const RuleEditRepositoriesDocument = {
   kind: 'Document',
@@ -36423,6 +36492,17 @@ export const RulesIndexLoaderDocument = {
         selections: [
           {
             kind: 'Field',
+            name: { kind: 'Name', value: 'projects' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
             name: { kind: 'Name', value: 'skillAvailability' },
             selectionSet: {
               kind: 'SelectionSet',
@@ -36517,6 +36597,7 @@ export const RulesIndexLoaderDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
           { kind: 'Field', name: { kind: 'Name', value: 'environment' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'tagAll' } },
@@ -36646,6 +36727,7 @@ export const RuleEditLoaderDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
           { kind: 'Field', name: { kind: 'Name', value: 'environment' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'tagAll' } },
@@ -36725,6 +36807,7 @@ export const RulesUpsertTagActionRuleDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
           { kind: 'Field', name: { kind: 'Name', value: 'environment' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
           { kind: 'Field', name: { kind: 'Name', value: 'tagAll' } },
@@ -36786,6 +36869,35 @@ export const RulesDeleteTagActionRuleDocument = {
 } as unknown as DocumentNode<
   RulesDeleteTagActionRuleMutation,
   RulesDeleteTagActionRuleMutationVariables
+>;
+export const RuleNewProjectsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'RuleNewProjects' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'projects' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  RuleNewProjectsQuery,
+  RuleNewProjectsQueryVariables
 >;
 export const RuleNewRepositoriesDocument = {
   kind: 'Document',

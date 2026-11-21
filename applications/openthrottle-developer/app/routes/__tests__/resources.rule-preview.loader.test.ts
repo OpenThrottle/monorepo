@@ -24,7 +24,7 @@ describe('routes/resources.rule-preview loader', () => {
 
     await loader(
       createLoaderArgs<Route.LoaderArgs>({
-        url: 'http://localhost/resources/rule-preview?actionType=inject-task&status=PENDING&tagAll=a&tagAll=b&evaluateEnvironment=ci',
+        url: 'http://localhost/resources/rule-preview?actionType=inject-task&status=PENDING&tagAll=a&tagAll=b&evaluateEnvironment=ci&projectId=proj-1',
       }),
     );
 
@@ -33,6 +33,7 @@ describe('routes/resources.rule-preview loader', () => {
       match: {
         actionType: 'inject-task',
         environment: null,
+        projectId: 'proj-1',
         repositoryId: null,
         status: 'PENDING',
         tagAll: ['a', 'b'],

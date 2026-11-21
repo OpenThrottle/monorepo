@@ -16,6 +16,7 @@ import {
 } from '~/routing/rules/utils/formatters';
 import type {
   RankedTagActionRule,
+  RulesProjectOption,
   RulesRepositoryOption,
 } from '~/routing/rules/utils/rule-groups';
 import { groupRulesByRepository } from '~/routing/rules/utils/rule-groups';
@@ -26,6 +27,7 @@ export interface RulesTableProps {
   isFiltered?: boolean;
   onToggleEnabled: (rule: TagActionRuleRowFragment) => void;
   pending?: boolean;
+  projects: RulesProjectOption[];
   repositories: RulesRepositoryOption[];
   rules: RankedTagActionRule[];
 }
@@ -33,6 +35,7 @@ export interface RulesTableProps {
 interface RulesTableColumnOptions {
   onToggleEnabled: (rule: TagActionRuleRowFragment) => void;
   pending: boolean;
+  projectNames: ReadonlyMap<string, string>;
   repositoryNames: ReadonlyMap<string, string>;
 }
 
@@ -43,7 +46,7 @@ type RulesTableColumns = DataTableColumnDef<
 
 /**
  * @description Tag→action rules list as a `bg-card` surface grouped by scope:
- * Global first, then one group per repository (narrowest rule first). Grouping
+ * Global first, then one group per project and per repository (narrowest rule first). Grouping
  * lives in `utils/rule-groups`; empty UI lives in {@link RulesEmpty}.
  */
 export const RulesTable = (props: RulesTableProps): React.ReactElement => {
@@ -52,6 +55,7 @@ export const RulesTable = (props: RulesTableProps): React.ReactElement => {
     isFiltered = false,
     onToggleEnabled,
     pending = false,
+    projects,
     repositories,
     rules,
   } = props;
@@ -61,13 +65,23 @@ export const RulesTable = (props: RulesTableProps): React.ReactElement => {
     () => new Map(repositories.map((repo) => [repo.id, repo.name])),
     [repositories],
   );
+  const projectNames = React.useMemo(
+    () => new Map(projects.map((project) => [project.id, project.name])),
+    [projects],
+  );
   const columns = React.useMemo(
-    () => RulesTable.buildTable({ onToggleEnabled, pending, repositoryNames }),
-    [onToggleEnabled, pending, repositoryNames],
+    () =>
+      RulesTable.buildTable({
+        onToggleEnabled,
+        pending,
+        projectNames,
+        repositoryNames,
+      }),
+    [onToggleEnabled, pending, projectNames, repositoryNames],
   );
   const groups = React.useMemo(
-    () => groupRulesByRepository(rules, repositories),
-    [repositories, rules],
+    () => groupRulesByRepository(rules, repositories, projects),
+    [projects, repositories, rules],
   );
 
   // Setup
@@ -97,7 +111,7 @@ export const RulesTable = (props: RulesTableProps): React.ReactElement => {
 RulesTable.buildTable = (
   options: RulesTableColumnOptions,
 ): RulesTableColumns => {
-  const { onToggleEnabled, pending, repositoryNames } = options;
+  const { onToggleEnabled, pending, projectNames, repositoryNames } = options;
 
   return [
     {
@@ -138,7 +152,11 @@ RulesTable.buildTable = (
     },
     {
       cell: ({ row }) => {
-        const trail = buildRuleScopeTrail(row.original, repositoryNames);
+        const trail = buildRuleScopeTrail(
+          row.original,
+          repositoryNames,
+          projectNames,
+        );
 
         return <RulesScopeBadges trail={trail} />;
       },

@@ -6,8 +6,7 @@ import { evaluateTagActionRules } from './tag-actions.ts';
 
 /**
  * @description The match conditions of a tag→action rule, in the order
- * {@link explainTagActionRuleMatch} reports them. `project` is reserved for cross-repo Projects and
- * only ever fails for a rule that sets it.
+ * {@link explainTagActionRuleMatch} reports them. Each one passes for a rule that leaves it unset.
  * @public
  */
 export const TAG_ACTION_CONDITIONS = {

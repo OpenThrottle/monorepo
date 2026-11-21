@@ -19,6 +19,7 @@ const buildInitialRule = (
     enabled: true,
     environment: 'ci',
     id: 'rule-1',
+    projectId: null,
     repositoryId: null,
     status: 'IN_PROGRESS',
     tagAll: ['breakdown'],
@@ -37,6 +38,7 @@ describe('useRuleForm', () => {
     expect(result.current.title).toBe('');
     expect(result.current.actionType).toBe('inject-task');
     expect(result.current.repositoryId).toBe(ANY);
+    expect(result.current.projectId).toBe(ANY);
     expect(result.current.status).toBe(ANY);
     expect(result.current.environment).toBe(ANY);
     expect(result.current.tagAll).toEqual([]);
@@ -209,5 +211,17 @@ describe('useRuleForm', () => {
 
       expect(result.current.attachPrompt.placement).toBe('end');
     });
+  });
+
+  test('hydrates projectId from an initial rule and lets it change', () => {
+    const { result } = renderHook(() =>
+      useRuleForm({ initialRule: buildInitialRule({ projectId: 'proj-1' }) }),
+    );
+
+    expect(result.current.projectId).toBe('proj-1');
+
+    act(() => result.current.setProjectId(ANY));
+
+    expect(result.current.projectId).toBe(ANY);
   });
 });

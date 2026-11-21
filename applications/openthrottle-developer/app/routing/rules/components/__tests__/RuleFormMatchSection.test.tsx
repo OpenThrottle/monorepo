@@ -24,9 +24,12 @@ describe('RuleFormMatchSection Component', () => {
     props = {
       environment: ANY,
       onEnvironmentChange: vi.fn(),
+      onProjectChange: vi.fn(),
       onRepositoryChange: vi.fn(),
       onStatusChange: vi.fn(),
       onToggleTag: vi.fn(),
+      projectId: ANY,
+      projects: [{ id: 'project-1', name: 'Platform' }],
       repositories: [
         { id: 'repo-1', name: 'monorepo' },
         { id: 'repo-2', name: 'website' },
@@ -123,5 +126,26 @@ describe('RuleFormMatchSection Component', () => {
     await user.click(component.getByRole('option', { name: 'monorepo' }));
 
     expect(props.onRepositoryChange).toHaveBeenCalledWith('repo-1');
+  });
+
+  test('renders the project select after the repository select', () => {
+    const repository = component.getByLabelText(RULES_COPY.repositoryLabel);
+    const project = component.getByLabelText(RULES_COPY.projectLabel);
+
+    expect(
+      repository.compareDocumentPosition(project) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  test('invokes onProjectChange when a project is picked', async () => {
+    const user = userEvent.setup();
+
+    await user.click(
+      component.getByRole('combobox', { name: RULES_COPY.projectLabel }),
+    );
+    await user.click(component.getByRole('option', { name: 'Platform' }));
+
+    expect(props.onProjectChange).toHaveBeenCalledWith('project-1');
   });
 });

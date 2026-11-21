@@ -12,7 +12,7 @@ export interface RulesScopeBadgesProps {
 
 /**
  * @description The scope trail as a compact badge sequence, widest rung first
- * (Global or repository, then environment, then status). Decorative chevrons
+ * (Global, or repository and project, then environment, then status). Decorative chevrons
  * are hidden from assistive tech; the list carries the reading order.
  */
 export const RulesScopeBadges = (
@@ -26,6 +26,7 @@ export const RulesScopeBadges = (
   const titles = {
     environment: RULES_COPY.environmentLabel,
     global: undefined,
+    project: RULES_COPY.projectLabel,
     repository: RULES_COPY.repositoryLabel,
     status: RULES_COPY.statusLabel,
     unknown: RULES_COPY.repositoryLabel,

@@ -5010,7 +5010,7 @@ export type Query = {
   prCountByLabel: Array<PrCountByLabelObject>;
   /** PR time-in-state summary (count and avg days per state: open, closed, merged). Paginates PRs up to 1000 (10 pages); repos with more PRs are truncated to the most recent window. */
   prTimeInStateSummary: Array<PrTimeInStateSummaryObject>;
-  /** Dry run: which of the caller's plans a rule would match, and why the rest do not, by the same evaluator the worker uses. Read-only: writes no ledger row and dispatches nothing. Only the match fields (repositoryId, status, environment, tagAll, actionType) are read, so a half-written actionPayloadJson never blocks it; the rule is evaluated as enabled. `environment` is the environment to evaluate plans in (ci | interactive | ralph); omit it for none — a pass triggered by a developer-app edit or a background job — so an environment-qualified rule then matches nothing. At most the newest 500 plans are evaluated; truncated says so. */
+  /** Dry run: which of the caller's plans a rule would match, and why the rest do not, by the same evaluator the worker uses. Read-only: writes no ledger row and dispatches nothing. Only the match fields (projectId, repositoryId, status, environment, tagAll, actionType) are read, so a half-written actionPayloadJson never blocks it; the rule is evaluated as enabled. `environment` is the environment to evaluate plans in (ci | interactive | ralph); omit it for none — a pass triggered by a developer-app edit or a background job — so an environment-qualified rule then matches nothing. At most the newest 500 plans are evaluated; truncated says so. */
   previewTagActionRule: TagActionRulePreviewObject;
   /** Get a project by ID */
   project?: Maybe<ProjectObject>;
@@ -7677,10 +7677,7 @@ export type TagActionRuleObject = {
   /** Optional environment qualifier (ci | interactive | ralph); null applies everywhere. */
   environment?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
-  /**
-   * Reserved for cross-repo Projects; not matched today.
-   * @deprecated Reserved for cross-repo Projects; use repositoryId
-   */
+  /** Optional project scope; null matches plans in every project. Matched against the plan's project, independently of repositoryId (the two scopes do not nest). */
   projectId?: Maybe<Scalars['ID']['output']>;
   /** Optional repository scope; null matches plans in every repository. */
   repositoryId?: Maybe<Scalars['ID']['output']>;
@@ -7703,6 +7700,7 @@ export type TagActionRulePreviewNonMatchObject = {
   id: Scalars['ID']['output'];
   /** The rule's tags the plan's effective tag set lacks. */
   missingTags: Array<Scalars['String']['output']>;
+  projectId?: Maybe<Scalars['ID']['output']>;
   repositoryId?: Maybe<Scalars['ID']['output']>;
   status: Scalars['String']['output'];
   title: Scalars['String']['output'];
@@ -7730,6 +7728,7 @@ export type TagActionRulePreviewObject = {
 export type TagActionRulePreviewPlanObject = {
   __typename?: 'TagActionRulePreviewPlanObject';
   id: Scalars['ID']['output'];
+  projectId?: Maybe<Scalars['ID']['output']>;
   repositoryId?: Maybe<Scalars['ID']['output']>;
   status: Scalars['String']['output'];
   title: Scalars['String']['output'];
@@ -8553,10 +8552,7 @@ export type UpsertTagActionRuleInput = {
   environment?: InputMaybe<Scalars['String']['input']>;
   /** When present, updates the existing rule (must belong to the caller). */
   id?: InputMaybe<Scalars['ID']['input']>;
-  /**
-   * Reserved for cross-repo Projects; not matched today.
-   * @deprecated Reserved for cross-repo Projects; use repositoryId
-   */
+  /** Optional project scope; null matches plans in every project. Matched against the plan's project, independently of repositoryId (the two scopes do not nest). */
   projectId?: InputMaybe<Scalars['ID']['input']>;
   /** Optional repository scope; null matches plans in every repository. */
   repositoryId?: InputMaybe<Scalars['ID']['input']>;

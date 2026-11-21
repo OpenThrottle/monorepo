@@ -20,6 +20,7 @@ export interface TagActionRulePreviewRule {
 /** @public */
 export interface TagActionRulePreviewPlan {
   readonly id: string;
+  readonly projectId: string | null;
   readonly repositoryId: string | null;
   readonly status: string;
   readonly title: string;

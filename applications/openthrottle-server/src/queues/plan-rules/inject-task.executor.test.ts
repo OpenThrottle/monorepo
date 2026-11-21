@@ -61,6 +61,7 @@ const buildAction = (
     ruleId,
     scope: {
       environment: null,
+      projectId: null,
       repositoryId: null,
       status: null,
       tagAll: ['breakdown'],

@@ -19,6 +19,15 @@ describe('attachRuleSpecificity', () => {
     expect(scoped?.specificity).toBeGreaterThan(global?.specificity ?? 0);
   });
 
+  test('scores a project-scoped rule higher than a global one', () => {
+    const [global, scoped] = attachRuleSpecificity([
+      { projectId: null, tagAll: ['x'] },
+      { projectId: 'project-1', tagAll: ['x'] },
+    ]);
+
+    expect(scoped?.specificity).toBeGreaterThan(global?.specificity ?? 0);
+  });
+
   test('keeps the row fields and does not mutate the input', () => {
     const input = [{ id: 'a', status: 'PENDING', tagAll: ['t'] }];
     const [rule] = attachRuleSpecificity(input);

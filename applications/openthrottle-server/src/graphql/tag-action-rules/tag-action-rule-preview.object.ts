@@ -36,6 +36,9 @@ export class TagActionRulePreviewPlanObject {
   id!: string;
 
   @Field(() => ID, { nullable: true })
+  projectId!: string | null;
+
+  @Field(() => ID, { nullable: true })
   repositoryId!: string | null;
 
   @Field(() => String)
@@ -64,6 +67,9 @@ export class TagActionRulePreviewNonMatchObject {
     description: `The rule's tags the plan's effective tag set lacks.`,
   })
   missingTags!: string[];
+
+  @Field(() => ID, { nullable: true })
+  projectId!: string | null;
 
   @Field(() => ID, { nullable: true })
   repositoryId!: string | null;

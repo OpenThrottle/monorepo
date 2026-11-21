@@ -19,6 +19,7 @@ describe('RuleForm Component', () => {
   beforeEach(() => {
     props = {
       initialRule: null,
+      projects: [{ id: 'proj-1', name: 'Platform' }],
       promptOptions: [],
       repositories: [{ id: 'repo-1', name: 'monorepo' }],
       skillSlugs: ['grilling', 'github-deep-review'],
@@ -70,6 +71,13 @@ describe('RuleForm Component', () => {
     expect(
       component.getByLabelText(RULES_COPY.repositoryLabel),
     ).toBeInTheDocument();
+  });
+
+  test('renders the project select with the Any hint', () => {
+    expect(
+      component.getByLabelText(RULES_COPY.projectLabel),
+    ).toBeInTheDocument();
+    expect(component.getByText(RULES_COPY.projectAnyHint)).toBeInTheDocument();
   });
 
   test('save is disabled until a title and skill are provided', async () => {

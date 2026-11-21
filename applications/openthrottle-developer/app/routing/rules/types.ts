@@ -14,3 +14,9 @@ export interface RuleFormAttachPromptState {
   readonly placement: string;
   readonly promptId: string;
 }
+
+/** A project or repository the rule form can scope to. */
+export interface RuleFormScopeOption {
+  readonly id: string;
+  readonly name: string;
+}

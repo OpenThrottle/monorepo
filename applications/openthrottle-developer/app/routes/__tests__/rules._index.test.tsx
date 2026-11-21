@@ -43,6 +43,7 @@ const disabledRule: RankedTagActionRule = {
   userId: 'user-1',
 };
 
+const projects = [{ id: 'proj-1', name: 'Platform' }];
 const repositories = [{ id: 'repo-1', name: 'monorepo' }];
 
 const matchesFor = (
@@ -53,7 +54,7 @@ const matchesFor = (
     {
       handle: undefined,
       id: 'routes/rules._index',
-      loaderData: { repositories, rules },
+      loaderData: { projects, repositories, rules },
       params: {},
       pathname: '/rules',
     },
@@ -70,7 +71,7 @@ const renderIndex = (
       <TooltipProvider>
         <Index
           actionData={undefined}
-          loaderData={{ repositories, rules }}
+          loaderData={{ projects, repositories, rules }}
           matches={matchesFor(rules)}
           params={{}}
         />

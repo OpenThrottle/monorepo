@@ -12,6 +12,7 @@ import {
 
 const globalScope: TagActionRuleScope = {
   environment: null,
+  projectId: null,
   repositoryId: null,
   status: null,
   tagAll: [],
@@ -46,11 +47,28 @@ describe('scoreTagActionSpecificity', () => {
     expect(
       scoreTagActionSpecificity({
         environment: 'ci',
+        projectId: null,
         repositoryId: 'repo-1',
         status: 'PENDING',
         tagAll: ['backend', 'database'],
       }),
     ).toBe(6);
+  });
+
+  test('a project scope counts two', () => {
+    expect(
+      scoreTagActionSpecificity({ ...globalScope, projectId: 'project-1' }),
+    ).toBe(2);
+  });
+
+  test('project and repository do not nest: a rule scoped to both adds both', () => {
+    expect(
+      scoreTagActionSpecificity({
+        ...globalScope,
+        projectId: 'project-1',
+        repositoryId: 'repo-1',
+      }),
+    ).toBe(4);
   });
 });
 
@@ -83,6 +101,31 @@ describe('rankMatchedTagActions', () => {
         match('repo', { repositoryId: 'r' }),
       ]),
     ).toEqual(['repo', 'tagged']);
+  });
+
+  test('a project-scoped rule beats a global one', () => {
+    expect(
+      rankedIds([match('global', {}), match('project', { projectId: 'p' })]),
+    ).toEqual(['project', 'global']);
+  });
+
+  test('a project scope and a repository scope tie, broken by createdAt', () => {
+    expect(
+      rankedIds([
+        match('repo', { repositoryId: 'r' }, '2026-03-01T00:00:00.000Z'),
+        match('project', { projectId: 'p' }, '2026-02-01T00:00:00.000Z'),
+      ]),
+    ).toEqual(['project', 'repo']);
+  });
+
+  test('a rule scoped to both project and repository beats either alone', () => {
+    expect(
+      rankedIds([
+        match('repo', { repositoryId: 'r' }),
+        match('both', { projectId: 'p', repositoryId: 'r' }),
+        match('project', { projectId: 'p' }),
+      ]),
+    ).toEqual(['both', 'project', 'repo']);
   });
 
   describe('ties', () => {

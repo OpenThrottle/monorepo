@@ -16,6 +16,7 @@ export interface RulesListFilterable {
   actionType: string;
   enabled: boolean;
   environment?: string | null;
+  projectId?: string | null;
   repositoryId?: string | null;
   status?: string | null;
   tagAll: readonly string[];
@@ -85,7 +86,10 @@ export function filterRulesList<T extends RulesListFilterable>(
       return false;
     }
 
-    if (scope === RULES_SCOPE_GLOBAL && rule.repositoryId != null) {
+    if (
+      scope === RULES_SCOPE_GLOBAL &&
+      (rule.repositoryId != null || rule.projectId != null)
+    ) {
       return false;
     }
 
