@@ -37,41 +37,42 @@ Every convention inherited from the retired rules tree — 15 of the 16 relocate
 [Corrections](#corrections-made-in-the-move)) — plus the rules that were already enforced by
 lint but never had a rule file of their own:
 
-| Convention                                                                  | Enforcement                            | Mechanism                                                             |
-| --------------------------------------------------------------------------- | -------------------------------------- | --------------------------------------------------------------------- |
-| [No new enums](#no-new-enums)                                               | **Enforced**                           | `no-restricted-syntax` → `TSEnumDeclaration`                          |
-| [Component and data boundaries](#component-and-data-boundaries)             | **Enforced**                           | `openthrottle/component-primitive-shape` + `audit:component-shape`    |
-| [No default exports](#no-default-exports)                                   | **Enforced**                           | `import-x/no-default-export`                                          |
-| [`import type`](#import-type)                                               | **Enforced**                           | `@typescript-eslint/consistent-type-imports`                          |
-| [Naming conventions](#naming-conventions)                                   | **Enforced** (file names honor system) | `@typescript-eslint/naming-convention`                                |
-| [NestJS file names](#nestjs-file-names)                                     | **Enforced**                           | `openthrottle/nestjs-file-naming`, `openthrottle/nestjs-file-exports` |
-| [Indexed access is `\| undefined`](#indexed-access-returns-undefined)       | **Enforced**                           | `noUncheckedIndexedAccess` compiler flag                              |
-| [No `as` casts](#no-as-casts)                                               | **Enforced**                           | `consistent-type-assertions`, `assertionStyle: 'never'`               |
-| [No `any`](#no-any)                                                         | **Enforced**                           | `@typescript-eslint/no-explicit-any`                                  |
-| [Alphabetize keys](#alphabetize-arrays-and-object-keys)                     | **Enforced**                           | `sort-keys`, `perfectionist/*`, `@graphql-eslint/alphabetize`         |
-| [File length caps](#file-length-caps)                                       | **Enforced**                           | `max-lines` (210 components / 210 routes)                             |
-| [No `await` in loops](#no-await-in-loops)                                   | **Enforced**                           | `no-await-in-loop`                                                    |
-| [Composing classes with `cn`](#composing-classes-with-cn)                   | **Enforced**                           | `no-restricted-imports` (`clsx`) + `no-restricted-syntax`             |
-| [Return types](#return-types)                                               | **Warned**                             | `explicit-module-boundary-types`                                      |
-| [Route primitive shape](#route-and-component-shape)                         | **Warned**                             | `openthrottle/route-primitive-shape`, `openthrottle/pre-hooks-unpack` |
-| [Hook primitive shape](#hook-shape)                                         | **Enforced**                           | `openthrottle/hook-primitive-shape` + `audit:hook-shape`              |
-| [Import order](#import-order)                                               | **Warned**                             | `simple-import-sort/imports`, `simple-import-sort/exports`            |
-| [Anti-flake test rules](#anti-flake-test-rules)                             | **Enforced**                           | `openthrottle/no-test-sleep` and four siblings; Vitest `retry: 0`     |
-| [Agent-safety rules](#agent-safety-rules)                                   | **Enforced**                           | `openthrottle/mcp-tool-registration` and two siblings                 |
-| [Discriminated unions](#discriminated-unions)                               | Honor system                           | —                                                                     |
-| [`interface extends` over `&`](#interface-extends-over-)                    | Honor system                           | —                                                                     |
-| [`readonly` by default](#readonly-properties)                               | Honor system                           | —                                                                     |
-| [Optional properties sparingly](#optional-properties)                       | Honor system                           | —                                                                     |
-| [Prefer results over throwing](#prefer-results-over-throwing)               | Honor system                           | —                                                                     |
-| [JSDoc](#jsdoc-comments)                                                    | Honor system                           | —                                                                     |
-| [Installing libraries](#installing-libraries)                               | Honor system                           | —                                                                     |
-| [Frontend design](#frontend-design)                                         | Honor system                           | —                                                                     |
-| [Data files hold data](#data-files-hold-data)                               | **Enforced** (React Router projects)   | `openthrottle/data-file-shape`                                        |
-| [Named functions use block bodies](#named-functions-use-block-bodies)       | **Enforced** (autofix)                 | `openthrottle/named-function-block-body`                              |
-| [A ternary takes at most three lines](#a-ternary-takes-at-most-three-lines) | **Enforced**                           | `openthrottle/three-line-ternary`                                     |
-| [Long strings are template literals](#long-strings-are-template-literals)   | **Enforced** (autofix)                 | `openthrottle/long-string-template-literal`                           |
-| [JSX consts live under `// Markup`](#jsx-consts-live-under-markup)          | **Enforced** (components)              | `openthrottle/component-primitive-shape`                              |
-| [`sideEffects` is declared and true](#sideeffects-is-declared-and-true)     | **Enforced**                           | `monorepo:check-side-effects` (CI + `check:local`)                    |
+| Convention                                                                  | Enforcement                             | Mechanism                                                             |
+| --------------------------------------------------------------------------- | --------------------------------------- | --------------------------------------------------------------------- |
+| [No new enums](#no-new-enums)                                               | **Enforced**                            | `no-restricted-syntax` → `TSEnumDeclaration`                          |
+| [Component and data boundaries](#component-and-data-boundaries)             | **Enforced**                            | `openthrottle/component-primitive-shape` + `audit:component-shape`    |
+| [No default exports](#no-default-exports)                                   | **Enforced**                            | `import-x/no-default-export`                                          |
+| [`import type`](#import-type)                                               | **Enforced**                            | `@typescript-eslint/consistent-type-imports`                          |
+| [Naming conventions](#naming-conventions)                                   | **Enforced** (file names honor system)  | `@typescript-eslint/naming-convention`                                |
+| [NestJS file names](#nestjs-file-names)                                     | **Enforced**                            | `openthrottle/nestjs-file-naming`, `openthrottle/nestjs-file-exports` |
+| [Indexed access is `\| undefined`](#indexed-access-returns-undefined)       | **Enforced**                            | `noUncheckedIndexedAccess` compiler flag                              |
+| [GraphQL data uses fragment types](#graphql-data-uses-fragment-types)       | **Enforced** (warn where not yet clean) | `openthrottle/prefer-graphql-fragment`                                |
+| [No `as` casts](#no-as-casts)                                               | **Enforced**                            | `consistent-type-assertions`, `assertionStyle: 'never'`               |
+| [No `any`](#no-any)                                                         | **Enforced**                            | `@typescript-eslint/no-explicit-any`                                  |
+| [Alphabetize keys](#alphabetize-arrays-and-object-keys)                     | **Enforced**                            | `sort-keys`, `perfectionist/*`, `@graphql-eslint/alphabetize`         |
+| [File length caps](#file-length-caps)                                       | **Enforced**                            | `max-lines` (210 components / 210 routes)                             |
+| [No `await` in loops](#no-await-in-loops)                                   | **Enforced**                            | `no-await-in-loop`                                                    |
+| [Composing classes with `cn`](#composing-classes-with-cn)                   | **Enforced**                            | `no-restricted-imports` (`clsx`) + `no-restricted-syntax`             |
+| [Return types](#return-types)                                               | **Warned**                              | `explicit-module-boundary-types`                                      |
+| [Route primitive shape](#route-and-component-shape)                         | **Warned**                              | `openthrottle/route-primitive-shape`, `openthrottle/pre-hooks-unpack` |
+| [Hook primitive shape](#hook-shape)                                         | **Enforced**                            | `openthrottle/hook-primitive-shape` + `audit:hook-shape`              |
+| [Import order](#import-order)                                               | **Warned**                              | `simple-import-sort/imports`, `simple-import-sort/exports`            |
+| [Anti-flake test rules](#anti-flake-test-rules)                             | **Enforced**                            | `openthrottle/no-test-sleep` and four siblings; Vitest `retry: 0`     |
+| [Agent-safety rules](#agent-safety-rules)                                   | **Enforced**                            | `openthrottle/mcp-tool-registration` and two siblings                 |
+| [Discriminated unions](#discriminated-unions)                               | Honor system                            | —                                                                     |
+| [`interface extends` over `&`](#interface-extends-over-)                    | Honor system                            | —                                                                     |
+| [`readonly` by default](#readonly-properties)                               | Honor system                            | —                                                                     |
+| [Optional properties sparingly](#optional-properties)                       | Honor system                            | —                                                                     |
+| [Prefer results over throwing](#prefer-results-over-throwing)               | Honor system                            | —                                                                     |
+| [JSDoc](#jsdoc-comments)                                                    | Honor system                            | —                                                                     |
+| [Installing libraries](#installing-libraries)                               | Honor system                            | —                                                                     |
+| [Frontend design](#frontend-design)                                         | Honor system                            | —                                                                     |
+| [Data files hold data](#data-files-hold-data)                               | **Enforced** (React Router projects)    | `openthrottle/data-file-shape`                                        |
+| [Named functions use block bodies](#named-functions-use-block-bodies)       | **Enforced** (autofix)                  | `openthrottle/named-function-block-body`                              |
+| [A ternary takes at most three lines](#a-ternary-takes-at-most-three-lines) | **Enforced**                            | `openthrottle/three-line-ternary`                                     |
+| [Long strings are template literals](#long-strings-are-template-literals)   | **Enforced** (autofix)                  | `openthrottle/long-string-template-literal`                           |
+| [JSX consts live under `// Markup`](#jsx-consts-live-under-markup)          | **Enforced** (components)               | `openthrottle/component-primitive-shape`                              |
+| [`sideEffects` is declared and true](#sideeffects-is-declared-and-true)     | **Enforced**                            | `monorepo:check-side-effects` (CI + `check:local`)                    |
 
 ## Corrections made in the move
 
@@ -261,6 +262,60 @@ const first = arr[0]; // string | undefined
 Handle the `undefined` — a guard, a default, or `.at()` with an explicit check. Do not
 reach for `!` (non-null assertion) or a cast to make it go away; both are banned by
 [No `as` casts](#no-as-casts) in spirit and the second one in fact.
+
+### GraphQL data uses fragment types
+
+**Enforced** by `openthrottle/prefer-graphql-fragment`, at `error` on every TypeScript file
+outside `__generated__` and `dist`, tests included.
+
+Type the GraphQL data a component, hook or helper receives with the `*Fragment` type codegen
+generates — never by indexing into a generated `*Query` / `*Mutation` / `*Subscription` type,
+neither down to a list element (`XQuery['field']['items'][number]`) nor stopping at the list or
+object (`XQuery['field']`). A fragment is the consumer's stated data contract: it names exactly
+the fields it uses and keeps its shape when the query around it is reshaped. An indexed type has
+no name of its own and silently changes whenever the query does.
+
+```ts
+// ❌ carved out of the route's query
+import type { GetPlanQuery } from '~/__generated__/graphql';
+
+export interface PlanHeaderProps {
+  readonly plan: NonNullable<GetPlanQuery['plan']>;
+}
+```
+
+```graphql
+# the route's .graphql document
+fragment PlanHeaderPlan on Plan {
+  status
+  title
+}
+
+query GetPlan($id: ID!) {
+  plan(id: $id) {
+    ...PlanHeaderPlan
+  }
+}
+```
+
+```ts
+// ✅ the fragment's generated type
+import type { PlanHeaderPlanFragment } from '~/__generated__/graphql';
+
+export interface PlanHeaderProps {
+  readonly plan: PlanHeaderPlanFragment;
+}
+```
+
+The rule is syntax-only: it counts an identifier whose imported name ends in `Query`,
+`Mutation` or `Subscription` and that comes from a `*-codegen` package or a `__generated__`
+path (aliases included), and it looks through `NonNullable<…>` and `Exclude<…>`. Indexing into
+a `*Fragment` type, and using a whole operation type, are fine. There is no autofix: the fix is
+a `.graphql` fragment plus a codegen run.
+
+A project that still has violations spreads `preferGraphqlFragmentWarningsEslintConfig` from
+`@tools/dotfiles` **last** in its `eslint.config.ts`, with a comment saying it goes once the
+project is clean. Delete that line in the PR that clears the last violation.
 
 ### `import type`
 
