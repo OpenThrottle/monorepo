@@ -23,7 +23,7 @@ import {
 } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import { ScheduleForm } from '~/routing/schedule/components/ScheduleForm';
-import { missingScheduleTiming } from '~/routing/schedule/utils/parse-form';
+import { missingScheduleTiming } from '~/routing/schedule/utils/missingScheduleTiming';
 import { ScheduleFormSchema } from '~/routing/schedule/utils/ScheduleFormSchema';
 
 type HandleData = Route.ComponentProps['loaderData'];

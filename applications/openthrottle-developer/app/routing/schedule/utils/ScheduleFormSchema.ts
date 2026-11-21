@@ -3,7 +3,7 @@ import { z } from 'zod/v3';
 
 import { SCHEDULE_REPOSITORY_NONE_VALUE } from '~/routing/schedule/data/data.repositories';
 
-import type { ParsedScheduleForm } from './parse-form';
+import type { ParsedScheduleForm } from './missingScheduleTiming';
 
 /** {@link ParsedScheduleForm} with the three always-required fields guaranteed. */
 export interface ValidatedScheduleForm extends ParsedScheduleForm {
