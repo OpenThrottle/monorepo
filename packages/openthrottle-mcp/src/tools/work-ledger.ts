@@ -15,10 +15,10 @@ import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import { z } from 'zod';
 
 import type {
-  AttachWorkSessionSubjectMutation,
-  EndWorkSessionMutation,
-  RecordWorkArtifactMutation,
-  WorkSessionsByPlanQuery,
+  EndedWorkSessionFragment,
+  RecordedWorkArtifactFragment,
+  WorkSessionFragment,
+  WorkSessionSubjectFragment,
 } from '../__generated__/graphql.js';
 import {
   AttachWorkSessionSubjectDocument,
@@ -42,7 +42,7 @@ import { runTool } from '../utils/runTool.ts';
 type BeginTaskSessionResult = GenericResult<{
   model: string | null;
   sessionId: string;
-  subject: AttachWorkSessionSubjectMutation['attachWorkSessionSubject'];
+  subject: WorkSessionSubjectFragment;
 }>;
 
 export const beginTaskSessionToolParameters = z
@@ -73,7 +73,7 @@ export async function beginTaskSessionToolHandler(
   return runTool<{
     model: string | null;
     sessionId: string;
-    subject: AttachWorkSessionSubjectMutation['attachWorkSessionSubject'];
+    subject: WorkSessionSubjectFragment;
   }>('begin_task_session', async () => {
     const token = getAuthToken();
 
@@ -118,7 +118,7 @@ export async function beginTaskSessionToolHandler(
 // ── record_artifact ────────────────────────────────────────────────────────
 
 type RecordArtifactResult = GenericResult<{
-  artifact: RecordWorkArtifactMutation['recordWorkArtifact'];
+  artifact: RecordedWorkArtifactFragment;
 }>;
 
 export const recordArtifactToolParameters = z
@@ -140,7 +140,7 @@ export async function recordArtifactToolHandler(
   }
 
   return runTool<{
-    artifact: RecordWorkArtifactMutation['recordWorkArtifact'];
+    artifact: RecordedWorkArtifactFragment;
   }>('record_artifact', async () => {
     const token = getAuthToken();
     const sessionId = await ensureWorkSession(token);
@@ -173,7 +173,7 @@ export async function recordArtifactToolHandler(
 // ── attach_session_subject ───────────────────────────────────────────────────
 
 type AttachSubjectResult = GenericResult<{
-  subject: AttachWorkSessionSubjectMutation['attachWorkSessionSubject'];
+  subject: WorkSessionSubjectFragment;
 }>;
 
 export const attachSessionSubjectToolParameters = z
@@ -194,7 +194,7 @@ export async function attachSessionSubjectToolHandler(
   }
 
   return runTool<{
-    subject: AttachWorkSessionSubjectMutation['attachWorkSessionSubject'];
+    subject: WorkSessionSubjectFragment;
   }>('attach_session_subject', async () => {
     const token = getAuthToken();
     const sessionId = await ensureWorkSession(token);
@@ -226,7 +226,7 @@ export async function attachSessionSubjectToolHandler(
 // ── end_session ──────────────────────────────────────────────────────────────
 
 type EndSessionResult = GenericResult<{
-  session: EndWorkSessionMutation['endWorkSession'];
+  session: EndedWorkSessionFragment | null | undefined;
 }>;
 
 export const endSessionToolParameters = z
@@ -245,7 +245,7 @@ export async function endSessionToolHandler(
     return invalidArgsContent(parsed.error);
   }
 
-  return runTool<{ session: EndWorkSessionMutation['endWorkSession'] }>(
+  return runTool<{ session: EndedWorkSessionFragment | null | undefined }>(
     'end_session',
     async () => {
       const closed = await closeCurrentSession(
@@ -270,11 +270,8 @@ export async function endSessionToolHandler(
 
 // ── get_work_sessions ────────────────────────────────────────────────────────
 
-type WorkSession =
-  WorkSessionsByPlanQuery['workSessionsByPlan']['sessions'][number];
-
 type GetWorkSessionsResult = GenericResult<{
-  sessions: WorkSession[];
+  sessions: WorkSessionFragment[];
   totalCount: number;
 }>;
 
@@ -302,7 +299,7 @@ export async function getWorkSessionsToolHandler(
     return invalidArgsContent(parsed.error);
   }
 
-  return runTool<{ sessions: WorkSession[]; totalCount: number }>(
+  return runTool<{ sessions: WorkSessionFragment[]; totalCount: number }>(
     'get_work_sessions',
     async () => {
       const token = getAuthToken();

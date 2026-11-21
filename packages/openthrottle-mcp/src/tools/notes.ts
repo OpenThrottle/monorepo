@@ -7,14 +7,11 @@ import { z } from 'zod';
 
 import {
   CreateNoteDocument,
-  type CreateNoteMutation,
   DeleteNoteDocument,
   GetNoteDocument,
-  type GetNoteQuery,
   GetNotesDocument,
-  type GetNotesQuery,
+  type NoteFragment,
   UpdateNoteDocument,
-  type UpdateNoteMutation,
 } from '../__generated__/graphql.js';
 import {
   CreateNoteInputSchema,
@@ -26,7 +23,7 @@ import { invalidArgsContent } from '../utils/errors.ts';
 import { runTool } from '../utils/runTool.ts';
 
 type CreateNoteResult = GenericResult<{
-  note: CreateNoteMutation['createNote'];
+  note: NoteFragment;
 }>;
 
 type DeleteNoteResult = GenericResult<{
@@ -34,15 +31,15 @@ type DeleteNoteResult = GenericResult<{
 }>;
 
 type GetNoteResult = GenericResult<{
-  note: GetNoteQuery['note'];
+  note: NoteFragment | null | undefined;
 }>;
 
 type ListNotesResult = GenericResult<{
-  notes: GetNotesQuery['notes'];
+  notes: NoteFragment[];
 }>;
 
 type UpdateNoteResult = GenericResult<{
-  note: UpdateNoteMutation['updateNote'];
+  note: NoteFragment;
 }>;
 
 export const createNoteToolParameters = CreateNoteInputSchema().strict();
@@ -73,22 +70,19 @@ export async function createNoteToolHandler(
     return invalidArgsContent(parsed.error);
   }
 
-  return runTool<{ note: CreateNoteMutation['createNote'] }>(
-    'create_note',
-    async () => {
-      const token = getAuthToken();
-      const result = await executeGraphqlWithAuth(token, CreateNoteDocument, {
-        input: parsed.data,
-      });
+  return runTool<{ note: NoteFragment }>('create_note', async () => {
+    const token = getAuthToken();
+    const result = await executeGraphqlWithAuth(token, CreateNoteDocument, {
+      input: parsed.data,
+    });
 
-      const note = result?.createNote ?? null;
-      if (!note) return null;
+    const note = result?.createNote ?? null;
+    if (!note) return null;
 
-      const text = `Created note: ${note.id}\n${JSON.stringify(note, null, 2)}`;
+    const text = `Created note: ${note.id}\n${JSON.stringify(note, null, 2)}`;
 
-      return { structuredContent: { note }, text };
-    },
-  );
+    return { structuredContent: { note }, text };
+  });
 }
 
 export async function deleteNoteToolHandler(
@@ -121,26 +115,29 @@ export async function getNoteToolHandler(
     return invalidArgsContent(parsed.error);
   }
 
-  return runTool<{ note: GetNoteQuery['note'] }>('get_note', async () => {
-    const token = getAuthToken();
-    const result = await executeGraphqlWithAuth(token, GetNoteDocument, {
-      id: parsed.data.id,
-    });
+  return runTool<{ note: NoteFragment | null | undefined }>(
+    'get_note',
+    async () => {
+      const token = getAuthToken();
+      const result = await executeGraphqlWithAuth(token, GetNoteDocument, {
+        id: parsed.data.id,
+      });
 
-    const note = result?.note ?? null;
-    if (!note) {
-      return null;
-    }
+      const note = result?.note ?? null;
+      if (!note) {
+        return null;
+      }
 
-    const text = `Note: ${note.id}\n${JSON.stringify(note, null, 2)}`;
-    return { structuredContent: { note }, text };
-  });
+      const text = `Note: ${note.id}\n${JSON.stringify(note, null, 2)}`;
+      return { structuredContent: { note }, text };
+    },
+  );
 }
 
 export async function listNotesToolHandler(
   _args: z.infer<typeof listNotesToolParameters>,
 ): Promise<ListNotesResult> {
-  return runTool<{ notes: GetNotesQuery['notes'] }>('list_notes', async () => {
+  return runTool<{ notes: NoteFragment[] }>('list_notes', async () => {
     const token = getAuthToken();
     const result = await executeGraphqlWithAuth(token, GetNotesDocument, {});
 
@@ -160,19 +157,16 @@ export async function updateNoteToolHandler(
     return invalidArgsContent(parsed.error);
   }
 
-  return runTool<{ note: UpdateNoteMutation['updateNote'] }>(
-    'update_note',
-    async () => {
-      const token = getAuthToken();
-      const result = await executeGraphqlWithAuth(token, UpdateNoteDocument, {
-        input: parsed.data,
-      });
+  return runTool<{ note: NoteFragment }>('update_note', async () => {
+    const token = getAuthToken();
+    const result = await executeGraphqlWithAuth(token, UpdateNoteDocument, {
+      input: parsed.data,
+    });
 
-      const note = result?.updateNote ?? null;
-      if (!note) return null;
+    const note = result?.updateNote ?? null;
+    if (!note) return null;
 
-      const text = `Updated note: ${note.id}\n${JSON.stringify(note, null, 2)}`;
-      return { structuredContent: { note }, text };
-    },
-  );
+    const text = `Updated note: ${note.id}\n${JSON.stringify(note, null, 2)}`;
+    return { structuredContent: { note }, text };
+  });
 }

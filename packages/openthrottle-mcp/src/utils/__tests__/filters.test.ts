@@ -5,10 +5,10 @@
 
 import { describe, expect, it } from 'vitest';
 
-import type { TaskListItem } from '../../tools/tasks.ts';
+import type { TaskFragment } from '../../__generated__/graphql.js';
 import { filterTasksByCategory } from '../filters.ts';
 
-const makeTask = (overrides: Partial<TaskListItem>): TaskListItem => {
+const makeTask = (overrides: Partial<TaskFragment>): TaskFragment => {
   return {
     assignee: null,
     category: 'infra',

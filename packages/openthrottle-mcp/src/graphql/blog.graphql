@@ -4,12 +4,22 @@
 # unpublish, archive or upsert document: those need blog:write and stay with a
 # human in the developer app.
 
+fragment BlogAuthor on BlogAuthorObject {
+  avatarUrl
+  bio
+  displayName
+  slug
+}
+
+fragment BlogTag on BlogTagObject {
+  description
+  name
+  slug
+}
+
 fragment BlogPostAdminFields on BlogPostAdminObject {
   author {
-    avatarUrl
-    bio
-    displayName
-    slug
+    ...BlogAuthor
   }
   bodyMarkdown
   coverImageAlt
@@ -25,9 +35,7 @@ fragment BlogPostAdminFields on BlogPostAdminObject {
   state
   status
   tags {
-    description
-    name
-    slug
+    ...BlogTag
   }
   title
   updatedAt
@@ -54,6 +62,82 @@ fragment BlogPostAdminSummaryFields on BlogPostAdminObject {
   updatedAt
 }
 
+fragment BlogAdminPostResult on BlogAdminPostResult {
+  __typename
+  ... on BlogPostAdminObject {
+    ...BlogPostAdminFields
+  }
+  ... on BlogPostNotFoundError {
+    message
+  }
+}
+
+fragment CreateBlogPostResult on CreateBlogPostResult {
+  __typename
+  ... on BlogCoverAltRequiredError {
+    message
+  }
+  ... on BlogPostAdminObject {
+    ...BlogPostAdminFields
+  }
+  ... on BlogReferenceNotFoundError {
+    entity
+    key
+    message
+  }
+  ... on BlogSlugConflictError {
+    message
+    slug
+  }
+}
+
+fragment UpdateBlogPostResult on UpdateBlogPostResult {
+  __typename
+  ... on BlogCoverAltRequiredError {
+    message
+  }
+  ... on BlogPostAdminObject {
+    ...BlogPostAdminFields
+  }
+  ... on BlogPostNotFoundError {
+    message
+  }
+  ... on BlogPostPublishPermissionRequiredError {
+    message
+  }
+  ... on BlogPostStaleWriteError {
+    currentUpdatedAt
+    message
+  }
+  ... on BlogReferenceNotFoundError {
+    entity
+    key
+    message
+  }
+  ... on BlogSlugConflictError {
+    message
+    slug
+  }
+}
+
+fragment SetBlogPostTagsResult on SetBlogPostTagsResult {
+  __typename
+  ... on BlogPostAdminObject {
+    ...BlogPostAdminFields
+  }
+  ... on BlogPostNotFoundError {
+    message
+  }
+  ... on BlogPostPublishPermissionRequiredError {
+    message
+  }
+  ... on BlogReferenceNotFoundError {
+    entity
+    key
+    message
+  }
+}
+
 query ListBlogPosts(
   $after: String
   $first: Int! = 10
@@ -71,101 +155,36 @@ query ListBlogPosts(
 
 query GetBlogPost($id: ID, $slug: String) {
   blogAdminPost(id: $id, slug: $slug) {
-    __typename
-    ... on BlogPostAdminObject {
-      ...BlogPostAdminFields
-    }
-    ... on BlogPostNotFoundError {
-      message
-    }
+    ...BlogAdminPostResult
   }
 }
 
 query ListBlogTags {
   blogAdminTags {
-    description
-    name
-    slug
+    ...BlogTag
   }
 }
 
 query ListBlogAuthors {
   blogAdminAuthors {
-    avatarUrl
-    bio
-    displayName
-    slug
+    ...BlogAuthor
   }
 }
 
 mutation CreateBlogPost($input: CreateBlogPostInput!) {
   createBlogPost(input: $input) {
-    __typename
-    ... on BlogCoverAltRequiredError {
-      message
-    }
-    ... on BlogPostAdminObject {
-      ...BlogPostAdminFields
-    }
-    ... on BlogReferenceNotFoundError {
-      entity
-      key
-      message
-    }
-    ... on BlogSlugConflictError {
-      message
-      slug
-    }
+    ...CreateBlogPostResult
   }
 }
 
 mutation UpdateBlogPost($input: UpdateBlogPostInput!) {
   updateBlogPost(input: $input) {
-    __typename
-    ... on BlogCoverAltRequiredError {
-      message
-    }
-    ... on BlogPostAdminObject {
-      ...BlogPostAdminFields
-    }
-    ... on BlogPostNotFoundError {
-      message
-    }
-    ... on BlogPostPublishPermissionRequiredError {
-      message
-    }
-    ... on BlogPostStaleWriteError {
-      currentUpdatedAt
-      message
-    }
-    ... on BlogReferenceNotFoundError {
-      entity
-      key
-      message
-    }
-    ... on BlogSlugConflictError {
-      message
-      slug
-    }
+    ...UpdateBlogPostResult
   }
 }
 
 mutation SetBlogPostTags($input: SetBlogPostTagsInput!) {
   setBlogPostTags(input: $input) {
-    __typename
-    ... on BlogPostAdminObject {
-      ...BlogPostAdminFields
-    }
-    ... on BlogPostNotFoundError {
-      message
-    }
-    ... on BlogPostPublishPermissionRequiredError {
-      message
-    }
-    ... on BlogReferenceNotFoundError {
-      entity
-      key
-      message
-    }
+    ...SetBlogPostTagsResult
   }
 }

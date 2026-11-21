@@ -74,9 +74,7 @@ mutation deleteTask($input: DeleteTaskInput!) {
 
 mutation promoteTaskToPlan($input: PromoteTaskToPlanInput!) {
   promoteTaskToPlan(input: $input) {
-    error
-    jobId
-    success
+    ...PromoteTaskToPlanResult
   }
 }
 
@@ -88,12 +86,7 @@ mutation reorderPlanTasks($input: ReorderPlanTasksInput!) {
 
 mutation appendPlanOutput($input: AppendPlanOutputInput!) {
   appendPlanOutput(input: $input) {
-    content
-    createdAt
-    id
-    iteration
-    planId
-    taskId
+    ...PlanOutputStreamChunk
   }
 }
 
@@ -136,19 +129,13 @@ mutation ralphEndWorkSession($input: EndWorkSessionInput!) {
 
 mutation registerCliPlanRun($input: RegisterCliPlanRunInput!) {
   registerCliPlanRun(input: $input) {
-    hostname
-    pid
-    ...PlanRun
-    workerId
+    ...CliPlanRun
   }
 }
 
 mutation settleCliPlanRun($input: SettleCliPlanRunInput!) {
   settleCliPlanRun(input: $input) {
-    hostname
-    pid
-    ...PlanRun
-    workerId
+    ...CliPlanRun
   }
 }
 
@@ -164,12 +151,7 @@ mutation registerPlanRunWorktreeCheckout(
   $input: RegisterPlanRunWorktreeCheckoutInput!
 ) {
   registerPlanRunWorktreeCheckout(input: $input) {
-    checkout {
-      displayName
-      filesystemPath
-      kind
-    }
-    ...PlanRun
+    ...PlanRunWithCheckout
   }
 }
 

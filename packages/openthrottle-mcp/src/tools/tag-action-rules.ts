@@ -13,8 +13,8 @@ import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import { z } from 'zod';
 
 import type {
-  PreviewTagActionRuleQuery,
-  RuleApplicationsQuery,
+  RuleApplicationFragment,
+  TagActionRulePreviewFragment,
 } from '../__generated__/graphql.js';
 import {
   DeleteTagActionRuleDocument,
@@ -123,7 +123,7 @@ const fetchLedgerRows = async (
     readonly planId: string | undefined;
     readonly ruleId: string | undefined;
   },
-): Promise<RuleApplicationsQuery['ruleApplications'] | undefined> => {
+): Promise<RuleApplicationFragment[] | undefined> => {
   if (scope.ruleId !== undefined) {
     const result = await executeGraphqlWithAuth(
       token,
@@ -335,11 +335,7 @@ export const previewTagActionRuleToolParameters = z
 
 export const previewTagActionRuleToolDescription = `Dry run a tag→action rule via the previewTagActionRule GraphQL query: which of your plans it would match and, for a sample of the rest, which conditions (repository, environment, status, tags) failed and which tags are missing. Answers "why didn't my rule fire". Read-only: dispatches nothing and writes no ledger row. Only the match fields are needed (no payload). Evaluates your newest 500 plans and says when it truncated. A rule qualified on an environment matches nothing unless you pass evaluateEnvironment (failedOnlyOnEnvironment marks that case). Requires a USER token.`;
 
-type PreviewRule = NonNullable<
-  PreviewTagActionRuleQuery['previewTagActionRule']
->;
-
-const describePreview = (preview: PreviewRule): string => {
+const describePreview = (preview: TagActionRulePreviewFragment): string => {
   const lines = [
     `Matches ${preview.matchedCount} of ${preview.evaluated} plans${preview.truncated ? ` (truncated: only the newest ${preview.cap} were evaluated)` : ''}${preview.environment == null ? '' : ` in environment ${preview.environment}`}.`,
   ];
@@ -358,13 +354,13 @@ const describePreview = (preview: PreviewRule): string => {
 
 export async function previewTagActionRuleToolHandler(
   args: z.infer<typeof previewTagActionRuleToolParameters>,
-): Promise<GenericResult<{ preview: PreviewRule }>> {
+): Promise<GenericResult<{ preview: TagActionRulePreviewFragment }>> {
   const parsed = previewTagActionRuleToolParameters.safeParse(args);
   if (!parsed.success) {
     return invalidArgsContent(parsed.error);
   }
 
-  return runTool<{ preview: PreviewRule }>(
+  return runTool<{ preview: TagActionRulePreviewFragment }>(
     'preview_tag_action_rule',
     async () => {
       const token = getAuthToken();

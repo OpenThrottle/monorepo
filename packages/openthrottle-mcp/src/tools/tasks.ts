@@ -7,25 +7,18 @@ import { z } from 'zod';
 
 import {
   CreateTaskDocument,
-  type CreateTaskMutation,
   CreateTasksDocument,
-  type CreateTasksMutation,
   DeleteTaskDocument,
   GetRemainingTasksByPlanIdDocument,
-  type GetRemainingTasksByPlanIdQuery,
   GetTaskDocument,
-  type GetTaskQuery,
   GetTasksByPlanIdDocument,
-  type GetTasksByPlanIdQuery,
   GetTasksDocument,
-  type GetTasksQuery,
   PlanTaskStatus,
   PromoteTaskToPlanDocument,
-  type PromoteTaskToPlanMutation,
+  type PromoteTaskToPlanResultFragment,
   ReorderPlanTasksDocument,
-  type ReorderPlanTasksMutation,
+  type TaskFragment,
   UpdateTaskDocument,
-  type UpdateTaskMutation,
 } from '../__generated__/graphql.js';
 import {
   CreateTaskInputSchema,
@@ -43,8 +36,6 @@ import { invalidArgsContent } from '../utils/errors.ts';
 import { filterTasksByCategory } from '../utils/filters.ts';
 import { runTool } from '../utils/runTool.ts';
 
-export type TaskListItem = GetTasksQuery['tasks'][number];
-
 /**
  * Upper bound requested from the capped root tasks() query when fetching the
  * full list to filter client-side. Matches the server-side MAX_TASKS_LIMIT so
@@ -53,7 +44,7 @@ export type TaskListItem = GetTasksQuery['tasks'][number];
 const GET_TASKS_FETCH_LIMIT = 500;
 
 type CreateTaskResult = GenericResult<{
-  task: CreateTaskMutation['createTask'];
+  task: TaskFragment;
 }>;
 
 type CreateTasksResult = GenericResult<{
@@ -65,31 +56,31 @@ type DeleteTaskResult = GenericResult<{
 }>;
 
 type GetTaskResult = GenericResult<{
-  task: GetTaskQuery['task'];
+  task: TaskFragment | null | undefined;
 }>;
 
 type GetTasksByPlanIdResult = GenericResult<{
-  tasks: GetTasksByPlanIdQuery['tasksByPlanId'];
+  tasks: TaskFragment[];
 }>;
 
 type GetRemainingTasksForPlanResult = GenericResult<{
-  tasks: GetRemainingTasksByPlanIdQuery['remainingTasksByPlanId'];
+  tasks: TaskFragment[];
 }>;
 
 type ListTasksByCategoryResult = GenericResult<{
-  tasks: readonly TaskListItem[];
+  tasks: readonly TaskFragment[];
 }>;
 
 type ReorderPlanTasksResult = GenericResult<{
-  tasks: ReorderPlanTasksMutation['reorderPlanTasks'];
+  tasks: TaskFragment[];
 }>;
 
 type UpdateTaskResult = GenericResult<{
-  task: UpdateTaskMutation['updateTask'];
+  task: TaskFragment;
 }>;
 
 type PromoteTaskResult = GenericResult<{
-  promotion: PromoteTaskToPlanMutation['promoteTaskToPlan'];
+  promotion: PromoteTaskToPlanResultFragment;
 }>;
 
 export const createTaskToolParameters = CreateTaskInputSchema().strict();
@@ -174,27 +165,24 @@ export async function createTaskToolHandler(
     return invalidArgsContent(parsed.error);
   }
 
-  return runTool<{ task: CreateTaskMutation['createTask'] }>(
-    'create_task',
-    async () => {
-      const token = getAuthToken();
-      const result = await executeGraphqlWithAuth(
-        token,
-        CreateTaskDocument,
-        {
-          input: parsed.data,
-        },
-        await ambientSessionOptions(token),
-      );
+  return runTool<{ task: TaskFragment }>('create_task', async () => {
+    const token = getAuthToken();
+    const result = await executeGraphqlWithAuth(
+      token,
+      CreateTaskDocument,
+      {
+        input: parsed.data,
+      },
+      await ambientSessionOptions(token),
+    );
 
-      const task = result?.createTask;
-      if (!task) return null;
+    const task = result?.createTask;
+    if (!task) return null;
 
-      const text = `Created task: ${task.id}\n${JSON.stringify(task, null, 2)}`;
+    const text = `Created task: ${task.id}\n${JSON.stringify(task, null, 2)}`;
 
-      return { structuredContent: { task }, text };
-    },
-  );
+    return { structuredContent: { task }, text };
+  });
 }
 
 function serializeRequirements(requirements: unknown): string | null {
@@ -247,8 +235,7 @@ export async function createTasksToolHandler(
         await ambientSessionOptions(token),
       );
 
-      const tasks: CreateTasksMutation['createTasks']['tasks'] =
-        result?.createTasks?.tasks ?? [];
+      const tasks: TaskFragment[] = result?.createTasks?.tasks ?? [];
       const created = tasks.map((task) => ({ id: task.id, title: task.title }));
 
       const createdLines = created.map((r) => ` - ${r.id} ${r.title}`);
@@ -296,19 +283,22 @@ export async function getTaskToolHandler(
     return invalidArgsContent(parsed.error);
   }
 
-  return runTool<{ task: GetTaskQuery['task'] }>('get_task', async () => {
-    const token = getAuthToken();
-    const result = await executeGraphqlWithAuth(token, GetTaskDocument, {
-      id: parsed.data.id,
-    });
+  return runTool<{ task: TaskFragment | null | undefined }>(
+    'get_task',
+    async () => {
+      const token = getAuthToken();
+      const result = await executeGraphqlWithAuth(token, GetTaskDocument, {
+        id: parsed.data.id,
+      });
 
-    const task = result?.task;
-    if (!task) return null;
+      const task = result?.task;
+      if (!task) return null;
 
-    const text = `Task: ${task.id}\n${JSON.stringify(task, null, 2)}`;
+      const text = `Task: ${task.id}\n${JSON.stringify(task, null, 2)}`;
 
-    return { structuredContent: { task }, text };
-  });
+      return { structuredContent: { task }, text };
+    },
+  );
 }
 
 export async function getTasksByPlanIdToolHandler(
@@ -320,7 +310,7 @@ export async function getTasksByPlanIdToolHandler(
   }
 
   return runTool<{
-    tasks: GetTasksByPlanIdQuery['tasksByPlanId'];
+    tasks: TaskFragment[];
   }>('get_tasks_by_plan_id', async () => {
     const token = getAuthToken();
     const result = await executeGraphqlWithAuth(
@@ -346,7 +336,7 @@ export async function getRemainingTasksForPlanToolHandler(
   }
 
   return runTool<{
-    tasks: GetRemainingTasksByPlanIdQuery['remainingTasksByPlanId'];
+    tasks: TaskFragment[];
   }>('get_remaining_tasks_for_plan', async () => {
     const token = getAuthToken();
     const result = await executeGraphqlWithAuth(
@@ -374,7 +364,7 @@ export async function listTasksByCategoryToolHandler(
 
   const { category, planId, status, limit } = parsed.data;
 
-  return runTool<{ tasks: readonly TaskListItem[] }>(
+  return runTool<{ tasks: readonly TaskFragment[] }>(
     'list_tasks_by_category',
     async () => {
       const token = getAuthToken();
@@ -408,26 +398,23 @@ export async function reorderPlanTasksToolHandler(
     return invalidArgsContent(parsed.error);
   }
 
-  return runTool<{ tasks: ReorderPlanTasksMutation['reorderPlanTasks'] }>(
-    'reorder_plan_tasks',
-    async () => {
-      const token = getAuthToken();
-      const result = await executeGraphqlWithAuth(
-        token,
-        ReorderPlanTasksDocument,
-        { input: parsed.data },
-        await ambientSessionOptions(token),
-      );
+  return runTool<{ tasks: TaskFragment[] }>('reorder_plan_tasks', async () => {
+    const token = getAuthToken();
+    const result = await executeGraphqlWithAuth(
+      token,
+      ReorderPlanTasksDocument,
+      { input: parsed.data },
+      await ambientSessionOptions(token),
+    );
 
-      const tasks = result?.reorderPlanTasks ?? [];
+    const tasks = result?.reorderPlanTasks ?? [];
 
-      const emptyText = 'reorder_plan_tasks: no tasks were reordered.';
-      const listText = `Reordered ${tasks.length} task(s):\n${JSON.stringify(tasks, null, 2)}`;
-      const text = tasks.length === 0 ? emptyText : listText;
+    const emptyText = 'reorder_plan_tasks: no tasks were reordered.';
+    const listText = `Reordered ${tasks.length} task(s):\n${JSON.stringify(tasks, null, 2)}`;
+    const text = tasks.length === 0 ? emptyText : listText;
 
-      return { structuredContent: { tasks }, text };
-    },
-  );
+    return { structuredContent: { tasks }, text };
+  });
 }
 
 export async function updateTaskToolHandler(
@@ -438,26 +425,23 @@ export async function updateTaskToolHandler(
     return invalidArgsContent(parsed.error);
   }
 
-  return runTool<{ task: UpdateTaskMutation['updateTask'] }>(
-    'update_task',
-    async () => {
-      const token = getAuthToken();
-      const result = await executeGraphqlWithAuth(
-        token,
-        UpdateTaskDocument,
-        {
-          input: parsed.data,
-        },
-        await ambientSessionOptions(token),
-      );
+  return runTool<{ task: TaskFragment }>('update_task', async () => {
+    const token = getAuthToken();
+    const result = await executeGraphqlWithAuth(
+      token,
+      UpdateTaskDocument,
+      {
+        input: parsed.data,
+      },
+      await ambientSessionOptions(token),
+    );
 
-      const task = result?.updateTask;
-      if (!task) return null;
+    const task = result?.updateTask;
+    if (!task) return null;
 
-      const text = `Updated task: ${task.id}\n${JSON.stringify(task, null, 2)}`;
-      return { structuredContent: { task }, text };
-    },
-  );
+    const text = `Updated task: ${task.id}\n${JSON.stringify(task, null, 2)}`;
+    return { structuredContent: { task }, text };
+  });
 }
 
 export async function promoteTaskToolHandler(
@@ -469,7 +453,7 @@ export async function promoteTaskToolHandler(
   }
 
   return runTool<{
-    promotion: PromoteTaskToPlanMutation['promoteTaskToPlan'];
+    promotion: PromoteTaskToPlanResultFragment;
   }>('promote_task', async () => {
     const token = getAuthToken();
     const result = await executeGraphqlWithAuth(

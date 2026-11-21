@@ -9,9 +9,9 @@ import type { z } from 'zod';
 
 import {
   ClaimPlanMessagesDocument,
-  type ClaimPlanMessagesMutation,
+  type ClaimPlanMessagesResultFragment,
+  type PlanMessageFieldsFragment,
   PostPlanMessageDocument,
-  type PostPlanMessageMutation,
 } from '../__generated__/graphql.js';
 import {
   ClaimPlanMessagesInputSchema,
@@ -22,15 +22,13 @@ import type { GenericResult } from '../types/index.ts';
 import { invalidArgsContent } from '../utils/errors.ts';
 import { runTool } from '../utils/runTool.ts';
 
-type PlanMessage = PostPlanMessageMutation['postPlanMessage'];
-
-type ClaimResult = ClaimPlanMessagesMutation['claimPlanMessages'];
-
 /**
  * @description Renders delivered messages as the block an agent reads at a task boundary: STEERs
  * (which override the task description where they conflict) before QUEUEs.
  */
-const formatDelivered = (messages: readonly PlanMessage[]): string => {
+const formatDelivered = (
+  messages: readonly PlanMessageFieldsFragment[],
+): string => {
   return messages
     .map(
       (message) =>
@@ -48,31 +46,34 @@ export const postPlanMessageToolDescription = `Post a message to a plan's inbox.
 
 export async function postPlanMessageToolHandler(
   args: z.infer<typeof postPlanMessageToolParameters>,
-): Promise<GenericResult<{ message: PlanMessage }>> {
+): Promise<GenericResult<{ message: PlanMessageFieldsFragment }>> {
   const parsed = postPlanMessageToolParameters.safeParse(args);
   if (!parsed.success) return invalidArgsContent(parsed.error);
 
-  return runTool<{ message: PlanMessage }>('post_plan_message', async () => {
-    const result = await executeGraphqlWithAuth(
-      getAuthToken(),
-      PostPlanMessageDocument,
-      {
-        input: {
-          author: parsed.data.author ?? null,
-          body: parsed.data.body,
-          kind: parsed.data.kind,
-          planId: parsed.data.planId,
-          taskId: parsed.data.taskId ?? null,
+  return runTool<{ message: PlanMessageFieldsFragment }>(
+    'post_plan_message',
+    async () => {
+      const result = await executeGraphqlWithAuth(
+        getAuthToken(),
+        PostPlanMessageDocument,
+        {
+          input: {
+            author: parsed.data.author ?? null,
+            body: parsed.data.body,
+            kind: parsed.data.kind,
+            planId: parsed.data.planId,
+            taskId: parsed.data.taskId ?? null,
+          },
         },
-      },
-    );
+      );
 
-    const message = result?.postPlanMessage ?? null;
-    if (!message) return null;
+      const message = result?.postPlanMessage ?? null;
+      if (!message) return null;
 
-    const text = `Posted ${message.kind} message ${message.id} to plan ${message.planId} (${message.status}).`;
-    return { structuredContent: { message }, text };
-  });
+      const text = `Posted ${message.kind} message ${message.id} to plan ${message.planId} (${message.status}).`;
+      return { structuredContent: { message }, text };
+    },
+  );
 }
 
 // ── claim_plan_messages ──────────────────────────────────────────────────────
@@ -84,32 +85,35 @@ export const claimPlanMessagesToolDescription = `Claim a plan's pending STEER/QU
 
 export async function claimPlanMessagesToolHandler(
   args: z.infer<typeof claimPlanMessagesToolParameters>,
-): Promise<GenericResult<{ claim: ClaimResult }>> {
+): Promise<GenericResult<{ claim: ClaimPlanMessagesResultFragment }>> {
   const parsed = claimPlanMessagesToolParameters.safeParse(args);
   if (!parsed.success) return invalidArgsContent(parsed.error);
 
-  return runTool<{ claim: ClaimResult }>('claim_plan_messages', async () => {
-    const result = await executeGraphqlWithAuth(
-      getAuthToken(),
-      ClaimPlanMessagesDocument,
-      {
-        input: {
-          planId: parsed.data.planId,
-          planRunId: parsed.data.planRunId ?? null,
-          taskId: parsed.data.taskId ?? null,
+  return runTool<{ claim: ClaimPlanMessagesResultFragment }>(
+    'claim_plan_messages',
+    async () => {
+      const result = await executeGraphqlWithAuth(
+        getAuthToken(),
+        ClaimPlanMessagesDocument,
+        {
+          input: {
+            planId: parsed.data.planId,
+            planRunId: parsed.data.planRunId ?? null,
+            taskId: parsed.data.taskId ?? null,
+          },
         },
-      },
-    );
+      );
 
-    const claim = result?.claimPlanMessages ?? null;
-    if (!claim) return null;
+      const claim = result?.claimPlanMessages ?? null;
+      if (!claim) return null;
 
-    const isEmpty = claim.messages.length === 0;
-    const deliveredText = `Delivered ${claim.messages.length} inbox message(s):\n\n${formatDelivered(claim.messages)}`;
-    const text = isEmpty
-      ? `No pending inbox messages for plan ${parsed.data.planId}.`
-      : deliveredText;
+      const isEmpty = claim.messages.length === 0;
+      const deliveredText = `Delivered ${claim.messages.length} inbox message(s):\n\n${formatDelivered(claim.messages)}`;
+      const text = isEmpty
+        ? `No pending inbox messages for plan ${parsed.data.planId}.`
+        : deliveredText;
 
-    return { structuredContent: { claim }, text };
-  });
+      return { structuredContent: { claim }, text };
+    },
+  );
 }

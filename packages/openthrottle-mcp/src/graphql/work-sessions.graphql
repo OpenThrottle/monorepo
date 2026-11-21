@@ -22,6 +22,28 @@ fragment WorkSessions on WorkSessionListResult {
   totalCount
 }
 
+fragment RecordedWorkArtifact on WorkArtifactObject {
+  externalKey
+  id
+  lifecycle
+  sessionId
+  type
+  verification
+}
+
+fragment WorkSessionSubject on WorkSessionSubjectObject {
+  id
+  planId
+  sessionId
+  taskId
+}
+
+fragment EndedWorkSession on WorkSessionObject {
+  closedBy
+  endedAt
+  id
+}
+
 mutation startWorkSession($input: StartWorkSessionInput!) {
   startWorkSession(input: $input) {
     id
@@ -33,29 +55,19 @@ mutation startWorkSession($input: StartWorkSessionInput!) {
 
 mutation recordWorkArtifact($input: RecordWorkArtifactInput!) {
   recordWorkArtifact(input: $input) {
-    externalKey
-    id
-    lifecycle
-    sessionId
-    type
-    verification
+    ...RecordedWorkArtifact
   }
 }
 
 mutation attachWorkSessionSubject($input: AttachWorkSessionSubjectInput!) {
   attachWorkSessionSubject(input: $input) {
-    id
-    planId
-    sessionId
-    taskId
+    ...WorkSessionSubject
   }
 }
 
 mutation endWorkSession($input: EndWorkSessionInput!) {
   endWorkSession(input: $input) {
-    closedBy
-    endedAt
-    id
+    ...EndedWorkSession
   }
 }
 

@@ -28,6 +28,7 @@ const serviceAccountToken = '***REMOVED-OT-TOKEN***';
  * asked for a field. `taskId` was stored but never returned precisely because it was
  * missing from these selection sets, and no mocked test could see that. These assert
  * on the generated documents themselves so a future selection-set trim fails here.
+ * Fragment spreads are followed, since the selections live in a shared fragment.
  */
 function rootFieldNames(document: {
   readonly definitions: readonly unknown[];
@@ -36,10 +37,54 @@ function rootFieldNames(document: {
   if (!operation) return [];
 
   const rootField = operation.selectionSet.selections.find(isField);
+  return fieldNames(document, rootField?.selectionSet?.selections ?? []);
+}
+
+function fieldNames(
+  document: { readonly definitions: readonly unknown[] },
+  selections: readonly unknown[],
+): readonly string[] {
+  return selections.flatMap((selection) => {
+    if (isField(selection)) return [selection.name.value];
+    if (!isFragmentSpread(selection)) return [];
+
+    const fragment = document.definitions.find(
+      (definition) =>
+        isFragmentDefinition(definition) &&
+        definition.name.value === selection.name.value,
+    );
+    return isFragmentDefinition(fragment)
+      ? fieldNames(document, fragment.selectionSet.selections)
+      : [];
+  });
+}
+
+interface FragmentDefinitionLike {
+  readonly kind: string;
+  readonly name: { readonly value: string };
+  readonly selectionSet: { readonly selections: readonly unknown[] };
+}
+
+interface FragmentSpreadLike {
+  readonly kind: string;
+  readonly name: { readonly value: string };
+}
+
+function isFragmentDefinition(node: unknown): node is FragmentDefinitionLike {
   return (
-    rootField?.selectionSet?.selections
-      .filter(isField)
-      .map((field) => field.name.value) ?? []
+    typeof node === 'object' &&
+    node !== null &&
+    'kind' in node &&
+    node.kind === 'FragmentDefinition'
+  );
+}
+
+function isFragmentSpread(node: unknown): node is FragmentSpreadLike {
+  return (
+    typeof node === 'object' &&
+    node !== null &&
+    'kind' in node &&
+    node.kind === 'FragmentSpread'
   );
 }
 

@@ -3,6 +3,46 @@
 # user identity (a service-account token gets an explanatory error).
 # See docs/monorepo/plan-task-tags-rules-design.md ("Rules engine").
 
+fragment RuleApplication on RuleApplicationObject {
+  createdAt
+  detailsJson
+  id
+  planId
+  ruleId
+  state
+  taskId
+  updatedAt
+}
+
+fragment TagActionRulePreview on TagActionRulePreviewObject {
+  cap
+  environment
+  evaluated
+  matched {
+    id
+    repositoryId
+    status
+    title
+  }
+  matchedCount
+  nonMatching {
+    conditions {
+      actual
+      condition
+      expected
+      passed
+    }
+    failedOnlyOnEnvironment
+    id
+    missingTags
+    repositoryId
+    status
+    title
+  }
+  specificity
+  truncated
+}
+
 query TagActionRules {
   tagActionRules {
     actionPayloadJson
@@ -23,27 +63,13 @@ query TagActionRules {
 
 query RuleApplications($planId: ID!) {
   ruleApplications(planId: $planId) {
-    createdAt
-    detailsJson
-    id
-    planId
-    ruleId
-    state
-    taskId
-    updatedAt
+    ...RuleApplication
   }
 }
 
 query RuleApplicationsForRule($ruleId: ID!) {
   ruleApplicationsForRule(ruleId: $ruleId) {
-    createdAt
-    detailsJson
-    id
-    planId
-    ruleId
-    state
-    taskId
-    updatedAt
+    ...RuleApplication
   }
 }
 
@@ -52,32 +78,7 @@ query PreviewTagActionRule(
   $input: UpsertTagActionRuleInput!
 ) {
   previewTagActionRule(environment: $environment, input: $input) {
-    cap
-    environment
-    evaluated
-    matched {
-      id
-      repositoryId
-      status
-      title
-    }
-    matchedCount
-    nonMatching {
-      conditions {
-        actual
-        condition
-        expected
-        passed
-      }
-      failedOnlyOnEnvironment
-      id
-      missingTags
-      repositoryId
-      status
-      title
-    }
-    specificity
-    truncated
+    ...TagActionRulePreview
   }
 }
 

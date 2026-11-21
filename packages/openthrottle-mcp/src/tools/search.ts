@@ -8,11 +8,11 @@ import { z } from 'zod';
 
 import {
   GetDocumentDocument,
-  type GetDocumentQuery,
+  type ListPlanSourceFragment,
+  type ListSourceInfoFragment,
   ListSourcesDocument,
-  type ListSourcesQuery,
+  type SearchChunkFragment,
   SearchDocument,
-  type SearchQuery,
 } from '../__generated__/graphql.js';
 import { getAuthToken } from '../auth/getAuthToken.ts';
 import type { GenericResult } from '../types/index.ts';
@@ -23,18 +23,18 @@ const SEARCH_DEFAULT_LIMIT = 20;
 const SEARCH_MAX_LIMIT = 50;
 
 type GetDocumentResult = GenericResult<{
-  chunk: GetDocumentQuery['getDocument'];
+  chunk: SearchChunkFragment | null | undefined;
 }>;
 
 type ListSourcesResult = GenericResult<{
-  plans: ListSourcesQuery['listSources']['plans'];
-  sources: ListSourcesQuery['listSources']['sources'];
+  plans: ListPlanSourceFragment[];
+  sources: ListSourceInfoFragment[];
 }>;
 
 type SemanticSearchStructured = {
-  chunks: SearchQuery['search']['chunks'];
-  mode: SearchQuery['search']['mode'];
-  reason: SearchQuery['search']['reason'];
+  chunks: SearchChunkFragment[];
+  mode: string;
+  reason: string | null | undefined;
 };
 
 type SemanticSearchResult = GenericResult<SemanticSearchStructured>;
@@ -64,7 +64,7 @@ export async function getDocumentToolHandler(
     return invalidArgsContent(parsed.error);
   }
 
-  return runTool<{ chunk: GetDocumentQuery['getDocument'] }>(
+  return runTool<{ chunk: SearchChunkFragment | null | undefined }>(
     'get_document',
     async () => {
       const token = getAuthToken();
@@ -90,8 +90,8 @@ export async function listSourcesToolHandler(
   _args: z.infer<typeof listSourcesToolParameters>,
 ): Promise<ListSourcesResult> {
   return runTool<{
-    plans: ListSourcesQuery['listSources']['plans'];
-    sources: ListSourcesQuery['listSources']['sources'];
+    plans: ListPlanSourceFragment[];
+    sources: ListSourceInfoFragment[];
   }>('list_sources', async () => {
     const token = getAuthToken();
     const result = await executeGraphqlWithAuth(token, ListSourcesDocument, {});

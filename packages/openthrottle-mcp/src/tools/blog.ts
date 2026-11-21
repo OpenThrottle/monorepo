@@ -12,21 +12,21 @@ import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import { z } from 'zod/v3';
 
 import {
+  type BlogAdminPostResultFragment,
+  type BlogAuthorFragment,
+  type BlogPostAdminSummaryFieldsFragment,
+  type BlogTagFragment,
   CreateBlogPostDocument,
-  type CreateBlogPostMutation,
+  type CreateBlogPostResultFragment,
   GetBlogPostDocument,
-  type GetBlogPostQuery,
   ListBlogAuthorsDocument,
-  type ListBlogAuthorsQuery,
   ListBlogPostsDocument,
-  type ListBlogPostsQuery,
   ListBlogTagsDocument,
-  type ListBlogTagsQuery,
   SetBlogPostTagsDocument,
-  type SetBlogPostTagsMutation,
+  type SetBlogPostTagsResultFragment,
   UpdateBlogPostDocument,
   type UpdateBlogPostInput,
-  type UpdateBlogPostMutation,
+  type UpdateBlogPostResultFragment,
 } from '../__generated__/graphql.js';
 import {
   BlogPostStateSchema,
@@ -44,46 +44,46 @@ const LIST_DEFAULT_FIRST = 10;
 const LIST_MAX_FIRST = 50;
 
 type BlogPostWriteOutcome =
-  | CreateBlogPostMutation['createBlogPost']
-  | SetBlogPostTagsMutation['setBlogPostTags']
-  | UpdateBlogPostMutation['updateBlogPost'];
+  | CreateBlogPostResultFragment
+  | SetBlogPostTagsResultFragment
+  | UpdateBlogPostResultFragment;
 
 type CreateBlogPostResult = GenericResult<{
   editorUrl: string | null;
-  result: CreateBlogPostMutation['createBlogPost'];
+  result: CreateBlogPostResultFragment;
 }>;
 
 type GetBlogPostResult = GenericResult<{
   editorUrl: string | null;
-  result: GetBlogPostQuery['blogAdminPost'];
+  result: BlogAdminPostResultFragment;
 }>;
 
 type ListBlogAuthorsResult = GenericResult<{
-  authors: ListBlogAuthorsQuery['blogAdminAuthors'];
+  authors: BlogAuthorFragment[];
 }>;
 
 type ListBlogPostsResult = GenericResult<{
   endCursor: string | null;
   hasNextPage: boolean;
   items: Array<
-    ListBlogPostsQuery['blogAdminPosts']['items'][number] & {
+    BlogPostAdminSummaryFieldsFragment & {
       editorUrl: string;
     }
   >;
 }>;
 
 type ListBlogTagsResult = GenericResult<{
-  tags: ListBlogTagsQuery['blogAdminTags'];
+  tags: BlogTagFragment[];
 }>;
 
 type SetBlogPostTagsResult = GenericResult<{
   editorUrl: string | null;
-  result: SetBlogPostTagsMutation['setBlogPostTags'];
+  result: SetBlogPostTagsResultFragment;
 }>;
 
 type UpdateBlogPostResult = GenericResult<{
   editorUrl: string | null;
-  result: UpdateBlogPostMutation['updateBlogPost'];
+  result: UpdateBlogPostResultFragment;
 }>;
 
 // ── shared copy + helpers ────────────────────────────────────────────────────
@@ -219,7 +219,7 @@ export async function listBlogPostsToolHandler(
     endCursor: string | null;
     hasNextPage: boolean;
     items: Array<
-      ListBlogPostsQuery['blogAdminPosts']['items'][number] & {
+      BlogPostAdminSummaryFieldsFragment & {
         editorUrl: string;
       }
     >;
@@ -290,7 +290,7 @@ export async function getBlogPostToolHandler(
 
   return runTool<{
     editorUrl: string | null;
-    result: GetBlogPostQuery['blogAdminPost'];
+    result: BlogAdminPostResultFragment;
   }>('get_blog_post', async () => {
     const token = getAuthToken();
     const result = await executeGraphqlWithAuth(token, GetBlogPostDocument, {
@@ -336,7 +336,7 @@ export async function createBlogPostToolHandler(
 
   return runTool<{
     editorUrl: string | null;
-    result: CreateBlogPostMutation['createBlogPost'];
+    result: CreateBlogPostResultFragment;
   }>('create_blog_post', async () => {
     const token = getAuthToken();
     const result = await executeGraphqlWithAuth(token, CreateBlogPostDocument, {
@@ -381,7 +381,7 @@ export async function updateBlogPostToolHandler(
 
   return runTool<{
     editorUrl: string | null;
-    result: UpdateBlogPostMutation['updateBlogPost'];
+    result: UpdateBlogPostResultFragment;
   }>('update_blog_post', async () => {
     const token = getAuthToken();
     const result = await executeGraphqlWithAuth(token, UpdateBlogPostDocument, {
@@ -412,7 +412,7 @@ export async function setBlogPostTagsToolHandler(
 
   return runTool<{
     editorUrl: string | null;
-    result: SetBlogPostTagsMutation['setBlogPostTags'];
+    result: SetBlogPostTagsResultFragment;
   }>('set_blog_post_tags', async () => {
     const token = getAuthToken();
     const result = await executeGraphqlWithAuth(
@@ -437,26 +437,23 @@ export const listBlogTagsToolDescription = `List every blog tag (slug, name, des
 export async function listBlogTagsToolHandler(
   _args: z.infer<typeof listBlogTagsToolParameters>,
 ): Promise<ListBlogTagsResult> {
-  return runTool<{ tags: ListBlogTagsQuery['blogAdminTags'] }>(
-    'list_blog_tags',
-    async () => {
-      const token = getAuthToken();
-      const result = await executeGraphqlWithAuth(
-        token,
-        ListBlogTagsDocument,
-        {},
-      );
+  return runTool<{ tags: BlogTagFragment[] }>('list_blog_tags', async () => {
+    const token = getAuthToken();
+    const result = await executeGraphqlWithAuth(
+      token,
+      ListBlogTagsDocument,
+      {},
+    );
 
-      const tags = result?.blogAdminTags;
-      if (!tags) return null;
+    const tags = result?.blogAdminTags;
+    if (!tags) return null;
 
-      const emptyText = `No blog tags exist yet. A human creates tags in the developer app.`;
-      const listText = `Blog tags (${tags.length}): ${tags.map((tag) => tag.slug).join(', ')}`;
-      const text = tags.length === 0 ? emptyText : listText;
+    const emptyText = `No blog tags exist yet. A human creates tags in the developer app.`;
+    const listText = `Blog tags (${tags.length}): ${tags.map((tag) => tag.slug).join(', ')}`;
+    const text = tags.length === 0 ? emptyText : listText;
 
-      return { structuredContent: { tags }, text };
-    },
-  );
+    return { structuredContent: { tags }, text };
+  });
 }
 
 // ── list_blog_authors ────────────────────────────────────────────────────────
@@ -468,7 +465,7 @@ export const listBlogAuthorsToolDescription = `List every blog author (slug, dis
 export async function listBlogAuthorsToolHandler(
   _args: z.infer<typeof listBlogAuthorsToolParameters>,
 ): Promise<ListBlogAuthorsResult> {
-  return runTool<{ authors: ListBlogAuthorsQuery['blogAdminAuthors'] }>(
+  return runTool<{ authors: BlogAuthorFragment[] }>(
     'list_blog_authors',
     async () => {
       const token = getAuthToken();

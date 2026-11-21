@@ -18,6 +18,19 @@ fragment PlanMessageFields on PlanMessageObject {
   updatedAt
 }
 
+fragment ClaimPlanMessagesResult on ClaimPlanMessagesResultObject {
+  auditChunk {
+    content
+    createdAt
+    id
+    planId
+    taskId
+  }
+  messages {
+    ...PlanMessageFields
+  }
+}
+
 mutation PostPlanMessage($input: PostPlanMessageInput!) {
   postPlanMessage(input: $input) {
     ...PlanMessageFields
@@ -26,15 +39,6 @@ mutation PostPlanMessage($input: PostPlanMessageInput!) {
 
 mutation ClaimPlanMessages($input: ClaimPlanMessagesInput!) {
   claimPlanMessages(input: $input) {
-    auditChunk {
-      content
-      createdAt
-      id
-      planId
-      taskId
-    }
-    messages {
-      ...PlanMessageFields
-    }
+    ...ClaimPlanMessagesResult
   }
 }
