@@ -1,11 +1,11 @@
 /**
- * @description Parses the ScheduleForm's FormData into the fields shared by create + update. The
- * server re-validates everything (cron, driver, capabilities, settings); this only shapes strings
- * into the GraphQL input. `undefined` fields are omitted so update can be a partial patch.
+ * @description The parsed shape of the ScheduleForm shared by create + update (produced by
+ * `ScheduleFormSchema` via `parseFormData`), plus the per-kind timing check. The server
+ * re-validates everything (cron, driver, capabilities, settings). `undefined` fields are omitted
+ * so update can be a partial patch.
  */
 
 import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
-import { SCHEDULE_REPOSITORY_NONE_VALUE } from '~/routing/schedule/data/data.repositories';
 import { SCHEDULE_KIND } from '~/routing/schedule/data/data.schedule-kind';
 
 export interface ParsedScheduleForm {
@@ -34,21 +34,6 @@ export interface ParsedScheduleForm {
   timezone?: string;
 }
 
-const str = (form: FormData, key: string): string | undefined => {
-  const value = form.get(key);
-  if (typeof value !== 'string') return undefined;
-  const trimmed = value.trim();
-  return trimmed === '' ? undefined : trimmed;
-};
-
-/** A minutes field as whole milliseconds, or undefined when blank or not a number. */
-const minutesAsMs = (form: FormData, key: string): number | undefined => {
-  const raw = str(form, key);
-  const minutes = raw === undefined ? Number.NaN : Number(raw);
-
-  return Number.isFinite(minutes) ? Math.round(minutes * 60_000) : undefined;
-};
-
 /**
  * @description The required-field message for the "when" of the chosen schedule kind (cron by
  * default), or null when its field is filled in. The server still validates the value itself.
@@ -70,33 +55,4 @@ export const missingScheduleTiming = (
       }
       return null;
   }
-};
-
-export const parseScheduleForm = (form: FormData): ParsedScheduleForm => {
-  const timeoutRaw = str(form, 'timeoutMs');
-  const timeoutMs = timeoutRaw === undefined ? undefined : Number(timeoutRaw);
-  const isTimeoutValid = timeoutMs !== undefined && Number.isFinite(timeoutMs);
-  const repositoryRaw = str(form, 'repositoryCheckoutId');
-  const isDefaultRepository =
-    repositoryRaw === undefined ||
-    repositoryRaw === SCHEDULE_REPOSITORY_NONE_VALUE;
-
-  return {
-    cronPattern: str(form, 'cronPattern'),
-    cwd: str(form, 'cwd'),
-    driverId: str(form, 'driverId'),
-    enabled: form.get('enabled') === 'true',
-    intervalMs: minutesAsMs(form, 'intervalMinutes'),
-    misfirePolicy: str(form, 'misfirePolicy'),
-    misfireThresholdMs: minutesAsMs(form, 'misfireThresholdMinutes'),
-    model: str(form, 'model'),
-    name: str(form, 'name'),
-    prompt: str(form, 'prompt'),
-    repositoryCheckoutId: isDefaultRepository ? null : repositoryRaw,
-    runAt: str(form, 'runAt'),
-    scheduleKind: str(form, 'scheduleKind'),
-    settingsJson: str(form, 'settingsJson'),
-    timeoutMs: isTimeoutValid ? timeoutMs : undefined,
-    timezone: str(form, 'timezone'),
-  };
 };
