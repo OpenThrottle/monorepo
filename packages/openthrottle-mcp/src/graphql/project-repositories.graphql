@@ -1,0 +1,16 @@
+# MCP-only GraphQL documents: project <-> repository links (many-to-many).
+# Mirrors the linkProjectRepository/unlinkProjectRepository mutations exposed
+# by openthrottle-server. Selection sets are alphabetized.
+
+mutation LinkProjectRepository($input: LinkProjectRepositoryInput!) {
+  linkProjectRepository(input: $input) {
+    createdAt
+    id
+    projectId
+    repositoryId
+  }
+}
+
+mutation UnlinkProjectRepository($input: UnlinkProjectRepositoryInput!) {
+  unlinkProjectRepository(input: $input)
+}

@@ -37,6 +37,7 @@ type PlanDefaultedKeys =
   | 'jobRunHooks'
   | 'project'
   | 'projectId'
+  | 'projectSortOrder'
   | 'runConfig'
   | 'status'
   | 'summary';
@@ -119,4 +120,7 @@ export interface PlansRepositoryMock extends BaseRepositoryMock<
   >;
   readonly listDistinctPeople: Mock<PlansRepository['listDistinctPeople']>;
   readonly listFiltered: Mock<PlansRepository['listFiltered']>;
+  readonly listInProject: Mock<PlansRepository['listInProject']>;
+  readonly maxProjectSortOrders: Mock<PlansRepository['maxProjectSortOrders']>;
+  readonly renumberProjectPlans: Mock<PlansRepository['renumberProjectPlans']>;
 }

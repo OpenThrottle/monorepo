@@ -2,22 +2,19 @@ import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import {
-  mergeRouteModuleMeta,
-  parsePagination,
-} from '@openthrottle/react-router-utils';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import * as React from 'react';
 
 import type { Route } from '@/app/routes/+types/projects.$projectId._index';
 import { GetProjectByIdDocument } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import { runProjectDetailAction } from '~/routing/projects/actions/projectId';
-import { ProjectDetailTabs } from '~/routing/projects/components/ProjectDetailTabs';
+import { ProjectDetailView } from '~/routing/projects/components/ProjectDetailView';
 import { ProjectNotFound } from '~/routing/projects/components/ProjectNotFound';
 import {
-  PROJECT_TASKS_DEFAULT_LIMIT,
-  PROJECT_TASKS_DEFAULT_PAGE,
-} from '~/routing/projects/config/projects.defaults';
+  getAvailablePlans,
+  getUnlinkedRepositories,
+} from '~/routing/projects/utils/projectPlans';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -28,30 +25,26 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
 
 export const loader = async (args: Route.LoaderArgs) => {
   const projectId = args.params.projectId;
-  const url = args.url;
-  const searchParams = url?.searchParams ?? new URLSearchParams();
-  const { limit, offset, page } = parsePagination(searchParams, {
-    defaultLimit: PROJECT_TASKS_DEFAULT_LIMIT,
-    defaultPage: PROJECT_TASKS_DEFAULT_PAGE,
+
+  const {
+    availablePlans,
+    project,
+    projectPlans,
+    skillTagVocabulary,
+    workspaceRepositories,
+  } = await executeGraphqlWithAuth(args.request, GetProjectByIdDocument, {
+    id: projectId,
   });
 
-  const { project, projectTasksResult, skillTagVocabulary } =
-    await executeGraphqlWithAuth(args.request, GetProjectByIdDocument, {
-      id: projectId,
-      limit,
-      offset,
-    });
-
-  const projectTasks = projectTasksResult.tasks;
-  const totalTaskCount = projectTasksResult.totalCount;
-
   return {
-    limit,
-    page,
+    availablePlans: getAvailablePlans(availablePlans, projectId),
+    availableRepositories: getUnlinkedRepositories(
+      workspaceRepositories,
+      project?.repositories ?? [],
+    ),
     project,
-    projectTasks,
+    projectPlans,
     tagVocabulary: skillTagVocabulary.tags ?? [],
-    totalTaskCount,
   };
 };
 
@@ -72,8 +65,13 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params: _p } = props;
-  const { limit, page, project, projectTasks, tagVocabulary, totalTaskCount } =
-    loaderData;
+  const {
+    availablePlans,
+    availableRepositories,
+    project,
+    projectPlans,
+    tagVocabulary,
+  } = loaderData;
 
   // Hooks
 
@@ -92,13 +90,12 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <ProjectDetailTabs
-        limit={limit}
-        page={page}
+      <ProjectDetailView
+        availablePlans={availablePlans}
+        availableRepositories={availableRepositories}
+        plans={projectPlans}
         project={project}
         tagVocabulary={tagVocabulary}
-        tasks={projectTasks}
-        totalTaskCount={totalTaskCount}
       />
     </GlobalScreen>
   );

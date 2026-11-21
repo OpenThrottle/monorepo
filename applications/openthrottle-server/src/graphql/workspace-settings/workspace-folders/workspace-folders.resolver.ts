@@ -58,6 +58,13 @@ export class WorkspaceFoldersResolver {
     return this.loaders.projectLoader.load(parent.projectId);
   }
 
+  @ResolveField(() => [ProjectObject], {
+    description: `Projects this repository is linked to through the many-to-many project_repositories table, oldest link first.`,
+  })
+  async projects(@Parent() parent: RepositoryObject): Promise<Project[]> {
+    return this.loaders.projectsByRepositoryIdLoader.load(parent.id);
+  }
+
   @Query(() => [DiscoveredFolderObject], {
     description: `Git repositories found one level under the configured workspace roots (server-host paths); empty when OPENTHROTTLE_WORKSPACE_ROOTS is unset.`,
   })

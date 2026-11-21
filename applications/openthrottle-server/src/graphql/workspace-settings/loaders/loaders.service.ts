@@ -5,8 +5,11 @@
 import { Injectable, Scope } from '@nestjs/common';
 import { createEntityByIdLoader } from '@openthrottle/nestjs-postgres';
 import type { Project } from '@openthrottle/nestjs-repositories-server';
-import { ProjectsRepository } from '@openthrottle/nestjs-repositories-server';
-import type DataLoader from 'dataloader';
+import {
+  ProjectRepositoriesRepository,
+  ProjectsRepository,
+} from '@openthrottle/nestjs-repositories-server';
+import DataLoader from 'dataloader';
 
 /**
  * @description Holds a project DataLoader for the current request. Injected into WorkspaceSettingsResolver; resolve the project relation via the loader instead of one findById per local-repository row.
@@ -14,8 +17,24 @@ import type DataLoader from 'dataloader';
 @Injectable({ scope: Scope.REQUEST })
 export class WorkspaceSettingsLoaders {
   readonly projectLoader: DataLoader<string, Project | null>;
+  /** Live projects linked to each repository through project_repositories, oldest link first. */
+  readonly projectsByRepositoryIdLoader: DataLoader<string, Project[]>;
 
-  constructor(projectsRepository: ProjectsRepository) {
+  constructor(
+    projectRepositoriesRepository: ProjectRepositoriesRepository,
+    projectsRepository: ProjectsRepository,
+  ) {
     this.projectLoader = createEntityByIdLoader(projectsRepository);
+    this.projectsByRepositoryIdLoader = new DataLoader<string, Project[]>(
+      async (repositoryIds) => {
+        const grouped =
+          await projectRepositoriesRepository.listProjectsByRepositoryIds(
+            repositoryIds,
+          );
+        return repositoryIds.map((repositoryId) => {
+          return grouped.get(repositoryId) ?? [];
+        });
+      },
+    );
   }
 }

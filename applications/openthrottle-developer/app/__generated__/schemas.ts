@@ -5,6 +5,7 @@ import {
   AddHookInput,
   AddPermissionToRoleInput,
   AddPlanTagInput,
+  AddPlanToProjectInput,
   AddProjectSkillTagInput,
   AddProjectTagInput,
   AddSkillTagInput,
@@ -83,6 +84,7 @@ import {
   LabelAgentTrajectoryInput,
   LastActivityInput,
   LinesAddedDeletedInput,
+  LinkProjectRepositoryInput,
   ListAgentConversationsInput,
   ListCustomPromptsInput,
   ListPlanMessagesInput,
@@ -132,6 +134,7 @@ import {
   RegisterPlanRunWorktreeCheckoutInput,
   RemainingTasksByPlanIdInput,
   RemovePermissionFromRoleInput,
+  RemovePlanFromProjectInput,
   RemovePlanTagInput,
   RemoveProjectSkillTagInput,
   RemoveProjectTagInput,
@@ -142,6 +145,7 @@ import {
   RemoveTaskTagInput,
   RenameSkillTagInput,
   ReorderPlanTasksInput,
+  ReorderProjectPlansInput,
   RepeatableJobsInput,
   ReplaceAgentTrajectoryInput,
   ReschedulePlanRunInput,
@@ -171,6 +175,7 @@ import {
   TimelineLaneGrouping,
   TimelineMarkerKind,
   TimelineSpanKind,
+  UnlinkProjectRepositoryInput,
   UnverifiedWorkArtifactsInput,
   UpdateAgentConversationTitleInput,
   UpdateBlogPostInput,
@@ -358,6 +363,15 @@ export function AddPlanTagInputSchema(): z.ZodObject<
   return z.object({
     planId: z.string().min(1),
     tag: z.string().min(1),
+  });
+}
+
+export function AddPlanToProjectInputSchema(): z.ZodObject<
+  Properties<AddPlanToProjectInput>
+> {
+  return z.object({
+    planId: z.string().min(1),
+    projectId: z.string().min(1),
   });
 }
 
@@ -1153,6 +1167,15 @@ export function LinesAddedDeletedInputSchema(): z.ZodObject<
   });
 }
 
+export function LinkProjectRepositoryInputSchema(): z.ZodObject<
+  Properties<LinkProjectRepositoryInput>
+> {
+  return z.object({
+    projectId: z.string().min(1),
+    repositoryId: z.string().min(1),
+  });
+}
+
 export function ListAgentConversationsInputSchema(): z.ZodObject<
   Properties<ListAgentConversationsInput>
 > {
@@ -1652,6 +1675,14 @@ export function RemovePermissionFromRoleInputSchema(): z.ZodObject<
   });
 }
 
+export function RemovePlanFromProjectInputSchema(): z.ZodObject<
+  Properties<RemovePlanFromProjectInput>
+> {
+  return z.object({
+    planId: z.string().min(1),
+  });
+}
+
 export function RemovePlanTagInputSchema(): z.ZodObject<
   Properties<RemovePlanTagInput>
 > {
@@ -1739,6 +1770,15 @@ export function ReorderPlanTasksInputSchema(): z.ZodObject<
   return z.object({
     planId: z.string().min(1),
     taskIds: z.array(z.string().min(1)),
+  });
+}
+
+export function ReorderProjectPlansInputSchema(): z.ZodObject<
+  Properties<ReorderProjectPlansInput>
+> {
+  return z.object({
+    planIds: z.array(z.string().min(1)),
+    projectId: z.string().min(1),
   });
 }
 
@@ -2000,6 +2040,15 @@ export function TasksByProjectIdInputSchema(): z.ZodObject<
     limit: z.number().nullish(),
     offset: z.number().nullish(),
     projectId: z.string().min(1),
+  });
+}
+
+export function UnlinkProjectRepositoryInputSchema(): z.ZodObject<
+  Properties<UnlinkProjectRepositoryInput>
+> {
+  return z.object({
+    projectId: z.string().min(1),
+    repositoryId: z.string().min(1),
   });
 }
 

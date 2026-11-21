@@ -518,6 +518,50 @@ export class McpDeveloperMcpSurface {
   }
 
   @Tool({
+    description: Th.addPlanToProjectToolDescription,
+    name: 'add_plan_to_project',
+    parameters: asMcpParameters(Th.addPlanToProjectToolParameters),
+  })
+  addPlanToProject(
+    args: Parameters<typeof Th.addPlanToProjectToolHandler>[0],
+  ): ReturnType<typeof Th.addPlanToProjectToolHandler> {
+    return Th.addPlanToProjectToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.getProjectPlansToolDescription,
+    name: 'get_project_plans',
+    parameters: asMcpParameters(Th.getProjectPlansToolParameters),
+  })
+  getProjectPlans(
+    args: Parameters<typeof Th.getProjectPlansToolHandler>[0],
+  ): ReturnType<typeof Th.getProjectPlansToolHandler> {
+    return Th.getProjectPlansToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.removePlanFromProjectToolDescription,
+    name: 'remove_plan_from_project',
+    parameters: asMcpParameters(Th.removePlanFromProjectToolParameters),
+  })
+  removePlanFromProject(
+    args: Parameters<typeof Th.removePlanFromProjectToolHandler>[0],
+  ): ReturnType<typeof Th.removePlanFromProjectToolHandler> {
+    return Th.removePlanFromProjectToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.reorderProjectPlansToolDescription,
+    name: 'reorder_project_plans',
+    parameters: asMcpParameters(Th.reorderProjectPlansToolParameters),
+  })
+  reorderProjectPlans(
+    args: Parameters<typeof Th.reorderProjectPlansToolHandler>[0],
+  ): ReturnType<typeof Th.reorderProjectPlansToolHandler> {
+    return Th.reorderProjectPlansToolHandler(args);
+  }
+
+  @Tool({
     description: Th.reorderPlanTasksToolDescription,
     name: 'reorder_plan_tasks',
     parameters: asMcpParameters(Th.reorderPlanTasksToolParameters),
@@ -592,6 +636,28 @@ export class McpDeveloperMcpSurface {
     args: Parameters<typeof Th.removePlanTagToolHandler>[0],
   ): ReturnType<typeof Th.removePlanTagToolHandler> {
     return Th.removePlanTagToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.linkProjectRepositoryToolDescription,
+    name: 'link_project_repository',
+    parameters: asMcpParameters(Th.linkProjectRepositoryToolParameters),
+  })
+  linkProjectRepository(
+    args: Parameters<typeof Th.linkProjectRepositoryToolHandler>[0],
+  ): ReturnType<typeof Th.linkProjectRepositoryToolHandler> {
+    return Th.linkProjectRepositoryToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.unlinkProjectRepositoryToolDescription,
+    name: 'unlink_project_repository',
+    parameters: asMcpParameters(Th.unlinkProjectRepositoryToolParameters),
+  })
+  unlinkProjectRepository(
+    args: Parameters<typeof Th.unlinkProjectRepositoryToolHandler>[0],
+  ): ReturnType<typeof Th.unlinkProjectRepositoryToolHandler> {
+    return Th.unlinkProjectRepositoryToolHandler(args);
   }
 
   @Tool({

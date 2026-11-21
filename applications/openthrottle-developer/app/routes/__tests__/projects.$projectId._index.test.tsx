@@ -15,7 +15,7 @@ const mockProject = {
   description: 'Test project description',
   id: 'proj-detail-1',
   name: 'Test Project',
-  nxProjectName: null,
+  repositories: [],
   tags: [
     {
       confidence: null,
@@ -28,41 +28,40 @@ const mockProject = {
   updatedAt: '2025-01-02T00:00:00Z',
 };
 
-const mockProjectTask = {
-  __typename: 'TaskObject' as const,
-  assignee: 'dev@example.com',
-  category: 'feature',
-  createdAt: '2025-01-02T00:00:00Z',
-  description: null,
-  id: 'task-1',
-  planId: 'plan-1',
-  requirementsJson: '[]',
-  summary: null,
-  title: 'A project task',
-  updatedAt: '2025-01-03T00:00:00Z',
-};
-
-const emptyProjectTasks: (typeof mockProjectTask)[] = [];
-
 const defaultLoaderData = {
-  limit: 20,
-  page: 1,
+  availablePlans: [],
+  availableRepositories: [],
   project: mockProject,
-  projectTasks: emptyProjectTasks,
+  projectPlans: [],
   tagVocabulary: [
     { dimension: 'domain', id: 'v-1', tag: 'backend' },
     { dimension: 'phase', id: 'v-2', tag: 'design' },
   ],
-  totalTaskCount: 0,
 };
 
 type LoaderData = {
-  limit: number;
-  page: number;
+  availablePlans: {
+    id: string;
+    projectId: string | null;
+    status: string;
+    title: string;
+  }[];
+  availableRepositories: {
+    defaultBranch: string | null;
+    id: string;
+    name: string;
+    normalizedRemoteUrl: string | null;
+  }[];
   project: typeof mockProject | null;
-  projectTasks: (typeof mockProjectTask)[];
+  projectPlans: {
+    id: string;
+    projectSortOrder: number | null;
+    status: string;
+    taskCount: number;
+    tasksCompletedCount: number;
+    title: string;
+  }[];
   tagVocabulary: { dimension: string; id: string; tag: string }[];
-  totalTaskCount: number;
 };
 
 const renderRoute = (
@@ -105,7 +104,7 @@ describe('routes/projects.$projectId._index.tsx', () => {
   test('should render project detail when project exists', async () => {
     const { component } = renderRoute(defaultLoaderData);
     expect(
-      await component.findByRole('tablist', { name: 'Project sections' }),
+      await component.findByTestId('ProjectPlansList'),
     ).toBeInTheDocument();
     expect(
       component.getAllByText('Test Project').length,
@@ -116,47 +115,34 @@ describe('routes/projects.$projectId._index.tsx', () => {
     ).toBeInTheDocument();
   });
 
-  test('should render Overview and Tasks tabs', async () => {
+  test('should render repositories and plans sections instead of tabs', async () => {
     const { component } = renderRoute(defaultLoaderData);
     expect(
-      await component.findByRole('tab', { name: 'Overview' }),
+      await component.findByRole('region', { name: 'Repositories' }),
     ).toBeInTheDocument();
-    expect(component.getByRole('tab', { name: 'Tasks' })).toBeInTheDocument();
-  });
-
-  test('should show tasks tab content with empty state when no tasks', async () => {
-    const user = userEvent.setup();
-    const { component } = renderRoute(defaultLoaderData);
-    await user.click(await component.findByRole('tab', { name: 'Tasks' }));
-    expect(component.getByText('No tasks')).toBeInTheDocument();
     expect(
-      component.getByText('This project has no tasks yet.'),
+      component.getByRole('region', { name: 'Plans' }),
     ).toBeInTheDocument();
+    expect(component.queryByRole('tab')).not.toBeInTheDocument();
   });
 
-  test('should show ProjectTasksTable when projectTasks are provided', async () => {
-    const user = userEvent.setup();
+  test('should list the project plans in order', async () => {
     const { component } = renderRoute({
       ...defaultLoaderData,
-      projectTasks: [mockProjectTask],
-      totalTaskCount: 1,
+      projectPlans: [
+        {
+          id: 'plan-1',
+          projectSortOrder: 1000,
+          status: 'PENDING',
+          taskCount: 3,
+          tasksCompletedCount: 1,
+          title: 'First plan',
+        },
+      ],
     });
-    await user.click(await component.findByRole('tab', { name: 'Tasks' }));
-    expect(component.getByText('A project task')).toBeInTheDocument();
-    expect(component.getByTestId('ProjectTasksTable')).toBeInTheDocument();
-  });
-
-  test('should render OpenThrottlePagination when totalTaskCount > limit', async () => {
-    const user = userEvent.setup();
-    const { component } = renderRoute({
-      ...defaultLoaderData,
-      limit: 2,
-      projectTasks: [mockProjectTask, { ...mockProjectTask, id: 'task-2' }],
-      totalTaskCount: 25,
-    });
-    await user.click(await component.findByRole('tab', { name: 'Tasks' }));
-    expect(component.getByTestId('OpenThrottlePagination')).toBeInTheDocument();
-    expect(component.getByText('Showing 1-2 of 25 tasks')).toBeInTheDocument();
+    expect(
+      await component.findByRole('link', { name: 'First plan' }),
+    ).toBeInTheDocument();
   });
 
   test('should render empty state when project is not found', async () => {

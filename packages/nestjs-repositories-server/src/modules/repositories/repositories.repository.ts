@@ -4,6 +4,7 @@ import { BaseRepository } from '@openthrottle/nestjs-postgres';
 import type { EntityManager } from 'typeorm';
 import { IsNull, Repository as OrmRepository } from 'typeorm';
 
+import { ProjectRepositoriesRepository } from '../project-repositories/project-repositories.repository.ts';
 import { RepositoryCheckout } from '../repository-checkouts/repository-checkout.entity.ts';
 import { normalizeRemoteUrl } from './remote-url/remote-url.utils.ts';
 import type {
@@ -20,7 +21,9 @@ import { Repository } from './repository.entity.ts';
  * fires none of the foreign key actions, so `remove` and `removeRepository` cascade to the
  * repository's checkouts themselves; see migration 178. The inherited `findById` throws on a
  * miss, so the nullable lookup is `findRepositoryById` and the nullable update is
- * `updateRepository`.
+ * `updateRepository`. The single `project_id` column is deprecated in favour of
+ * `project_repositories`; `create` and `updateRepository` write both so nothing regresses
+ * before the UI moves to the join table.
  * @public
  */
 @Injectable()
@@ -33,8 +36,28 @@ export class RepositoriesRepository extends BaseRepository<
   constructor(
     @InjectRepository(Repository)
     repository: OrmRepository<Repository>,
+    private readonly projectRepositories: ProjectRepositoriesRepository,
   ) {
     super(repository);
+  }
+
+  /**
+   * @description Inserts a repository and, when it carries a (deprecated) `projectId`, links
+   * it to that project in `project_repositories` too.
+   */
+  override async create(
+    input: RepositoryCreateInput,
+    options?: Parameters<OrmRepository<Repository>['save']>[1],
+  ): Promise<Repository> {
+    const created = await super.create(input, options);
+    if (created.projectId !== null) {
+      await this.projectRepositories.syncLegacyProject(
+        created.id,
+        null,
+        created.projectId,
+      );
+    }
+    return created;
   }
 
   /**
@@ -117,11 +140,20 @@ export class RepositoriesRepository extends BaseRepository<
     if (data.normalizedRemoteUrl !== undefined) {
       existing.normalizedRemoteUrl = data.normalizedRemoteUrl;
     }
+    const previousProjectId = existing.projectId;
     if (data.projectId !== undefined) {
       existing.projectId = data.projectId;
     }
 
-    return this.repository.save(existing);
+    const saved = await this.repository.save(existing);
+    if (data.projectId !== undefined) {
+      await this.projectRepositories.syncLegacyProject(
+        saved.id,
+        previousProjectId,
+        data.projectId,
+      );
+    }
+    return saved;
   }
 
   /**

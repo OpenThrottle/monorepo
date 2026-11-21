@@ -23,6 +23,7 @@ import { TaggingQueueProducerModule } from '../../queues/tagging/producer/produc
 import { EffectiveUserResolutionModule } from '../../services/effective-user-resolution/effective-user-resolution.module.ts';
 import { EmbedderModule } from '../../services/embedder/embedder.module.ts';
 import { PlanCreationModule } from '../../services/plan-creation/plan-creation.module.ts';
+import { PlanProjectMembershipModule } from '../../services/plan-project-membership/plan-project-membership.module.ts';
 import { PlanRunWorktreeCheckoutModule } from '../../services/plan-run-worktree-checkout/plan-run-worktree-checkout.module.ts';
 import { SourceControlModule } from '../../services/source-control/source-control.module.ts';
 import { WorktreeCheckoutPruneModule } from '../../services/worktree-checkout-prune/worktree-checkout-prune.module.ts';
@@ -43,6 +44,7 @@ import { PlansResolver } from './plans.resolver.ts';
     NotificationsModule,
     PlanCreationModule,
     PlanEnqueueModule,
+    PlanProjectMembershipModule,
     PlanRulesQueueProducerModule,
     PlanRunsModule,
     PlanRunWorktreeCheckoutModule,

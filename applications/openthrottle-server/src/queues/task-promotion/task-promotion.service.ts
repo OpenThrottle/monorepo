@@ -46,6 +46,7 @@ import { resolveArtifactForWrite } from '../../graphql/work-ledger/artifact-type
 import { WORK_LEDGER_CAPTURE_FAILED_MARKER } from '../../graphql/work-ledger/work-ledger.constants.ts';
 import { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture/work-ledger-capture.service.ts';
 import { NotificationsService } from '../../notifications/notifications.service.ts';
+import { PlanProjectMembershipService } from '../../services/plan-project-membership/plan-project-membership.service.ts';
 import {
   PROMOTED_TAG,
   PROMOTED_TASK_STATUS,
@@ -65,6 +66,7 @@ export class TaskPromotionService {
     private readonly dataSource: DataSource,
     private readonly logger: LoggerService,
     private readonly notificationsService: NotificationsService,
+    private readonly planProjectMembership: PlanProjectMembershipService,
     private readonly workLedgerCapture: WorkLedgerCaptureService,
   ) {}
 
@@ -174,13 +176,18 @@ export class TaskPromotionService {
     const description = body === '' ? preamble : `${preamble}\n\n${body}`;
 
     const planRepo = manager.getRepository(Plan);
+    const projectId = task.projectId ?? sourcePlan?.projectId ?? null;
     const plan = planRepo.create({
       assignee: task.assignee ?? sourcePlan?.assignee ?? null,
       author: task.assignee ?? sourcePlan?.author ?? 'openthrottle',
       category: task.category ?? sourcePlan?.category ?? 'feature',
       description,
       project: task.project ?? sourcePlan?.project ?? null,
-      projectId: task.projectId ?? sourcePlan?.projectId ?? null,
+      projectId,
+      projectSortOrder: await this.planProjectMembership.appendSortOrder(
+        projectId,
+        manager,
+      ),
       status: 'PENDING',
       title: task.title,
     });

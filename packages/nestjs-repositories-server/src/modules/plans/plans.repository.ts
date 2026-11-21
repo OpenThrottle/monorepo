@@ -1,10 +1,19 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BaseRepository } from '@openthrottle/nestjs-postgres';
-import { And, IsNull, LessThan, MoreThanOrEqual, Repository } from 'typeorm';
+import type { EntityManager } from 'typeorm';
+import {
+  And,
+  In,
+  IsNull,
+  LessThan,
+  MoreThanOrEqual,
+  Repository,
+} from 'typeorm';
 
 import { Task } from '../tasks/task.entity.ts';
 import { Plan } from './plan.entity.ts';
+import { PROJECT_PLAN_SORT_ORDER_GAP } from './plans.constants.ts';
 import type {
   CountPlansByDateRangeParams,
   ListPlansFilteredParams,
@@ -91,6 +100,7 @@ export class PlansRepository extends BaseRepository<Plan, PlanCreateInput> {
         'plan.id',
         'plan.project',
         'plan.projectId',
+        'plan.projectSortOrder',
         'plan.status',
         'plan.summary',
         'plan.title',
@@ -237,5 +247,86 @@ export class PlansRepository extends BaseRepository<Plan, PlanCreateInput> {
       .andWhere('plan.deletedAt IS NULL')
       .limit(limit)
       .getMany();
+  }
+
+  /**
+   * @description The live plans of a project in their project order: `project_sort_order`
+   * ascending, then creation time as a tie-break for any row that has no position yet.
+   * Uses an explicit `orderBy` chain rather than a `find({ order })` object: the object's key
+   * order is the sort precedence, and the alphabetize-keys lint rule would put `createdAt` first.
+   */
+  async listInProject(projectId: string): Promise<Plan[]> {
+    return this.repository
+      .createQueryBuilder('plan')
+      .where('plan.projectId = :projectId', { projectId })
+      .orderBy('plan.projectSortOrder', 'ASC', 'NULLS LAST')
+      .addOrderBy('plan.createdAt', 'ASC')
+      .getMany();
+  }
+
+  /**
+   * @description The highest live `project_sort_order` of each given project, keyed by project
+   * id. A project with no positioned live plan has no entry. Pass `manager` to read inside a
+   * transaction.
+   */
+  async maxProjectSortOrders(
+    projectIds: readonly string[],
+    manager?: EntityManager,
+  ): Promise<Map<string, number>> {
+    if (projectIds.length === 0) {
+      return new Map();
+    }
+
+    const rows = await (manager ?? this.repository.manager).query<
+      { max: number; project_id: string }[]
+    >(
+      `SELECT project_id, MAX(project_sort_order)::int AS max FROM plans WHERE deleted_at IS NULL AND project_sort_order IS NOT NULL AND project_id = ANY($1::uuid[]) GROUP BY project_id`,
+      [projectIds],
+    );
+
+    return new Map(
+      rows.map((row) => {
+        return [row.project_id, row.max];
+      }),
+    );
+  }
+
+  /**
+   * @description Renumbers the given plans 1000, 2000, … in `orderedPlanIds` order in one
+   * transaction and returns them in that order. The positions are cleared first so the
+   * per-project partial unique index never sees two plans on one slot mid-update. Callers
+   * validate that every id is a live plan of `projectId`.
+   */
+  async renumberProjectPlans(
+    projectId: string,
+    orderedPlanIds: readonly string[],
+  ): Promise<Plan[]> {
+    if (orderedPlanIds.length === 0) {
+      return [];
+    }
+
+    return this.repository.manager.transaction(async (manager) => {
+      await manager.update(
+        Plan,
+        { id: In([...orderedPlanIds]), projectId },
+        { projectSortOrder: null },
+      );
+      await Promise.all(
+        orderedPlanIds.map((id, index) => {
+          return manager.update(
+            Plan,
+            { id, projectId },
+            {
+              projectSortOrder: (index + 1) * PROJECT_PLAN_SORT_ORDER_GAP,
+            },
+          );
+        }),
+      );
+
+      return manager.find(Plan, {
+        order: { projectSortOrder: 'ASC' },
+        where: { id: In([...orderedPlanIds]) },
+      });
+    });
   }
 }

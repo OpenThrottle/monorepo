@@ -8,6 +8,7 @@ import {
 
 import { CheckoutPathResolutionModule } from '../checkout-path-resolution/checkout-path-resolution.module.ts';
 import { EffectiveUserResolutionModule } from '../effective-user-resolution/effective-user-resolution.module.ts';
+import { PlanProjectMembershipModule } from '../plan-project-membership/plan-project-membership.module.ts';
 import { PlanCreationService } from './plan-creation.service.ts';
 
 @Module({
@@ -17,6 +18,7 @@ import { PlanCreationService } from './plan-creation.service.ts';
     CheckoutPathResolutionModule,
     EffectiveUserResolutionModule,
     LoggerModule,
+    PlanProjectMembershipModule,
     PlansModule,
     UserPreferencesModule,
   ],

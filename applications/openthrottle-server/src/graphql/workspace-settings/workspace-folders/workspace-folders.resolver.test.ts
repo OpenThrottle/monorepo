@@ -5,10 +5,14 @@
  */
 
 import { createMock } from '@golevelup/ts-vitest';
+import type { Project } from '@openthrottle/nestjs-repositories-server';
+import { projectsFactory } from '@openthrottle/nestjs-repositories-server/testing';
+import type DataLoader from 'dataloader';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { WorktreeActivityService } from '../../../services/worktree-activity/worktree-activity.service.ts';
 import type { WorkspaceSettingsLoaders } from '../loaders/loaders.service.ts';
+import type { RepositoryObject } from '../repository.object.ts';
 import type {
   AddWorkspaceFolderPayloadObject,
   RefreshCheckoutPayloadObject,
@@ -20,6 +24,7 @@ const USER = 'user-1';
 
 const build = (
   service: Partial<WorkspaceFoldersService>,
+  loaders: Partial<WorkspaceSettingsLoaders> = {},
 ): {
   readonly invalidate: ReturnType<typeof vi.fn>;
   readonly resolver: WorkspaceFoldersResolver;
@@ -27,13 +32,35 @@ const build = (
   const invalidate = vi.fn();
   const resolver = new WorkspaceFoldersResolver(
     createMock<WorktreeActivityService>({ invalidate }),
-    createMock<WorkspaceSettingsLoaders>(),
+    createMock<WorkspaceSettingsLoaders>(loaders),
     createMock<WorkspaceFoldersService>(service),
   );
   return { invalidate, resolver };
 };
 
 describe('WorkspaceFoldersResolver', () => {
+  describe('projects', () => {
+    it('resolves the repository projects through the batched loader', async () => {
+      const projects = [projectsFactory.build(), projectsFactory.build()];
+      const load = vi.fn().mockResolvedValue(projects);
+      const { resolver } = build(
+        {},
+        {
+          projectsByRepositoryIdLoader: createMock<
+            DataLoader<string, Project[]>
+          >({
+            load,
+          }),
+        },
+      );
+
+      await expect(
+        resolver.projects(createMock<RepositoryObject>({ id: 'repo-1' })),
+      ).resolves.toBe(projects);
+      expect(load).toHaveBeenCalledWith('repo-1');
+    });
+  });
+
   describe('addWorkspaceFolder', () => {
     it('returns the payload and drops the cached discovery', async () => {
       const payload = createMock<AddWorkspaceFolderPayloadObject>();

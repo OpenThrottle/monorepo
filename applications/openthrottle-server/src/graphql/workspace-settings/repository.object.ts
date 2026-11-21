@@ -220,10 +220,16 @@ export class RepositoryObject {
   defaultBranch!: string | null;
 
   @Field(() => ID, {
+    deprecationReason: `A repository can belong to several projects; use projects (backed by project_repositories).`,
     description: `OpenThrottle project linked at the repository level.`,
     nullable: true,
   })
   projectId!: string | null;
+
+  @Field(() => [ProjectObject], {
+    description: `Projects this repository is linked to through the many-to-many project_repositories table, oldest link first; resolved via ResolveField.`,
+  })
+  projects?: ProjectObject[];
 
   @Field(() => ProjectObject, { nullable: true })
   project?: ProjectObject | null;

@@ -3,7 +3,7 @@ import { NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import type { EntityManager, Repository } from 'typeorm';
-import { And, IsNull, LessThan, MoreThanOrEqual } from 'typeorm';
+import { And, In, IsNull, LessThan, MoreThanOrEqual } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Task } from '../tasks/task.entity.ts';
@@ -17,7 +17,12 @@ describe('PlansRepository', () => {
   const transaction = vi.fn();
   const query = vi.fn();
   const count = vi.fn();
+  const find = vi.fn();
+  const managerFind = vi.fn();
+  const managerQuery = vi.fn();
+  const managerUpdate = vi.fn();
   const queryBuilder = {
+    addOrderBy: vi.fn().mockReturnThis(),
     andWhere: vi.fn().mockReturnThis(),
     getMany: vi.fn(),
     getManyAndCount: vi.fn(),
@@ -33,6 +38,7 @@ describe('PlansRepository', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     for (const method of [
+      queryBuilder.addOrderBy,
       queryBuilder.andWhere,
       queryBuilder.limit,
       queryBuilder.orderBy,
@@ -43,7 +49,13 @@ describe('PlansRepository', () => {
     ]) {
       method.mockReturnThis();
     }
-    const manager = createMock<EntityManager>({ findOneOrFail, softDelete });
+    const manager = createMock<EntityManager>({
+      find: managerFind,
+      findOneOrFail,
+      query: managerQuery,
+      softDelete,
+      update: managerUpdate,
+    });
     transaction.mockImplementation(
       async (run: (entityManager: EntityManager) => Promise<unknown>) => {
         return run(manager);
@@ -58,7 +70,11 @@ describe('PlansRepository', () => {
           useValue: createMock<Repository<Plan>>({
             count,
             createQueryBuilder: vi.fn().mockReturnValue(queryBuilder),
-            manager: createMock<EntityManager>({ transaction }),
+            find,
+            manager: createMock<EntityManager>({
+              query: managerQuery,
+              transaction,
+            }),
             query,
             target: Plan,
           }),
@@ -281,6 +297,93 @@ describe('PlansRepository', () => {
       expect(count).toHaveBeenCalledWith({
         where: { createdAt: And(MoreThanOrEqual(dayStart), LessThan(dayEnd)) },
       });
+    });
+  });
+
+  describe('listInProject', () => {
+    it('lists live plans of the project in project order', async () => {
+      const plans = plansFactory.buildList(2);
+      queryBuilder.getMany.mockResolvedValue(plans);
+
+      const result = await repository.listInProject('project-1');
+
+      expect(result).toBe(plans);
+      expect(queryBuilder.where).toHaveBeenCalledWith(
+        'plan.projectId = :projectId',
+        { projectId: 'project-1' },
+      );
+      expect(queryBuilder.orderBy).toHaveBeenCalledWith(
+        'plan.projectSortOrder',
+        'ASC',
+        'NULLS LAST',
+      );
+      expect(queryBuilder.addOrderBy).toHaveBeenCalledWith(
+        'plan.createdAt',
+        'ASC',
+      );
+    });
+  });
+
+  describe('maxProjectSortOrders', () => {
+    it('skips the query when no project is asked about', async () => {
+      const result = await repository.maxProjectSortOrders([]);
+
+      expect(result.size).toBe(0);
+      expect(managerQuery).not.toHaveBeenCalled();
+    });
+
+    it('maps each project to its highest live position; a project with none has no entry', async () => {
+      managerQuery.mockResolvedValue([{ max: 3000, project_id: 'a' }]);
+
+      const result = await repository.maxProjectSortOrders(['a', 'b']);
+
+      expect(result.get('a')).toBe(3000);
+      expect(result.has('b')).toBe(false);
+      expect(managerQuery.mock.calls[0]?.[0]).toMatch(/deleted_at IS NULL/);
+      expect(managerQuery.mock.calls[0]?.[1]).toEqual([['a', 'b']]);
+    });
+
+    it('reads through the caller transaction manager when one is given', async () => {
+      const transactionQuery = vi.fn().mockResolvedValue([]);
+      const transactionManager = createMock<EntityManager>({
+        query: transactionQuery,
+      });
+
+      await repository.maxProjectSortOrders(['a'], transactionManager);
+
+      expect(transactionQuery).toHaveBeenCalledTimes(1);
+      expect(managerQuery).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('renumberProjectPlans', () => {
+    it('does nothing for an empty list', async () => {
+      const result = await repository.renumberProjectPlans('project-1', []);
+
+      expect(result).toEqual([]);
+      expect(transaction).not.toHaveBeenCalled();
+    });
+
+    it('clears the positions first, then numbers 1000, 2000, … in the given order, in one transaction', async () => {
+      const plans = plansFactory.buildList(3);
+      managerUpdate.mockResolvedValue({ affected: 1 });
+      managerFind.mockResolvedValue(plans);
+      const ids = ['c', 'a', 'b'];
+
+      const result = await repository.renumberProjectPlans('project-1', ids);
+
+      expect(result).toBe(plans);
+      expect(transaction).toHaveBeenCalledTimes(1);
+      expect(managerUpdate.mock.calls[0]).toEqual([
+        Plan,
+        { id: In(ids), projectId: 'project-1' },
+        { projectSortOrder: null },
+      ]);
+      expect(managerUpdate.mock.calls.slice(1)).toEqual([
+        [Plan, { id: 'c', projectId: 'project-1' }, { projectSortOrder: 1000 }],
+        [Plan, { id: 'a', projectId: 'project-1' }, { projectSortOrder: 2000 }],
+        [Plan, { id: 'b', projectId: 'project-1' }, { projectSortOrder: 3000 }],
+      ]);
     });
   });
 });

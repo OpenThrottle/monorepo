@@ -6,6 +6,8 @@ import type { EntityManager, Repository as OrmRepository } from 'typeorm';
 import { IsNull } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { ProjectRepositoriesRepository } from '../project-repositories/project-repositories.repository.ts';
+import { createProjectRepositoriesRepositoryMock } from '../project-repositories/project-repositories.utils.ts';
 import { RepositoryCheckout } from '../repository-checkouts/repository-checkout.entity.ts';
 import { repositoriesFactory } from './repositories.factory.ts';
 import { RepositoriesRepository } from './repositories.repository.ts';
@@ -21,10 +23,12 @@ describe('RepositoriesRepository', () => {
   const managerSave = vi.fn();
   const managerSoftDelete = vi.fn();
   const managerUpdate = vi.fn();
+  const projectRepositories = createProjectRepositoriesRepositoryMock();
   let repository: RepositoriesRepository;
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    projectRepositories.syncLegacyProject.mockResolvedValue(undefined);
     create.mockImplementation((data: Partial<Repository>) => {
       return repositoriesFactory.build(data);
     });
@@ -50,6 +54,10 @@ describe('RepositoriesRepository', () => {
     const app = await Test.createTestingModule({
       providers: [
         RepositoriesRepository,
+        {
+          provide: ProjectRepositoriesRepository,
+          useValue: projectRepositories,
+        },
         {
           provide: getRepositoryToken(Repository),
           useValue: createMock<OrmRepository<Repository>>({
@@ -95,6 +103,34 @@ describe('RepositoriesRepository', () => {
       expect(findOne).toHaveBeenCalledWith({
         where: { normalizedRemoteUrl: 'https://github.com/o/r' },
       });
+    });
+  });
+
+  describe('create', () => {
+    it('links a repository created with a project', async () => {
+      const created = await repository.create({
+        defaultBranch: null,
+        name: 'Linked',
+        normalizedRemoteUrl: null,
+        projectId: 'project-1',
+      });
+
+      expect(projectRepositories.syncLegacyProject).toHaveBeenCalledWith(
+        created.id,
+        null,
+        'project-1',
+      );
+    });
+
+    it('does not link a repository created without a project', async () => {
+      await repository.create({
+        defaultBranch: null,
+        name: 'Unlinked',
+        normalizedRemoteUrl: null,
+        projectId: null,
+      });
+
+      expect(projectRepositories.syncLegacyProject).not.toHaveBeenCalled();
     });
   });
 
@@ -181,6 +217,58 @@ describe('RepositoriesRepository', () => {
 
       expect(result?.projectId).toBe('project-1');
       expect(result?.name).toBe('OpenThrottle');
+    });
+
+    it('does not touch the join table when projectId is omitted', async () => {
+      const existing = repositoriesFactory.build({ projectId: 'project-1' });
+      findOne.mockResolvedValue(existing);
+
+      await repository.updateRepository(existing.id, { name: 'Renamed' });
+
+      expect(projectRepositories.syncLegacyProject).not.toHaveBeenCalled();
+    });
+
+    it('links the repository when a project is first set', async () => {
+      const existing = repositoriesFactory.build({ projectId: null });
+      findOne.mockResolvedValue(existing);
+
+      await repository.updateRepository(existing.id, {
+        projectId: 'project-1',
+      });
+
+      expect(projectRepositories.syncLegacyProject).toHaveBeenCalledWith(
+        existing.id,
+        null,
+        'project-1',
+      );
+    });
+
+    it('moves the link when the project changes from P to Q', async () => {
+      const existing = repositoriesFactory.build({ projectId: 'project-p' });
+      findOne.mockResolvedValue(existing);
+
+      await repository.updateRepository(existing.id, {
+        projectId: 'project-q',
+      });
+
+      expect(projectRepositories.syncLegacyProject).toHaveBeenCalledWith(
+        existing.id,
+        'project-p',
+        'project-q',
+      );
+    });
+
+    it('drops the old link when the project is cleared', async () => {
+      const existing = repositoriesFactory.build({ projectId: 'project-p' });
+      findOne.mockResolvedValue(existing);
+
+      await repository.updateRepository(existing.id, { projectId: null });
+
+      expect(projectRepositories.syncLegacyProject).toHaveBeenCalledWith(
+        existing.id,
+        'project-p',
+        null,
+      );
     });
 
     it('can clear the project link with an explicit null', async () => {

@@ -16,6 +16,7 @@ import { DataSource } from 'typeorm';
 import type { CreatePlanInput } from '../../graphql/plans/plan.input.ts';
 import { CheckoutPathResolutionService } from '../checkout-path-resolution/checkout-path-resolution.service.ts';
 import { EffectiveUserResolutionService } from '../effective-user-resolution/effective-user-resolution.service.ts';
+import { PlanProjectMembershipService } from '../plan-project-membership/plan-project-membership.service.ts';
 import {
   applyDefaultAgentToRunConfig,
   isUniqueViolation,
@@ -48,6 +49,7 @@ export class PlanCreationService {
     private readonly disabledAgentClis: UserDisabledAgentClisRepository,
     private readonly checkoutPathResolutionService: CheckoutPathResolutionService,
     private readonly effectiveUserResolutionService: EffectiveUserResolutionService,
+    private readonly planProjectMembership: PlanProjectMembershipService,
     private readonly plansRepository: PlansRepository,
     private readonly userPreferencesRepository: UserPreferencesRepository,
   ) {
@@ -268,10 +270,16 @@ export class PlanCreationService {
       throw new BadRequestException('id must be a UUID.');
     }
 
-    const fields = await this.resolvePlanCreateFields(input, userId);
+    const resolved = await this.resolvePlanCreateFields(input, userId);
+    const fields = {
+      ...resolved,
+      projectSortOrder: await this.planProjectMembership.appendSortOrder(
+        resolved.projectId,
+      ),
+    };
 
     if (clientId.id === undefined) {
-      return this.plansRepository.create(fields);
+      return this.linkRepositoryOf(await this.plansRepository.create(fields));
     }
 
     // Idempotent create (OT plan ca13e543): a caller that timed out re-sends the same id, and
@@ -284,7 +292,9 @@ export class PlanCreationService {
     }
 
     try {
-      return await this.plansRepository.create({ ...fields, id });
+      return await this.linkRepositoryOf(
+        await this.plansRepository.create({ ...fields, id }),
+      );
     } catch (error: unknown) {
       const winner = isUniqueViolation(error)
         ? await this.findReplayedPlan(id, fields.title)
@@ -296,6 +306,16 @@ export class PlanCreationService {
 
       throw error;
     }
+  }
+
+  /**
+   * @description Soft repository constraint: links the new plan's workspace repository to its
+   * project (a no-op without both). Returns the plan so a create can end on it.
+   */
+  private async linkRepositoryOf(plan: Plan): Promise<Plan> {
+    await this.planProjectMembership.linkPlanRepository(plan);
+
+    return plan;
   }
 
   /**
@@ -339,11 +359,26 @@ export class PlanCreationService {
       inputs.map((input) => this.resolvePlanCreateFields(input, userId)),
     );
 
-    return this.dataSource.transaction(async (manager) => {
+    const saved = await this.dataSource.transaction(async (manager) => {
       const planRepo = manager.getRepository(Plan);
-      const entities = fieldsList.map((fields) => planRepo.create(fields));
+      // One batch can add several plans to the same project, so positions are handed out
+      // together: each lands after the project's current last plan and the batch's earlier ones.
+      const sortOrders = await this.planProjectMembership.appendSortOrders(
+        fieldsList.map((fields) => fields.projectId),
+        manager,
+      );
+      const entities = fieldsList.map((fields, index) =>
+        planRepo.create({
+          ...fields,
+          projectSortOrder: sortOrders[index] ?? null,
+        }),
+      );
 
       return planRepo.save(entities);
     });
+
+    await this.planProjectMembership.linkPlanRepositories(saved);
+
+    return saved;
   }
 }

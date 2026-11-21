@@ -60,7 +60,10 @@ export class CreatePlanInput {
   })
   id?: string | null;
 
-  @Field(() => String, { nullable: true })
+  @Field(() => String, {
+    deprecationReason: `Free-text label, unrelated to projects and superseded by projectId.`,
+    nullable: true,
+  })
   project?: string | null;
 
   @Field(() => ID, {
@@ -116,7 +119,10 @@ export class UpdatePlanInput {
   @Field(() => ID, { description: 'Plan id to update' })
   id!: string;
 
-  @Field(() => String, { nullable: true })
+  @Field(() => String, {
+    deprecationReason: `Free-text label, unrelated to projects and superseded by projectId.`,
+    nullable: true,
+  })
   project?: string | null;
 
   @Field(() => ID, {
@@ -161,7 +167,10 @@ export class ListPlansByStatusInput {
   @Field(() => Int, { nullable: true })
   offset?: number | null;
 
-  @Field(() => String, { nullable: true })
+  @Field(() => String, {
+    deprecationReason: `Free-text label, unrelated to projects and superseded by projectId.`,
+    nullable: true,
+  })
   project?: string | null;
 
   @Field(() => ID, { nullable: true })

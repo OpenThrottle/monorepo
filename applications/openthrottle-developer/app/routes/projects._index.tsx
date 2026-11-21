@@ -78,11 +78,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   const totalCount = sorted.length;
   const paginatedProjects = sorted.slice(offset, offset + limit);
 
-  // Linked totals across every project, not just the current page. Both come from
-  // the `plans`/`tasks` collections the query already loads - the same arrays the
-  // table's Plans and Tasks columns count. The previous sum read `planCount`,
-  // which exists on ProjectObject but is NOT selected by this route's query, so it
-  // was always undefined and the card silently showed 0 beside a table reading 7.
+  // Linked totals across every project, not just the current page.
   const plansLinkedCount = projectsToShow.reduce(
     (sum, project) => sum + (project.plans?.length ?? 0),
     0,
@@ -158,12 +154,9 @@ export default function Component(
         </div>
 
         <p className="text-muted-foreground text-sm">
-          Projects group plans and tasks by Nx application in this monorepo.
-          Each row maps to one app (for example openthrottle-developer or
-          openthrottle-server) so you can see linked plan and task counts per
-          codebase. Set a project on a plan or task when work clearly targets a
-          single app; leave it unset for cross-cutting, docs-only, or multi-app
-          work.
+          Projects are initiatives: an ordered list of plans across one or more
+          linked repositories. Each row shows how many of its plans are
+          completed.
         </p>
       </div>
 

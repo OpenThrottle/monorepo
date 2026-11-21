@@ -15,27 +15,54 @@ import {
 import type {
   Plan,
   Project,
+  ProjectRepository,
+  Repository,
   Task,
 } from '@openthrottle/nestjs-repositories-server';
-import { ProjectsRepository } from '@openthrottle/nestjs-repositories-server';
+import {
+  ProjectRepositoriesRepository,
+  ProjectsRepository,
+  RepositoriesRepository,
+} from '@openthrottle/nestjs-repositories-server';
 
+import { PlanProjectMembershipService } from '../../services/plan-project-membership/plan-project-membership.service.ts';
 import { PlanObject } from '../plans/plan.object.ts';
 import { TaskObject } from '../tasks/task.object.ts';
+import { RepositoryObject } from '../workspace-settings/repository.object.ts';
 import { ProjectsLoaders } from './loaders/loaders.service.ts';
 import {
+  AddPlanToProjectInput,
   CreateProjectInput,
   DeleteProjectInput,
+  LinkProjectRepositoryInput,
+  RemovePlanFromProjectInput,
+  ReorderProjectPlansInput,
+  UnlinkProjectRepositoryInput,
   UpdateProjectInput,
 } from './project.input.ts';
 import { ProjectObject } from './project.object.ts';
+import { ProjectRepositoryObject } from './project-repository.object.ts';
 
 // @authz-stance: authenticated-only (Path A — see OT plan 18e16dfc-4f22-43f9-9b77-6fc90309b60a)
 @Resolver(() => ProjectObject)
 export class ProjectsResolver {
   constructor(
+    private readonly planProjectMembership: PlanProjectMembershipService,
     private readonly projectRelationLoaders: ProjectsLoaders,
+    private readonly projectRepositoriesRepository: ProjectRepositoriesRepository,
     private readonly projectsRepository: ProjectsRepository,
+    private readonly repositoriesRepository: RepositoriesRepository,
   ) {}
+
+  // @ProfileResponseTime('ProjectsResolver.repositories')
+  @ResolveField(() => [RepositoryObject], {
+    description: `Repositories linked to this project; ordered by link time ascending`,
+  })
+  async repositories(@Parent() parent: Project): Promise<Repository[]> {
+    return this.projectRelationLoaders.repositoriesByProjectIdLoader.load(
+      parent.id,
+    );
+  }
 
   // @ProfileResponseTime('ProjectsResolver.plans')
   @ResolveField(() => [PlanObject], {
@@ -140,5 +167,92 @@ export class ProjectsResolver {
       }
       throw error;
     }
+  }
+
+  // @ProfileResponseTime('ProjectsResolver.linkProjectRepository')
+  @Mutation(() => ProjectRepositoryObject, {
+    description: `Link a repository to a project (many-to-many). Idempotent: linking an already-linked pair returns the existing link. Fails when the project or repository does not exist.`,
+  })
+  async linkProjectRepository(
+    @Args('input', { type: () => LinkProjectRepositoryInput })
+    input: LinkProjectRepositoryInput,
+  ): Promise<ProjectRepository> {
+    const [project, repository] = await Promise.all([
+      this.projectsRepository.findOne({ where: { id: input.projectId } }),
+      this.repositoriesRepository.findRepositoryById(input.repositoryId),
+    ]);
+    if (!project) {
+      throw new NotFoundException(`Project not found: ${input.projectId}`);
+    }
+    if (!repository) {
+      throw new NotFoundException(
+        `Repository not found: ${input.repositoryId}`,
+      );
+    }
+
+    return this.projectRepositoriesRepository.link(
+      input.projectId,
+      input.repositoryId,
+    );
+  }
+
+  // @ProfileResponseTime('ProjectsResolver.unlinkProjectRepository')
+  @Mutation(() => Boolean, {
+    description: `Remove a repository's link to a project. Returns false when the pair was not linked.`,
+  })
+  async unlinkProjectRepository(
+    @Args('input', { type: () => UnlinkProjectRepositoryInput })
+    input: UnlinkProjectRepositoryInput,
+  ): Promise<boolean> {
+    return this.projectRepositoriesRepository.unlink(
+      input.projectId,
+      input.repositoryId,
+    );
+  }
+
+  // @ProfileResponseTime('ProjectsResolver.projectPlans')
+  @Query(() => [PlanObject], {
+    description: `The live plans of a project in project order (projectSortOrder ascending)`,
+  })
+  async projectPlans(
+    @Args('projectId', { type: () => ID }) projectId: string,
+  ): Promise<Plan[]> {
+    return this.planProjectMembership.listPlans(projectId);
+  }
+
+  // @ProfileResponseTime('ProjectsResolver.addPlanToProject')
+  @Mutation(() => PlanObject, {
+    description: `Add a plan to a project, appended after the project's last plan (a plan in another project moves and lands at the end of this one). Also links the plan's workspace repository to the project when it is set and not yet linked; that link never blocks. Idempotent for a plan already in the project. Fails when the plan or project does not exist.`,
+  })
+  async addPlanToProject(
+    @Args('input', { type: () => AddPlanToProjectInput })
+    input: AddPlanToProjectInput,
+  ): Promise<Plan> {
+    return this.planProjectMembership.addPlan(input.planId, input.projectId);
+  }
+
+  // @ProfileResponseTime('ProjectsResolver.removePlanFromProject')
+  @Mutation(() => PlanObject, {
+    description: `Remove a plan from its project, clearing projectId and projectSortOrder. The project's repository links stay. A plan with no project is returned unchanged.`,
+  })
+  async removePlanFromProject(
+    @Args('input', { type: () => RemovePlanFromProjectInput })
+    input: RemovePlanFromProjectInput,
+  ): Promise<Plan> {
+    return this.planProjectMembership.removePlan(input.planId);
+  }
+
+  // @ProfileResponseTime('ProjectsResolver.reorderProjectPlans')
+  @Mutation(() => [PlanObject], {
+    description: `Reorder the plans of a project. Renumbers projectSortOrder 1000, 2000, … in planIds order atomically; unlisted plans of the project follow in their existing order. Returns every live plan of the project in the new order.`,
+  })
+  async reorderProjectPlans(
+    @Args('input', { type: () => ReorderProjectPlansInput })
+    input: ReorderProjectPlansInput,
+  ): Promise<Plan[]> {
+    return this.planProjectMembership.reorderPlans(
+      input.projectId,
+      input.planIds,
+    );
   }
 }

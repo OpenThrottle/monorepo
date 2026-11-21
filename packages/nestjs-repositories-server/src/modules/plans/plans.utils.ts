@@ -34,5 +34,14 @@ export function createPlansRepositoryMock(): PlansRepositoryMock {
     listFiltered: vi.fn(async () => {
       return { plans: [], totalCount: 0 };
     }),
+    listInProject: vi.fn(async () => {
+      return [];
+    }),
+    maxProjectSortOrders: vi.fn(async () => {
+      return new Map<string, number>();
+    }),
+    renumberProjectPlans: vi.fn(async () => {
+      return [];
+    }),
   };
 }

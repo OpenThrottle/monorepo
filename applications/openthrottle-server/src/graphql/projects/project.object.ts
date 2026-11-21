@@ -6,6 +6,7 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import type {
   Plan,
   ProjectData,
+  Repository,
   Task,
 } from '@openthrottle/nestjs-repositories-server';
 
@@ -16,6 +17,7 @@ import type {
 // replaced — `require` does not exist under `type: module`.
 import { PlanObject } from '../plans/plan.object.ts';
 import { TaskObject } from '../tasks/task.object.ts';
+import { RepositoryObject } from '../workspace-settings/repository.object.ts';
 
 @ObjectType()
 export class ProjectObject implements ProjectData {
@@ -32,10 +34,16 @@ export class ProjectObject implements ProjectData {
   name!: string;
 
   @Field(() => String, {
+    deprecationReason: `Projects are initiatives, not Nx projects`,
     description: `NX project name (e.g. applications/openthrottle-server)`,
     nullable: true,
   })
   nxProjectName!: string | null;
+
+  @Field(() => [RepositoryObject], {
+    description: `Repositories linked to this project through the many-to-many project_repositories table, oldest link first; resolved via ResolveField. Only repository scalars and projects are resolved here; checkouts are populated by workspaceRepositories.`,
+  })
+  repositories?: (Repository | RepositoryObject)[];
 
   @Field(() => [PlanObject], {
     description: `Plans linked to this project; resolved via ResolveField.`,

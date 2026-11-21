@@ -5,7 +5,8 @@ fragment ProjectCard on ProjectObject {
   name
   nxProjectName
   plans {
-    title
+    id
+    status
   }
   tasks {
     title
