@@ -15,6 +15,7 @@ fragment RulePreviewNonMatch on TagActionRulePreviewNonMatchObject {
   failedOnlyOnEnvironment
   id
   missingTags
+  projectId
   repositoryId
   status
   title
@@ -26,6 +27,7 @@ fragment RulePreview on TagActionRulePreviewObject {
   evaluated
   matched {
     id
+    projectId
     repositoryId
     status
     title

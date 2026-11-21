@@ -1,6 +1,10 @@
 # One rule, its apply-once ledger across plans (plan titles included), and the
-# registered repositories that name its scope trail.
+# registered repositories and projects that name its scope trail.
 query RuleDetailLoader($id: ID!) {
+  projects {
+    id
+    name
+  }
   ruleApplicationsForRule(ruleId: $id) {
     createdAt
     detailsJson

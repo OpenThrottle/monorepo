@@ -4,6 +4,7 @@ import { ANY, ENVIRONMENTS } from '~/routing/rules/data/data.rule-form-options';
 export interface RulePreviewMatch {
   readonly actionType: string;
   readonly environment: string | null;
+  readonly projectId: string | null;
   readonly repositoryId: string | null;
   readonly status: string | null;
   readonly tagAll: readonly string[];
@@ -41,6 +42,7 @@ export const buildRulePreviewQuery = (request: RulePreviewRequest): string => {
   if (evaluateEnvironment != null) {
     params.set('evaluateEnvironment', evaluateEnvironment);
   }
+  if (match.projectId != null) params.set('projectId', match.projectId);
   if (match.repositoryId != null) {
     params.set('repositoryId', match.repositoryId);
   }
@@ -62,6 +64,7 @@ export const parseRulePreviewQuery = (
     match: {
       actionType: params.get('actionType') ?? '',
       environment: normalizeRuleFormChoice(params.get('environment')),
+      projectId: normalizeRuleFormChoice(params.get('projectId')),
       repositoryId: normalizeRuleFormChoice(params.get('repositoryId')),
       status: normalizeRuleFormChoice(params.get('status')),
       tagAll: params.getAll('tagAll'),

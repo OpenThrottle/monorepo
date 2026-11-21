@@ -76,6 +76,7 @@ describe('routes/rules.$ruleId._index loader', () => {
     const ledger = [{ id: 'app-1', planId: 'plan-1', state: 'flagged' }];
     mockExecute.mockResolvedValue(
       asMock<Awaited<ReturnType<typeof executeGraphqlWithAuth>>>({
+        projects: [{ id: 'proj-1', name: 'Platform' }],
         ruleApplicationsForRule: ledger,
         tagActionRule: rule,
         workspaceRepositories: [{ id: 'repo-1', name: 'monorepo' }],
@@ -91,12 +92,14 @@ describe('routes/rules.$ruleId._index loader', () => {
     );
     expect(result.applications).toEqual(ledger);
     expect(result.repositories).toEqual([{ id: 'repo-1', name: 'monorepo' }]);
+    expect(result.projects).toEqual([{ id: 'proj-1', name: 'Platform' }]);
     expect(result.rule).toMatchObject({ id: 'rule-1' });
   });
 
   test('returns a null rule when the query resolves null', async () => {
     mockExecute.mockResolvedValue(
       asMock<Awaited<ReturnType<typeof executeGraphqlWithAuth>>>({
+        projects: [],
         ruleApplicationsForRule: [],
         tagActionRule: null,
         workspaceRepositories: [],

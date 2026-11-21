@@ -140,10 +140,15 @@ backs the worker, the plan-context read and the preview.
 Scope is "which plans does this rule apply to, and how narrowly". From broadest to
 narrowest:
 
-1. **Global**: no repository, no environment, no status.
+1. **Global**: no repository, no project, no environment, no status.
 2. **Repository**: `repository_id` set (migration 189). The rule only matches plans in
    that repository.
-3. Further qualifiers on top of either: an `environment`, a `status`, and each extra tag.
+3. **Project**: `project_id` set. The rule only matches plans in that project
+   (`plans.project_id`). Project and repository are separate rungs, not nested ones: a
+   project can span many repositories and a repository can serve many projects, so a
+   rule may set either, both or neither.
+4. Further qualifiers on top of any of these: an `environment`, a `status`, and each
+   extra tag.
 
 The repository rung needs a real column on plans. `plans.repository_id` (migration 188) is **derived by a trigger** from `run_config -> workspace -> repositoryId`. It is
 never written by a client: every path that saves a plan, whether the server, task
@@ -155,8 +160,8 @@ NULL and a repository-scoped rule stops matching that plan. A rule's own
 `repository_id` cascades instead: deleting the repository deletes its rules, because
 quietly widening a repository-scoped rule to every repository would be wrong.
 
-`tag_action_rules.project_id` is still matched when set, but it is **not scored** and
-the UI does not offer it. It is reserved for cross-repo Projects (see Not yet).
+`tag_action_rules.project_id` points at a cross-repo Project. If the plan has no
+project, a project-scoped rule does not match it.
 
 ### Specificity ordering
 
@@ -166,14 +171,16 @@ score is `scoreTagActionSpecificity`:
 | Qualifier             | Points |
 | --------------------- | ------ |
 | Repository            | 2      |
+| Project               | 2      |
 | Environment           | 1      |
 | Status                | 1      |
 | Each tag in `tag_all` | 1      |
 
 Ties break on rule `createdAt` ascending (oldest first), then rule id, so the order is
-stable between evaluations. `projectId` scores nothing: a project and a repository do
-not nest (a project spans repositories), so ranking one against the other needs a
-decision the Projects model has to make.
+stable between evaluations. Project and repository are worth the same because neither
+is narrower than the other: they do not nest, so a rule scoped to both simply adds both
+weights (4), and a project-only rule against a repository-only rule is a tie that the
+older rule wins.
 
 Ranking only orders; it never drops a match. What "narrowest wins" means is decided per
 action type, below. The same `scoreTagActionSpecificity` feeds the `/rules` table
@@ -395,13 +402,15 @@ deleted when the rule stops matching, is disabled or is deleted:
 
 **Developer app** (`applications/openthrottle-developer/app/routing/rules/`):
 
-- `/rules`: the rules table grouped by scope, Global first and then one group per
-  repository (alphabetical), plus a catch-all for rules pointing at a repository the user
-  no longer lists. Each group is ordered narrowest first, with a scope filter.
+- `/rules`: the rules table grouped by scope: Global first, then one group per project
+  for rules scoped only to a project, then one group per repository (each alphabetical),
+  plus a catch-all for rules pointing at a repository or project the user no longer
+  lists. A rule scoped to both lands in its repository group, and its scope trail names
+  the project. Each group is ordered narrowest first, with a scope filter.
 - `/rules/:id`: the rule, its applications from the ledger (state and reason
   labels, with flagged and orphaned rows called out), and the preview.
-- The rule form: title, tags (domain and phase), status, environment, a repository
-  select ("Any" leaves it global), the action fields (for `attach-prompt`, a picker over
+- The rule form: title, tags (domain and phase), status, environment, repository and
+  project selects ("Any" leaves that rung unset), the action fields (for `attach-prompt`, a picker over
   the prompts and personas the user can see, marked Yours or System) and a live preview
   that updates as the form changes.
 - **Preview** runs the real evaluator over the user's most recently updated plans
@@ -432,8 +441,5 @@ deleted when the rule stops matching, is disabled or is deleted:
   resolution by path (`findVisibleByFilePath`) prefers it. `customPrompts` still lists
   both rows: it is the library a user manages, and hiding the system row would make
   "delete my override to fall back" undiscoverable.
-- **Cross-repo Projects.** `project_id` is matched when set but unscored and not
-  offered in the UI. Projects span repositories and do not nest with repository scope,
-  so how a project rule ranks against a repository rule is left to that model.
 - **No automatic retry of flagged rows.** A flagged row stays flagged after its cause
   is fixed (see the apply-once fingerprint).

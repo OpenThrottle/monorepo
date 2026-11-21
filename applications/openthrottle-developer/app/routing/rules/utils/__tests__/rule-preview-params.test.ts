@@ -13,6 +13,7 @@ const request: RulePreviewRequest = {
   match: {
     actionType: 'inject-task',
     environment: 'ralph',
+    projectId: 'proj-1',
     repositoryId: 'repo-1',
     status: 'PENDING',
     tagAll: ['backend', 'spike'],
@@ -53,6 +54,7 @@ describe('buildRulePreviewQuery / parseRulePreviewQuery', () => {
       match: {
         actionType: 'inject-task',
         environment: null,
+        projectId: null,
         repositoryId: null,
         status: null,
         tagAll: [],
@@ -60,6 +62,12 @@ describe('buildRulePreviewQuery / parseRulePreviewQuery', () => {
     });
 
     expect(query).toBe('actionType=inject-task');
+  });
+
+  test('carries projectId in the query string', () => {
+    const params = new URLSearchParams(buildRulePreviewQuery(request));
+
+    expect(params.get('projectId')).toBe('proj-1');
   });
 
   test('repeats tagAll once per tag', () => {

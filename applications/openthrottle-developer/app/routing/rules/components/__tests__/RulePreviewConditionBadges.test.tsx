@@ -27,6 +27,7 @@ const plan = (
     failedOnlyOnEnvironment: false,
     id: 'plan-1',
     missingTags: [],
+    projectId: null,
     repositoryId: null,
     status: 'PENDING',
     title: 'Ship it',
@@ -87,5 +88,27 @@ describe('RulePreviewConditionBadges', () => {
     expect(
       component.queryByTestId('RulePreviewEnvironmentOnly'),
     ).not.toBeInTheDocument();
+  });
+
+  test('renders a project condition badge when the rule qualifies on project', () => {
+    const component = render(
+      <RulePreviewConditionBadges
+        plan={plan({
+          conditions: [
+            {
+              actual: 'proj-2',
+              condition: 'project',
+              expected: 'proj-1',
+              passed: false,
+            },
+          ],
+        })}
+      />,
+    );
+
+    const [badge] = component.getAllByTestId('RulePreviewCondition');
+
+    expect(badge?.dataset.condition).toBe('project');
+    expect(badge?.dataset.passed).toBe('false');
   });
 });

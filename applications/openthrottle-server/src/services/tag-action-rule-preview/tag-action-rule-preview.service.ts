@@ -99,6 +99,7 @@ export class TagActionRulePreviewService {
       };
       const summary: TagActionRulePreviewPlan = {
         id: plan.id,
+        projectId: plan.projectId,
         repositoryId: plan.repositoryId,
         status: plan.status,
         title: plan.title,

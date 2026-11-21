@@ -9,6 +9,7 @@ export interface RulesStatsProps {
   disabledCount: number;
   enabledCount: number;
   globalCount: number;
+  projectCount: number;
   repositoryCount: number;
   totalCount: number;
 }
@@ -19,6 +20,7 @@ export const RulesStats = (props: RulesStatsProps): React.ReactElement => {
     disabledCount,
     enabledCount,
     globalCount,
+    projectCount,
     repositoryCount,
     totalCount,
   } = props;
@@ -37,7 +39,7 @@ export const RulesStats = (props: RulesStatsProps): React.ReactElement => {
 
   return (
     <div
-      className={cn('grid gap-4 md:grid-cols-5 md:gap-6 lg:gap-8', className)}
+      className={cn('grid gap-4 md:grid-cols-6 md:gap-6 lg:gap-8', className)}
       data-testid="RulesStats"
     >
       <OpenThrottleStatCard
@@ -59,6 +61,10 @@ export const RulesStats = (props: RulesStatsProps): React.ReactElement => {
       <OpenThrottleStatCard
         title={RULES_COPY.statsRepositoryLabel}
         value={repositoryCount}
+      />
+      <OpenThrottleStatCard
+        title={RULES_COPY.statsProjectLabel}
+        value={projectCount}
       />
     </div>
   );

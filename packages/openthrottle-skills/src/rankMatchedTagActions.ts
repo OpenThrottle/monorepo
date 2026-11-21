@@ -1,15 +1,16 @@
 import type { MatchedTagAction, TagActionRuleScope } from './tag-actions.ts';
 
 /**
- * @description Specificity weights for {@link scoreTagActionSpecificity}. A repository scope is
- * worth two because it is the narrowest rung of the ladder; environment and status qualifiers are
- * worth one each; every tag in `tagAll` adds one. `projectId` is deliberately not scored: it is
- * reserved for cross-repo Projects, which do not nest with repositories, so how the two rank is a
- * decision for that model.
+ * @description Specificity weights for {@link scoreTagActionSpecificity}. Project and repository
+ * scopes are worth two each: they are the narrowest rungs of the ladder. They do not nest (a
+ * project can span many repositories, a repository can serve many projects), so neither ranks
+ * above the other; a rule scoped to both simply adds both weights. Environment and status
+ * qualifiers are worth one each; every tag in `tagAll` adds one.
  * @public
  */
 export const TAG_ACTION_SPECIFICITY_WEIGHTS = {
   ENVIRONMENT: 1,
+  PROJECT: 2,
   REPOSITORY: 2,
   STATUS: 1,
   TAG: 1,
@@ -24,6 +25,8 @@ export const TAG_ACTION_SPECIFICITY_WEIGHTS = {
 export const scoreTagActionSpecificity = (
   scope: TagActionRuleScope,
 ): number => {
+  const project =
+    scope.projectId == null ? 0 : TAG_ACTION_SPECIFICITY_WEIGHTS.PROJECT;
   const repository =
     scope.repositoryId == null ? 0 : TAG_ACTION_SPECIFICITY_WEIGHTS.REPOSITORY;
   const environment =
@@ -32,7 +35,7 @@ export const scoreTagActionSpecificity = (
     scope.status == null ? 0 : TAG_ACTION_SPECIFICITY_WEIGHTS.STATUS;
   const tags = scope.tagAll.length * TAG_ACTION_SPECIFICITY_WEIGHTS.TAG;
 
-  return repository + environment + status + tags;
+  return project + repository + environment + status + tags;
 };
 
 /**

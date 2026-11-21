@@ -17,8 +17,8 @@ export interface RulesTableGroupProps {
 }
 
 /**
- * @description One hierarchy rung of the rules list: a heading (Global, the
- * repository name, or Unknown repository) over its narrowest-first rows.
+ * @description One hierarchy rung of the rules list: a heading (Global, a
+ * project or repository name, or Unknown repository) over its narrowest-first rows.
  */
 export const RulesTableGroup = (
   props: RulesTableGroupProps,
@@ -35,6 +35,7 @@ export const RulesTableGroup = (
   // Setup
   const titles = {
     global: RULES_COPY.scopeGlobalLabel,
+    project: group.projectName ?? '',
     repository: group.repositoryName ?? '',
     unknown: RULES_COPY.scopeUnknownRepositoryLabel,
   };

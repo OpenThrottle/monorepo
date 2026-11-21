@@ -53,9 +53,10 @@ describe('summarizeRuleAction', () => {
 
 describe('buildRuleScopeTrail', () => {
   const names = new Map([['repo-1', 'monorepo']]);
+  const projects = new Map([['proj-1', 'Platform']]);
 
   test('a global rule is a single Global step', () => {
-    expect(buildRuleScopeTrail({}, names)).toEqual([
+    expect(buildRuleScopeTrail({}, names, projects)).toEqual([
       { kind: 'global', label: RULES_COPY.scopeGlobalLabel },
     ]);
   });
@@ -65,6 +66,7 @@ describe('buildRuleScopeTrail', () => {
       buildRuleScopeTrail(
         { environment: 'ci', repositoryId: 'repo-1', status: 'PENDING' },
         names,
+        projects,
       ),
     ).toEqual([
       { kind: 'repository', label: 'monorepo' },
@@ -74,14 +76,42 @@ describe('buildRuleScopeTrail', () => {
   });
 
   test('a repository id outside the list becomes the unknown step', () => {
-    expect(buildRuleScopeTrail({ repositoryId: 'gone' }, names)).toEqual([
+    expect(
+      buildRuleScopeTrail({ repositoryId: 'gone' }, names, projects),
+    ).toEqual([
       { kind: 'unknown', label: RULES_COPY.scopeUnknownRepositoryLabel },
     ]);
   });
 
   test('skips blank environment and status', () => {
     expect(
-      buildRuleScopeTrail({ environment: '', status: '' }, names),
+      buildRuleScopeTrail({ environment: '', status: '' }, names, projects),
     ).toHaveLength(1);
+  });
+
+  test('a project-only rule is a single Project step, not Global', () => {
+    expect(
+      buildRuleScopeTrail({ projectId: 'proj-1' }, names, projects),
+    ).toEqual([{ kind: 'project', label: 'Platform' }]);
+  });
+
+  test('a rule with repository and project shows both, repository first', () => {
+    expect(
+      buildRuleScopeTrail(
+        { projectId: 'proj-1', repositoryId: 'repo-1', status: 'PENDING' },
+        names,
+        projects,
+      ),
+    ).toEqual([
+      { kind: 'repository', label: 'monorepo' },
+      { kind: 'project', label: 'Platform' },
+      { kind: 'status', label: 'PENDING' },
+    ]);
+  });
+
+  test('a project id outside the list becomes the unknown project step', () => {
+    expect(buildRuleScopeTrail({ projectId: 'gone' }, names, projects)).toEqual(
+      [{ kind: 'unknown', label: RULES_COPY.scopeUnknownProjectLabel }],
+    );
   });
 });

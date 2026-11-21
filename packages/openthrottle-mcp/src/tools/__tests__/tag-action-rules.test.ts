@@ -127,7 +127,13 @@ describe('previewTagActionRuleToolHandler', () => {
     environment: null,
     evaluated: 2,
     matched: [
-      { id: 'plan-1', repositoryId: 'repo-1', status: 'PENDING', title: 'A' },
+      {
+        id: 'plan-1',
+        projectId: null,
+        repositoryId: 'repo-1',
+        status: 'PENDING',
+        title: 'A',
+      },
     ],
     matchedCount: 1,
     nonMatching: [
@@ -143,6 +149,7 @@ describe('previewTagActionRuleToolHandler', () => {
         failedOnlyOnEnvironment: true,
         id: 'plan-2',
         missingTags: [],
+        projectId: null,
         repositoryId: null,
         status: 'PENDING',
         title: 'B',
@@ -172,6 +179,7 @@ describe('previewTagActionRuleToolHandler', () => {
         input: expect.objectContaining({
           actionType: 'inject-task',
           environment: 'ci',
+          projectId: null,
           repositoryId: null,
           tagAll: ['spike'],
         }),
@@ -180,6 +188,26 @@ describe('previewTagActionRuleToolHandler', () => {
     expect(structured(result)).toEqual({ preview });
     expect(result.content[0]?.text).toContain('Matches 1 of 2 plans');
     expect(result.content[0]?.text).toContain('environment only');
+  });
+
+  it('passes the project scope through', async () => {
+    vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
+      previewTagActionRule: preview,
+    });
+
+    await previewTagActionRuleToolHandler({
+      actionType: 'inject-task',
+      projectId: 'project-1',
+    });
+
+    expect(executeGraphqlWithAuth).toHaveBeenCalledWith(
+      'ot_sa_test_token',
+      PreviewTagActionRuleDocument,
+      {
+        environment: null,
+        input: expect.objectContaining({ projectId: 'project-1' }),
+      },
+    );
   });
 
   it('rejects arguments without an action type before calling GraphQL', async () => {

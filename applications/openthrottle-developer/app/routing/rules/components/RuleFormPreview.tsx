@@ -11,7 +11,12 @@ export interface RuleFormPreviewProps {
   /** The rule form; only its match fields are read, and the summary follows them. */
   readonly form: Pick<
     UseRuleFormResult,
-    'actionType' | 'environment' | 'repositoryId' | 'status' | 'tagAll'
+    | 'actionType'
+    | 'environment'
+    | 'projectId'
+    | 'repositoryId'
+    | 'status'
+    | 'tagAll'
   >;
 }
 
@@ -32,6 +37,7 @@ export const RuleFormPreview = (
     match: {
       actionType: form.actionType,
       environment,
+      projectId: normalizeRuleFormChoice(form.projectId),
       repositoryId: normalizeRuleFormChoice(form.repositoryId),
       status: normalizeRuleFormChoice(form.status),
       tagAll: form.tagAll,

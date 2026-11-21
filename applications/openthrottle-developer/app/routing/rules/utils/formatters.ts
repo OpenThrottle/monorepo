@@ -67,37 +67,51 @@ export const summarizeRuleAction = (
 };
 
 export interface RuleScopeStep {
-  readonly kind: 'environment' | 'global' | 'repository' | 'status' | 'unknown';
+  readonly kind:
+    'environment' | 'global' | 'project' | 'repository' | 'status' | 'unknown';
   readonly label: string;
 }
 
 export interface RuleScopeSource {
   readonly environment?: string | null;
+  readonly projectId?: string | null;
   readonly repositoryId?: string | null;
   readonly status?: string | null;
 }
 
 /**
- * @description The rule's narrowness as an ordered trail — Global or the
- * repository name, then environment, then status — for the Scope column.
- * A repository id missing from `repositoryNames` reads as the unknown repository.
+ * @description The rule's narrowness as an ordered trail — Global, or the
+ * repository name and/or project name, then environment, then status — for the
+ * Scope column. An id missing from `repositoryNames` or `projectNames` reads as
+ * the unknown repository or project.
  */
 export const buildRuleScopeTrail = (
   rule: RuleScopeSource,
   repositoryNames: ReadonlyMap<string, string>,
+  projectNames: ReadonlyMap<string, string>,
 ): RuleScopeStep[] => {
   const trail: RuleScopeStep[] = [];
-  const repositoryName = repositoryNames.get(rule.repositoryId ?? '');
 
-  if (rule.repositoryId == null) {
+  if (rule.repositoryId == null && rule.projectId == null) {
     trail.push({ kind: 'global', label: RULES_COPY.scopeGlobalLabel });
-  } else if (repositoryName === undefined) {
-    trail.push({
-      kind: 'unknown',
-      label: RULES_COPY.scopeUnknownRepositoryLabel,
-    });
-  } else {
-    trail.push({ kind: 'repository', label: repositoryName });
+  }
+
+  if (rule.repositoryId != null) {
+    const repositoryName = repositoryNames.get(rule.repositoryId);
+    trail.push(
+      repositoryName === undefined
+        ? { kind: 'unknown', label: RULES_COPY.scopeUnknownRepositoryLabel }
+        : { kind: 'repository', label: repositoryName },
+    );
+  }
+
+  if (rule.projectId != null) {
+    const projectName = projectNames.get(rule.projectId);
+    trail.push(
+      projectName === undefined
+        ? { kind: 'unknown', label: RULES_COPY.scopeUnknownProjectLabel }
+        : { kind: 'project', label: projectName },
+    );
   }
 
   if (rule.environment != null && rule.environment !== '') {

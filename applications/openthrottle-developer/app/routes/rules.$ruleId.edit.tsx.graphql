@@ -1,3 +1,12 @@
+# Projects for the rule form's project select. A rule scopes to a plan's project
+# (projects.id), independently of its repository.
+query RuleEditProjects {
+  projects {
+    id
+    name
+  }
+}
+
 # Registered repositories for the rule form's repository select. Rules scope to
 # a repository (repositories.id), so list workspaceRepositories rather than the
 # checkout-keyed workspaceSettings.localRepositories.

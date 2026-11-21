@@ -68,7 +68,7 @@
     "mcp.tool/list_tag_action_rules": 404,
     "mcp.tool/list_tasks_by_category": 788,
     "mcp.tool/post_plan_message": 815,
-    "mcp.tool/preview_tag_action_rule": 1697,
+    "mcp.tool/preview_tag_action_rule": 1814,
     "mcp.tool/promote_task": 906,
     "mcp.tool/record_artifact": 733,
     "mcp.tool/register_plan_run": 1346,
@@ -163,7 +163,7 @@
     "mcp.toolDescription/list_tag_action_rules": 186,
     "mcp.toolDescription/list_tasks_by_category": 187,
     "mcp.toolDescription/post_plan_message": 353,
-    "mcp.toolDescription/preview_tag_action_rule": 580,
+    "mcp.toolDescription/preview_tag_action_rule": 589,
     "mcp.toolDescription/promote_task": 589,
     "mcp.toolDescription/record_artifact": 348,
     "mcp.toolDescription/register_plan_run": 772,
@@ -239,12 +239,12 @@
     "skillDescription/ot-worktree": 482
   },
   "reported": {
-    "mcpToolset/admin": 18677,
+    "mcpToolset/admin": 18794,
     "mcpToolset/agents": 3086,
     "mcpToolset/blog": 7444,
     "mcpToolset/core": 40060,
     "mcpToolset/scheduling": 5256,
-    "mcpToolsFull": 74523
+    "mcpToolsFull": 74640
   },
   "totals": {
     "alwaysInjected": 48028,

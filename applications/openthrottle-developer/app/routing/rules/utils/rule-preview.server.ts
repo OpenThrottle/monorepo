@@ -24,6 +24,7 @@ export const loadRulePreview = async (
         actionPayloadJson: '{}',
         actionType: match.actionType,
         environment: match.environment,
+        projectId: match.projectId,
         repositoryId: match.repositoryId,
         status: match.status,
         tagAll: [...match.tagAll],
@@ -56,6 +57,7 @@ export const loadRulePreviewForRule = async (
     match: {
       actionType: rule.actionType,
       environment: rule.environment ?? null,
+      projectId: rule.projectId ?? null,
       repositoryId: rule.repositoryId ?? null,
       status: rule.status ?? null,
       tagAll: rule.tagAll,

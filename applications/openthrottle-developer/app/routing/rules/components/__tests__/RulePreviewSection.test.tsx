@@ -17,7 +17,13 @@ const preview = (
     environment: null,
     evaluated: 3,
     matched: [
-      { id: 'plan-1', repositoryId: 'repo-1', status: 'PENDING', title: 'Hit' },
+      {
+        id: 'plan-1',
+        projectId: 'proj-1',
+        repositoryId: 'repo-1',
+        status: 'PENDING',
+        title: 'Hit',
+      },
     ],
     matchedCount: 1,
     nonMatching: [
@@ -33,6 +39,7 @@ const preview = (
         failedOnlyOnEnvironment: false,
         id: 'plan-2',
         missingTags: ['spike'],
+        projectId: null,
         repositoryId: null,
         status: 'PENDING',
         title: 'Miss',
@@ -49,6 +56,7 @@ const renderSection = (state: RulePreviewState): ReturnType<typeof render> => {
     return (
       <TooltipProvider>
         <RulePreviewSection
+          projectNames={new Map([['proj-1', 'Platform']])}
           repositoryNames={new Map([['repo-1', 'monorepo']])}
           state={state}
         />
@@ -85,6 +93,14 @@ describe('RulePreviewSection', () => {
       expect(
         component.getByTestId('RulePreviewMissingTags'),
       ).toBeInTheDocument();
+    });
+
+    test('names the plan project beside its repository on a matched row', async () => {
+      const component = renderSection({ kind: 'ready', preview: preview({}) });
+
+      expect(
+        await component.findByTestId('RulePreviewMatchedPlan'),
+      ).toHaveTextContent('Platform');
     });
 
     test('shows the truncation note only when truncated', async () => {

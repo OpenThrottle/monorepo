@@ -27,6 +27,11 @@ const makeRule = (
   };
 };
 
+const projects = [
+  { id: 'p-web', name: 'Website' },
+  { id: 'p-core', name: 'Core' },
+];
+
 const repositories = [
   { id: 'r-web', name: 'website' },
   { id: 'r-mono', name: 'monorepo' },
@@ -56,7 +61,7 @@ describe('compareRulesNarrowestFirst', () => {
 
 describe('groupRulesByRepository', () => {
   test('returns no groups for no rules', () => {
-    expect(groupRulesByRepository([], repositories)).toEqual([]);
+    expect(groupRulesByRepository([], repositories, projects)).toEqual([]);
   });
 
   test('orders Global, repositories by name, then unknown; omits empty groups', () => {
@@ -68,6 +73,7 @@ describe('groupRulesByRepository', () => {
         makeRule('global'),
       ],
       repositories,
+      projects,
     );
 
     expect(groups.map((group) => group.kind)).toEqual([
@@ -93,6 +99,7 @@ describe('groupRulesByRepository', () => {
         makeRule('g-narrow', { specificity: 1 }),
       ],
       repositories,
+      projects,
     );
 
     expect(groups[0]?.rules.map((rule) => rule.id)).toEqual([
@@ -104,9 +111,57 @@ describe('groupRulesByRepository', () => {
 
   test('does not mutate its input', () => {
     const input = [makeRule('a'), makeRule('b', { specificity: 5 })];
-    groupRulesByRepository(input, repositories);
+    groupRulesByRepository(input, repositories, projects);
 
     expect(input.map((rule) => rule.id)).toEqual(['a', 'b']);
+  });
+});
+
+describe('groupRulesByRepository with projects', () => {
+  test('puts project-only rules in a project group between Global and repositories', () => {
+    const groups = groupRulesByRepository(
+      [
+        makeRule('mono', { repositoryId: 'r-mono' }),
+        makeRule('web', { projectId: 'p-web' }),
+        makeRule('core', { projectId: 'p-core' }),
+        makeRule('global'),
+      ],
+      repositories,
+      projects,
+    );
+
+    expect(groups.map((group) => group.kind)).toEqual([
+      'global',
+      'project',
+      'project',
+      'repository',
+    ]);
+    expect(groups.map((group) => group.projectName)).toEqual([
+      null,
+      'Core',
+      'Website',
+      null,
+    ]);
+  });
+
+  test('a rule with a repository and a project stays in the repository group', () => {
+    const groups = groupRulesByRepository(
+      [makeRule('both', { projectId: 'p-web', repositoryId: 'r-mono' })],
+      repositories,
+      projects,
+    );
+
+    expect(groups.map((group) => group.kind)).toEqual(['repository']);
+  });
+
+  test('a dangling project id lands in the unknown group', () => {
+    const groups = groupRulesByRepository(
+      [makeRule('gone', { projectId: 'p-deleted' })],
+      repositories,
+      projects,
+    );
+
+    expect(groups.map((group) => group.kind)).toEqual(['unknown']);
   });
 });
 
@@ -118,6 +173,16 @@ describe('countRulesByScope', () => {
         makeRule('b', { repositoryId: 'r-mono' }),
         makeRule('c', { repositoryId: 'gone' }),
       ]),
-    ).toEqual({ global: 1, repository: 2 });
+    ).toEqual({ global: 1, project: 0, repository: 2 });
+  });
+
+  test('counts project-only rules separately from Global', () => {
+    expect(
+      countRulesByScope([
+        makeRule('a'),
+        makeRule('b', { projectId: 'p-web' }),
+        makeRule('c', { projectId: 'p-web', repositoryId: 'r-mono' }),
+      ]),
+    ).toEqual({ global: 1, project: 1, repository: 1 });
   });
 });

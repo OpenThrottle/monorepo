@@ -11,6 +11,7 @@ import { RuleFormPreview } from '../RuleFormPreview';
 const form = {
   actionType: 'inject-task',
   environment: 'any',
+  projectId: 'any',
   repositoryId: 'any',
   status: 'any',
   tagAll: ['spike'],

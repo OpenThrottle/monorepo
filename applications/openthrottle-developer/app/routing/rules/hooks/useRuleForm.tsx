@@ -27,10 +27,12 @@ export interface UseRuleFormResult {
   readonly handleToggleTag: (tag: string) => void;
   readonly isEdit: boolean;
   readonly placement: string;
+  readonly projectId: string;
   readonly repositoryId: string;
   readonly setActionType: React.Dispatch<React.SetStateAction<string>>;
   readonly setEnvironment: React.Dispatch<React.SetStateAction<string>>;
   readonly setPlacement: React.Dispatch<React.SetStateAction<string>>;
+  readonly setProjectId: React.Dispatch<React.SetStateAction<string>>;
   readonly setRepositoryId: React.Dispatch<React.SetStateAction<string>>;
   readonly setSkillSlug: React.Dispatch<React.SetStateAction<string>>;
   readonly setSlugAllow: React.Dispatch<React.SetStateAction<string>>;
@@ -85,6 +87,9 @@ export const useRuleForm = (options: UseRuleFormOptions): UseRuleFormResult => {
   );
   const [tagAll, setTagAll] = React.useState<string[]>(
     initialRule?.tagAll ?? [],
+  );
+  const [projectId, setProjectId] = React.useState(
+    initialRule?.projectId ?? ANY,
   );
   const [repositoryId, setRepositoryId] = React.useState(
     initialRule?.repositoryId ?? ANY,
@@ -209,10 +214,12 @@ export const useRuleForm = (options: UseRuleFormOptions): UseRuleFormResult => {
     handleToggleTag,
     isEdit,
     placement,
+    projectId,
     repositoryId,
     setActionType,
     setEnvironment,
     setPlacement,
+    setProjectId,
     setRepositoryId,
     setSkillSlug,
     setSlugAllow,

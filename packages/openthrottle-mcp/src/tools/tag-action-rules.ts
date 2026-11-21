@@ -318,6 +318,10 @@ export const previewTagActionRuleToolParameters = z
       .describe(
         'The environment to evaluate your plans in (ci | interactive | ralph). Omit for none: an environment-qualified rule then matches nothing.',
       ),
+    projectId: z
+      .string()
+      .nullish()
+      .describe('The rule project scope; omit to match every project.'),
     repositoryId: z
       .string()
       .nullish()
@@ -333,7 +337,7 @@ export const previewTagActionRuleToolParameters = z
   })
   .strict();
 
-export const previewTagActionRuleToolDescription = `Dry run a tag→action rule via the previewTagActionRule GraphQL query: which of your plans it would match and, for a sample of the rest, which conditions (repository, environment, status, tags) failed and which tags are missing. Answers "why didn't my rule fire". Read-only: dispatches nothing and writes no ledger row. Only the match fields are needed (no payload). Evaluates your newest 500 plans and says when it truncated. A rule qualified on an environment matches nothing unless you pass evaluateEnvironment (failedOnlyOnEnvironment marks that case). Requires a USER token.`;
+export const previewTagActionRuleToolDescription = `Dry run a tag→action rule via the previewTagActionRule GraphQL query: which of your plans it would match and, for a sample of the rest, which conditions (project, repository, environment, status, tags) failed and which tags are missing. Answers "why didn't my rule fire". Read-only: dispatches nothing and writes no ledger row. Only the match fields are needed (no payload). Evaluates your newest 500 plans and says when it truncated. A rule qualified on an environment matches nothing unless you pass evaluateEnvironment (failedOnlyOnEnvironment marks that case). Requires a USER token.`;
 
 const describePreview = (preview: TagActionRulePreviewFragment): string => {
   const lines = [
@@ -364,8 +368,13 @@ export async function previewTagActionRuleToolHandler(
     'preview_tag_action_rule',
     async () => {
       const token = getAuthToken();
-      const { actionType, environment, evaluateEnvironment, repositoryId } =
-        parsed.data;
+      const {
+        actionType,
+        environment,
+        evaluateEnvironment,
+        projectId,
+        repositoryId,
+      } = parsed.data;
       const result = await executeGraphqlWithAuth(
         token,
         PreviewTagActionRuleDocument,
@@ -376,6 +385,7 @@ export async function previewTagActionRuleToolHandler(
             actionPayloadJson: '{}',
             actionType,
             environment: environment ?? null,
+            projectId: projectId ?? null,
             repositoryId: repositoryId ?? null,
             status: parsed.data.status ?? null,
             tagAll: parsed.data.tagAll ?? [],

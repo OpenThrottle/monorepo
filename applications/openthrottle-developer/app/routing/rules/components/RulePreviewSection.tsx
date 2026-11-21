@@ -10,6 +10,7 @@ import type { RulePreviewState } from '~/routing/rules/types';
 
 export interface RulePreviewSectionProps {
   readonly className?: string;
+  readonly projectNames: ReadonlyMap<string, string>;
   readonly repositoryNames: ReadonlyMap<string, string>;
   readonly state: RulePreviewState;
 }
@@ -18,12 +19,12 @@ export interface RulePreviewSectionProps {
  * @description The rule detail page's "Why does or doesn't this match?" section: the environment
  * to preview in, the plans the rule matches, and a sample of the ones it does not with a badge per
  * condition. A plan with no repository says so, since that is the usual reason a
- * repository-scoped rule never fires.
+ * repository-scoped rule never fires; a plan's project follows when it has one.
  */
 export const RulePreviewSection = (
   props: RulePreviewSectionProps,
 ): React.ReactElement => {
-  const { className, repositoryNames, state } = props;
+  const { className, projectNames, repositoryNames, state } = props;
 
   // Hooks
 
@@ -32,6 +33,15 @@ export const RulePreviewSection = (
   const repositoryLabel = (repositoryId: string | null | undefined): string => {
     if (repositoryId == null) return RULE_PREVIEW_COPY.noRepositoryLabel;
     return repositoryNames.get(repositoryId) ?? repositoryId;
+  };
+  const scopeLabel = (plan: {
+    readonly projectId?: string | null;
+    readonly repositoryId?: string | null;
+  }): string => {
+    const repository = repositoryLabel(plan.repositoryId);
+    if (plan.projectId == null) return repository;
+
+    return `${repository} · ${projectNames.get(plan.projectId) ?? plan.projectId}`;
   };
 
   // Handlers
@@ -47,7 +57,7 @@ export const RulePreviewSection = (
         {plan.title}
       </Link>
       <span className="text-muted-foreground text-xs">
-        {plan.status} · {repositoryLabel(plan.repositoryId)}
+        {plan.status} · {scopeLabel(plan)}
       </span>
     </li>
   ));
@@ -62,7 +72,7 @@ export const RulePreviewSection = (
           {plan.title}
         </Link>
         <span className="text-muted-foreground text-xs">
-          {plan.status} · {repositoryLabel(plan.repositoryId)}
+          {plan.status} · {scopeLabel(plan)}
         </span>
       </div>
       <RulePreviewConditionBadges plan={plan} />

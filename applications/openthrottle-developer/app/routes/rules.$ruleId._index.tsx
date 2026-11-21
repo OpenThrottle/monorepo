@@ -38,7 +38,13 @@ export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
 export const loader = async (args: Route.LoaderArgs) => {
   const { ruleId } = args.params;
   if (ruleId == null || ruleId === '') {
-    return { applications: [], preview: null, repositories: [], rule: null };
+    return {
+      applications: [],
+      preview: null,
+      projects: [],
+      repositories: [],
+      rule: null,
+    };
   }
 
   const page = await executeGraphqlWithAuth(
@@ -62,6 +68,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   return {
     applications: page.ruleApplicationsForRule,
     preview,
+    projects: page.projects,
     repositories: page.workspaceRepositories,
     rule,
   };
@@ -76,12 +83,15 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { loaderData } = props;
-  const { applications, preview, repositories, rule } = loaderData;
+  const { applications, preview, projects, repositories, rule } = loaderData;
 
   // Hooks
   const fetcher = useFetcher<typeof action>();
 
   // Setup
+  const projectNames = new Map(
+    projects.map((project) => [project.id, project.name]),
+  );
   const repositoryNames = new Map(
     repositories.map((repository) => [repository.id, repository.name]),
   );
@@ -118,6 +128,7 @@ export default function Component(
       <RuleDetailHeader
         onToggleEnabled={handleToggleEnabled}
         pending={fetcher.state !== 'idle'}
+        projectNames={projectNames}
         repositoryNames={repositoryNames}
         rule={rule}
       />
@@ -127,7 +138,11 @@ export default function Component(
         </p>
       )}
       {preview != null && (
-        <RulePreviewSection repositoryNames={repositoryNames} state={preview} />
+        <RulePreviewSection
+          projectNames={projectNames}
+          repositoryNames={repositoryNames}
+          state={preview}
+        />
       )}
       <RuleApplicationsSection applications={applications} />
     </GlobalScreen>

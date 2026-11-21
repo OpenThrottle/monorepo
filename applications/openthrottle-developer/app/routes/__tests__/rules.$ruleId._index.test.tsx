@@ -78,6 +78,7 @@ describe('routes/rules.$ruleId._index.tsx', () => {
     const component = renderDetail({
       applications,
       preview: null,
+      projects: [],
       repositories: [],
       rule,
     });
@@ -101,6 +102,7 @@ describe('routes/rules.$ruleId._index.tsx', () => {
     const component = renderDetail({
       applications: [],
       preview: null,
+      projects: [],
       repositories: [],
       rule: null,
     });
@@ -127,6 +129,7 @@ describe('routes/rules.$ruleId._index.tsx', () => {
           truncated: false,
         },
       },
+      projects: [],
       repositories: [],
       rule,
     });
@@ -140,6 +143,7 @@ describe('routes/rules.$ruleId._index.tsx', () => {
     const component = renderDetail({
       applications: [],
       preview: null,
+      projects: [],
       repositories: [],
       rule,
     });

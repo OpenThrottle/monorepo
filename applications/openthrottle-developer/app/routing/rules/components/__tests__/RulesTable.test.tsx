@@ -39,6 +39,7 @@ describe('RulesTable Component', () => {
     cleanup();
     props = {
       onToggleEnabled: vi.fn(),
+      projects: [],
       repositories: [],
       rules: [
         {
@@ -157,6 +158,7 @@ describe('RulesTable Component', () => {
       cleanup();
       props = {
         onToggleEnabled: vi.fn(),
+        projects: [],
         repositories: [],
         rules: [
           {
@@ -228,6 +230,7 @@ describe('RulesTable Component', () => {
       cleanup();
       props = {
         onToggleEnabled: vi.fn(),
+        projects: [],
         repositories: [
           { id: 'repo-b', name: 'website' },
           { id: 'repo-a', name: 'monorepo' },
@@ -308,6 +311,60 @@ describe('RulesTable Component', () => {
           name: `${RULES_COPY.viewAction}: Rule gone`,
         }),
       ).toBeInTheDocument();
+    });
+  });
+
+  describe('when rules are scoped to a project', () => {
+    const makeRule = (
+      id: string,
+      overrides: Partial<RulesTableProps['rules'][number]>,
+    ): RulesTableProps['rules'][number] => {
+      return {
+        actionPayloadJson: '{}',
+        actionType: 'inject-task',
+        createdAt: '2026-01-01T00:00:00.000Z',
+        enabled: true,
+        environment: null,
+        id,
+        projectId: null,
+        repositoryId: null,
+        specificity: 0,
+        status: null,
+        tagAll: [],
+        title: `Rule ${id}`,
+        updatedAt: '2026-01-01T00:00:00.000Z',
+        userId: 'user-1',
+        ...overrides,
+      };
+    };
+
+    beforeEach(() => {
+      cleanup();
+      component = renderTable({
+        projects: [{ id: 'proj-1', name: 'Platform' }],
+        repositories: [],
+        rules: [
+          makeRule('proj-rule', { projectId: 'proj-1', specificity: 2 }),
+          makeRule('global', {}),
+        ],
+      });
+    });
+
+    test('groups a project-only rule under its project, after Global', () => {
+      const kinds = component
+        .getAllByTestId('RulesTableGroup')
+        .map((group) => group.getAttribute('data-group-kind'));
+
+      expect(kinds).toEqual(['global', 'project']);
+    });
+
+    test('shows the project in the scope trail', () => {
+      const badge = component
+        .getAllByTestId('RulesScopeBadges')
+        .map((trail) => trail.querySelector('[data-scope-kind="project"]'))
+        .find((node) => node != null);
+
+      expect(badge).toHaveTextContent('Platform');
     });
   });
 });
