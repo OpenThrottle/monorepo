@@ -399,11 +399,40 @@ explains it:
    ```
 
    The adapter treated that as agy's own failure, so the turn read "interrupted" and the idle stop
-   was lost. Now, when the adapter stopped agy, its own reason wins. An idle stop says agy produced
-   no output and names a slow MCP server start as the usual cause.
+   was lost. Now, when the adapter stopped agy, its own reason wins.
 
 A thinking-heavy turn gets close to the timeout as well. The 4-call probe has spent up to 90s with
 no stdout before its first tool step, because agy streams no thinking events.
+
+### How long the silent start takes (agy 1.5.13, 2026-11-20)
+
+`init` always arrives within ~3s, before the MCP wait. The silence is the gap from `init` to agy's
+first `step_update`:
+
+| Run                                                     | `init` → first `step_update` |
+| ------------------------------------------------------- | ---------------------------- |
+| Direct `agy -p`, adapter's scrubbed env, warm npm cache | 8–9s                         |
+| Same, empty `npm_config_cache` (cold `npx` fetches)     | 13s                          |
+| Same, with the server process's `PATH`                  | 8s                           |
+| Server-spawned chat turn, machine load average ~50      | 37s and 63s                  |
+| Conversation 54a41391 (2026-11-14)                      | over 120s                    |
+
+Each slow server on its own reaches its MCP `initialize` reply in 7–15s warm and 8–12s cold. A cold
+cache and the server's `PATH` therefore don't explain the long waits; host load (agy starts five MCP
+servers at once) and network variance do. The `agy acp` path does not hold the first model call for
+these servers at all: the ACP probe's first model call came ~1s after the prompt, while
+`openthrottle_github` and `openthrottle_shadcn` were still connecting at 30s.
+
+**The fix is a startup allowance, not a longer idle timeout.** From spawn until agy's first event
+after `init`, the adapter allows `OPENTHROTTLE_ANTIGRAVITY_STARTUP_TIMEOUT_MS` (default 300000,
+never below the idle timeout). It emits a keepalive every 30s (or half the idle timeout, if that is
+shorter), so the chat orchestrator's 150s backstop does not fire either. Once agy is replying, the
+usual 120s idle timeout applies. A startup stop says agy did not start replying and names a slow MCP
+server start as the usual cause. An idle stop after that says only that agy produced no output.
+
+Rejected: raising the idle timeout for every turn (it would also delay catching a genuinely stalled
+reply); pre-warming the `npx` servers (the cold cache costs ~5s, not minutes); and skipping the
+workspace plugin's servers for chat (agy has no per-run switch for them, and chat needs them).
 
 **A denied MCP call can come back DONE.** Under the server's scrubbed env, the same probe reported
 `call_mcp_tool` as `state: DONE` with no output and no error, and only `result.denied_actions`

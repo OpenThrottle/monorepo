@@ -235,20 +235,21 @@ install/update and plan/scheduled runs all resolve the executable through the sa
 `resolveDriverBinary` rule, so they always agree on which binary runs (see
 [environment-variables.md § Agent CLI drivers](../monorepo/environment-variables.md#5-agent-cli-drivers)).
 
-| Var                                       | Meaning                                                        | Default            |
-| ----------------------------------------- | -------------------------------------------------------------- | ------------------ |
-| `OPENTHROTTLE_AGENT_DEV_CWD`              | Dev-only cwd when no repository is selected (ignored in prod)  | unset              |
-| `OPENTHROTTLE_CURSOR_AGENT_BIN`           | Absolute path to `cursor-agent` (else PATH)                    | `cursor-agent`     |
-| `OPENTHROTTLE_CLAUDE_BIN`                 | Absolute path to `claude` (else PATH)                          | `claude`           |
-| `OPENTHROTTLE_CODEX_BIN`                  | Absolute path to `codex` (else PATH)                           | `codex`            |
-| `OPENTHROTTLE_GROK_BIN`                   | Absolute path to `grok` (else PATH)                            | `grok`             |
-| `OPENTHROTTLE_OPENCODE_BIN`               | Absolute path to `opencode` (else PATH)                        | `opencode`         |
-| `OPENTHROTTLE_CLAUDE_CONFIG_DIR`          | Dedicated plugin-free `CLAUDE_CONFIG_DIR` for headless claude  | unset (uses HOME)  |
-| `OPENTHROTTLE_AGENT_IDLE_TIMEOUT_MS`      | Per-agent idle: kill the child after this much stdout silence  | 120000             |
-| `OPENTHROTTLE_CHAT_IDLE_TIMEOUT_MS`       | Server chat backstop: abort a turn with no chunk for this long | agent idle + 30000 |
-| `OPENTHROTTLE_AGENT_WALLCLOCK_TIMEOUT_MS` | Hard run cap                                                   | 900000             |
-| `OPENTHROTTLE_AGENT_KILL_GRACE_MS`        | SIGTERM→SIGKILL grace                                          | 5000               |
-| `OPENTHROTTLE_AGENT_SESSION_TIMEOUT_MS`   | Bound `cursor-agent create-chat` (kill child on timeout)       | 30000              |
+| Var                                           | Meaning                                                                                 | Default            |
+| --------------------------------------------- | --------------------------------------------------------------------------------------- | ------------------ |
+| `OPENTHROTTLE_AGENT_DEV_CWD`                  | Dev-only cwd when no repository is selected (ignored in prod)                           | unset              |
+| `OPENTHROTTLE_CURSOR_AGENT_BIN`               | Absolute path to `cursor-agent` (else PATH)                                             | `cursor-agent`     |
+| `OPENTHROTTLE_CLAUDE_BIN`                     | Absolute path to `claude` (else PATH)                                                   | `claude`           |
+| `OPENTHROTTLE_CODEX_BIN`                      | Absolute path to `codex` (else PATH)                                                    | `codex`            |
+| `OPENTHROTTLE_GROK_BIN`                       | Absolute path to `grok` (else PATH)                                                     | `grok`             |
+| `OPENTHROTTLE_OPENCODE_BIN`                   | Absolute path to `opencode` (else PATH)                                                 | `opencode`         |
+| `OPENTHROTTLE_CLAUDE_CONFIG_DIR`              | Dedicated plugin-free `CLAUDE_CONFIG_DIR` for headless claude                           | unset (uses HOME)  |
+| `OPENTHROTTLE_AGENT_IDLE_TIMEOUT_MS`          | Per-agent idle: kill the child after this much stdout silence                           | 120000             |
+| `OPENTHROTTLE_ANTIGRAVITY_STARTUP_TIMEOUT_MS` | agy only: silence allowed before it starts replying (its MCP wait); keepalives cover it | 300000             |
+| `OPENTHROTTLE_CHAT_IDLE_TIMEOUT_MS`           | Server chat backstop: abort a turn with no chunk for this long                          | agent idle + 30000 |
+| `OPENTHROTTLE_AGENT_WALLCLOCK_TIMEOUT_MS`     | Hard run cap                                                                            | 900000             |
+| `OPENTHROTTLE_AGENT_KILL_GRACE_MS`            | SIGTERM→SIGKILL grace                                                                   | 5000               |
+| `OPENTHROTTLE_AGENT_SESSION_TIMEOUT_MS`       | Bound `cursor-agent create-chat` (kill child on timeout)                                | 30000              |
 
 The cursor child additionally **inherits** these from the server process when
 set, because cursor provably reads them — dropping one silently diverges the

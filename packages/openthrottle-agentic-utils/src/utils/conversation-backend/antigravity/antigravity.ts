@@ -24,6 +24,9 @@
 
 import { spawn } from 'node:child_process';
 
+import { isRecord } from '@openthrottle/nodejs-utils';
+
+import { AsyncQueue } from '../acp/AsyncQueue.ts';
 import { NdjsonBuffer } from '../cursor-agent/ndjson.ts';
 import {
   resolveAgentTimeouts,
@@ -31,7 +34,7 @@ import {
 } from '../cursor-agent/teardown.ts';
 import { describeExit } from '../describeExit.ts';
 import { withFileMentions } from '../file-mentions.ts';
-import { withKeepalive } from '../keepalive.ts';
+import { CONVERSATION_KEEPALIVE_CHUNK, withKeepalive } from '../keepalive.ts';
 import {
   CONVERSATION_STREAM_CHUNK_KINDS,
   type ConversationBackend,
@@ -103,27 +106,73 @@ export function buildAntigravityPrompt(run: ConversationBackendRun): string {
   return sections.join('\n\n');
 }
 
-/** Termination reason for the per-turn idle timer. */
-const IDLE_TIMEOUT_REASON = 'idle timeout';
+/**
+ * Env override: how long agy may stay silent before it starts replying, in ms.
+ *
+ * @public
+ */
+export const ANTIGRAVITY_STARTUP_TIMEOUT_MS_ENV = `OPENTHROTTLE_ANTIGRAVITY_STARTUP_TIMEOUT_MS`;
 
 /**
- * The terminal error for a turn this adapter stopped itself, or `null` when it did not stop it.
- * An idle stop names its usual cause: agy holds the first model call until its workspace-plugin
- * MCP servers connect and writes nothing meanwhile, so one slow server start (an `npx` launch
- * fetching from the registry) runs straight into the idle timeout. Every other reason
+ * @description agy writes `init` within ~3s, then nothing until its workspace-plugin MCP servers
+ * have connected and the first model call returns. That gap measured 8–16s on an idle machine and
+ * 37–63s under load (2026-11-20, agy 1.5.13), and passed 120s in conversation 54a41391, so it gets
+ * its own allowance instead of the 120s idle timeout. Five minutes leaves the 15-minute wall clock
+ * as the outer bound.
+ */
+const DEFAULT_STARTUP_TIMEOUT_MS = 300_000;
+
+/**
+ * @description Upper bound on the keepalive spacing while agy starts up. It must stay well inside the
+ * chat orchestrator's idle backstop (agent idle + 30s, 150s by default), which otherwise sees a
+ * silent startup as a stalled turn.
+ */
+const MAX_STARTUP_KEEPALIVE_MS = 30_000;
+
+/** Termination reason for the per-turn idle timer once agy is replying. */
+const IDLE_TIMEOUT_REASON = 'idle timeout';
+
+/** Termination reason for the startup allowance running out before agy replied. */
+const STARTUP_TIMEOUT_REASON = 'startup timeout';
+
+/** Read the startup allowance: a positive integer from the env, else the default. */
+function resolveStartupTimeoutMs(env: NodeJS.ProcessEnv = process.env): number {
+  const parsed = Number.parseInt(
+    env[ANTIGRAVITY_STARTUP_TIMEOUT_MS_ENV] ?? '',
+    10,
+  );
+
+  return Number.isFinite(parsed) && parsed > 0
+    ? parsed
+    : DEFAULT_STARTUP_TIMEOUT_MS;
+}
+
+/**
+ * @description The terminal error for a turn this adapter stopped itself, or `null` when it did not
+ * stop it. A startup stop names its usual cause: agy holds the first model call until its
+ * workspace-plugin MCP servers connect and writes nothing meanwhile. Every other reason
  * (`cancelled`, `wall-clock timeout`) passes through unchanged.
  */
 function describeTermination(
   reason: string | null,
-  idleMs: number,
+  limits: { readonly idleMs: number; readonly startupMs: number },
 ): string | null {
-  if (reason !== IDLE_TIMEOUT_REASON) {
-    return reason;
+  if (reason === STARTUP_TIMEOUT_REASON) {
+    const seconds = Math.round(limits.startupMs / 1000);
+    return `agy did not start replying within ${seconds}s and was stopped. agy waits for its MCP servers to connect before it replies, so a slow-starting MCP server is the usual cause.`;
   }
 
-  const seconds = Math.round(idleMs / 1000);
-  return `agy produced no output for ${seconds}s and was stopped. agy waits for its MCP servers to connect before it replies, so a slow-starting MCP server is the usual cause.`;
+  if (reason === IDLE_TIMEOUT_REASON) {
+    const seconds = Math.round(limits.idleMs / 1000);
+    return `agy produced no output for ${seconds}s and was stopped.`;
+  }
+
+  return reason;
 }
+
+/** One item on the adapter's read queue: a stdout read, or a startup keepalive tick. */
+type AntigravityRead =
+  { readonly data: Buffer; readonly kind: 'data' } | { readonly kind: 'tick' };
 
 async function* streamAntigravity(
   run: ConversationBackendRun,
@@ -159,6 +208,9 @@ async function* streamAntigravity(
   child.stdin?.end();
 
   const timeouts = resolveAgentTimeouts();
+  // Never stricter than the idle timeout, so a raised idle timeout still covers a slow startup.
+  const startupMs = Math.max(resolveStartupTimeoutMs(), timeouts.idleMs);
+  const limits = { idleMs: timeouts.idleMs, startupMs };
   let terminationReason: string | null = null;
   const terminate = (reason: string): void => {
     if (terminationReason === null) {
@@ -166,6 +218,24 @@ async function* streamAntigravity(
     }
     terminateChild(child, timeouts.graceMs);
   };
+
+  // Two phases. Starting: from spawn until agy's first event after `init`, bounded once by
+  // `startupMs` while keepalive ticks hold the orchestrator backstop off. Replying: the usual idle
+  // timer, reset by every stdout read.
+  const reads = new AsyncQueue<AntigravityRead>();
+  let started = false;
+  const startupTimer = setTimeout(() => {
+    terminate(STARTUP_TIMEOUT_REASON);
+  }, startupMs);
+  startupTimer.unref();
+  const keepaliveMs = Math.min(
+    MAX_STARTUP_KEEPALIVE_MS,
+    Math.max(1, Math.floor(timeouts.idleMs / 2)),
+  );
+  const startupTicker = setInterval(() => {
+    reads.push({ kind: 'tick' });
+  }, keepaliveMs);
+  startupTicker.unref();
 
   let idleTimer: NodeJS.Timeout | null = null;
   const resetIdle = (): void => {
@@ -177,6 +247,15 @@ async function* streamAntigravity(
       timeouts.idleMs,
     );
     idleTimer.unref();
+  };
+  const markStarted = (): void => {
+    if (started) {
+      return;
+    }
+    started = true;
+    clearTimeout(startupTimer);
+    clearInterval(startupTicker);
+    resetIdle();
   };
   const wallTimer = setTimeout(
     () => terminate('wall-clock timeout'),
@@ -217,6 +296,10 @@ async function* streamAntigravity(
       } catch {
         continue;
       }
+      // `init` arrives before agy's MCP wait; anything after it means agy is replying.
+      if (isRecord(parsed) && parsed.event !== 'init') {
+        markStarted();
+      }
       for (const chunk of mapEvent(parsed)) {
         if (!chunk.done) {
           yield chunk;
@@ -227,27 +310,41 @@ async function* streamAntigravity(
         // A SIGTERMed agy still writes a `result` on its way out
         // (`status: ERROR, error: 'interrupted'`, all-zero usage). When this adapter did the
         // stopping, that result says nothing about why, so the reason it stopped for wins.
-        const stopError = describeTermination(
-          terminationReason,
-          timeouts.idleMs,
-        );
+        const stopError = describeTermination(terminationReason, limits);
         yield stopError === null ? chunk : { ...chunk, error: stopError };
       }
     }
   };
 
   try {
-    resetIdle();
-    if (child.stdout !== null) {
-      for await (const data of child.stdout) {
-        resetIdle();
-        // A stdout read that maps to no chunk still reset the child's idle timer above; surface it
-        // as a keepalive so the server backstop stays in step.
-        yield* withKeepalive(emit(buffer.push(data)));
+    if (child.stdout === null) {
+      reads.end();
+    } else {
+      child.stdout.on('data', (data: Buffer) => {
+        reads.push({ data, kind: 'data' });
+      });
+      child.stdout.on('close', () => {
+        reads.end();
+      });
+    }
+
+    for await (const read of reads) {
+      if (read.kind === 'tick') {
+        if (!started) {
+          yield CONVERSATION_KEEPALIVE_CHUNK;
+        }
+        continue;
       }
 
-      yield* emit(buffer.flush());
+      if (started) {
+        resetIdle();
+      }
+      // A stdout read that maps to no chunk still counts as activity; surface it as a keepalive
+      // so the server backstop stays in step.
+      yield* withKeepalive(emit(buffer.push(read.data)));
     }
+
+    yield* emit(buffer.flush());
 
     const { code, error } = await closed;
     if (!sawTerminal) {
@@ -256,7 +353,7 @@ async function* streamAntigravity(
         error !== null ||
         (code !== null && code !== 0);
       const message =
-        describeTermination(terminationReason, timeouts.idleMs) ??
+        describeTermination(terminationReason, limits) ??
         describeExit('agy', { code, error, stderr });
       yield {
         delta: '',
@@ -266,6 +363,9 @@ async function* streamAntigravity(
       };
     }
   } finally {
+    clearTimeout(startupTimer);
+    clearInterval(startupTicker);
+    reads.end();
     if (idleTimer !== null) {
       clearTimeout(idleTimer);
     }

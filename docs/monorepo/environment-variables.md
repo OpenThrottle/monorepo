@@ -144,16 +144,17 @@ plus any per-run `env` — so a stub named here is the binary a run actually spa
 | `AGENT_DISCOVERY_HARD_TTL_MS`  | Hard TTL; past it the next request blocks on a fresh sweep. Clamped up to the soft TTL                                                                                                                                   | `600000`     |
 | `AGENT_DISCOVERY_WARM_ON_BOOT` | Fire one non-blocking sweep at server bootstrap (retried once if a probe timed out) so the first home load never blocks on a cold sweep. `0`/`false`/`no`/`off` disables; unset is off under `NODE_ENV=test` or `VITEST` | on           |
 
-### Agent run bounds (all read in `cursor-agent/teardown.ts`, none in `.env.default`)
+### Agent run bounds (read in `cursor-agent/teardown.ts` unless noted, none in `.env.default`)
 
-| Variable                                  | Used for                                     | Code default                |
-| ----------------------------------------- | -------------------------------------------- | --------------------------- |
-| `OPENTHROTTLE_AGENT_IDLE_TIMEOUT_MS`      | Per-agent no-output timeout                  | `120000`                    |
-| `OPENTHROTTLE_AGENT_WALLCLOCK_TIMEOUT_MS` | Per-agent wall-clock cap                     | `900000`                    |
-| `OPENTHROTTLE_AGENT_KILL_GRACE_MS`        | SIGTERM → SIGKILL grace                      | `5000`                      |
-| `OPENTHROTTLE_AGENT_SESSION_TIMEOUT_MS`   | Timeout for minting a CLI session            | `30000`                     |
-| `OPENTHROTTLE_CHAT_IDLE_TIMEOUT_MS`       | Chat-stream orchestrator backstop            | agent idle + `30000` margin |
-| `OPENTHROTTLE_RALPH_MAX_TOTAL_MS`         | Cumulative wall-clock budget for a Ralph run | unset → derived ceiling     |
+| Variable                                      | Used for                                                                                                             | Code default                |
+| --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | --------------------------- |
+| `OPENTHROTTLE_AGENT_IDLE_TIMEOUT_MS`          | Per-agent no-output timeout                                                                                          | `120000`                    |
+| `OPENTHROTTLE_AGENT_WALLCLOCK_TIMEOUT_MS`     | Per-agent wall-clock cap                                                                                             | `900000`                    |
+| `OPENTHROTTLE_ANTIGRAVITY_STARTUP_TIMEOUT_MS` | agy only, in `antigravity/antigravity.ts`: silence allowed before agy starts replying (never below the idle timeout) | `300000`                    |
+| `OPENTHROTTLE_AGENT_KILL_GRACE_MS`            | SIGTERM → SIGKILL grace                                                                                              | `5000`                      |
+| `OPENTHROTTLE_AGENT_SESSION_TIMEOUT_MS`       | Timeout for minting a CLI session                                                                                    | `30000`                     |
+| `OPENTHROTTLE_CHAT_IDLE_TIMEOUT_MS`           | Chat-stream orchestrator backstop                                                                                    | agent idle + `30000` margin |
+| `OPENTHROTTLE_RALPH_MAX_TOTAL_MS`             | Cumulative wall-clock budget for a Ralph run                                                                         | unset → derived ceiling     |
 
 ## 6. Plans, runs and workspaces
 
