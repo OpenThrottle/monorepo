@@ -93,6 +93,7 @@ import {
   ListPullsInput,
   LoginInput,
   MissingWorktreeCheckoutReason,
+  MoveProjectPlanInput,
   OpenToMergedCycleTimeInput,
   PlanEmbeddingsByPlanInput,
   PlanMessageKind,
@@ -104,6 +105,8 @@ import {
   PostPlanMessageInput,
   PrCountByLabelInput,
   PressureLevel,
+  ProjectPlanMoveDirection,
+  ProjectPlansPageInput,
   PromoteTaskToPlanInput,
   PrsMergedPerPeriodInput,
   PruneWorktreeCheckoutOutcome,
@@ -270,6 +273,9 @@ export const PlanTaskStatusSchema: z.ZodType<PlanTaskStatus> =
 
 export const PressureLevelSchema: z.ZodType<PressureLevel> =
   z.nativeEnum(PressureLevel);
+
+export const ProjectPlanMoveDirectionSchema: z.ZodType<ProjectPlanMoveDirection> =
+  z.nativeEnum(ProjectPlanMoveDirection);
 
 export const PruneWorktreeCheckoutOutcomeSchema: z.ZodType<PruneWorktreeCheckoutOutcome> =
   z.nativeEnum(PruneWorktreeCheckoutOutcome);
@@ -1256,6 +1262,15 @@ export function LoginInputSchema(): z.ZodObject<Properties<LoginInput>> {
   });
 }
 
+export function MoveProjectPlanInputSchema(): z.ZodObject<
+  Properties<MoveProjectPlanInput>
+> {
+  return z.object({
+    direction: ProjectPlanMoveDirectionSchema,
+    planId: z.string().min(1),
+  });
+}
+
 export function OpenToMergedCycleTimeInputSchema(): z.ZodObject<
   Properties<OpenToMergedCycleTimeInput>
 > {
@@ -1305,6 +1320,16 @@ export function PrCountByLabelInputSchema(): z.ZodObject<
     owner: z.string().min(1),
     repo: z.string().min(1),
     state: z.string().nullish(),
+  });
+}
+
+export function ProjectPlansPageInputSchema(): z.ZodObject<
+  Properties<ProjectPlansPageInput>
+> {
+  return z.object({
+    limit: z.number(),
+    offset: z.number(),
+    projectId: z.string().min(1),
   });
 }
 

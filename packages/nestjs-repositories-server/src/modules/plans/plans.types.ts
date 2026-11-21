@@ -94,6 +94,24 @@ export interface ListPlansFilteredResult {
 }
 
 /**
+ * @description The window {@link PlansRepository.pageInProject} reads.
+ * @public
+ */
+export interface ProjectPlansPage {
+  readonly limit: number;
+  readonly offset: number;
+}
+
+/**
+ * @description A page of a project's plans, plus the project's total live plan count.
+ * @public
+ */
+export interface ProjectPlansPageResult {
+  readonly plans: Plan[];
+  readonly totalCount: number;
+}
+
+/**
  * @description A row of {@link PlansRepository.countByStatus}.
  * @public
  */
@@ -122,5 +140,6 @@ export interface PlansRepositoryMock extends BaseRepositoryMock<
   readonly listFiltered: Mock<PlansRepository['listFiltered']>;
   readonly listInProject: Mock<PlansRepository['listInProject']>;
   readonly maxProjectSortOrders: Mock<PlansRepository['maxProjectSortOrders']>;
+  readonly pageInProject: Mock<PlansRepository['pageInProject']>;
   readonly renumberProjectPlans: Mock<PlansRepository['renumberProjectPlans']>;
 }

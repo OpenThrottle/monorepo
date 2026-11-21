@@ -18,9 +18,9 @@ const {
   ProjectDetailAddPlanDocument,
   ProjectDetailAddProjectTagDocument,
   ProjectDetailLinkRepositoryDocument,
+  ProjectDetailMovePlanDocument,
   ProjectDetailRemovePlanDocument,
   ProjectDetailRemoveProjectTagDocument,
-  ProjectDetailReorderPlansDocument,
   ProjectDetailUnlinkRepositoryDocument,
 } = await import('~/__generated__/graphql');
 const { runProjectDetailAction } = await import('../projectId');
@@ -133,10 +133,10 @@ describe('projects/actions/projectId tag parser', () => {
         { planId: 'plan-1' },
       ],
       [
-        'reorderProjectPlans',
-        { planIds: 'plan-2,plan-1' },
-        ProjectDetailReorderPlansDocument,
-        { planIds: ['plan-2', 'plan-1'], projectId: 'proj-1' },
+        'moveProjectPlan',
+        { direction: 'UP', planId: 'plan-2' },
+        ProjectDetailMovePlanDocument,
+        { direction: 'UP', planId: 'plan-2' },
       ],
     ])('%s calls its mutation', async (intent, fields, document, input) => {
       const result = await runProjectDetailAction(
@@ -147,6 +147,21 @@ describe('projects/actions/projectId tag parser', () => {
       expect(mockExecute).toHaveBeenCalledWith(expect.any(Request), document, {
         input,
       });
+    });
+
+    test('rejects a move with an unknown direction without calling the server', async () => {
+      const result = await runProjectDetailAction(
+        actionArgs(
+          form({
+            direction: 'SIDEWAYS',
+            intent: 'moveProjectPlan',
+            planId: 'p',
+          }),
+        ),
+      );
+
+      expect(result).toHaveProperty('projectError');
+      expect(mockExecute).not.toHaveBeenCalled();
     });
 
     test('rejects a structure intent with no ids without calling the server', async () => {

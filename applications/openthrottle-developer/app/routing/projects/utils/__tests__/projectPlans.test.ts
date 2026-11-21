@@ -4,30 +4,7 @@ import {
   getAvailablePlans,
   getProjectPlanProgress,
   getUnlinkedRepositories,
-  moveProjectPlanId,
 } from '../projectPlans';
-
-describe('moveProjectPlanId', () => {
-  const ids = ['a', 'b', 'c'];
-
-  test('moves an id up by swapping with its predecessor', () => {
-    expect(moveProjectPlanId(ids, 'b', 'up')).toEqual(['b', 'a', 'c']);
-  });
-
-  test('moves an id down by swapping with its successor', () => {
-    expect(moveProjectPlanId(ids, 'b', 'down')).toEqual(['a', 'c', 'b']);
-  });
-
-  test('leaves the order unchanged at an edge', () => {
-    expect(moveProjectPlanId(ids, 'a', 'up')).toEqual(ids);
-    expect(moveProjectPlanId(ids, 'c', 'down')).toEqual(ids);
-  });
-
-  test('leaves the order unchanged for an unknown id and does not mutate', () => {
-    expect(moveProjectPlanId(ids, 'z', 'up')).toEqual(ids);
-    expect(ids).toEqual(['a', 'b', 'c']);
-  });
-});
 
 describe('getProjectPlanProgress', () => {
   test('counts COMPLETED plans against the total', () => {

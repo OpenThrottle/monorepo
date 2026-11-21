@@ -41,9 +41,9 @@ describe('ProjectPlansList Component', () => {
         action: async ({ request }: { request: Request }) => {
           const formData = await request.formData();
           submitted.push({
+            direction: formData.get('direction'),
             intent: formData.get('intent'),
             planId: formData.get('planId'),
-            planIds: formData.get('planIds'),
           });
           return {};
         },
@@ -56,10 +56,12 @@ describe('ProjectPlansList Component', () => {
   beforeEach(() => {
     submitted = [];
     props = {
+      offset: 0,
       plans: [
         plan('plan-a', 'First plan', 'COMPLETED'),
         plan('plan-b', 'Second plan', 'PENDING'),
       ],
+      totalCount: 2,
     };
   });
 
@@ -79,7 +81,7 @@ describe('ProjectPlansList Component', () => {
       ).toHaveAttribute('href', '/plans/plan-b');
     });
 
-    test('Move up submits the full new order', async () => {
+    test('Move up submits the plan and direction', async () => {
       const user = userEvent.setup();
       await user.click(
         component.getByRole('button', {
@@ -93,8 +95,9 @@ describe('ProjectPlansList Component', () => {
       );
       await waitFor(() => expect(submitted).toHaveLength(1));
       expect(submitted[0]).toMatchObject({
-        intent: 'reorderProjectPlans',
-        planIds: 'plan-b,plan-a',
+        direction: 'UP',
+        intent: 'moveProjectPlan',
+        planId: 'plan-b',
       });
     });
 
@@ -118,9 +121,42 @@ describe('ProjectPlansList Component', () => {
     });
   });
 
+  describe('on a later page', () => {
+    beforeEach(() => {
+      props = { ...props, offset: 50, totalCount: 52 };
+      renderList();
+    });
+
+    test('numbers rows by their position in the whole project', () => {
+      const items = component.getAllByRole('listitem');
+      expect(items[0]).toHaveTextContent('51');
+      expect(items[1]).toHaveTextContent('52');
+    });
+
+    test('lets the first row of the page move up onto the previous page', async () => {
+      const user = userEvent.setup();
+      await user.click(
+        component.getByRole('button', {
+          name: `${PROJECT_PLANS_COPY.menuAriaLabelPrefix} First plan`,
+        }),
+      );
+      const moveUp = await component.findByRole('menuitem', {
+        name: PROJECT_PLANS_COPY.moveUp,
+      });
+      expect(moveUp).not.toHaveAttribute('aria-disabled', 'true');
+      await user.click(moveUp);
+      await waitFor(() => expect(submitted).toHaveLength(1));
+      expect(submitted[0]).toMatchObject({
+        direction: 'UP',
+        intent: 'moveProjectPlan',
+        planId: 'plan-a',
+      });
+    });
+  });
+
   describe('without plans', () => {
     test('renders the empty state and no list', () => {
-      props = { plans: [] };
+      props = { offset: 0, plans: [], totalCount: 0 };
       renderList();
       expect(component.queryByRole('list')).not.toBeInTheDocument();
       expect(component.getByTestId('ProjectPlansList')).toBeInTheDocument();

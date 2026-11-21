@@ -16,7 +16,7 @@ fragment ProjectPageDetails on ProjectObject {
   updatedAt
 }
 
-query getProjectById($id: ID!) {
+query getProjectById($id: ID!, $limit: Int!, $offset: Int!) {
   # Candidates for the "add existing plan" and "link repository" pickers. The
   # plans list is bounded; a plan already in this project is filtered out in
   # the loader.
@@ -31,8 +31,13 @@ query getProjectById($id: ID!) {
     ...ProjectPageDetails
   }
 
-  projectPlans(projectId: $id) {
-    ...ProjectPlanRow
+  projectPlansPage(
+    input: { limit: $limit, offset: $offset, projectId: $id }
+  ) {
+    plans {
+      ...ProjectPlanRow
+    }
+    totalCount
   }
 
   skillTagVocabulary {
@@ -106,8 +111,8 @@ mutation ProjectDetailRemovePlan($input: RemovePlanFromProjectInput!) {
   }
 }
 
-mutation ProjectDetailReorderPlans($input: ReorderProjectPlansInput!) {
-  reorderProjectPlans(input: $input) {
+mutation ProjectDetailMovePlan($input: MoveProjectPlanInput!) {
+  moveProjectPlan(input: $input) {
     id
   }
 }

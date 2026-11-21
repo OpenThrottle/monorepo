@@ -26,6 +26,8 @@ describe('ProjectDetailView Component', () => {
     props = {
       availablePlans: [],
       availableRepositories: [],
+      page: 1,
+      pageOffset: 0,
       plans: [
         {
           __typename: 'PlanObject',
@@ -37,18 +39,22 @@ describe('ProjectDetailView Component', () => {
           title: 'Plan one',
         },
       ],
+      plansTotal: 1,
       project: mockProject,
       tagVocabulary: [],
     };
+  });
 
+  const renderView = (): void => {
     const Component = () => {
       return <ProjectDetailView {...props} />;
     };
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     component = render(<RoutesStub />);
-  });
+  };
 
   test('renders the project name and description', () => {
+    renderView();
     expect(
       component.getByRole('heading', { name: 'Test Project' }),
     ).toBeInTheDocument();
@@ -56,6 +62,7 @@ describe('ProjectDetailView Component', () => {
   });
 
   test('renders the repositories and plans sections, with no tasks table', () => {
+    renderView();
     expect(
       component.getByRole('region', { name: 'Repositories' }),
     ).toBeInTheDocument();
@@ -70,5 +77,24 @@ describe('ProjectDetailView Component', () => {
       component.queryByTestId('ProjectTasksTable'),
     ).not.toBeInTheDocument();
     expect(component.queryByRole('tab')).not.toBeInTheDocument();
+  });
+
+  test('renders no pager when every plan fits on one page', () => {
+    renderView();
+    expect(
+      component.queryByTestId('OpenThrottlePagination'),
+    ).not.toBeInTheDocument();
+  });
+
+  test('renders a pager pointing at the next page of this project', () => {
+    props = { ...props, plansTotal: 94 };
+    renderView();
+    expect(component.getByTestId('OpenThrottlePagination')).toBeInTheDocument();
+    expect(
+      component.getByRole('link', { name: 'Go to next page' }),
+    ).toHaveAttribute(
+      'href',
+      expect.stringMatching(/^\/projects\/project-1\?.*page=2/),
+    );
   });
 });

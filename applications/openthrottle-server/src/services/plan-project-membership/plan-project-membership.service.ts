@@ -16,7 +16,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import type { Plan } from '@openthrottle/nestjs-repositories-server';
+import type {
+  Plan,
+  ProjectPlansPage,
+  ProjectPlansPageResult,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   PlansRepository,
   PROJECT_PLAN_SORT_ORDER_GAP,
@@ -25,6 +29,9 @@ import {
 } from '@openthrottle/nestjs-repositories-server';
 import { planRunConfigFromPlanStorage } from '@openthrottle/openthrottle-plan-config';
 import type { EntityManager } from 'typeorm';
+
+import { PROJECT_PLAN_MOVE_DIRECTION } from './plan-project-membership.constants.ts';
+import type { ProjectPlanMoveDirection } from './plan-project-membership.types.ts';
 
 @Injectable()
 export class PlanProjectMembershipService {
@@ -161,6 +168,55 @@ export class PlanProjectMembershipService {
    */
   async listPlans(projectId: string): Promise<Plan[]> {
     return this.plansRepository.listInProject(projectId);
+  }
+
+  /**
+   * @description One page of a project's live plans in project order, plus the total count.
+   */
+  async pagePlans(
+    projectId: string,
+    page: ProjectPlansPage,
+  ): Promise<ProjectPlansPageResult> {
+    return this.plansRepository.pageInProject(projectId, page);
+  }
+
+  /**
+   * @description Swaps a plan with its neighbour in the project's full order (`UP` = earlier),
+   * so a move works across any page boundary the caller renders. A plan already at that end is
+   * left in place. Returns every live plan of the project in the resulting order.
+   * @throws BadRequestException when the plan is in no project.
+   * @throws NotFoundException when the plan does not exist.
+   */
+  async movePlan(
+    planId: string,
+    direction: ProjectPlanMoveDirection,
+  ): Promise<Plan[]> {
+    const plan = await this.plansRepository.findOne({ where: { id: planId } });
+
+    if (!plan) {
+      throw new NotFoundException(`Plan not found: ${planId}`);
+    }
+    if (plan.projectId === null) {
+      throw new BadRequestException(`Plan is not in a project: ${planId}`);
+    }
+
+    const current = await this.plansRepository.listInProject(plan.projectId);
+    const ids = current.map((row) => {
+      return row.id;
+    });
+    const index = ids.indexOf(planId);
+    const target =
+      direction === PROJECT_PLAN_MOVE_DIRECTION.UP ? index - 1 : index + 1;
+    const neighbour = ids[target];
+
+    if (index === -1 || neighbour === undefined) {
+      return current;
+    }
+
+    ids[target] = planId;
+    ids[index] = neighbour;
+
+    return this.plansRepository.renumberProjectPlans(plan.projectId, ids);
   }
 
   /**

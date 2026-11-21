@@ -1,32 +1,7 @@
-export type ProjectPlanMoveDirection = 'down' | 'up';
-
 export interface ProjectPlanProgress {
   readonly completed: number;
   readonly total: number;
 }
-
-/**
- * @description Returns `planIds` with `planId` swapped with its neighbour in
- * `direction`. An id that is missing or already at that edge returns the order
- * unchanged, so a stale click never produces a surprising reorder.
- */
-export const moveProjectPlanId = (
-  planIds: readonly string[],
-  planId: string,
-  direction: ProjectPlanMoveDirection,
-): string[] => {
-  const next = [...planIds];
-  const index = next.indexOf(planId);
-  const target = direction === 'up' ? index - 1 : index + 1;
-  const current = next[index];
-  const neighbour = next[target];
-  if (index === -1 || current === undefined || neighbour === undefined) {
-    return next;
-  }
-  next[index] = neighbour;
-  next[target] = current;
-  return next;
-};
 
 /**
  * @description Completed / total plan counts for a project. Only COMPLETED

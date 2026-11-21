@@ -2,7 +2,11 @@
  * @description GraphQL input types for project mutations. Replaces many individual @Args with a single input object.
  */
 
-import { Field, ID, InputType } from '@nestjs/graphql';
+import { Field, ID, InputType, Int } from '@nestjs/graphql';
+
+import type { ProjectPlanMoveDirection } from '../../services/plan-project-membership/plan-project-membership.types.ts';
+import { PROJECT_PLAN_MOVE_DIRECTION } from './project-plan-move-direction.enum.ts';
+import { PROJECT_PLANS_PAGE_MAX_LIMIT } from './projects.constants.ts';
 
 @InputType()
 export class CreateProjectInput {
@@ -76,6 +80,31 @@ export class AddPlanToProjectInput {
 export class RemovePlanFromProjectInput {
   @Field(() => ID, { description: 'Plan to remove from its project' })
   planId!: string;
+}
+
+@InputType()
+export class MoveProjectPlanInput {
+  @Field(() => PROJECT_PLAN_MOVE_DIRECTION, {
+    description: `UP swaps with the earlier plan in project order, DOWN with the later one`,
+  })
+  direction!: ProjectPlanMoveDirection;
+
+  @Field(() => ID, { description: 'Plan to move within its project' })
+  planId!: string;
+}
+
+@InputType()
+export class ProjectPlansPageInput {
+  @Field(() => Int, {
+    description: `Page size, 1 to ${PROJECT_PLANS_PAGE_MAX_LIMIT}`,
+  })
+  limit!: number;
+
+  @Field(() => Int, { description: 'Rows to skip; 0 or more' })
+  offset!: number;
+
+  @Field(() => ID, { description: 'Project whose plans are listed' })
+  projectId!: string;
 }
 
 @InputType()

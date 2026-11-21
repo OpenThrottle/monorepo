@@ -8,41 +8,42 @@ import type { ProjectPlanRowFragment } from '~/__generated__/graphql';
 import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
 import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
 import { PROJECT_PLANS_COPY } from '~/routing/projects/data/data.copy';
-import { moveProjectPlanId } from '~/routing/projects/utils/projectPlans';
 
 export interface ProjectPlansListProps {
   readonly className?: string;
+  /** Position of the first row in the project's full order (the page offset). */
+  readonly offset: number;
+  /** One page of the project's plans, in project order. */
   readonly plans: readonly ProjectPlanRowFragment[];
+  /** Live plans in the project across every page. */
+  readonly totalCount: number;
 }
 
 /**
- * @description The project's plans in project order, each row with its status,
- * task progress, a link to the plan (its PR lives on the plan's runs, so the
- * plan page is the PR entry point) and a GlobalPopover with Move up / Move down
- * / Remove. Every move posts the full new order (`reorderProjectPlans`).
+ * @description One page of the project's plans in project order, each row with
+ * its absolute position, status, task progress, a link to the plan (its PR lives
+ * on the plan's runs, so the plan page is the PR entry point) and a
+ * GlobalPopover with Move up / Move down / Remove. A move posts only the plan
+ * and a direction (`moveProjectPlan`); the server swaps it with its neighbour in
+ * the full order, so the first row of a page can move onto the previous page.
  */
 export const ProjectPlansList = (
   props: ProjectPlansListProps,
 ): React.ReactElement => {
-  const { className, plans } = props;
+  const { className, offset, plans, totalCount } = props;
 
   // Hooks
 
   // Setup
-  const planIds = plans.map((plan) => plan.id);
 
   // Handlers
   const buildActions = (
     plan: ProjectPlanRowFragment,
     index: number,
   ): GlobalPopoverAction[] => {
-    const reorderFields = (
-      direction: 'down' | 'up',
-    ): Record<string, string> => {
-      return {
-        intent: 'reorderProjectPlans',
-        planIds: moveProjectPlanId(planIds, plan.id, direction).join(','),
-      };
+    const position = offset + index;
+    const moveFields = (direction: 'DOWN' | 'UP'): Record<string, string> => {
+      return { direction, intent: 'moveProjectPlan', planId: plan.id };
     };
 
     return [
@@ -53,8 +54,8 @@ export const ProjectPlansList = (
         to: `/plans/${plan.id}`,
       },
       {
-        disabled: index === 0,
-        fields: reorderFields('up'),
+        disabled: position === 0,
+        fields: moveFields('UP'),
         id: `up-${plan.id}`,
         kind: 'submit',
         label: PROJECT_PLANS_COPY.moveUp,
@@ -62,8 +63,8 @@ export const ProjectPlansList = (
         separatorBefore: true,
       },
       {
-        disabled: index === plans.length - 1,
-        fields: reorderFields('down'),
+        disabled: position === totalCount - 1,
+        fields: moveFields('DOWN'),
         id: `down-${plan.id}`,
         kind: 'submit',
         label: PROJECT_PLANS_COPY.moveDown,
@@ -115,7 +116,7 @@ export const ProjectPlansList = (
         >
           <div className="flex min-w-0 items-center gap-3">
             <span className="text-muted-foreground w-6 text-right text-xs tabular-nums">
-              {index + 1}
+              {offset + index + 1}
             </span>
             <div className="min-w-0">
               <Link
