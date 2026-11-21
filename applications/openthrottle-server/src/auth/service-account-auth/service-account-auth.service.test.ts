@@ -50,16 +50,20 @@ describe('ServiceAccountAuthService', () => {
       ).resolves.toBeNull();
     });
 
-    it('returns principal when verification succeeds', async () => {
+    it('returns principal and scopes when verification succeeds', async () => {
       const serviceAccountId = '11111111-1111-4111-8111-111111111111';
       credentials.verifyBearerToken.mockResolvedValue({
         credentialId: 'cred-1',
+        scopes: ['telemetry:ingest'],
         serviceAccountId,
       });
 
       await expect(
         service.tryAuthenticateAuthorizationHeader('Bearer ot_sa_p_s'),
-      ).resolves.toEqual(authPrincipalFromServiceAccountId(serviceAccountId));
+      ).resolves.toEqual({
+        principal: authPrincipalFromServiceAccountId(serviceAccountId),
+        scopes: ['telemetry:ingest'],
+      });
     });
   });
 

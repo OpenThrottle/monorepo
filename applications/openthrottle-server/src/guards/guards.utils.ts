@@ -54,3 +54,20 @@ export const getEditorNameForPrincipal = async (
     principal.sub
   );
 };
+
+/**
+ * @description Whether a credential may call a handler. An unrestricted credential (`scopes`
+ * null) always may; a scoped one only when the handler declares at least one of its scopes with
+ * `@CredentialScope()`. A handler that declares none is closed to every scoped credential.
+ */
+export const isCredentialScopeAllowed = (
+  credentialScopes: readonly string[] | null,
+  handlerScopes: readonly string[],
+): boolean => {
+  if (credentialScopes == null) {
+    return true;
+  }
+  return handlerScopes.some((scope) => {
+    return credentialScopes.includes(scope);
+  });
+};

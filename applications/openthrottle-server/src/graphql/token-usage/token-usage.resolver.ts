@@ -18,9 +18,11 @@ import type {
 import {
   AgentAccountsRepository,
   AgentTokenUsageRepository,
+  SERVICE_ACCOUNT_CREDENTIAL_SCOPES,
 } from '@openthrottle/nestjs-repositories-server';
 import type { IdentifiedAgentAccount } from '@openthrottle/openthrottle-agentic-utils';
 
+import { CredentialScope } from '../../guards/credential-scope.decorator.ts';
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { AgentAccountStampingService } from '../../services/agent-account-stamping/agent-account-stamping.service.ts';
 import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service.ts';
@@ -74,6 +76,7 @@ export class TokenUsageResolver {
     private readonly tokenUsageRepository: AgentTokenUsageRepository,
   ) {}
 
+  @CredentialScope(SERVICE_ACCOUNT_CREDENTIAL_SCOPES.TELEMETRY_INGEST)
   @Mutation(() => RecordTokenUsageResultObject, {
     description: `Batch-ingest hook-captured token usage rows (at most 500). Rows are attributed to the human user the authenticated principal acts as (human JWT, or a service account's acting user); a userId is never accepted from the client. Idempotent: rows whose (source, sessionId, requestId) already exist are skipped. created_at is the row's occurredAt, not ingest time. Any invalid row rejects the whole batch with BAD_REQUEST naming the row index.`,
   })

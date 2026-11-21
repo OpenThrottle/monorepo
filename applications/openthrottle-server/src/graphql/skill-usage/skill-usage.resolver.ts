@@ -19,6 +19,7 @@ import {
   isSkillUsageOutcome,
   isSkillUsageScope,
   normalizeRemoteUrl,
+  SERVICE_ACCOUNT_CREDENTIAL_SCOPES,
   SKILL_USAGE_OUTCOMES,
   SKILL_USAGE_PRIVACY_LEVELS,
   SKILL_USAGE_SCOPE_LIST,
@@ -27,6 +28,7 @@ import {
   SkillUsageOutcomesRepository,
 } from '@openthrottle/nestjs-repositories-server';
 
+import { CredentialScope } from '../../guards/credential-scope.decorator.ts';
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service.ts';
 import {
@@ -83,6 +85,7 @@ export class SkillUsageResolver {
     private readonly skillUsageOutcomesRepository: SkillUsageOutcomesRepository,
   ) {}
 
+  @CredentialScope(SERVICE_ACCOUNT_CREDENTIAL_SCOPES.TELEMETRY_INGEST)
   @Mutation(() => SkillUsageEventObject, {
     description: `Record one harness-captured skill invocation. Args must already be privacy-processed by the client; the server stores them as-sent. The event is attributed to the human user the authenticated principal acts as, resolved server-side — a userId is never accepted from the client, and stays null when the principal resolves to no one.`,
   })
@@ -156,6 +159,7 @@ export class SkillUsageResolver {
     return toSkillUsageEventObject(saved);
   }
 
+  @CredentialScope(SERVICE_ACCOUNT_CREDENTIAL_SCOPES.TELEMETRY_INGEST)
   @Mutation(() => SkillUsageOutcomeObject, {
     description: `Record one opt-in outcome/duration enrichment for a skill we author. Correlates to a harness start by sessionId + skillName. Additive to PreToolUse capture — never a replacement. Missing outcomes are a valid state.`,
   })

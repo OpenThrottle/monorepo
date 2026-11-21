@@ -11,7 +11,10 @@ import { ServiceAccountCredential } from './service-account-credential.entity.ts
 import { serviceAccountCredentialsFactory } from './service-account-credentials.factory.ts';
 import { ServiceAccountCredentialsRepository } from './service-account-credentials.repository.ts';
 import { SERVICE_ACCOUNT_BEARER_PREFIX } from './token/token.constants.ts';
-import { parseServiceAccountToken } from './token/token.utils.ts';
+import {
+  deriveServiceAccountToken,
+  parseServiceAccountToken,
+} from './token/token.utils.ts';
 
 const serviceAccountId = '11111111-1111-4111-8111-111111111111';
 const credentialId = '22222222-2222-4222-8222-222222222222';
@@ -246,6 +249,56 @@ describe('ServiceAccountCredentialsRepository', () => {
       expect(save).toHaveBeenCalledWith(existing);
     });
 
+    it('creates a scoped credential with its scopes normalized', async () => {
+      accountFindOne.mockResolvedValue(enabledAccount);
+      findOne.mockResolvedValue(null);
+
+      await repository.upsertCredentialForToken({
+        scopes: ['telemetry:ingest', 'telemetry:ingest'],
+        serviceAccountId,
+        token,
+      });
+
+      expect(save.mock.calls[0]?.[0]).toEqual(
+        expect.objectContaining({ scopes: ['telemetry:ingest'] }),
+      );
+    });
+
+    it('narrows an existing credential in place when only its scopes differ', async () => {
+      accountFindOne.mockResolvedValue(enabledAccount);
+      const existingHash = await hashSecret(secret, TEST_ROUNDS);
+      const existing = serviceAccountCredentialsFactory.build({
+        prefix,
+        revokedAt: null,
+        scopes: null,
+        secretHash: existingHash,
+        serviceAccountId,
+      });
+      findOne.mockResolvedValue(existing);
+
+      const result = await repository.upsertCredentialForToken({
+        scopes: ['telemetry:ingest'],
+        serviceAccountId,
+        token,
+      });
+
+      expect(result?.action).toBe('updated');
+      expect(existing.scopes).toEqual(['telemetry:ingest']);
+      expect(existing.secretHash).toBe(existingHash);
+    });
+
+    it('rejects an empty scope list', async () => {
+      accountFindOne.mockResolvedValue(enabledAccount);
+
+      await expect(
+        repository.upsertCredentialForToken({
+          scopes: [],
+          serviceAccountId,
+          token,
+        }),
+      ).rejects.toThrow(/non-empty/);
+    });
+
     it('throws when the prefix belongs to a different service account', async () => {
       accountFindOne.mockResolvedValue(enabledAccount);
       findOne.mockResolvedValue(
@@ -258,6 +311,44 @@ describe('ServiceAccountCredentialsRepository', () => {
       await expect(
         repository.upsertCredentialForToken({ serviceAccountId, token }),
       ).rejects.toThrow(/different service account/);
+    });
+  });
+
+  describe('upsertTelemetryIngestCredential', () => {
+    const parentToken = `${SERVICE_ACCOUNT_BEARER_PREFIX}parentprefix_parentsecret`;
+
+    it('provisions the derived token as a telemetry:ingest credential', async () => {
+      accountFindOne.mockResolvedValue(enabledAccount);
+      findOne.mockResolvedValue(null);
+
+      const result = await repository.upsertTelemetryIngestCredential({
+        parentToken,
+        serviceAccountId,
+      });
+
+      expect(result?.action).toBe('created');
+      expect(result?.token).toBe(
+        deriveServiceAccountToken(parentToken, 'telemetry-ingest'),
+      );
+      const saved = save.mock.calls[0]?.[0];
+      expect(saved).toEqual(
+        expect.objectContaining({
+          label: 'bootstrap-skill-usage',
+          prefix: parseServiceAccountToken(result?.token ?? '')?.prefix,
+          scopes: ['telemetry:ingest'],
+        }),
+      );
+    });
+
+    it('returns null when the service account is missing', async () => {
+      accountFindOne.mockResolvedValue(null);
+
+      await expect(
+        repository.upsertTelemetryIngestCredential({
+          parentToken,
+          serviceAccountId,
+        }),
+      ).resolves.toBeNull();
     });
   });
 
@@ -347,11 +438,22 @@ describe('ServiceAccountCredentialsRepository', () => {
       expect(update).not.toHaveBeenCalled();
     });
 
+    it("returns a scoped credential's allow-list", async () => {
+      findOne.mockResolvedValue(
+        await credentialWith({ scopes: ['telemetry:ingest'] }),
+      );
+
+      await expect(repository.verifyBearerToken(bearer)).resolves.toEqual(
+        expect.objectContaining({ scopes: ['telemetry:ingest'] }),
+      );
+    });
+
     it('returns principal and touches last_used_at on success', async () => {
       findOne.mockResolvedValue(await credentialWith({}));
 
       await expect(repository.verifyBearerToken(bearer)).resolves.toEqual({
         credentialId,
+        scopes: null,
         serviceAccountId,
       });
       expect(update).toHaveBeenCalledWith(

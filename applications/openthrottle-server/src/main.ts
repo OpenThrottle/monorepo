@@ -13,13 +13,20 @@ import {
   setProfileExecutionReporter,
 } from '@openthrottle/nestjs-profiling';
 import { getCorsOptions } from '@openthrottle/nestjs-rbac';
+import {
+  ServiceAccountCredentialsRepository,
+  ServiceAccountsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { ApiAppModule } from './api-app/api-app.module.ts';
 import { AppModule } from './app.module.ts';
 import { PROCESS_ROLES } from './config/config.constants.ts';
 import type { ProcessRole } from './config/config.types.ts';
 import { resolveProcessRole } from './config/config.utils.ts';
-import { ensureUserEnvFileOnBoot } from './services/user-env-file/user-env-file.utils.ts';
+import {
+  ensureUserEnvFileOnBoot,
+  provisionTelemetryIngestToken,
+} from './services/user-env-file/user-env-file.utils.ts';
 import { WorkerAppModule } from './worker-app/worker-app.module.ts';
 
 /**
@@ -134,12 +141,19 @@ async function bootstrap(role: 'all' | 'api'): Promise<void> {
    * Fill in `~/.openthrottle/.env` so hooks in every checkout on this machine can
    * reach this server. Primary, non-container servers only; fail-open.
    */
-  ensureUserEnvFileOnBoot({
+  await ensureUserEnvFileOnBoot({
     ensure: ensureUserEnvEntries,
     env: process.env,
     fileExists: existsSync,
     logger,
     port,
+    provisionTelemetryToken: async (parentToken) => {
+      return provisionTelemetryIngestToken({
+        credentials: app.get(ServiceAccountCredentialsRepository),
+        parentToken,
+        serviceAccounts: app.get(ServiceAccountsRepository),
+      });
+    },
   });
 
   logger.info(

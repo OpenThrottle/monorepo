@@ -3,7 +3,7 @@
  * Extends `BaseHardDeleteModel`: a credential is revoked through `revoked_at`, and a deleted
  * one must really be gone, so the table has no soft delete (and no `updated_at`: the
  * lifecycle columns `last_used_at` and `revoked_at` stamp themselves). Matches
- * databases/openthrottle/migrations (044, 107, 175).
+ * databases/openthrottle/migrations (044, 107, 175, 182).
  * @public
  */
 
@@ -46,6 +46,10 @@ export class ServiceAccountCredential extends BaseHardDeleteModel {
     type: 'timestamp with time zone',
   })
   revokedAt!: Date | null;
+
+  /** Scope allow-list; null means unrestricted (see migration 182). */
+  @Column({ array: true, name: 'scopes', nullable: true, type: 'text' })
+  scopes!: string[] | null;
 
   @ManyToOne('ServiceAccount', 'credentials', { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'service_account_id' })

@@ -20,6 +20,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import {
   getEditorNameForPrincipal,
   getPermissionsForPrincipal,
+  isCredentialScopeAllowed,
 } from './guards.utils.ts';
 
 const userId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
@@ -149,5 +150,27 @@ describe('principal-access', () => {
         ).resolves.toBe(userId);
       });
     });
+  });
+});
+
+describe('isCredentialScopeAllowed', () => {
+  it('admits an unrestricted credential on any handler', () => {
+    expect(isCredentialScopeAllowed(null, [])).toBe(true);
+  });
+
+  it('admits a scoped credential when the handler declares one of its scopes', () => {
+    expect(
+      isCredentialScopeAllowed(['telemetry:ingest'], ['telemetry:ingest']),
+    ).toBe(true);
+  });
+
+  it('refuses a scoped credential on a handler that declares no scope', () => {
+    expect(isCredentialScopeAllowed(['telemetry:ingest'], [])).toBe(false);
+  });
+
+  it('refuses a scoped credential on a handler that declares other scopes', () => {
+    expect(
+      isCredentialScopeAllowed(['telemetry:ingest'], ['plans:write']),
+    ).toBe(false);
   });
 });

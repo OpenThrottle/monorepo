@@ -8,6 +8,11 @@ import type { DeepPartial } from 'typeorm';
 import { IsNull, Repository } from 'typeorm';
 
 import { ServiceAccount } from '../service-accounts/service-account.entity.ts';
+import {
+  SERVICE_ACCOUNT_CREDENTIAL_SCOPES,
+  TELEMETRY_INGEST_CREDENTIAL_LABEL,
+  TELEMETRY_INGEST_TOKEN_PURPOSE,
+} from './scope/scope.constants.ts';
 import { SERVICE_ACCOUNT_SECRET_BCRYPT_ROUNDS } from './secret/secret.constants.ts';
 import { hashSecret } from './secret/secret.utils.ts';
 import { ServiceAccountCredential } from './service-account-credential.entity.ts';
@@ -15,9 +20,11 @@ import type {
   CreateServiceAccountCredentialResult,
   ServiceAccountCredentialCreateInput,
   UpsertServiceAccountCredentialResult,
+  UpsertTelemetryIngestCredentialResult,
   VerifiedServiceAccountCredential,
 } from './service-account-credentials.types.ts';
 import {
+  deriveServiceAccountToken,
   formatServiceAccountToken,
   normalizeServiceAccountBearerToken,
   parseServiceAccountToken,
@@ -26,6 +33,43 @@ import {
 const PREFIX_LENGTH = 12;
 const SECRET_LENGTH = 32;
 const ALPHABET = `abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789`;
+
+/**
+ * @description A scope list as stored: null stays null (unrestricted), a list is de-duplicated
+ * and sorted so equality is order-free. Throws on an empty list, which the table's CHECK refuses
+ * anyway: an allow-list of nothing is a revocation spelled wrong.
+ */
+const normalizeScopes = (
+  scopes: readonly string[] | null | undefined,
+): string[] | null => {
+  if (scopes == null) {
+    return null;
+  }
+  const normalized = [...new Set(scopes)].sort();
+  if (normalized.length === 0) {
+    throw new Error(
+      'Service account credential scopes must be null (unrestricted) or non-empty.',
+    );
+  }
+  return normalized;
+};
+
+const sameScopes = (
+  left: readonly string[] | null,
+  right: readonly string[] | null,
+): boolean => {
+  if (left == null || right == null) {
+    return left == null && right == null;
+  }
+  const sortedLeft = [...left].sort();
+  const sortedRight = [...right].sort();
+  return (
+    sortedLeft.length === sortedRight.length &&
+    sortedLeft.every((scope, index) => {
+      return scope === sortedRight[index];
+    })
+  );
+};
 
 /**
  * @description Data access and lifecycle for the openthrottle `service_account_credentials`
@@ -66,6 +110,7 @@ export class ServiceAccountCredentialsRepository extends BaseRepository<
       lastUsedAt: input.lastUsedAt ?? null,
       prefix: input.prefix,
       revokedAt: input.revokedAt ?? null,
+      scopes: normalizeScopes(input.scopes),
       secretHash: input.secretHash,
       serviceAccountId: input.serviceAccountId,
     };
@@ -73,11 +118,13 @@ export class ServiceAccountCredentialsRepository extends BaseRepository<
 
   /**
    * @description Creates a credential and returns the plaintext `ot_sa_<prefix>_<secret>`
-   * once. Null when the service account is missing, soft deleted or disabled.
+   * once. Null when the service account is missing, soft deleted or disabled. `scopes` null
+   * (the default) makes an unrestricted credential; a list limits it to those scopes.
    */
   async createCredential(input: {
     expiresAt?: Date | null;
     label?: string | null;
+    scopes?: readonly string[] | null;
     serviceAccountId: string;
   }): Promise<CreateServiceAccountCredentialResult | null> {
     const account = await this.serviceAccountRepository.findOne({
@@ -95,6 +142,7 @@ export class ServiceAccountCredentialsRepository extends BaseRepository<
       expiresAt: input.expiresAt ?? null,
       label: input.label ?? null,
       prefix,
+      scopes: normalizeScopes(input.scopes),
       secretHash,
       serviceAccountId: input.serviceAccountId,
     });
@@ -113,10 +161,13 @@ export class ServiceAccountCredentialsRepository extends BaseRepository<
    * secret; otherwise the row is rehashed and un-revoked in place (`updated`),
    * or created (`created`). Returns null when the service account is missing,
    * soft deleted or disabled. Throws when `token` is malformed or its prefix
-   * belongs to a different service account.
+   * belongs to a different service account. `scopes` is part of the provisioned state: a row
+   * whose scopes differ is updated in place, so narrowing a bootstrap token is a re-run, not a
+   * rotation. Omitting it (or null) provisions an unrestricted credential.
    */
   async upsertCredentialForToken(input: {
     label?: string | null;
+    scopes?: readonly string[] | null;
     serviceAccountId: string;
     token: string;
   }): Promise<UpsertServiceAccountCredentialResult | null> {
@@ -134,6 +185,7 @@ export class ServiceAccountCredentialsRepository extends BaseRepository<
       );
     }
 
+    const scopes = normalizeScopes(input.scopes);
     const existing = await this.repository.findOne({
       where: { prefix: parsed.prefix },
     });
@@ -144,14 +196,17 @@ export class ServiceAccountCredentialsRepository extends BaseRepository<
           `Service account token prefix "${parsed.prefix}" is already in use by a different service account.`,
         );
       }
-      const alreadyMatches =
+      const secretMatches =
         existing.revokedAt == null &&
         (await bcrypt.compare(parsed.secret, existing.secretHash));
-      if (alreadyMatches) {
+      if (secretMatches && sameScopes(existing.scopes, scopes)) {
         return { action: 'noop', credential: existing };
       }
-      existing.secretHash = await hashSecret(parsed.secret);
+      if (!secretMatches) {
+        existing.secretHash = await hashSecret(parsed.secret);
+      }
       existing.revokedAt = null;
+      existing.scopes = scopes;
       if (input.label !== undefined) {
         existing.label = input.label;
       }
@@ -164,10 +219,38 @@ export class ServiceAccountCredentialsRepository extends BaseRepository<
       expiresAt: null,
       label: input.label ?? null,
       prefix: parsed.prefix,
+      scopes,
       secretHash,
       serviceAccountId: input.serviceAccountId,
     });
     return { action: 'created', credential: created };
+  }
+
+  /**
+   * @description Provisions the `telemetry:ingest`-scoped credential whose token is derived from
+   * `parentToken` (the account's `OPENTHROTTLE_MCP_AUTH_TOKEN`), and returns that token with the
+   * upsert outcome. Idempotent; an existing row is narrowed or rehashed in place. This is the
+   * token the local server writes into `~/.openthrottle/.env`, so a copy left on disk reaches
+   * only the telemetry ingest mutations. Null when the service account is missing or disabled.
+   */
+  async upsertTelemetryIngestCredential(input: {
+    parentToken: string;
+    serviceAccountId: string;
+  }): Promise<UpsertTelemetryIngestCredentialResult | null> {
+    const token = deriveServiceAccountToken(
+      input.parentToken,
+      TELEMETRY_INGEST_TOKEN_PURPOSE,
+    );
+    const result = await this.upsertCredentialForToken({
+      label: TELEMETRY_INGEST_CREDENTIAL_LABEL,
+      scopes: [SERVICE_ACCOUNT_CREDENTIAL_SCOPES.TELEMETRY_INGEST],
+      serviceAccountId: input.serviceAccountId,
+      token,
+    });
+    if (result == null) {
+      return null;
+    }
+    return { ...result, token };
   }
 
   /**
@@ -215,6 +298,7 @@ export class ServiceAccountCredentialsRepository extends BaseRepository<
 
     return {
       credentialId: credential.id,
+      scopes: credential.scopes,
       serviceAccountId: credential.serviceAccountId,
     };
   }

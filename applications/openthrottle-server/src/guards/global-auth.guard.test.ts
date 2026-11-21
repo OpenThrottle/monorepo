@@ -1,6 +1,6 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { ExecutionContext } from '@nestjs/common';
-import { UnauthorizedException } from '@nestjs/common';
+import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import type { Reflector } from '@nestjs/core';
 import {
   AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
@@ -13,6 +13,7 @@ import type { GlobalClsAuthHook } from '../auth/global-cls-auth-hook/global-cls-
 import type { ServiceAccountAuthService } from '../auth/service-account-auth/service-account-auth.service.ts';
 import { GlobalAuthGuard } from './global-auth.guard.ts';
 import type { GqlJwtAuthGuard } from './gql-jwt-auth.guard.ts';
+import { CREDENTIAL_SCOPES_KEY } from './guards.constants.ts';
 
 const createHttpExecutionContext = (req: object): ExecutionContext => {
   return createMock<ExecutionContext>({
@@ -123,7 +124,7 @@ describe('GlobalAuthGuard', () => {
     ).mockReturnValue(true);
     vi.mocked(
       serviceAccountAuthService.tryAuthenticateAuthorizationHeader,
-    ).mockResolvedValue(saPrincipal);
+    ).mockResolvedValue({ principal: saPrincipal, scopes: null });
     const ctx = createHttpExecutionContext(req);
 
     await expect(guard.canActivate(ctx)).resolves.toBe(true);
@@ -199,7 +200,7 @@ describe('GlobalAuthGuard', () => {
     ).mockReturnValue(true);
     vi.mocked(
       serviceAccountAuthService.tryAuthenticateAuthorizationHeader,
-    ).mockResolvedValue(saPrincipal);
+    ).mockResolvedValue({ principal: saPrincipal, scopes: null });
     const ctx = createHttpExecutionContext(req);
 
     await expect(guard.canActivate(ctx)).resolves.toBe(true);
@@ -258,11 +259,95 @@ describe('GlobalAuthGuard', () => {
     ).mockReturnValue(true);
     vi.mocked(
       serviceAccountAuthService.tryAuthenticateAuthorizationHeader,
-    ).mockResolvedValue(principal);
+    ).mockResolvedValue({ principal, scopes: null });
     const ctx = createHttpExecutionContext(req);
 
     await guard.canActivate(ctx);
 
     expect(req.user).toEqual(principal);
+  });
+
+  describe('scoped service-account credentials', () => {
+    const saPrincipal = authPrincipalFromServiceAccountId(
+      '11111111-1111-4111-8111-111111111111',
+    );
+
+    const mockMetadata = (input: {
+      readonly handlerScopes: readonly string[] | undefined;
+      readonly isPublic: boolean;
+    }): void => {
+      vi.mocked(reflector.getAllAndOverride).mockImplementation(
+        (key: unknown) => {
+          return key === CREDENTIAL_SCOPES_KEY
+            ? input.handlerScopes
+            : input.isPublic;
+        },
+      );
+    };
+
+    beforeEach(() => {
+      vi.mocked(
+        serviceAccountAuthService.isServiceAccountAuthorization,
+      ).mockReturnValue(true);
+      vi.mocked(
+        serviceAccountAuthService.tryAuthenticateAuthorizationHeader,
+      ).mockResolvedValue({
+        principal: saPrincipal,
+        scopes: ['telemetry:ingest'],
+      });
+    });
+
+    it('admits a handler that declares one of the credential scopes', async () => {
+      mockMetadata({ handlerScopes: ['telemetry:ingest'], isPublic: false });
+      const req: { headers: { authorization: string }; user?: unknown } = {
+        headers: { authorization: 'Bearer ot_sa_prefix_secret' },
+      };
+
+      await expect(
+        guard.canActivate(createHttpExecutionContext(req)),
+      ).resolves.toBe(true);
+
+      expect(req.user).toEqual(saPrincipal);
+    });
+
+    it('refuses a handler that declares no scope with 403', async () => {
+      mockMetadata({ handlerScopes: undefined, isPublic: false });
+      const req: { headers: { authorization: string }; user?: unknown } = {
+        headers: { authorization: 'Bearer ot_sa_prefix_secret' },
+      };
+
+      await expect(
+        guard.canActivate(createHttpExecutionContext(req)),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+
+      expect(req.user).toBeUndefined();
+      expect(globalClsAuthHook.populateFromPrincipal).not.toHaveBeenCalled();
+    });
+
+    it('refuses a handler that declares a different scope with 403', async () => {
+      mockMetadata({ handlerScopes: ['plans:write'], isPublic: false });
+
+      await expect(
+        guard.canActivate(
+          createHttpExecutionContext({
+            headers: { authorization: 'Bearer ot_sa_prefix_secret' },
+          }),
+        ),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+    });
+
+    it('stays anonymous on an unscoped @Public handler', async () => {
+      mockMetadata({ handlerScopes: undefined, isPublic: true });
+      const req: { headers: { authorization: string }; user?: unknown } = {
+        headers: { authorization: 'Bearer ot_sa_prefix_secret' },
+      };
+
+      await expect(
+        guard.canActivate(createHttpExecutionContext(req)),
+      ).resolves.toBe(true);
+
+      expect(req.user).toBeUndefined();
+      expect(globalClsAuthHook.populateFromPrincipal).not.toHaveBeenCalled();
+    });
   });
 });
