@@ -5,7 +5,10 @@
  */
 
 import { createMock } from '@golevelup/ts-vitest';
-import type { LoggerService } from '@openthrottle/nestjs-modules';
+import type {
+  GlobalClsService,
+  LoggerService,
+} from '@openthrottle/nestjs-modules';
 import type { Queue } from 'bullmq';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -21,11 +24,13 @@ describe('PlanRulesEvaluationService.enqueueEvaluation', () => {
   let service: PlanRulesEvaluationService;
   let queue: Queue<PlanRulesEvaluateJobData>;
   let logger: LoggerService;
+  let globalCls: GlobalClsService;
 
   beforeEach(() => {
     queue = createMock<Queue<PlanRulesEvaluateJobData>>();
     logger = createMock<LoggerService>();
-    service = new PlanRulesEvaluationService(logger, queue);
+    globalCls = createMock<GlobalClsService>();
+    service = new PlanRulesEvaluationService(globalCls, logger, queue);
   });
 
   it('enqueues with a plan-scoped deduplication id and keepLastIfActive', async () => {
@@ -87,5 +92,30 @@ describe('PlanRulesEvaluationService.enqueueEvaluation', () => {
       service.enqueueEvaluation(planId, 'manual', null),
     ).resolves.toBeUndefined();
     expect(logger.error).toHaveBeenCalledOnce();
+  });
+
+  describe('requestEnvironment', () => {
+    it('is null outside a request context', () => {
+      vi.mocked(globalCls.isActive).mockReturnValue(false);
+
+      expect(service.requestEnvironment()).toBeNull();
+      expect(globalCls.get).not.toHaveBeenCalled();
+    });
+
+    it('reads a known environment from the request header', () => {
+      vi.mocked(globalCls.isActive).mockReturnValue(true);
+      vi.mocked(globalCls.get).mockReturnValue('Ralph');
+
+      expect(service.requestEnvironment()).toBe('ralph');
+    });
+
+    it('is null for a missing or unknown header value', () => {
+      vi.mocked(globalCls.isActive).mockReturnValue(true);
+      vi.mocked(globalCls.get).mockReturnValueOnce(undefined);
+      expect(service.requestEnvironment()).toBeNull();
+
+      vi.mocked(globalCls.get).mockReturnValueOnce('staging');
+      expect(service.requestEnvironment()).toBeNull();
+    });
   });
 });

@@ -9,7 +9,7 @@
  * ("Output contract").
  */
 
-import { Field, Int, ObjectType } from '@nestjs/graphql';
+import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
 
 @ObjectType({
   description: `A single skill's resolved, per-context availability: its static frontmatter flag, the effective flag, and the decisive rung's provenance.`,
@@ -48,9 +48,47 @@ export class SkillAvailabilityResolvedSkillObject {
 }
 
 @ObjectType({
+  description: `A custom prompt an attach-prompt rule attached to the plan, re-checked on read (rule live and qualified for the read's environment; prompt live and visible to the plan owner).`,
+})
+export class PlanContextAttachedPromptObject {
+  @Field(() => String, { description: `The prompt's current content.` })
+  content!: string;
+
+  @Field(() => String, {
+    description: `The prompt's repo-relative file path; null for a prompt with no file.`,
+    nullable: true,
+  })
+  filePath!: string | null;
+
+  @Field(() => String, {
+    description: `Where an agent composes it: start (before the plan context) or end (after it).`,
+  })
+  placement!: string;
+
+  @Field(() => ID, { description: `The attached custom_prompts row.` })
+  promptId!: string;
+
+  @Field(() => String, { description: `personas or prompts.` })
+  promptType!: string;
+
+  @Field(() => ID, {
+    description: `The attach-prompt rule whose ledger row is the attachment.`,
+  })
+  ruleId!: string;
+
+  @Field(() => String, { description: `The prompt's title.` })
+  title!: string;
+}
+
+@ObjectType({
   description: `A project's resolved skill-availability universe for a given context (environment), plus resolve-time warnings.`,
 })
 export class SkillAvailabilityResolutionResult {
+  @Field(() => [PlanContextAttachedPromptObject], {
+    description: `Prompts attach-prompt rules attached to the plan, in composition order: every start prompt, then every end prompt, each in attach order. Empty when the query has no planId.`,
+  })
+  attachedPrompts!: PlanContextAttachedPromptObject[];
+
   @Field(() => [SkillAvailabilityResolvedSkillObject], {
     description: `Resolved skills, in the project's ingested order (alphabetical by slug).`,
   })

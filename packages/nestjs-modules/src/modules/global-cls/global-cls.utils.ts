@@ -45,6 +45,19 @@ export const globalClsUserFromJwtLike = (
  */
 const HEADER_OT_SESSION_ID = 'x-ot-session-id';
 
+/**
+ * Request header naming the agent environment a caller runs in (`ci | interactive | ralph`), set by
+ * the openthrottle-mcp stdio server from its launch environment. Stored raw: the consumer owns the
+ * vocabulary and must validate it, treating an unknown value as "no environment".
+ */
+const HEADER_OT_ENVIRONMENT = 'x-ot-environment';
+
+const presentOrUndefined = (value: string | undefined): string | undefined => {
+  const trimmed = value?.trim() ?? '';
+
+  return trimmed === '' ? undefined : trimmed;
+};
+
 export const setupGlobalCls = (
   cls: ClsService,
   req: { headers: Record<string, string | undefined> },
@@ -67,6 +80,12 @@ export const setupGlobalCls = (
     headerSessionId != null && headerSessionId !== ''
       ? headerSessionId
       : undefined,
+  );
+
+  // Unvalidated claim too — see HEADER_OT_ENVIRONMENT above.
+  cls.set(
+    'environment',
+    presentOrUndefined(req.headers[HEADER_OT_ENVIRONMENT]),
   );
 };
 /**

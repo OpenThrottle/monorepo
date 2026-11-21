@@ -1,4 +1,8 @@
-import { type SkillAvailabilityEnvironment } from '@openthrottle/openthrottle-skills';
+import type {
+  ATTACH_PROMPT_PLACEMENTS,
+  ATTACH_PROMPT_TYPES,
+  SkillAvailabilityEnvironment,
+} from '@openthrottle/openthrottle-skills';
 
 /** @public */
 export interface PlanContextResolvedSkill {
@@ -10,8 +14,34 @@ export interface PlanContextResolvedSkill {
   readonly staticDisableModelInvocation: boolean | null;
 }
 
+/** The attachment facts an 'applied' attach-prompt ledger row records in `details`. */
+export interface AttachedPromptDetails {
+  readonly placement: (typeof ATTACH_PROMPT_PLACEMENTS)[number];
+  readonly promptId: string;
+  readonly promptType: (typeof ATTACH_PROMPT_TYPES)[number];
+}
+
+/**
+ * A custom prompt an attach-prompt rule attached to the plan, as an agent composes it: `start`
+ * prompts go before the plan context, `end` prompts after it.
+ *
+ * @public
+ */
+export interface PlanContextAttachedPrompt {
+  readonly content: string;
+  readonly filePath: string | null;
+  readonly placement: (typeof ATTACH_PROMPT_PLACEMENTS)[number];
+  readonly promptId: string;
+  readonly promptType: (typeof ATTACH_PROMPT_TYPES)[number];
+  /** The attach-prompt rule whose ledger row is the attachment. */
+  readonly ruleId: string;
+  readonly title: string;
+}
+
 /** @public */
 export interface PlanContextAvailability {
+  /** Attached prompts in composition order: every `start` one, then every `end` one. */
+  readonly attachedPrompts: PlanContextAttachedPrompt[];
   readonly effectiveDomainTags: string[];
   readonly skills: PlanContextResolvedSkill[];
   readonly warnings: string[];

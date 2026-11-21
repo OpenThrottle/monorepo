@@ -316,7 +316,7 @@ export const previewTagActionRuleToolParameters = z
       .string()
       .nullish()
       .describe(
-        'The environment to evaluate your plans in (ci | interactive | ralph). Omit for none, which is what the worker does today: an environment-qualified rule then matches nothing.',
+        'The environment to evaluate your plans in (ci | interactive | ralph). Omit for none: an environment-qualified rule then matches nothing.',
       ),
     repositoryId: z
       .string()
@@ -333,7 +333,7 @@ export const previewTagActionRuleToolParameters = z
   })
   .strict();
 
-export const previewTagActionRuleToolDescription = `Dry run a tag→action rule via the previewTagActionRule GraphQL query: which of your plans it would match and, for a sample of the rest, which conditions (repository, environment, status, tags) failed and which tags are missing. Answers "why didn't my rule fire". Read-only: dispatches nothing and writes no ledger row. Only the match fields are needed (no payload). Evaluates your newest 500 plans and says when it truncated. A rule qualified on an environment matches nothing unless you pass evaluateEnvironment, because the worker passes none today (failedOnlyOnEnvironment marks that case). Requires a USER token.`;
+export const previewTagActionRuleToolDescription = `Dry run a tag→action rule via the previewTagActionRule GraphQL query: which of your plans it would match and, for a sample of the rest, which conditions (repository, environment, status, tags) failed and which tags are missing. Answers "why didn't my rule fire". Read-only: dispatches nothing and writes no ledger row. Only the match fields are needed (no payload). Evaluates your newest 500 plans and says when it truncated. A rule qualified on an environment matches nothing unless you pass evaluateEnvironment (failedOnlyOnEnvironment marks that case). Requires a USER token.`;
 
 type PreviewRule = NonNullable<
   PreviewTagActionRuleQuery['previewTagActionRule']

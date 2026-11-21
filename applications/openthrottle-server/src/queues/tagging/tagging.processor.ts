@@ -163,6 +163,7 @@ export class TaggingProcessor
     );
 
     if ((result.added > 0 || result.removed > 0) && planId != null) {
+      // Null: a background job has no request, so it knows no environment.
       await this.planRulesEvaluationService.enqueueEvaluation(
         planId,
         PLAN_RULES_TRIGGER_KINDS.TAG_CHANGED,

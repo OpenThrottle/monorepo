@@ -38,6 +38,15 @@ query SkillAvailability(
     taskId: $taskId
     relevantOnly: $relevantOnly
   ) {
+    attachedPrompts {
+      content
+      filePath
+      placement
+      promptId
+      promptType
+      ruleId
+      title
+    }
     skills {
       effectiveDisableModelInvocation
       matchedPlanTags

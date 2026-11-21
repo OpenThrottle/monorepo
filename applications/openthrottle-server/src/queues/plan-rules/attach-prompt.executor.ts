@@ -23,8 +23,9 @@
  * There is no attachment table: the rule_applications ledger row IS the
  * attachment record. Attachment is a static ledger fact, so `reconcile` and
  * `reinject` are omitted — there is no continuous invariant to re-establish
- * and nothing to undo. Composing attached prompts into an agent's context is a
- * consumer concern not implemented here.
+ * and nothing to undo. Composing attached prompts into an agent's context is
+ * the plan-context read's job (PlanContextAvailabilityService, surfaced as
+ * `skillAvailability(planId).attachedPrompts`), which re-checks each row.
  */
 
 import { Injectable, OnModuleInit } from '@nestjs/common';

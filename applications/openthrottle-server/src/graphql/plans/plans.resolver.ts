@@ -1033,7 +1033,7 @@ export class PlansResolver {
     await this.planRulesEvaluationService.enqueueEvaluation(
       plan.id,
       PLAN_RULES_TRIGGER_KINDS.PLAN_CREATED,
-      null,
+      this.planRulesEvaluationService.requestEnvironment(),
     );
     await this.taggingEnqueueService.enqueuePredict(
       TAGGING_ENTITY_TYPES.PLAN,
@@ -1058,7 +1058,7 @@ export class PlansResolver {
         this.planRulesEvaluationService.enqueueEvaluation(
           plan.id,
           PLAN_RULES_TRIGGER_KINDS.PLAN_CREATED,
-          null,
+          this.planRulesEvaluationService.requestEnvironment(),
         ),
       ),
     );
@@ -1275,7 +1275,7 @@ export class PlansResolver {
       await this.planRulesEvaluationService.enqueueEvaluation(
         saved.id,
         PLAN_RULES_TRIGGER_KINDS.STATUS_CHANGED,
-        null,
+        this.planRulesEvaluationService.requestEnvironment(),
       );
     }
     return saved;
@@ -1336,7 +1336,7 @@ export class PlansResolver {
       await this.planRulesEvaluationService.enqueueEvaluation(
         plan.id,
         PLAN_RULES_TRIGGER_KINDS.STATUS_CHANGED,
-        null,
+        this.planRulesEvaluationService.requestEnvironment(),
       );
     }
     return plan;
@@ -1378,7 +1378,7 @@ export class PlansResolver {
     await this.planRulesEvaluationService.enqueueEvaluation(
       planId,
       PLAN_RULES_TRIGGER_KINDS.MANUAL,
-      null,
+      this.planRulesEvaluationService.requestEnvironment(),
     );
 
     const result = new EvaluatePlanRulesResultObject();

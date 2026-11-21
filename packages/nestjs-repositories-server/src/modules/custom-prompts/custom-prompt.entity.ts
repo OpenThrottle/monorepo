@@ -1,9 +1,11 @@
 /**
  * @description TypeORM entity for the openthrottle `custom_prompts` table: the agent-asset
  * library (skills, rules, personas, prompts). Extends `BaseModel`, so a delete is a soft delete
- * through `deleted_at`. The unique index on (file_path, prompt_type) deliberately still covers
- * soft-deleted rows: the agent-asset ingest upserts `ON CONFLICT … deleted_at = NULL` and
- * revives a prompt whose file reappeared. Matches databases/openthrottle/migrations (036, 179).
+ * through `deleted_at`. The unique index on (file_path, prompt_type, user_id) is per owner, with
+ * every system row (user_id NULL) one owner (NULLS NOT DISTINCT), so a user's prompt can override
+ * a system prompt at the same path. It deliberately still covers soft-deleted rows: the
+ * agent-asset ingest upserts `ON CONFLICT … deleted_at = NULL` and revives a prompt whose file
+ * reappeared. Matches databases/openthrottle/migrations (036, 179, 190).
  * @public
  */
 

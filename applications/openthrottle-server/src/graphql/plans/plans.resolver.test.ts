@@ -265,6 +265,7 @@ describe('PlansResolver', () => {
   const mockPlanRulesEvaluationService = createMock<PlanRulesEvaluationService>(
     {
       enqueueEvaluation: mockEnqueueEvaluation,
+      requestEnvironment: vi.fn().mockReturnValue('ralph'),
     },
   );
 
@@ -2750,10 +2751,11 @@ describe('PlansResolver', () => {
       const result = await resolver.evaluatePlanRules(mockPlan.id);
 
       expect(mockEnqueueEvaluation).toHaveBeenCalledTimes(1);
+      // The request's x-ot-environment rides along to the worker.
       expect(mockEnqueueEvaluation).toHaveBeenCalledWith(
         mockPlan.id,
         PLAN_RULES_TRIGGER_KINDS.MANUAL,
-        null,
+        'ralph',
       );
       expect(result).toEqual({
         enqueued: true,

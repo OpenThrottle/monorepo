@@ -207,6 +207,30 @@ describe('PlanRulesProcessor.process', () => {
       expect(result.matched).toBe(0);
       expect(executor.execute).not.toHaveBeenCalled();
     });
+    it("a pass in another environment leaves the rule's ledger row alone", async () => {
+      await processor.process(buildJob(null));
+      await processor.process(buildJob('ci'));
+
+      // Never evaluated in those passes, so never orphaned by them: a null or ci pass
+      // overlapping a ralph pass must not soft-close what the ralph pass injected.
+      for (const call of vi.mocked(
+        ruleApplicationsRepository.orphanUnmatchedApplications,
+      ).mock.calls) {
+        expect(call[1]).toEqual(['rule-1']);
+      }
+    });
+
+    it("orphans an unmatched rule of the pass's own environment", async () => {
+      tagActionRulesRepository.listEnabledForUser.mockResolvedValue([
+        buildRule({ environment: 'ralph', tagAll: ['not-on-the-plan'] }),
+      ]);
+
+      await processor.process(buildJob('ralph'));
+
+      expect(
+        ruleApplicationsRepository.orphanUnmatchedApplications,
+      ).toHaveBeenCalledWith(planId, [], expect.any(Function));
+    });
   });
 
   it('no-ops on duplicate delivery: an existing ledger row in ANY state blocks dispatch', async () => {

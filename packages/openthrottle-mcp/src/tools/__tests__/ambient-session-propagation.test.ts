@@ -11,6 +11,7 @@
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { captureStdioAgentEnvironment } from '../../config/agent-environment.ts';
 import { clearCurrentSession } from '../../session/current-session.ts';
 import { getPlanToolHandler, updatePlanToolHandler } from '../plans.ts';
 import { getTaskToolHandler, updateTaskToolHandler } from '../tasks.ts';
@@ -32,6 +33,7 @@ describe('ambient work-session propagation', () => {
 
   afterEach(() => {
     delete process.env.OPENTHROTTLE_MCP_AUTH_TOKEN;
+    captureStdioAgentEnvironment(null);
     clearCurrentSession();
   });
 
@@ -88,7 +90,41 @@ describe('ambient work-session propagation', () => {
       'test-token',
       expect.anything(),
       { input: expect.objectContaining({ id: 'task-1' }) },
-      {},
+      { headers: {} },
+    );
+  });
+
+  it('mutations carry the captured agent environment as X-OT-Environment', async () => {
+    captureStdioAgentEnvironment('ralph');
+    mockExecute
+      .mockResolvedValueOnce({ startWorkSession: { id: 'sess-1' } })
+      .mockResolvedValueOnce({ updateTask: { id: 'task-1' } });
+
+    await updateTaskToolHandler({ id: 'task-1', status: 'COMPLETED' });
+
+    expect(mockExecute).toHaveBeenLastCalledWith(
+      'test-token',
+      expect.anything(),
+      { input: expect.objectContaining({ id: 'task-1' }) },
+      {
+        headers: { 'X-OT-Environment': 'ralph', 'X-OT-Session-Id': 'sess-1' },
+      },
+    );
+  });
+
+  it('sends the environment even when no session could be opened', async () => {
+    captureStdioAgentEnvironment('ci');
+    mockExecute
+      .mockRejectedValueOnce(new Error('session service down'))
+      .mockResolvedValueOnce({ updateTask: { id: 'task-1' } });
+
+    await updateTaskToolHandler({ id: 'task-1', status: 'COMPLETED' });
+
+    expect(mockExecute).toHaveBeenLastCalledWith(
+      'test-token',
+      expect.anything(),
+      { input: expect.objectContaining({ id: 'task-1' }) },
+      { headers: { 'X-OT-Environment': 'ci' } },
     );
   });
 

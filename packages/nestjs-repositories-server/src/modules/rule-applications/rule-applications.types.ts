@@ -88,6 +88,9 @@ export interface RuleApplicationsRepositoryMock extends BaseRepositoryMock<
   readonly findByRuleAndPlan: Mock<
     RuleApplicationsRepository['findByRuleAndPlan']
   >;
+  readonly listAppliedAttachPrompts: Mock<
+    RuleApplicationsRepository['listAppliedAttachPrompts']
+  >;
   readonly listEdgePlacementSiblings: Mock<
     RuleApplicationsRepository['listEdgePlacementSiblings']
   >;

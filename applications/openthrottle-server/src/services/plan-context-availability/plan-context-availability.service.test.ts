@@ -10,9 +10,13 @@ import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
+  CustomPrompt,
+  CustomPromptsRepository,
   Plan,
   PlansRepository,
   ProjectsRepository,
+  RuleApplication,
+  RuleApplicationsRepository,
   SkillTagsRepository,
   TagActionRule,
   TagActionRulesRepository,
@@ -21,13 +25,17 @@ import type {
   UsersRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import type {
+  CustomPromptsRepositoryMock,
   PlansRepositoryMock,
+  RuleApplicationsRepositoryMock,
   TagActionRulesRepositoryMock,
   TasksRepositoryMock,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import {
+  createCustomPromptsRepositoryMock,
   createPlansRepositoryMock,
   createProjectsRepositoryMock,
+  createRuleApplicationsRepositoryMock,
   createSkillTagsRepositoryMock,
   createTagActionRulesRepositoryMock,
   createTasksRepositoryMock,
@@ -67,8 +75,37 @@ const availabilityExceptionRule = (
   });
 };
 
+const attachRow = (
+  id: string,
+  details: Record<string, unknown>,
+  ruleEnvironment: string | null = null,
+): RuleApplication => {
+  return asMock<RuleApplication>({
+    details,
+    id,
+    rule: asMock<TagActionRule>({ environment: ruleEnvironment }),
+    ruleId: `rule-${id}`,
+    state: 'applied',
+  });
+};
+
+const livePrompt = (
+  id: string,
+  promptType: 'personas' | 'prompts' = 'prompts',
+): CustomPrompt => {
+  return asMock<CustomPrompt>({
+    content: `content of ${id}`,
+    filePath: `.agents/prompts/${id}.md`,
+    id,
+    promptType,
+    title: `Title ${id}`,
+  });
+};
+
 describe('PlanContextAvailabilityService', () => {
   let service: PlanContextAvailabilityService;
+  let customPromptsRepository: CustomPromptsRepositoryMock;
+  let ruleApplicationsRepository: RuleApplicationsRepositoryMock;
   let planFindOne: PlansRepositoryMock['findOne'];
   let taskFindOne: TasksRepositoryMock['findOne'];
   let effectiveTagSet: Mock<TagsService['getEffectiveTagSet']>;
@@ -126,11 +163,16 @@ describe('PlanContextAvailabilityService', () => {
       },
     ]);
 
+    customPromptsRepository = createCustomPromptsRepositoryMock();
+    ruleApplicationsRepository = createRuleApplicationsRepositoryMock();
+
     service = new PlanContextAvailabilityService(
+      asMock<CustomPromptsRepository>(customPromptsRepository),
       createMock<LoggerService>(),
       asMock<PlansRepository>(plansRepository),
       createMock<ProjectSkillsService>({ getSkillsForProject }),
       asMock<ProjectsRepository>(createProjectsRepositoryMock()),
+      asMock<RuleApplicationsRepository>(ruleApplicationsRepository),
       createMock<SkillAvailabilityService>({ getRuleSetForProject }),
       asMock<SkillTagsRepository>(skillTagsRepository),
       asMock<TagActionRulesRepository>(tagActionRulesRepository),
@@ -384,6 +426,179 @@ describe('PlanContextAvailabilityService', () => {
       await expect(
         service.isSkillUnavailableForPlan(planId, 'grilling', ownerId),
       ).resolves.toBe(true);
+    });
+  });
+
+  describe('attached prompts', () => {
+    const resolve = (environment?: 'ci' | 'interactive' | 'ralph') => {
+      return service.resolveForPlan({
+        environment,
+        planId,
+        vocabularySeedDefaults: true,
+        vocabularyUserId: callerId,
+      });
+    };
+
+    it('composes start prompts first, then end prompts, each in attach order', async () => {
+      ruleApplicationsRepository.listAppliedAttachPrompts.mockResolvedValue([
+        attachRow('a', {
+          placement: 'end',
+          promptId: 'p-a',
+          promptType: 'prompts',
+        }),
+        attachRow('b', {
+          placement: 'start',
+          promptId: 'p-b',
+          promptType: 'personas',
+        }),
+        attachRow('c', {
+          placement: 'end',
+          promptId: 'p-c',
+          promptType: 'prompts',
+        }),
+        attachRow('d', {
+          placement: 'start',
+          promptId: 'p-d',
+          promptType: 'prompts',
+        }),
+      ]);
+      customPromptsRepository.findVisibleById.mockImplementation(async (id) => {
+        return livePrompt(id, id === 'p-b' ? 'personas' : 'prompts');
+      });
+
+      const result = await resolve();
+
+      expect(result.attachedPrompts.map((prompt) => prompt.promptId)).toEqual([
+        'p-b',
+        'p-d',
+        'p-a',
+        'p-c',
+      ]);
+      expect(result.attachedPrompts[0]).toEqual({
+        content: 'content of p-b',
+        filePath: '.agents/prompts/p-b.md',
+        placement: 'start',
+        promptId: 'p-b',
+        promptType: 'personas',
+        ruleId: 'rule-b',
+        title: 'Title p-b',
+      });
+    });
+
+    it('re-checks visibility against the plan owner, not the caller', async () => {
+      ruleApplicationsRepository.listAppliedAttachPrompts.mockResolvedValue([
+        attachRow('a', {
+          placement: 'end',
+          promptId: 'p-a',
+          promptType: 'prompts',
+        }),
+      ]);
+
+      await resolve();
+
+      expect(customPromptsRepository.findVisibleById).toHaveBeenCalledWith(
+        'p-a',
+        ownerId,
+      );
+    });
+
+    it('drops a since-deleted or no-longer-visible prompt', async () => {
+      ruleApplicationsRepository.listAppliedAttachPrompts.mockResolvedValue([
+        attachRow('gone', {
+          placement: 'end',
+          promptId: 'p-gone',
+          promptType: 'prompts',
+        }),
+        attachRow('kept', {
+          placement: 'end',
+          promptId: 'p-kept',
+          promptType: 'prompts',
+        }),
+      ]);
+      // The repository answers null for a soft-deleted row and for another user's row alike.
+      customPromptsRepository.findVisibleById.mockImplementation(async (id) => {
+        return id === 'p-kept' ? livePrompt(id) : null;
+      });
+
+      const result = await resolve();
+
+      expect(result.attachedPrompts.map((prompt) => prompt.promptId)).toEqual([
+        'p-kept',
+      ]);
+    });
+
+    it('drops a prompt whose type changed since it was attached', async () => {
+      ruleApplicationsRepository.listAppliedAttachPrompts.mockResolvedValue([
+        attachRow('a', {
+          placement: 'end',
+          promptId: 'p-a',
+          promptType: 'prompts',
+        }),
+      ]);
+      customPromptsRepository.findVisibleById.mockResolvedValue(
+        livePrompt('p-a', 'personas'),
+      );
+
+      expect((await resolve()).attachedPrompts).toEqual([]);
+    });
+
+    it('drops a row whose details do not parse', async () => {
+      ruleApplicationsRepository.listAppliedAttachPrompts.mockResolvedValue([
+        attachRow('a', { reason: 'already-attached' }),
+      ]);
+
+      expect((await resolve()).attachedPrompts).toEqual([]);
+      expect(customPromptsRepository.findVisibleById).not.toHaveBeenCalled();
+    });
+
+    it("takes an environment-qualified rule's prompt only on a read in that environment", async () => {
+      ruleApplicationsRepository.listAppliedAttachPrompts.mockResolvedValue([
+        attachRow(
+          'a',
+          { placement: 'end', promptId: 'p-a', promptType: 'prompts' },
+          'ralph',
+        ),
+      ]);
+      customPromptsRepository.findVisibleById.mockResolvedValue(
+        livePrompt('p-a'),
+      );
+
+      expect((await resolve('ralph')).attachedPrompts).toHaveLength(1);
+      expect((await resolve('ci')).attachedPrompts).toEqual([]);
+      expect((await resolve()).attachedPrompts).toEqual([]);
+    });
+
+    it('has no attachments when the plan author has no user row', async () => {
+      ruleApplicationsRepository.listAppliedAttachPrompts.mockResolvedValue([
+        attachRow('a', {
+          placement: 'end',
+          promptId: 'p-a',
+          promptType: 'prompts',
+        }),
+      ]);
+      const usersRepository = createUsersRepositoryMock();
+      usersRepository.findByGithubUsername.mockResolvedValue(null);
+      service = new PlanContextAvailabilityService(
+        asMock<CustomPromptsRepository>(customPromptsRepository),
+        createMock<LoggerService>(),
+        asMock<PlansRepository>(
+          Object.assign(createPlansRepositoryMock(), { findOne: planFindOne }),
+        ),
+        createMock<ProjectSkillsService>({ getSkillsForProject }),
+        asMock<ProjectsRepository>(createProjectsRepositoryMock()),
+        asMock<RuleApplicationsRepository>(ruleApplicationsRepository),
+        createMock<SkillAvailabilityService>({ getRuleSetForProject }),
+        asMock<SkillTagsRepository>(createSkillTagsRepositoryMock()),
+        asMock<TagActionRulesRepository>(createTagActionRulesRepositoryMock()),
+        createMock<TagsService>({ getEffectiveTagSet: effectiveTagSet }),
+        asMock<TasksRepository>(createTasksRepositoryMock()),
+        createMock<UsersRepository>(usersRepository),
+      );
+
+      expect((await resolve()).attachedPrompts).toEqual([]);
+      expect(
+        ruleApplicationsRepository.listAppliedAttachPrompts,
+      ).not.toHaveBeenCalled();
     });
   });
 });

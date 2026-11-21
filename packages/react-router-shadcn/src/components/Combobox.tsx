@@ -22,6 +22,11 @@ export interface ComboboxOption {
 
 export interface ComboboxProps {
   readonly className?: string;
+  /**
+   * Classes for the popover panel, merged last. It defaults to the trigger's width; pass e.g.
+   * `w-auto min-w-(--radix-popover-trigger-width)` to let long labels widen it instead.
+   */
+  readonly contentClassName?: string;
   readonly disabled?: boolean;
   readonly emptyText?: string;
   /** Persistent row under the list — e.g. a "keep typing to narrow" hint. */
@@ -57,6 +62,7 @@ export const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
   (props, ref): React.ReactElement => {
     const {
       className,
+      contentClassName,
       disabled = false,
       emptyText = 'No results found.',
       footer,
@@ -123,7 +129,10 @@ export const Combobox = React.forwardRef<HTMLButtonElement, ComboboxProps>(
         </PopoverTrigger>
         <PopoverContent
           align="start"
-          className="w-(--radix-popover-trigger-width) p-0"
+          className={cn(
+            'w-(--radix-popover-trigger-width) p-0',
+            contentClassName,
+          )}
         >
           <Command shouldFilter={shouldFilter}>
             <CommandInput

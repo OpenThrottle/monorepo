@@ -45,7 +45,12 @@ describe('ProjectTagsResolver', () => {
     createMock<TagsLoaders>(),
     createMock<LoggerService>(),
     asMock<PlansRepository>(plansRepository),
-    createMock<PlanRulesEvaluationService>({ enqueueEvaluation }),
+    createMock<PlanRulesEvaluationService>({
+      enqueueEvaluation,
+      requestEnvironment: () => {
+        return null;
+      },
+    }),
     createMock<ServiceAccountsRepository>(
       createServiceAccountsRepositoryMock(),
     ),

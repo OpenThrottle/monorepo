@@ -24,15 +24,20 @@
  * The plan owner is resolved from plan.author (GitHub username → users row);
  * a plan whose author has no user row has no rules and is skipped.
  *
- * The evaluation environment comes from the job data (`environment`, set by the
- * trigger that knows it: `ci | interactive | ralph`). An environment-qualified
- * rule matches only a pass carrying that environment; a null-environment pass
- * (a trigger that does not know its environment) skips every qualified rule,
- * which then applies on a pass for its environment or on a qualified
- * plan-context read. As of this writing no trigger knows its environment, so
- * every pass is null and environment-qualified rules take effect only on
- * qualified plan-context reads; a trigger opts in by passing its environment
- * to enqueueEvaluation.
+ * The evaluation environment comes from the job data (`environment`:
+ * `ci | interactive | ralph`, or null). GraphQL-triggered passes carry the
+ * environment the request claims through the `x-ot-environment` header, which
+ * the openthrottle-mcp stdio server sets from its launch environment; the
+ * developer UI and background triggers (the tagging worker) carry null. An
+ * environment-qualified rule matches only a pass carrying that environment; a
+ * null pass skips every qualified rule.
+ *
+ * A pass also leaves alone the ledger rows of rules qualified on a DIFFERENT
+ * environment: it never evaluated them, so it must not orphan what another
+ * environment's pass applied. Passes for one plan in different environments
+ * are deduplicated separately and can overlap; that exclusion, the apply-once
+ * fingerprint and the deterministic reconcile targets are what keep them from
+ * thrashing each other.
  */
 
 import { Processor, WorkerHost } from '@nestjs/bullmq';
@@ -68,7 +73,10 @@ import type {
   PlanRulesEvaluateJob,
   PlanRulesEvaluateJobResult,
 } from './plan-rules.types.ts';
-import { findSupersededInjectTasks } from './plan-rules.utils.ts';
+import {
+  findSupersededInjectTasks,
+  outOfEnvironmentRuleIds,
+} from './plan-rules.utils.ts';
 
 @Processor(PLAN_RULES_QUEUE_NAME, {
   ...defaultWorkerOptions,
@@ -347,7 +355,10 @@ export class PlanRulesProcessor
     const orphaned =
       await this.ruleApplicationsRepository.orphanUnmatchedApplications(
         planId,
-        matched.map((action) => action.ruleId),
+        [
+          ...matched.map((action) => action.ruleId),
+          ...outOfEnvironmentRuleIds(rules, environment),
+        ],
         async (capture) => {
           await this.captureOrphanedTaskStatusChange(capture);
           softClosedTaskIds.push(capture.taskId);

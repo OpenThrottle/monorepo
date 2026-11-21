@@ -47,6 +47,7 @@ describe('RuleApplicationsRepository', () => {
     getOne,
     getRawMany,
     innerJoin: vi.fn().mockReturnThis(),
+    innerJoinAndSelect: vi.fn().mockReturnThis(),
     leftJoinAndSelect: vi.fn().mockReturnThis(),
     orderBy: vi.fn().mockReturnThis(),
     select: vi.fn().mockReturnThis(),
@@ -314,6 +315,28 @@ describe('RuleApplicationsRepository', () => {
       await expect(
         repository.findAppliedAttachPrompt(PLAN_ID, 'prompt-1'),
       ).resolves.toBeNull();
+    });
+  });
+
+  describe('listAppliedAttachPrompts', () => {
+    it('reads applied rows of live attach-prompt rules oldest first', async () => {
+      const rows = [appliedRow('app-1', 'rule-1', null)];
+      getMany.mockResolvedValue(rows);
+
+      await expect(repository.listAppliedAttachPrompts(PLAN_ID)).resolves.toBe(
+        rows,
+      );
+      expect(edgeQueryBuilder.andWhere).toHaveBeenCalledWith(
+        'rule.actionType = :actionType',
+        { actionType: 'attach-prompt' },
+      );
+      expect(edgeQueryBuilder.andWhere).toHaveBeenCalledWith(
+        'rule.deletedAt IS NULL',
+      );
+      expect(edgeQueryBuilder.orderBy).toHaveBeenCalledWith(
+        'application.createdAt',
+        'ASC',
+      );
     });
   });
 

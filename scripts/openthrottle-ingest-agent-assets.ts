@@ -2,7 +2,8 @@
  * @description Ingests `.agents/` skills, rules, personas, and prompts into `custom_prompts`.
  * Content only: openthrottle-server embeds the rows (its embeddings reconciler picks up raw-SQL
  * writes like these within one interval — 15 minutes by default — or on its next boot).
- * Idempotent per (file_path, prompt_type). D5: hard-fail on skill/persona validation errors; warn-only on rules.
+ * Idempotent per (file_path, prompt_type) among system rows (user_id NULL); it never touches a
+ * user's prompt, which may override a system prompt at the same path (migration 190). D5: hard-fail on skill/persona validation errors; warn-only on rules.
  */
 
 /* eslint-disable no-await-in-loop -- sequential per-file upsert is intentional */
@@ -196,7 +197,7 @@ const main = async (): Promise<void> => {
              title, content, description, prompt_type, labels, file_path, deleted_at
            )
            VALUES ($1, $2, $3, $4, $5::jsonb, $6, NULL)
-           ON CONFLICT (file_path, prompt_type)
+           ON CONFLICT (file_path, prompt_type, user_id)
            WHERE file_path IS NOT NULL
            DO UPDATE SET
              title = EXCLUDED.title,
@@ -244,6 +245,7 @@ const main = async (): Promise<void> => {
        FROM custom_prompts
        WHERE deleted_at IS NULL
          AND file_path IS NOT NULL
+         AND user_id IS NULL
          AND (${prefixConditions})`,
       prefixParams,
     );
@@ -257,6 +259,7 @@ const main = async (): Promise<void> => {
         `UPDATE custom_prompts
          SET deleted_at = NOW(), updated_at = NOW()
          WHERE deleted_at IS NULL
+           AND user_id IS NULL
            AND file_path = ANY($1::text[])`,
         [stalePaths],
       );

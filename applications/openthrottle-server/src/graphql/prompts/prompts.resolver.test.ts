@@ -3,7 +3,11 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { createMock } from '@golevelup/ts-vitest';
-import { BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import {
@@ -22,6 +26,7 @@ import {
   createCustomPromptsRepositoryMock,
   createRolesRepositoryMock,
 } from '@openthrottle/nestjs-repositories-server/testing';
+import { QueryFailedError } from 'typeorm';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service.ts';
@@ -373,6 +378,30 @@ describe('CustomPromptsResolver', () => {
       ).rejects.toThrow(ForbiddenException);
 
       expect(customPromptsRepository.create).not.toHaveBeenCalled();
+    });
+    test('reports a second prompt of one owner at a path as a Conflict', async () => {
+      customPromptsRepository.create.mockRejectedValue(
+        new QueryFailedError(
+          'INSERT',
+          [],
+          Object.assign(new Error('duplicate key'), { code: '23505' }),
+        ),
+      );
+
+      await expect(
+        resolver.createCustomPrompt(principal, createInput),
+      ).rejects.toThrow(
+        new ConflictException(CUSTOM_PROMPT_ACCESS_REFUSAL.duplicatePath),
+      );
+    });
+
+    test('lets any other write failure through unchanged', async () => {
+      const failure = new Error('connection reset');
+      customPromptsRepository.create.mockRejectedValue(failure);
+
+      await expect(
+        resolver.createCustomPrompt(principal, createInput),
+      ).rejects.toBe(failure);
     });
   });
 

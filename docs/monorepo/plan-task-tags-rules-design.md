@@ -290,8 +290,8 @@ promotions are additive and idempotent per task.
 (`prompts` or `personas`; `rules` was retired with migration 111); `placement`
 (`start` or `end`, default `end`).
 
-A `filePath` reference is the `(file_path, prompt_type)` natural key from migration 048,
-so a rule keeps working when the same prompt has a different id in another database.
+A `filePath` reference is the `(file_path, prompt_type)` natural key (per owner since
+migration 190), so a rule keeps working when the same prompt has a different id in another database.
 
 **Prompt resolution order.** The executor resolves the prompt among _live_ rows the
 **rule owner** can see, which is their own rows plus system rows (`user_id IS NULL`):
@@ -416,18 +416,22 @@ deleted when the rule stops matching, is disabled or is deleted:
 
 ## Not yet
 
-- **No trigger supplies an environment.** Every worker pass carries `null`, so
-  environment-qualified rules apply only on plan-context reads. A trigger opts in by
-  passing its environment to `enqueueEvaluation`; the dedup key already separates
-  environments.
-- **Attached prompts are not composed into agent context.** An `attach-prompt` rule
-  records the attachment in the ledger, and `placement` is stored, but nothing reads the
-  ledger to build an agent's context yet.
-- **"User prompt beats system prompt" cannot be reached today.** Migration 048's unique
-  index on `(file_path, prompt_type)` is global and deliberately covers soft-deleted
-  rows (migration 179 notes why), so a user row and a system row for the same path
-  cannot coexist. The preference is implemented in `findVisibleByFilePath` and will
-  take effect when that index is scoped per owner.
+- **Background triggers carry no environment.** GraphQL-triggered passes carry the
+  environment from the `x-ot-environment` header, which openthrottle-mcp's stdio server
+  sets from its launch environment (explicit `OPENTHROTTLE_MCP_ENVIRONMENT`, then `CI`,
+  then an orchestrator's run identity as `ralph`, then an agent harness as
+  `interactive`). Developer-app edits and the tagging worker carry `null`, so they skip
+  environment-qualified rules. A pass never orphans the ledger rows of a rule qualified
+  on another environment.
+- **Attached prompts are returned, not injected.** `skillAvailability(planId)` returns
+  `attachedPrompts` in composition order (`start` first, then `end`), re-checked on read.
+  Placing them around the plan context is the reading agent's job; no runner composes
+  them into a prompt server-side yet.
+- **The prompts list does not de-duplicate overrides.** Since migration 190 a user's
+  prompt can override a system prompt at the same `(file_path, prompt_type)`, and
+  resolution by path (`findVisibleByFilePath`) prefers it. `customPrompts` still lists
+  both rows: it is the library a user manages, and hiding the system row would make
+  "delete my override to fall back" undiscoverable.
 - **Cross-repo Projects.** `project_id` is matched when set but unscored and not
   offered in the UI. Projects span repositories and do not nest with repository scope,
   so how a project rule ranks against a repository rule is left to that model.

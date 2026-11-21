@@ -48,7 +48,7 @@
     "mcp.tool/get_project": 495,
     "mcp.tool/get_project_plans": 499,
     "mcp.tool/get_remaining_tasks_for_plan": 451,
-    "mcp.tool/get_skill_availability": 1146,
+    "mcp.tool/get_skill_availability": 1293,
     "mcp.tool/get_skill_availability_rule_set": 449,
     "mcp.tool/get_task": 320,
     "mcp.tool/get_tasks_by_plan_id": 370,
@@ -68,7 +68,7 @@
     "mcp.tool/list_tag_action_rules": 404,
     "mcp.tool/list_tasks_by_category": 788,
     "mcp.tool/post_plan_message": 815,
-    "mcp.tool/preview_tag_action_rule": 1772,
+    "mcp.tool/preview_tag_action_rule": 1697,
     "mcp.tool/promote_task": 906,
     "mcp.tool/record_artifact": 733,
     "mcp.tool/register_plan_run": 1346,
@@ -143,7 +143,7 @@
     "mcp.toolDescription/get_project": 204,
     "mcp.toolDescription/get_project_plans": 188,
     "mcp.toolDescription/get_remaining_tasks_for_plan": 162,
-    "mcp.toolDescription/get_skill_availability": 740,
+    "mcp.toolDescription/get_skill_availability": 883,
     "mcp.toolDescription/get_skill_availability_rule_set": 167,
     "mcp.toolDescription/get_task": 61,
     "mcp.toolDescription/get_tasks_by_plan_id": 91,
@@ -163,7 +163,7 @@
     "mcp.toolDescription/list_tag_action_rules": 186,
     "mcp.toolDescription/list_tasks_by_category": 187,
     "mcp.toolDescription/post_plan_message": 353,
-    "mcp.toolDescription/preview_tag_action_rule": 618,
+    "mcp.toolDescription/preview_tag_action_rule": 580,
     "mcp.toolDescription/promote_task": 589,
     "mcp.toolDescription/record_artifact": 348,
     "mcp.toolDescription/register_plan_run": 772,
@@ -239,12 +239,12 @@
     "skillDescription/ot-worktree": 482
   },
   "reported": {
-    "mcpToolset/admin": 18605,
+    "mcpToolset/admin": 18677,
     "mcpToolset/agents": 3086,
     "mcpToolset/blog": 7444,
     "mcpToolset/core": 40060,
     "mcpToolset/scheduling": 5256,
-    "mcpToolsFull": 74451
+    "mcpToolsFull": 74523
   },
   "totals": {
     "alwaysInjected": 48028,
