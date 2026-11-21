@@ -122,8 +122,12 @@ a secret compared by hash.
 | Refresh token      | `ot_ort_<prefix>_<secret>` | until the grant expires  | **Rotated on every use**; reuse of a rotated refresh token revokes the whole grant (OAuth 2.1 §4.3.1) |
 | Grant              | DB row                     | **30 days** from consent | Matches the T3 reference. Refresh never extends it; re-consent does                                   |
 
-Hashing: SHA-256 of the secret (these are 256-bit random values, so a slow KDF buys nothing and
-costs a bcrypt per request). Comparison is constant-time.
+Hashing: plain hex SHA-256 of the secret, compared in constant time. This is the decision shared
+by every machine-minted bearer secret, `ot_sa_` service-account credentials included: these are
+256-bit random values, so bcrypt buys nothing, and HMAC was rejected because a database-write
+attacker already has a better way in. The reasoning, measurements and threat model live in
+[openthrottle-server-auth.md § Machine token hashing](./openthrottle-server-auth.md#machine-token-hashing-sha-256-not-bcrypt-not-hmac),
+which also explains why CodeQL's `js/insufficient-password-hash` flags these call sites anyway.
 
 ## Scopes and RBAC
 

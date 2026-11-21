@@ -4,6 +4,7 @@
  */
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 
+import { hashSecret } from '../service-account-credentials/secret/secret.utils.ts';
 import {
   OAUTH_ACCESS_TOKEN_PREFIX,
   OAUTH_REFRESH_TOKEN_PREFIX,
@@ -37,12 +38,34 @@ const tokenPrefixFor = (kind: OAuthTokenKind): string => {
     : OAUTH_REFRESH_TOKEN_PREFIX;
 };
 
-/** @description Hex SHA-256 of a secret. The secrets are 256-bit random, so no slow KDF is needed. */
+/**
+ * @description Hex SHA-256 of an OAuth secret: the secret part of an `ot_oat_` access token or an
+ * `ot_ort_` refresh token, or a whole authorization code. It is the same scheme as service-account
+ * credentials, so it delegates to their `hashSecret`.
+ *
+ * - **No slow KDF.** Every input is 256 bits from `randomBytes`, so there is nothing to guess and
+ *   bcrypt would add nothing except a pass through libuv's thread pool on every request.
+ * - **No HMAC.** A keyed hash only stops an attacker who can write to the database, and that
+ *   attacker can already overwrite a `users.password_hash` and sign in as an admin. In return it
+ *   would cost a new secret in every environment and a rotation story.
+ * - **CodeQL** `js/insufficient-password-hash` flags this call regardless, because its password
+ *   heuristic matches any identifier containing `oauth`. The alert is a known false positive:
+ *   dismiss it with a link to the decision rather than renaming identifiers to dodge it.
+ *
+ * Decision, measurements and threat model: docs/openthrottle/openthrottle-server-auth.md
+ * § Machine token hashing.
+ */
 export function hashOAuthSecret(secret: string): string {
-  return createHash('sha256').update(secret, 'utf8').digest('hex');
+  return hashSecret(secret);
 }
 
-/** @description Constant-time comparison of two hex hashes. */
+/**
+ * @description Constant-time comparison of two strings of equal-length hashes or digests: a
+ * stored hash against {@link hashOAuthSecret} of a presented secret, or a PKCE challenge against
+ * the computed S256 digest. Not `validateSecret` from the service-account secret utils: that one
+ * is async, takes the plaintext rather than a digest, and falls back to bcrypt for a legacy
+ * `$2…$` hash, a path OAuth rows never need and should never accept.
+ */
 export function oauthHashesEqual(a: string, b: string): boolean {
   const bufA = Buffer.from(a, 'utf8');
   const bufB = Buffer.from(b, 'utf8');
