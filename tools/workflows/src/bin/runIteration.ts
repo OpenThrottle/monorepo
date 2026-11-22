@@ -15,6 +15,7 @@ import {
 } from '@openthrottle/openthrottle-agentic-utils';
 import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 import type {
+  AgentAccountError,
   AgentDriver,
   DriverChunk,
   DriverInvocationConfig,
@@ -62,6 +63,11 @@ export interface RunIterationConfig {
   iteration: number;
   /** Model preset when the backend supports it (Cursor: `--model`; Claude Code: `--model`). */
   model?: string;
+  /**
+   * Optional callback fired when the iteration closes normally and the driver detected a fatal
+   * account error (no credit, a bad key, no access — Claude only). Same timing as `onUsageLimit`.
+   */
+  onAccountError?: (accountError: AgentAccountError) => void;
   /** Optional callback for each stdout/stderr chunk (async path only). */
   onChunk?: (chunk: CursorAgentChunk) => void;
   /**
@@ -164,6 +170,7 @@ export const runIteration = (config: RunIterationConfig): string => {
 
   return runDriverSync(driver, toDriverConfig(config, driver), {
     logger: ralphDebugLogger,
+    onAccountError: config.onAccountError,
     onUsageLimit: config.onUsageLimit,
   });
 };
@@ -236,6 +243,7 @@ export const runIterationAsync = async (
 
   const output = await runDriverAsync(driver, toDriverConfig(config, driver), {
     logger: ralphDebugLogger,
+    onAccountError: config.onAccountError,
     onRawOutput: (raw) => {
       rawOutput.current = raw;
     },

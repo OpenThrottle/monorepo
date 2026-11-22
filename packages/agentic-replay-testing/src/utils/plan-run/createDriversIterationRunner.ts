@@ -49,7 +49,10 @@ export function createDriversIterationRunner(): WorkflowRalphIterationRunner {
           signal: params.signal,
           timeoutMs: params.timeoutMs,
         },
-        { onUsageLimit: params.onUsageLimit },
+        {
+          onAccountError: params.onAccountError,
+          onUsageLimit: params.onUsageLimit,
+        },
       );
     },
   };

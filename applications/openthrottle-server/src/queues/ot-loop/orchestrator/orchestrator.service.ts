@@ -96,7 +96,9 @@ const toEffort = (
   return DRIVER_REASONING_EFFORT_VALUES.find((level) => level === value);
 };
 
-const failed = (reason: WorkflowFailedReason): WorkflowRunResult => {
+const failed = (
+  reason: Exclude<WorkflowFailedReason, 'workflow_agent_account_error'>,
+): WorkflowRunResult => {
   return { exitCode: 1, reason, status: 'failed' };
 };
 

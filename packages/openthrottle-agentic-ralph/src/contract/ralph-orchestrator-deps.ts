@@ -50,6 +50,21 @@ export interface WorkflowRalphUsageLimit {
 }
 
 /**
+ * @description A fatal account error reported by an iteration runner: the agent's account cannot
+ * serve requests at all, so every further iteration would fail the same way. Structurally identical
+ * to `AgentAccountError` in `@openthrottle/openthrottle-drivers`. `kind` is the API's error class
+ * (`billing_error`, `authentication_error`, `permission_error`); `message` the CLI's human text;
+ * `apiKeySource` the credential the CLI said it used (`ANTHROPIC_API_KEY` for a key from its
+ * environment, anything else for its own login), null when it never said.
+ * @public
+ */
+export interface WorkflowRalphAccountError {
+  readonly apiKeySource: string | null;
+  readonly kind: string;
+  readonly message: string | null;
+}
+
+/**
  * @description One agent iteration (layer-2), aligned with `tools/workflows` `RunIterationConfig` /
  * `runIterationAsync`: environment-specific runner returns combined stdout/stderr text.
  */
@@ -69,13 +84,19 @@ export interface WorkflowRalphIterationRunParams {
   readonly env?: Readonly<Record<string, string>>;
   readonly iteration: number;
   readonly model: string | undefined;
+  /**
+   * @description Fired by the runner when the iteration closed on a fatal account error (no credit,
+   * a bad key, no access). The orchestrator stops the run FAILED on it — nothing lifts on its own,
+   * so there is no resume. A runner whose backend never reports one simply never calls it.
+   */
+  readonly onAccountError?: (accountError: WorkflowRalphAccountError) => void;
   readonly onChunk?: WorkflowRalphIterationOnChunk;
+  readonly onTrajectory?: (record: TrajectoryRecord) => void | Promise<void>;
   /**
    * @description Fired by the runner when the iteration closed having hit a subscription usage limit.
    * The orchestrator uses it to stop the run cleanly instead of treating the iteration as ordinary
    * (failed) agent output.
    */
-  readonly onTrajectory?: (record: TrajectoryRecord) => void | Promise<void>;
   readonly onUsageLimit?: (usageLimit: WorkflowRalphUsageLimit) => void;
   readonly runner: WorkflowConfigRunner;
   readonly signal: AbortSignal | undefined;

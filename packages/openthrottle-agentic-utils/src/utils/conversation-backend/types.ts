@@ -168,9 +168,16 @@ export function toConversationServiceTier(
  * null). The terminal chunk of a limited turn additionally carries
  * `metadata.usageLimit` with the same shape.
  *
+ * `account_error` is a non-terminal notice that the backend's account cannot
+ * serve requests at all (claude's synthetic API-error `assistant` event, or an
+ * error `result`, classed `billing_error` / `authentication_error` /
+ * `permission_error`). Its `metadata` carries `{ kind, message }`. Unlike
+ * `usage_limit` it never lifts on its own, so a run should stop, not retry.
+ *
  * @public
  */
 export const CONVERSATION_STREAM_CHUNK_KINDS = {
+  accountError: 'account_error',
   keepalive: 'keepalive',
   permissionRequest: 'permission_request',
   session: 'session',
