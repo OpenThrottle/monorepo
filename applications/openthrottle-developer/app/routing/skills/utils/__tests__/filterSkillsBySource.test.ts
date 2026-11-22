@@ -12,17 +12,19 @@ const entry = (
   slug: string,
   source: RepoSkillEntry['source'],
   overlay?: 'custom' | 'personal',
-): RepoSkillEntry => { return {
-  disableModelInvocation: undefined,
-  isCustom: overlay === 'custom' ? true : undefined,
-  isPersonal: overlay === 'personal' ? true : undefined,
-  layout: 'agents',
-  repoRelativePath: `.agents/skills/${slug}/SKILL.md`,
-  slug,
-  source,
-  summary: `${slug} summary`,
-  tags: undefined,
-}; };
+): RepoSkillEntry => {
+  return {
+    disableModelInvocation: undefined,
+    isCustom: overlay === 'custom' ? true : undefined,
+    isPersonal: overlay === 'personal' ? true : undefined,
+    layout: 'agents',
+    repoRelativePath: `.agents/skills/${slug}/SKILL.md`,
+    slug,
+    source,
+    summary: `${slug} summary`,
+    tags: undefined,
+  };
+};
 
 const entries = [
   entry('ot-plans', 'openthrottle'),

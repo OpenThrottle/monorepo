@@ -54,17 +54,19 @@ const entryFor = (
   repoRelativePath: string,
   source: RepoSkillEntry['source'] = 'openthrottle',
   overlay?: 'custom' | 'personal',
-): RepoSkillEntry => { return {
-  disableModelInvocation: undefined,
-  isCustom: overlay === 'custom' ? true : undefined,
-  isPersonal: overlay === 'personal' ? true : undefined,
-  layout: 'agents',
-  repoRelativePath,
-  slug: 'my-skill',
-  source,
-  summary: 'Original description.',
-  tags: undefined,
-}; };
+): RepoSkillEntry => {
+  return {
+    disableModelInvocation: undefined,
+    isCustom: overlay === 'custom' ? true : undefined,
+    isPersonal: overlay === 'personal' ? true : undefined,
+    layout: 'agents',
+    repoRelativePath,
+    slug: 'my-skill',
+    source,
+    summary: 'Original description.',
+    tags: undefined,
+  };
+};
 
 const PERSONAL_DIR_ENV = 'OPENTHROTTLE_PERSONAL_SKILLS_DIR';
 

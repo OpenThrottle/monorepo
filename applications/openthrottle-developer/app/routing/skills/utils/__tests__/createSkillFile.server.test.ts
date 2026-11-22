@@ -60,9 +60,15 @@ describe('createSkillFile', () => {
   let root: string;
   let personalRoot: string;
 
-  const repoSkillPath = (): string => { return join(root, 'skills', SLUG, 'SKILL.md'); };
-  const personalSkillPath = (): string => { return join(personalRoot, SLUG, 'SKILL.md'); };
-  const customSkillPath = (): string => { return join(root, '.agents/skills', SLUG, 'SKILL.md'); };
+  const repoSkillPath = (): string => {
+    return join(root, 'skills', SLUG, 'SKILL.md');
+  };
+  const personalSkillPath = (): string => {
+    return join(personalRoot, SLUG, 'SKILL.md');
+  };
+  const customSkillPath = (): string => {
+    return join(root, '.agents/skills', SLUG, 'SKILL.md');
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
