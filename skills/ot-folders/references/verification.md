@@ -25,7 +25,8 @@ pnpm nx run monorepo:check-folder-vocabulary
 
 `check-folder-vocabulary` fails on any tracked path under a rule-4 junk-drawer
 folder and names the replacement; `check:local` and the CI `gates` job run it too.
-`pnpm run check:local:audit` runs the three shape audits. Note what `--strict` actually gates:
+`pnpm run check:local:audit` runs every `audit:*:strict` except test-coverage (the
+same glob as CI's `audit:strict`), and `check:local` runs it. Note what `--strict` actually gates:
 the component audit exits non-zero on **R4/R5/R6** (hoist violations,
 multi-component files, and authored components over the 210-line cap). Its R6
 count matches ESLint's `max-lines` exactly, and it repeats that cap on purpose:

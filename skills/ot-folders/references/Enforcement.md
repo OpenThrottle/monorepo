@@ -40,11 +40,12 @@ final content. The shadcn profile's VR6 cap stays report-only.
 `.cursor/plans/` is absent — the audit passes and only the report write fails.
 `pnpm run audit:strict` runs every `audit:*:strict` except test-coverage.
 
-**What actually gates locally:** `check:local` runs `check:local:component-shape`
-(component + shadcn strict) but **not** `check:local:audit` — so route-shape
-strict is _not_ part of `check:local`. That matches the rule's `warn` severity
-and the warn-first rollout. See `docs/monorepo/CI-quality-gates.md` for what
-blocks a merge.
+**What actually gates locally:** `check:local` runs `check:local:audit`, the same
+`audit:*:strict` glob CI's `gates` job runs, so every strict audit (component,
+shadcn, route, hook, file-name casing, workspace and third-party deps) fails
+locally exactly where it fails in CI. A new `audit:<thing>:strict` joins both
+the moment it is named. See `docs/monorepo/CI-quality-gates.md` for what blocks
+a merge.
 
 ## The six section markers
 

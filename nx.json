@@ -324,6 +324,15 @@
         "description": "Build the app's client bundle so the `clientNodeBoundary` Vite plugin (`@tools/dotfiles/client-node-boundary`, in every React Router app's vite.config.ts) can fail it when a Node builtin is reachable from browser code. Vite externalizes `node:*` for the browser and ships `module.exports = {}` in its place, so lint and typecheck pass and the break only surfaces at runtime; the plugin makes `build` itself fail. This no-op target exists so CI's sharded P0 line, which runs no other app build, pulls `build` in for affected apps."
       }
     },
+    "check-local-ci-parity": {
+      "cache": false,
+      "description": "Fail when CI's `gates` job runs a check the root `check:local` chain does not, via scripts/check-local-ci-parity.ts. Both sides are expanded through root package.json scripts and root targets to the commands they finally run, so the same check spelled differently on each side still matches; deliberate CI-only gates are listed with a reason in the script's EXEMPTIONS (OT plan cfecf37f). Never cached: the inputs are package.json, nx.json and the workflow, and the check takes well under a second.",
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsx ./scripts/check-local-ci-parity.ts",
+        "cwd": "{workspaceRoot}"
+      }
+    },
     "check-lockfile": {
       "cache": true,
       "executor": "nx:run-commands",
