@@ -2189,8 +2189,81 @@ var DRIVERS = {
 var DRIVER_IDS = Object.values(DRIVERS);
 var DRIVER_ID_SET = new Set(DRIVER_IDS);
 
-// packages/openthrottle-drivers/src/utils/claude-output.ts
+// packages/openthrottle-drivers/src/utils/account-error.ts
+var ACCOUNT_ERROR_KINDS = {
+  authenticationError: "authentication_error",
+  billingError: "billing_error",
+  permissionError: "permission_error"
+};
 var isRecord2 = (value) => {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+};
+var WIRE_ERROR_KINDS = {
+  authentication_error: ACCOUNT_ERROR_KINDS.authenticationError,
+  authentication_failed: ACCOUNT_ERROR_KINDS.authenticationError,
+  billing_error: ACCOUNT_ERROR_KINDS.billingError,
+  permission_error: ACCOUNT_ERROR_KINDS.permissionError
+};
+var STATUS_ERROR_KINDS = {
+  401: ACCOUNT_ERROR_KINDS.authenticationError,
+  403: ACCOUNT_ERROR_KINDS.permissionError
+};
+var kindOfWireError = (value) => {
+  const name = isRecord2(value) ? value.type : value;
+  if (typeof name !== "string") {
+    return null;
+  }
+  return WIRE_ERROR_KINDS[name] ?? null;
+};
+var assistantText = (event) => {
+  const message = event.message;
+  const content = isRecord2(message) ? message.content : void 0;
+  if (!Array.isArray(content)) {
+    return null;
+  }
+  const text = content.filter((block) => {
+    return isRecord2(block) && block.type === "text";
+  }).map((block) => {
+    return typeof block.text === "string" ? block.text : "";
+  }).join("\n").trim();
+  return text === "" ? null : text;
+};
+var fromAssistant = (event) => {
+  const message = event.message;
+  const kind = kindOfWireError(event.error) ?? (isRecord2(message) ? kindOfWireError(message.error) : null);
+  return kind === null ? null : { kind, message: assistantText(event) };
+};
+var fromResult = (event) => {
+  if (event.is_error !== true) {
+    return null;
+  }
+  const status = event.api_error_status;
+  const statusKind = typeof status === "number" ? STATUS_ERROR_KINDS[status] ?? null : null;
+  const kind = kindOfWireError(event.error) ?? statusKind;
+  const text = typeof event.result === "string" ? event.result.trim() : "";
+  return kind === null ? null : { kind, message: text === "" ? null : text };
+};
+var parseClaudeAccountError = (event) => {
+  if (!isRecord2(event)) {
+    return null;
+  }
+  if (event.type === "assistant") {
+    return fromAssistant(event);
+  }
+  if (event.type === "result") {
+    return fromResult(event);
+  }
+  return null;
+};
+var parseClaudeApiKeySource = (event) => {
+  if (!isRecord2(event) || event.type !== "system" || event.subtype !== "init") {
+    return null;
+  }
+  return typeof event.apiKeySource === "string" ? event.apiKeySource : null;
+};
+
+// packages/openthrottle-drivers/src/utils/claude-output.ts
+var isRecord3 = (value) => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 };
 var epochSecondsToIso = (value) => {
@@ -2201,7 +2274,7 @@ var epochSecondsToIso = (value) => {
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
 };
 var parseClaudeRateLimitInfo = (value) => {
-  if (!isRecord2(value) || value.status !== "rejected") {
+  if (!isRecord3(value) || value.status !== "rejected") {
     return null;
   }
   return {
@@ -2210,11 +2283,12 @@ var parseClaudeRateLimitInfo = (value) => {
   };
 };
 var isClaudeUsageLimitResult = (event) => {
-  return isRecord2(event) && event.type === "result" && event.is_error === true && event.api_error_status === 429;
+  return isRecord3(event) && event.type === "result" && event.is_error === true && event.api_error_status === 429;
 };
 
 // packages/openthrottle-agentic-utils/src/utils/conversation-backend/types.ts
 var CONVERSATION_STREAM_CHUNK_KINDS = {
+  accountError: "account_error",
   keepalive: "keepalive",
   permissionRequest: "permission_request",
   session: "session",
@@ -2460,13 +2534,13 @@ var CLAUDE_ACTIVE_CREDENTIALS = {
 };
 var API_KEY_ENV_NAME = "ANTHROPIC_API_KEY";
 var CLAUDE_AI_AUTH_METHOD = "claude.ai";
-function isRecord3(value) {
+function isRecord4(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 function readRecord(stdout) {
   try {
     const parsed = JSON.parse(stdout);
-    return isRecord3(parsed) ? parsed : null;
+    return isRecord4(parsed) ? parsed : null;
   } catch {
     return null;
   }
@@ -2827,7 +2901,10 @@ function mapSystem2(event) {
     delta: "",
     done: false,
     kind: CONVERSATION_STREAM_CHUNK_KINDS.session,
-    metadata: { sessionId: asString3(event.session_id) ?? null }
+    metadata: {
+      apiKeySource: parseClaudeApiKeySource(event),
+      sessionId: asString3(event.session_id) ?? null
+    }
   };
 }
 function mapStreamEvent(inner) {
@@ -2871,6 +2948,17 @@ function mapStreamEvent(inner) {
   return null;
 }
 function mapAssistant2(event) {
+  const accountError = parseClaudeAccountError(event);
+  if (accountError !== null) {
+    return [
+      {
+        delta: "",
+        done: false,
+        kind: CONVERSATION_STREAM_CHUNK_KINDS.accountError,
+        metadata: { kind: accountError.kind, message: accountError.message }
+      }
+    ];
+  }
   const message = event.message;
   if (!isRecord(message) || !Array.isArray(message.content)) {
     return [];
@@ -2936,6 +3024,7 @@ function mapRateLimit(event) {
 function mapResult2(event) {
   const isError = event.is_error === true;
   const hitUsageLimit = isClaudeUsageLimitResult(event);
+  const accountError = parseClaudeAccountError(event);
   const unknownUsageLimit = {
     usageLimit: { rateLimitType: null, resetsAt: null }
   };
@@ -2950,7 +3039,8 @@ function mapResult2(event) {
       result: asString3(event.result) ?? null,
       totalCostUsd: event.total_cost_usd ?? null,
       usage: event.usage ?? null,
-      ...hitUsageLimit ? unknownUsageLimit : {}
+      ...hitUsageLimit ? unknownUsageLimit : {},
+      ...accountError === null ? {} : { accountError }
     }
   };
 }
