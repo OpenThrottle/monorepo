@@ -247,7 +247,6 @@ export class ProjectsResolver {
     return {
       hasNextPage: hasNextPage(page, input.offset ?? 0),
       items: page.items,
-      plans: page.items,
       totalCount: page.totalCount,
     };
   }

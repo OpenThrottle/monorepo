@@ -101,12 +101,12 @@ describe('QueuesResolver', () => {
 
       expect(result).not.toBeNull();
       expect(result?.jobs).not.toBeNull();
-      expect(result?.jobs?.jobs).toHaveLength(1);
-      expect(result?.jobs?.jobs[0]?.id).toBe('job-1');
-      expect(result?.jobs?.jobs[0]?.state).toBe('waiting');
-      expect(result?.jobs?.hasNext).toBe(true);
-      expect(result?.jobs?.total).toBe(42);
-      expect(result?.jobs?.jobs[0]?.taskRunMetrics).toBeNull();
+      expect(result?.jobs?.items).toHaveLength(1);
+      expect(result?.jobs?.items[0]?.id).toBe('job-1');
+      expect(result?.jobs?.items[0]?.state).toBe('waiting');
+      expect(result?.jobs?.hasNextPage).toBe(true);
+      expect(result?.jobs?.totalCount).toBe(42);
+      expect(result?.jobs?.items[0]?.taskRunMetrics).toBeNull();
       expect(mockQueuesService.getJobs).toHaveBeenCalledWith(
         PLANS_QUEUE_NAME,
         ['waiting', 'active'],
@@ -165,10 +165,10 @@ describe('QueuesResolver', () => {
         states: ['completed'],
       });
 
-      expect(result?.jobs?.jobs).toHaveLength(1);
-      expect(result?.jobs?.jobs[0]?.taskRunMetrics).not.toBeNull();
-      expect(result?.jobs?.jobs[0]?.taskRunMetrics?.atStart.rssMb).toBe(50);
-      expect(result?.jobs?.jobs[0]?.taskRunMetrics?.atEnd.rssMb).toBe(55);
+      expect(result?.jobs?.items).toHaveLength(1);
+      expect(result?.jobs?.items[0]?.taskRunMetrics).not.toBeNull();
+      expect(result?.jobs?.items[0]?.taskRunMetrics?.atStart.rssMb).toBe(50);
+      expect(result?.jobs?.items[0]?.taskRunMetrics?.atEnd.rssMb).toBe(55);
     });
   });
 

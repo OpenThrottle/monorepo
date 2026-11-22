@@ -30,36 +30,24 @@ export class CmsLibraryComponentsResolver {
 
   @Public()
   @Query(() => CmsLibraryComponentListResult, {
-    description: `One page of live cms library components across every library, by typename. limit is 1 to 100 (default 25); take and skip are deprecated aliases of limit and offset.`,
+    description: `One page of live cms library components across every library, by typename. limit is 1 to 100 (default 25).`,
   })
   async cmsLibraryComponents(
     @Args('limit', {
-      description: `Page size, 1 to ${PAGINATION_MAX_LIMIT} (default ${PAGINATION_DEFAULT_LIMIT}). Replaces take.`,
+      description: `Page size, 1 to ${PAGINATION_MAX_LIMIT} (default ${PAGINATION_DEFAULT_LIMIT}).`,
       nullable: true,
       type: () => Int,
     })
     limit: number | null,
     @Args('offset', {
-      description: `Rows to skip, 0 or more. Replaces skip.`,
+      description: `Rows to skip, 0 or more.`,
       nullable: true,
       type: () => Int,
     })
     offset: number | null,
-    @Args('skip', {
-      deprecationReason: `Use offset`,
-      nullable: true,
-      type: () => Int,
-    })
-    skip: number | null,
-    @Args('take', {
-      deprecationReason: `Use limit`,
-      nullable: true,
-      type: () => Int,
-    })
-    take: number | null,
   ): Promise<CmsLibraryComponentListResult> {
     return this.cmsLibraryComponentsService.findPage(
-      resolveCmsPageOptions({ limit, offset, skip, take }),
+      resolveCmsPageOptions({ limit, offset }),
     );
   }
 

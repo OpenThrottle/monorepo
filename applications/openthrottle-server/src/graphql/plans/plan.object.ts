@@ -322,9 +322,6 @@ export class PlanRunPullRequestObject {
 export class ListPlansByStatusResultObject extends OffsetPageObject {
   @Field(() => [PlanObject])
   items!: PlanObject[];
-
-  @Field(() => [PlanObject], { deprecationReason: `Use items` })
-  plans!: PlanObject[];
 }
 
 /** Result of createPlans: the plans created in the batch and how many. */

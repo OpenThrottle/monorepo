@@ -873,7 +873,6 @@ export class PlansResolver {
 
     result.hasNextPage = hasNextPage(page, input.offset ?? 0);
     result.items = page.items;
-    result.plans = page.items;
     result.totalCount = page.totalCount;
 
     return result;
@@ -909,7 +908,6 @@ export class PlansResolver {
 
       result.hasNextPage = false;
       result.items = [];
-      result.plans = [];
       result.totalCount = 0;
 
       return result;
@@ -957,7 +955,6 @@ export class PlansResolver {
 
     result.hasNextPage = false;
     result.items = plans;
-    result.plans = plans;
     result.totalCount = plans.length;
 
     return result;

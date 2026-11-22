@@ -701,7 +701,6 @@ describe('PlansResolver', () => {
       const result = await resolver.listPlansByStatus(baseInput());
 
       expect(result.items).toHaveLength(1);
-      expect(result.plans).toEqual(result.items);
       expect(result.items[0]?.id).toBe(mockPlan.id);
       expect(result.totalCount).toBe(1);
       expect(result.hasNextPage).toBe(false);
@@ -727,7 +726,7 @@ describe('PlansResolver', () => {
         baseInput({ statuses: ['IN_PROGRESS', 'PENDING'] }),
       );
 
-      expect(result.plans).toHaveLength(1);
+      expect(result.items).toHaveLength(1);
       expect(result.totalCount).toBe(1);
       expect(mockPlansRepository.listFiltered).toHaveBeenCalledWith(
         expect.objectContaining({ statuses: ['IN_PROGRESS', 'PENDING'] }),
@@ -898,7 +897,7 @@ describe('PlansResolver', () => {
         query: 'some query',
       });
 
-      expect(result.plans).toEqual([]);
+      expect(result.items).toEqual([]);
       expect(result.totalCount).toBe(0);
     });
 
@@ -939,7 +938,7 @@ describe('PlansResolver', () => {
         10,
         'nomic-embed-text-v1.5',
       );
-      expect(result.plans).toEqual([mockPlan]);
+      expect(result.items).toEqual([mockPlan]);
       expect(result.totalCount).toBe(1);
     });
   });

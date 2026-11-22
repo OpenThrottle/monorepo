@@ -19,6 +19,4 @@ export type CmsGraphqlErrorCode =
 export interface CmsPageArgs {
   readonly limit: number | null | undefined;
   readonly offset: number | null | undefined;
-  readonly skip: number | null | undefined;
-  readonly take: number | null | undefined;
 }

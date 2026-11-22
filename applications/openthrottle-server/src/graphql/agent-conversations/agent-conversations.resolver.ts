@@ -94,7 +94,6 @@ export class AgentConversationsResolver {
 
     const items = conversations.map(toAgentConversationObject);
 
-    result.conversations = items;
     result.hasNextPage = hasNextPage({ items, totalCount }, offset ?? 0);
     result.items = items;
     result.totalCount = totalCount;
@@ -159,7 +158,6 @@ export class AgentConversationsResolver {
 
     result.hasNextPage = hasNextPage({ items, totalCount }, input.offset ?? 0);
     result.items = items;
-    result.messages = items;
     result.totalCount = totalCount;
 
     return result;

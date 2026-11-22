@@ -419,7 +419,6 @@ describe('TasksResolver', () => {
       });
 
       expect(result.items).toHaveLength(2);
-      expect(result.tasks).toEqual(result.items);
       expect(result.totalCount).toBe(2);
       expect(result.hasNextPage).toBe(false);
       expect(repo.find).toHaveBeenCalledWith({

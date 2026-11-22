@@ -2606,25 +2606,10 @@ export type JobObject = {
 
 export type JobsResultObject = {
   __typename?: 'JobsResultObject';
-  /**
-   * Whether more jobs exist after this page.
-   * @deprecated Use hasNextPage
-   */
-  hasNext: Scalars['Boolean']['output'];
   /** Whether rows remain after this page */
   hasNextPage: Scalars['Boolean']['output'];
   /** Paginated list of jobs for the queue. */
   items: Array<JobObject>;
-  /**
-   * Paginated list of jobs for the queue.
-   * @deprecated Use items
-   */
-  jobs: Array<JobObject>;
-  /**
-   * Total jobs across the requested states (state-filtered), for accurate pagination.
-   * @deprecated Use totalCount
-   */
-  total: Scalars['Int']['output'];
   /** Rows across every page */
   totalCount: Scalars['Int']['output'];
 };
@@ -2723,8 +2708,6 @@ export type ListAgentConversationMessagesResultObject = {
   /** Whether rows remain after this page */
   hasNextPage: Scalars['Boolean']['output'];
   items: Array<AgentConversationMessageObject>;
-  /** @deprecated Use items */
-  messages: Array<AgentConversationMessageObject>;
   /** Rows across every page */
   totalCount: Scalars['Int']['output'];
 };
@@ -2740,8 +2723,6 @@ export type ListAgentConversationsInput = {
 
 export type ListAgentConversationsResultObject = {
   __typename?: 'ListAgentConversationsResultObject';
-  /** @deprecated Use items */
-  conversations: Array<AgentConversationObject>;
   /** Whether rows remain after this page */
   hasNextPage: Scalars['Boolean']['output'];
   items: Array<AgentConversationObject>;
@@ -2826,8 +2807,6 @@ export type ListPlansByStatusResultObject = {
   /** Whether rows remain after this page */
   hasNextPage: Scalars['Boolean']['output'];
   items: Array<PlanObject>;
-  /** @deprecated Use items */
-  plans: Array<PlanObject>;
   /** Rows across every page */
   totalCount: Scalars['Int']['output'];
 };
@@ -4753,8 +4732,6 @@ export type ProjectPlansPageResultObject = {
   hasNextPage: Scalars['Boolean']['output'];
   /** This page's plans, in project order */
   items: Array<PlanObject>;
-  /** @deprecated Use items */
-  plans: Array<PlanObject>;
   /** Rows across every page */
   totalCount: Scalars['Int']['output'];
 };
@@ -4974,27 +4951,27 @@ export type Query = {
   captureHealth: Array<CaptureHealthRowObject>;
   /** A live cms fragment by uuid; null when none matches. */
   cmsFragment?: Maybe<CmsFragmentObject>;
-  /** One page of live cms fragments, oldest first, optionally narrowed by typename and isSystem (false also matches an unset flag). limit is 1 to 100 (default 25); take and skip are deprecated aliases of limit and offset. */
+  /** One page of live cms fragments, oldest first, optionally narrowed by typename and isSystem (false also matches an unset flag). limit is 1 to 100 (default 25). */
   cmsFragments: CmsFragmentListResult;
   /** A live cms layout by slug, with its fragment tree; null when none matches. A DRAFT or DISABLED layout is null unless the caller may write cms content. */
   cmsLayout?: Maybe<CmsLayoutObject>;
   /** A live cms layout by uuid, with its fragment tree; null when none matches. A DRAFT or DISABLED layout is null unless the caller may write cms content. */
   cmsLayoutByUuid?: Maybe<CmsLayoutObject>;
-  /** One page of live cms layouts, without their trees: ACTIVE ones only, unless the caller may write cms content. limit is 1 to 100 (default 25); take and skip are deprecated aliases of limit and offset. */
+  /** One page of live cms layouts, without their trees: ACTIVE ones only, unless the caller may write cms content. limit is 1 to 100 (default 25). */
   cmsLayouts: CmsLayoutListResult;
-  /** One page of live cms libraries with their components. limit is 1 to 100 (default 25); take and skip are deprecated aliases of limit and offset. */
+  /** One page of live cms libraries with their components. limit is 1 to 100 (default 25). */
   cmsLibraries: CmsLibraryListResult;
   /** A live cms library by uuid, with its components; null when none matches. */
   cmsLibrary?: Maybe<CmsLibraryObject>;
   /** A live cms library component by uuid; null when none matches. */
   cmsLibraryComponent?: Maybe<CmsLibraryComponentObject>;
-  /** One page of live cms library components across every library, by typename. limit is 1 to 100 (default 25); take and skip are deprecated aliases of limit and offset. */
+  /** One page of live cms library components across every library, by typename. limit is 1 to 100 (default 25). */
   cmsLibraryComponents: CmsLibraryComponentListResult;
   /** A live cms schema by uuid; null when none matches. */
   cmsSchema?: Maybe<CmsSchemaObject>;
   /** The live cms schema for a typename at a version; without a version, its newest ACTIVE version. Null when none matches. */
   cmsSchemaByTypename?: Maybe<CmsSchemaObject>;
-  /** One page of live cms schemas, optionally filtered by status (ACTIVE | DISABLED | DRAFT) and typename. limit is 1 to 100 (default 25); take and skip are deprecated aliases of limit and offset. */
+  /** One page of live cms schemas, optionally filtered by status (ACTIVE | DISABLED | DRAFT) and typename. limit is 1 to 100 (default 25). */
   cmsSchemas: CmsSchemaListResult;
   /** Index status for a registered repository: unavailable, hostedOptInRequired, indexing, ready, or notIndexed. */
   codeIndexStatus: CodeIndexStatusObject;
@@ -5338,8 +5315,6 @@ export type QueryCmsFragmentsArgs = {
   isSystem?: InputMaybe<Scalars['Boolean']['input']>;
   limit?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
-  skip?: InputMaybe<Scalars['Int']['input']>;
-  take?: InputMaybe<Scalars['Int']['input']>;
   typename?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -5354,15 +5329,11 @@ export type QueryCmsLayoutByUuidArgs = {
 export type QueryCmsLayoutsArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
-  skip?: InputMaybe<Scalars['Int']['input']>;
-  take?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type QueryCmsLibrariesArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
-  skip?: InputMaybe<Scalars['Int']['input']>;
-  take?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type QueryCmsLibraryArgs = {
@@ -5376,8 +5347,6 @@ export type QueryCmsLibraryComponentArgs = {
 export type QueryCmsLibraryComponentsArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
-  skip?: InputMaybe<Scalars['Int']['input']>;
-  take?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type QueryCmsSchemaArgs = {
@@ -5392,9 +5361,7 @@ export type QueryCmsSchemaByTypenameArgs = {
 export type QueryCmsSchemasArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
-  skip?: InputMaybe<Scalars['Int']['input']>;
   status?: InputMaybe<Scalars['String']['input']>;
-  take?: InputMaybe<Scalars['Int']['input']>;
   typename?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -8032,8 +7999,6 @@ export type TasksByProjectIdResultObject = {
   /** Whether rows remain after this page */
   hasNextPage: Scalars['Boolean']['output'];
   items: Array<TaskObject>;
-  /** @deprecated Use items */
-  tasks: Array<TaskObject>;
   /** Rows across every page */
   totalCount: Scalars['Int']['output'];
 };

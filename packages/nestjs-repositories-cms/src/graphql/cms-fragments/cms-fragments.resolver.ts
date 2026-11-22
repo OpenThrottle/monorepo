@@ -40,7 +40,7 @@ export class CmsFragmentsResolver {
 
   @Public()
   @Query(() => CmsFragmentListResult, {
-    description: `One page of live cms fragments, oldest first, optionally narrowed by typename and isSystem (false also matches an unset flag). limit is 1 to 100 (default 25); take and skip are deprecated aliases of limit and offset.`,
+    description: `One page of live cms fragments, oldest first, optionally narrowed by typename and isSystem (false also matches an unset flag). limit is 1 to 100 (default 25).`,
   })
   async cmsFragments(
     @Args('typename', { nullable: true, type: () => String })
@@ -48,29 +48,17 @@ export class CmsFragmentsResolver {
     @Args('isSystem', { nullable: true, type: () => Boolean })
     isSystem: boolean | null,
     @Args('limit', {
-      description: `Page size, 1 to ${PAGINATION_MAX_LIMIT} (default ${PAGINATION_DEFAULT_LIMIT}). Replaces take.`,
+      description: `Page size, 1 to ${PAGINATION_MAX_LIMIT} (default ${PAGINATION_DEFAULT_LIMIT}).`,
       nullable: true,
       type: () => Int,
     })
     limit: number | null,
     @Args('offset', {
-      description: `Rows to skip, 0 or more. Replaces skip.`,
+      description: `Rows to skip, 0 or more.`,
       nullable: true,
       type: () => Int,
     })
     offset: number | null,
-    @Args('skip', {
-      deprecationReason: `Use offset`,
-      nullable: true,
-      type: () => Int,
-    })
-    skip: number | null,
-    @Args('take', {
-      deprecationReason: `Use limit`,
-      nullable: true,
-      type: () => Int,
-    })
-    take: number | null,
     @Args('childCandidatesOf', {
       description: `Only fragments addable as a new child of this fragment: leaves out the fragment itself, its ancestors (a cycle) and its current children.`,
       nullable: true,
@@ -79,7 +67,7 @@ export class CmsFragmentsResolver {
     childCandidatesOf: string | null,
   ): Promise<CmsFragmentListResult> {
     return this.cmsFragmentsService.findPage({
-      ...resolveCmsPageOptions({ limit, offset, skip, take }),
+      ...resolveCmsPageOptions({ limit, offset }),
       childCandidatesOf: childCandidatesOf ?? null,
       isSystem: isSystem ?? null,
       typename: typename ?? null,

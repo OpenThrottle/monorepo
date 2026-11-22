@@ -113,7 +113,6 @@ describe('AgentConversationsResolver', () => {
       });
 
       expect(result.items).toHaveLength(1);
-      expect(result.conversations).toEqual(result.items);
       expect(result.items[0]?.id).toBe(mockConversation.id);
       expect(result.totalCount).toBe(1);
       expect(result.hasNextPage).toBe(false);
@@ -182,8 +181,8 @@ describe('AgentConversationsResolver', () => {
         },
       );
 
-      expect(result.messages).toHaveLength(1);
-      expect(result.messages[0]?.sortOrder).toBe(1);
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0]?.sortOrder).toBe(1);
       expect(result.totalCount).toBe(1);
     });
   });

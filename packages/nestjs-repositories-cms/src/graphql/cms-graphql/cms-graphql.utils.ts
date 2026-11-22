@@ -21,8 +21,8 @@ export function isCmsUuid(value: string): boolean {
 }
 
 /**
- * @description `skip` / `take` GraphQL arguments as BaseRepository paging options; the repository
- * clamps them.
+ * @description An offset / page size as BaseRepository `skip` / `take` paging options; the
+ * repository clamps them.
  */
 export function toCmsPageOptions(
   skip: number | null | undefined,
@@ -32,8 +32,7 @@ export function toCmsPageOptions(
 }
 
 /**
- * @description Reads a cms list query's paging arguments: `limit` wins over the deprecated
- * `take`, `offset` over the deprecated `skip`.
+ * @description Reads a cms list query's `limit` / `offset` arguments as repository paging options.
  * @throws GraphQLError BAD_USER_INPUT when the value sent is outside 1..{@link PAGINATION_MAX_LIMIT}
  * (limit) or negative (offset).
  */
@@ -41,8 +40,7 @@ export function resolveCmsPageOptions(args: CmsPageArgs): {
   readonly skip: number;
   readonly take: number;
 } {
-  const limit = args.limit ?? args.take;
-  const offset = args.offset ?? args.skip;
+  const { limit, offset } = args;
 
   assertPagination({ limit, offset }, { max: PAGINATION_MAX_LIMIT });
 

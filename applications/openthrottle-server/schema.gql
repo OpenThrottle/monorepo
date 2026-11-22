@@ -470,7 +470,6 @@ type TasksByProjectIdResultObject {
   """Rows across every page"""
   totalCount: Int!
   items: [TaskObject!]!
-  tasks: [TaskObject!]! @deprecated(reason: "Use items")
 }
 
 type CreateTasksResultObject {
@@ -900,7 +899,6 @@ type ListPlansByStatusResultObject {
   """Rows across every page"""
   totalCount: Int!
   items: [PlanObject!]!
-  plans: [PlanObject!]! @deprecated(reason: "Use items")
 }
 
 type CreatePlansResultObject {
@@ -1165,7 +1163,6 @@ type ListAgentConversationsResultObject {
 
   """Rows across every page"""
   totalCount: Int!
-  conversations: [AgentConversationObject!]! @deprecated(reason: "Use items")
   items: [AgentConversationObject!]!
 }
 
@@ -1176,7 +1173,6 @@ type ListAgentConversationMessagesResultObject {
   """Rows across every page"""
   totalCount: Int!
   items: [AgentConversationMessageObject!]!
-  messages: [AgentConversationMessageObject!]! @deprecated(reason: "Use items")
 }
 
 type AgentCliModelOption {
@@ -3282,19 +3278,8 @@ type JobsResultObject {
   """Rows across every page"""
   totalCount: Int!
 
-  """Whether more jobs exist after this page."""
-  hasNext: Boolean! @deprecated(reason: "Use hasNextPage")
-
   """Paginated list of jobs for the queue."""
   items: [JobObject!]!
-
-  """Paginated list of jobs for the queue."""
-  jobs: [JobObject!]! @deprecated(reason: "Use items")
-
-  """
-  Total jobs across the requested states (state-filtered), for accurate pagination.
-  """
-  total: Int! @deprecated(reason: "Use totalCount")
 }
 
 type QueueDetailsObject {
@@ -4024,7 +4009,6 @@ type ProjectPlansPageResultObject {
 
   """This page's plans, in project order"""
   items: [PlanObject!]!
-  plans: [PlanObject!]! @deprecated(reason: "Use items")
 }
 
 """A link between a project and a repository (many-to-many)."""
@@ -6462,19 +6446,17 @@ type Query {
   serverInfo: ServerInfoObject!
 
   """
-  One page of live cms fragments, oldest first, optionally narrowed by typename and isSystem (false also matches an unset flag). limit is 1 to 100 (default 25); take and skip are deprecated aliases of limit and offset.
+  One page of live cms fragments, oldest first, optionally narrowed by typename and isSystem (false also matches an unset flag). limit is 1 to 100 (default 25).
   """
   cmsFragments(
     typename: String
     isSystem: Boolean
 
-    """Page size, 1 to 100 (default 25). Replaces take."""
+    """Page size, 1 to 100 (default 25)."""
     limit: Int
 
-    """Rows to skip, 0 or more. Replaces skip."""
+    """Rows to skip, 0 or more."""
     offset: Int
-    skip: Int @deprecated(reason: "Use offset")
-    take: Int @deprecated(reason: "Use limit")
 
     """
     Only fragments addable as a new child of this fragment: leaves out the fragment itself, its ancestors (a cycle) and its current children.
@@ -6486,16 +6468,14 @@ type Query {
   cmsFragment(uuid: String!): CmsFragmentObject
 
   """
-  One page of live cms layouts, without their trees: ACTIVE ones only, unless the caller may write cms content. limit is 1 to 100 (default 25); take and skip are deprecated aliases of limit and offset.
+  One page of live cms layouts, without their trees: ACTIVE ones only, unless the caller may write cms content. limit is 1 to 100 (default 25).
   """
   cmsLayouts(
-    """Page size, 1 to 100 (default 25). Replaces take."""
+    """Page size, 1 to 100 (default 25)."""
     limit: Int
 
-    """Rows to skip, 0 or more. Replaces skip."""
+    """Rows to skip, 0 or more."""
     offset: Int
-    skip: Int @deprecated(reason: "Use offset")
-    take: Int @deprecated(reason: "Use limit")
   ): CmsLayoutListResult!
 
   """
@@ -6514,16 +6494,14 @@ type Query {
   availableCmsTypenames(layoutUuid: String!): [String!]!
 
   """
-  One page of live cms libraries with their components. limit is 1 to 100 (default 25); take and skip are deprecated aliases of limit and offset.
+  One page of live cms libraries with their components. limit is 1 to 100 (default 25).
   """
   cmsLibraries(
-    """Page size, 1 to 100 (default 25). Replaces take."""
+    """Page size, 1 to 100 (default 25)."""
     limit: Int
 
-    """Rows to skip, 0 or more. Replaces skip."""
+    """Rows to skip, 0 or more."""
     offset: Int
-    skip: Int @deprecated(reason: "Use offset")
-    take: Int @deprecated(reason: "Use limit")
   ): CmsLibraryListResult!
 
   """
@@ -6532,33 +6510,29 @@ type Query {
   cmsLibrary(uuid: String!): CmsLibraryObject
 
   """
-  One page of live cms library components across every library, by typename. limit is 1 to 100 (default 25); take and skip are deprecated aliases of limit and offset.
+  One page of live cms library components across every library, by typename. limit is 1 to 100 (default 25).
   """
   cmsLibraryComponents(
-    """Page size, 1 to 100 (default 25). Replaces take."""
+    """Page size, 1 to 100 (default 25)."""
     limit: Int
 
-    """Rows to skip, 0 or more. Replaces skip."""
+    """Rows to skip, 0 or more."""
     offset: Int
-    skip: Int @deprecated(reason: "Use offset")
-    take: Int @deprecated(reason: "Use limit")
   ): CmsLibraryComponentListResult!
 
   """A live cms library component by uuid; null when none matches."""
   cmsLibraryComponent(uuid: String!): CmsLibraryComponentObject
 
   """
-  One page of live cms schemas, optionally filtered by status (ACTIVE | DISABLED | DRAFT) and typename. limit is 1 to 100 (default 25); take and skip are deprecated aliases of limit and offset.
+  One page of live cms schemas, optionally filtered by status (ACTIVE | DISABLED | DRAFT) and typename. limit is 1 to 100 (default 25).
   """
   cmsSchemas(
-    """Page size, 1 to 100 (default 25). Replaces take."""
+    """Page size, 1 to 100 (default 25)."""
     limit: Int
 
-    """Rows to skip, 0 or more. Replaces skip."""
+    """Rows to skip, 0 or more."""
     offset: Int
-    skip: Int @deprecated(reason: "Use offset")
     status: String
-    take: Int @deprecated(reason: "Use limit")
     typename: String
   ): CmsSchemaListResult!
 

@@ -124,9 +124,6 @@ export class TaskObject {
 export class TasksByProjectIdResultObject extends OffsetPageObject {
   @Field(() => [TaskObject])
   items!: TaskObject[];
-
-  @Field(() => [TaskObject], { deprecationReason: `Use items` })
-  tasks!: TaskObject[];
 }
 
 /** Result of createTasks: the tasks created in the batch and how many. */
