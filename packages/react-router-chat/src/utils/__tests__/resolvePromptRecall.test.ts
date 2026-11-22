@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { resolvePromptRecall } from '../prompt-recall';
+import { resolvePromptRecall } from '../resolvePromptRecall';
 
 const history = ['first', 'line one\nline two', 'latest'];
 

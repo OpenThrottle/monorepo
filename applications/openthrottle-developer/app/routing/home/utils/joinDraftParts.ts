@@ -8,5 +8,5 @@ export function joinDraftParts(prefix: string, transcript: string): string {
     return prefix;
   }
 
-  return `${prefix.replace(/\s+$/, '')} ${trimmedTranscript}`;
+  return `${prefix.trimEnd()} ${trimmedTranscript}`;
 }

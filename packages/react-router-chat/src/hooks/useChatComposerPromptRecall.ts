@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import { resolvePromptRecall } from '../utils/prompt-recall';
+import { resolvePromptRecall } from '../utils/resolvePromptRecall';
 
 export interface UseChatComposerPromptRecallOptions {
   readonly disabled: boolean;
