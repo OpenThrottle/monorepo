@@ -119,9 +119,6 @@ export class AgentConversationMessageObject {
 /** Result of listAgentConversations: conversations slice and total count. */
 @ObjectType()
 export class ListAgentConversationsResultObject extends OffsetPageObject {
-  @Field(() => [AgentConversationObject], { deprecationReason: `Use items` })
-  conversations!: AgentConversationObject[];
-
   @Field(() => [AgentConversationObject])
   items!: AgentConversationObject[];
 }
@@ -131,9 +128,4 @@ export class ListAgentConversationsResultObject extends OffsetPageObject {
 export class ListAgentConversationMessagesResultObject extends OffsetPageObject {
   @Field(() => [AgentConversationMessageObject])
   items!: AgentConversationMessageObject[];
-
-  @Field(() => [AgentConversationMessageObject], {
-    deprecationReason: `Use items`,
-  })
-  messages!: AgentConversationMessageObject[];
 }

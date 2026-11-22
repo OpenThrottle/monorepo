@@ -291,7 +291,6 @@ export class TasksResolver {
     return {
       hasNextPage: hasNextPage({ items, totalCount }, skip),
       items,
-      tasks: items,
       totalCount,
     };
   }

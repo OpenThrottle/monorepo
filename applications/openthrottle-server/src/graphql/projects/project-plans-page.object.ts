@@ -14,7 +14,4 @@ export class ProjectPlansPageResultObject extends OffsetPageObject {
     description: `This page's plans, in project order`,
   })
   items!: PlanObject[];
-
-  @Field(() => [PlanObject], { deprecationReason: `Use items` })
-  plans!: PlanObject[];
 }

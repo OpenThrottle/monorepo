@@ -20,10 +20,10 @@ const buildResolver = () => {
 
 describe('CmsFragmentsResolver', () => {
   describe('cmsFragments', () => {
-    it('passes default paging to the service when skip and take are omitted', async () => {
+    it('passes default paging to the service when limit and offset are omitted', async () => {
       const { resolver, service } = buildResolver();
 
-      await resolver.cmsFragments(null, null, null, null, null, null, null);
+      await resolver.cmsFragments(null, null, null, null, null);
 
       expect(service.findPage).toHaveBeenCalledWith({
         childCandidatesOf: null,
@@ -40,10 +40,8 @@ describe('CmsFragmentsResolver', () => {
       await resolver.cmsFragments(
         'Heading',
         false,
-        null,
-        null,
-        50,
         10,
+        50,
         '5eed0000-0000-4000-8000-000000000205',
       );
 
@@ -58,31 +56,9 @@ describe('CmsFragmentsResolver', () => {
   });
 
   describe('cmsFragments limit and offset', () => {
-    it('prefers limit and offset over the deprecated take and skip', async () => {
-      const { resolver, service } = buildResolver();
-
-      await resolver.cmsFragments(null, null, 5, 15, 50, 10, null);
-
-      expect(service.findPage).toHaveBeenCalledWith({
-        childCandidatesOf: null,
-        isSystem: null,
-        skip: 15,
-        take: 5,
-        typename: null,
-      });
-    });
-
     it('rejects a limit above 100 as BAD_USER_INPUT', async () => {
       const { resolver, service } = buildResolver();
-      const read = resolver.cmsFragments(
-        null,
-        null,
-        101,
-        null,
-        null,
-        null,
-        null,
-      );
+      const read = resolver.cmsFragments(null, null, 101, null, null);
 
       await expect(read).rejects.toMatchObject({
         extensions: { code: 'BAD_USER_INPUT' },

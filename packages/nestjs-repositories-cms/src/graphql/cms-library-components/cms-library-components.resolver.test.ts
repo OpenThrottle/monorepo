@@ -20,33 +20,25 @@ const buildResolver = () => {
 
 describe('CmsLibraryComponentsResolver', () => {
   describe('cmsLibraryComponents', () => {
-    it('passes default paging to the service when skip and take are omitted', async () => {
+    it('passes default paging to the service when limit and offset are omitted', async () => {
       const { resolver, service } = buildResolver();
 
-      await resolver.cmsLibraryComponents(null, null, null, null);
+      await resolver.cmsLibraryComponents(null, null);
 
       expect(service.findPage).toHaveBeenCalledWith({ skip: 0, take: 25 });
     });
 
-    it('passes explicit paging through', async () => {
+    it('maps limit and offset to repository paging', async () => {
       const { resolver, service } = buildResolver();
 
-      await resolver.cmsLibraryComponents(null, null, 50, 10);
-
-      expect(service.findPage).toHaveBeenCalledWith({ skip: 50, take: 10 });
-    });
-
-    it('prefers limit and offset over the deprecated take and skip', async () => {
-      const { resolver, service } = buildResolver();
-
-      await resolver.cmsLibraryComponents(5, 15, 50, 10);
+      await resolver.cmsLibraryComponents(5, 15);
 
       expect(service.findPage).toHaveBeenCalledWith({ skip: 15, take: 5 });
     });
 
     it('rejects a negative offset as BAD_USER_INPUT', async () => {
       const { resolver, service } = buildResolver();
-      const read = resolver.cmsLibraryComponents(null, -1, null, null);
+      const read = resolver.cmsLibraryComponents(null, -1);
 
       await expect(read).rejects.toMatchObject({
         extensions: { code: 'BAD_USER_INPUT' },

@@ -403,7 +403,6 @@ describe('ProjectsResolver', () => {
       ).resolves.toEqual({
         hasNextPage: true,
         items: [plan],
-        plans: [plan],
         totalCount: 94,
       });
       expect(membership.pagePlans).toHaveBeenCalledWith(mockProject.id, {
