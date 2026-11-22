@@ -174,6 +174,12 @@ Three backstops (settle-on-next-register, the Claude Code `Stop` hook, the serve
 an abandoned run to `STALE` — damage control for a hard crash, never a substitute for step 6. Latency
 and harness coverage: [references/backstops.md](./references/backstops.md).
 
+### What the workflow hooks back up
+
+Under Claude Code, `openthrottle-workflow` hooks warn on or floor each duty above, but every duty
+stays on you, and under other drivers the prose is all there is. Which hook backs which duty:
+[references/workflow-hooks.md](./references/workflow-hooks.md).
+
 ## Finishing
 
 1. **Close the plan with a three-way status check.** Re-fetch `get_tasks_by_plan_id(planId)` (or `get_remaining_tasks_for_plan`), then decide:

@@ -6,7 +6,11 @@ Keeps an agent working an OpenThrottle plan honest about its bookkeeping. During
 run it claims the plan inbox before a subagent delegation or a destructive command, so a
 human's STEER lands before the step rather than after it; it warns when an edit is about
 to happen with no task `IN_PROGRESS`; it tells the agent when completing a task closed the
-plan; and on `Stop` it settles plan runs whose session is provably gone.
+plan; it writes a `[hook:narration]` chunk to the plan output stream for a task transition
+the model did not narrate; it warns when a task goes `IN_PROGRESS` while another still is;
+and on `Stop` it settles plan runs whose session is provably gone, summarizes any task the
+run moved with no narration at all, and warns about a task left `IN_PROGRESS` after its
+work was committed.
 
 Outside a plan run, and with no OpenThrottle server configured, every hook is a no-op.
 Plan-run notes live under `~/.openthrottle/`, never in your repository.
@@ -49,8 +53,9 @@ settles bookkeeping, and every one of them allows when it fails or cannot reach 
 | `PreToolUse` (matcher `Bash|Agent|Task`) | `hooks/plan-inbox-claim.cjs` |
 | `PreToolUse` (matcher `Edit|Write|MultiEdit|NotebookEdit`) | `hooks/plan-run-task-guard.cjs` |
 | `PreToolUse` (session kickoff tools) | `hooks/require-ot-plan-kickoff.cjs` |
-| `PostToolUse` (matcher `mcp__.*__update_task`) | `hooks/plan-auto-close.cjs` |
-| `Stop` | `hooks/plan-run-janitor.cjs` |
+| `PreToolUse` (matcher `mcp__.*__update_task`) | `hooks/plan-run-invariants.cjs` |
+| `PostToolUse` (matcher `mcp__.*__update_task`) | `hooks/plan-auto-close.cjs`, `hooks/plan-narration.cjs` |
+| `Stop` | `hooks/plan-run-janitor.cjs`, `hooks/plan-narration.cjs`, `hooks/plan-run-invariants.cjs` |
 
 ## Authoring
 
