@@ -93,6 +93,7 @@ import {
   ListPlansByStatusInput,
   ListPullsInput,
   LoginInput,
+  MetricScope,
   MissingWorktreeCheckoutReason,
   MoveProjectPlanInput,
   OpenToMergedCycleTimeInput,
@@ -225,7 +226,7 @@ import {
 } from './graphql.ts';
 
 type Properties<T> = Required<{
-  [K in keyof T]: z.ZodType<T[K], any, T[K]>;
+  [K in keyof T]: z.ZodType<T[K]>;
 }>;
 
 type definedNonNullAny = {};
@@ -237,77 +238,91 @@ export const definedNonNullAnySchema = z
   .any()
   .refine((v) => isDefinedNonNullAny(v));
 
-export const BlogPostStateSchema = z.nativeEnum(BlogPostState);
+export const BlogPostStateSchema: z.ZodType<BlogPostState> =
+  z.nativeEnum(BlogPostState);
 
-export const BlogPostStatusSchema = z.nativeEnum(BlogPostStatus);
+export const BlogPostStatusSchema: z.ZodType<BlogPostStatus> =
+  z.nativeEnum(BlogPostStatus);
 
-export const BlogReferenceEntitySchema = z.nativeEnum(BlogReferenceEntity);
+export const BlogReferenceEntitySchema: z.ZodType<BlogReferenceEntity> =
+  z.nativeEnum(BlogReferenceEntity);
 
-export const CustomPromptTypeSchema = z.nativeEnum(CustomPromptType);
+export const CustomPromptTypeSchema: z.ZodType<CustomPromptType> =
+  z.nativeEnum(CustomPromptType);
 
-export const EditorPresenceStateSchema = z.nativeEnum(EditorPresenceState);
+export const EditorPresenceStateSchema: z.ZodType<EditorPresenceState> =
+  z.nativeEnum(EditorPresenceState);
 
-export const IdRefKindSchema = z.nativeEnum(IdRefKind);
+export const IdRefKindSchema: z.ZodType<IdRefKind> = z.nativeEnum(IdRefKind);
 
-export const MissingWorktreeCheckoutReasonSchema = z.nativeEnum(
-  MissingWorktreeCheckoutReason,
-);
+export const MetricScopeSchema: z.ZodType<MetricScope> =
+  z.nativeEnum(MetricScope);
 
-export const PlanMessageKindSchema = z.nativeEnum(PlanMessageKind);
+export const MissingWorktreeCheckoutReasonSchema: z.ZodType<MissingWorktreeCheckoutReason> =
+  z.nativeEnum(MissingWorktreeCheckoutReason);
 
-export const PlanMessageStatusSchema = z.nativeEnum(PlanMessageStatus);
+export const PlanMessageKindSchema: z.ZodType<PlanMessageKind> =
+  z.nativeEnum(PlanMessageKind);
 
-export const PlanRalphWorkflowModeSchema = z.nativeEnum(PlanRalphWorkflowMode);
+export const PlanMessageStatusSchema: z.ZodType<PlanMessageStatus> =
+  z.nativeEnum(PlanMessageStatus);
 
-export const PlanRunWorktreeTeardownOutcomeSchema = z.nativeEnum(
-  PlanRunWorktreeTeardownOutcome,
-);
+export const PlanRalphWorkflowModeSchema: z.ZodType<PlanRalphWorkflowMode> =
+  z.nativeEnum(PlanRalphWorkflowMode);
 
-export const PlanTaskStatusSchema = z.nativeEnum(PlanTaskStatus);
+export const PlanRunWorktreeTeardownOutcomeSchema: z.ZodType<PlanRunWorktreeTeardownOutcome> =
+  z.nativeEnum(PlanRunWorktreeTeardownOutcome);
 
-export const PressureLevelSchema = z.nativeEnum(PressureLevel);
+export const PlanTaskStatusSchema: z.ZodType<PlanTaskStatus> =
+  z.nativeEnum(PlanTaskStatus);
 
-export const ProjectPlanMoveDirectionSchema = z.nativeEnum(
-  ProjectPlanMoveDirection,
-);
+export const PressureLevelSchema: z.ZodType<PressureLevel> =
+  z.nativeEnum(PressureLevel);
 
-export const PruneWorktreeCheckoutOutcomeSchema = z.nativeEnum(
-  PruneWorktreeCheckoutOutcome,
-);
+export const ProjectPlanMoveDirectionSchema: z.ZodType<ProjectPlanMoveDirection> =
+  z.nativeEnum(ProjectPlanMoveDirection);
 
-export const QueueJobLogLevelSchema = z.nativeEnum(QueueJobLogLevel);
+export const PruneWorktreeCheckoutOutcomeSchema: z.ZodType<PruneWorktreeCheckoutOutcome> =
+  z.nativeEnum(PruneWorktreeCheckoutOutcome);
 
-export const RalphNestedDebugCliSchema = z.nativeEnum(RalphNestedDebugCli);
+export const QueueJobLogLevelSchema: z.ZodType<QueueJobLogLevel> =
+  z.nativeEnum(QueueJobLogLevel);
 
-export const RolloutEvaluationReasonSchema = z.nativeEnum(
-  RolloutEvaluationReason,
-);
+export const RalphNestedDebugCliSchema: z.ZodType<RalphNestedDebugCli> =
+  z.nativeEnum(RalphNestedDebugCli);
 
-export const RolloutFlagKindSchema = z.nativeEnum(RolloutFlagKind);
+export const RolloutEvaluationReasonSchema: z.ZodType<RolloutEvaluationReason> =
+  z.nativeEnum(RolloutEvaluationReason);
 
-export const TimelineLaneGroupingSchema = z.nativeEnum(TimelineLaneGrouping);
+export const RolloutFlagKindSchema: z.ZodType<RolloutFlagKind> =
+  z.nativeEnum(RolloutFlagKind);
 
-export const TimelineMarkerKindSchema = z.nativeEnum(TimelineMarkerKind);
+export const TimelineLaneGroupingSchema: z.ZodType<TimelineLaneGrouping> =
+  z.nativeEnum(TimelineLaneGrouping);
 
-export const TimelineSpanKindSchema = z.nativeEnum(TimelineSpanKind);
+export const TimelineMarkerKindSchema: z.ZodType<TimelineMarkerKind> =
+  z.nativeEnum(TimelineMarkerKind);
 
-export const WallClockInterpretationSchema = z.nativeEnum(
-  WallClockInterpretation,
-);
+export const TimelineSpanKindSchema: z.ZodType<TimelineSpanKind> =
+  z.nativeEnum(TimelineSpanKind);
 
-export const WorkspaceEditorIdSchema = z.nativeEnum(WorkspaceEditorId);
+export const WallClockInterpretationSchema: z.ZodType<WallClockInterpretation> =
+  z.nativeEnum(WallClockInterpretation);
 
-export const WorkspaceFolderReconciliationSchema = z.nativeEnum(
-  WorkspaceFolderReconciliation,
-);
+export const WorkspaceEditorIdSchema: z.ZodType<WorkspaceEditorId> =
+  z.nativeEnum(WorkspaceEditorId);
 
-export const WorktreeActivitySchema = z.nativeEnum(WorktreeActivity);
+export const WorkspaceFolderReconciliationSchema: z.ZodType<WorkspaceFolderReconciliation> =
+  z.nativeEnum(WorkspaceFolderReconciliation);
 
-export const WorktreeDiscoveryProblemKindSchema = z.nativeEnum(
-  WorktreeDiscoveryProblemKind,
-);
+export const WorktreeActivitySchema: z.ZodType<WorktreeActivity> =
+  z.nativeEnum(WorktreeActivity);
 
-export const WorktreeRootSourceSchema = z.nativeEnum(WorktreeRootSource);
+export const WorktreeDiscoveryProblemKindSchema: z.ZodType<WorktreeDiscoveryProblemKind> =
+  z.nativeEnum(WorktreeDiscoveryProblemKind);
+
+export const WorktreeRootSourceSchema: z.ZodType<WorktreeRootSource> =
+  z.nativeEnum(WorktreeRootSource);
 
 export function ActivityByDateInputSchema(): z.ZodObject<
   Properties<ActivityByDateInput>
@@ -653,7 +668,7 @@ export function CreateCustomPromptInputSchema(): z.ZodObject<
     content: z.string().min(1),
     description: z.string().nullish(),
     filePath: z.string().nullish(),
-    labels: z.array(z.string().min(1)),
+    labels: z.array(z.string().min(1)).default([]),
     projectId: z.string().nullish(),
     promptType: CustomPromptTypeSchema,
     title: z.string().min(1),
@@ -747,7 +762,7 @@ export function CreateRolloutFlagInputSchema(): z.ZodObject<
     key: z.string().min(1),
     kind: RolloutFlagKindSchema.nullish(),
     offVariation: z.number().nullish(),
-    targetRoles: z.array(z.string().min(1)),
+    targetRoles: z.array(z.string().min(1)).default([]),
     variations: z
       .array(z.lazy(() => RolloutFlagVariationInputSchema()))
       .nullish(),
@@ -1999,10 +2014,10 @@ export function SkillAvailabilityRuleInputSchema(): z.ZodObject<
 > {
   return z.object({
     environment: z.string().nullish(),
-    slugAllow: z.array(z.string().min(1)),
-    slugDeny: z.array(z.string().min(1)),
-    tagAllow: z.array(z.string().min(1)),
-    tagDeny: z.array(z.string().min(1)),
+    slugAllow: z.array(z.string().min(1)).default([]),
+    slugDeny: z.array(z.string().min(1)).default([]),
+    tagAllow: z.array(z.string().min(1)).default([]),
+    tagDeny: z.array(z.string().min(1)).default([]),
   });
 }
 
@@ -2437,7 +2452,7 @@ export function UpsertTagActionRuleInputSchema(): z.ZodObject<
     projectId: z.string().nullish(),
     repositoryId: z.string().nullish(),
     status: z.string().nullish(),
-    tagAll: z.array(z.string().min(1)),
+    tagAll: z.array(z.string().min(1)).default([]),
     title: z.string().min(1),
   });
 }

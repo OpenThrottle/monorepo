@@ -23,6 +23,7 @@ type Documents = {
   'fragment EmbeddingsHealth on EmbeddingsHealthObject {\n  coverage {\n    embedded\n    entity\n    stale\n    table\n    total\n  }\n  detail\n  dims\n  model\n  provider\n  queueDepth\n  staleCount\n  status\n}\n\nfragment ServerHealthWithEmbeddings on ServerHealthObject {\n  api\n  database\n  embeddings {\n    ...EmbeddingsHealth\n  }\n  redis\n  websocket\n}\n\nquery getServerHealthWithEmbeddings {\n  serverHealth {\n    ...ServerHealthWithEmbeddings\n  }\n}': typeof types.EmbeddingsHealthFragmentDoc;
   'fragment GitTextDraft on GitTextDraftObject {\n  branchName\n  commitMessage\n  pullRequestBody\n  pullRequestTitle\n}\n\nquery gitTextDraft($input: GitTextDraftInput!) {\n  gitTextDraft(input: $input) {\n    ...GitTextDraft\n  }\n}': typeof types.GitTextDraftFragmentDoc;
   'query discoverLocalModels {\n  discoverLocalModels {\n    endpoints {\n      baseUrl\n      host\n      models\n      port\n      provider\n    }\n    scannedAt\n    scannedHosts\n    totalCount\n  }\n}': typeof types.DiscoverLocalModelsDocument;
+  'query ViewerOAuthScopes {\n  viewerOAuthScopes\n}': typeof types.ViewerOAuthScopesDocument;
   'mutation deletePlanOutput($input: DeletePlanOutputInput!) {\n  deletePlanOutput(input: $input) {\n    deletedCount\n  }\n}': typeof types.DeletePlanOutputDocument;
   'fragment PlanMessageFields on PlanMessageObject {\n  author\n  body\n  createdAt\n  deliveredAt\n  deliveredToTaskId\n  id\n  kind\n  planId\n  planRunId\n  status\n  taskId\n  updatedAt\n}\n\nfragment ClaimPlanMessagesResult on ClaimPlanMessagesResultObject {\n  auditChunk {\n    content\n    createdAt\n    id\n    planId\n    taskId\n  }\n  messages {\n    ...PlanMessageFields\n  }\n}\n\nmutation PostPlanMessage($input: PostPlanMessageInput!) {\n  postPlanMessage(input: $input) {\n    ...PlanMessageFields\n  }\n}\n\nmutation ClaimPlanMessages($input: ClaimPlanMessagesInput!) {\n  claimPlanMessages(input: $input) {\n    ...ClaimPlanMessagesResult\n  }\n}': typeof types.PlanMessageFieldsFragmentDoc;
   'mutation AddPlanTag($input: AddPlanTagInput!) {\n  addPlanTag(input: $input) {\n    confidence\n    createdAt\n    dimension\n    id\n    planId\n    source\n    tag\n    updatedAt\n  }\n}\n\nmutation RemovePlanTag($input: RemovePlanTagInput!) {\n  removePlanTag(input: $input)\n}\n\nmutation AddProjectTag($input: AddProjectTagInput!) {\n  addProjectTag(input: $input) {\n    confidence\n    createdAt\n    dimension\n    id\n    projectId\n    source\n    tag\n    updatedAt\n  }\n}\n\nmutation RemoveProjectTag($input: RemoveProjectTagInput!) {\n  removeProjectTag(input: $input)\n}\n\nmutation AddTaskTag($input: AddTaskTagInput!) {\n  addTaskTag(input: $input) {\n    confidence\n    createdAt\n    dimension\n    id\n    source\n    tag\n    taskId\n    updatedAt\n  }\n}\n\nmutation RemoveTaskTag($input: RemoveTaskTagInput!) {\n  removeTaskTag(input: $input)\n}\n\nmutation AddProjectSkillTag($input: AddProjectSkillTagInput!) {\n  addProjectSkillTag(input: $input) {\n    description\n    orphanedAt\n    slug\n    source\n    sourceUrl\n    staticDisableModelInvocation\n    tags\n  }\n}\n\nmutation RemoveProjectSkillTag($input: RemoveProjectSkillTagInput!) {\n  removeProjectSkillTag(input: $input)\n}': typeof types.AddPlanTagDocument;
@@ -54,6 +55,8 @@ const documents: Documents = {
     types.GitTextDraftFragmentDoc,
   'query discoverLocalModels {\n  discoverLocalModels {\n    endpoints {\n      baseUrl\n      host\n      models\n      port\n      provider\n    }\n    scannedAt\n    scannedHosts\n    totalCount\n  }\n}':
     types.DiscoverLocalModelsDocument,
+  'query ViewerOAuthScopes {\n  viewerOAuthScopes\n}':
+    types.ViewerOAuthScopesDocument,
   'mutation deletePlanOutput($input: DeletePlanOutputInput!) {\n  deletePlanOutput(input: $input) {\n    deletedCount\n  }\n}':
     types.DeletePlanOutputDocument,
   'fragment PlanMessageFields on PlanMessageObject {\n  author\n  body\n  createdAt\n  deliveredAt\n  deliveredToTaskId\n  id\n  kind\n  planId\n  planRunId\n  status\n  taskId\n  updatedAt\n}\n\nfragment ClaimPlanMessagesResult on ClaimPlanMessagesResultObject {\n  auditChunk {\n    content\n    createdAt\n    id\n    planId\n    taskId\n  }\n  messages {\n    ...PlanMessageFields\n  }\n}\n\nmutation PostPlanMessage($input: PostPlanMessageInput!) {\n  postPlanMessage(input: $input) {\n    ...PlanMessageFields\n  }\n}\n\nmutation ClaimPlanMessages($input: ClaimPlanMessagesInput!) {\n  claimPlanMessages(input: $input) {\n    ...ClaimPlanMessagesResult\n  }\n}':
@@ -146,6 +149,12 @@ export function graphql(
 export function graphql(
   source: 'query discoverLocalModels {\n  discoverLocalModels {\n    endpoints {\n      baseUrl\n      host\n      models\n      port\n      provider\n    }\n    scannedAt\n    scannedHosts\n    totalCount\n  }\n}',
 ): (typeof documents)['query discoverLocalModels {\n  discoverLocalModels {\n    endpoints {\n      baseUrl\n      host\n      models\n      port\n      provider\n    }\n    scannedAt\n    scannedHosts\n    totalCount\n  }\n}'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: 'query ViewerOAuthScopes {\n  viewerOAuthScopes\n}',
+): (typeof documents)['query ViewerOAuthScopes {\n  viewerOAuthScopes\n}'];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
