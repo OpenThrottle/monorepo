@@ -45,8 +45,8 @@ to a package that browser code imports:
 pnpm nx run openthrottle-developer:check-client-boundary
 ```
 
-A new React Router app needs the plugin in its `vite.config.ts` and an empty
-`"check-client-boundary": {}` target in its `package.json`.
+The `react-router` application generator adds both the plugin and the empty
+`"check-client-boundary": {}` target, so a scaffolded app is covered from the start.
 
 ### A package's name tells you nothing
 

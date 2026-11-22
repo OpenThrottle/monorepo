@@ -212,7 +212,7 @@
     "skill/github-commit": 6017,
     "skill/github-pull-request": 12190,
     "skill/github-squash": 6184,
-    "skill/ot-coding-standards": 3464,
+    "skill/ot-coding-standards": 3488,
     "skill/ot-folders": 14757,
     "skill/ot-generators": 5961,
     "skill/ot-loop": 20775,
@@ -253,6 +253,6 @@
     "mcpInstructions": 2183,
     "mcpTools": 40060,
     "prompts": 141004,
-    "skills": 158658
+    "skills": 158682
   }
 }
