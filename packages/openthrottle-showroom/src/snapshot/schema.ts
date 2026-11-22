@@ -90,6 +90,13 @@ export const quoteIdentifier = (name: string): string => {
   return `"${name}"`;
 };
 
+/**
+ * @description Generated columns (`a.attgenerated <> ''`, e.g. the
+ * `search_tsv` full-text vectors) are left out on purpose. Postgres derives
+ * them from the row's other columns, which the manifest already classifies,
+ * and refuses an explicit value on insert, so an exported `null` would fail
+ * the load. The demo database recomputes them on its own.
+ */
 export const reflectSchema = async (
   runner: QueryRunner,
 ): Promise<DatabaseSchema> => {
@@ -103,6 +110,7 @@ export const reflectSchema = async (
          ON a.attrelid = (quote_ident(c.table_name))::regclass
         AND a.attname = c.column_name
       WHERE c.table_schema = 'public' AND t.table_type = 'BASE TABLE'
+        AND a.attgenerated = ''
       ORDER BY c.table_name, c.ordinal_position`,
   );
 

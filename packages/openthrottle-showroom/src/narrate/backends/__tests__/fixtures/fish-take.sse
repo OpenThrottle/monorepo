@@ -1,0 +1,18 @@
+event: message
+data: {"audio_base64":"UklGRgD///9XQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQD///8BAQEBAQEBAQ==","content":"","chunk_seq":0,"chunk_audio_offset_sec":0,"alignment":{"segments":[{"text":"Hello","start":0,"end":0.4}],"audio_duration":0.4}}
+
+event: message
+data: {"audio_base64":"AgICAgICAgI=","content":"","chunk_seq":0,"chunk_audio_offset_sec":0,"alignment":{"segments":[{"text":"Hello","start":0,"end":0.4},{"text":"there","start":0.4,"end":0.8}],"audio_duration":0.8}}
+
+event: message
+data: {"audio_base64":"AwMDAwMDAwM=","content":"","chunk_seq":1,"chunk_audio_offset_sec":0.8,"alignment":{"segments":[{"text":"Open","start":0,"end":0.4}],"audio_duration":0.4}}
+
+event: message
+data: {"audio_base64":"BAQEBAQEBAQ=","content":"","chunk_seq":1,"chunk_audio_offset_sec":0.8,"alignment":{"segments":[{"text":"Open","start":0,"end":0.4},{"text":"Throttle","start":0.4,"end":0.8}],"audio_duration":0.8}}
+
+event: message
+data: {"audio_base64":"BQUFBQUFBQU=","content":"","chunk_seq":1,"chunk_audio_offset_sec":0.8,"alignment":{"segments":[{"text":"Open","start":0,"end":0.4},{"text":"Throttle","start":0.4,"end":0.8},{"text":"local","start":0.8,"end":1.2},{"text":"first","start":1.2,"end":1.6}],"audio_duration":1.6}}
+
+event: message
+data: {"audio_base64":"","content":"","chunk_seq":1,"chunk_audio_offset_sec":0.8,"alignment":null}
+

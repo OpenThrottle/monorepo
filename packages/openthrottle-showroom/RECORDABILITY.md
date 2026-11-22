@@ -16,6 +16,57 @@ This file is the input to every flow authored under plan
 that came out of it. When a beat here disagrees with the episode module, the
 episode module is the thing to change — a flow never invents picture.
 
+## Refreshed 2026-11-21
+
+The owner decided that **the recording build keeps `FEATURE_BETA_PREVIEW` off**:
+Season 1 does not film beta surfaces (PIPELINE.md § Four things the demo server
+needs). Three things the August audit says below have since changed, and are
+corrected in place where they appear:
+
+- **`/search` is no longer beta-gated.** It is not in `GATED_PREFIXES`, and the
+  server embeds locally by default, so neither cross-cutting finding below still
+  applies to 07, which now has a flow (see its row).
+- **The plan and task toolbars are not hard-coded off any more.** Since #625,
+  `PlanDetailRoute` reads `const showToolbar = FEATURE_BETA_PREVIEW` and
+  `TaskDetailRoute` reads `const showBetaSurfaces = FEATURE_BETA_PREVIEW`. With
+  the flag off for recordings, that is still a block for 08, 09, 15 and L1's
+  run-start beat, but it names a beta surface, not a missing one.
+- **The committed snapshot predates the 768-dim embeddings.** Its 1536-dim
+  vectors do not load into a migrated demo database, so `seed-demo.sh --reset`
+  failed until the snapshot was regenerated (plan task 5300, done 2026-11-22:
+  29 tables, 17,797 rows, and `seed-demo.sh --reset` passes again).
+- **02 and 04 are registered.** Their `flow.ts` modules (written 2026-08-26,
+  before the registry) now sit in `FLOWS` and pass the beat-drift gate. 08 and
+  09 also have a `flow.ts` on disk, deliberately unregistered: both drive the
+  beta-only toolbar.
+
+## Recorded 2026-11-22
+
+Every registered flow, recorded headless against a production build
+(`NODE_ENV=production`, `FEATURE_BETA_PREVIEW` unset) on a fresh
+`seed-demo.sh --reset`, then leak-scanned. Errors are leak-scan failures and
+must be zero; warnings are mostly `high-entropy` hits on imported free text, which
+the publish checklist's human review pass covers. That pass is **owed for every
+take below**: no take has been reviewed by a person yet, so none is `ready`.
+
+| flow                        | take | scan errors / warnings | retries, and why                                                                                                                                 |
+| --------------------------- | ---- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 01-what-is-openthrottle     | 36s  | 0 / 4                  | none                                                                                                                                             |
+| 02-one-command-boot         | 47s  | 0 / 0                  | 1: `boot` region pointed at a line revealed mid-beat                                                                                             |
+| 03-first-plan               | 72s  | 0 / 0                  | none                                                                                                                                             |
+| 04-mental-model             | 46s  | 0 / 3                  | 2: the `/plans` project column is gone (beat rewritten to the project's plans list); two regions pointed at elements that appear after a click   |
+| 05-connect-ot-mcp           | 61s  | 0 / 23                 | none                                                                                                                                             |
+| 07-semantic-search          | 46s  | 0 / 736                | 2: plain-anchor and GET-form navigations dropped the hide stylesheet, so the metrics strip came back (runner now re-installs it after `waitFor`) |
+| 11-ralph-one-task           | 80s  | 0 / 6                  | none; recorded twice, identical step manifests                                                                                                   |
+| 12-watch-run-live           | 79s  | 0 / 11                 | none; recorded twice, identical step manifests                                                                                                   |
+| 13-plan-id-traceability     | 68s  | 0 / 5                  | none                                                                                                                                             |
+| 21-dashboard-tour           | 36s  | 0 / 6                  | none                                                                                                                                             |
+| 22-self-host-docker-compose | 67s  | 0 / 0                  | none                                                                                                                                             |
+| L2-setup-from-scratch       | 267s | 0 / 1064               | 1: the login form was prefilled because `NODE_ENV` was unset                                                                                     |
+
+Every other episode carries a `blockedOn`: 06, 08, 09, 10, 14, 15, 16, 17, 18,
+19, 20 and L1.
+
 ---
 
 ## The finding that reorganises the whole plan: `FEATURE_BETA_PREVIEW`
@@ -97,14 +148,19 @@ Every beat is a terminal except beats 5–6, which are the dashboard. Runs again
 `pnpm run start` output rather than retyping it, per the
 `surfaces/mcp-instructions.txt` precedent.
 
-### 03-first-plan — **app-gap, blocked**
+### 03-first-plan — `recordable` (shell surface + app payoff)
 
-Every beat drives a web form that no longer exists: **New plan**, the title and
-description fields, **Create plan**, then **Add task** twice. The plan and task
-create/edit routes were removed — plans and tasks are authored through the
-OpenThrottle MCP from the editor, and the plans index deliberately offers no
-create CTA. The flow that recorded these beats is retired with them. Re-script
-the episode around an editor + MCP demo before recording.
+Re-scripted around the MCP path on 2026-11-22. The original beats drove web
+create forms (**New plan**, the title and description fields, **Create plan**,
+**Add task** twice) that were removed: plans and tasks are authored by an agent
+through the OpenThrottle MCP, and the plans index deliberately offers no create
+CTA. The episode now shows that instead. Five beats are a typeset agent session
+(`create_plan`, then `create_tasks`, with the real argument names and the
+fixture's values), and the last two land on the pre-seeded rate-limiting plan's
+Tasks tab (`/plans/<id>?tab=tasks`, `#task-<id>` rows), which renders with the
+beta flag off. The recorder cannot make a live MCP call, so the editor half is a
+replay and the plan is seeded; the flow is read-only (not `mutates`). The seeded
+plan carries progress a new plan would not (one task done, one in progress).
 
 ### 04-mental-model — `recordable`
 
@@ -125,21 +181,38 @@ Beats 3–6 (Decompose, proposed plan renders, edit/delete a task, Save) have no
 implementation behind them. Not a drop-zone question and not a model question —
 the ingest service does not exist. Do not author a flow.
 
-### 07-semantic-search — **app-gap, blocked** (existing `blockedOn`, restated)
+### 07-semantic-search — `recordable` (re-checked 2026-11-21, verified 2026-11-22)
 
-All seven beats depend on `/search` returning results. Beta-gated _and_
-provider-dependent, per the two findings above. The existing `blockedOn` string
-is replaced with one that names the cause rather than the symptom.
+All seven beats depend on `/search` returning results. In August that was
+beta-gated _and_ provider-dependent, per the two findings above. Neither holds
+now: the route is ungated and the query embeds locally.
+
+Two beats described UI the app does not have, and were corrected in the episode
+module: beat 2 promised notes among the results (the corpus is plans, tasks and
+docs; `SearchChunk.source`), and beat 3 promised a match reason on hover (the
+relevance is printed on `SearchCard`, `[data-testid="SearchCard-relevance"]`).
+
+**Recordable (2026-11-22).** Against a production build on the regenerated
+snapshot, flag off, both `rate limiting` and `how did we handle retries` return
+ten cards, identical across two runs. A task result links to its plan at that
+task, so beat 4 holds. Flow authored and registered; `blockedOn` cleared.
 
 ### 08-promote-task — **app-gap, blocked**
 
-| beat                                      | verdict         | note                                                                                                                                                                                                                                                                                              |
-| ----------------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1 scroll the long description             | recordable      | Longest snapshot task description is 5,222 chars — scrolls. Assert by shape, not by id.                                                                                                                                                                                                           |
-| 2 **Promote to plan** in the task toolbar | app-gap (minor) | `PromoteTaskButton` and `PlanTaskToolbar` render **no `data-testid`**. A flow can only reach them by text or `aria-label`, which `selectors.test.ts` does not check — so the coupling it exists to guard would be silently absent. Needs one shared hook in the app, added for the E2E suite too. |
-| 6 add one task to the new plan            | recordable      | Mutating — inherits the take-2 convention.                                                                                                                                                                                                                                                        |
+Blocked by the beta flag (2026-11-21): the task toolbar renders only under
+`FEATURE_BETA_PREVIEW`, and recordings run with it off. The hook gap below is
+still owed when the toolbar leaves beta.
+
+| beat                                      | verdict    | note                                                                                                                                                                                                                                                                                              |
+| ----------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 scroll the long description             | recordable | Longest snapshot task description is 5,222 chars — scrolls. Assert by shape, not by id.                                                                                                                                                                                                           |
+| 2 **Promote to plan** in the task toolbar | app-gap    | `PromoteTaskButton` and `PlanTaskToolbar` render **no `data-testid`**. A flow can only reach them by text or `aria-label`, which `selectors.test.ts` does not check — so the coupling it exists to guard would be silently absent. Needs one shared hook in the app, added for the E2E suite too. |
+| 6 add one task to the new plan            | recordable | Mutating — inherits the take-2 convention.                                                                                                                                                                                                                                                        |
 
 ### 09-tags-and-rules — **app-gap, blocked**, but only at the ends
+
+Where the table below says the toolbar is not rendered, read: it renders only
+under `FEATURE_BETA_PREVIEW`, which recordings keep off (2026-11-21).
 
 | beat                                              | verdict                                   | note                                                                                                                                                                                                                                                                                                                       |
 | ------------------------------------------------- | ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -164,6 +237,8 @@ Beats 0 and 3 need a task `IN_PROGRESS` and a run that reads as live. Every
 imported run is coerced to `COMPLETED` at load, deliberately. Blocked on task
 `8dd502d0` of this plan, not on the app.
 
+2026-11-22: flow authored (`src/episodes/11-ralph-one-task/flow.ts`), `liveRun` on the hero run with task `…0102` held `IN_PROGRESS`. Nothing appends output during a take: "streaming" is the hero plan's 19 seeded chunks, and the beats show only what they contain. The hero tasks are one COMPLETED, one IN_PROGRESS, one PENDING, so the beats were rewritten to say so (they asked for "the rest pending" and "two tasks complete"), Tasks and Output are separate tabs so "output below it" became a tab switch, and the task "flip" is the log's own `-> COMPLETED` / `-> IN_PROGRESS` lines, not a live transition. No chunk runs a type check, so narration "Lint, types, tests" became "Tests, then lint". The test run fails once and then passes (the log shows it); the beat claims only the pass.
+
 ### 12-watch-run-live — `recordable` with one caveat
 
 The hero run (19 output chunks) and the largest imported run (24) both scroll.
@@ -172,12 +247,16 @@ risk: the runner's own notes say a page the browser considers hidden does not
 run `requestAnimationFrame` reliably, which is why the synthetic cursor is
 driven from Node. Verify that beat specifically before believing it.
 
+2026-11-22: flow authored (`src/episodes/12-watch-run-live/flow.ts`), `liveRun` on the hero run. Beat 4 is not filmable as written: the runner drives one page and has no tab or visibility verb, so the beat was rewritten to leave for `/plans` and return to the plan's Output tab by a full page load (the whole stream is still there, ending on the latest line), and its narration "Close the tab" became "Leave the page". Nothing appends during the take, so "actively scrolling" is the flow moving through the 19 seeded chunks, and at the landscape viewport the 19 short lines may fit on one screen so the scrolls only visibly move in the portrait pass. The tool call, the failing command and its retry all exist in the seeded chunks (`Writing src/…`, `FAIL bucket.test.ts`, the same `pnpm test` run twice, then `PASS`), as plain log lines; the app has no tool-call widget.
+
 ### 13-plan-id-traceability — `recordable`, split across two groups
 
 Beats 0–2 are a terminal (`git log`, zoom the footer, copy the id) → shell
 surface. Beat 3 "paste into the dashboard search; the task opens" is the
 **commander id-jump**, not `/search`, so it is ungated and deterministic.
 Beats 4–6 are plain app navigation. The two halves compose into one flow.
+
+2026-11-22: flow authored (`src/episodes/13-plan-id-traceability/flow.ts`). Beat 3 drives the header commander — `[data-testid="GlobalLayoutHeaderSearch"] input` opens `[data-testid="OpenThrottleCommander"]`, the pasted task UUID resolves to an "Open task" row (`CommanderItemRow-trailing` marks it resolved) and Enter jumps. "Copy the task id" is a highlight of the footer, since the runner has no clipboard verb.
 
 ### 14-scheduled-runs — mixed
 
@@ -195,8 +274,9 @@ Two things stand between this episode and a take, and only one was foreseen. The
 foreseen one is solved: `KillPlanRunButton` short-circuits to `null` unless a run
 is active, and the live-run heartbeat above now provides one.
 
-The unforeseen one is fatal: the plan toolbar the button lives in is not rendered
-at all. Beats 2, 3 and 4 have no control behind them.
+The unforeseen one is fatal: the plan toolbar the button lives in renders only
+under `FEATURE_BETA_PREVIEW` (hard-coded off in August, flag-gated since #625),
+and recordings keep the flag off. Beats 2, 3 and 4 have no control behind them.
 
 When the toolbar returns, one thing is still owed — `KillPlanRunButton` carries
 no `data-testid`, only `aria-label="Kill plan run for <title>"`, so a flow
@@ -219,6 +299,11 @@ beat 5 is real. Beats 3–4 — "Send; the response streams in", twice — are a
 which CLIs happen to be installed on the recording host. There is no replay seam
 today that streams a seeded conversation at reading pace. Either build one or
 rewrite the beats to open a completed thread.
+
+**2026-11-22:** beat 5 is no longer real. The workspace deleted 124 of the 134
+conversations in the snapshot window after August, so the regenerated snapshot
+carries 10 conversations and 20 messages. The two sidebar `dataRequirements`
+moved to `blockedOn`: only the hero fixture can satisfy them now.
 
 ### 18-ollama-local-models — **app-gap, blocked**
 
@@ -259,18 +344,23 @@ exists; the product in the script does not.
 Compose file, `compose up`, health checks, dashboard on the served port. Capture
 the real output.
 
+2026-11-22: flow authored (`src/episodes/22-self-host-docker-compose/flow.ts`). Compose file: the repo-root `docker-compose.yml`, `prod` profile. Captured verbatim: the compose excerpt (real lines, read at build time). Derived from that file, not recorded: the `compose --profile prod up -d` container lines (names, `depends_on` order, Healthy/Exited/Started from `healthcheck:` and the images' `HEALTHCHECK`) and `docker compose port developer 6020` (`.env.default`). No migration count or timings are shown because no file supports them. Real: the dashboard at both ends.
+
 ### L1-idea-to-shipped-commit — blocked by composition
 
 21 beats. Beat 6 (decompose over MCP), beats 9–13 (live run with a failing
 validation and a fix) and beat 17 (token usage and cost) inherit the in-progress
 -run and live-call gaps above; beat 17 additionally hits the NULL cost columns.
 Deliberately last, and not authorable until the shorts it summarises are.
+Its run-start beat also needs the plan toolbar, which is a beta surface.
 
 ### L2-setup-from-scratch — `recordable` (shell surface), one caveat
 
 Beat 10 — "the login form is prefilled; submit" — is only true in development.
 The recording configuration types credentials. Either the beat is a development
 beat and says so, or it types.
+
+2026-11-22: flow authored (`src/episodes/L2-setup-from-scratch/flow.ts`), and the episode re-scripted to match. Beat 10 now types the demo credentials after `/auth/logout`. Beat 12 ("mostly empty") became "the demo workspace, not an empty install", since the seeded workspace is not empty. Beat 13 ("create one plan with one task") was dropped: the web form was removed (#495), plans come from the agent, and the agent beat (now "ask it to create a plan") shows the plan landing at the top of Plans. Node is twenty-six, not twenty-two (`engines.node`). Captured: `node`/`pnpm` versions, the Postgres-unreachable line (`scripts/ensure-migrations.ts` against a dead port, re-run by a test). Read from the repo at build time: the migration ledger lines. Derived and pinned to source strings: the `setup.sh` steps, Compose lines, boot lines and the stale-token banner. Not shown: `pnpm install` progress, clone progress, step timings. Does not compose the shorts' flows; see the flow's doc comment for why.
 
 ---
 
@@ -379,7 +469,10 @@ currently standing in.
 ## What this changed in the episode modules
 
 - **07** — `blockedOn` restated to name `FEATURE_BETA_PREVIEW`, the beta banner
-  and the embedding-provider dependency.
+  and the embedding-provider dependency. Superseded 2026-11-21: both are gone,
+  two beats were corrected, and the one remaining blocker is the snapshot.
+- **08, 09, 15, L1** (2026-11-21) — `blockedOn` rewritten to name the beta flag
+  rather than a hard-coded `false`.
 - **06, 10, 14, 18, 20** — `blockedOn` populated, having been empty.
 - **19** — `dataRequirement` added for skill availability rules.
 - **14** — `dataRequirement` added for run token cost.

@@ -7,7 +7,7 @@
  * `../episodes/<id>/flow.ts` and exits when it is absent, which is exactly the
  * discovery-by-failure this file removes.
  *
- * Twenty-one of the twenty-four episodes have no flow. That is not a bug to be
+ * Twelve of the twenty-four episodes have no registered flow. That is not a bug to be
  * hidden — it is the state of the season, and `flows.test.ts` holds it to the
  * rule that an episode without a flow must say in `production.blockedOn` what
  * stops it. See `../../RECORDABILITY.md` for the per-beat evidence behind each
@@ -16,16 +16,34 @@
 
 import type { DemoFlow } from '../runner/types.ts';
 import { flow as flow01WhatIsOpenthrottle } from './01-what-is-openthrottle/flow.ts';
+import { flow as flow02OneCommandBoot } from './02-one-command-boot/flow.ts';
+import { flow as flow03FirstPlan } from './03-first-plan/flow.ts';
+import { flow as flow04MentalModel } from './04-mental-model/flow.ts';
 import { flow as flow05ConnectOtMcp } from './05-connect-ot-mcp/flow.ts';
+import { flow as flow07SemanticSearch } from './07-semantic-search/flow.ts';
+import { flow as flow11RalphOneTask } from './11-ralph-one-task/flow.ts';
+import { flow as flow12WatchRunLive } from './12-watch-run-live/flow.ts';
+import { flow as flow13PlanIdTraceability } from './13-plan-id-traceability/flow.ts';
 import { flow as flow21DashboardTour } from './21-dashboard-tour/flow.ts';
+import { flow as flow22SelfHostDockerCompose } from './22-self-host-docker-compose/flow.ts';
+import { flow as flowL2SetupFromScratch } from './L2-setup-from-scratch/flow.ts';
 
 /**
  * Every flow that exists, keyed by the episode id it records.
  */
 export const FLOWS: Readonly<Record<string, DemoFlow>> = {
   [flow01WhatIsOpenthrottle.id]: flow01WhatIsOpenthrottle,
+  [flow02OneCommandBoot.id]: flow02OneCommandBoot,
+  [flow03FirstPlan.id]: flow03FirstPlan,
+  [flow04MentalModel.id]: flow04MentalModel,
   [flow05ConnectOtMcp.id]: flow05ConnectOtMcp,
+  [flow07SemanticSearch.id]: flow07SemanticSearch,
+  [flow11RalphOneTask.id]: flow11RalphOneTask,
+  [flow12WatchRunLive.id]: flow12WatchRunLive,
+  [flow13PlanIdTraceability.id]: flow13PlanIdTraceability,
   [flow21DashboardTour.id]: flow21DashboardTour,
+  [flow22SelfHostDockerCompose.id]: flow22SelfHostDockerCompose,
+  [flowL2SetupFromScratch.id]: flowL2SetupFromScratch,
 };
 
 /**

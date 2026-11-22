@@ -1,19 +1,19 @@
 /**
- * @description Flow for `docs/marketing/scripts/02-one-command-boot.md`.
+ * @description Flow for episode `02-one-command-boot` (`./episode.ts`).
  *
- * Transcribed from that script's on-screen-action column, beat for beat. If the
- * script changes, change this; if this needs a step the script does not describe,
- * the script is wrong.
+ * Transcribed from the episode's beat actions, beat for beat. If the episode
+ * changes, change this; if this needs a step the episode does not describe, the
+ * episode is wrong.
  *
- * The script asked for a split frame — terminal left, browser right. The recorder
+ * The original script asked for a split frame — terminal left, browser right. The recorder
  * is one chromium page, so this does what 05 settled instead: a typeset terminal
  * surface (`./surface.ts`) carries the first five beats, and the cut to the real,
  * authenticated dashboard at 0:39 is the payoff. The episode's beat actions were
  * updated to match; see the note in `./episode.ts`.
  *
- * Seven flow beats, matching the script's seven narration rows — narration is
- * matched to flow beats POSITIONALLY (assemble/timeline.ts), so the count is a
- * contract, not a style choice.
+ * Seven flow beats, one fewer than the episode's eight, because the assembler
+ * appends the outro card. The count is a contract: `planTimeline` resolves each
+ * beat's narration budget by index, and `flows.test.ts` fails on a mismatch.
  */
 
 import type { DemoFlow } from '../../runner/types.ts';
@@ -40,7 +40,9 @@ export const flow: DemoFlow = {
   // the content grid, which the crop then centres on.
   portraitStrategy: 'crop',
   regionOfInterest: {
-    boot: '#boot-api',
+    // The wrapper, not #boot-api: the API line is revealed partway into the beat,
+    // and a region is measured at the beat's start.
+    boot: '#boot',
     compose: '#setup-docker',
     dashboard: '[data-testid="dashboard-content-grid"]',
     hold: '[data-testid="dashboard-content-grid"]',

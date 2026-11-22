@@ -80,7 +80,7 @@ captions do not help search.
 
 ## Cross-posting and docs
 
-- The same 9:16 master goes to any other short-form surface unchanged. It carries no
+- The same portrait master goes to any other short-form surface unchanged. It carries no
   YouTube-specific branding, by design.
 - **Embed the matching Short in the `docs/` page it explains.** These are
   documentation as much as marketing: "Your first plan in 60 seconds" belongs on the
@@ -119,7 +119,7 @@ Season 1 is done when:
   re-recording is manual — see [pipeline.md](./pipeline.md) § Re-recording the
   catalogue.
 - The channel has enough watch data to say which _format_ worked, not which topic —
-  60s versus long-form, tour versus single-idea.
+  short versus long-form, tour versus single-idea.
 
 **Season 2 is triggered by data, not by the calendar.** If the shorts hold audience
 and the long-form does not, Season 2 is all shorts. If a specific topic outperforms,

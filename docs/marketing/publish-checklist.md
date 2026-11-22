@@ -57,9 +57,11 @@ pnpm nx run openthrottle-developer:video-assemble --args="--script <slug>"
 ```
 
 - The script is within its spoken-word budget.
-- Both masters exist at the right dimensions, and neither exceeds 60s for a Short.
+- Both masters exist at the dimensions in `formats` (`format.json`), and a Short does
+  not exceed `formats.short.maxDurationSeconds`.
 - The `.srt` cue count matches the narration segment count.
-- Audio measures about -14 LUFS at no more than -1.0 dBTP.
+- Audio measures about `audio.targetLufs` at no more than `audio.truePeakDb`
+  (`format.json`).
 
 ## 3. Human: does it deliver the claim?
 
@@ -70,13 +72,13 @@ Nothing below can be automated, and each has sunk a video somewhere:
 - [ ] **Every UI state shown is real and current.** No aspirational features. This is
       the one mistake the scan cannot catch and the audience always does. Check the
       script's `blockedOn` is empty.
-- [ ] **The first three seconds show the payoff.** If frame 1 is a login page or an
+- [ ] **The hook shows the payoff** (`shortBeats.hook` in `format.json`). If frame 1 is a login page or an
       empty state, re-record from the right place rather than trimming.
 - [ ] **The pacing is watchable.** Would you finish it if it were not yours?
 - [ ] **The narration sounds like a person.** If it sounds synthetic, the voice
       decision is not settled — see `NARRATION.md`. Do not ship a robotic voice
       because the pipeline is otherwise ready.
-- [ ] **Captions are legible on a phone** and clear of the bottom 15% Shorts UI.
+- [ ] **Captions are legible on a phone** and clear of the Shorts UI (`safeAreas.portrait` in `format.json`).
 - [ ] **Nothing in frame is baked into an image** that the scan could not read.
 
 ## 4. Human: licensing and marks
@@ -94,7 +96,7 @@ Nothing below can be automated, and each has sunk a video somewhere:
 
 - [ ] Title, description and tags come from `metadata.json`, not retyped.
 - [ ] `.srt` uploaded alongside the video.
-- [ ] Correct aspect: the 9:16 master for Shorts, the 16:9 for the main feed.
+- [ ] Correct aspect: the portrait master for Shorts, the landscape one for the main feed.
 - [ ] Long-form only: a thumbnail from the template, and chapter markers.
 
 ## If something ships wrong anyway

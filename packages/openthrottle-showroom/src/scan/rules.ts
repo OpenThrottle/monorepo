@@ -69,7 +69,10 @@ export const RULES: readonly LeakRule[] = [
     appliesTo: ['frame', 'shipped'],
     because: `A home directory leaks a username and the shape of someone’s machine.`,
     id: 'home-path',
-    pattern: /\/(?:Users|home)\/[a-z0-9._-]+/gi,
+    // Only at the root of a path: a `/home/` or `/Users/` that follows a path
+    // segment (`app/routing/home/demo/…`, a route folder named `home`) is a
+    // repository path, not someone's machine. `~/` is a different rule's job.
+    pattern: /(?<![\w./-])\/(?:Users|home)\/[a-z0-9._-]+/gi,
     severity: 'error',
   },
   {

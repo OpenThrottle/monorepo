@@ -35,7 +35,11 @@ export const episode: VideoEpisode = {
       thesis: 'Promises the outcome up front and closes on what you do next.',
     },
   ],
-  youtube: { summary: '…', tags: [/* 6–10 */], title: '…' },
+  youtube: {
+    summary: '…',
+    tags: [/* count bounded by rules.ts */],
+    title: '…',
+  },
 };
 ```
 
@@ -45,7 +49,9 @@ beside it as `flow.ts`.
 
 ## Rules
 
-- **~130 spoken words, hard.** 55 seconds at a natural 145 wpm. The word count is
+- **A hard spoken-word budget.** It is the short's target duration at a natural
+  reading rate, computed by `budgetWords` in `src/episodes/derived.ts` from
+  `formats.short.targetDurationSeconds` and `WORDS_PER_MINUTE`. The word count is
   **computed** — there is no field to keep in sync, and the validator prints the
   number rather than writing it back into your file. Over the budget is a failure,
   no exceptions and no faster TTS.
@@ -59,13 +65,13 @@ beside it as `flow.ts`.
   yet designed.
 - **`t` is the beat start**, `mm:ss`, monotonic, first beat at `0:00`. The
   assembly stage treats these as intent, not gospel — actual timings come from
-  the runner's manifest — but a beat list that does not add up to under 55s never
-  will after recording.
+  the runner's manifest — but a beat list that does not add up to under the short target
+  (`formats.short.targetDurationSeconds`) never will after recording.
 - **Front-load.** The first beat starts at `0:00` with the payoff already on
   screen. No login, no empty state, no "first, let's navigate to".
 
-**The budget is a ceiling, not a target.** Most shorts land 25–35 seconds of
-speech across 55 seconds of picture, and that is correct: the gaps are where the
+**The budget is a ceiling, not a target.** Most shorts speak for roughly half the
+picture's runtime, and that is correct: the gaps are where the
 viewer watches the action instead of listening to someone describe it. A short
 whose narration fills the entire runtime is over-narrated.
 

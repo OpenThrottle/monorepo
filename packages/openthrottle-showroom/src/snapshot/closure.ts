@@ -28,7 +28,22 @@ export interface WindowedRoot {
   windowColumn: string;
 }
 
+/**
+ * One row kept out of the snapshot by decision, not by the window. The row is
+ * never added, and every selected row that references it (transitively) is
+ * removed with it, so the snapshot still loads with its FK checks intact.
+ */
+export interface ExcludedRow {
+  /** Primary-key value. Only single-column primary keys can be excluded. */
+  readonly id: string;
+  /** Why, in a sentence — the review of a snapshot diff reads this. */
+  readonly reason: string;
+  readonly table: string;
+}
+
 export interface SnapshotScope {
+  /** Rows removed by decision, with everything that references them. */
+  excludedRows: readonly ExcludedRow[];
   /** Root tables exported in full, plus their downward closure. */
   fullRoots: string[];
   /** Root tables exported where `windowColumn >= cutoff`, plus closure. */
@@ -138,6 +153,8 @@ export const collectSnapshotRows = async (
 
   const downwardTables = computeDownwardTables(schema, rootTables);
   const selected: SnapshotRows = new Map();
+  /** table name → primary-key keys that must never be selected. */
+  const excluded = excludedKeysByTable(schema, scope.excludedRows);
 
   /** Rows added downward, still owing a child expansion. */
   const expansionQueue: { rows: Record<string, unknown>[]; table: string }[] =
@@ -157,6 +174,10 @@ export const collectSnapshotRows = async (
 
     for (const row of rows) {
       const key = rowKey(table, row);
+
+      if (excluded.get(tableName)?.has(key) === true) {
+        continue;
+      }
 
       if (!bucket.has(key)) {
         bucket.set(key, row);
@@ -296,7 +317,89 @@ export const collectSnapshotRows = async (
   }
   /* eslint-enable no-await-in-loop */
 
+  removeRowsReferencingExcluded(schema, selected, excluded);
+
   return selected;
+};
+
+/**
+ * @description Validate the scope's exclusions and index them by table. An
+ * exclusion naming a missing table or a composite-key table fails loudly: a
+ * typo here would silently put the row back in the snapshot.
+ */
+const excludedKeysByTable = (
+  schema: DatabaseSchema,
+  excludedRows: readonly ExcludedRow[],
+): Map<string, Set<string>> => {
+  const keys = new Map<string, Set<string>>();
+
+  for (const row of excludedRows) {
+    const table = requireTable(schema, row.table);
+
+    if (table.primaryKey.length !== 1) {
+      throw new Error(
+        `cannot exclude a row from '${row.table}': only single-column primary keys are supported`,
+      );
+    }
+
+    const bucket = keys.get(row.table) ?? new Set<string>();
+
+    bucket.add(stableStringify([row.id]));
+    keys.set(row.table, bucket);
+  }
+
+  return keys;
+};
+
+/**
+ * @description Remove every selected row whose FK points at an excluded row,
+ * then every row pointing at one of those, to a fixpoint. Removed keys join
+ * `excluded`, so the cascade follows them. Only edges onto a single-column
+ * primary key are followed, which is every edge an exclusion can start from.
+ */
+const removeRowsReferencingExcluded = (
+  schema: DatabaseSchema,
+  selected: SnapshotRows,
+  excluded: Map<string, Set<string>>,
+): void => {
+  let changed = excluded.size > 0;
+
+  while (changed) {
+    changed = false;
+
+    for (const edge of schema.foreignKeys) {
+      const parentTable = schema.tables.get(edge.parentTable);
+      const gone = excluded.get(edge.parentTable);
+      const bucket = selected.get(edge.childTable);
+
+      if (
+        gone === undefined ||
+        bucket === undefined ||
+        parentTable?.primaryKey.length !== 1 ||
+        parentTable.primaryKey[0] !== edge.parentColumn
+      ) {
+        continue;
+      }
+
+      for (const [key, row] of bucket) {
+        const value = row[edge.childColumn];
+
+        if (value === null || value === undefined) {
+          continue;
+        }
+
+        if (gone.has(stableStringify([value]))) {
+          bucket.delete(key);
+
+          const removed = excluded.get(edge.childTable) ?? new Set<string>();
+
+          removed.add(key);
+          excluded.set(edge.childTable, removed);
+          changed = true;
+        }
+      }
+    }
+  }
 };
 
 /**
@@ -349,6 +452,72 @@ export const orderTablesTopologically = (
       ordered.push(name);
       placed.add(name);
     }
+  }
+
+  return ordered;
+};
+
+/**
+ * @description Reorder one table's rows so a row another row references through
+ * a self-FK (`tasks.parent_task_id`, `skill_usage_events.duplicate_of_id`,
+ * `plan_runs.resume_of_run_id`) is written first. The loader inserts in file
+ * order and Postgres checks each FK on insert, so primary-key order alone only
+ * works when ids happen to sort parents first: time-ordered uuidv7 ids do, and
+ * random v4 ids do not. Otherwise stable: rows keep their incoming order, and a
+ * row moves only to follow the row it points at. A cycle is left as found, and
+ * fails on load naming the constraint.
+ */
+export const orderRowsBySelfReference = (
+  schema: DatabaseSchema,
+  tableName: string,
+  rows: readonly Record<string, unknown>[],
+): Record<string, unknown>[] => {
+  const table = schema.tables.get(tableName);
+  const selfEdges = schema.foreignKeys.filter((edge) => {
+    return (
+      edge.childTable === tableName &&
+      edge.parentTable === tableName &&
+      table?.primaryKey.length === 1 &&
+      table.primaryKey[0] === edge.parentColumn
+    );
+  });
+
+  if (table === undefined || selfEdges.length === 0) {
+    return [...rows];
+  }
+
+  const byKey = new Map(
+    rows.map((row) => [stableStringify([row[table.primaryKey[0] ?? '']]), row]),
+  );
+  const visited = new Set<Record<string, unknown>>();
+  const ordered: Record<string, unknown>[] = [];
+
+  const visit = (row: Record<string, unknown>): void => {
+    if (visited.has(row)) {
+      return;
+    }
+
+    visited.add(row);
+
+    for (const edge of selfEdges) {
+      const value = row[edge.childColumn];
+
+      if (value === null || value === undefined) {
+        continue;
+      }
+
+      const parent = byKey.get(stableStringify([value]));
+
+      if (parent !== undefined) {
+        visit(parent);
+      }
+    }
+
+    ordered.push(row);
+  };
+
+  for (const row of rows) {
+    visit(row);
   }
 
   return ordered;

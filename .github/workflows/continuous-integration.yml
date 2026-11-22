@@ -251,8 +251,9 @@ jobs:
 
           # databases: everything the database-seeds job exercises — the migrations
           # and seeds, the runner and seed scripts, the URL helpers they share,
-          # the scripts' wiring in the root package.json, and the job itself.
-          if grep -qE '^databases/|^scripts/check-database-seeds\.sh$|^scripts/openthrottle-database-(migrations|seed-[a-z]+)\.ts$|^scripts/utils/|^packages/openthrottle-agentic-utils/|^package\.json$|^pnpm-lock\.yaml$|^\.github/workflows/continuous-integration\.yml$' <<<"$changed"; then
+          # the scripts' wiring in the root package.json, the showroom snapshot
+          # manifest and its drift check, and the job itself.
+          if grep -qE '^databases/|^scripts/check-database-seeds\.sh$|^packages/openthrottle-showroom/src/snapshot/(manifest|schema)[^/]*\.ts$|^packages/openthrottle-showroom/src/scripts/check-manifest-drift\.ts$|^scripts/openthrottle-database-(migrations|seed-[a-z]+)\.ts$|^scripts/utils/|^packages/openthrottle-agentic-utils/|^package\.json$|^pnpm-lock\.yaml$|^\.github/workflows/continuous-integration\.yml$' <<<"$changed"; then
             echo "databases=true" >> "$GITHUB_OUTPUT"
             echo "→ databases=true (migrations, seeds or their scripts touched)"
           else
@@ -1267,7 +1268,8 @@ jobs:
   # renames a column a seed writes would otherwise only surface the next time
   # someone ran `database:seed:*` by hand. It applies every migration, runs each
   # seed twice, and fails unless both runs succeed, the second changes no row,
-  # and the cms `welcome` layout resolves by slug.
+  # and the cms `welcome` layout resolves by slug. It then checks the showroom
+  # snapshot manifest classifies every table and column the migrations built.
   #
   # 💰 Its own job, not a `build` step, because it needs a Postgres service
   # container that no other job wants. Path-gated on `databases` and skipped on
@@ -1321,6 +1323,13 @@ jobs:
         env:
           # The `job` context is only available to steps, not to job-level `env`.
           PG_CONTAINER: ${{ job.services.postgres.id }}
+
+      # The same migrated schema is what the showroom snapshot export reflects,
+      # so its manifest drift guard runs here for the cost of one reflection
+      # query: a migration that adds an unclassified table or column fails this
+      # PR, not the next `snapshot-export`.
+      - name: '🎬 Showroom snapshot manifest matches the migrated schema'
+        run: pnpm exec tsx packages/openthrottle-showroom/src/scripts/check-manifest-drift.ts
 
   # Stable required-check target. Branch protection should require THIS job
   # ("ci-success"), not a matrix-suffixed leg like `build (1, lint,typecheck,test)`

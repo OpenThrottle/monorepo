@@ -5,15 +5,14 @@
  * that file's own production notes, preserved because it is the only record of
  * why the beats are what they are.
  *
- * **BLOCKED.** Recording this flow found that `/search` — and `/search?q=…` —
- * redirects to `/dashboard` in a production build, reproducibly, for a fully
- * permissioned user. There is also no Search item in the sidebar. Search today is the
- * header ⌘K commander, which is a different UX from the one this script describes
- * (a results page with per-result match reasons and pagination).
- *
- * Two options, and this script cannot be recorded until one is taken: fix the
- * `/search` route, or rewrite the script around the commander. Do not record it
- * against the commander while the narration still describes a results page.
+ * **Re-checked 2026-11-21.** The August audit found `/search` redirecting to
+ * `/dashboard`. That was the beta gate, and it is gone: `/search` is not in
+ * `GATED_PREFIXES`, and the server embeds locally by default, so the route is
+ * reachable with `FEATURE_BETA_PREVIEW` off and needs no API key. Two beats were
+ * corrected to the app as it is: the corpus is plans, tasks and docs (notes are
+ * not embedded), and a result's relevance is printed on its card rather than
+ * revealed on hover. Checked live on 2026-11-22 against the regenerated
+ * snapshot: both queries return ten results, identical across two runs.
  */
 
 import type { VideoEpisode } from '../types.ts';
@@ -26,10 +25,13 @@ export const episode: VideoEpisode = {
     },
     { action: 'Clear the field; type `how did we handle retries`.', t: '0:08' },
     {
-      action: `Results render — plans, tasks and notes, none of which contain that phrase.`,
+      action: `Results render — plans, tasks and docs, none of which contain that phrase.`,
       t: '0:18',
     },
-    { action: 'Hover the top result; the match reason shows.', t: '0:27' },
+    {
+      action: 'Hold on the top result; its relevance shows on the card.',
+      t: '0:27',
+    },
     {
       action: 'Click the top result → the plan from months ago opens.',
       t: '0:36',
@@ -57,10 +59,7 @@ export const episode: VideoEpisode = {
   format: 'short',
   id: '07-semantic-search',
   production: {
-    blockedOn: [
-      '/search is gated behind FEATURE_BETA_PREVIEW (authMiddleware BETA_ROUTE_PREFIXES); with the flag off it redirects to /dashboard, and with it on the route renders the "may not function as expected" beta banner over the whole episode',
-      'Results require a live embedding provider — SearchResolver embeds the query at request time and returns zero chunks without OPENAI_API_KEY or Ollama, so the payoff is both empty by default and a non-deterministic model call when it is not',
-    ],
+    blockedOn: [],
     recording: 'live',
     titleCard: ['Search every plan', 'you ever wrote'],
   },

@@ -44,7 +44,7 @@ export const episode: VideoEpisode = {
   id: '15-kill-runaway-run',
   production: {
     blockedOn: [
-      'The plan toolbar is not rendered — PlanDetailRoute hard-codes `const showToolbar = false` (landed in #452, 2026-08-28), so Kill run, the disabled run actions and their tooltips are all absent from the page this episode is about',
+      `Kill run is a beta surface: KillPlanRunButton, the disabled run actions and their tooltips live in the plan toolbar, which PlanDetailRoute renders only under FEATURE_BETA_PREVIEW (\`const showToolbar = FEATURE_BETA_PREVIEW\`, since #625). Season 1 records with the flag off, so the page this episode is about has none of them. Unblocks when the plan toolbar leaves beta`,
     ],
     recording: 'replay',
     titleCard: ['Kill a runaway', 'agent run'],

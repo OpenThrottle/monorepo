@@ -1,0 +1,1 @@
+✗ 🔴 Postgres is not reachable after 10 attempt(s) — start it with: pnpm run database:start

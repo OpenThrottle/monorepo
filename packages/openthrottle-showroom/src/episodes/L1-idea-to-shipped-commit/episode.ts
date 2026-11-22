@@ -77,7 +77,7 @@ export const episode: VideoEpisode = {
   id: 'L1-idea-to-shipped-commit',
   production: {
     blockedOn: [
-      'Starting a run from the plan needs the plan toolbar, which PlanDetailRoute hard-codes off (`const showToolbar = false`, #452)',
+      `Starting a run from the plan is a beta surface: the run controls live in the plan toolbar, which PlanDetailRoute renders only under FEATURE_BETA_PREVIEW (since #625), and Season 1 records with the flag off. Unblocks when the plan toolbar leaves beta`,
       'Composites 03, 06, 11, 12, 13 and 18 — it cannot be filmed while the episodes it summarises are blocked',
     ],
     recording: 'replay',

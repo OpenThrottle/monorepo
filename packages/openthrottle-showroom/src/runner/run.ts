@@ -32,6 +32,7 @@
  * the dev database is a leak.
  */
 
+import type { ChildProcess } from 'node:child_process';
 import { spawn } from 'node:child_process';
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -127,8 +128,42 @@ const spawnLiveRunHeartbeat = (flow: DemoFlow) => {
       runId,
       ...taskArgs,
     ],
-    { cwd: repositoryRoot(), stdio: 'inherit' },
+    // Its own process group: `pnpm exec tsx` is two wrappers deep, and a
+    // signal sent to the wrapper alone never reaches the node process that
+    // holds the heartbeat, so the runner waited on it forever.
+    { cwd: repositoryRoot(), detached: true, stdio: 'inherit' },
   );
+};
+
+const HEARTBEAT_SETTLE_TIMEOUT_MS = 10_000;
+
+/**
+ * @description SIGINT the heartbeat's whole process group, then wait (bounded)
+ * for it to settle the run back to `COMPLETED` before the runner exits.
+ */
+const stopLiveRunHeartbeat = async (
+  heartbeat: ChildProcess | null,
+): Promise<void> => {
+  const pid = heartbeat?.pid;
+
+  if (heartbeat === null || pid === undefined || heartbeat.exitCode !== null) {
+    return;
+  }
+
+  const exited = new Promise<void>((resolve) => {
+    heartbeat.once('exit', () => {
+      resolve();
+    });
+  });
+
+  process.kill(-pid, 'SIGINT');
+
+  await Promise.race([
+    exited,
+    new Promise<void>((resolve) => {
+      setTimeout(resolve, HEARTBEAT_SETTLE_TIMEOUT_MS);
+    }),
+  ]);
 };
 
 const main = async (): Promise<void> => {
@@ -185,6 +220,19 @@ const main = async (): Promise<void> => {
   // afterwards — a child process rather than a database dependency in the
   // recorder, and rather than a demo-only branch in the server's stale sweep.
   const heartbeat = spawnLiveRunHeartbeat(flow);
+  const heartbeatPid = heartbeat?.pid;
+
+  // A detached group does not die with the runner, so a take that throws must
+  // still signal it rather than leave a run heartbeating with nobody filming.
+  if (heartbeatPid !== undefined) {
+    process.once('exit', () => {
+      try {
+        process.kill(-heartbeatPid, 'SIGINT');
+      } catch {
+        // Already gone: the normal path stopped it.
+      }
+    });
+  }
 
   // Give it the one round trip it needs to flip the run before frame 1 — the
   // opening beat is the run in progress, and a badge that changes two seconds in
@@ -425,7 +473,7 @@ const main = async (): Promise<void> => {
   // SIGINT rather than SIGKILL: the heartbeat settles the run back to COMPLETED
   // on the way out, which is what returns the workspace to the seeded rule. A
   // run the flow itself killed keeps the terminal status the take just showed.
-  heartbeat?.kill('SIGINT');
+  await stopLiveRunHeartbeat(heartbeat);
 };
 
 main().catch((error: unknown) => {

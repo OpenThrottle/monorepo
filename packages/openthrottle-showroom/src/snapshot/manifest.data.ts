@@ -15,6 +15,10 @@
 import type { SnapshotManifest } from './manifest.ts';
 
 export const SNAPSHOT_MANIFEST: SnapshotManifest = {
+  agent_accounts: {
+    classification: 'denied',
+    reason: `agent-CLI account identities (email, org, external account id, credential kind) — identity-adjacent, never exported; agent_token_usage drops its reference`,
+  },
   agent_conversation_messages: {
     classification: 'exported',
     columns: {
@@ -95,6 +99,10 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
   agent_token_usage: {
     classification: 'exported',
     columns: {
+      agent_account_id: {
+        action: 'drop',
+        reason: `references the denied agent_accounts table`,
+      },
       cached_read_tokens: {
         action: 'keep',
         reason: 'token count — a number, not a credential',
@@ -108,6 +116,14 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
       created_at: {
         action: 'keep',
         reason: 'structural (timestamp with time zone)',
+      },
+      cwd: {
+        action: 'scrub',
+        reason: `free text — identity/secret pass (text)`,
+      },
+      git_branch: {
+        action: 'scrub',
+        reason: `free text — identity/secret pass (text)`,
       },
       id: { action: 'keep', reason: 'structural (uuid)' },
       input_tokens: {
@@ -135,6 +151,22 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
         action: 'keep',
         reason: 'token count — a number, not a credential',
       },
+      repo_identity: {
+        action: 'scrub',
+        reason: `free text — identity/secret pass (text)`,
+      },
+      request_id: {
+        action: 'scrub',
+        reason: `free text — identity/secret pass (text)`,
+      },
+      session_id: {
+        action: 'scrub',
+        reason: `free text — identity/secret pass (text)`,
+      },
+      source: {
+        action: 'scrub',
+        reason: `free text — identity/secret pass (text)`,
+      },
       total_tokens: {
         action: 'keep',
         reason: 'token count — a number, not a credential',
@@ -142,6 +174,26 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
       user_id: { action: 'keep', reason: 'structural (uuid)' },
     },
     reason: 'token/cost badges on conversations',
+  },
+  agent_trajectories: {
+    classification: 'denied',
+    reason: `full agent transcripts (tool calls, file contents, command output) from arbitrary workspaces — the code_embeddings argument applies; never exported`,
+  },
+  blog_authors: {
+    classification: 'ignored',
+    reason: `website CMS content — no episode films the blog, and it is only reachable upward from users`,
+  },
+  blog_post_tags: {
+    classification: 'ignored',
+    reason: `website CMS content — no episode films the blog`,
+  },
+  blog_posts: {
+    classification: 'ignored',
+    reason: `website CMS content — no episode films the blog`,
+  },
+  blog_tags: {
+    classification: 'ignored',
+    reason: `website CMS content — no episode films the blog`,
   },
   code_embeddings: {
     classification: 'denied',
@@ -158,6 +210,10 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
         action: 'scrub',
         reason: 'free text — identity/secret pass (text)',
       },
+      content_hash: {
+        action: 'keep',
+        reason: `hash of the exported source text — structural`,
+      },
       created_at: {
         action: 'keep',
         reason: 'structural (timestamp with time zone)',
@@ -166,7 +222,15 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
       embedding: {
         action: 'keep',
         reason: `embedding vector — embedded text is kept, so the vector stays valid`,
-        vectorDimension: 1536,
+        vectorDimension: 768,
+      },
+      embedding_dims: {
+        action: 'keep',
+        reason: `structural (integer) — matches the pinned vectorDimension`,
+      },
+      embedding_model: {
+        action: 'keep',
+        reason: `embedding model id — structural, compared before vectors are reused`,
       },
       id: { action: 'keep', reason: 'structural (uuid)' },
       metadata: {
@@ -284,6 +348,10 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
         action: 'scrub',
         reason: 'free text — identity/secret pass (text)',
       },
+      content_hash: {
+        action: 'keep',
+        reason: `hash of the exported source text — structural`,
+      },
       created_at: {
         action: 'keep',
         reason: 'structural (timestamp with time zone)',
@@ -292,7 +360,15 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
       embedding: {
         action: 'keep',
         reason: `embedding vector — embedded text is kept, so the vector stays valid`,
-        vectorDimension: 1536,
+        vectorDimension: 768,
+      },
+      embedding_dims: {
+        action: 'keep',
+        reason: `structural (integer) — matches the pinned vectorDimension`,
+      },
+      embedding_model: {
+        action: 'keep',
+        reason: `embedding model id — structural, compared before vectors are reused`,
       },
       id: { action: 'keep', reason: 'structural (uuid)' },
       metadata: {
@@ -302,6 +378,34 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
     },
     reason: 'semantic docs-search corpus (episode 07)',
   },
+  eval_cases: {
+    classification: 'ignored',
+    reason: `eval system — not on camera in Season 1; only reachable through the denied agent_trajectories`,
+  },
+  eval_datasets: {
+    classification: 'ignored',
+    reason: `eval system — not on camera in Season 1`,
+  },
+  eval_grades: {
+    classification: 'ignored',
+    reason: `eval system — not on camera in Season 1`,
+  },
+  eval_human_labels: {
+    classification: 'ignored',
+    reason: `eval system — not on camera in Season 1; only reachable through the denied agent_trajectories`,
+  },
+  eval_judge_calibrations: {
+    classification: 'ignored',
+    reason: `eval system — not on camera in Season 1`,
+  },
+  eval_runs: {
+    classification: 'ignored',
+    reason: `eval system — not on camera in Season 1`,
+  },
+  eval_trials: {
+    classification: 'ignored',
+    reason: `eval system — not on camera in Season 1; only reachable through the denied agent_trajectories`,
+  },
   mcp_connector_connections: {
     classification: 'denied',
     reason: `stores per-user MCP connector credentials/config — never leaves the workspace`,
@@ -309,6 +413,22 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
   notes: {
     classification: 'ignored',
     reason: `not FK-reachable from the export roots; the hero seed authors its own notes`,
+  },
+  oauth_authorization_requests: {
+    classification: 'denied',
+    reason: `OAuth plumbing — PKCE challenges, code hashes and state; credential-adjacent, never exported`,
+  },
+  oauth_clients: {
+    classification: 'denied',
+    reason: `OAuth client registrations and redirect URIs — credential-adjacent, never exported`,
+  },
+  oauth_grants: {
+    classification: 'denied',
+    reason: `OAuth grants bind a user to a client and scopes — credential-adjacent, never exported`,
+  },
+  oauth_tokens: {
+    classification: 'denied',
+    reason: `hashed OAuth access/refresh tokens — credentials, never exported`,
   },
   permissions: {
     classification: 'ignored',
@@ -321,6 +441,10 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
         action: 'scrub',
         reason: 'free text — identity/secret pass (text)',
       },
+      content_hash: {
+        action: 'keep',
+        reason: `hash of the exported source text — structural`,
+      },
       created_at: {
         action: 'keep',
         reason: 'structural (timestamp with time zone)',
@@ -328,7 +452,15 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
       embedding: {
         action: 'keep',
         reason: `embedding vector — embedded text is kept, so the vector stays valid`,
-        vectorDimension: 1536,
+        vectorDimension: 768,
+      },
+      embedding_dims: {
+        action: 'keep',
+        reason: `structural (integer) — matches the pinned vectorDimension`,
+      },
+      embedding_model: {
+        action: 'keep',
+        reason: `embedding model id — structural, compared before vectors are reused`,
       },
       id: { action: 'keep', reason: 'structural (uuid)' },
       metadata: {
@@ -338,6 +470,10 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
       plan_id: { action: 'keep', reason: 'structural (uuid)' },
     },
     reason: 'semantic plan search',
+  },
+  plan_messages: {
+    classification: 'ignored',
+    reason: `plan inbox (STEER/QUEUE) bodies — no Season 1 episode films steering; revisit and export with body scrubbed if one does`,
   },
   plan_output_stream: {
     classification: 'exported',
@@ -352,6 +488,7 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
       },
       id: { action: 'keep', reason: 'structural (uuid)' },
       iteration: { action: 'keep', reason: 'structural (integer)' },
+      kind: { action: 'keep', reason: `structural enum (text)` },
       plan_id: { action: 'keep', reason: 'structural (uuid)' },
       task_id: { action: 'keep', reason: 'structural (uuid)' },
     },
@@ -377,6 +514,7 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
         reason: 'structural (timestamp with time zone)',
       },
       execution_backend: { action: 'keep', reason: 'structural (text)' },
+      heartbeat_expected: { action: 'keep', reason: `structural (boolean)` },
       hostname: {
         action: 'scrub',
         reason: 'machine hostname — collapses to the demo hostname',
@@ -393,16 +531,30 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
       pid: { action: 'keep', reason: 'structural (integer)' },
       plan_id: { action: 'keep', reason: 'structural (uuid)' },
       queue_name: { action: 'keep', reason: 'structural (text)' },
+      resume_of_run_id: { action: 'keep', reason: `structural (uuid)` },
       run_config_snapshot: {
         action: 'scrub',
         reason: 'free text — identity/secret pass (jsonb)',
       },
       run_kind: { action: 'keep', reason: 'structural (text)' },
+      scheduled_for: {
+        action: 'keep',
+        reason: `structural (timestamp with time zone)`,
+      },
+      settled_reason: {
+        action: 'scrub',
+        reason: `free text — identity/secret pass (text)`,
+      },
       status: { action: 'keep', reason: 'structural (text)' },
       updated_at: {
         action: 'keep',
         reason: 'structural (timestamp with time zone)',
       },
+      usage_limit_resets_at: {
+        action: 'keep',
+        reason: `structural (timestamp with time zone)`,
+      },
+      usage_limit_type: { action: 'keep', reason: `structural enum (text)` },
       worker_id: { action: 'keep', reason: 'structural (text)' },
     },
     reason: 'run badges and run detail surfaces',
@@ -471,6 +623,8 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
         reason: 'free text — identity/secret pass (text)',
       },
       project_id: { action: 'keep', reason: 'structural (uuid)' },
+      project_sort_order: { action: 'keep', reason: `structural (integer)` },
+      repository_id: { action: 'keep', reason: `structural (uuid)` },
       run_config: {
         action: 'scrub',
         reason: 'free text — identity/secret pass (jsonb)',
@@ -490,6 +644,10 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
       },
     },
     reason: 'the core planning surface',
+  },
+  project_repositories: {
+    classification: 'ignored',
+    reason: `project ↔ repository links — not reachable downward from the roots; projects arrive only as FK parents`,
   },
   project_skills: {
     classification: 'ignored',
@@ -540,6 +698,18 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
         reason: 'structural (timestamp with time zone)',
       },
       id: { action: 'keep', reason: 'structural (uuid)' },
+      ledger_harvest_cursor: {
+        action: 'keep',
+        reason: `commit sha cursor — structural`,
+      },
+      ledger_harvest_enabled: {
+        action: 'keep',
+        reason: `structural (boolean)`,
+      },
+      ledger_harvested_at: {
+        action: 'keep',
+        reason: `structural (timestamp with time zone)`,
+      },
       name: { action: 'keep', reason: 'structural (text)' },
       normalized_remote_url: {
         action: 'scrub',
@@ -692,7 +862,12 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
         action: 'scrub',
         reason: 'free text — identity/secret pass (text)',
       },
+      resume_of_run_id: { action: 'keep', reason: `structural (uuid)` },
       scheduled_agent_job_id: { action: 'keep', reason: 'structural (uuid)' },
+      scheduled_for: {
+        action: 'keep',
+        reason: `structural (timestamp with time zone)`,
+      },
       settings_snapshot: {
         action: 'scrub',
         reason: 'free text — identity/secret pass (jsonb)',
@@ -710,16 +885,31 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
         action: 'scrub',
         reason: 'free text — identity/secret pass (text)',
       },
+      usage_limit_resets_at: {
+        action: 'keep',
+        reason: `structural (timestamp with time zone)`,
+      },
+      usage_limit_type: { action: 'keep', reason: `structural enum (text)` },
     },
     reason: 'scheduled-job run history',
+  },
+  scheduled_agent_job_webhook_deliveries: {
+    classification: 'denied',
+    reason: `inbound webhook headers and rendered third-party payloads — may carry signatures or tokens; never exported`,
+  },
+  scheduled_agent_job_webhook_triggers: {
+    classification: 'denied',
+    reason: `webhook token hashes and encrypted signing secrets — credentials, never exported`,
   },
   scheduled_agent_jobs: {
     classification: 'exported',
     columns: {
+      approval_state: { action: 'keep', reason: `structural enum (text)` },
       created_at: {
         action: 'keep',
         reason: 'structural (timestamp with time zone)',
       },
+      created_via: { action: 'keep', reason: `structural enum (text)` },
       cron_pattern: {
         action: 'scrub',
         reason: 'free text — identity/secret pass (text)',
@@ -735,10 +925,17 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
       driver_id: { action: 'keep', reason: 'structural (text)' },
       enabled: { action: 'keep', reason: 'structural (boolean)' },
       id: { action: 'keep', reason: 'structural (uuid)' },
+      idempotency_key: {
+        action: 'drop',
+        reason: `caller-supplied dedupe key — never on camera`,
+      },
+      interval_ms: { action: 'keep', reason: `structural (integer)` },
       last_run_at: {
         action: 'keep',
         reason: 'structural (timestamp with time zone)',
       },
+      misfire_policy: { action: 'keep', reason: `structural enum (text)` },
+      misfire_threshold_ms: { action: 'keep', reason: `structural (integer)` },
       model: {
         action: 'scrub',
         reason: 'free text — identity/secret pass (text)',
@@ -754,6 +951,11 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
         reason: 'free text — identity/secret pass (text)',
       },
       repository_checkout_id: { action: 'keep', reason: 'structural (uuid)' },
+      run_at: {
+        action: 'keep',
+        reason: `structural (timestamp with time zone)`,
+      },
+      schedule_kind: { action: 'keep', reason: `structural enum (text)` },
       scheduler_key: {
         action: 'scrub',
         reason: 'free text — identity/secret pass (text)',
@@ -835,10 +1037,15 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
         action: 'scrub',
         reason: 'free text — identity/secret pass (text)',
       },
+      created_at: {
+        action: 'keep',
+        reason: `structural (timestamp with time zone)`,
+      },
       cwd: {
         action: 'scrub',
         reason: 'free text — identity/secret pass (text)',
       },
+      duplicate_of_id: { action: 'keep', reason: `structural (uuid)` },
       git_branch: {
         action: 'scrub',
         reason: 'free text — identity/secret pass (text)',
@@ -849,6 +1056,7 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
         action: 'scrub',
         reason: 'free text — identity/secret pass (text)',
       },
+      is_fixture: { action: 'keep', reason: `structural (boolean)` },
       occurred_at: {
         action: 'keep',
         reason: 'structural (timestamp with time zone)',
@@ -859,11 +1067,16 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
         action: 'keep',
         reason: 'structural (timestamp with time zone)',
       },
+      repo_identity: {
+        action: 'scrub',
+        reason: `free text — identity/secret pass (text)`,
+      },
       scope: { action: 'keep', reason: 'structural (text)' },
       session_id: { action: 'keep', reason: 'structural (text)' },
       skill_name: { action: 'keep', reason: 'structural (text)' },
       source: { action: 'keep', reason: 'structural (text)' },
       tool_use_id: { action: 'keep', reason: 'structural (text)' },
+      user_id: { action: 'keep', reason: `structural (uuid)` },
     },
     reason: 'skills usage analytics surfaces',
   },
@@ -901,6 +1114,7 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
       },
       id: { action: 'keep', reason: 'structural (uuid)' },
       project_id: { action: 'keep', reason: 'structural (uuid)' },
+      repository_id: { action: 'keep', reason: `structural (uuid)` },
       status: { action: 'keep', reason: 'structural (plan_task_status)' },
       tag_all: { action: 'keep', reason: 'structural (text[])' },
       title: {
@@ -922,6 +1136,10 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
         action: 'scrub',
         reason: 'free text — identity/secret pass (text)',
       },
+      content_hash: {
+        action: 'keep',
+        reason: `hash of the exported source text — structural`,
+      },
       created_at: {
         action: 'keep',
         reason: 'structural (timestamp with time zone)',
@@ -929,7 +1147,15 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
       embedding: {
         action: 'keep',
         reason: `embedding vector — embedded text is kept, so the vector stays valid`,
-        vectorDimension: 1536,
+        vectorDimension: 768,
+      },
+      embedding_dims: {
+        action: 'keep',
+        reason: `structural (integer) — matches the pinned vectorDimension`,
+      },
+      embedding_model: {
+        action: 'keep',
+        reason: `embedding model id — structural, compared before vectors are reused`,
       },
       id: { action: 'keep', reason: 'structural (uuid)' },
       metadata: {
@@ -1026,8 +1252,13 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
         action: 'keep',
         reason: 'structural (timestamp with time zone)',
       },
+      wave: { action: 'keep', reason: `structural (integer)` },
     },
     reason: 'plan detail task tables',
+  },
+  telemetry_heartbeats: {
+    classification: 'denied',
+    reason: `machine ids, machine labels and repo identities of the real workstation — identity-adjacent, never exported`,
   },
   user_disabled_agent_clis: {
     classification: 'ignored',
@@ -1036,6 +1267,10 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
   user_favorite_agent_models: {
     classification: 'ignored',
     reason: 'per-user preference — the demo user configures its own',
+  },
+  user_preferences: {
+    classification: 'ignored',
+    reason: `per-user preference — the demo user configures its own`,
   },
   user_roles: {
     classification: 'ignored',
@@ -1136,6 +1371,10 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
         action: 'keep',
         reason: 'structural (timestamp with time zone)',
       },
+      created_at: {
+        action: 'keep',
+        reason: `structural (timestamp with time zone)`,
+      },
       id: { action: 'keep', reason: 'structural (uuid)' },
       plan_id: { action: 'keep', reason: 'structural (uuid)' },
       session_id: { action: 'keep', reason: 'structural (uuid)' },
@@ -1188,5 +1427,9 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
       },
     },
     reason: 'work ledger sessions',
+  },
+  worktree_removals: {
+    classification: 'denied',
+    reason: `filesystem paths and process ancestry of the real workstation — identity-adjacent, never exported`,
   },
 };

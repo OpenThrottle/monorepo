@@ -132,6 +132,30 @@ export const assertManifestMatchesSchema = (
     }
   }
 
+  for (const edge of schema.foreignKeys) {
+    const child = manifest[edge.childTable];
+    const parent = manifest[edge.parentTable];
+
+    if (
+      child?.classification !== TABLE_CLASSIFICATION.exported ||
+      parent === undefined ||
+      parent.classification === TABLE_CLASSIFICATION.exported
+    ) {
+      continue;
+    }
+
+    const columnEntry = child.columns[edge.childColumn];
+
+    if (
+      columnEntry !== undefined &&
+      columnEntry.action !== COLUMN_ACTION.drop
+    ) {
+      problems.push(
+        `column '${edge.childTable}.${edge.childColumn}' references '${edge.parentTable}', which is ${parent.classification} — the snapshot cannot carry the parent row, so classify the column 'drop' in ${MANIFEST_PATH} (or export the parent)`,
+      );
+    }
+  }
+
   for (const tableName of Object.keys(manifest)) {
     if (!schema.tables.has(tableName)) {
       problems.push(
@@ -145,6 +169,31 @@ export const assertManifestMatchesSchema = (
       `snapshot manifest is out of sync with the database schema:\n  - ${problems.join('\n  - ')}`,
     );
   }
+};
+
+/**
+ * @description The schema the FK closure walks: every edge that touches a
+ * table not classified `exported` is removed. Without this, a denied or
+ * ignored table that hangs off an export root (`agent_trajectories` under
+ * `plan_runs`, `plan_messages` under `plans`) would be reached downward and
+ * fail the export, and an `exported` row pointing at one would pull its parent
+ * upward. {@link assertManifestMatchesSchema} guarantees every such upward
+ * reference is a `drop` column, so the pruned parent is never needed on load.
+ */
+export const exportableSchema = (
+  manifest: SnapshotManifest,
+  schema: DatabaseSchema,
+): DatabaseSchema => {
+  const isExported = (table: string): boolean => {
+    return manifest[table]?.classification === TABLE_CLASSIFICATION.exported;
+  };
+
+  return {
+    ...schema,
+    foreignKeys: schema.foreignKeys.filter((edge) => {
+      return isExported(edge.childTable) && isExported(edge.parentTable);
+    }),
+  };
 };
 
 /**

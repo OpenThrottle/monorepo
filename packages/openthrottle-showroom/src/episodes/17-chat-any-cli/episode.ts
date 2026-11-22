@@ -30,23 +30,13 @@ export const episode: VideoEpisode = {
     },
     { action: 'Outro card.', t: '0:52' },
   ],
-  dataRequirements: [
-    {
-      atLeast: 20,
-      describe: 'conversations in the chat sidebar',
-      sql: `SELECT count(*) AS value FROM agent_conversations WHERE deleted_at IS NULL`,
-    },
-    {
-      atLeast: 10,
-      describe: 'conversations long enough to scroll as a real exchange',
-      sql: `SELECT count(*) AS value FROM (SELECT c.id FROM agent_conversations c JOIN agent_conversation_messages m ON m.conversation_id = c.id WHERE c.deleted_at IS NULL GROUP BY c.id HAVING count(*) >= 4) x`,
-    },
-  ],
+  dataRequirements: [],
   format: 'short',
   id: '17-chat-any-cli',
   production: {
     blockedOn: [
       'There is no seam that replays a seeded conversation at streaming pace, so "send; the response streams in" is a live CLI call — non-deterministic in content and duration, and dependent on which CLIs happen to be installed on the recording host',
+      `The chat sidebar has nothing to scroll: the real workspace deleted 124 of the 134 conversations in the snapshot window after August, so the 2026-11-22 snapshot carries 10, none longer than 3 messages. The beat needs at least 20 conversations and 10 of 4+ messages, which the hero fixture will have to author (moved here from dataRequirements, because no re-export can satisfy them)`,
     ],
     recording: 'replay',
     titleCard: ['Any CLI,', 'one composer'],

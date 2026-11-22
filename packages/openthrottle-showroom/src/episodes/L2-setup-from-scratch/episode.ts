@@ -10,6 +10,16 @@
  * matters more than pace** — do not cut a wait short and imply setup is faster than
  * it is.
  *
+ * 2026-11-22: re-scripted against the repo so every beat is something that can be
+ * filmed truthfully. The sign-in beat types the demo credentials (the form is
+ * prefilled only in development); the "create one plan" beat is gone, because the
+ * web form was removed and plans are written by the agent, which the later beats
+ * already show; the dashboard is the seeded demo, so it is not called empty; Node
+ * is twenty-six (`engines.node`, not twenty-two); and the two troubleshooting
+ * beats show the repo's own error text. The terminals are typeset surfaces, not a
+ * live machine, so "clean machine" below describes what they show. See `./flow.ts`
+ * and `./surface.ts`.
+ *
  * Recorded on a genuinely clean machine state: fresh clone, no node_modules, no
  * containers running, no `.env`. If the take starts from a warm machine it is a lie
  * by omission, and the first comment will say so.
@@ -28,10 +38,10 @@ export const episode: VideoEpisode = {
       t: '00:20',
     },
     { action: 'Clone the repository; `cd` into it.', t: '00:50' },
-    { action: 'Run `pnpm install`; output scrolls in real time.', t: '01:20' },
+    { action: 'Run `pnpm install`; the long wait.', t: '01:20' },
     { action: 'Run `./scripts/setup.sh`.', t: '02:10' },
     {
-      action: 'Docker containers start; Postgres and Redis go healthy.',
+      action: 'Docker containers start: Postgres and Redis.',
       t: '02:40',
     },
     { action: 'Migrations apply; the ledger output scrolls.', t: '03:20' },
@@ -42,21 +52,23 @@ export const episode: VideoEpisode = {
       t: '04:30',
     },
     {
-      action: `Browser to the dashboard port; the login form is prefilled; submit.`,
+      action: `Browser to the dashboard; type the demo credentials into the sign-in form; submit.`,
       t: '05:20',
     },
-    { action: 'Dashboard loads, mostly empty.', t: '05:50' },
-    { action: 'Create one plan with one task.', t: '06:10' },
+    {
+      action: 'Dashboard loads: the demo workspace, not an empty install.',
+      t: '05:50',
+    },
     {
       action: 'Terminal: `pnpm run setup:mcp-instructions`; copy the block.',
       t: '06:30',
     },
     {
-      action: "Paste into the agent's MCP config; save; restart the agent.",
+      action: `Run the printed command to register the server in the agent's config; restart the agent.`,
       t: '07:00',
     },
     {
-      action: 'Ask the agent to list plans; it returns the one you made.',
+      action: `Ask the agent to create a plan; it reports the plan it wrote, and the plan is at the top of Plans.`,
       t: '07:30',
     },
     { action: 'Show a failed Postgres connection and the fix.', t: '08:00' },
@@ -83,7 +95,7 @@ export const episode: VideoEpisode = {
         ],
         [
           '00:20',
-          'Three things first. Node twenty-two or newer, pnpm, and Docker running.',
+          'Three things first. Node twenty-six or newer, pnpm, and Docker running.',
         ],
         ['00:50', 'Clone it. It is one repository with everything in it.'],
         ['01:20', 'Install. This is the long wait, and it is the only one.'],
@@ -102,22 +114,27 @@ export const episode: VideoEpisode = {
         ['05:20', 'Open it and log in with the seeded account.'],
         [
           '05:50',
-          'It is empty, because it is yours. Nothing was uploaded and nothing was shared.',
+          'A fresh install starts nearly empty. This is the demo workspace, so there is something to see. Either way it is yours: nothing was uploaded and nothing was shared.',
         ],
-        ['06:10', 'Make one plan so there is something to look at.'],
         [
           '06:30',
           'Last step, and the one that makes it useful. Wire your agent to it.',
         ],
-        ['07:00', "Paste that into your agent's config and restart the agent."],
-        ['07:30', 'Ask it what plans exist. If it answers, you are done.'],
+        [
+          '07:00',
+          "Run that command, which adds it to your agent's config, and restart the agent.",
+        ],
+        [
+          '07:30',
+          'Ask it to make a plan. If it answers, you are done, and the plan is in the dashboard.',
+        ],
         [
           '08:00',
           'Two things go wrong for most people. The database is not running, which looks like this.',
         ],
         [
           '08:40',
-          'And a stale environment file, which looks like this. Both are one command each.',
+          'And a stale environment file, which looks like this. Each prints its own fix.',
         ],
         [
           '09:20',
@@ -127,6 +144,18 @@ export const episode: VideoEpisode = {
     },
   ],
   youtube: {
+    chapters: [
+      { label: 'The finished dashboard', t: '00:00' },
+      { label: 'What you need first', t: '00:20' },
+      { label: 'Clone and install', t: '00:50' },
+      { label: 'Run the setup script', t: '02:10' },
+      { label: 'Migrations and the seeded login', t: '03:20' },
+      { label: 'Start it', t: '04:00' },
+      { label: 'Sign in', t: '05:20' },
+      { label: 'Connect your agent', t: '06:30' },
+      { label: 'When it goes wrong', t: '08:00' },
+      { label: 'A working install', t: '09:20' },
+    ],
     tags: [
       'openthrottle',
       'developer tools',

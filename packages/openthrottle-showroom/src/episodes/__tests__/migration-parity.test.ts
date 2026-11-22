@@ -20,8 +20,10 @@ import { resolveVariant } from '../registry.ts';
 const MARKDOWN_WORD_COUNTS: Readonly<Record<string, number>> = {
   '01-what-is-openthrottle': 101,
   '02-one-command-boot': 80,
-  '03-first-plan': 93,
-  '04-mental-model': 91,
+  // Re-scripted 2026-11-22 around the MCP path (was 93 as migrated).
+  '03-first-plan': 86,
+  // 91 → 94 on 2026-11-22: notes are not searchable, so the 0:41 line no longer says so.
+  '04-mental-model': 94,
   '05-connect-ot-mcp': 99,
   '06-prd-to-plan': 75,
   '07-semantic-search': 73,
@@ -41,7 +43,11 @@ const MARKDOWN_WORD_COUNTS: Readonly<Record<string, number>> = {
   '21-dashboard-tour': 67,
   '22-self-host-docker-compose': 59,
   'L1-idea-to-shipped-commit': 299,
-  'L2-setup-from-scratch': 235,
+  // Re-scripted 2026-11-22 so every beat is filmable truthfully (was 235 as
+  // migrated): the "make one plan" cue is gone (plans are written by the agent),
+  // the dashboard beat no longer calls the demo workspace empty, and the
+  // sign-in, register, ask-agent and troubleshooting cues were reworded.
+  'L2-setup-from-scratch': 252,
 };
 
 describe('migration parity', () => {
@@ -153,11 +159,7 @@ describe('season shape', () => {
       .sort();
 
     expect(blocked).toEqual([
-      // 03 joined when the plan/task create + edit web forms were removed:
-      // every one of its beats drove a control that no longer exists.
-      '03-first-plan',
       '06-prd-to-plan',
-      '07-semantic-search',
       '08-promote-task',
       '09-tags-and-rules',
       '10-notes',

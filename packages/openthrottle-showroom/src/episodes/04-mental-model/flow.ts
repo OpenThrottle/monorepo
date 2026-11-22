@@ -1,20 +1,19 @@
 /**
- * @description Flow for `docs/marketing/scripts/04-mental-model.md`.
+ * @description Flow for episode `04-mental-model` (`./episode.ts`).
  *
- * Transcribed from that script's on-screen-action column, beat for beat. If the
- * script changes, change this; if this needs a step the script does not describe,
- * the script is wrong.
+ * Transcribed from the episode's beat actions, beat for beat. If the episode
+ * changes, change this; if this needs a step the episode does not describe, the
+ * episode is wrong.
  *
  * One term per beat, each shown rather than described: the plan header, a task
  * row, a note, a project, and then the row-level project link that ties them
- * together. The script's original 0:41 beat asked for a project badge on the plan
- * detail page; no such badge exists — the plan→project relation is rendered
- * exactly one place in the app, the project link on a plan's row in `/plans`
- * (`plans-table-columns.tsx`), so that is what goes on camera. See the note in
+ * together. Re-checked 2026-11-22: the plan→project edge is no longer on the
+ * plan detail header (its badge is commented out) or in the /plans table, so the
+ * 0:41 beat films the project's own plans list instead. See the note in
  * `./episode.ts`.
  *
- * Seven flow beats, matching the script's seven narration rows — narration is
- * matched to flow beats POSITIONALLY (assemble/timeline.ts).
+ * Seven flow beats, one fewer than the episode's eight, because the assembler
+ * appends the outro card (`flows.test.ts` holds the count).
  */
 
 import type { DemoFlow } from '../../runner/types.ts';
@@ -23,6 +22,7 @@ import {
   dwell,
   highlight,
   navigate,
+  scrollTo,
   waitFor,
 } from '../../runner/types.ts';
 
@@ -40,10 +40,10 @@ export const flow: DemoFlow = {
   regionOfInterest: {
     hold: '[data-testid="GlobalHeading"]',
     hook: '[data-testid="GlobalHeading"]',
-    note: '[data-testid="MarkdownRenderer"]',
+    note: '[data-testid="NotesTable"]',
     plan: '[data-testid="GlobalHeading"]',
-    project: '#project-overview-heading',
-    relations: '[data-testid="PlansTable"]',
+    project: '[data-testid="ProjectsTable"]',
+    relations: '[data-testid="ProjectPlansList"]',
     task: `#task-${TASK_ID}`,
   },
   steps: [
@@ -78,15 +78,14 @@ export const flow: DemoFlow = {
     waitFor('#project-overview-heading'),
     dwell(3_400),
 
-    // 0:41 — how they relate: the project link on a plan's row is the one place
-    // the app renders the plan→project edge.
-    navigate('/plans', 'relations'),
-    waitFor('[data-testid="PlansTable"]'),
+    // 0:41 — how they relate, on the project just opened: the plans that point
+    // at it. The /plans project column and the plan-header project badge are
+    // both gone from the app (the badge is commented out in
+    // PlanDetailRouteHeader), so this list is where the edge is rendered.
+    waitFor('[data-testid="ProjectPlansList"]', 'relations'),
+    scrollTo('[data-testid="ProjectPlansList"]'),
     dwell(700),
-    highlight(
-      '[data-testid="PlansTable"] tbody tr:first-child a[aria-label^="Project:"]',
-      2_000,
-    ),
+    highlight('[data-testid="ProjectPlansList"]', 2_000),
     dwell(2_600),
 
     // 0:50 — hold on the plan the short opened on.

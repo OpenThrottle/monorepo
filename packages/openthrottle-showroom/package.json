@@ -75,10 +75,13 @@
   "scripts": {},
   "sideEffects": [
     "./src/assemble/assemble.ts",
+    "./src/episodes/03-first-plan/surface.ts",
     "./src/episodes/05-connect-ot-mcp/surface.ts",
+    "./src/episodes/13-plan-id-traceability/surface.ts",
     "./src/narrate/narrate.ts",
     "./src/runner/run.ts",
     "./src/scan/leak-scan.ts",
+    "./src/scripts/check-manifest-drift.ts",
     "./src/scripts/demo-live-run.ts",
     "./src/scripts/ensure-demo-database.ts",
     "./src/scripts/resolve-demo-url.ts",

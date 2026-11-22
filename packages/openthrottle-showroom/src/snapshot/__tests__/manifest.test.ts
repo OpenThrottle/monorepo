@@ -5,6 +5,7 @@ import type { SnapshotManifest } from '../manifest.ts';
 import {
   assertManifestMatchesSchema,
   assertTableExportable,
+  exportableSchema,
 } from '../manifest.ts';
 import type { DatabaseSchema } from '../schema.ts';
 
@@ -54,6 +55,50 @@ const manifest: SnapshotManifest = {
     classification: 'denied',
     reason: 'test fixture',
   },
+};
+
+const PLAN_TO_SECRET_EDGE = {
+  childColumn: 'secret_id',
+  childTable: 'plans',
+  name: 'fk_plans_secret',
+  parentColumn: 'id',
+  parentTable: 'secrets',
+};
+
+const withSecretReference = (
+  action: 'drop' | 'keep',
+): { manifest: SnapshotManifest; schema: DatabaseSchema } => {
+  const schema = makeSchema([
+    {
+      columns: {
+        embedding: 'vector(1536)',
+        id: 'uuid',
+        secret_id: 'uuid',
+        title: 'text',
+      },
+      name: 'plans',
+    },
+    { columns: { id: 'uuid', token: 'text' }, name: 'secrets' },
+  ]);
+  const plans = manifest.plans;
+
+  if (plans === undefined || plans.classification !== 'exported') {
+    throw new Error('fixture plans must be exported');
+  }
+
+  return {
+    manifest: {
+      ...manifest,
+      plans: {
+        ...plans,
+        columns: {
+          ...plans.columns,
+          secret_id: { action, reason: 'reference to a denied table' },
+        },
+      },
+    },
+    schema: { ...schema, foreignKeys: [PLAN_TO_SECRET_EDGE] },
+  };
 };
 
 const matchingSchema = makeSchema([
@@ -162,6 +207,43 @@ describe('assertManifestMatchesSchema', () => {
   });
 });
 
+describe('assertManifestMatchesSchema — references to non-exported tables', () => {
+  test('a kept reference to a denied parent fails asking for drop', () => {
+    const fixture = withSecretReference('keep');
+
+    expect(() =>
+      assertManifestMatchesSchema(fixture.manifest, fixture.schema),
+    ).toThrow(
+      /column 'plans\.secret_id' references 'secrets', which is denied — .* classify the column 'drop'/,
+    );
+  });
+
+  test('a dropped reference to a denied parent passes', () => {
+    const fixture = withSecretReference('drop');
+
+    expect(() =>
+      assertManifestMatchesSchema(fixture.manifest, fixture.schema),
+    ).not.toThrow();
+  });
+});
+
+describe('exportableSchema', () => {
+  test('removes every edge that touches a non-exported table', () => {
+    const fixture = withSecretReference('drop');
+
+    expect(
+      exportableSchema(fixture.manifest, fixture.schema).foreignKeys,
+    ).toEqual([]);
+  });
+
+  test('keeps edges between exported tables', () => {
+    const selfEdge = { ...PLAN_TO_SECRET_EDGE, parentTable: 'plans' };
+    const schema = { ...matchingSchema, foreignKeys: [selfEdge] };
+
+    expect(exportableSchema(manifest, schema).foreignKeys).toEqual([selfEdge]);
+  });
+});
+
 describe('assertTableExportable', () => {
   test('rejects a denied table the closure reached', () => {
     expect(() => assertTableExportable(manifest, 'secrets')).toThrow(
@@ -191,7 +273,15 @@ describe('SNAPSHOT_MANIFEST (the committed classification)', () => {
 
   test('credential-adjacent tables are denied', () => {
     for (const table of [
+      'agent_accounts',
+      'agent_trajectories',
       'mcp_connector_connections',
+      'oauth_authorization_requests',
+      'oauth_clients',
+      'oauth_grants',
+      'oauth_tokens',
+      'scheduled_agent_job_webhook_deliveries',
+      'scheduled_agent_job_webhook_triggers',
       'service_account_credentials',
       'subscriptions',
     ]) {
