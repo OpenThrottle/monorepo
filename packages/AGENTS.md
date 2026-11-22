@@ -21,7 +21,9 @@ Family-shared notes for everything under `packages/`. Per-project deltas live in
 ## Import and export rules
 
 - No deep imports between workspace packages: consume via the main entry (`import { X } from '@openthrottle/foo'`) and re-export new symbols from the package's `index.ts`. Do not add subpath exports just to expose one symbol.
-- Server/client boundary: Node-only engines (e.g. `openthrottle-ide`) are consumed by UI packages via type-only imports plus `*.server.ts` dynamic imports; never import Node-only packages into browser code.
+- **Server/client boundary — only the app's client build catches a violation.** A `node:*` import anywhere on a client module's import graph ships an empty Vite stub that breaks the page at runtime; `typecheck` and `lint` pass regardless. The `clientNodeBoundary` Vite plugin (`@tools/dotfiles/client-node-boundary`) fails every React Router app's client build on it, and CI runs that build through the `check-client-boundary` target. Escape hatches, all three already used here: move the code server-side (how `expandHome` was fixed — it now lives in `applications/openthrottle-server/src/services/paths/`), `import type` (erased at compile time), or a `*.server.ts` module (never bundled for the browser).
+  - **A package's name is not a signal.** `nodejs-utils` sounds server-only and is imported by browser code — one `node:os` import in its barrel reached all eight client modules importing `isRecord` from it. Barrels amplify: anything behind `index.ts` reaches every client consumer of that package.
+  - Node-only engines (e.g. `openthrottle-ide`, `openthrottle-agentic-utils`, `openthrottle-skills`) stay fine as-is — they are reached only through type-only imports and `*.server.ts` dynamic imports. Full rule: the [`ot-coding-standards`](../skills/ot-coding-standards/SKILL.md) skill.
 
 ## Gotchas
 

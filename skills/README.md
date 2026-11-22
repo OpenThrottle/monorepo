@@ -96,6 +96,7 @@ worktree. The machinery behind that script is [`ot-worktree/`](./ot-worktree/) b
 - [`ot-folders/`](./ot-folders/) — where code goes, what it is named, what shape it must have, and how to prove it — the placement rules behind the `openthrottle/*` lint rules and module boundaries.
 - [`ot-generators/`](./ot-generators/) — scaffolding with `@tools/generators`: which generator makes an app, package, component, route or NestJS service, and how to run one.
 - [`ot-plans/`](./ot-plans/) — plans and tasks via the `openthrottle-mcp` server, plus the `Plan-Id`/`Task-Id` and work-ledger traceability rules.
+- [`ot-coding-standards/`](./ot-coding-standards/) — standards lint and typecheck cannot see: the client/Node boundary (`node:*` in browser bundles).
 - [`ot-postgres/`](./ot-postgres/) — SQL authoring under `databases/`: migrations, table design and naming, `COMMENT ON` standards, idempotent DDL.
 - [`ot-stack/`](./ot-stack/) — conventions for the platform itself: `openthrottle-server`, the developer app, the GraphQL schema, embeddings and semantic ingest.
 - [`ot-worktree/`](./ot-worktree/) — the portable machinery behind `worktree:new`, `worktree:heal` and `worktree:remove`: creating, provisioning and tearing down a worktree.
