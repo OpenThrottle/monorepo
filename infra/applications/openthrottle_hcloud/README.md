@@ -99,9 +99,12 @@ a drop-in.
 - **`server_image` and `server_image_os` are different things.** The first is the container image for
   `openthrottle-server`; the second is the box's OS image. The `_os` suffix exists only to keep them
   apart.
-- **`mcp_domain` defaults to empty**, keeping `mcp` reachable only on the compose network. The MCP
-  transport authenticates with `OPENTHROTTLE_MCP_AUTH_TOKEN`; publishing it widens the surface, so
-  set a hostname only when a remote client genuinely needs it.
+- **`mcp_domain` defaults to empty**, keeping `mcp` reachable only on the compose network. Setting
+  it publishes the MCP and renders `OT_MCP_PUBLIC_URL`, `OT_OAUTH_ISSUER` and `OT_OAUTH_CONSENT_URL`
+  into `.env`, which makes the MCP an OAuth resource server: remote clients sign in through the
+  developer app and get per-user, scoped, revocable tokens, and a request with no bearer is refused
+  rather than running as the `OPENTHROTTLE_MCP_AUTH_TOKEN` service account. Design:
+  [`docs/openthrottle/mcp-oauth-design.md`](../../../docs/openthrottle/mcp-oauth-design.md).
 - **Cloud-init changes do not reach a running server** — `user_data` is in `ignore_changes` on the
   underlying module. See [`hcloud_server`](../../modules/hcloud_server/README.md).
 - **First boot does not provision a login user.** `docker compose run --rm bootstrap` is a manual,

@@ -1,0 +1,20 @@
+fragment OAuthGrantFields on OAuthGrantObject {
+  clientHost
+  clientName
+  createdAt
+  expiresAt
+  id
+  lastUsedAt
+  resource
+  scopes
+}
+
+query SettingsConnections {
+  myOAuthGrants {
+    ...OAuthGrantFields
+  }
+}
+
+mutation RevokeOAuthGrant($id: String!) {
+  revokeOAuthGrant(id: $id)
+}

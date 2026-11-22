@@ -110,6 +110,39 @@ export type * from './modules/mcp-connector-connections/mcp-connector-connection
 export * from './modules/notes/note.entity.ts';
 export * from './modules/notes/notes.module.ts';
 export * from './modules/notes/notes.repository.ts';
+export {
+  OAUTH_ACCESS_TOKEN_PREFIX,
+  OAUTH_GRANT_REVOKED_REASONS,
+  OAUTH_LIFETIMES_MS,
+  OAUTH_REFRESH_TOKEN_PREFIX,
+  OAUTH_SCOPES,
+  OAUTH_SUPPORTED_SCOPES,
+} from './modules/oauth/oauth.constants.ts';
+export { OAuthModule } from './modules/oauth/oauth.module.ts';
+export { OAuthService } from './modules/oauth/oauth.service.ts';
+export type {
+  DecideAuthorizationRequestResult,
+  IssuedOAuthTokens,
+  IssueOAuthTokensResult,
+  OAuthErrorCode,
+  OAuthFailure,
+  OAuthGrantRevokedReason,
+  OAuthScope,
+  RegisterDynamicClientResult,
+  UpsertMetadataDocumentClientInput,
+  VerifiedOAuthAccessToken,
+} from './modules/oauth/oauth.types.ts';
+export {
+  isOAuthAccessTokenAuthorization,
+  isRegistrableRedirectUri,
+  parseOAuthScopes,
+  redirectUriMatches,
+  scopesAllowWrite,
+} from './modules/oauth/oauth.utils.ts';
+export { OAuthAuthorizationRequest } from './modules/oauth/oauth-authorization-request.entity.ts';
+export { OAuthClient } from './modules/oauth/oauth-client.entity.ts';
+export { OAuthGrant } from './modules/oauth/oauth-grant.entity.ts';
+export { OAuthToken } from './modules/oauth/oauth-token.entity.ts';
 export * from './modules/permissions/permission.entity.ts';
 export * from './modules/permissions/permissions.module.ts';
 export * from './modules/permissions/permissions.repository.ts';

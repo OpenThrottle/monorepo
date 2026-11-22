@@ -43,23 +43,23 @@ is why the naming discipline below is worth the pedantry.
 
 These must match exactly across both modules. Changing one without the other breaks rung 4.
 
-| Variable            | Type             | Default            | Notes                                                         |
-| ------------------- | ---------------- | ------------------ | ------------------------------------------------------------- |
-| `env_name`          | `string`         | —                  | Resource-name prefix.                                         |
-| `api_domain`        | `string`         | —                  | Caddy routes this to `openthrottle-server`.                   |
-| `developer_domain`  | `string`         | —                  | Caddy routes this to `openthrottle-developer`.                |
-| `server_image`      | `string`         | `""`               | Fully-qualified, tag pinned. Registry-agnostic by design.     |
-| `developer_image`   | `string`         | `""`               | Same.                                                         |
-| `caddy_image`       | `string`         | `"caddy:2-alpine"` | Same on both; Caddy comes from Docker Hub either way.         |
-| `postgres_db_name`  | `string`         | `"openthrottle"`   | `POSTGRES_DB`.                                                |
-| `postgres_user`     | `string`         | `"openthrottle"`   | `POSTGRES_USER`.                                              |
-| `postgres_password` | `string` (sens.) | `""`               | `POSTGRES_PASSWORD`.                                          |
-| `deploy_enabled`    | `bool`           | `false`            | Gates the rendered compose + startup script and the firewall. |
-| `migrations_image`  | `string`         | `""`               | The server's schema gate. Same SHA as `server_image`.         |
-| `mcp_image`         | `string`         | `""`               | `openthrottle-mcp` streamable-HTTP transport.                 |
-| `mcp_domain`        | `string`         | `""`               | Empty keeps `mcp` on the compose network only.                |
-| `jwt_secret`        | `string` (sens.) | `""`               | Empty = **generate on the instance** at first boot.           |
-| `ssh_allowed_cidrs` | `list(string)`   | `[]`               | `0.0.0.0/0` rejected by validation on both paths.             |
+| Variable            | Type             | Default            | Notes                                                                                                                                               |
+| ------------------- | ---------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `env_name`          | `string`         | —                  | Resource-name prefix.                                                                                                                               |
+| `api_domain`        | `string`         | —                  | Caddy routes this to `openthrottle-server`.                                                                                                         |
+| `developer_domain`  | `string`         | —                  | Caddy routes this to `openthrottle-developer`.                                                                                                      |
+| `server_image`      | `string`         | `""`               | Fully-qualified, tag pinned. Registry-agnostic by design.                                                                                           |
+| `developer_image`   | `string`         | `""`               | Same.                                                                                                                                               |
+| `caddy_image`       | `string`         | `"caddy:2-alpine"` | Same on both; Caddy comes from Docker Hub either way.                                                                                               |
+| `postgres_db_name`  | `string`         | `"openthrottle"`   | `POSTGRES_DB`.                                                                                                                                      |
+| `postgres_user`     | `string`         | `"openthrottle"`   | `POSTGRES_USER`.                                                                                                                                    |
+| `postgres_password` | `string` (sens.) | `""`               | `POSTGRES_PASSWORD`.                                                                                                                                |
+| `deploy_enabled`    | `bool`           | `false`            | Gates the rendered compose + startup script and the firewall.                                                                                       |
+| `migrations_image`  | `string`         | `""`               | The server's schema gate. Same SHA as `server_image`.                                                                                               |
+| `mcp_image`         | `string`         | `""`               | `openthrottle-mcp` streamable-HTTP transport.                                                                                                       |
+| `mcp_domain`        | `string`         | `""`               | Empty keeps `mcp` on the compose network only. Set, it also renders the OAuth env (`OT_MCP_PUBLIC_URL`, `OT_OAUTH_ISSUER`, `OT_OAUTH_CONSENT_URL`). |
+| `jwt_secret`        | `string` (sens.) | `""`               | Empty = **generate on the instance** at first boot.                                                                                                 |
+| `ssh_allowed_cidrs` | `list(string)`   | `[]`               | `0.0.0.0/0` rejected by validation on both paths.                                                                                                   |
 
 These last five **converged** rather than being shared from the start. They began as Hetzner-only
 because the GCP path simply lacked the corresponding capability — no `mcp` service, no migrations

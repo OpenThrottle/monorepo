@@ -3699,6 +3699,61 @@ type TaskStatusChangedNotification implements NotificationEvent {
   status: String!
 }
 
+"""
+A pending OAuth authorization request, as the developer-app consent screen renders it.
+"""
+type OAuthAuthorizationRequestObject {
+  """
+  The client's self-asserted name. Untrusted — show it beside clientHost.
+  """
+  clientName: String
+
+  """
+  The host the client is identified by (CIMD URL host, client_uri host, or redirect URI host or scheme).
+  """
+  clientHost: String!
+  expiresAt: DateTime!
+  id: String!
+
+  """Where the browser returns after the decision (host only)."""
+  redirectHost: String!
+
+  """
+  dcr (registered via POST /oauth/register) or cimd (Client ID Metadata Document).
+  """
+  registrationKind: String!
+
+  """Scopes the client asked for: mcp:read, mcp:write."""
+  requestedScopes: [String!]!
+
+  """The MCP resource URL the token will be bound to."""
+  resource: String!
+}
+
+"""Where to send the browser after an OAuth consent decision."""
+type DecideOAuthAuthorizationResultObject {
+  """
+  The client's redirect URI carrying code (approve) or error=access_denied (deny), plus state and iss.
+  """
+  redirectUrl: String!
+}
+
+"""
+A client the signed-in user has authorized to use the MCP server on their behalf.
+"""
+type OAuthGrantObject {
+  clientHost: String!
+  clientName: String
+  createdAt: DateTime!
+
+  """Grants last 30 days from consent; refreshing never extends them."""
+  expiresAt: DateTime!
+  id: String!
+  lastUsedAt: DateTime
+  resource: String!
+  scopes: [String!]!
+}
+
 type PlanEmbeddingObject {
   content: String!
   createdAt: DateTime!
@@ -7209,6 +7264,21 @@ type Query {
   """
   userPreferences: UserPreferencesObject!
 
+  """
+  A pending OAuth authorization request for the consent screen, or null when it is unknown, decided or expired.
+  """
+  oauthAuthorizationRequest(id: String!): OAuthAuthorizationRequestObject
+
+  """
+  The OAuth scopes of the access token this request authenticated with, or null when it did not use an OAuth token. Lets the MCP server answer insufficient_scope before running a write tool.
+  """
+  viewerOAuthScopes: [String!]
+
+  """
+  Clients the signed-in user has authorized via OAuth that are still live, newest first.
+  """
+  myOAuthGrants: [OAuthGrantObject!]!
+
   """Get a user by ID"""
   user(id: ID!): UserObject
 
@@ -8670,6 +8740,16 @@ type Mutation {
   Update the authenticated user's preferences. An omitted field is left unchanged; an explicit null clears it to the system default.
   """
   updateUserPreferences(input: UpdateUserPreferencesInput!): UserPreferencesObject!
+
+  """
+  Approve or deny a pending OAuth authorization request as the signed-in user. Returns the client redirect URL to send the browser to.
+  """
+  decideOAuthAuthorization(input: DecideOAuthAuthorizationInput!): DecideOAuthAuthorizationResultObject!
+
+  """
+  Revoke one of the signed-in user's OAuth grants and every token under it. False when no live grant of theirs matched.
+  """
+  revokeOAuthGrant(id: String!): Boolean!
 
   """Create a user"""
   createUser(input: CreateUserInput!): UserObject!
@@ -11348,6 +11428,17 @@ input UserPreferencesAgentInput {
 
   """Driver-specific model id."""
   model: String!
+}
+
+input DecideOAuthAuthorizationInput {
+  """true to approve, false to deny."""
+  approve: Boolean!
+
+  """The authorization request id from the consent URL."""
+  id: String!
+
+  """Scopes to grant, a subset of the requested scopes. Ignored on deny."""
+  scopes: [String!]!
 }
 
 input CreateUserInput {

@@ -8,7 +8,11 @@ import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS } from '@openthrottle/nestjs-rbac';
 import { Permissions } from '@openthrottle/nestjs-rbac';
 import type { User } from '@openthrottle/nestjs-repositories-server';
-import { UsersRepository } from '@openthrottle/nestjs-repositories-server';
+import {
+  OAUTH_GRANT_REVOKED_REASONS,
+  OAuthService,
+  UsersRepository,
+} from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { CreateUserInput, UpdateUserInput } from './user.input.ts';
@@ -18,7 +22,10 @@ import { nullIfNotFound } from './users.utils.ts';
 @Resolver(() => UserObject)
 @UseGuards(GqlPermissionsGuard)
 export class UsersResolver {
-  constructor(private readonly usersRepository: UsersRepository) {}
+  constructor(
+    private readonly oauthService: OAuthService,
+    private readonly usersRepository: UsersRepository,
+  ) {}
 
   // @ProfileResponseTime('UsersResolver.user')
   @Query(() => UserObject, {
@@ -80,7 +87,7 @@ export class UsersResolver {
   async updateUser(
     @Args('input', { type: () => UpdateUserInput }) input: UpdateUserInput,
   ): Promise<User | null> {
-    return nullIfNotFound(async () => {
+    const entity = await nullIfNotFound(async () => {
       return this.usersRepository.update(input.id, {
         ...(input.disabledAt !== undefined && {
           disabledAt: input.disabledAt,
@@ -91,6 +98,12 @@ export class UsersResolver {
         ...(input.email !== undefined && { email: input.email }),
       });
     });
+
+    if (entity !== null && input.disabledAt != null) {
+      await this.revokeOAuthGrants(entity.id);
+    }
+
+    return entity;
   }
 
   // @ProfileResponseTime('UsersResolver.disableUser')
@@ -102,9 +115,25 @@ export class UsersResolver {
   async disableUser(
     @Args('id', { type: () => ID }) id: string,
   ): Promise<User | null> {
-    return nullIfNotFound(async () => {
+    const entity = await nullIfNotFound(async () => {
       return this.usersRepository.disable(id);
     });
+    if (entity !== null) {
+      await this.revokeOAuthGrants(entity.id);
+    }
+    return entity;
+  }
+
+  /**
+   * @description A disabled user's OAuth clients lose access at once (token validation also
+   * checks `disabled_at`, so this is the durable half: re-enabling does not revive them).
+   */
+  private async revokeOAuthGrants(userId: string): Promise<void> {
+    await this.oauthService.revokeGrantsForUser(
+      userId,
+      OAUTH_GRANT_REVOKED_REASONS.USER_DISABLED,
+      new Date(),
+    );
   }
 
   // @ProfileResponseTime('UsersResolver.enableUser')

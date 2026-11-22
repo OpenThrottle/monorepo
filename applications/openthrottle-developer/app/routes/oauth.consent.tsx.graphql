@@ -1,0 +1,22 @@
+fragment OAuthConsentRequestFields on OAuthAuthorizationRequestObject {
+  clientHost
+  clientName
+  expiresAt
+  id
+  redirectHost
+  registrationKind
+  requestedScopes
+  resource
+}
+
+query OAuthConsentRequest($id: String!) {
+  oauthAuthorizationRequest(id: $id) {
+    ...OAuthConsentRequestFields
+  }
+}
+
+mutation DecideOAuthAuthorization($input: DecideOAuthAuthorizationInput!) {
+  decideOAuthAuthorization(input: $input) {
+    redirectUrl
+  }
+}

@@ -2699,6 +2699,9 @@ importers:
       '@openthrottle/agentic-token-usage':
         specifier: workspace:^
         version: link:../agentic-token-usage
+      '@openthrottle/nestjs-modules':
+        specifier: workspace:^
+        version: link:../nestjs-modules
       '@openthrottle/nestjs-postgres':
         specifier: workspace:^
         version: link:../nestjs-postgres
