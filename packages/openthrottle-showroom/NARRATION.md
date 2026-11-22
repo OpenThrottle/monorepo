@@ -1,6 +1,9 @@
 # Narration
 
-Script markdown in, per-sentence audio plus timings out.
+Script markdown in, per-sentence audio plus timings out. Fish Audio renders the
+whole take in one request and slices it into those per-sentence files (see
+[Whole-take rendering](#whole-take-rendering)); Piper and `say` render sentence by
+sentence.
 
 ```bash
 pnpm exec tsx packages/openthrottle-showroom/src/narrate/narrate.ts \
@@ -190,7 +193,9 @@ about three seconds — a 1.6-second clip measured -15.1 when asked for -14 — 
 normalising each sentence independently flattens the relative level between them,
 which is what makes narration sound like a series of announcements. The stage now
 renders every clip raw, concatenates the take, measures **once**, and applies that
-single gain to every clip.
+single gain to every clip. The whole-take path gets the same result more directly:
+the take is already one file, so it is measured once, gain-and-resample is applied
+in one pass, and the normalised take is sliced with no further filter.
 
 **The peak ceiling was binding.** At -1.5 dBTP the take normalised to -15.3 LUFS,
 because reaching -14 would have breached the peak. Moving to -1.0 dBTP — a standard
@@ -221,8 +226,157 @@ is only safe after hearing Piper read the written form, and Piper mangles this
 vocabulary the same way `say` does. Re-check the list per script as new terms appear,
 not per backend.
 
+## Whole-take rendering
+
+A backend that offers `renderTake` renders the whole script in ONE request, which
+reads as one performance instead of a series of separately rendered sentences. The
+word timings it returns locate each sentence boundary, the take is normalised once,
+and it is sliced into the usual per-sentence files.
+
+### How to render one
+
+It is the **default whenever the backend offers `renderTake`**. Today that is Fish
+Audio only, so a default render is whole-take with no flag:
+
+```bash
+# Default: whole take (Fish offers renderTake).
+pnpm exec tsx …/narrate.ts --script 05-connect-ot-mcp
+
+# Escape hatch: the per-sentence path on a backend that supports both.
+pnpm exec tsx …/narrate.ts --script 05-connect-ot-mcp --per-sentence
+```
+
+`renderMode` in `timings.json` records which path produced the take:
+`'whole-take'` or `'per-sentence'`. It is additive, so timings written before it
+existed still read. `--no-cache` forces a fresh render on both paths.
+
+| Backend      | Whole take | Notes                                              |
+| ------------ | ---------- | -------------------------------------------------- |
+| `fish-audio` | yes        | `/v1/tts/stream/with-timestamp`; the default       |
+| `piper`      | no         | on box; per-sentence only, byte for byte as before |
+| `macos-say`  | no         | rehearsal; per-sentence only                       |
+| `elevenlabs` | no         | per-sentence only, deliberately not implemented    |
+
+Piper, `say` and ElevenLabs are deliberately left on the per-sentence path: none of
+them returns word timings that this stage uses, and the point of the change is Fish's
+single-request read.
+
+### Cache trade-off
+
+The take cache keys on the full spoken text, so a one-word edit re-buys the whole
+take (about $0.17 for a full 24-script season pass); an unchanged script replays for
+free. The per-sentence cache is unchanged.
+
+### Baseline measurement, and what is still owed
+
+Method: episode 05, payoff-first variant, 605 spoken characters, `s2.1-pro-free`,
+lexicon applied. The per-sentence path and the whole-take path (default, then
+`chunk_length` 100, 200 and 300) were each normalised by the same single gain and
+measured with ffmpeg `ebur128`. The code is `spike/fish-whole-take.ts`; its output,
+including `report.md`, the raw and normalised wavs and the word timings, is in
+`spike/output/fish-whole-take/` (gitignored, so it exists only on the machine that
+ran it).
+
+| Take (script 05)             | Integrated | LRA    | Duration |
+| ---------------------------- | ---------- | ------ | -------- |
+| Per-sentence                 | -14.4 LUFS | 2.3 LU | 31.49s   |
+| Whole take, default          | -14.3 LUFS | 2.2 LU | 31.35s   |
+| Whole take, chunk_length 100 | -14.2 LUFS | 2.0 LU | 30.50s   |
+| Whole take, chunk_length 200 | -14.2 LUFS | 2.3 LU | 31.96s   |
+| Whole take, chunk_length 300 | -14.3 LUFS | 2.1 LU | 29.55s   |
+
+- **Loudness range does not separate the methods**, and the 2.4 s duration spread is
+  run-to-run noise. The measurement cannot say whether whole-take sounds better.
+- **Word timings were clean:** 101 of 101 words, in order, with no merges or splits,
+  punctuation stripped, on an 80 ms grid.
+- **`chunk_length` had no observable effect.** Every setting produced the same 3
+  chunks of 268, 235 and 100 characters, split at sentence ends. The seams between
+  chunks are 412 to 691 ms pauses (paragraph-like, against a 160 to 240 ms median
+  sentence break) with no restart of the voice. The per-sentence path's joins run
+  0 to 121 ms, two of them with no gap at all.
+- **The stream surprise:** a chunk's last event already carries the start of the
+  NEXT chunk's audio, so audio is concatenated in arrival order and never split by
+  `chunk_seq`. Alignment is cumulative within a chunk, so the last event per
+  `chunk_seq` counts.
+
+**Pinned parameters:** `sample_rate: 44100` (48000 is rejected with a 400; the take is
+resampled to format.json's rate in the single normalise pass), `chunk_length: 300`
+(provisional, see above), and no `condition_on_previous_chunks`, `temperature` or
+`top_p`, which are unverified on this endpoint.
+
+**The listen has NOT happened.** The phone-speaker A/B of per-sentence against
+whole-take (the same method as the bake-off above) is owed, and the verdict on
+whether whole-take beats per-sentence is **pending**. The files to compare are
+`spike/output/fish-whole-take/per-sentence.normalised.wav` and
+`whole-default.normalised.wav` (plus `whole-100`, `whole-200`, `whole-300`) on the
+machine that ran the spike. Until a person has listened, whole-take is the default on
+the strength of the clean timings and the single-request read, not on a verdict. If
+the listen goes the other way, `--per-sentence` is the way back.
+
+### Season 1 re-render
+
+All 24 episodes rendered whole-take with exit code 0 and no desyncs. Shorts came out
+at 18.4 to 32.2 s against the 60 s cap; L1 is 86.3 s and L2 is 73.1 s against the
+720 s cap. No script or lexicon edits were needed. **Still to do, by a person:** the
+per-episode listen, and the per-term lexicon pass (each substitution re-heard through
+the whole-take voice, since the lexicon entries were set against per-sentence
+renders).
+
 ## Why per-sentence files
 
 The task asked for per-beat clips so that re-recording one beat does not invalidate
 the take. Per-sentence is strictly finer, and it also produces caption-grade segment
 timings for free — a caption cue is a phrase, not a beat.
+
+The per-sentence **file layout** (`NNN-<beat>.wav` and one `timings.json` segment per
+sentence) is the contract with the assembly and caption stages, and it holds on BOTH
+render paths. Whole-take rendering changes how the audio is produced, not what is
+written: the take is cut into the same files at sentence boundaries found from word
+timings, so `assemble/timeline.ts` and `assemble/captions.ts` do not know which path
+ran.
+
+## Word-level captions: not in v1
+
+**Decision: caption cues stay sentence-level.** `assemble/captions.ts` keeps reading
+`segment.written` and the segment's start and end from `timings.json`, exactly as
+before. The whole-take path derives those segment times from word timings, but the
+words themselves stop at the narration stage.
+
+**Why the word timings do not map onto captions yet.** The timings are of the
+**spoken** words and captions show the **written** form, and `lexicon.ts` is one-way:
+it rewrites written to spoken and keeps no record of what became what. `MCP` is three
+spoken words (`M C P`, which the service may return as one word or three), `9:16` is
+`nine by sixteen`, `OpenThrottle` is two words, `read` is `reed`. Karaoke-style cues
+would highlight a written word at the time its spoken words are heard, and nothing
+says which spoken words belong to which written word. Guessing by position or length
+is the proportional splitting that the sentence mapper refuses to do.
+
+**What a word-level version would need:**
+
+- **Token-level provenance from the lexicon.** `applyLexicon` would return the
+  spoken text together with a list of spans, each saying that written characters
+  `[a, b)` became spoken characters `[c, d)`. Unsubstituted text maps one to one.
+  This is better than a reversible lexicon table, because the table is ambiguous the
+  other way (`reed` could be a real word) and provenance is recorded at the moment of
+  substitution, when the answer is known.
+- **A written-word to spoken-word alignment** built from those spans and the same
+  normalised-character walk that `mapWordsToSentences` already does: each written
+  word owns the spoken words whose characters fall in its span, and its timing is
+  the first of their starts to the last of their ends. A word that cannot be placed
+  fails loudly, as the sentence mapper does.
+- **A new field in `timings.json`**, for example per segment `words: { text, startSeconds, endSeconds }[]`
+  in the written form, added alongside the existing fields (additive, like
+  `renderMode`). `captions.ts` would emit one cue per word, or one cue per phrase
+  with word-level highlight, only when the field is present, and fall back to the
+  sentence cue otherwise. Per-sentence-path takes have no word timings and would
+  keep sentence cues.
+
+**Follow-up plan: no, not yet.** The cost is real: a lexicon change that touches
+every substitution, a new alignment with its own failure modes, a `timings.json`
+extension and caption rendering and styling work. The benefit is unproven: the
+episodes are shorts of 18 to 32 seconds plus two long-forms of 73 and 86 seconds,
+each with one short caption per sentence, which already reads in step with the
+voice, and nobody has asked for karaoke styling. Revisit when a specific episode needs it, or when a caption style
+is chosen that requires per-word timing. The groundwork is already in place: the
+word timings are recorded per take in the render cache, and the sentence mapper is
+the template for the alignment. Filing a plan now would be speculation.

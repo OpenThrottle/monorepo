@@ -55,7 +55,7 @@ export const episode: VideoEpisode = {
   id: '09-tags-and-rules',
   production: {
     blockedOn: [
-      'Adding a tag to a plan has no UI: PlanToolbarTags lives inside the plan toolbar, which PlanDetailRoute hard-codes off (`const showToolbar = false`, #452). The addPlanTag action still exists, so this is a hidden control rather than a missing feature — but the first and sixth beats both click it',
+      `Adding a tag to a plan is a beta surface: PlanToolbarTags lives in the plan toolbar, which PlanDetailRoute renders only under FEATURE_BETA_PREVIEW (\`const showToolbar = FEATURE_BETA_PREVIEW\`, since #625). Season 1 records with the flag off, and the first and sixth beats both click it. Unblocks when the plan toolbar leaves beta`,
     ],
     recording: 'live',
     titleCard: ['Tags and rules', 'that act for you'],

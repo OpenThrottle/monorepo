@@ -92,6 +92,12 @@ describe('detectSecret', () => {
     ).toContain('high-entropy-string');
   });
 
+  test('flags the same token under any key other than contentBlobId', () => {
+    expect(
+      detectSecret('{"apiKey":"Xy/aB3dE5fG7hJ9kL1mN3pQ5rS7tU9vW1xY3zA5bC7d="}'),
+    ).toContain('high-entropy-string');
+  });
+
   test.each([
     ['a git SHA', 'commit 4548e987aa4548e987aa4548e987aa4548e987aa landed'],
     ['a UUID', 'plan 050c43a1-8b00-485d-adce-86bda5bb7a19 done'],
@@ -100,6 +106,14 @@ describe('detectSecret', () => {
       'integrity sha512-AbCdEf0123456789AbCdEf0123456789AbCdEf01 unchanged',
     ],
     ['ordinary prose', 'the quick brown fox jumps over the lazy dog'],
+    [
+      'a content-blob id',
+      '{"contentBlobId":"aB3dE5fG7hJ9kL1mN3pQ5rS7tU9vW1xY3zA5bC7d"}',
+    ],
+    [
+      'a content-blob id whose base64 run starts after a slash',
+      '{"contentBlobId":"Xy/aB3dE5fG7hJ9kL1mN3pQ5rS7tU9vW1xY3zA5bC7d="}',
+    ],
   ])('does not flag %s', (_label, text) => {
     expect(detectSecret(text)).toBeNull();
   });

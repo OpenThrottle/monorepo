@@ -35,6 +35,7 @@ import {
 } from './backends/elevenlabs.ts';
 import {
   DEFAULT_FISH_AUDIO_VOICE,
+  FISH_TAKE_CHUNK_LENGTH,
   fishAudioBackend,
 } from './backends/fish-audio.ts';
 import { DEFAULT_PIPER_VOICE, piperBackend } from './backends/piper.ts';
@@ -45,7 +46,10 @@ import {
   renderCacheKey,
   storeCachedRender,
 } from './render-cache.ts';
+import { renderWholeTake as renderWholeTakeWith } from './renderWholeTake.ts';
+import { selectRenderMode } from './selectRenderMode.ts';
 import type { NarrationTimings, SegmentTiming, TtsBackend } from './types.ts';
+import { RENDER_MODE } from './types.ts';
 
 const execFileAsync = promisify(execFile);
 
@@ -148,50 +152,29 @@ const measureLoudness = async (
   ].join(':');
 };
 
-const main = async (): Promise<void> => {
-  const slug = argValue('script');
+interface RenderOptions {
+  readonly audioDir: string;
+  readonly backend: TtsBackend;
+  readonly format: ReturnType<typeof loadFormat>;
+  readonly script: ReturnType<typeof parseScript>;
+  readonly voice: string;
+}
 
-  if (!slug) {
-    console.error(
-      'narrate: --script <slug> is required (e.g. --script 03-first-plan)',
-    );
-    process.exit(1);
-  }
+interface RenderedSegments {
+  readonly segments: readonly SegmentTiming[];
+  readonly totalSeconds: number;
+}
 
-  const backendId =
-    argValue('backend') ?? process.env.NARRATION_BACKEND ?? 'fish-audio';
-
-  const backend = BACKENDS[backendId];
-
-  if (!backend) {
-    console.error(
-      `narrate: unknown backend '${backendId}' (have: ${Object.keys(BACKENDS).join(', ')})`,
-    );
-    process.exit(1);
-  }
-
-  const voice =
-    argValue('voice') ??
-    process.env.NARRATION_VOICE ??
-    DEFAULT_VOICES[backend.id];
-
-  if (!voice) {
-    console.error(`narrate: no default voice for backend '${backend.id}'`);
-    process.exit(1);
-  }
-
-  const format = loadFormat();
-  const variantId = argValue('variant');
-  const script = parseScript(slug, variantId);
-
-  const audioDir = join(takeDir(slug, script.variant), 'audio');
-  rmSync(audioDir, { force: true, recursive: true });
-  mkdirSync(audioDir, { recursive: true });
+/** The per-sentence path: one backend call per sentence, then one gain per take. */
+const renderPerSentence = async (
+  options: RenderOptions & { readonly slug: string },
+): Promise<RenderedSegments> => {
+  const { audioDir, backend, format, script, voice } = options;
 
   // Raw renders are cached OUTSIDE audioDir (which is wiped per run), keyed on
   // backend + model + voice + spoken text, so an edit only re-buys the sentences
   // it changed. `--no-cache` forces a full re-render.
-  const cacheDir = join(captureDir(slug), 'render-cache');
+  const cacheDir = join(captureDir(options.slug), 'render-cache');
   const useCache = !process.argv.includes('--no-cache');
   mkdirSync(cacheDir, { recursive: true });
 
@@ -319,10 +302,98 @@ const main = async (): Promise<void> => {
   rmSync(listPath, { force: true });
   /* eslint-enable no-await-in-loop */
 
+  return { segments, totalSeconds: cursor };
+};
+
+const cacheDirFor = (slug: string): string => {
+  return join(captureDir(slug), 'render-cache');
+};
+
+const renderWholeTake = (
+  options: RenderOptions & { readonly slug: string },
+): Promise<RenderedSegments> => {
+  // Same cache directory as the per-sentence path, separate entries (`take-*`).
+  const noCache = process.argv.includes('--no-cache');
+  const cache = noCache
+    ? undefined
+    : { chunkLength: FISH_TAKE_CHUNK_LENGTH, dir: cacheDirFor(options.slug) };
+
+  return renderWholeTakeWith(
+    { ...options, cache },
+    {
+      ffmpeg: async (args) => {
+        await execFileAsync('ffmpeg', args);
+      },
+      measureLoudness: (path) => {
+        return measureLoudness(
+          path,
+          options.format.audio.targetLufs,
+          options.format.audio.truePeakDb,
+        );
+      },
+      probeDuration,
+    },
+  );
+};
+
+const main = async (): Promise<void> => {
+  const slug = argValue('script');
+
+  if (!slug) {
+    console.error(
+      'narrate: --script <slug> is required (e.g. --script 03-first-plan)',
+    );
+    process.exit(1);
+  }
+
+  const backendId =
+    argValue('backend') ?? process.env.NARRATION_BACKEND ?? 'fish-audio';
+
+  const backend = BACKENDS[backendId];
+
+  if (!backend) {
+    console.error(
+      `narrate: unknown backend '${backendId}' (have: ${Object.keys(BACKENDS).join(', ')})`,
+    );
+    process.exit(1);
+  }
+
+  const voice =
+    argValue('voice') ??
+    process.env.NARRATION_VOICE ??
+    DEFAULT_VOICES[backend.id];
+
+  if (!voice) {
+    console.error(`narrate: no default voice for backend '${backend.id}'`);
+    process.exit(1);
+  }
+
+  // `--per-sentence` forces the per-sentence path on a backend that offers both.
+  const renderMode = selectRenderMode({
+    backend,
+    perSentence: process.argv.includes('--per-sentence'),
+  });
+
+  const format = loadFormat();
+  const variantId = argValue('variant');
+  const script = parseScript(slug, variantId);
+
+  const audioDir = join(takeDir(slug, script.variant), 'audio');
+  rmSync(audioDir, { force: true, recursive: true });
+  mkdirSync(audioDir, { recursive: true });
+
+  const renderOptions = { audioDir, backend, format, script, voice };
+  const isWholeTake = renderMode === RENDER_MODE.WHOLE_TAKE;
+  const rendered = isWholeTake
+    ? await renderWholeTake({ ...renderOptions, slug })
+    : await renderPerSentence({ ...renderOptions, slug });
+  const { segments, totalSeconds: cursor } = rendered;
+
   const timings: NarrationTimings = {
     backend: backend.id,
     integratedLufsTarget: format.audio.targetLufs,
     ...(backend.model === undefined ? {} : { model: backend.model }),
+    renderMode,
     segments,
     slug,
     totalSeconds: cursor,

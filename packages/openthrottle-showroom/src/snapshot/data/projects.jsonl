@@ -1,1 +1,2 @@
-{"created_at":{"$offsetMs":-17280179236},"description":null,"id":"f6848476-ddc4-4b52-b174-03c4883c272f","name":"OpenThrottle/monorepo","nx_project_name":"OpenThrottle/monorepo","updated_at":{"$offsetMs":-1875233386}}
+{"created_at":{"$offsetMs":-1108827313},"deleted_at":null,"description":"Auto-created by the add-folder onboarding flow for https://github.com/OpenThrottle/.github.","id":"1b8b9146-11c6-4287-9b9c-eecf2e00a1a1","name":"OpenThrottle/.github","nx_project_name":"OpenThrottle/.github","updated_at":{"$offsetMs":-1108827313}}
+{"created_at":{"$offsetMs":-17280179236},"deleted_at":null,"description":null,"id":"f6848476-ddc4-4b52-b174-03c4883c272f","name":"OpenThrottle/monorepo","nx_project_name":"OpenThrottle/monorepo","updated_at":{"$offsetMs":-1875233386}}

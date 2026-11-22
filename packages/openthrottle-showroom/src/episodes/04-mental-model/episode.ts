@@ -20,9 +20,10 @@ export const episode: VideoEpisode = {
     { action: 'Navigate to `/notes`, open a seeded note.', t: '0:21' },
     { action: 'Navigate to `/projects`, open a seeded project.', t: '0:31' },
     {
-      // The plan detail page has no project badge; the one place the app renders
-      // the plan→project relation is the project link on a plan's row in /plans.
-      action: "Back to `/plans`; highlight a plan row's project link.",
+      // 2026-11-22: the /plans project column and the plan-header project badge
+      // are both gone, so the relation is shown where the app still renders it,
+      // the project's own plans list.
+      action: 'On that project, highlight the plans that point at it.',
       t: '0:41',
     },
     { action: 'Hold on the plan.', t: '0:50' },
@@ -57,7 +58,7 @@ export const episode: VideoEpisode = {
         ],
         [
           '0:41',
-          'Plans point at a project. Tasks live under plans. Notes are searchable by anything.',
+          'Plans point at a project. Tasks live under plans. Notes keep what you learned along the way.',
         ],
         ['0:50', 'That is the whole vocabulary.'],
       ],

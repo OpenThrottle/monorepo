@@ -25,6 +25,8 @@ packages/openthrottle-showroom/
 ├── src/scripts/verify-demo-data.ts  # the episode data gate
 ├── src/scripts/ensure-demo-database.ts
 ├── src/scripts/resolve-demo-url.ts
+├── src/scripts/demo-live-run.ts     # heartbeat that holds one run live for a take
+├── src/scripts/check-manifest-drift.ts  # CI gate: manifest vs migrated schema
 ├── spike/                     # task-3 recorder comparison + verdict
 └── output/                    # captures and masters (gitignored)
 ```
@@ -180,8 +182,9 @@ schema`. A growing list means the dev database has drifted from
 
 ### Size
 
-Measured 2026-08-27: ~17MB across 28 tables as plain JSONL, largest file 4.2MB
-(`documentation_embeddings.jsonl`). Committed uncompressed on purpose — gzip
+Measured 2026-11-22: ~37MB across 29 tables as plain JSONL, largest file 16.5MB
+(`task_embeddings.jsonl`, 1,478 rows of 768-dim vectors; the August snapshot,
+~17MB, carried no task vectors at all). Committed uncompressed on purpose — gzip
 would make the diff unreviewable, which defeats the ritual above. If the
 directory ever exceeds **50MB**, narrow the export scope (shorter window, or
 demote a bulky table to `ignored`) before reaching for compression;
@@ -209,6 +212,13 @@ pnpm exec tsx packages/openthrottle-showroom/src/runner/run.ts \
   --flow 03-first-plan --base http://localhost:7180
 ```
 
+A flow that sets `liveRun` (11, 12) has the runner spawn
+`src/scripts/demo-live-run.ts`, which writes heartbeats to the demo database, so
+the recorder's own shell needs the same `OPENTHROTTLE_POSTGRES_URL` the demo
+server runs with (print it with `src/scripts/resolve-demo-url.ts`). Without it the
+heartbeat refuses the real database, as it should, and the take films a run
+that is not live.
+
 Out comes `output/<flow>/frames/` plus `frames.concat` (per-frame durations) and
 `manifest.json` (`{beat, kind, tStart, tEnd, narrationCue, target}` per step). The
 assembly stage turns those into a master; `--headed` shows the browser while you
@@ -224,7 +234,7 @@ wrong.
 id that names no flow fails with a list of the ones that do rather than a module
 resolution error. **[AUTHORING_FLOWS.md](./AUTHORING_FLOWS.md) is the guide** —
 portrait strategy, regions of interest, the `waitFor`-before-`highlight` rule,
-and what the four shipped flows settled. **[RECORDABILITY.md](./RECORDABILITY.md)
+and what the shipped flows settled. **[RECORDABILITY.md](./RECORDABILITY.md)
 is the per-beat audit** of every episode that has no flow yet; read your
 episode's row before you write a line.
 
@@ -305,7 +315,7 @@ intentional pause, and it is pacing for the narration rather than a wait for the
 - **Login before capture starts.** A screencast opens on the payoff, not a login
   form, so authentication is setup rather than content.
 
-### Two things the demo server needs
+### Four things the demo server needs
 
 - **`GITHUB_USER=atlas-ada`.** Plan creation requires an author unless the server
   supplies a default, and without it `03-first-plan` silently fails to create
@@ -315,6 +325,22 @@ intentional pause, and it is pacing for the narration rather than a wait for the
   the login form's prefill is development-only — which is why the runner types
   credentials rather than submitting a prefilled form the way the Maestro helper
   does.
+- **`NODE_ENV=production`, exported.** A production _build_ is not enough:
+  `NODE_ENV` defaults to `development` when unset
+  (`packages/react-router-utils/src/config/environment.ts`), and then the
+  served build prefills the login form with the development account and shows
+  the dev diagnostics strip. Found 2026-11-22, when a long-form flow typed into
+  a prefilled field. In production the server also refuses the committed default
+  `JWT_SECRET`, so export a throwaway one for the demo stack
+  (`JWT_SECRET="$(openssl rand -base64 48)"`); it never needs to outlive the take.
+- **`FEATURE_BETA_PREVIEW` unset.** Season 1 does not film beta surfaces
+  (decided 2026-11-21). A control that renders only with the flag on does not
+  exist for a recording: the plan and task toolbars (`PlanDetailRoute`,
+  `TaskDetailRoute`) and the routes in `GATED_PREFIXES`
+  (`packages/react-router-auth/src/utils/middleware.ts`) are out of frame, and
+  an episode that needs one carries a `blockedOn` that names the flag. Neither
+  `seed-demo.sh` nor the runner sets it, so leave it out of the shell you boot the
+  build from too. It defaults to off.
 
 ## Chrome kept out of frame
 

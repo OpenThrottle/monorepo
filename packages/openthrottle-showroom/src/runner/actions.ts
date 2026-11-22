@@ -239,6 +239,11 @@ export const runStep = async (
         .locator(step.selector)
         .first()
         .waitFor({ state: 'visible', timeout: 30_000 });
+      // A click on a plain anchor is a full-document navigation, which drops the
+      // overlay and the hide stylesheet with it: the server-metrics strip then
+      // came back on 07's last beat. A flow always waits for the new page, so
+      // re-install here; it is a no-op when the overlay is still in place.
+      await installCursor(page, hideSelectors);
       return;
     }
 

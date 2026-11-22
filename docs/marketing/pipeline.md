@@ -52,22 +52,23 @@ The capture stays at `output/<episode>/`; only the words and what derives from
 them are per-take.
 
 **Record the portrait pass for anything destined to be a Short.** Reframing a
-1920-wide capture into 9:16 is a compromise either way — cropping clips a table at
+landscape capture into the portrait frame is a compromise either way — cropping clips a table at
 both edges, fitting shrinks the text past readable — and it is not a marginal
 difference when you look at the two side by side. A second capture lets the app's
 own responsive layout do the work.
 
 The portrait pass lays out at a **mobile** viewport and captures the full frame:
-`recording.portraitViewport` in `format.json` is 540×960, and with
-`deviceScaleFactor: 2` the page renders at exactly 1080×1920, so the emitted frame
-is the Short's own size and nothing is upscaled. The 540 is the point — it is below
-the app's 768px mobile breakpoint (`MOBILE_BREAKPOINT` in
+`recording.portraitViewport` in `format.json` is a phone-width CSS viewport, and with
+`recording.deviceScaleFactor` the page renders at exactly the portrait frame
+(`formats.short`), so the emitted frame is the Short's own size and nothing is
+upscaled. The viewport width is the point — it is below the app's mobile breakpoint
+(`MOBILE_BREAKPOINT` in
 `packages/react-router-shadcn/src/hooks/useIsMobile.tsx`), so the app picks its
 phone layout.
 
-Recording at the Short's own 1080 CSS pixels, as this originally did, put the app
-_above_ that breakpoint: it rendered the desktop layout, sidebar and all, and on a
-content-light route roughly 60% of the frame was empty background. The text was
+Recording at the Short's own frame width in CSS pixels, as this originally did, put
+the app _above_ that breakpoint: it rendered the desktop layout, sidebar and all, and
+on a content-light route most of the frame was empty background. The text was
 legible either way — this is the difference between a Short composed for the format
 and a cropped desktop.
 
@@ -117,15 +118,16 @@ publishable at all.
   and every later beat inherited the previous one's words. Where a beat's narration
   runs longer than its action, it **holds the last frame of that beat** rather than
   speeding the picture up.
-- **Burns the lower third** (Shorts have no title card) and appends the shared 2s
-  outro.
-- **Generates captions** — burned into the 9:16 master, plus an `.srt` sidecar.
-- **Reframes 9:16** from a portrait capture when one exists; otherwise per the
+- **Burns the lower third** (Shorts have no title card) and appends the shared
+  outro (`cards.outro`).
+- **Generates captions** — burned into the portrait master, plus an `.srt` sidecar.
+- **Reframes to portrait** from a portrait capture when one exists; otherwise per the
   flow's `portraitStrategy` (`crop` follows the per-beat region of interest, `fit`
   letterboxes).
 - **Mixes an optional music bed** at `musicBedDb` under narration, ducked while
   anyone is speaking. Off by default — see below.
-- **Encodes** H.264 high profile, CRF 18, yuv420p, faststart, AAC 192k, stereo.
+- **Encodes** with the `encode` block of `format.json` (codec, profile, CRF, pixel
+  format, faststart, audio bitrate), stereo.
 
 ### Watch the run's closing warnings
 

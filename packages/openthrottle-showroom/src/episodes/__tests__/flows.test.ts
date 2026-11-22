@@ -64,15 +64,7 @@ describe('the flow registry', () => {
  * what makes that true — it fails if an entry here has already been satisfied,
  * so the list cannot quietly outlive the work.
  */
-const AWAITING_FLOW: readonly string[] = [
-  '02-one-command-boot',
-  '04-mental-model',
-  '11-ralph-one-task',
-  '12-watch-run-live',
-  '13-plan-id-traceability',
-  '22-self-host-docker-compose',
-  'L2-setup-from-scratch',
-];
+const AWAITING_FLOW: readonly string[] = [];
 
 describe('every episode is either recordable or honestly blocked', () => {
   /**

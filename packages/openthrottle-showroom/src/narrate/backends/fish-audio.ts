@@ -10,7 +10,22 @@
 
 import { writeFileSync } from 'node:fs';
 
-import type { RenderRequest, TtsBackend } from '../types.ts';
+import type {
+  RenderedTake,
+  RenderRequest,
+  TakeRequest,
+  TtsBackend,
+} from '../types.ts';
+import type { SseEvent } from './fish-audio-sse.ts';
+import {
+  assembleTake,
+  assertCoverage,
+  buildWav,
+  FISH_TAKE_SAMPLE_RATE,
+  flushSseText,
+  parseSseText,
+  parseTakeEvent,
+} from './fish-audio-sse.ts';
 
 /**
  * The pinned voice for the default backend, from the public library
@@ -64,6 +79,92 @@ export const resolveFishAudioApiKey = (
 
 const RESOLVED_MODEL = resolveFishAudioModel();
 
+/**
+ * @description The pinned `chunk_length` for a whole-take request. Part of the
+ * take cache key, because it shapes the request even though the spike saw no
+ * effect from it.
+ */
+export const FISH_TAKE_CHUNK_LENGTH = 300;
+
+const TAKE_ENDPOINT = 'https://api.fish.audio/v1/tts/stream/with-timestamp';
+
+/**
+ * @description Request body for a whole-take render.
+ *
+ * - `sample_rate: 44100` — the highest wav rate Fish accepts: 48000 is rejected
+ *   with a 400. The take is therefore NOT at format.json's rate; the gain-then-slice
+ *   step (OT task 4) resamples it with `-ar <format.audio.sampleRate>`, the same
+ *   way the per-sentence path's ffmpeg passes do.
+ * - `chunk_length: 300` — had no observable effect in the spike; pinned and
+ *   provisional until the human listen.
+ * - `condition_on_previous_chunks`, `temperature` and `top_p` are deliberately not
+ *   sent: unverified on this endpoint.
+ */
+export const buildTakeBody = (
+  text: string,
+  voice: string,
+): Record<string, string | number> => {
+  return {
+    chunk_length: FISH_TAKE_CHUNK_LENGTH,
+    format: 'wav',
+    reference_id: voice,
+    sample_rate: FISH_TAKE_SAMPLE_RATE,
+    text,
+  };
+};
+
+const readTakeStream = async (response: Response): Promise<SseEvent[]> => {
+  if (response.body === null) {
+    throw new Error('fish-audio: whole-take response has no body');
+  }
+
+  const decoder = new TextDecoder();
+  const events: SseEvent[] = [];
+  let rest = '';
+
+  for await (const part of response.body) {
+    const parsed = parseSseText(rest, decoder.decode(part, { stream: true }));
+
+    events.push(...parsed.events);
+    rest = parsed.rest;
+  }
+
+  events.push(...flushSseText(`${rest}${decoder.decode()}`));
+
+  return events;
+};
+
+const renderTake = async (request: TakeRequest): Promise<RenderedTake> => {
+  const key = resolveFishAudioApiKey();
+  const wavPath = request.outputPath.replace(/\.(aiff|wav)$/i, '.wav');
+
+  const response = await fetch(TAKE_ENDPOINT, {
+    body: JSON.stringify(buildTakeBody(request.text, request.voice)),
+    headers: {
+      Authorization: `Bearer ${key}`,
+      'Content-Type': 'application/json',
+      model: RESOLVED_MODEL,
+    },
+    method: 'POST',
+  });
+
+  if (!response.ok) {
+    const detail = await response.text();
+
+    throw new Error(
+      `fish-audio: whole-take render failed (${String(response.status)} ${response.statusText}): ${detail.slice(0, 500)}`,
+    );
+  }
+
+  const events = await readTakeStream(response);
+  const take = assembleTake(events.map((event) => parseTakeEvent(event.data)));
+
+  assertCoverage(request.text, take.words);
+  writeFileSync(wavPath, buildWav(take.pcm, FISH_TAKE_SAMPLE_RATE));
+
+  return { audioPath: wavPath, words: take.words };
+};
+
 export const fishAudioBackend: TtsBackend = {
   id: 'fish-audio',
   model: RESOLVED_MODEL,
@@ -97,5 +198,6 @@ export const fishAudioBackend: TtsBackend = {
 
     return wavPath;
   },
+  renderTake,
   sendsDataOffBox: true,
 };

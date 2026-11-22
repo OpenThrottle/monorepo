@@ -23,6 +23,28 @@ describe('scanText', () => {
     ).toBe(true);
   });
 
+  test('does not read a repository folder named home as a home directory', () => {
+    const findings = scanText(
+      'hold.txt',
+      'useConversationStream hook (applications/openthrottle-developer/app/routing/home/demo/useConversationStream.tsx)',
+      'frame',
+    );
+
+    expect(findings.some((finding) => finding.rule === 'home-path')).toBe(
+      false,
+    );
+  });
+
+  test('still fails on a home directory after a space or a quote', () => {
+    for (const text of ['cd /home/alex/src', 'path: "/Users/alex/x"']) {
+      expect(
+        scanText('hook.txt', text, 'frame').some(
+          (finding) => finding.rule === 'home-path',
+        ),
+      ).toBe(true);
+    }
+  });
+
   test('fails on a real email address but allows the fictional demo domain', () => {
     const real = scanText(
       'hook.txt',

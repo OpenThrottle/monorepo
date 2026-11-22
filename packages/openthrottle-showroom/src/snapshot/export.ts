@@ -17,18 +17,42 @@ import { mkdir, readdir, unlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import type { RowFetcher, SnapshotScope } from './closure.ts';
-import { collectSnapshotRows, orderTablesTopologically } from './closure.ts';
+import {
+  collectSnapshotRows,
+  orderRowsBySelfReference,
+  orderTablesTopologically,
+} from './closure.ts';
 import { SNAPSHOT_MANIFEST } from './manifest.data.ts';
 import type { SnapshotManifest } from './manifest.ts';
 import {
   assertManifestMatchesSchema,
   assertTableExportable,
+  exportableSchema,
 } from './manifest.ts';
 import type { DatabaseSchema, QueryRunner } from './schema.ts';
 import { quoteIdentifier, reflectSchema } from './schema.ts';
 import { stableStringify, stableStringifyManifest } from './stable-json.ts';
 
 export const SNAPSHOT_SCOPE: SnapshotScope = {
+  // Each exclusion is a decision, and its reason is what a reviewer of the
+  // snapshot diff reads. Rows that reference an excluded row go with it.
+  excludedRows: [
+    {
+      id: '3f0bd0b8-b5fa-4388-a799-a46278d2704a',
+      reason: `the secret detector flagged a high-entropy token in a stringified tool call (tool_metadata events[].metadata.toolCall); the owner chose exclusion over allowlisting a value nobody reviewed (2026-11-22)`,
+      table: 'agent_conversation_messages',
+    },
+    {
+      id: '65362f7d-7e57-4863-94d9-180714539831',
+      reason: `the secret detector flagged a high-entropy token in a stringified tool call (tool_metadata events[].metadata.toolCall); the owner chose exclusion over allowlisting a value nobody reviewed (2026-11-22)`,
+      table: 'agent_conversation_messages',
+    },
+    {
+      id: '8b6471b7-e152-40b0-b565-2e3252f778b2',
+      reason: `the secret detector flagged a high-entropy token in a stringified tool call (tool_metadata events[].metadata.toolCall); the owner chose exclusion over allowlisting a value nobody reviewed (2026-11-22)`,
+      table: 'agent_conversation_messages',
+    },
+  ],
   // code_embeddings is deliberately ABSENT: the code index spans arbitrary
   // local workspaces, including private repositories (measured 2026-08-27:
   // 4,800 of 5,760 rows were another repo). The manifest denies it.
@@ -92,7 +116,17 @@ export interface SnapshotExportOptions {
   ) => SnapshotRowTransform;
 }
 
-const createPgRowFetcher = (runner: QueryRunner): RowFetcher => {
+/**
+ * @description `untilIso` is the window's exclusive upper edge — the rebase
+ * anchor. Without it a windowed root reads every row since the cutoff, so a
+ * re-export pulls in whatever the workspace did after the anchor: the output
+ * stops being a function of the data inside the window, and those rows rebase
+ * to positive offsets, which the seed turns into activity in the future.
+ */
+const createPgRowFetcher = (
+  runner: QueryRunner,
+  untilIso: string,
+): RowFetcher => {
   return {
     fetchAll: async (table) => {
       const result = await runner.query(
@@ -113,8 +147,9 @@ const createPgRowFetcher = (runner: QueryRunner): RowFetcher => {
     fetchSince: async (table, column, cutoffIso) => {
       const result = await runner.query(
         `SELECT * FROM ${quoteIdentifier(table)}
-        WHERE ${quoteIdentifier(column)} >= $1::timestamptz`,
-        [cutoffIso],
+        WHERE ${quoteIdentifier(column)} >= $1::timestamptz
+          AND ${quoteIdentifier(column)} < $2::timestamptz`,
+        [cutoffIso, untilIso],
       );
 
       return result.rows;
@@ -170,10 +205,12 @@ export const exportSnapshot = async (
   // every exported column is classified and vector dimensions still match.
   assertManifestMatchesSchema(manifest, schema);
 
-  const fetcher = createPgRowFetcher(options.runner);
+  const fetcher = createPgRowFetcher(options.runner, options.anchorIso);
+  // The closure walks only edges between exported tables, so a denied or
+  // ignored child of a root is never reached instead of failing the write.
   const rows = await collectSnapshotRows(
     fetcher,
-    schema,
+    exportableSchema(manifest, schema),
     scope,
     options.cutoffIso,
   );
@@ -213,10 +250,14 @@ export const exportSnapshot = async (
     // classified 'exported' before its rows may land in the snapshot.
     assertTableExportable(manifest, table);
 
-    const sortedRows = [...bucket.values()].sort((a, b) =>
-      comparePrimaryKeys(
-        tableSchema.primaryKey.map((column) => a[column]),
-        tableSchema.primaryKey.map((column) => b[column]),
+    const sortedRows = orderRowsBySelfReference(
+      schema,
+      table,
+      [...bucket.values()].sort((a, b) =>
+        comparePrimaryKeys(
+          tableSchema.primaryKey.map((column) => a[column]),
+          tableSchema.primaryKey.map((column) => b[column]),
+        ),
       ),
     );
 

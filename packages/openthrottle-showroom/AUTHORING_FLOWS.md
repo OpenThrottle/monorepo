@@ -111,13 +111,13 @@ ready yet, you want a `waitFor`.
 
 ## Comment every step with its beat time
 
-All four flows do it — `// 0:24 — save, land on the new plan.` — and it is what
-makes drift visible in review. A reviewer can read the flow next to the episode
-and see, without running anything, that the beat at 0:24 is the beat the flow
-says it is. It is also the only place a _reason_ fits: 03's category beat carries
-"not in the first draft of the script: the app requires it and has no default, so
-the script gained a beat rather than the flow pretending the field is not there",
-which is the whole argument for that beat existing.
+Every registered flow does it — `// 0:05 — "a plan is a goal with an ordered list
+of work under it."` in 04 — and it is what makes drift visible in review. A
+reviewer can read the flow next to the episode and see, without running anything,
+that the beat at 0:05 is the beat the flow says it is. It is also the only place a
+_reason_ fits, in a step comment or the flow's doc: 13 explains that the runner
+has no clipboard verb, so its copy beat highlights the id and types the same constant, which is the whole argument for
+that beat looking the way it does.
 
 ## Selectors are shared with the E2E suite
 

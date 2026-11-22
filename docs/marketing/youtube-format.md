@@ -7,10 +7,20 @@ pipeline (see [`pipeline.md`](./pipeline.md)), so the format has to be a set of
 constants a script can read, not a set of tastes a human applies.
 
 **Machine-readable constants live in [`format.json`](./format.json).** That file
-is the source of truth for every number below. The runner, the narration stage
-and the ffmpeg assembly stage all read it; nothing hard-codes a resolution, a
-LUFS target or a safe-area inset. When you change a number here, change it there
-in the same commit.
+owns every duration, resolution, frame rate, loudness target, true-peak ceiling,
+sample rate, bitrate, safe-area inset and card timing. The runner, the narration
+stage and the ffmpeg assembly stage all read it; nothing hard-codes a resolution, a
+LUFS target or a safe-area inset.
+
+**This file states no such number.** It names the `format.json` key and explains why
+the value is what it is, so changing a value is one edit in one place. Three kinds
+of number do not belong in `format.json`, and each has one owner that this file
+points at instead of restating: validator thresholds (tag count, thumbnail words) in
+[`rules.ts`](../../packages/openthrottle-showroom/src/validate/rules.ts), the
+reading rate and word budget in
+[`derived.ts`](../../packages/openthrottle-showroom/src/episodes/derived.ts), and
+artwork dimensions in [`assets/README.md`](./assets/README.md). See the ownership
+table in [`README.md`](./README.md).
 
 ---
 
@@ -26,22 +36,25 @@ the wrong place. Cut to the payoff.
 
 ## Shorts — the workhorse
 
-| Property   | Value                                                      |
-| ---------- | ---------------------------------------------------------- |
-| Duration   | ≤ 60s hard cap; **target 55s** (leaves room for TTS drift) |
-| Primary    | 1080×1920 (9:16), 30fps                                    |
-| Secondary  | 1920×1080 (16:9), 30fps — the main-feed export             |
-| Captions   | Burned in on the 9:16 master, plus a sidecar `.srt`        |
-| Title card | **None.** No bumper, no logo sting, no "hi and welcome"    |
-| Outro      | The shared 2s outro card, identical on every video         |
+| Property   | Value                                                                                                              |
+| ---------- | ------------------------------------------------------------------------------------------------------------------ |
+| Duration   | Hard cap `formats.short.maxDurationSeconds`; **target** `formats.short.targetDurationSeconds` (room for TTS drift) |
+| Primary    | The portrait frame: `formats.short.width` × `height`, `aspect`, `fps`                                              |
+| Secondary  | The landscape frame, `formats.longform` dimensions — the main-feed export                                          |
+| Captions   | Burned in on the portrait master, plus a sidecar `.srt`                                                            |
+| Title card | **None.** No bumper, no logo sting, no "hi and welcome" (`cards.title.durationSeconds`)                            |
+| Outro      | The shared outro card, `cards.outro.durationSeconds`, identical on every video                                     |
 
 ### Beat structure
 
 ```
-0–3s     HOOK      The payoff is already on screen. Hard cut in, mid-action.
-3–50s    BODY      The single idea, one continuous click-path, no cuts to black.
-50–60s   OUTRO     Result held on screen → 2s outro card.
+HOOK    shortBeats.hook    The payoff is already on screen. Hard cut in, mid-action.
+BODY    shortBeats.body    The single idea, one continuous click-path, no cuts to black.
+OUTRO   shortBeats.outro   Result held on screen → the outro card.
 ```
+
+The beat windows are the `startSeconds` and `endSeconds` under those `format.json`
+keys.
 
 The hook is the only beat with a rule about content rather than time: **at t=0
 the frame must already show the thing the title promises.** Not the login page,
@@ -52,42 +65,43 @@ Recording starts _after_ seeded state is in place and the app is on the right
 route (see the demo seed script) — the pipeline never records a navigation
 warm-up and trims it later.
 
-### Why 55 and not 60
+### Why the target sits under the cap
 
 TTS length is not fully predictable, and the assembly stage extends dwell on the
 last frame of a beat when narration runs long rather than speeding the picture
-up. A 55s target absorbs that drift; a 60s target means the cap gets breached by
-a second and YouTube reclassifies the upload.
+up. A target with headroom absorbs that drift; a target equal to the cap means the
+cap gets breached by a second and YouTube reclassifies the upload.
 
-**Gate:** read the narration aloud against a stopwatch. Over 55 seconds spoken →
-cut words. Never raise the TTS rate to fit; sped-up narration is the single most
+**Gate:** read the narration aloud against a stopwatch. Over the short target
+spoken → cut words. Never raise the TTS rate to fit; sped-up narration is the single most
 recognisable "this was automated" tell.
 
 ## Long-form — rare, deliberate
 
-| Property   | Value                                             |
-| ---------- | ------------------------------------------------- |
-| Duration   | 5–12 min                                          |
-| Resolution | 1920×1080 (16:9), 30fps                           |
-| Chapters   | Required — YouTube chapter markers in description |
-| Title card | 2s title card (long-form only)                    |
-| Thumbnail  | Required — from the template below                |
+| Property   | Value                                                                            |
+| ---------- | -------------------------------------------------------------------------------- |
+| Duration   | `formats.longform.minDurationSeconds` to `maxDurationSeconds`                    |
+| Resolution | `formats.longform.width` × `height`, `aspect`, `fps`                             |
+| Chapters   | Required — YouTube chapter markers in description (`formats.longform.chaptered`) |
+| Title card | A title card, long-form only (`cards.title`)                                     |
+| Thumbnail  | Required — from the template below                                               |
 
 Only two are planned for Season 1 (the flagship idea→plan→tasks→commit walkthrough
 and a setup-from-scratch piece). Long-form is where setup and narrative live;
 everything else is a Short.
 
-### Why 30fps and not 60
+### Why the frame rate is not higher
 
-The spec started at 60. The task-3 recording spike proved no browser-capture path
-delivers a true 60fps: Playwright's `recordVideo` is locked to 25fps VP8 with no
-knob, and a CDP screencast emits frames only when the page changes, so its rate is
-a property of the content rather than a setting.
+The spec started at a higher rate. The task-3 recording spike proved no
+browser-capture path delivers it truthfully: Playwright's `recordVideo` is locked to
+a fixed rate and codec with no knob, and a CDP screencast emits frames only when the
+page changes, so its rate is a property of the content rather than a setting.
 
-30fps constant is the honest number, and it is the right one anyway. A dashboard
-screencast is text plus discrete state changes; the only continuous motion is the
-synthetic cursor and a few CSS transitions. Nothing in that benefits from 60fps,
-and doubling the frame count doubles capture disk for no visible gain.
+A constant `fps` (`formats.*.fps`) is the honest number, and it is the right one
+anyway. A dashboard screencast is text plus discrete state changes; the only
+continuous motion is the synthetic cursor and a few CSS transitions. Nothing in that
+benefits from a higher rate, and doubling the frame count doubles capture disk for
+no visible gain.
 
 ### The app must be recorded in dark mode
 
@@ -98,32 +112,35 @@ preference, it is what keeps the overlays from fighting the footage.
 
 ### The portrait pass must be recorded at a phone-width viewport
 
-A 1080×1920 frame is the Short's size, not the layout that should fill it. The
-runner records the portrait pass at a 540×960 CSS viewport (`format.json` →
-`recording.portraitViewport`) and lets `deviceScaleFactor: 2` render it at the full
-1080×1920, so the frame is unchanged and nothing is upscaled.
+The Short's frame size is not the layout that should fill it. The runner records the
+portrait pass at a phone-width CSS viewport (`format.json` →
+`recording.portraitViewport`) and lets `recording.deviceScaleFactor` render it at the
+full portrait frame, so the frame is unchanged and nothing is upscaled.
 
-The 540 is doing the work: it is under the app's 768px mobile breakpoint, so the app
-lays out for a phone. Recording at 1080 CSS pixels put us above the breakpoint and
-captured the desktop layout, sidebar and all — on a content-light route about 60% of
-the frame was empty background. Legible, but visibly a cropped desktop rather than
-something composed for the format.
+The viewport width is doing the work: it is under the app's mobile breakpoint
+(`MOBILE_BREAKPOINT` in `packages/react-router-shadcn/src/hooks/useIsMobile.tsx`), so
+the app lays out for a phone. Recording at the Short's own frame width in CSS pixels
+put us above the breakpoint and captured the desktop layout, sidebar and all — on a
+content-light route most of the frame was empty background. Legible, but visibly a
+cropped desktop rather than something composed for the format. The reasoning is also
+recorded in `recording.portraitViewport._note`.
 
 ## Safe areas
 
 The Shorts player draws its own UI over the frame. Content that lands under it is
 content nobody sees.
 
-**Portrait (1080×1920):** keep meaningful content out of the bottom **15%**
-(288px — title, channel, description), the right **14%** (151px — the like /
-comment / share rail), the top **8%** and the left **4%**.
+**Portrait (`safeAreas.portrait`):** keep meaningful content out of the bottom band
+(title, channel, description), the right band (the like / comment / share rail), and
+the thinner top and left bands. The insets are fractions of the frame, set per side
+in `format.json`.
 
-**Landscape (1920×1080):** a uniform 5%/4% inset is enough; the only overlay is
-the scrubber.
+**Landscape (`safeAreas.landscape`):** a small inset on every side is enough; the
+only overlay is the scrubber.
 
-Practically: the 9:16 crop is **not a centre crop**. Each flow declares a region
+Practically: the portrait crop is **not a centre crop**. Each flow declares a region
 of interest per beat and the assembly stage crops to follow the action, keeping
-the active element inside the portrait safe box. A centre crop of a 1920-wide
+the active element inside the portrait safe box. A centre crop of a landscape
 dashboard puts the sidebar and half the content off-frame.
 
 ## Title card, lower third, outro
@@ -132,25 +149,26 @@ Assets are checked in under [`assets/`](./assets/) as SVG, rendered to PNG at
 build time by the assembly stage (`assets/README.md` has the render commands).
 
 - **Lower third** ([`lower-third.svg`](./assets/lower-third.svg)) — appears at
-  1.5s, holds 3s, fades. Carries the video title and nothing else. It exists
+  `cards.lowerThird.startSeconds`, holds for `durationSeconds`, fades. Carries the video title and nothing else. It exists
   because Shorts have no title card: the viewer needs the claim in text while the
   narration is still on its first sentence.
-- **Outro card** ([`outro-card.svg`](./assets/outro-card.svg)) — 2s, identical on
-  every video, no animation beyond a fade. `openthrottle.ai` over the repo URL on
+- **Outro card** ([`outro-card.svg`](./assets/outro-card.svg)) — `cards.outro`,
+  identical on every video, no animation beyond a fade. `openthrottle.ai` over the repo URL on
   the brand near-black. Repetition is the point; it is the only branding moment
   in a Short and it has to be recognisable at a glance.
-- **Title card** ([`title-card.svg`](./assets/title-card.svg)) — long-form only,
-  2s, video title plus season/episode.
+- **Title card** ([`title-card.svg`](./assets/title-card.svg)) — long-form only
+  (`cards.title`), video title plus season/episode.
 
 ## Thumbnails
 
 Long-form only. Shorts use a frame from the video (YouTube picks or you pick, but
 never a custom card — a designed thumbnail on a Short reads as an ad).
 
-Template: [`assets/thumbnail-template.svg`](./assets/thumbnail-template.svg),
-1280×720. Rules: at most **four words**, set in the brand sans at ≥ 120px so it
-survives the mobile sidebar render; a real screenshot behind a near-black scrim
-at 70%; the red rule top-left. No faces, no arrows, no circled UI, no expression
+Template: [`assets/thumbnail-template.svg`](./assets/thumbnail-template.svg); its
+dimensions, type size and scrim opacity are set in the SVG and listed in
+[`assets/README.md`](./assets/README.md). Rules: a hard cap on the word count
+(`rules.ts`), set in the brand sans large enough to survive the mobile sidebar
+render; a real screenshot behind a near-black scrim; the red rule top-left. No faces, no arrows, no circled UI, no expression
 of surprise.
 
 ## Titles, descriptions, tags
@@ -189,21 +207,22 @@ Chapters:            <long-form only>
 00:00 …
 ```
 
-Never read a URL aloud in narration — it wastes seconds of a 55-second budget and
+Never read a URL aloud in narration — it wastes seconds of the short budget and
 sounds like a robot. URLs live in the description and on the outro card.
 
-**Tags** — 6–10, no keyword stuffing. Baseline set every video carries:
-`openthrottle`, `ai agents`, `coding agents`, `developer tools`, `open source`.
-Then 1–5 specific to the video (`claude code`, `mcp`, `cron`, `monorepo`, `nx`).
+**Tags** — a bounded count (`tag-count` in `rules.ts`), no keyword stuffing.
+Baseline set every video carries: `openthrottle`, `ai agents`, `coding agents`,
+`developer tools`, `open source`. Then a few specific to the video (`claude code`,
+`mcp`, `cron`, `monorepo`, `nx`).
 
 ## Channel identity
 
 - **Handle:** `@OpenThrottleAI`
-- **Avatar** — [`assets/channel-avatar.svg`](./assets/channel-avatar.svg), 800×800.
-  The brand mark on near-black. Must read at 24px.
-- **Banner** — [`assets/channel-banner.svg`](./assets/channel-banner.svg),
-  2560×1440 with the 1546×423 "safe" centre carrying the wordmark and tagline;
-  everything outside it is crop-tolerant.
+- **Avatar** — [`assets/channel-avatar.svg`](./assets/channel-avatar.svg). The brand
+  mark on near-black. Must read at the smallest size YouTube shows it.
+- **Banner** — [`assets/channel-banner.svg`](./assets/channel-banner.svg), with a
+  "safe" centre carrying the wordmark and tagline; everything outside it is
+  crop-tolerant. Dimensions: [`assets/README.md`](./assets/README.md).
 - **Tagline:** _Ship faster with agents that actually know what they're building._
 - **About copy:**
 
@@ -222,13 +241,14 @@ Then 1–5 specific to the video (`claude code`, `mcp`, `cron`, `monorepo`, `nx`
 
 ## Audio levels
 
-Narration is normalised to **-14 LUFS integrated** (YouTube's target) with a
-**-1.0 dBTP** ceiling, and the music bed sits about 28 dB under narration.
+Narration is normalised to `audio.targetLufs` integrated (YouTube's target) with an
+`audio.truePeakDb` ceiling, and the music bed sits `audio.musicBedDb` under
+narration, ducked by `audio.duckDb` while anyone speaks.
 
-The peak ceiling is not cosmetic. At -1.5 dBTP the ceiling binds before the
-loudness target is reached — a measured take landed at -15.3 LUFS because raising
-it further would have breached the peak. -1.0 dBTP is a standard safe delivery
-ceiling and lets a take reach -14.3.
+The peak ceiling is not cosmetic. Set too tight, the ceiling binds before the
+loudness target is reached and a take lands short of target because raising it
+further would breach the peak. The measured evidence, and why the current ceiling is
+a standard safe delivery value, is recorded in `audio._truePeakNote`.
 
 Loudness is measured **once per take** and the same gain applied to every clip.
 Normalising each sentence independently is wrong twice: integrated LUFS is
@@ -242,14 +262,14 @@ videos_.
 Taken from the app's own dark theme (`packages/react-router-shadcn/src/theme.css`)
 so cards never clash with the footage behind them:
 
-| Token      | Value     | Use                                  |
-| ---------- | --------- | ------------------------------------ |
-| red        | `#FF0000` | The single accent. Rules, marks only |
-| background | `#0A0D0F` | Card grounds, scrims                 |
-| card       | `#13171B` | Raised panels                        |
-| border     | `#20262D` | Hairlines                            |
-| foreground | `#F7F9FA` | Primary text                         |
-| muted      | `#7C8892` | Secondary text                       |
+| Token      | `format.json` key  | Use                                  |
+| ---------- | ------------------ | ------------------------------------ |
+| red        | `brand.red`        | The single accent. Rules, marks only |
+| background | `brand.background` | Card grounds, scrims                 |
+| card       | `brand.card`       | Raised panels                        |
+| border     | `brand.border`     | Hairlines                            |
+| foreground | `brand.foreground` | Primary text                         |
+| muted      | `brand.muted`      | Secondary text                       |
 
 Type: the brand sans for all card text; the mono face **only** for literal
 commands and identifiers. Never set narration text or titles in mono.

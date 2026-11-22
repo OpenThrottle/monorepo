@@ -178,17 +178,20 @@ export const detectSecret = (text: string): string | null => {
   for (const match of withoutUrls.matchAll(HIGH_ENTROPY_CANDIDATE)) {
     const token = match[0];
     const before = withoutUrls.slice(
-      Math.max(0, (match.index ?? 0) - 24),
+      Math.max(0, (match.index ?? 0) - 64),
       match.index,
     );
 
     // Documented non-secret contexts seen in real data: pg_dump's \restrict
     // safety token in dump output, and internal content-blob ids in tool
     // metadata. Neither grants access to anything. Quotes may arrive
-    // backslash-escaped when the text is itself embedded in JSONL.
+    // backslash-escaped when the text is itself embedded in JSONL. A blob id
+    // is base64, and the candidate pattern stops at `/` and `=`, so the
+    // flagged run can start partway into the value: allow a base64 prefix
+    // between the opening quote and the token.
     if (
       /\\restrict\s*$/.test(before) ||
-      /\\?"contentBlobId\\?":\s*\\?"?$/.test(before)
+      /\\?"contentBlobId\\?":\s*\\?"?[A-Za-z0-9+/=_-]*$/.test(before)
     ) {
       continue;
     }

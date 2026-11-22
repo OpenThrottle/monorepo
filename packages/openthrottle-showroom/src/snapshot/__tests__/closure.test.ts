@@ -4,6 +4,7 @@ import type { RowFetcher, SnapshotScope } from '../closure.ts';
 import {
   collectSnapshotRows,
   computeDownwardTables,
+  orderRowsBySelfReference,
   orderTablesTopologically,
 } from '../closure.ts';
 import type { DatabaseSchema, TableSchema } from '../schema.ts';
@@ -195,6 +196,7 @@ const softDeleteRows: Record<string, Record<string, unknown>[]> = {
 const fetcher = createFetcher(rows);
 
 const scope: SnapshotScope = {
+  excludedRows: [],
   fullRoots: [],
   windowedRoots: [{ table: 'plans', windowColumn: 'created_at' }],
 };
@@ -272,12 +274,67 @@ describe('collectSnapshotRows', () => {
     ]);
   });
 
+  test('an excluded row leaves with every row that references it', async () => {
+    const selected = await collectSnapshotRows(
+      fetcher,
+      schema,
+      {
+        ...scope,
+        excludedRows: [{ id: 't1', reason: 'test fixture', table: 'tasks' }],
+      },
+      '2026-01-01T00:00:00Z',
+    );
+
+    const ids = (table: string): string[] => {
+      return [...(selected.get(table)?.values() ?? [])]
+        .map((row) => String(row.id))
+        .sort();
+    };
+
+    // t2 is t1's subtask, so it cannot load without t1.
+    expect(ids('tasks')).toEqual([]);
+    expect(ids('plans')).toEqual(['pl-new']);
+    expect(ids('plan_runs')).toEqual(['r1']);
+  });
+
+  test('an excluded root row pulls in none of its children', async () => {
+    const selected = await collectSnapshotRows(
+      fetcher,
+      schema,
+      {
+        ...scope,
+        excludedRows: [
+          { id: 'pl-new', reason: 'test fixture', table: 'plans' },
+        ],
+      },
+      '2026-01-01T00:00:00Z',
+    );
+
+    expect(selected.get('plans')?.size ?? 0).toBe(0);
+    expect(selected.get('tasks')?.size ?? 0).toBe(0);
+    expect(selected.get('plan_runs')?.size ?? 0).toBe(0);
+  });
+
+  test('an exclusion naming a missing table fails loudly', async () => {
+    await expect(
+      collectSnapshotRows(
+        fetcher,
+        schema,
+        {
+          ...scope,
+          excludedRows: [{ id: 'x', reason: 'test fixture', table: 'nope' }],
+        },
+        '2026-01-01T00:00:00Z',
+      ),
+    ).rejects.toThrow(/nope/);
+  });
+
   test('fails loudly when a root table does not exist', async () => {
     await expect(
       collectSnapshotRows(
         fetcher,
         schema,
-        { fullRoots: ['does_not_exist'], windowedRoots: [] },
+        { excludedRows: [], fullRoots: ['does_not_exist'], windowedRoots: [] },
         '2026-01-01T00:00:00Z',
       ),
     ).rejects.toThrow(/does_not_exist/);
@@ -289,12 +346,44 @@ describe('collectSnapshotRows', () => {
         fetcher,
         schema,
         {
+          excludedRows: [],
           fullRoots: [],
           windowedRoots: [{ table: 'users', windowColumn: 'created_at' }],
         },
         '2026-01-01T00:00:00Z',
       ),
     ).rejects.toThrow(/no column 'created_at'/);
+  });
+});
+
+describe('orderRowsBySelfReference', () => {
+  test('writes a referenced row before the row that points at it', () => {
+    const child = { id: 'a', parent_task_id: 'b', plan_id: 'pl-new' };
+    const parent = { id: 'b', parent_task_id: null, plan_id: 'pl-new' };
+
+    expect(
+      orderRowsBySelfReference(schema, 'tasks', [child, parent]).map(
+        (row) => row.id,
+      ),
+    ).toEqual(['b', 'a']);
+  });
+
+  test('keeps the incoming order when nothing needs to move', () => {
+    const rows = [
+      { id: 'a', parent_task_id: null, plan_id: 'pl-new' },
+      { id: 'b', parent_task_id: 'a', plan_id: 'pl-new' },
+      { id: 'c', parent_task_id: null, plan_id: 'pl-new' },
+    ];
+
+    expect(
+      orderRowsBySelfReference(schema, 'tasks', rows).map((row) => row.id),
+    ).toEqual(['a', 'b', 'c']);
+  });
+
+  test('leaves a table without a self-reference untouched', () => {
+    const rows = [{ id: 'z' }, { id: 'y' }];
+
+    expect(orderRowsBySelfReference(schema, 'users', rows)).toEqual(rows);
   });
 });
 

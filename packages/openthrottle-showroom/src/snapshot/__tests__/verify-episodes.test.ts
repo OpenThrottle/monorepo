@@ -87,13 +87,15 @@ describe('the committed episode requirements', () => {
   test('the episodes this snapshot unblocks all declare requirements', () => {
     const ids = new Set(withRequirements.map((entry) => entry.id));
 
+    // 17-chat-any-cli left this list on 2026-11-22: the workspace deleted most
+    // of the window's conversations, so its sidebar requirements now sit in
+    // its blockedOn until the hero fixture authors them.
     for (const id of [
       '07-semantic-search',
       '09-tags-and-rules',
       '13-plan-id-traceability',
       '14-scheduled-runs',
       '16-worktrees',
-      '17-chat-any-cli',
       '19-skills',
       '21-dashboard-tour',
     ]) {

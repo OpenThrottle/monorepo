@@ -28,7 +28,11 @@ export const episode: VideoEpisode = {
       thesis: 'Promises the outcome up front.',
     },
   ],
-  youtube: { summary: '…', tags: [/* 6–10 */], title: '…' },
+  youtube: {
+    summary: '…',
+    tags: [/* count bounded by rules.ts */],
+    title: '…',
+  },
 };
 ```
 
@@ -60,8 +64,8 @@ words to the picture would force every take to breathe identically, which defeat
 the point of testing a slower delivery. A cue does not have to start with a beat,
 and a beat does not have to carry a cue.
 
-Silence is normal. Most shorts land 25–35 seconds of speech across 55 seconds of
-picture, and the gaps are where the viewer watches instead of being talked at.
+Silence is normal. Most shorts speak for roughly half the picture's runtime, and the
+gaps are where the viewer watches instead of being talked at.
 
 ### How cues reach the picture
 
@@ -136,8 +140,8 @@ why that take exists.
 
 ## Computed, never stored
 
-`spokenWords`, estimated spoken seconds (145 wpm) and budget headroom against
-`format.json` are functions over a variant, not fields on it. Nothing derived can
+`spokenWords`, estimated spoken seconds (`WORDS_PER_MINUTE` in
+`derived.ts`) and budget headroom against `format.json` are functions over a variant, not fields on it. Nothing derived can
 go stale, and there is no `--check` mode whose only job is to notice that a file
 and its own derived field have diverged.
 

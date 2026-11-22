@@ -195,3 +195,22 @@ export const CONNECT_OT_MCP_COMMANDS = {
   restartCommand: 'claude',
   setupCommand: 'pnpm run setup:mcp-instructions',
 } as const;
+
+/**
+ * @public The text pieces of the 05 surfaces, for the long-form that retells this
+ * short (`L2-setup-from-scratch`).
+ *
+ * Exported as DATA rather than as the short's step sequence, because the long-form
+ * cannot concatenate steps (see `../L2-setup-from-scratch/flow.ts`). Sharing the
+ * text is what stops the two videos disagreeing about what `setup:mcp-instructions`
+ * prints, which launcher path it names, or what the agent reports back. Adding
+ * this changes nothing the short itself renders.
+ */
+export const CONNECT_OT_MCP_TEXT = {
+  agentBanner,
+  agentReply,
+  launcher,
+  printedAfter,
+  printedBefore,
+  registerCommand,
+} as const;

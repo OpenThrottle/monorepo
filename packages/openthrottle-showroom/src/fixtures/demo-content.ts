@@ -173,8 +173,8 @@ export const DEMO_PLANS: readonly DemoPlan[] = [
   {
     // Video 05's payoff: the plan the agent wrote over MCP, one minute before the
     // recording. Its own plan rather than a reuse of the rate-limiting one, because
-    // 03 CREATES that plan on camera — one plan with two different origin stories
-    // across a season is a continuity error a viewer will notice.
+    // 03 replays the agent writing THAT plan — one plan with two different origin
+    // stories across a season is a continuity error a viewer will notice.
     //
     // Newest `createdAtOffset` in the fixture, so it lands at the top of /plans:
     // `listPlansByStatus` orders `createdAt DESC` by default.

@@ -24,7 +24,7 @@ export const episode: VideoEpisode = {
     },
     { action: 'Scroll up in the stream to earlier output.', t: '0:27' },
     {
-      action: 'Switch browser tabs and return; the stream is still current.',
+      action: `Leave for the plans list and return to the plan's Output tab; the whole stream is still there, ending on the latest line.`,
       t: '0:36',
     },
     { action: 'Hold on the streaming output.', t: '0:46' },
@@ -40,6 +40,31 @@ export const episode: VideoEpisode = {
       atLeast: 1,
       describe: `the hero run itself, still COMPLETED so the badge cannot change between takes`,
       sql: `SELECT count(*) AS value FROM plan_runs WHERE id = 'd0d0d0d0-0000-4000-8000-00000000ff01' AND status = 'COMPLETED'`,
+    },
+    {
+      atLeast: 1,
+      describe: `a file-write tool call in the hero output, the tool-call beat`,
+      sql: `SELECT count(*) AS value FROM plan_output_stream WHERE plan_id = 'd0d0d0d0-0000-4000-8000-000000000001' AND content LIKE 'Writing src/gateway/throttle/bucket.ts (+94%'`,
+    },
+    {
+      atLeast: 1,
+      describe: `a failing test command in the hero output, the failure beat`,
+      sql: `SELECT count(*) AS value FROM plan_output_stream WHERE plan_id = 'd0d0d0d0-0000-4000-8000-000000000001' AND content LIKE 'FAIL bucket.test.ts%'`,
+    },
+    {
+      atLeast: 2,
+      describe: `the same test command twice, so the retry after the failure is on screen`,
+      sql: `SELECT count(*) AS value FROM plan_output_stream WHERE plan_id = 'd0d0d0d0-0000-4000-8000-000000000001' AND content = '$ pnpm test --filter atlas-api throttle'`,
+    },
+    {
+      atLeast: 1,
+      describe: `the passing run after the retry`,
+      sql: `SELECT count(*) AS value FROM plan_output_stream WHERE plan_id = 'd0d0d0d0-0000-4000-8000-000000000001' AND content LIKE 'PASS bucket.test.ts%'`,
+    },
+    {
+      atLeast: 1,
+      describe: `the stream's latest line, the one the return beat ends on`,
+      sql: `SELECT count(*) AS value FROM plan_output_stream WHERE plan_id = 'd0d0d0d0-0000-4000-8000-000000000001' AND content LIKE 'PASS gateway middleware%'`,
     },
   ],
   format: 'short',
@@ -64,7 +89,7 @@ export const episode: VideoEpisode = {
         ],
         [
           '0:36',
-          'Close the tab and come back. It is still there, because it is stored, not tailed.',
+          'Leave the page and come back. It is still there, because it is stored, not tailed.',
         ],
         [
           '0:46',

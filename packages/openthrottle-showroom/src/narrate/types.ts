@@ -35,6 +35,35 @@ export interface RenderRequest {
   readonly voice: string;
 }
 
+/** @description One whole-take render: the full narration as a single request. */
+export interface TakeRequest {
+  /** Absolute path of the file to write. The backend chooses its own container. */
+  readonly outputPath: string;
+  readonly text: string;
+  readonly voice: string;
+}
+
+/** @description One spoken word, timed absolute to the start of the take. */
+export interface WordTiming {
+  readonly endSeconds: number;
+  readonly startSeconds: number;
+  readonly text: string;
+}
+
+export interface RenderedTake {
+  /** Path of the take audio actually written. */
+  readonly audioPath: string;
+  /** Spoken words in order, absolute to the take. */
+  readonly words: readonly WordTiming[];
+}
+
+export const RENDER_MODE = {
+  PER_SENTENCE: 'per-sentence',
+  WHOLE_TAKE: 'whole-take',
+} as const;
+
+export type RenderMode = (typeof RENDER_MODE)[keyof typeof RENDER_MODE];
+
 export interface TtsBackend {
   /** Identifier recorded in timings.json, so a take can be traced to its voice. */
   readonly id: string;
@@ -45,6 +74,11 @@ export interface TtsBackend {
   readonly model?: string;
   /** Render one sentence. Returns the path actually written. */
   readonly render: (request: RenderRequest) => Promise<string>;
+  /**
+   * Render the whole take in one request, with word timings. Optional because only
+   * some backends can; the rest keep the per-sentence `render` path.
+   */
+  readonly renderTake?: (request: TakeRequest) => Promise<RenderedTake>;
   /**
    * True when the backend sends text to a third party. Recorded per take, because
    * "nothing leaves your box" is a claim this project makes and narration is text
@@ -68,6 +102,11 @@ export interface NarrationTimings {
   readonly integratedLufsTarget: number;
   /** Hosted-provider model id for the take, when the backend has one. */
   readonly model?: string;
+  /**
+   * Which render path produced this take. Optional only so timings written before
+   * the field existed still type-check; narrate always writes it.
+   */
+  readonly renderMode?: RenderMode;
   readonly segments: readonly SegmentTiming[];
   readonly slug: string;
   readonly totalSeconds: number;
