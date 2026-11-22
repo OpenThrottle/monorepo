@@ -43,6 +43,10 @@
     "./app-version": {
       "types": "./src/app-version.ts",
       "default": "./src/app-version.ts"
+    },
+    "./client-node-boundary": {
+      "types": "./src/clientNodeBoundary.ts",
+      "default": "./src/clientNodeBoundary.ts"
     }
   },
   "nx": {

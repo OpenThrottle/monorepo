@@ -56,6 +56,21 @@ describe('generatorReactRouterApplication', () => {
     expect(dependencies).toMatchObject({ graphql: 'catalog:' });
   });
 
+  test('fails its client build when a Node builtin reaches browser code', async () => {
+    await generatorReactRouterApplication(tree, { name });
+    const paths = tree.listChanges().map((change) => change.path);
+    const viteConfigPath = paths.find((path) => path.endsWith('/vite.config.ts')); // prettier-ignore
+    const packageJsonPath = paths.find((path) => path.startsWith('applications/') && path.endsWith('/package.json')); // prettier-ignore
+
+    expect(tree.read(viteConfigPath ?? '', 'utf-8')).toContain(
+      'clientNodeBoundary(),',
+    );
+    // The no-op target CI runs to pull this app's `build` into the P0 line.
+    expect(readJson(tree, packageJsonPath ?? '').nx.targets).toHaveProperty(
+      'check-client-boundary',
+    );
+  });
+
   test('injects and checks the package.json version as __APP_VERSION__', async () => {
     await generatorReactRouterApplication(tree, { name });
     const paths = tree.listChanges().map((change) => change.path);

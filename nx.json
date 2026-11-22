@@ -316,6 +316,14 @@
         "{workspaceRoot}/scripts/check-generated-attributes.ts"
       ]
     },
+    "check-client-boundary": {
+      "cache": true,
+      "dependsOn": ["build"],
+      "executor": "nx:noop",
+      "metadata": {
+        "description": "Build the app's client bundle so the `clientNodeBoundary` Vite plugin (`@tools/dotfiles/client-node-boundary`, in every React Router app's vite.config.ts) can fail it when a Node builtin is reachable from browser code. Vite externalizes `node:*` for the browser and ships `module.exports = {}` in its place, so lint and typecheck pass and the break only surfaces at runtime; the plugin makes `build` itself fail. This no-op target exists so CI's sharded P0 line, which runs no other app build, pulls `build` in for affected apps."
+      }
+    },
     "check-lockfile": {
       "cache": true,
       "executor": "nx:run-commands",

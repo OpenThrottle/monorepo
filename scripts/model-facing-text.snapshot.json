@@ -212,6 +212,7 @@
     "skill/github-commit": 6017,
     "skill/github-pull-request": 12190,
     "skill/github-squash": 6184,
+    "skill/ot-coding-standards": 3488,
     "skill/ot-folders": 14757,
     "skill/ot-generators": 5961,
     "skill/ot-loop": 20775,
@@ -227,6 +228,7 @@
     "skillDescription/github-commit": 309,
     "skillDescription/github-pull-request": 254,
     "skillDescription/github-squash": 296,
+    "skillDescription/ot-coding-standards": 495,
     "skillDescription/ot-folders": 631,
     "skillDescription/ot-generators": 359,
     "skillDescription/ot-loop": 291,
@@ -247,10 +249,10 @@
     "mcpToolsFull": 74640
   },
   "totals": {
-    "alwaysInjected": 48028,
+    "alwaysInjected": 48523,
     "mcpInstructions": 2183,
     "mcpTools": 40060,
     "prompts": 141004,
-    "skills": 155194
+    "skills": 158682
   }
 }

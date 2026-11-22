@@ -114,6 +114,7 @@ OT-owned skills are authored under [`skills/`](./skills/) and surfaced to every 
 
 - **ot-generators** — `@tools/generators`, `NX_ISOLATE_PLUGINS=false`, `pnpm nx`, AGENT_USAGE alignment: [`skills/ot-generators/SKILL.md`](./skills/ot-generators/SKILL.md)
 - **ot-stack** — openthrottle-server GraphQL, databases/embeddings, openthrottle-developer UI, openthrottle-mcp package: [`skills/ot-stack/SKILL.md`](./skills/ot-stack/SKILL.md)
+- **ot-coding-standards** — standards lint and typecheck cannot see, starting with the client/Node boundary (`node:*` reaching a browser bundle, the `clientNodeBoundary` Vite plugin): [`skills/ot-coding-standards/SKILL.md`](./skills/ot-coding-standards/SKILL.md)
 - **ot-postgres** — SQL migrations, `COMMENT ON TABLE` / column comments, idempotent DDL in `databases/<db>/migrations/` (`openthrottle`, `cms`): [`skills/ot-postgres/SKILL.md`](./skills/ot-postgres/SKILL.md)
 - **ot-plans** — openthrottle-mcp, plans/tasks, `Plan-Id` / `Task-Id`, post-merge work-ledger commit recording: [`skills/ot-plans/SKILL.md`](./skills/ot-plans/SKILL.md)
 - **agents-ralph** — the Ralph loop prompt: one task at a time, status sync, commit cadence: [`skills/agents-ralph/SKILL.md`](./skills/agents-ralph/SKILL.md)
