@@ -407,6 +407,69 @@ var DESTRUCTIVE_COMMAND_PATTERNS = [
   )
 ];
 
+// packages/agentic-hooks/src/data/findPlanRunBinding.ts
+var REGISTER_RUN_SUFFIX = "__register_plan_run";
+var SETTLE_RUN_SUFFIX = "__settle_plan_run";
+var UPDATE_TASK_SUFFIX = "__update_task";
+var IN_PROGRESS = "IN_PROGRESS";
+var nonEmptyString = (value) => {
+  return typeof value === "string" && value !== "" ? value : null;
+};
+var applyTaskUpdate = (run, input) => {
+  const rawStatus = nonEmptyString(input.status);
+  if (rawStatus === null) return;
+  const status = rawStatus.toUpperCase();
+  run.latestStatus = status;
+  const id = nonEmptyString(input.id);
+  if (id === null) return;
+  run.statusByTaskId.delete(id);
+  run.statusByTaskId.set(id, status);
+  if (status === IN_PROGRESS) {
+    run.currentTaskId = id;
+  } else if (id === run.currentTaskId) {
+    run.currentTaskId = null;
+  }
+};
+var toState = (run, events, adapter) => {
+  const inProgressTaskIds = [...run.statusByTaskId].filter(([, status]) => status === IN_PROGRESS).map(([id]) => id);
+  return {
+    branch: run.branch,
+    currentTaskId: run.currentTaskId,
+    inProgressTaskIds,
+    lastStatusByTaskId: new Map(run.statusByTaskId),
+    latestStatus: run.latestStatus,
+    planId: run.planId,
+    planRunId: adapter.planRunIdOf(events.slice(run.registerEventIndex)),
+    registerEventIndex: run.registerEventIndex
+  };
+};
+var findPlanRunBinding = (events, adapter) => {
+  let run = null;
+  let isSettled = false;
+  for (const [eventIndex, event] of events.entries()) {
+    for (const use of adapter.toolUsesOf(event)) {
+      if (use.name.endsWith(REGISTER_RUN_SUFFIX)) {
+        run = {
+          branch: nonEmptyString(use.input.branch),
+          currentTaskId: null,
+          latestStatus: null,
+          planId: nonEmptyString(use.input.planId),
+          registerEventIndex: eventIndex,
+          statusByTaskId: /* @__PURE__ */ new Map()
+        };
+        isSettled = false;
+      } else if (use.name.endsWith(SETTLE_RUN_SUFFIX)) {
+        isSettled = run !== null;
+      } else if (use.name.endsWith(UPDATE_TASK_SUFFIX)) {
+        if (run !== null && !isSettled) applyTaskUpdate(run, use.input);
+      }
+    }
+  }
+  if (run === null) return { kind: "none" };
+  const state = toState(run, events, adapter);
+  return isSettled ? { ...state, kind: "settled" } : { ...state, kind: "active" };
+};
+
 // packages/agentic-hooks/src/data/read-new.ts
 var import_node_fs2 = __toESM(require("node:fs"), 1);
 var NEWLINE = 10;
@@ -602,6 +665,22 @@ var claudeSessionToolUsesOf = (event) => {
   return isMainLine(event) ? toolUsesOf(event) : [];
 };
 
+// packages/agentic-hooks/src/adapters/claude/plan-run-binding.ts
+var claudePlanRunTranscript = {
+  planRunIdOf: (events) => {
+    return findClaudeSessionPlanRunId(events) ?? null;
+  },
+  timestampMsOf: (event) => {
+    if (!isRecord(event) || typeof event.timestamp !== "string") return null;
+    const ms = Date.parse(event.timestamp);
+    return Number.isNaN(ms) ? null : ms;
+  },
+  toolUsesOf: claudeSessionToolUsesOf
+};
+var findClaudePlanRunBinding = (events) => {
+  return findPlanRunBinding(events, claudePlanRunTranscript);
+};
+
 // packages/agentic-hooks/src/adapters/claude/plan-run-task-guard-output.ts
 var import_node_fs4 = __toESM(require("node:fs"), 1);
 var PLAN_RUN_GUARD_MAX_TAIL_BYTES = 6 * 1024 * 1024;
@@ -631,10 +710,6 @@ var readTranscriptTail = (transcriptPath, maxBytes = PLAN_RUN_GUARD_MAX_TAIL_BYT
 
 // packages/agentic-hooks/src/adapters/claude/plan-inbox-claim-output.ts
 var DELEGATION_TOOL_NAMES = /* @__PURE__ */ new Set(["Agent", "Task"]);
-var REGISTER_RUN_SUFFIX = "__register_plan_run";
-var SETTLE_RUN_SUFFIX = "__settle_plan_run";
-var UPDATE_TASK_SUFFIX = "__update_task";
-var IN_PROGRESS = "IN_PROGRESS";
 var STEER = "STEER";
 var isInboxClaimTool = (raw) => {
   if (!isRecord(raw) || typeof raw.tool_name !== "string") return false;
@@ -651,35 +726,12 @@ var readCandidate = (raw) => {
   return { sessionId, transcriptPath };
 };
 var findActivePlanRun = (events) => {
-  let run = null;
-  let taskId = null;
-  for (const [eventIndex, event] of events.entries()) {
-    for (const use of claudeSessionToolUsesOf(event)) {
-      if (use.name.endsWith(REGISTER_RUN_SUFFIX)) {
-        run = { eventIndex, planId: use.input.planId };
-        taskId = null;
-      } else if (use.name.endsWith(SETTLE_RUN_SUFFIX)) {
-        run = null;
-        taskId = null;
-      } else if (use.name.endsWith(UPDATE_TASK_SUFFIX) && run !== null) {
-        const { id, status } = use.input;
-        if (typeof id !== "string" || id === "") continue;
-        if (typeof status !== "string" || status === "") continue;
-        if (status.toUpperCase() === IN_PROGRESS) {
-          taskId = id;
-        } else if (id === taskId) {
-          taskId = null;
-        }
-      }
-    }
-  }
-  if (run === null || typeof run.planId !== "string" || run.planId === "") {
-    return null;
-  }
+  const binding = findClaudePlanRunBinding(events);
+  if (binding.kind !== "active" || binding.planId === null) return null;
   return {
-    planId: run.planId,
-    planRunId: findClaudeSessionPlanRunId(events.slice(run.eventIndex)) ?? null,
-    taskId
+    planId: binding.planId,
+    planRunId: binding.planRunId,
+    taskId: binding.currentTaskId
   };
 };
 var formatListing = (messages) => {

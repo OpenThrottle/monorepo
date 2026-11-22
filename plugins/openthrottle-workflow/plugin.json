@@ -7,6 +7,6 @@
   "dependencies": [
     "openthrottle"
   ],
-  "description": "OpenThrottle plan-run workflow hooks for Claude Code: delivers plan inbox messages before destructive steps, warns on edits with no task in progress, reports plan auto-close, settles abandoned runs, and requires an OT plan for session kickoffs.",
+  "description": "OpenThrottle plan-run workflow hooks for Claude Code: delivers plan inbox messages before destructive steps, warns on edits with no task in progress, reports plan auto-close, narrates task transitions the model left unnarrated, warns on a second task going in progress or a committed task left in progress, settles abandoned runs, and requires an OT plan for session kickoffs.",
   "name": "openthrottle-workflow"
 }

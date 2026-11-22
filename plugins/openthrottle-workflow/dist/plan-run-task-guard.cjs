@@ -52,6 +52,69 @@ var isRecord = (value) => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 };
 
+// packages/agentic-hooks/src/data/findPlanRunBinding.ts
+var REGISTER_RUN_SUFFIX = "__register_plan_run";
+var SETTLE_RUN_SUFFIX = "__settle_plan_run";
+var UPDATE_TASK_SUFFIX = "__update_task";
+var IN_PROGRESS = "IN_PROGRESS";
+var nonEmptyString = (value) => {
+  return typeof value === "string" && value !== "" ? value : null;
+};
+var applyTaskUpdate = (run, input) => {
+  const rawStatus = nonEmptyString(input.status);
+  if (rawStatus === null) return;
+  const status = rawStatus.toUpperCase();
+  run.latestStatus = status;
+  const id = nonEmptyString(input.id);
+  if (id === null) return;
+  run.statusByTaskId.delete(id);
+  run.statusByTaskId.set(id, status);
+  if (status === IN_PROGRESS) {
+    run.currentTaskId = id;
+  } else if (id === run.currentTaskId) {
+    run.currentTaskId = null;
+  }
+};
+var toState = (run, events, adapter) => {
+  const inProgressTaskIds = [...run.statusByTaskId].filter(([, status]) => status === IN_PROGRESS).map(([id]) => id);
+  return {
+    branch: run.branch,
+    currentTaskId: run.currentTaskId,
+    inProgressTaskIds,
+    lastStatusByTaskId: new Map(run.statusByTaskId),
+    latestStatus: run.latestStatus,
+    planId: run.planId,
+    planRunId: adapter.planRunIdOf(events.slice(run.registerEventIndex)),
+    registerEventIndex: run.registerEventIndex
+  };
+};
+var findPlanRunBinding = (events, adapter) => {
+  let run = null;
+  let isSettled = false;
+  for (const [eventIndex, event] of events.entries()) {
+    for (const use of adapter.toolUsesOf(event)) {
+      if (use.name.endsWith(REGISTER_RUN_SUFFIX)) {
+        run = {
+          branch: nonEmptyString(use.input.branch),
+          currentTaskId: null,
+          latestStatus: null,
+          planId: nonEmptyString(use.input.planId),
+          registerEventIndex: eventIndex,
+          statusByTaskId: /* @__PURE__ */ new Map()
+        };
+        isSettled = false;
+      } else if (use.name.endsWith(SETTLE_RUN_SUFFIX)) {
+        isSettled = run !== null;
+      } else if (use.name.endsWith(UPDATE_TASK_SUFFIX)) {
+        if (run !== null && !isSettled) applyTaskUpdate(run, use.input);
+      }
+    }
+  }
+  if (run === null) return { kind: "none" };
+  const state = toState(run, events, adapter);
+  return isSettled ? { ...state, kind: "settled" } : { ...state, kind: "active" };
+};
+
 // packages/agentic-hooks/src/data/read-new.ts
 var import_node_fs = __toESM(require("node:fs"), 1);
 var NEWLINE = 10;
@@ -190,6 +253,22 @@ var claudeSessionToolUsesOf = (event) => {
   return isMainLine(event) ? toolUsesOf(event) : [];
 };
 
+// packages/agentic-hooks/src/adapters/claude/plan-run-binding.ts
+var claudePlanRunTranscript = {
+  planRunIdOf: (events) => {
+    return findClaudeSessionPlanRunId(events) ?? null;
+  },
+  timestampMsOf: (event) => {
+    if (!isRecord(event) || typeof event.timestamp !== "string") return null;
+    const ms = Date.parse(event.timestamp);
+    return Number.isNaN(ms) ? null : ms;
+  },
+  toolUsesOf: claudeSessionToolUsesOf
+};
+var findClaudePlanRunBinding = (events) => {
+  return findPlanRunBinding(events, claudePlanRunTranscript);
+};
+
 // packages/agentic-hooks/src/adapters/claude/plan-run-task-guard-output.ts
 var PLAN_RUN_GUARD_MAX_TAIL_BYTES = 6 * 1024 * 1024;
 var EDIT_TOOL_NAMES = /* @__PURE__ */ new Set([
@@ -198,35 +277,16 @@ var EDIT_TOOL_NAMES = /* @__PURE__ */ new Set([
   "NotebookEdit",
   "Write"
 ]);
-var REGISTER_RUN_SUFFIX = "__register_plan_run";
-var SETTLE_RUN_SUFFIX = "__settle_plan_run";
-var UPDATE_TASK_SUFFIX = "__update_task";
-var IN_PROGRESS = "IN_PROGRESS";
+var IN_PROGRESS2 = "IN_PROGRESS";
 var decidePlanRunTask = (events) => {
-  let run = null;
-  let latestStatus = null;
-  for (const [eventIndex, event] of events.entries()) {
-    for (const use of claudeSessionToolUsesOf(event)) {
-      if (use.name.endsWith(REGISTER_RUN_SUFFIX)) {
-        const { planId } = use.input;
-        run = {
-          eventIndex,
-          planId: typeof planId === "string" ? planId : null
-        };
-        latestStatus = null;
-      } else if (use.name.endsWith(SETTLE_RUN_SUFFIX)) {
-        run = null;
-      } else if (use.name.endsWith(UPDATE_TASK_SUFFIX) && run !== null) {
-        const { status } = use.input;
-        if (typeof status === "string" && status !== "") {
-          latestStatus = status.toUpperCase();
-        }
-      }
-    }
+  const binding = findClaudePlanRunBinding(events);
+  if (binding.kind !== "active" || binding.latestStatus === IN_PROGRESS2) {
+    return { kind: "pass" };
   }
-  if (run === null || latestStatus === IN_PROGRESS) return { kind: "pass" };
-  const runId = findClaudeSessionPlanRunId(events.slice(run.eventIndex)) ?? run.planId ?? "unknown";
-  return { kind: "flag", runId };
+  return {
+    kind: "flag",
+    runId: binding.planRunId ?? binding.planId ?? "unknown"
+  };
 };
 var formatPlanRunTaskFlag = (runId) => {
   return `No task is IN_PROGRESS in plan run ${runId}: flip the task you're working on first.`;

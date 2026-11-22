@@ -1,0 +1,735 @@
+#!/usr/bin/env node
+
+/**
+ * -------- GENERATED — DO NOT EDIT ------------------------------------
+ * Source: packages/agentic-hooks/src/adapters/claude/plan-run-invariants.ts
+ * Regenerate: pnpm nx run @openthrottle/agentic-hooks:bundle-hooks
+ * Authoring lives in @openthrottle/agentic-hooks; this file is a bundle.
+ * ----------------------------------------------------------------------
+ */
+
+"use strict";
+var __create = Object.create;
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
+  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+  mod
+));
+
+// packages/agentic-hooks/src/adapters/claude/plan-run-invariants.ts
+var import_node_fs4 = __toESM(require("node:fs"), 1);
+
+// packages/agentic-hooks/src/config/env.ts
+var import_node_fs = __toESM(require("node:fs"), 1);
+var import_node_os = __toESM(require("node:os"), 1);
+var import_node_path = __toESM(require("node:path"), 1);
+
+// packages/agentic-hooks/src/utils/logging.ts
+var logHookError = (message, err) => {
+  try {
+    const detail = err instanceof Error ? err.message : err != null ? String(err) : "";
+    process.stderr.write(
+      `[skill-usage-capture] ${message}${detail ? `: ${detail}` : ""}
+`
+    );
+  } catch {
+  }
+};
+
+// packages/agentic-hooks/src/config/env.ts
+var userConfigDir = () => {
+  return import_node_path.default.join(import_node_os.default.homedir(), ".openthrottle");
+};
+var OT_MARKER_REL = import_node_path.default.join(
+  "applications",
+  "openthrottle-server",
+  "package.json"
+);
+var OT_MARKER_NAME = "openthrottle-server";
+var checkoutCache = /* @__PURE__ */ new Map();
+var isOpenThrottleCheckout = (repoRoot) => {
+  if (!repoRoot) {
+    return false;
+  }
+  const cached = checkoutCache.get(repoRoot);
+  if (cached !== void 0) {
+    return cached;
+  }
+  let match = false;
+  try {
+    const markerPath = import_node_path.default.join(repoRoot, OT_MARKER_REL);
+    if (import_node_fs.default.existsSync(markerPath)) {
+      const parsed = JSON.parse(import_node_fs.default.readFileSync(markerPath, "utf8"));
+      match = typeof parsed === "object" && parsed !== null && "name" in parsed && parsed.name === OT_MARKER_NAME;
+    }
+  } catch {
+    match = false;
+  }
+  checkoutCache.set(repoRoot, match);
+  return match;
+};
+var parseEnvLine = (line) => {
+  const trimmed = line.trim();
+  if (!trimmed || trimmed.startsWith("#")) {
+    return null;
+  }
+  const eq = trimmed.indexOf("=");
+  if (eq <= 0) {
+    return null;
+  }
+  const key = trimmed.slice(0, eq).trim();
+  if (!key) {
+    return null;
+  }
+  let value = trimmed.slice(eq + 1).trim();
+  if (value.startsWith('"') && value.endsWith('"') || value.startsWith("'") && value.endsWith("'")) {
+    value = value.slice(1, -1);
+  }
+  return { key, value };
+};
+var readEnvFile = (envPath) => {
+  const out = {};
+  try {
+    if (!import_node_fs.default.existsSync(envPath)) {
+      return out;
+    }
+    const text = import_node_fs.default.readFileSync(envPath, "utf8");
+    for (const line of text.split("\n")) {
+      const assignment = parseEnvLine(line);
+      if (assignment) {
+        out[assignment.key] = assignment.value;
+      }
+    }
+  } catch (err) {
+    logHookError("readEnvFile failed", err);
+  }
+  return out;
+};
+var readRepoEnvFile = (repoRoot) => {
+  return isOpenThrottleCheckout(repoRoot) ? readEnvFile(import_node_path.default.join(repoRoot, ".env")) : {};
+};
+var readUserEnvFile = () => {
+  return readEnvFile(import_node_path.default.join(userConfigDir(), ".env"));
+};
+var envLayers = (repoRoot, options) => {
+  return [
+    repoRoot ? readRepoEnvFile(repoRoot) : {},
+    ...options?.includeProcessEnv === false ? [] : [process.env],
+    readUserEnvFile()
+  ];
+};
+var resolveOtEnv = (repoRoot, key, options) => {
+  for (const layer of envLayers(repoRoot, options)) {
+    const value = layer[key];
+    if (value && value.trim()) {
+      return value.trim();
+    }
+  }
+  return "";
+};
+var LOOPBACK_AUTHORITY = /^([a-z][a-z0-9+.-]*:\/\/(?:[^/?#@]*@)?)localhost(?=[:/?#]|$)/i;
+var normalizeLoopbackHost = (url) => {
+  return url.replace(LOOPBACK_AUTHORITY, "$1127.0.0.1");
+};
+var graphqlUrlFromEnvMap = (env) => {
+  const explicit = env.OPENTHROTTLE_GRAPHQL_URL?.trim() || env.OPENTHROTTLE_WORKER_GRAPHQL_URL?.trim();
+  if (explicit) {
+    return normalizeLoopbackHost(explicit.replace(/\/$/, ""));
+  }
+  const appUrl = env.OPENTHROTTLE_SERVER_APP_URL?.trim()?.replace(/\/$/, "");
+  if (appUrl) {
+    return normalizeLoopbackHost(`${appUrl}/graphql`);
+  }
+  return null;
+};
+var resolveGraphqlUrl = (repoRoot, options) => {
+  for (const layer of envLayers(repoRoot, options)) {
+    const url = graphqlUrlFromEnvMap(layer);
+    if (url) {
+      return url;
+    }
+  }
+  return null;
+};
+var resolveAuthToken = (repoRoot, options) => {
+  return resolveOtEnv(repoRoot, "OPENTHROTTLE_MCP_AUTH_TOKEN", options) || resolveOtEnv(repoRoot, "OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN", options) || "";
+};
+
+// packages/nodejs-utils/src/utils/isRecord.ts
+var isRecord = (value) => {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+};
+
+// packages/agentic-hooks/src/data/graphql.ts
+var PERMANENT_GRAPHQL_CODES = [
+  "BAD_REQUEST",
+  "BAD_USER_INPUT",
+  "GRAPHQL_PARSE_FAILED",
+  "GRAPHQL_VALIDATION_FAILED"
+];
+var SCHEMA_SKEW_MESSAGE_PATTERNS = [
+  /Field "[^"]+" is not defined by type "[^"]+"/,
+  /Cannot query field "[^"]+" on type "[^"]+"/,
+  /Unknown argument "[^"]+" on field "[^"]+"/,
+  /Unknown type "[^"]+"/,
+  /Value "[^"]+" does not exist in "[^"]+" enum/
+];
+var isSchemaSkewMessage = (message) => {
+  return SCHEMA_SKEW_MESSAGE_PATTERNS.some((pattern) => pattern.test(message));
+};
+var TRANSIENT_CLIENT_STATUSES = [401, 403, 408, 429];
+var isPermanentHttpStatus = (status) => {
+  return status >= 400 && status < 500 && !TRANSIENT_CLIENT_STATUSES.includes(status);
+};
+var readStatusCode = (extensions) => {
+  const original = extensions.originalError;
+  if (isRecord(original) && typeof original.statusCode === "number") {
+    return original.statusCode;
+  }
+  return null;
+};
+var readGraphqlErrors = (payload) => {
+  if (!isRecord(payload) || !Array.isArray(payload.errors) || !payload.errors.length) {
+    return null;
+  }
+  let permanent = false;
+  const messages = [];
+  for (const error of payload.errors) {
+    if (!isRecord(error)) {
+      continue;
+    }
+    const message = typeof error.message === "string" ? error.message : "";
+    messages.push(message);
+    if (isSchemaSkewMessage(message)) {
+      continue;
+    }
+    const extensions = isRecord(error.extensions) ? error.extensions : {};
+    const code = typeof extensions.code === "string" ? extensions.code : "";
+    const status = readStatusCode(extensions);
+    if (PERMANENT_GRAPHQL_CODES.includes(code) || status !== null && isPermanentHttpStatus(status)) {
+      permanent = true;
+    }
+  }
+  return { message: messages.join("; "), permanent };
+};
+var readMutationData = (payload, field) => {
+  return isRecord(payload) && isRecord(payload.data) ? payload.data[field] : void 0;
+};
+var transient = (reason) => {
+  return {
+    ok: false,
+    permanent: false,
+    reason
+  };
+};
+var UNKNOWN_INPUT_FIELD = /Field "[^"]+" is not defined by type/;
+var postMutationOnce = async ({
+  authToken,
+  fetchImpl,
+  graphqlUrl,
+  query,
+  timeoutMs,
+  variables,
+  field
+}) => {
+  if (typeof fetchImpl !== "function") {
+    return transient("fetch unavailable");
+  }
+  if (!graphqlUrl) {
+    return transient("missing graphql url");
+  }
+  const headers = {
+    "Content-Type": "application/json"
+  };
+  if (authToken) {
+    headers.Authorization = `Bearer ${authToken}`;
+  }
+  let response;
+  try {
+    response = await fetchImpl(graphqlUrl, {
+      body: JSON.stringify({ query, variables }),
+      headers,
+      method: "POST",
+      signal: AbortSignal.timeout(timeoutMs)
+    });
+  } catch (err) {
+    if (err instanceof Error && err.name === "TimeoutError") {
+      return transient("timeout");
+    }
+    if (err instanceof Error) {
+      return transient(err.message);
+    }
+    return transient(String(err));
+  }
+  let payload;
+  try {
+    payload = await response.json();
+  } catch (err) {
+    return {
+      ok: false,
+      permanent: isPermanentHttpStatus(response.status),
+      reason: `invalid json (${response.status}): ${err instanceof Error ? err.message : String(err)}`
+    };
+  }
+  const errors = readGraphqlErrors(payload);
+  if (errors !== null) {
+    return { ok: false, permanent: errors.permanent, reason: errors.message };
+  }
+  if (!response.ok) {
+    return {
+      ok: false,
+      permanent: isPermanentHttpStatus(response.status),
+      reason: `http ${response.status}`
+    };
+  }
+  return { data: readMutationData(payload, field), ok: true };
+};
+var postMutation = async (args) => {
+  const posted = await postMutationOnce(args);
+  const { legacyVariables } = args;
+  if (posted.ok || legacyVariables === void 0 || !UNKNOWN_INPUT_FIELD.test(posted.reason)) {
+    return posted;
+  }
+  return postMutationOnce({ ...args, variables: legacyVariables });
+};
+var postGraphqlField = async (args) => {
+  return postMutation(args);
+};
+
+// packages/agentic-hooks/src/data/findPlanRunBinding.ts
+var REGISTER_RUN_SUFFIX = "__register_plan_run";
+var SETTLE_RUN_SUFFIX = "__settle_plan_run";
+var UPDATE_TASK_SUFFIX = "__update_task";
+var IN_PROGRESS = "IN_PROGRESS";
+var nonEmptyString = (value) => {
+  return typeof value === "string" && value !== "" ? value : null;
+};
+var applyTaskUpdate = (run, input) => {
+  const rawStatus = nonEmptyString(input.status);
+  if (rawStatus === null) return;
+  const status = rawStatus.toUpperCase();
+  run.latestStatus = status;
+  const id = nonEmptyString(input.id);
+  if (id === null) return;
+  run.statusByTaskId.delete(id);
+  run.statusByTaskId.set(id, status);
+  if (status === IN_PROGRESS) {
+    run.currentTaskId = id;
+  } else if (id === run.currentTaskId) {
+    run.currentTaskId = null;
+  }
+};
+var toState = (run, events, adapter) => {
+  const inProgressTaskIds = [...run.statusByTaskId].filter(([, status]) => status === IN_PROGRESS).map(([id]) => id);
+  return {
+    branch: run.branch,
+    currentTaskId: run.currentTaskId,
+    inProgressTaskIds,
+    lastStatusByTaskId: new Map(run.statusByTaskId),
+    latestStatus: run.latestStatus,
+    planId: run.planId,
+    planRunId: adapter.planRunIdOf(events.slice(run.registerEventIndex)),
+    registerEventIndex: run.registerEventIndex
+  };
+};
+var findPlanRunBinding = (events, adapter) => {
+  let run = null;
+  let isSettled = false;
+  for (const [eventIndex, event] of events.entries()) {
+    for (const use of adapter.toolUsesOf(event)) {
+      if (use.name.endsWith(REGISTER_RUN_SUFFIX)) {
+        run = {
+          branch: nonEmptyString(use.input.branch),
+          currentTaskId: null,
+          latestStatus: null,
+          planId: nonEmptyString(use.input.planId),
+          registerEventIndex: eventIndex,
+          statusByTaskId: /* @__PURE__ */ new Map()
+        };
+        isSettled = false;
+      } else if (use.name.endsWith(SETTLE_RUN_SUFFIX)) {
+        isSettled = run !== null;
+      } else if (use.name.endsWith(UPDATE_TASK_SUFFIX)) {
+        if (run !== null && !isSettled) applyTaskUpdate(run, use.input);
+      }
+    }
+  }
+  if (run === null) return { kind: "none" };
+  const state = toState(run, events, adapter);
+  return isSettled ? { ...state, kind: "settled" } : { ...state, kind: "active" };
+};
+
+// packages/agentic-hooks/src/data/plan-run-invariants.ts
+var IN_PROGRESS2 = "IN_PROGRESS";
+var IN_PROGRESS_QUERY = `
+query PlanRunInvariantTasks($input: TasksByPlanIdInput!) {
+  tasksByPlanId(input: $input) { id status }
+}
+`;
+var GIT_COMMIT = /\bgit\b[^\n|;&]*\bcommit\b/;
+var TASK_ID_FOOTER = /Task-Id:\s*([0-9A-Za-z-]+)/g;
+var runLabelOf = (binding) => {
+  return binding.planRunId ?? binding.planId ?? "unknown";
+};
+var listIds = (ids) => {
+  return ids.join(", ");
+};
+var decideDoubleInProgress = async ({
+  binding,
+  lookupInProgress,
+  status,
+  taskId
+}) => {
+  if (taskId === null || typeof status !== "string") return null;
+  if (status.toUpperCase() !== IN_PROGRESS2) return null;
+  if (binding.kind !== "active" || binding.planId === null) return null;
+  const isOther = (id) => {
+    return id !== taskId;
+  };
+  let others = binding.inProgressTaskIds.filter(isOther);
+  if (others.length === 0) {
+    others = (await lookupInProgress(binding.planId) ?? []).filter(isOther);
+  }
+  if (others.length === 0) return null;
+  const open = listIds(others);
+  const isOne = others.length === 1;
+  const subject = isOne ? `task ${open} is` : `tasks ${open} are`;
+  return `Task ${taskId} is going IN_PROGRESS while ${subject} still IN_PROGRESS in plan run ${runLabelOf(binding)}. A loop works one task at a time: flip ${open} to COMPLETED, BLOCKED or SKIPPED with update_task first.`;
+};
+var committedTaskIdsOf = (commands) => {
+  const ids = /* @__PURE__ */ new Set();
+  for (const command of commands) {
+    if (!GIT_COMMIT.test(command)) continue;
+    for (const match of command.matchAll(TASK_ID_FOOTER)) {
+      const [, id] = match;
+      if (id !== void 0) ids.add(id);
+    }
+  }
+  return ids;
+};
+var decideStrandedAtStop = ({
+  binding,
+  committedTaskIds
+}) => {
+  if (binding.kind !== "active") return null;
+  const stranded = binding.inProgressTaskIds.filter((id) => {
+    return committedTaskIds.has(id);
+  });
+  if (stranded.length === 0) return null;
+  const ids = listIds(stranded);
+  return `Task ${ids} in plan run ${runLabelOf(binding)} is still IN_PROGRESS, but its work was committed (Task-Id: footer). Next turn, flip it with update_task to COMPLETED (or BLOCKED / SKIPPED) before starting another task.`;
+};
+var lookupInProgressTaskIds = async ({
+  authToken,
+  fetchImpl = globalThis.fetch,
+  graphqlUrl,
+  planId,
+  timeoutMs
+}) => {
+  try {
+    const posted = await postGraphqlField({
+      authToken,
+      fetchImpl,
+      field: "tasksByPlanId",
+      graphqlUrl,
+      query: IN_PROGRESS_QUERY,
+      timeoutMs,
+      variables: { input: { planId } }
+    });
+    if (!posted.ok || !Array.isArray(posted.data)) return null;
+    return posted.data.flatMap((task) => {
+      if (!isRecord(task) || typeof task.id !== "string") return [];
+      const isOpen = typeof task.status === "string" && task.status.toUpperCase() === IN_PROGRESS2;
+      return isOpen ? [task.id] : [];
+    });
+  } catch (err) {
+    logHookError("plan-run-invariants: OT lookup failed", err);
+    return null;
+  }
+};
+
+// packages/agentic-hooks/src/data/read-new.ts
+var import_node_fs2 = __toESM(require("node:fs"), 1);
+var NEWLINE = 10;
+var readNewBytes = ({
+  filePath,
+  maxBytes,
+  offset
+}) => {
+  const unchanged = { lines: [], nextOffset: offset };
+  let fd = null;
+  try {
+    fd = import_node_fs2.default.openSync(filePath, "r");
+    const { size } = import_node_fs2.default.fstatSync(fd);
+    const start = offset > size || offset < 0 ? 0 : offset;
+    if (size === start) {
+      return { lines: [], nextOffset: start };
+    }
+    const remaining = size - start;
+    const hasMaxBytes = maxBytes !== void 0 && maxBytes > 0;
+    let window = remaining;
+    if (hasMaxBytes) {
+      window = Math.min(remaining, Math.floor(maxBytes));
+    }
+    let buffer = Buffer.alloc(0);
+    let lastNewline = -1;
+    while (lastNewline < 0) {
+      buffer = Buffer.alloc(window);
+      const bytesRead = import_node_fs2.default.readSync(fd, buffer, 0, window, start);
+      lastNewline = buffer.subarray(0, bytesRead).lastIndexOf(NEWLINE);
+      if (window >= remaining) {
+        break;
+      }
+      window = Math.min(remaining, window * 2);
+    }
+    if (lastNewline < 0) {
+      return { lines: [], nextOffset: start };
+    }
+    const lines = buffer.subarray(0, lastNewline).toString("utf8").split("\n").map((line) => line.replace(/\r$/, "")).filter((line) => line.trim() !== "");
+    return { lines, nextOffset: start + lastNewline + 1 };
+  } catch (err) {
+    if (!(err instanceof Error && "code" in err && err.code === "ENOENT")) {
+      logHookError("readNewBytes failed", err);
+    }
+    return unchanged;
+  } finally {
+    if (fd !== null) {
+      try {
+        import_node_fs2.default.closeSync(fd);
+      } catch {
+      }
+    }
+  }
+};
+
+// packages/openthrottle-agentic-utils/src/utils/trajectory/claude-session.ts
+var REGISTER_RUN_TOOL = "__register_plan_run";
+var SUBAGENT_TRANSPORT_BYTES = 160 * 1024;
+var stringOf = (value) => {
+  return typeof value === "string" && value !== "" ? value : void 0;
+};
+var isMainLine = (event) => {
+  return isRecord(event) && event.isSidechain !== true;
+};
+var toolUsesOf = (event) => {
+  if (!isRecord(event) || event.type !== "assistant") {
+    return [];
+  }
+  const message = isRecord(event.message) ? event.message : void 0;
+  const content = Array.isArray(message?.content) ? message.content : [];
+  return content.flatMap((block) => {
+    if (!isRecord(block) || block.type !== "tool_use") {
+      return [];
+    }
+    const id = stringOf(block.id);
+    const name = stringOf(block.name);
+    const input = isRecord(block.input) ? block.input : {};
+    return id === void 0 || name === void 0 ? [] : [{ id, input, name }];
+  });
+};
+var toolResultText = (content) => {
+  if (!Array.isArray(content)) {
+    return content;
+  }
+  return content.map((part) => {
+    const isText = isRecord(part) && typeof part.text === "string";
+    return isText ? part.text : "";
+  }).join("");
+};
+var toolResultsOf = (event) => {
+  if (!isRecord(event) || event.type !== "user") {
+    return [];
+  }
+  const message = isRecord(event.message) ? event.message : void 0;
+  const content = Array.isArray(message?.content) ? message.content : [];
+  return content.flatMap((block) => {
+    if (!isRecord(block) || block.type !== "tool_result") {
+      return [];
+    }
+    const toolUseId = stringOf(block.tool_use_id);
+    const text = toolResultText(block.content);
+    const isUsable = toolUseId !== void 0 && typeof text === "string";
+    return isUsable ? [{ content: text, toolUseId }] : [];
+  });
+};
+var findClaudeSessionPlanRunId = (events) => {
+  const registerIds = /* @__PURE__ */ new Set();
+  let planRunId;
+  for (const event of events) {
+    for (const use of toolUsesOf(event)) {
+      if (use.name.endsWith(REGISTER_RUN_TOOL)) {
+        registerIds.add(use.id);
+      }
+    }
+    for (const result of toolResultsOf(event)) {
+      if (registerIds.has(result.toolUseId)) {
+        planRunId = runIdOf(result.content) ?? planRunId;
+      }
+    }
+  }
+  return planRunId;
+};
+function runIdOf(content) {
+  try {
+    const parsed = JSON.parse(content);
+    const run = isRecord(parsed) && isRecord(parsed.run) ? parsed.run : {};
+    return stringOf(run.id);
+  } catch {
+    return void 0;
+  }
+}
+var claudeSessionToolUsesOf = (event) => {
+  return isMainLine(event) ? toolUsesOf(event) : [];
+};
+
+// packages/agentic-hooks/src/adapters/claude/plan-run-binding.ts
+var claudePlanRunTranscript = {
+  planRunIdOf: (events) => {
+    return findClaudeSessionPlanRunId(events) ?? null;
+  },
+  timestampMsOf: (event) => {
+    if (!isRecord(event) || typeof event.timestamp !== "string") return null;
+    const ms = Date.parse(event.timestamp);
+    return Number.isNaN(ms) ? null : ms;
+  },
+  toolUsesOf: claudeSessionToolUsesOf
+};
+var findClaudePlanRunBinding = (events) => {
+  return findPlanRunBinding(events, claudePlanRunTranscript);
+};
+
+// packages/agentic-hooks/src/adapters/claude/plan-run-task-guard-output.ts
+var import_node_fs3 = __toESM(require("node:fs"), 1);
+var PLAN_RUN_GUARD_MAX_TAIL_BYTES = 6 * 1024 * 1024;
+var parseTranscriptLines = (lines) => {
+  return lines.flatMap((line) => {
+    try {
+      return [JSON.parse(line)];
+    } catch {
+      return [];
+    }
+  });
+};
+var readTranscriptTail = (transcriptPath, maxBytes = PLAN_RUN_GUARD_MAX_TAIL_BYTES) => {
+  try {
+    const { size } = import_node_fs3.default.statSync(transcriptPath);
+    const { lines } = readNewBytes({
+      filePath: transcriptPath,
+      maxBytes: maxBytes + 1024,
+      offset: Math.max(0, size - maxBytes)
+    });
+    return parseTranscriptLines(lines);
+  } catch (err) {
+    logHookError("plan-run-task-guard: transcript read failed", err);
+    return [];
+  }
+};
+
+// packages/agentic-hooks/src/adapters/claude/plan-run-invariants-output.ts
+var UPDATE_TASK_SUFFIX2 = "__update_task";
+var nonEmptyString2 = (value) => {
+  return typeof value === "string" && value !== "" ? value : null;
+};
+var bashCommandsSinceRegister = (events, binding) => {
+  if (binding.kind === "none") return [];
+  return events.slice(binding.registerEventIndex).flatMap((event) => {
+    return claudeSessionToolUsesOf(event).flatMap((use) => {
+      if (use.name !== "Bash") return [];
+      const command = nonEmptyString2(use.input.command);
+      return command === null ? [] : [command];
+    });
+  });
+};
+var renderPreToolUse = (message) => {
+  const hookSpecificOutput = {
+    additionalContext: message,
+    hookEventName: "PreToolUse"
+  };
+  return `${JSON.stringify({ hookSpecificOutput })}
+`;
+};
+var renderStop = (message) => {
+  return `${JSON.stringify({ systemMessage: message })}
+`;
+};
+var decideClaudePlanRunInvariants = async (raw, deps) => {
+  try {
+    if (!isRecord(raw)) return null;
+    const transcriptPath = nonEmptyString2(raw.transcript_path);
+    if (transcriptPath === null) return null;
+    const readEvents = deps.readEvents ?? readTranscriptTail;
+    if (raw.hook_event_name === "Stop") {
+      const events = readEvents(transcriptPath);
+      const binding = findClaudePlanRunBinding(events);
+      const message2 = decideStrandedAtStop({
+        binding,
+        committedTaskIds: committedTaskIdsOf(
+          bashCommandsSinceRegister(events, binding)
+        )
+      });
+      return message2 === null ? null : renderStop(message2);
+    }
+    const toolName = nonEmptyString2(raw.tool_name);
+    if (toolName === null || !toolName.endsWith(UPDATE_TASK_SUFFIX2)) {
+      return null;
+    }
+    if (!isRecord(raw.tool_input)) return null;
+    const message = await decideDoubleInProgress({
+      binding: findClaudePlanRunBinding(readEvents(transcriptPath)),
+      lookupInProgress: deps.lookupInProgress,
+      status: raw.tool_input.status,
+      taskId: nonEmptyString2(raw.tool_input.id)
+    });
+    return message === null ? null : renderPreToolUse(message);
+  } catch (err) {
+    logHookError("plan-run-invariants: decision failed", err);
+    return null;
+  }
+};
+
+// packages/agentic-hooks/src/adapters/claude/plan-run-invariants.ts
+var LOOKUP_TIMEOUT_MS = 1500;
+var main = async () => {
+  try {
+    const stdinBuf = import_node_fs4.default.readFileSync(0, "utf8");
+    if (!stdinBuf || !stdinBuf.trim()) return;
+    let raw;
+    try {
+      raw = JSON.parse(stdinBuf);
+    } catch (err) {
+      logHookError("plan-run-invariants: invalid JSON stdin", err);
+      return;
+    }
+    const repoRoot = process.env.CLAUDE_PROJECT_DIR || process.env.OPEN_THROTTLE_REPO_ROOT || process.cwd();
+    const output = await decideClaudePlanRunInvariants(raw, {
+      lookupInProgress: (planId) => lookupInProgressTaskIds({
+        authToken: resolveAuthToken(repoRoot),
+        graphqlUrl: resolveGraphqlUrl(repoRoot),
+        planId,
+        timeoutMs: LOOKUP_TIMEOUT_MS
+      })
+    });
+    if (output !== null) process.stdout.write(output);
+  } catch (err) {
+    logHookError("plan-run-invariants failed", err);
+  }
+};
+main().finally(() => {
+  process.exit(0);
+});

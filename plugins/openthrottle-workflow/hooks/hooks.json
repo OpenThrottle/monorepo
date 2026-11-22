@@ -8,6 +8,12 @@
             "statusMessage": "Report plan auto-close (PostToolUse)",
             "timeout": 10,
             "type": "command"
+          },
+          {
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/plan-narration.cjs\"",
+            "statusMessage": "Narrate the task transition (PostToolUse)",
+            "timeout": 10,
+            "type": "command"
           }
         ],
         "matcher": "mcp__.*__update_task"
@@ -45,6 +51,17 @@
           }
         ],
         "matcher": "Bash|Agent|Task"
+      },
+      {
+        "hooks": [
+          {
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/plan-run-invariants.cjs\"",
+            "statusMessage": "Plan-run invariants (PreToolUse)",
+            "timeout": 10,
+            "type": "command"
+          }
+        ],
+        "matcher": "mcp__.*__update_task"
       }
     ],
     "Stop": [
@@ -53,6 +70,18 @@
           {
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/plan-run-janitor.cjs\"",
             "statusMessage": "Settle abandoned plan runs (Stop)",
+            "type": "command"
+          },
+          {
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/plan-narration.cjs\"",
+            "statusMessage": "Narrate unnarrated plan tasks (Stop)",
+            "timeout": 10,
+            "type": "command"
+          },
+          {
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/plan-run-invariants.cjs\"",
+            "statusMessage": "Plan-run invariants (Stop)",
+            "timeout": 10,
             "type": "command"
           }
         ]
