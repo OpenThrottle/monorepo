@@ -40,6 +40,8 @@ import { SettleRunLedgerService } from '../../graphql/work-ledger/settle-run-led
 import { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account/status-change-system-account.service.ts';
 import { ProcessMetricsService } from '../../metrics/process-metrics/process-metrics.service.ts';
 import type { EnhancedTaskRunMetrics } from '../../metrics/process-metrics/process-metrics.types.ts';
+import { SystemMetricsService } from '../../metrics/system-metrics/system-metrics.service.ts';
+import type { SystemMetricsSnapshot } from '../../metrics/system-metrics/system-metrics.types.ts';
 import { NotificationsService } from '../../notifications/notifications.service.ts';
 import { PlanRunWorktreeCleanupService } from '../../services/plan-run-worktree-cleanup/plan-run-worktree-cleanup.service.ts';
 import { AgenticRalphOrchestratorService } from '../agentic-ralph/orchestrator/orchestrator.service.ts';
@@ -242,6 +244,49 @@ const snapshotStub = {
   heapUsedMb: 20,
   rssMb: 50,
 };
+const mockSystemSnapshot: SystemMetricsSnapshot = {
+  activeProcesses: {
+    activeWorktreeCount: 0,
+    lockedWorktrees: [],
+    scope: 'process',
+    totalWorktreeCount: 0,
+  },
+  container: {
+    kind: 'unavailable',
+    reason: 'Not Linux (darwin)',
+    scope: 'container',
+  },
+  hostMemory: { freeBytes: 1, scope: 'host', totalBytes: 2, usedRatio: 0.5 },
+  loadAverage: {
+    cpuCount: 8,
+    load15m: 0.5,
+    load1m: 0.5,
+    load5m: 0.5,
+    perCoreLoad1m: 0.06,
+    scope: 'host',
+  },
+  platform: 'darwin',
+  pressureBasis: 'host',
+  pressureLevel: 'low',
+  psi: {
+    full10s: null,
+    full300s: null,
+    full60s: null,
+    fullTotalUs: null,
+    scope: 'host',
+    some10s: null,
+    some300s: null,
+    some60s: null,
+    someTotalUs: null,
+  },
+  psiAvailable: false,
+  timestamp: 1700000000000,
+};
+
+const mockSystemMetrics = createMock<SystemMetricsService>({
+  getSystemSnapshot: vi.fn().mockResolvedValue(mockSystemSnapshot),
+});
+
 const mockProcessMetrics = createMock<ProcessMetricsService>({
   getCurrentSnapshot: vi.fn().mockReturnValue(snapshotStub),
 });
@@ -372,6 +417,10 @@ describe('PlansProcessor', () => {
         {
           provide: ProcessMetricsService,
           useValue: mockProcessMetrics,
+        },
+        {
+          provide: SystemMetricsService,
+          useValue: mockSystemMetrics,
         },
         {
           provide: getQueueToken(PLANS_QUEUE_NAME),

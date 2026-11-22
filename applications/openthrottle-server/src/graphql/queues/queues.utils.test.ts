@@ -198,6 +198,88 @@ describe('parseTaskRunMetricsFromReturnvalue', () => {
     expect(result?.systemCpuMetrics?.atEnd.timestamp).toBe(1700000010000);
   });
 
+  test('parses the container block on per-run system CPU metrics', () => {
+    const container = {
+      cpu: {
+        limitVcpus: 0.75,
+        nrPeriods: 10,
+        nrThrottled: 4,
+        throttledUsec: 900,
+        usageUsec: 5000,
+      },
+      cpuWindow: null,
+      kind: 'cgroup',
+      memory: {
+        currentBytes: 10,
+        events: { high: 1, max: 0, oom: 0, oomKill: 0 },
+        highBytes: null,
+        limitBytes: 20,
+      },
+      path: '/sys/fs/cgroup',
+      psi: { scope: 'container', some10s: 4 },
+      scope: 'container',
+    };
+    const returnvalue = JSON.stringify({
+      taskRunMetrics: {
+        atEnd: validSnapshot,
+        atStart: validSnapshot,
+        systemCpuMetrics: {
+          ...validSystemCpuMetrics,
+          atEnd: { ...validSystemCpuMetrics.atEnd, container },
+          atStart: {
+            ...validSystemCpuMetrics.atStart,
+            container: {
+              kind: 'unavailable',
+              reason: 'Not Linux (darwin)',
+              scope: 'container',
+            },
+          },
+          containerCpuWindow: {
+            elapsedMs: 10000,
+            throttledPeriodRatio: 0.4,
+            usageRatioOfLimit: 0.9,
+            usedVcpus: 0.675,
+          },
+          pressureBasis: 'container',
+        },
+      },
+    });
+
+    const metrics =
+      parseTaskRunMetricsFromReturnvalue(returnvalue)?.systemCpuMetrics;
+
+    expect(metrics?.pressureBasis).toBe('container');
+    expect(metrics?.containerCpuWindow?.throttledPeriodRatio).toBe(0.4);
+    expect(metrics?.atEnd.container).toMatchObject({
+      available: true,
+      cpu: { limitVcpus: 0.75, nrThrottled: 4 },
+      memory: { events: { high: 1 }, limitBytes: 20 },
+      psi: { scope: 'container', some10s: 4 },
+    });
+    expect(metrics?.atStart.container).toMatchObject({
+      available: false,
+      unavailableReason: 'Not Linux (darwin)',
+    });
+  });
+
+  test('leaves container fields null on runs recorded before them', () => {
+    const returnvalue = JSON.stringify({
+      taskRunMetrics: {
+        atEnd: validSnapshot,
+        atStart: validSnapshot,
+        systemCpuMetrics: validSystemCpuMetrics,
+      },
+    });
+
+    const metrics =
+      parseTaskRunMetricsFromReturnvalue(returnvalue)?.systemCpuMetrics;
+
+    expect(metrics?.atEnd.container).toBeNull();
+    expect(metrics?.containerCpuWindow).toBeNull();
+    expect(metrics?.pressureBasis).toBeNull();
+    expect(metrics?.atEnd.loadAverage.scope).toBeNull();
+  });
+
   test('parses all new metrics when present together', () => {
     const returnvalue = JSON.stringify({
       taskRunMetrics: {

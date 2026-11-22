@@ -2933,6 +2933,124 @@ type PsiCpuMetrics {
 
   """Total some stall time in microseconds (cumulative since boot)."""
   someTotalUs: Float
+
+  """
+  Whose pressure this is: host (/proc/pressure/cpu) or container (the server cgroup's cpu.pressure). Null on plan-run metrics recorded before scopes existed.
+  """
+  scope: MetricScope
+}
+
+"""
+What a metric group measures: host (the whole machine or VM — load average, os memory and /proc/pressure are host-wide under Docker), container (the server's own cgroup limits and usage) or process (the server process and the runs it tracks).
+"""
+enum MetricScope {
+  container
+  host
+  process
+}
+
+"""
+The server cgroup's CPU limit (cpu.max) and cumulative accounting (cpu.stat) since the cgroup was created.
+"""
+type ContainerCpuMetrics {
+  """vCPUs allowed by cpu.max (quota / period). Null when unlimited."""
+  limitVcpus: Float
+
+  """CFS enforcement periods elapsed (cpu.stat nr_periods)."""
+  nrPeriods: Float
+
+  """Periods in which the cgroup was throttled (cpu.stat nr_throttled)."""
+  nrThrottled: Float
+
+  """Total time throttled, in microseconds (cpu.stat throttled_usec)."""
+  throttledUsec: Float
+
+  """Total CPU time used, in microseconds (cpu.stat usage_usec)."""
+  usageUsec: Float
+}
+
+"""
+The server cgroup's CPU usage and throttling between two reads, so it describes recent behaviour rather than totals.
+"""
+type ContainerCpuWindow {
+  """Length of the window in milliseconds."""
+  elapsedMs: Float!
+
+  """Share of CFS periods in the window that were throttled, 0–1."""
+  throttledPeriodRatio: Float
+
+  """
+  CPU used in the window as a share of the cpu.max limit; above ~0.9 the container is at its ceiling. Null when unlimited.
+  """
+  usageRatioOfLimit: Float
+
+  """Average vCPUs used over the window."""
+  usedVcpus: Float
+}
+
+"""
+Counters from the server cgroup's memory.events, cumulative since it was created.
+"""
+type ContainerMemoryEvents {
+  """Times usage went over memory.high and was throttled."""
+  high: Float!
+
+  """Times usage hit memory.max."""
+  max: Float!
+
+  """Times the OOM killer was invoked for this cgroup."""
+  oom: Float!
+
+  """
+  Processes in this cgroup killed by the OOM killer. Non-zero means the memory limit is too small.
+  """
+  oomKill: Float!
+}
+
+"""The server cgroup's memory limit and usage."""
+type ContainerMemoryMetrics {
+  """Current usage in bytes (memory.current)."""
+  currentBytes: Float
+
+  """OOM and limit counters (memory.events). Null when unreadable."""
+  events: ContainerMemoryEvents
+
+  """memory.high throttle threshold in bytes. Null when unlimited."""
+  highBytes: Float
+
+  """memory.max hard limit in bytes. Null when unlimited."""
+  limitBytes: Float
+}
+
+"""
+The server's own cgroup v2 limits, usage and pressure. When available is false only unavailableReason is set (macOS, cgroup v1, unreadable files).
+"""
+type ContainerMetrics {
+  """Whether the server's cgroup v2 was found and read."""
+  available: Boolean!
+
+  """CPU limit and cumulative accounting."""
+  cpu: ContainerCpuMetrics
+
+  """
+  CPU usage and throttling since the previous read (or over the run, on plan-run metrics).
+  """
+  cpuWindow: ContainerCpuWindow
+
+  """Memory limit, usage and OOM counters."""
+  memory: ContainerMemoryMetrics
+
+  """Absolute path of the cgroup directory that was read."""
+  path: String
+
+  """The cgroup's own CPU pressure (cpu.pressure), not the host's."""
+  psi: PsiCpuMetrics
+
+  """Always container."""
+  scope: MetricScope!
+
+  """Why the cgroup could not be read, when available is false."""
+  unavailableReason: String
 }
 
 """System load average from os.loadavg()."""
@@ -2949,12 +3067,24 @@ type LoadAverageMetrics {
   """5-minute load average."""
   load5m: Float!
 
-  """Per-core load (load1m / cpuCount). > 1 means oversubscribed."""
+  """
+  Per-core load (load1m / cpuCount). > 1 means oversubscribed. Host-wide: inside a container, cpuCount is the host's CPUs, not the container's cpu.max limit.
+  """
   perCoreLoad1m: Float!
+
+  """
+  Always host when set: os.loadavg() counts every process on the machine. Null on plan-run metrics recorded before scopes existed.
+  """
+  scope: MetricScope
 }
 
 """System-level CPU metrics snapshot at a point in time."""
 type SystemCpuSnapshot {
+  """
+  The server's own cgroup limits and usage at snapshot time. Null on runs recorded before container metrics existed.
+  """
+  container: ContainerMetrics
+
   """Load average at snapshot time."""
   loadAverage: LoadAverageMetrics!
 
@@ -2975,11 +3105,21 @@ type SystemCpuMetrics {
   """Snapshot at job start."""
   atStart: SystemCpuSnapshot!
 
+  """
+  The server cgroup's CPU usage and throttling over the whole job (atStart to atEnd). Null outside a cgroup or on older runs.
+  """
+  containerCpuWindow: ContainerCpuWindow
+
   """Platform: linux, darwin, win32, etc."""
   platform: String!
 
   """
-  Interpretation of system CPU pressure: low, moderate, high, or unknown.
+  What pressureLevel was judged on: container (usage and throttling against the cgroup's cpu.max limit) or host (load average and PSI). Null on runs recorded before scopes existed, which were always host.
+  """
+  pressureBasis: MetricScope
+
+  """
+  Interpretation of CPU pressure: low, moderate, high, or unknown. Judged on the container's own CPU limit when the server has one, otherwise on host load and PSI — see pressureBasis.
   """
   pressureLevel: PressureLevel!
 
@@ -3245,6 +3385,77 @@ type PlanRunMetricsEntry {
 }
 
 """
+Host memory from os.totalmem()/os.freemem(). Inside a container this is the host's (or VM's) memory, not the container's limit — see ContainerMetrics.memory for that.
+"""
+type HostMemoryMetrics {
+  """Free host memory in bytes."""
+  freeBytes: Float!
+
+  """Always host."""
+  scope: MetricScope!
+
+  """Total host memory in bytes."""
+  totalBytes: Float!
+
+  """(total - free) / total, 0–1."""
+  usedRatio: Float!
+}
+
+"""Worktree-backed runs the server is tracking."""
+type ActiveProcessesMetrics {
+  """Worktrees currently locked by a run."""
+  activeWorktreeCount: Int!
+
+  """Job ids holding a worktree lock."""
+  lockedWorktrees: [String!]!
+
+  """Always process."""
+  scope: MetricScope!
+
+  """Worktrees known to the tracker."""
+  totalWorktreeCount: Int!
+}
+
+"""
+Live system metrics, each group labelled with its scope: host-wide load, memory and PSI next to the server's own cgroup limits, usage and throttling.
+"""
+type SystemMetricsSnapshot {
+  """Worktree-backed runs the server is tracking."""
+  activeProcesses: ActiveProcessesMetrics!
+
+  """
+  The server's own cgroup limits, usage and throttling, or why there is none.
+  """
+  container: ContainerMetrics!
+
+  """Host memory."""
+  hostMemory: HostMemoryMetrics!
+
+  """Host load average."""
+  loadAverage: LoadAverageMetrics!
+
+  """Platform: linux, darwin, win32, etc."""
+  platform: String!
+
+  """
+  What pressureLevel was judged on: container when the server has a cgroup CPU limit, otherwise host.
+  """
+  pressureBasis: MetricScope!
+
+  """Interpretation of CPU pressure: low, moderate, high, or unknown."""
+  pressureLevel: PressureLevel!
+
+  """Host PSI (/proc/pressure/cpu). Null fields off Linux."""
+  psi: PsiCpuMetrics!
+
+  """Whether host PSI is available."""
+  psiAvailable: Boolean!
+
+  """When the snapshot was taken (Unix ms)."""
+  timestamp: Float!
+}
+
+"""
 Metrics namespace: server snapshot and plan-run metrics. serverMetrics at root remains for backward compatibility.
 """
 type MetricsObject {
@@ -3257,6 +3468,11 @@ type MetricsObject {
   Current process CPU and memory snapshot. Same data as root serverMetrics query.
   """
   serverSnapshot: ServerMetricsObject!
+
+  """
+  Live host and container metrics, each group labelled with its scope. Same data as REST GET /metrics/system.
+  """
+  systemSnapshot: SystemMetricsSnapshot!
 }
 
 type ModelEndpointObject {

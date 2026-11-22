@@ -49,6 +49,9 @@ import type {
   ProcessMetricsSnapshot,
 } from '../../metrics/process-metrics/process-metrics.types.ts';
 import { formatEnhancedTaskRunMetricsSummary } from '../../metrics/process-metrics/process-metrics.utils.ts';
+import { SystemMetricsService } from '../../metrics/system-metrics/system-metrics.service.ts';
+import type { SystemMetricsSnapshot } from '../../metrics/system-metrics/system-metrics.types.ts';
+import { buildRunSystemCpuMetrics } from '../../metrics/system-metrics/system-metrics.utils.ts';
 import { NotificationsService } from '../../notifications/notifications.service.ts';
 import { PlanRunWorktreeCleanupService } from '../../services/plan-run-worktree-cleanup/plan-run-worktree-cleanup.service.ts';
 import type { ProvisionedPlanRunWorktree } from '../../services/plan-run-worktree-provision/plan-run-worktree-provision.types.ts';
@@ -161,6 +164,7 @@ export class PlansProcessor
     private readonly scheduledPlanRun: ScheduledPlanRunService,
     private readonly settleRunLedger: SettleRunLedgerService,
     private readonly statusChangeSystemAccount: StatusChangeSystemAccountService,
+    private readonly systemMetrics: SystemMetricsService,
     private readonly tasksRepository: TasksRepository,
     private readonly usageLimitResume: UsageLimitResumeService,
     private readonly workLedgerRun: WorkLedgerRunService,
@@ -965,6 +969,7 @@ export class PlansProcessor
       const logContext = `${PlansProcessor.name} [planId=${planId}, jobId=${jobId}]`;
 
       const metricsAtStart = this.processMetrics.getCurrentSnapshot();
+      const systemAtStart = await this.captureSystemSnapshotSafe();
 
       this.logger.info(
         `Plan job started: planId=${planId}, jobId=${jobId}`,
@@ -1047,7 +1052,7 @@ export class PlansProcessor
         };
       }
 
-      const result = await this.processOrchestrator(
+      const orchestratorResult = await this.processOrchestrator(
         job,
         jobId,
         logContext,
@@ -1057,6 +1062,10 @@ export class PlansProcessor
         priorPlanStatus,
         lifecycleDispatcher,
         workSessionId,
+      );
+      const result = await this.withSystemCpuMetrics(
+        orchestratorResult,
+        systemAtStart,
       );
 
       if (result.taskRunMetrics) {
@@ -1259,6 +1268,46 @@ export class PlansProcessor
         PlansProcessor.name,
       );
     }
+  }
+
+  /**
+   * @description Reads the system snapshot (host load, PSI, the server's own cgroup) for a run's
+   * metrics. Best-effort: a failure is logged and yields null, never fails the job.
+   */
+  private async captureSystemSnapshotSafe(): Promise<SystemMetricsSnapshot | null> {
+    try {
+      return await this.systemMetrics.getSystemSnapshot();
+    } catch (error) {
+      this.logger.warn(`Failed to capture system metrics for a plan run`, {
+        message: error instanceof Error ? error.message : String(error),
+      });
+      return null;
+    }
+  }
+
+  /**
+   * @description Adds start/end system CPU metrics, including the container's throttling over
+   * the run, to the result's taskRunMetrics so they persist in the job returnvalue.
+   */
+  private async withSystemCpuMetrics(
+    result: PlanRunJobResult,
+    systemAtStart: SystemMetricsSnapshot | null,
+  ): Promise<PlanRunJobResult> {
+    const { taskRunMetrics } = result;
+    if (!taskRunMetrics || systemAtStart === null) {
+      return result;
+    }
+    const systemAtEnd = await this.captureSystemSnapshotSafe();
+    if (systemAtEnd === null) {
+      return result;
+    }
+    return {
+      ...result,
+      taskRunMetrics: {
+        ...taskRunMetrics,
+        systemCpuMetrics: buildRunSystemCpuMetrics(systemAtStart, systemAtEnd),
+      },
+    };
   }
 
   /**

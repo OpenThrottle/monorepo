@@ -7,11 +7,14 @@ import { EmitNotification } from '@openthrottle/nestjs-websockets';
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
 
 import { ProcessMetricsService } from '../../metrics/process-metrics/process-metrics.service.ts';
+import { SystemMetricsService } from '../../metrics/system-metrics/system-metrics.service.ts';
 import { ServerMetricsObject } from '../health/server-metrics.object.ts';
 import { parseTaskRunMetricsFromReturnvalue } from '../queues/queues.utils.ts';
 import { QueuesService } from '../queues/queues-service/queues-service.service.ts';
 import { MetricsObject } from './metrics.object.ts';
+import { toSystemMetricsSnapshotObject } from './metrics.utils.ts';
 import { PlanRunMetricsEntryObject } from './plan-run-metrics-entry.object.ts';
+import { SystemMetricsSnapshotObject } from './system-metrics-snapshot.object.ts';
 
 const METRICS_DEFAULT_RECENT_PLAN_RUNS_LIMIT = 10;
 const METRICS_MAX_RECENT_PLAN_RUNS_LIMIT = 100;
@@ -22,6 +25,7 @@ export class MetricsResolver {
   constructor(
     private readonly processMetrics: ProcessMetricsService,
     private readonly queuesService: QueuesService,
+    private readonly systemMetrics: SystemMetricsService,
   ) {}
 
   /**
@@ -37,6 +41,16 @@ export class MetricsResolver {
   @ResolveField(() => ServerMetricsObject)
   serverSnapshot(): ServerMetricsObject {
     return this.processMetrics.getCurrentSnapshot();
+  }
+
+  /**
+   * @description Live host and container metrics (the REST GET /metrics/system data).
+   */
+  @ResolveField(() => SystemMetricsSnapshotObject)
+  async systemSnapshot(): Promise<SystemMetricsSnapshotObject> {
+    return toSystemMetricsSnapshotObject(
+      await this.systemMetrics.getSystemSnapshot(),
+    );
   }
 
   /**

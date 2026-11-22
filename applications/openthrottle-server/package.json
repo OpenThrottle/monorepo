@@ -285,6 +285,7 @@
     "./src/graphql/blog/blog-reference-entity.enum.ts",
     "./src/graphql/editor-presence/editor-presence-state.enum.ts",
     "./src/graphql/id-refs/id-refs.enum.ts",
+    "./src/graphql/metrics/metric-scope.enum.ts",
     "./src/graphql/metrics/system-cpu-metrics.object.ts",
     "./src/graphql/metrics/wall-clock-metrics.object.ts",
     "./src/graphql/plan-messages/plan-message.enum.ts",

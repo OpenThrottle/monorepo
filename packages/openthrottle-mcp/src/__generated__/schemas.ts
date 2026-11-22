@@ -92,6 +92,7 @@ import {
   ListPlansByStatusInput,
   ListPullsInput,
   LoginInput,
+  MetricScope,
   MissingWorktreeCheckoutReason,
   MoveProjectPlanInput,
   OpenToMergedCycleTimeInput,
@@ -252,6 +253,9 @@ export const EditorPresenceStateSchema: z.ZodType<EditorPresenceState> =
   z.nativeEnum(EditorPresenceState);
 
 export const IdRefKindSchema: z.ZodType<IdRefKind> = z.nativeEnum(IdRefKind);
+
+export const MetricScopeSchema: z.ZodType<MetricScope> =
+  z.nativeEnum(MetricScope);
 
 export const MissingWorktreeCheckoutReasonSchema: z.ZodType<MissingWorktreeCheckoutReason> =
   z.nativeEnum(MissingWorktreeCheckoutReason);

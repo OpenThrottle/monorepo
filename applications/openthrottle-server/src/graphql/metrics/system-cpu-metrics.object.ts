@@ -12,6 +12,14 @@ import {
   registerEnumType,
 } from '@nestjs/graphql';
 
+import {
+  ContainerCpuWindowObject,
+  ContainerMetricsObject,
+} from './container-metrics.object.ts';
+import type { MetricScopeType } from './metric-scope.enum.ts';
+import { MetricScope } from './metric-scope.enum.ts';
+import { PsiCpuMetricsObject } from './psi-cpu-metrics.object.ts';
+
 export const PressureLevel = {
   high: 'high',
   low: 'low',
@@ -26,59 +34,6 @@ registerEnumType(PressureLevel, {
   description: `System CPU pressure level interpretation.`,
   name: 'PressureLevel',
 });
-
-@ObjectType('PsiCpuMetrics', {
-  description: `Linux Pressure Stall Information (PSI) for CPU. Null fields on non-Linux platforms.`,
-})
-export class PsiCpuMetricsObject {
-  @Field(() => Float, {
-    description: `Percentage of time all runnable tasks stalled (10s avg).`,
-    nullable: true,
-  })
-  full10s!: number | null;
-
-  @Field(() => Float, {
-    description: `Percentage of time all runnable tasks stalled (300s avg).`,
-    nullable: true,
-  })
-  full300s!: number | null;
-
-  @Field(() => Float, {
-    description: `Percentage of time all runnable tasks stalled (60s avg).`,
-    nullable: true,
-  })
-  full60s!: number | null;
-
-  @Field(() => Float, {
-    description: `Total full stall time in microseconds (cumulative since boot).`,
-    nullable: true,
-  })
-  fullTotalUs!: number | null;
-
-  @Field(() => Float, {
-    description: `Percentage of time at least one task stalled (10s avg).`,
-    nullable: true,
-  })
-  some10s!: number | null;
-
-  @Field(() => Float, {
-    description: `Percentage of time at least one task stalled (300s avg).`,
-    nullable: true,
-  })
-  some300s!: number | null;
-
-  @Field(() => Float, {
-    description: `Percentage of time at least one task stalled (60s avg).`,
-    nullable: true,
-  })
-  some60s!: number | null;
-
-  @Field(() => Float, {
-    description: `Total some stall time in microseconds (cumulative since boot).`,
-    nullable: true,
-  })
-  someTotalUs!: number | null;
-}
 
 @ObjectType('LoadAverageMetrics', {
   description: `System load average from os.loadavg().`,
@@ -105,15 +60,27 @@ export class LoadAverageMetricsObject {
   load5m!: number;
 
   @Field(() => Float, {
-    description: `Per-core load (load1m / cpuCount). > 1 means oversubscribed.`,
+    description: `Per-core load (load1m / cpuCount). > 1 means oversubscribed. Host-wide: inside a container, cpuCount is the host's CPUs, not the container's cpu.max limit.`,
   })
   perCoreLoad1m!: number;
+
+  @Field(() => MetricScope, {
+    description: `Always host when set: os.loadavg() counts every process on the machine. Null on plan-run metrics recorded before scopes existed.`,
+    nullable: true,
+  })
+  scope!: MetricScopeType | null;
 }
 
 @ObjectType('SystemCpuSnapshot', {
   description: `System-level CPU metrics snapshot at a point in time.`,
 })
 export class SystemCpuSnapshotObject {
+  @Field(() => ContainerMetricsObject, {
+    description: `The server's own cgroup limits and usage at snapshot time. Null on runs recorded before container metrics existed.`,
+    nullable: true,
+  })
+  container!: ContainerMetricsObject | null;
+
   @Field(() => LoadAverageMetricsObject, {
     description: `Load average at snapshot time.`,
   })
@@ -144,13 +111,25 @@ export class SystemCpuMetricsObject {
   })
   atStart!: SystemCpuSnapshotObject;
 
+  @Field(() => ContainerCpuWindowObject, {
+    description: `The server cgroup's CPU usage and throttling over the whole job (atStart to atEnd). Null outside a cgroup or on older runs.`,
+    nullable: true,
+  })
+  containerCpuWindow!: ContainerCpuWindowObject | null;
+
   @Field(() => String, {
     description: `Platform: linux, darwin, win32, etc.`,
   })
   platform!: string;
 
+  @Field(() => MetricScope, {
+    description: `What pressureLevel was judged on: container (usage and throttling against the cgroup's cpu.max limit) or host (load average and PSI). Null on runs recorded before scopes existed, which were always host.`,
+    nullable: true,
+  })
+  pressureBasis!: MetricScopeType | null;
+
   @Field(() => PressureLevel, {
-    description: `Interpretation of system CPU pressure: low, moderate, high, or unknown.`,
+    description: `Interpretation of CPU pressure: low, moderate, high, or unknown. Judged on the container's own CPU limit when the server has one, otherwise on host load and PSI — see pressureBasis.`,
   })
   pressureLevel!: PressureLevelType;
 
