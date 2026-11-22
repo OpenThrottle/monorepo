@@ -121,6 +121,7 @@ describe('claude driver parity', () => {
     expect(claudeDriver.capabilities).toEqual({
       attachesWorkspaceMcp: true,
       chatStreaming: true,
+      isolatesRepoAgentConfig: true,
       mcpAutoApprove: false,
       permissionMode: true,
       pluginDir: true,
@@ -210,6 +211,7 @@ describe('cursor driver parity', () => {
     expect(cursorDriver.capabilities).toEqual({
       attachesWorkspaceMcp: true,
       chatStreaming: true,
+      isolatesRepoAgentConfig: false,
       mcpAutoApprove: true,
       permissionMode: false,
       pluginDir: true,

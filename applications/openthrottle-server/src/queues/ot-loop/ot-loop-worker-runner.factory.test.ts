@@ -61,6 +61,7 @@ describe('createOtLoopWorkerRunner', () => {
       planId: 'plan-1',
       planRunId: 'run-1',
       pluginDirs: ['/ot/plugins/openthrottle-workflow'],
+      repoAgentConfig: { kind: 'isolated', mcpServers: {} },
       runDriver,
       timeoutMs: 5000,
     });
@@ -119,6 +120,7 @@ describe('createOtLoopWorkerRunner', () => {
       effort: 'high',
       model: 'sonnet',
       pluginDirs: ['/ot/plugins/openthrottle-workflow'],
+      repoAgentConfig: { kind: 'isolated', mcpServers: {} },
       signal: controller.signal,
       timeoutMs: 5000,
     });

@@ -6,6 +6,7 @@ import type {
   AgentDriver,
   DriverInvocationConfig,
   DriverReasoningEffort,
+  DriverRepoAgentConfig,
   RunDriverOptions,
   UsageLimit,
 } from '@openthrottle/openthrottle-drivers';
@@ -91,6 +92,8 @@ export interface OtLoopWorkerRunnerOptions {
   readonly planRunId: string | undefined;
   /** OT's hook payloads for this driver (`--plugin-dir` for Claude); empty loads none. */
   readonly pluginDirs: readonly string[];
+  /** The checkout's trust posture; isolated spawns the worker with the repo's own config suppressed. */
+  readonly repoAgentConfig: DriverRepoAgentConfig;
   readonly runDriver: OtLoopRunDriver;
   /** Per-attempt wall-clock limit; `undefined` means none. */
   readonly timeoutMs: number | undefined;

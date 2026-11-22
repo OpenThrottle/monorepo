@@ -6502,6 +6502,8 @@ export type ReplaceAgentTrajectoryInput = {
 /** A per-user on-disk instance of a repository. Paths are on the server host. */
 export type RepositoryCheckoutObject = {
   __typename?: 'RepositoryCheckoutObject';
+  /** True when this user trusts the checkout's repo-local agent config (.claude/settings.json hooks, .mcp.json servers) to run during plan runs. Default false: plan runs suppress that config so only OpenThrottle-supplied MCP servers and plugin hooks load. The OpenThrottle checkout itself (isForeign false) is always trusted, whatever this says. */
+  agentConfigTrusted: Scalars['Boolean']['output'];
   createdAt: Scalars['DateTime']['output'];
   displayName: Scalars['String']['output'];
   /** Absolute path on the server host. */
@@ -6531,7 +6533,11 @@ export type RepositoryInspectionAgentConfigObject = {
   agentsMd: Scalars['Boolean']['output'];
   claudeMd: Scalars['Boolean']['output'];
   cursorRules: Scalars['Boolean']['output'];
+  /** Repo-local hook commands a plan run would execute (.claude/settings.json, .claude/settings.local.json, .cursor/hooks.json). Null until the checkout is rescanned. */
+  hookCount?: Maybe<Scalars['Int']['output']>;
   mcpJson: Scalars['Boolean']['output'];
+  /** Repo-local MCP servers a plan run would connect (.mcp.json, .cursor/mcp.json). Null until the checkout is rescanned. */
+  mcpServerCount?: Maybe<Scalars['Int']['output']>;
   skillsDir: Scalars['Boolean']['output'];
 };
 
@@ -8474,6 +8480,8 @@ export type UpdateProjectInput = {
 
 /** Edit an owned repository's name, default branch, and/or project link. Omitted fields are left unchanged. */
 export type UpdateRepositoryInput = {
+  /** Trust (or revoke trust in) the repo-local agent config of this user's checkouts of the repository, so plan runs load (or suppress) its hooks and MCP servers; omit to leave unchanged. Has no effect on the OpenThrottle checkout, which is always trusted. */
+  agentConfigTrusted?: InputMaybe<Scalars['Boolean']['input']>;
   /** New default branch; omit to leave unchanged. */
   defaultBranch?: InputMaybe<Scalars['String']['input']>;
   /** Opt this user's checkouts of the repository into (or out of) foreign-workspace skill injection; omit to leave unchanged. */
@@ -15477,6 +15485,7 @@ export type GetWorkspaceRepositoryQuery = {
     updatedAt: any;
     checkouts: Array<{
       __typename?: 'RepositoryCheckoutObject';
+      agentConfigTrusted: boolean;
       createdAt: any;
       displayName: string;
       filesystemPath: string;
@@ -15499,7 +15508,9 @@ export type GetWorkspaceRepositoryQuery = {
           agentsMd: boolean;
           claudeMd: boolean;
           cursorRules: boolean;
+          hookCount?: number | null;
           mcpJson: boolean;
+          mcpServerCount?: number | null;
           skillsDir: boolean;
         };
         git: {
@@ -15553,6 +15564,7 @@ export type GetWorkspaceRepositoryForEditQuery = {
     updatedAt: any;
     checkouts: Array<{
       __typename?: 'RepositoryCheckoutObject';
+      agentConfigTrusted: boolean;
       createdAt: any;
       displayName: string;
       filesystemPath: string;
@@ -15575,7 +15587,9 @@ export type GetWorkspaceRepositoryForEditQuery = {
           agentsMd: boolean;
           claudeMd: boolean;
           cursorRules: boolean;
+          hookCount?: number | null;
           mcpJson: boolean;
+          mcpServerCount?: number | null;
           skillsDir: boolean;
         };
         git: {
@@ -15628,6 +15642,7 @@ export type UpdateRepositoryMutation = {
     updatedAt: any;
     checkouts: Array<{
       __typename?: 'RepositoryCheckoutObject';
+      agentConfigTrusted: boolean;
       createdAt: any;
       displayName: string;
       filesystemPath: string;
@@ -15650,7 +15665,9 @@ export type UpdateRepositoryMutation = {
           agentsMd: boolean;
           claudeMd: boolean;
           cursorRules: boolean;
+          hookCount?: number | null;
           mcpJson: boolean;
+          mcpServerCount?: number | null;
           skillsDir: boolean;
         };
         git: {
@@ -15706,7 +15723,9 @@ export type RepositoryCheckoutInspectionFragment = {
     agentsMd: boolean;
     claudeMd: boolean;
     cursorRules: boolean;
+    hookCount?: number | null;
     mcpJson: boolean;
+    mcpServerCount?: number | null;
     skillsDir: boolean;
   };
   git: {
@@ -15740,6 +15759,7 @@ export type RepositoryCheckoutInspectionFragment = {
 
 export type RepositoryCheckoutFieldsFragment = {
   __typename?: 'RepositoryCheckoutObject';
+  agentConfigTrusted: boolean;
   createdAt: any;
   displayName: string;
   filesystemPath: string;
@@ -15762,7 +15782,9 @@ export type RepositoryCheckoutFieldsFragment = {
       agentsMd: boolean;
       claudeMd: boolean;
       cursorRules: boolean;
+      hookCount?: number | null;
       mcpJson: boolean;
+      mcpServerCount?: number | null;
       skillsDir: boolean;
     };
     git: {
@@ -15821,6 +15843,7 @@ export type WorkspaceRepositoryFieldsFragment = {
   updatedAt: any;
   checkouts: Array<{
     __typename?: 'RepositoryCheckoutObject';
+    agentConfigTrusted: boolean;
     createdAt: any;
     displayName: string;
     filesystemPath: string;
@@ -15843,7 +15866,9 @@ export type WorkspaceRepositoryFieldsFragment = {
         agentsMd: boolean;
         claudeMd: boolean;
         cursorRules: boolean;
+        hookCount?: number | null;
         mcpJson: boolean;
+        mcpServerCount?: number | null;
         skillsDir: boolean;
       };
       git: {
@@ -15901,6 +15926,7 @@ export type GetSettingsRepositoriesQuery = {
     updatedAt: any;
     checkouts: Array<{
       __typename?: 'RepositoryCheckoutObject';
+      agentConfigTrusted: boolean;
       createdAt: any;
       displayName: string;
       filesystemPath: string;
@@ -15923,7 +15949,9 @@ export type GetSettingsRepositoriesQuery = {
           agentsMd: boolean;
           claudeMd: boolean;
           cursorRules: boolean;
+          hookCount?: number | null;
           mcpJson: boolean;
+          mcpServerCount?: number | null;
           skillsDir: boolean;
         };
         git: {
@@ -16159,6 +16187,7 @@ export type AddWorkspaceFolderResultFragment = {
   reconciliation: WorkspaceFolderReconciliation;
   checkout: {
     __typename?: 'RepositoryCheckoutObject';
+    agentConfigTrusted: boolean;
     createdAt: any;
     displayName: string;
     filesystemPath: string;
@@ -16181,7 +16210,9 @@ export type AddWorkspaceFolderResultFragment = {
         agentsMd: boolean;
         claudeMd: boolean;
         cursorRules: boolean;
+        hookCount?: number | null;
         mcpJson: boolean;
+        mcpServerCount?: number | null;
         skillsDir: boolean;
       };
       git: {
@@ -16225,6 +16256,7 @@ export type AddWorkspaceFolderResultFragment = {
     updatedAt: any;
     checkouts: Array<{
       __typename?: 'RepositoryCheckoutObject';
+      agentConfigTrusted: boolean;
       createdAt: any;
       displayName: string;
       filesystemPath: string;
@@ -16247,7 +16279,9 @@ export type AddWorkspaceFolderResultFragment = {
           agentsMd: boolean;
           claudeMd: boolean;
           cursorRules: boolean;
+          hookCount?: number | null;
           mcpJson: boolean;
+          mcpServerCount?: number | null;
           skillsDir: boolean;
         };
         git: {
@@ -16295,6 +16329,7 @@ export type AddWorkspaceFolderMutation = {
     reconciliation: WorkspaceFolderReconciliation;
     checkout: {
       __typename?: 'RepositoryCheckoutObject';
+      agentConfigTrusted: boolean;
       createdAt: any;
       displayName: string;
       filesystemPath: string;
@@ -16317,7 +16352,9 @@ export type AddWorkspaceFolderMutation = {
           agentsMd: boolean;
           claudeMd: boolean;
           cursorRules: boolean;
+          hookCount?: number | null;
           mcpJson: boolean;
+          mcpServerCount?: number | null;
           skillsDir: boolean;
         };
         git: {
@@ -16361,6 +16398,7 @@ export type AddWorkspaceFolderMutation = {
       updatedAt: any;
       checkouts: Array<{
         __typename?: 'RepositoryCheckoutObject';
+        agentConfigTrusted: boolean;
         createdAt: any;
         displayName: string;
         filesystemPath: string;
@@ -16383,7 +16421,9 @@ export type AddWorkspaceFolderMutation = {
             agentsMd: boolean;
             claudeMd: boolean;
             cursorRules: boolean;
+            hookCount?: number | null;
             mcpJson: boolean;
+            mcpServerCount?: number | null;
             skillsDir: boolean;
           };
           git: {
@@ -16436,6 +16476,7 @@ export type CloneRepositoryMutation = {
     reconciliation: WorkspaceFolderReconciliation;
     checkout: {
       __typename?: 'RepositoryCheckoutObject';
+      agentConfigTrusted: boolean;
       createdAt: any;
       displayName: string;
       filesystemPath: string;
@@ -16458,7 +16499,9 @@ export type CloneRepositoryMutation = {
           agentsMd: boolean;
           claudeMd: boolean;
           cursorRules: boolean;
+          hookCount?: number | null;
           mcpJson: boolean;
+          mcpServerCount?: number | null;
           skillsDir: boolean;
         };
         git: {
@@ -16502,6 +16545,7 @@ export type CloneRepositoryMutation = {
       updatedAt: any;
       checkouts: Array<{
         __typename?: 'RepositoryCheckoutObject';
+        agentConfigTrusted: boolean;
         createdAt: any;
         displayName: string;
         filesystemPath: string;
@@ -16524,7 +16568,9 @@ export type CloneRepositoryMutation = {
             agentsMd: boolean;
             claudeMd: boolean;
             cursorRules: boolean;
+            hookCount?: number | null;
             mcpJson: boolean;
+            mcpServerCount?: number | null;
             skillsDir: boolean;
           };
           git: {
@@ -16577,6 +16623,7 @@ export type RefreshCheckoutMutation = {
     supersededProjectId?: string | null;
     checkout: {
       __typename?: 'RepositoryCheckoutObject';
+      agentConfigTrusted: boolean;
       createdAt: any;
       displayName: string;
       filesystemPath: string;
@@ -16599,7 +16646,9 @@ export type RefreshCheckoutMutation = {
           agentsMd: boolean;
           claudeMd: boolean;
           cursorRules: boolean;
+          hookCount?: number | null;
           mcpJson: boolean;
+          mcpServerCount?: number | null;
           skillsDir: boolean;
         };
         git: {
@@ -16648,6 +16697,7 @@ export type RefreshCheckoutMutation = {
       updatedAt: any;
       checkouts: Array<{
         __typename?: 'RepositoryCheckoutObject';
+        agentConfigTrusted: boolean;
         createdAt: any;
         displayName: string;
         filesystemPath: string;
@@ -16670,7 +16720,9 @@ export type RefreshCheckoutMutation = {
             agentsMd: boolean;
             claudeMd: boolean;
             cursorRules: boolean;
+            hookCount?: number | null;
             mcpJson: boolean;
+            mcpServerCount?: number | null;
             skillsDir: boolean;
           };
           git: {
@@ -22694,7 +22746,12 @@ export const RepositoryCheckoutInspectionFragmentDoc = {
                 { kind: 'Field', name: { kind: 'Name', value: 'agentsMd' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'claudeMd' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'cursorRules' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'hookCount' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'mcpJson' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'mcpServerCount' },
+                },
                 { kind: 'Field', name: { kind: 'Name', value: 'skillsDir' } },
               ],
             },
@@ -22808,6 +22865,10 @@ export const RepositoryCheckoutFieldsFragmentDoc = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'agentConfigTrusted' },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
           { kind: 'Field', name: { kind: 'Name', value: 'filesystemPath' } },
@@ -22891,7 +22952,12 @@ export const RepositoryCheckoutFieldsFragmentDoc = {
                 { kind: 'Field', name: { kind: 'Name', value: 'agentsMd' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'claudeMd' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'cursorRules' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'hookCount' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'mcpJson' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'mcpServerCount' },
+                },
                 { kind: 'Field', name: { kind: 'Name', value: 'skillsDir' } },
               ],
             },
@@ -23061,7 +23127,12 @@ export const WorkspaceRepositoryFieldsFragmentDoc = {
                 { kind: 'Field', name: { kind: 'Name', value: 'agentsMd' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'claudeMd' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'cursorRules' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'hookCount' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'mcpJson' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'mcpServerCount' },
+                },
                 { kind: 'Field', name: { kind: 'Name', value: 'skillsDir' } },
               ],
             },
@@ -23141,6 +23212,10 @@ export const WorkspaceRepositoryFieldsFragmentDoc = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'agentConfigTrusted' },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
           { kind: 'Field', name: { kind: 'Name', value: 'filesystemPath' } },
@@ -23281,7 +23356,12 @@ export const AddWorkspaceFolderResultFragmentDoc = {
                 { kind: 'Field', name: { kind: 'Name', value: 'agentsMd' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'claudeMd' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'cursorRules' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'hookCount' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'mcpJson' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'mcpServerCount' },
+                },
                 { kind: 'Field', name: { kind: 'Name', value: 'skillsDir' } },
               ],
             },
@@ -23361,6 +23441,10 @@ export const AddWorkspaceFolderResultFragmentDoc = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'agentConfigTrusted' },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
           { kind: 'Field', name: { kind: 'Name', value: 'filesystemPath' } },
@@ -41169,7 +41253,12 @@ export const GetWorkspaceRepositoryDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'agentsMd' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'claudeMd' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'cursorRules' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'hookCount' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'mcpJson' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'mcpServerCount' },
+                },
                 { kind: 'Field', name: { kind: 'Name', value: 'skillsDir' } },
               ],
             },
@@ -41249,6 +41338,10 @@ export const GetWorkspaceRepositoryDocument = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'agentConfigTrusted' },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
           { kind: 'Field', name: { kind: 'Name', value: 'filesystemPath' } },
@@ -41444,7 +41537,12 @@ export const GetWorkspaceRepositoryForEditDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'agentsMd' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'claudeMd' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'cursorRules' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'hookCount' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'mcpJson' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'mcpServerCount' },
+                },
                 { kind: 'Field', name: { kind: 'Name', value: 'skillsDir' } },
               ],
             },
@@ -41524,6 +41622,10 @@ export const GetWorkspaceRepositoryForEditDocument = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'agentConfigTrusted' },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
           { kind: 'Field', name: { kind: 'Name', value: 'filesystemPath' } },
@@ -41711,7 +41813,12 @@ export const UpdateRepositoryDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'agentsMd' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'claudeMd' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'cursorRules' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'hookCount' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'mcpJson' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'mcpServerCount' },
+                },
                 { kind: 'Field', name: { kind: 'Name', value: 'skillsDir' } },
               ],
             },
@@ -41791,6 +41898,10 @@ export const UpdateRepositoryDocument = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'agentConfigTrusted' },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
           { kind: 'Field', name: { kind: 'Name', value: 'filesystemPath' } },
@@ -41970,7 +42081,12 @@ export const GetSettingsRepositoriesDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'agentsMd' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'claudeMd' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'cursorRules' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'hookCount' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'mcpJson' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'mcpServerCount' },
+                },
                 { kind: 'Field', name: { kind: 'Name', value: 'skillsDir' } },
               ],
             },
@@ -42050,6 +42166,10 @@ export const GetSettingsRepositoriesDocument = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'agentConfigTrusted' },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
           { kind: 'Field', name: { kind: 'Name', value: 'filesystemPath' } },
@@ -42559,7 +42679,12 @@ export const AddWorkspaceFolderDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'agentsMd' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'claudeMd' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'cursorRules' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'hookCount' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'mcpJson' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'mcpServerCount' },
+                },
                 { kind: 'Field', name: { kind: 'Name', value: 'skillsDir' } },
               ],
             },
@@ -42639,6 +42764,10 @@ export const AddWorkspaceFolderDocument = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'agentConfigTrusted' },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
           { kind: 'Field', name: { kind: 'Name', value: 'filesystemPath' } },
@@ -42925,7 +43054,12 @@ export const CloneRepositoryDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'agentsMd' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'claudeMd' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'cursorRules' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'hookCount' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'mcpJson' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'mcpServerCount' },
+                },
                 { kind: 'Field', name: { kind: 'Name', value: 'skillsDir' } },
               ],
             },
@@ -43005,6 +43139,10 @@ export const CloneRepositoryDocument = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'agentConfigTrusted' },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
           { kind: 'Field', name: { kind: 'Name', value: 'filesystemPath' } },
@@ -43246,7 +43384,12 @@ export const RefreshCheckoutDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'agentsMd' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'claudeMd' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'cursorRules' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'hookCount' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'mcpJson' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'mcpServerCount' },
+                },
                 { kind: 'Field', name: { kind: 'Name', value: 'skillsDir' } },
               ],
             },
@@ -43326,6 +43469,10 @@ export const RefreshCheckoutDocument = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'agentConfigTrusted' },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
           { kind: 'Field', name: { kind: 'Name', value: 'filesystemPath' } },

@@ -138,6 +138,47 @@ const mergeChildEnv = (
 };
 
 /**
+ * @description Whether a driver may run an invocation's repo agent-config posture. A trusted (or
+ * unspecified) posture always may; an isolated one needs
+ * {@link DriverCapabilities.isolatesRepoAgentConfig}.
+ * @public
+ */
+export type RepoAgentConfigCheck =
+  { readonly ok: false; readonly reason: string } | { readonly ok: true };
+
+/**
+ * @description Checks an invocation against the trust gate before anything spawns. Callers use it
+ * to say why a run will not start; the engine uses it to refuse, so an untrusted checkout never
+ * runs with its own config on a CLI that cannot suppress it.
+ * @public
+ */
+export const checkRepoAgentConfig = (
+  driver: AgentDriver,
+  config: Pick<DriverInvocationConfig, 'repoAgentConfig'>,
+): RepoAgentConfigCheck => {
+  if (config.repoAgentConfig?.kind !== 'isolated') {
+    return { ok: true };
+  }
+
+  if (driver.capabilities.isolatesRepoAgentConfig) {
+    return { ok: true };
+  }
+
+  return {
+    ok: false,
+    reason: `${driver.label} cannot run an untrusted checkout: its CLI has no way to stop the repository's own hooks and MCP servers from loading. Trust the repository's agent config, or run it with claude.`,
+  };
+};
+
+/**
+ * @description The string a refused invocation returns in place of output, in the engine's
+ * `<promise>ERROR</promise>` sentinel convention.
+ */
+const refusalOutput = (reason: string): string => {
+  return `<promise>ERROR</promise>\n${reason}`;
+};
+
+/**
  * @description Builds the shell command with the executable resolved from the driver's `binEnv`
  * override in the child's effective env (inherited `process.env` + `config.env`) — the same rule
  * discovery and chat use — so a stub named by `OPENTHROTTLE_<X>_BIN` is what a plan or scheduled
@@ -181,6 +222,16 @@ export const runDriverSync = (
   options: RunDriverOptions = {},
 ): string => {
   const logger = options.logger ?? noopDriverLogger;
+  const check = checkRepoAgentConfig(driver, config);
+  if (!check.ok) {
+    logger.debug('runDriverSync: refused by the trust gate', {
+      iteration: config.iteration,
+      runnerLabel: driver.label,
+    });
+
+    return refusalOutput(check.reason);
+  }
+
   const command = buildCommand(driver, config);
   const { cwd, iteration } = config;
 
@@ -241,6 +292,16 @@ export const runDriverAsync = (
 ): Promise<string> => {
   const logger = options.logger ?? noopDriverLogger;
   const runnerLabel = driver.label;
+  const check = checkRepoAgentConfig(driver, config);
+  if (!check.ok) {
+    logger.debug('runDriverAsync: refused by the trust gate', {
+      iteration: config.iteration,
+      runnerLabel,
+    });
+
+    return Promise.resolve(refusalOutput(check.reason));
+  }
+
   const command = buildCommand(driver, config);
   const { cwd, iteration, onChunk, signal, timeoutMs } = config;
 

@@ -40,6 +40,12 @@ const capabilities: DriverCapabilities = {
   attachesWorkspaceMcp: true,
   chatStreaming: true,
   /**
+   * `false`: grok 1.0.77 reads the workspace `.mcp.json` and has no flag to skip it or the other
+   * per-directory config `grok inspect` reports (`--help` checked 2026-11-22). An untrusted
+   * checkout's grok run is refused.
+   */
+  isolatesRepoAgentConfig: false,
+  /**
    * No flag needed and none exists — verified against grok 1.0.0 (3cd0d0cbcebe). Grok loads the
    * workspace's `.mcp.json` with no approval step and no per-server gate, so there is nothing for
    * this driver to emit; see {@link DriverCapabilities.attachesWorkspaceMcp} above for the evidence.

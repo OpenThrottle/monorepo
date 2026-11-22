@@ -2224,6 +2224,7 @@ export function UpdateRepositoryInputSchema(): z.ZodObject<
   Properties<UpdateRepositoryInput>
 > {
   return z.object({
+    agentConfigTrusted: z.boolean().nullish(),
     defaultBranch: z.string().nullish(),
     foreignSkillInjectionEnabled: z.boolean().nullish(),
     id: z.string().min(1),

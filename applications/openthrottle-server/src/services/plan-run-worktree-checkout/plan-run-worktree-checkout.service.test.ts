@@ -74,7 +74,9 @@ const buildSnapshot = (
       agentsMd: false,
       claudeMd: false,
       cursorRules: false,
+      hookCount: 0,
       mcpJson: false,
+      mcpServerCount: 0,
       skillsDir: false,
     },
     git: {

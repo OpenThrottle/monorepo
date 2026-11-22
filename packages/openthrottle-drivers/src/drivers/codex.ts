@@ -33,6 +33,14 @@ const capabilities: DriverCapabilities = {
   attachesWorkspaceMcp: false,
   chatStreaming: true,
   /**
+   * `false`: codex-cli 0.167.0 loads a project `.codex/config.toml` (MCP servers, approval and
+   * sandbox policy) and `.codex/rules/` only for a project the HOST trusts in `~/.codex/config.toml`,
+   * and `exec --help` (checked 2026-11-22) has no flag to skip that layer for one run. Whether a
+   * foreign checkout's config loads is therefore host state OT cannot pin from the command string,
+   * so an untrusted checkout's codex run is refused rather than assumed safe.
+   */
+  isolatesRepoAgentConfig: false,
+  /**
    * No auto-approve flag exists. Codex resolves MCP servers from `[mcp_servers.*]` tables in the
    * USER-scope `~/.codex/config.toml` and, since codex-cli 0.167.0 (verified 2026-11-12), from a
    * TRUSTED project's `.codex/config.toml` — which this repo generates from

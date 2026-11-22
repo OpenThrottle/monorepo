@@ -34,7 +34,7 @@ export const createOtLoopWorkerRunner = (
   options: OtLoopWorkerRunnerOptions,
 ): WorkerRunner => {
   const { cwd, driver, effort, env, output, planId, planRunId } = options;
-  const { pluginDirs, runDriver, timeoutMs } = options;
+  const { pluginDirs, repoAgentConfig, runDriver, timeoutMs } = options;
   let attempts = 0;
 
   return {
@@ -92,6 +92,7 @@ export const createOtLoopWorkerRunner = (
               previousFailure: input.previousFailure,
               task,
             }),
+            repoAgentConfig,
             signal,
             ...(timeoutMs !== undefined ? { timeoutMs } : {}),
           },

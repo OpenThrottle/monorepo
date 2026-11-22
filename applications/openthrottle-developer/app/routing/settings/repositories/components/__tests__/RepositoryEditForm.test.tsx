@@ -112,6 +112,7 @@ describe('RepositoryEditForm Component', () => {
 
   describe('worktree skill overlay toggle', () => {
     const foreignCheckout = {
+      agentConfigTrusted: false,
       createdAt: '2026-07-24T00:00:00.000Z',
       displayName: 'monorepo',
       filesystemPath: '/Users/dev/Development/acme',
@@ -165,6 +166,7 @@ describe('RepositoryEditForm Component', () => {
       ...repository,
       checkouts: [
         {
+          agentConfigTrusted: false,
           createdAt: '2026-07-24T00:00:00.000Z',
           displayName: 'monorepo',
           filesystemPath: '/Users/dev/Development/openthrottle',

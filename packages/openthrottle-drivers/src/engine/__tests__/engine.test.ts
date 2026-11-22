@@ -48,6 +48,7 @@ const testDriver: AgentDriver = defineDriver({
   capabilities: {
     attachesWorkspaceMcp: false,
     chatStreaming: false,
+    isolatesRepoAgentConfig: false,
     mcpAutoApprove: false,
     permissionMode: false,
     pluginDir: false,

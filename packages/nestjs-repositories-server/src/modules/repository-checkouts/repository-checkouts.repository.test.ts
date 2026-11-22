@@ -538,6 +538,36 @@ describe('RepositoryCheckoutsRepository', () => {
     });
   });
 
+  describe('setAgentConfigTrustedForRepository', () => {
+    it('updates every live checkout of the user and returns the affected count', async () => {
+      update.mockResolvedValue({ affected: 2 });
+
+      const result = await repository.setAgentConfigTrustedForRepository(
+        userId,
+        repositoryId,
+        true,
+      );
+
+      expect(result).toBe(2);
+      expect(update).toHaveBeenCalledWith(
+        { deletedAt: IsNull(), repositoryId, userId },
+        { agentConfigTrusted: true },
+      );
+    });
+
+    it('returns 0 when the user owns no live checkout of the repository', async () => {
+      update.mockResolvedValue({ affected: 0 });
+
+      await expect(
+        repository.setAgentConfigTrustedForRepository(
+          userId,
+          repositoryId,
+          false,
+        ),
+      ).resolves.toBe(0);
+    });
+  });
+
   describe('removeForUser', () => {
     it('soft deletes the live row owned by the user and returns true', async () => {
       softDelete.mockResolvedValue({ affected: 1, raw: [] });

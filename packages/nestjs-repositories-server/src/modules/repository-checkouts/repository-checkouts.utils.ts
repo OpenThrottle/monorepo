@@ -62,6 +62,9 @@ export function createRepositoryCheckoutsRepositoryMock(): RepositoryCheckoutsRe
     saveInspection: vi.fn(async () => {
       return null;
     }),
+    setAgentConfigTrustedForRepository: vi.fn(async () => {
+      return 0;
+    }),
     setForeignSkillInjectionEnabledForRepository: vi.fn(async () => {
       return 0;
     }),

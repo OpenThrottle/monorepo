@@ -48,6 +48,12 @@ export class RefreshCheckoutInput {
   description: `Edit an owned repository's name, default branch, and/or project link. Omitted fields are left unchanged.`,
 })
 export class UpdateRepositoryInput {
+  @Field(() => Boolean, {
+    description: `Trust (or revoke trust in) the repo-local agent config of this user's checkouts of the repository, so plan runs load (or suppress) its hooks and MCP servers; omit to leave unchanged. Has no effect on the OpenThrottle checkout, which is always trusted.`,
+    nullable: true,
+  })
+  agentConfigTrusted?: boolean | null;
+
   @Field(() => String, {
     description: `New default branch; omit to leave unchanged.`,
     nullable: true,

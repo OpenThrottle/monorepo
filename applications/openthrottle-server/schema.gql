@@ -493,7 +493,17 @@ type RepositoryInspectionAgentConfigObject {
   agentsMd: Boolean!
   claudeMd: Boolean!
   cursorRules: Boolean!
+
+  """
+  Repo-local hook commands a plan run would execute (.claude/settings.json, .claude/settings.local.json, .cursor/hooks.json). Null until the checkout is rescanned.
+  """
+  hookCount: Int
   mcpJson: Boolean!
+
+  """
+  Repo-local MCP servers a plan run would connect (.mcp.json, .cursor/mcp.json). Null until the checkout is rescanned.
+  """
+  mcpServerCount: Int
   skillsDir: Boolean!
 }
 
@@ -578,6 +588,11 @@ type RepositoryCheckoutObject {
 
   """Absolute path on the server host."""
   filesystemPath: String!
+
+  """
+  True when this user trusts the checkout's repo-local agent config (.claude/settings.json hooks, .mcp.json servers) to run during plan runs. Default false: plan runs suppress that config so only OpenThrottle-supplied MCP servers and plugin hooks load. The OpenThrottle checkout itself (isForeign false) is always trusted, whatever this says.
+  """
+  agentConfigTrusted: Boolean!
   displayName: String!
 
   """
@@ -11418,6 +11433,11 @@ input RefreshCheckoutInput {
 Edit an owned repository's name, default branch, and/or project link. Omitted fields are left unchanged.
 """
 input UpdateRepositoryInput {
+  """
+  Trust (or revoke trust in) the repo-local agent config of this user's checkouts of the repository, so plan runs load (or suppress) its hooks and MCP servers; omit to leave unchanged. Has no effect on the OpenThrottle checkout, which is always trusted.
+  """
+  agentConfigTrusted: Boolean
+
   """New default branch; omit to leave unchanged."""
   defaultBranch: String
 

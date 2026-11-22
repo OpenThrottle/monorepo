@@ -260,3 +260,23 @@ export const REMOVE_PLAN_RUN_WORKTREE_COPY = {
     `Removed ${path}. Its branch${branch === null ? '' : ` ${branch}`} was kept.`,
   title: `Remove this worktree?`,
 } as const;
+
+/** Copy for the repository detail's agent-config trust card. */
+export const REPOSITORY_AGENT_CONFIG_TRUST_COPY = {
+  alwaysTrusted: `Always trusted`,
+  alwaysTrustedHelp: `This is OpenThrottle's own repository, so plan runs always load its hooks and MCP servers.`,
+  heading: `Repo agent config`,
+  hookPlural: `hooks`,
+  hookSingular: `hook`,
+  notScanned: `Not scanned yet — refresh the checkout to see what it would run.`,
+  revokeButton: `Revoke trust`,
+  serverPlural: `MCP servers`,
+  serverSingular: `MCP server`,
+  trustButton: `Trust this repository`,
+  trusted: `Trusted`,
+  trustedHelp: `Plan runs load this repository's own hooks and MCP servers.`,
+  untrusted: `Untrusted`,
+  untrustedHelp: `Plan runs suppress this repository's own hooks and MCP servers; only OpenThrottle's MCP server and plugin hooks load. Runs need Claude Code until you trust it.`,
+  updateFailed: `Failed to update trust.`,
+  wouldRunPrefix: `This repository defines`,
+} as const;

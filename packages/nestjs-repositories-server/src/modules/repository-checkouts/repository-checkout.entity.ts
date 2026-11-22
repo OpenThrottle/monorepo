@@ -35,6 +35,13 @@ export class RepositoryCheckout extends BaseModel {
   @Column({ name: 'filesystem_path', type: 'text' })
   filesystemPath!: string;
 
+  @Column({
+    default: false,
+    name: 'agent_config_trusted',
+    type: 'boolean',
+  })
+  agentConfigTrusted!: boolean;
+
   @Column({ name: 'display_name', type: 'text' })
   displayName!: string;
 

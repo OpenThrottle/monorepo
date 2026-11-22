@@ -35,6 +35,7 @@ import {
   systemScheduleClock,
 } from '@openthrottle/openthrottle-agentic-loop';
 import type { PlanRunCommandRunner } from '@openthrottle/openthrottle-agentic-utils';
+import type { AgentConfigTrust } from '@openthrottle/openthrottle-agentic-utils';
 import {
   createPlanRunCommandRunner,
   discoverAgentClis,
@@ -44,6 +45,7 @@ import {
 import type {
   DriverId,
   DriverReasoningEffort,
+  DriverRepoAgentConfig,
   UsageLimit,
 } from '@openthrottle/openthrottle-drivers';
 import {
@@ -169,6 +171,7 @@ export class OtLoopOrchestratorService {
 
     try {
       return await this.execute({
+        agentConfigTrust: workspace.agentConfigTrust,
         cwd,
         output,
         params,
@@ -193,6 +196,7 @@ export class OtLoopOrchestratorService {
   }
 
   private async execute(input: {
+    readonly agentConfigTrust: AgentConfigTrust;
     readonly cwd: string;
     readonly output: PlanOutputWriter;
     readonly params: RunOtLoopJobParams;
@@ -227,6 +231,15 @@ export class OtLoopOrchestratorService {
       commands.finalValidation,
     );
     const driver = parseDriverId(tuning.driver ?? jobData.driver ?? 'cursor');
+    // The OT Loop worker uses no MCP, so an untrusted checkout's worker gets none at all.
+    const repoAgentConfig = this.planRunWorkspaceService.buildRepoAgentConfig(
+      input.agentConfigTrust,
+    );
+    await this.planRunWorkspaceService.refuseUnlessDriverHonoursPosture({
+      driver: getDriver(driver),
+      planId,
+      repoAgentConfig,
+    });
     const runModel = toModel(tuning.model);
     const client = createOtLoopClient({
       executeGraphqlV2: this.executeGraphqlV2,
@@ -272,6 +285,7 @@ export class OtLoopOrchestratorService {
       output,
       planId,
       planRunId: run?.id,
+      repoAgentConfig,
       runCommand,
       runModel,
       say,
@@ -351,6 +365,7 @@ export class OtLoopOrchestratorService {
     readonly output: PlanOutputWriter;
     readonly planId: string;
     readonly planRunId: string | undefined;
+    readonly repoAgentConfig: DriverRepoAgentConfig;
     readonly runCommand: PlanRunCommandRunner;
     readonly runModel: string | undefined;
     readonly say: (message: string) => void;
@@ -422,6 +437,7 @@ export class OtLoopOrchestratorService {
             ? {}
             : { payloadRels: driver.pluginDirRels },
         ),
+        repoAgentConfig: input.repoAgentConfig,
         runDriver: runDriverAsync,
         timeoutMs: input.timeoutMs,
       }),

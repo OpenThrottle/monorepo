@@ -13,7 +13,9 @@ fragment RepositoryCheckoutInspection on RepositoryInspectionObject {
     agentsMd
     claudeMd
     cursorRules
+    hookCount
     mcpJson
+    mcpServerCount
     skillsDir
   }
   git {
@@ -39,6 +41,7 @@ fragment RepositoryCheckoutInspection on RepositoryInspectionObject {
 }
 
 fragment RepositoryCheckoutFields on RepositoryCheckoutObject {
+  agentConfigTrusted
   createdAt
   displayName
   filesystemPath

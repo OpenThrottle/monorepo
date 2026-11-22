@@ -15,14 +15,17 @@ import {
 } from '~/__generated__/graphql';
 
 export interface MockCheckoutOverrides {
+  agentConfigTrusted?: boolean;
   branch?: string | null;
   displayName?: string;
   filesystemPath?: string;
   foreignSkillInjectionEnabled?: boolean;
+  hookCount?: number | null;
   id: string;
   isForeign?: boolean;
   kind?: string;
   managed?: boolean;
+  mcpServerCount?: number | null;
   repositoryId?: string;
   updatedAt?: string;
   worktreeSkillOverlayEnabled?: boolean;
@@ -53,6 +56,10 @@ export interface MockRepositoryOverrides {
 
 const mockInspection = (
   branch: string | null,
+  counts: {
+    readonly hookCount: number | null;
+    readonly mcpServerCount: number | null;
+  },
 ): RepositoryCheckoutInspectionFragment | null | undefined => {
   if (!branch) {
     return null;
@@ -63,7 +70,9 @@ const mockInspection = (
       agentsMd: false,
       claudeMd: false,
       cursorRules: false,
+      hookCount: counts.hookCount,
       mcpJson: false,
+      mcpServerCount: counts.mcpServerCount,
       skillsDir: false,
     },
     git: {
@@ -95,26 +104,30 @@ export const mockCheckout = (
   overrides: MockCheckoutOverrides,
 ): RepositoryCheckoutFieldsFragment => {
   const {
+    agentConfigTrusted = false,
     branch = null,
     displayName = overrides.id,
     filesystemPath = `/Users/dev/Development/${overrides.id}`,
     foreignSkillInjectionEnabled = false,
+    hookCount = 0,
     id,
     isForeign = true,
     kind = 'primary',
     managed = false,
+    mcpServerCount = 0,
     repositoryId = 'repo-1',
     updatedAt = '2026-07-24T00:00:00.000Z',
     worktreeSkillOverlayEnabled = true,
   } = overrides;
 
   return {
+    agentConfigTrusted,
     createdAt: '2026-07-24T00:00:00.000Z',
     displayName,
     filesystemPath,
     foreignSkillInjectionEnabled,
     id,
-    inspection: mockInspection(branch),
+    inspection: mockInspection(branch, { hookCount, mcpServerCount }),
     isForeign,
     kind,
     managed,

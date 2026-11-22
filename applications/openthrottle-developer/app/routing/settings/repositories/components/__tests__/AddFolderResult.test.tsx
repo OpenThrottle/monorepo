@@ -10,6 +10,7 @@ import type { AddFolderResultProps } from '../AddFolderResult';
 import { AddFolderResult } from '../AddFolderResult';
 
 const checkout = {
+  agentConfigTrusted: false,
   createdAt: '2026-07-24T00:00:00.000Z',
   displayName: 'openthrottle',
   filesystemPath: '/Users/dev/Development/openthrottle',

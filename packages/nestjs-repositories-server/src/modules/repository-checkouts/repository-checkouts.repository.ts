@@ -319,6 +319,25 @@ export class RepositoryCheckoutsRepository extends BaseRepository<
   }
 
   /**
+   * @description Sets the per-user agent-config trust flag for every one of the
+   * user's live checkouts of a repository, mirroring
+   * {@link RepositoryCheckoutsRepository.setForeignSkillInjectionEnabledForRepository}:
+   * trust is a repository-level consent, so the primary and its worktrees flip together.
+   * Returns the number of rows updated.
+   */
+  async setAgentConfigTrustedForRepository(
+    userId: string,
+    repositoryId: string,
+    trusted: boolean,
+  ): Promise<number> {
+    const { updateCount } = await this.updateMany(
+      { repositoryId, userId },
+      { agentConfigTrusted: trusted },
+    );
+    return updateCount;
+  }
+
+  /**
    * @description Persists an inspection snapshot with its scan timestamp.
    * Returns null when the live checkout does not exist.
    */

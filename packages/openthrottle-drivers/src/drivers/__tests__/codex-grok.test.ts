@@ -96,6 +96,7 @@ describe('codex driver', () => {
     expect(codexDriver.capabilities).toEqual({
       attachesWorkspaceMcp: false,
       chatStreaming: true,
+      isolatesRepoAgentConfig: false,
       mcpAutoApprove: false,
       permissionMode: true,
       pluginDir: false,
@@ -195,6 +196,7 @@ describe('grok driver', () => {
     expect(grokDriver.capabilities).toEqual({
       attachesWorkspaceMcp: true,
       chatStreaming: true,
+      isolatesRepoAgentConfig: false,
       mcpAutoApprove: false,
       permissionMode: true,
       pluginDir: false,
