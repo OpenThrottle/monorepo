@@ -88,14 +88,14 @@ describe('SkillsToolbar Component', () => {
     expect(component.queryByText('Create new skill')).not.toBeInTheDocument();
   });
 
-  describe('source filter (All / OpenThrottle / External)', () => {
+  describe('source filter (All / OpenThrottle / External / Custom / Personal)', () => {
     const onSourceFilterChange = vi.fn();
 
     beforeEach(() => {
       onSourceFilterChange.mockClear();
     });
 
-    test('renders the three filter segments', () => {
+    test('renders all five filter segments', () => {
       const component = renderRoutesStub(
         <SkillsToolbar
           onSourceFilterChange={onSourceFilterChange}
@@ -112,6 +112,27 @@ describe('SkillsToolbar Component', () => {
       expect(
         component.getByRole('radio', { name: 'External' }),
       ).toBeInTheDocument();
+      expect(
+        component.getByRole('radio', { name: 'Custom' }),
+      ).toBeInTheDocument();
+      expect(
+        component.getByRole('radio', { name: 'Personal' }),
+      ).toBeInTheDocument();
+    });
+
+    test('emits custom when the Custom segment is clicked', async () => {
+      const user = userEvent.setup();
+      const component = renderRoutesStub(
+        <SkillsToolbar
+          onSourceFilterChange={onSourceFilterChange}
+          sourceFilter="all"
+        />,
+      );
+
+      await user.click(component.getByRole('radio', { name: 'Custom' }));
+
+      expect(onSourceFilterChange).toHaveBeenCalledTimes(1);
+      expect(onSourceFilterChange).toHaveBeenCalledWith('custom');
     });
 
     test('marks the active segment from the sourceFilter prop', () => {

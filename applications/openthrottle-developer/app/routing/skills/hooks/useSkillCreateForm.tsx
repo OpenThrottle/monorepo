@@ -1,10 +1,11 @@
+import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
 import * as React from 'react';
 import { useFetcher } from 'react-router';
 
 import type { SkillCreateDestination } from '~/routing/skills/config/skill-create';
 import {
   DEFAULT_SKILL_CREATE_DESTINATION,
-  SKILL_CREATE_DESTINATIONS,
+  SKILL_CREATE_DESTINATION_PATH_PREFIX,
   SKILL_CREATE_FIELDS,
   SKILL_CREATE_SLUG_PATTERN,
 } from '~/routing/skills/config/skill-create';
@@ -18,6 +19,11 @@ interface SkillCreateActionData {
 }
 
 export interface UseSkillCreateFormResult {
+  /**
+   * `FEATURE_BETA_PREVIEW`. Read once here so the presentational field takes it
+   * as a prop and stays renderable in both states without stubbing modules.
+   */
+  betaPreviewEnabled: boolean;
   canSubmit: boolean;
   content: string;
   description: string;
@@ -98,10 +104,8 @@ export const useSkillCreateForm = (): UseSkillCreateFormResult => {
 
   const content = isDocumentDirty ? draft : seededContent;
 
-  const isRepoDestination = destination === SKILL_CREATE_DESTINATIONS.repo;
-  const repoPath = `skills/${scaffoldName}/SKILL.md`;
-  const personalPath = `${scaffoldName}/SKILL.md`;
-  const livePath = isRepoDestination ? repoPath : personalPath;
+  const pathPrefix = SKILL_CREATE_DESTINATION_PATH_PREFIX[destination];
+  const livePath = `${pathPrefix}${scaffoldName}/SKILL.md`;
   const editorPath = frozenPathRef.current ?? livePath;
 
   // A slug is only wrong once something has been typed — an untouched field
@@ -163,6 +167,7 @@ export const useSkillCreateForm = (): UseSkillCreateFormResult => {
   // 🔌 Short Circuit
 
   return {
+    betaPreviewEnabled: FEATURE_BETA_PREVIEW,
     canSubmit,
     content,
     description,

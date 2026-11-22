@@ -1,6 +1,7 @@
 // @vitest-environment node
 import {
   existsSync,
+  lstatSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -65,6 +66,9 @@ describe('createSkillFile', () => {
   const personalSkillPath = (): string => {
     return join(personalRoot, SLUG, 'SKILL.md');
   };
+  const customSkillPath = (): string => {
+    return join(root, '.agents/skills', SLUG, 'SKILL.md');
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -96,13 +100,54 @@ describe('createSkillFile', () => {
     test('writes to the committed catalog for the repo destination', () => {
       const result = createSkillFile({
         content: VALID_CONTENT,
-        destination: SKILL_CREATE_DESTINATIONS.repo,
+        destination: SKILL_CREATE_DESTINATIONS.openthrottle,
         slug: SLUG,
       });
 
       expect(result).toEqual({ ok: true, slug: SLUG });
       expect(readFileSync(repoSkillPath(), 'utf8')).toBe(VALID_CONTENT);
       expect(existsSync(personalSkillPath())).toBe(false);
+    });
+
+    // The custom tier lands as a REAL directory inside .agents/skills — the same
+    // shape a lockfile install has, and the shape the managed .gitignore block
+    // re-includes, so it is committable the moment it is written.
+    test('writes a real directory under .agents/skills for the custom destination', () => {
+      const result = createSkillFile({
+        content: VALID_CONTENT,
+        destination: SKILL_CREATE_DESTINATIONS.custom,
+        slug: SLUG,
+      });
+
+      expect(result).toEqual({ ok: true, slug: SLUG });
+      expect(readFileSync(customSkillPath(), 'utf8')).toBe(VALID_CONTENT);
+      expect(
+        lstatSync(join(root, '.agents/skills', SLUG)).isSymbolicLink(),
+      ).toBe(false);
+      // Neither of the other two destinations is touched.
+      expect(existsSync(repoSkillPath())).toBe(false);
+      expect(existsSync(personalSkillPath())).toBe(false);
+    });
+
+    test('normalizes CRLF to LF for a custom create too', () => {
+      const result = createSkillFile({
+        content: VALID_CONTENT.replaceAll('\n', '\r\n'),
+        destination: SKILL_CREATE_DESTINATIONS.custom,
+        slug: SLUG,
+      });
+
+      expect(result).toEqual({ ok: true, slug: SLUG });
+      expect(readFileSync(customSkillPath(), 'utf8')).toBe(VALID_CONTENT);
+    });
+
+    test('links a custom create in so the per-CLI fan-out dirs get it', () => {
+      createSkillFile({
+        content: VALID_CONTENT,
+        destination: SKILL_CREATE_DESTINATIONS.custom,
+        slug: SLUG,
+      });
+
+      expect(mockSyncSkillLinks).toHaveBeenCalledWith(root);
     });
 
     test('writes under the personal root for the personal destination', () => {
@@ -140,7 +185,7 @@ describe('createSkillFile', () => {
     test('normalizes CRLF content to LF before writing', () => {
       const result = createSkillFile({
         content: VALID_CONTENT.replaceAll('\n', '\r\n'),
-        destination: SKILL_CREATE_DESTINATIONS.repo,
+        destination: SKILL_CREATE_DESTINATIONS.openthrottle,
         slug: SLUG,
       });
 
@@ -151,7 +196,7 @@ describe('createSkillFile', () => {
     test('links the new skill in after writing', () => {
       createSkillFile({
         content: VALID_CONTENT,
-        destination: SKILL_CREATE_DESTINATIONS.repo,
+        destination: SKILL_CREATE_DESTINATIONS.openthrottle,
         slug: SLUG,
       });
 
@@ -164,8 +209,10 @@ describe('createSkillFile', () => {
     const expectNothingWritten = (): void => {
       expect(existsSync(repoSkillPath())).toBe(false);
       expect(existsSync(personalSkillPath())).toBe(false);
+      expect(existsSync(customSkillPath())).toBe(false);
       expect(existsSync(join(root, 'skills', SLUG))).toBe(false);
       expect(existsSync(join(personalRoot, SLUG))).toBe(false);
+      expect(existsSync(join(root, '.agents/skills', SLUG))).toBe(false);
     };
 
     test('refuses when no monorepo root resolves', () => {
@@ -173,7 +220,7 @@ describe('createSkillFile', () => {
 
       const result = createSkillFile({
         content: VALID_CONTENT,
-        destination: SKILL_CREATE_DESTINATIONS.repo,
+        destination: SKILL_CREATE_DESTINATIONS.openthrottle,
         slug: SLUG,
       });
 
@@ -195,7 +242,7 @@ describe('createSkillFile', () => {
     ])('refuses a slug that is %s', (_label, slug) => {
       const result = createSkillFile({
         content: VALID_CONTENT,
-        destination: SKILL_CREATE_DESTINATIONS.repo,
+        destination: SKILL_CREATE_DESTINATIONS.openthrottle,
         slug,
       });
 
@@ -210,7 +257,7 @@ describe('createSkillFile', () => {
     test('refuses empty content', () => {
       const result = createSkillFile({
         content: '   \n  ',
-        destination: SKILL_CREATE_DESTINATIONS.repo,
+        destination: SKILL_CREATE_DESTINATIONS.openthrottle,
         slug: SLUG,
       });
 
@@ -302,7 +349,7 @@ describe('createSkillFile', () => {
 
       const result = createSkillFile({
         content: VALID_CONTENT,
-        destination: SKILL_CREATE_DESTINATIONS.repo,
+        destination: SKILL_CREATE_DESTINATIONS.openthrottle,
         slug: SLUG,
       });
 
@@ -318,7 +365,7 @@ describe('createSkillFile', () => {
 
       const result = createSkillFile({
         content: VALID_CONTENT,
-        destination: SKILL_CREATE_DESTINATIONS.repo,
+        destination: SKILL_CREATE_DESTINATIONS.openthrottle,
         slug: SLUG,
       });
 
@@ -331,7 +378,7 @@ describe('createSkillFile', () => {
 
       const result = createSkillFile({
         content: VALID_CONTENT,
-        destination: SKILL_CREATE_DESTINATIONS.repo,
+        destination: SKILL_CREATE_DESTINATIONS.openthrottle,
         slug: SLUG,
       });
 
@@ -359,7 +406,7 @@ describe('createSkillFile', () => {
 
       const result = createSkillFile({
         content: VALID_CONTENT,
-        destination: SKILL_CREATE_DESTINATIONS.repo,
+        destination: SKILL_CREATE_DESTINATIONS.openthrottle,
         slug: SLUG,
       });
 
@@ -370,10 +417,101 @@ describe('createSkillFile', () => {
       expectNothingWritten();
     });
 
+    // Every collision rule applies to a custom create too — a name taken
+    // anywhere is taken, whichever destination you picked.
+    test.each([
+      [
+        'the committed catalog',
+        (): void => {
+          mkdirSync(join(root, 'skills', SLUG), { recursive: true });
+          writeFileSync(repoSkillPath(), 'existing');
+        },
+        'committed',
+      ],
+      [
+        'the lockfile',
+        (): void => {
+          writeFileSync(
+            join(root, 'skills-lock.json'),
+            JSON.stringify({
+              skills: {
+                [SLUG]: { source: 'owner/repo', sourceType: 'github' },
+              },
+            }),
+          );
+        },
+        'skills-lock.json',
+      ],
+      [
+        'the personal root',
+        (): void => {
+          mkdirSync(join(personalRoot, SLUG), { recursive: true });
+          writeFileSync(personalSkillPath(), 'existing');
+        },
+        'personal skill',
+      ],
+    ])(
+      'refuses a custom create colliding with %s',
+      (_label, seed, expectedFragment) => {
+        seed();
+
+        const result = createSkillFile({
+          content: VALID_CONTENT,
+          destination: SKILL_CREATE_DESTINATIONS.custom,
+          slug: SLUG,
+        });
+
+        expect(result.ok).toBe(false);
+        if (!result.ok) {
+          expect(result.error).toContain(expectedFragment);
+        }
+        expect(existsSync(customSkillPath())).toBe(false);
+        expect(mockSyncSkillLinks).not.toHaveBeenCalled();
+      },
+    );
+
+    // Discovery only sees a folder holding a SKILL.md, so a bare directory at
+    // the custom target is invisible to it — and mkdir -p would happily fill
+    // it. Refuse cleanly rather than writing into someone else's directory.
+    test('refuses a custom create over an existing bare .agents/skills directory', () => {
+      mkdirSync(join(root, '.agents/skills', SLUG), { recursive: true });
+
+      const result = createSkillFile({
+        content: VALID_CONTENT,
+        destination: SKILL_CREATE_DESTINATIONS.custom,
+        slug: SLUG,
+      });
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.error).toContain('.agents/skills');
+      }
+      expect(existsSync(customSkillPath())).toBe(false);
+      expect(mockSyncSkillLinks).not.toHaveBeenCalled();
+    });
+
+    test('surfaces a sync failure on a custom create rather than reporting success', () => {
+      mockSyncSkillLinks.mockReturnValue({
+        error: SKILL_CREATE_COPY.syncFailedError,
+        ok: false,
+      });
+
+      const result = createSkillFile({
+        content: VALID_CONTENT,
+        destination: SKILL_CREATE_DESTINATIONS.custom,
+        slug: SLUG,
+      });
+
+      expect(result).toEqual({
+        error: SKILL_CREATE_COPY.syncFailedError,
+        ok: false,
+      });
+    });
+
     test('refuses content whose frontmatter does not validate', () => {
       const result = createSkillFile({
         content: '---\ndescription: Missing the name key.\n---\n\n# Broken\n',
-        destination: SKILL_CREATE_DESTINATIONS.repo,
+        destination: SKILL_CREATE_DESTINATIONS.openthrottle,
         slug: SLUG,
       });
 
@@ -387,7 +525,7 @@ describe('createSkillFile', () => {
     test('refuses content whose name does not match the slug', () => {
       const result = createSkillFile({
         content: `---\nname: different-name\ndescription: Valid but misnamed.\n---\n\n# X\n`,
-        destination: SKILL_CREATE_DESTINATIONS.repo,
+        destination: SKILL_CREATE_DESTINATIONS.openthrottle,
         slug: SLUG,
       });
 
@@ -406,7 +544,7 @@ describe('createSkillFile', () => {
 
       const result = createSkillFile({
         content,
-        destination: SKILL_CREATE_DESTINATIONS.repo,
+        destination: SKILL_CREATE_DESTINATIONS.openthrottle,
         slug: SLUG,
       });
 
@@ -426,7 +564,7 @@ describe('createSkillFile', () => {
 
       const result = createSkillFile({
         content: VALID_CONTENT,
-        destination: SKILL_CREATE_DESTINATIONS.repo,
+        destination: SKILL_CREATE_DESTINATIONS.openthrottle,
         slug: SLUG,
       });
 

@@ -1,6 +1,6 @@
 /**
- * @description Shared shape for the create-a-skill flow: the two destinations a
- * new SKILL.md can land in, and the form field names the route action reads.
+ * @description Shared shape for the create-a-skill flow: the three destinations
+ * a new SKILL.md can land in, and the form field names the route action reads.
  *
  * Client and server both import this so the posted value and the value the
  * action narrows are the same literal union by construction. `as const` object
@@ -12,11 +12,20 @@
  *
  * - `personal` — `<personal root>/<slug>/SKILL.md`, outside the repo, linked in
  *   as a gitignored symlink. Uncommittable by design.
- * - `repo` — `<monorepo root>/skills/<slug>/SKILL.md`, the committed catalog.
+ * - `custom` — `<monorepo root>/.agents/skills/<slug>/SKILL.md`, a real
+ *   directory in YOUR repository, committed with it. The end user's own tier.
+ * - `openthrottle` — `<monorepo root>/skills/<slug>/SKILL.md`, OpenThrottle's
+ *   committed catalog. Meaningful only when working ON OpenThrottle, so it is
+ *   gated behind `FEATURE_BETA_PREVIEW` in the UI and refused server-side when
+ *   the flag is off.
+ *
+ * `openthrottle` was called `repo` until the custom tier landed: with three
+ * destinations all writing into a repository, "repo" no longer names which one.
  */
 export const SKILL_CREATE_DESTINATIONS = {
+  custom: 'custom',
+  openthrottle: 'openthrottle',
   personal: 'personal',
-  repo: 'repo',
 } as const;
 
 export type SkillCreateDestination =
@@ -35,9 +44,44 @@ export const isSkillCreateDestination = (
   value: unknown,
 ): value is SkillCreateDestination => {
   return (
-    value === SKILL_CREATE_DESTINATIONS.personal ||
-    value === SKILL_CREATE_DESTINATIONS.repo
+    value === SKILL_CREATE_DESTINATIONS.custom ||
+    value === SKILL_CREATE_DESTINATIONS.openthrottle ||
+    value === SKILL_CREATE_DESTINATIONS.personal
   );
+};
+
+/**
+ * @description Whether a narrowed destination may actually be used, given the
+ * beta-preview flag. Only the OpenThrottle catalog is gated: writing into
+ * OpenThrottle's own `skills/` is meaningful when working ON OpenThrottle and
+ * an invitation to write into someone else's catalog otherwise.
+ *
+ * Pure and flag-in-hand rather than reading `FEATURE_BETA_PREVIEW` itself: the
+ * flag is a module-level const resolved at import time, so a predicate that
+ * closed over it could only ever be tested in one state. The route action
+ * supplies the real flag — hiding the button is an affordance, this is the
+ * guard, and a hand-crafted POST only ever meets the guard.
+ */
+export const isSkillCreateDestinationAvailable = (
+  destination: SkillCreateDestination,
+  betaPreviewEnabled: boolean,
+): boolean => {
+  return (
+    destination !== SKILL_CREATE_DESTINATIONS.openthrottle || betaPreviewEnabled
+  );
+};
+
+/**
+ * @description Repo-relative prefix the create editor's path label shows per
+ * destination. Personal has none — its root lives outside the checkout, so a
+ * repo-rooted path would be a lie.
+ */
+export const SKILL_CREATE_DESTINATION_PATH_PREFIX: Readonly<
+  Record<SkillCreateDestination, string>
+> = {
+  [SKILL_CREATE_DESTINATIONS.custom]: '.agents/skills/',
+  [SKILL_CREATE_DESTINATIONS.openthrottle]: 'skills/',
+  [SKILL_CREATE_DESTINATIONS.personal]: '',
 };
 
 /** Form field names, shared by the form and the action that parses it. */
