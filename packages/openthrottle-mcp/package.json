@@ -106,18 +106,34 @@
       "codegen-graphql-watch": {},
       "lint": {},
       "measure-tool-surface": {
-        "cache": false,
+        "cache": true,
         "dependsOn": [
           "codegen-graphql"
         ],
         "executor": "nx:run-commands",
+        "inputs": [
+          "production",
+          "^production",
+          {
+            "dependentTasksOutputFiles": "**/*.ts"
+          },
+          {
+            "externalDependencies": [
+              "@modelcontextprotocol/sdk",
+              "zod"
+            ]
+          }
+        ],
         "metadata": {
-          "description": "Measure the stdio MCP surface (instructions block + every tools/list entry, in UTF-8 bytes) over an in-memory client, both as an unconfigured client gets it (the default toolset) and in full with each tool's toolset, and write it to tmp/model-facing-text/tool-surface.json for monorepo:check-model-facing-text. Runs from source, so it needs codegen but not a build. Never cached: the tool schemas derive from gitignored __generated__ output that Nx cannot hash."
+          "description": "Measure the stdio MCP surface (instructions block + every tools/list entry, in UTF-8 bytes) over an in-memory client, both as an unconfigured client gets it (the default toolset) and in full with each tool's toolset, and write it to tmp/model-facing-text/tool-surface.json for monorepo:check-model-facing-text. Runs from source, so it needs codegen but not a build. Cached: the surface is a pure function of this package's source, its committed src/__generated__ (hashed by `production`, since this package's .gitignore negates the root rule) and its workspace dependencies. `dependentTasksOutputFiles` also hashes codegen-graphql's output after it runs, so a same-run regeneration cannot replay a stale surface."
         },
         "options": {
           "command": "tsx ./packages/openthrottle-mcp/src/model-facing-text/writeToolSurface.ts ./tmp/model-facing-text/tool-surface.json",
           "cwd": "{workspaceRoot}"
-        }
+        },
+        "outputs": [
+          "{workspaceRoot}/tmp/model-facing-text/tool-surface.json"
+        ]
       },
       "serve": {
         "cache": false,
