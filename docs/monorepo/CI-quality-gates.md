@@ -106,6 +106,15 @@ list while working, or `--json` for the full report.
 | Knip cleanup (lowering baseline) | Knip hygiene and safe dead-code cleanup (maintenance)        | visormatt |
 | GraphQL/codegen policy           | GraphQL schema and codegen drift guards (infra)              | visormatt |
 
+## `check:local` runs every `gates` check
+
+`pnpm run check:local` is meant to fail locally on anything CI's `gates` job would fail on. That held only by convention until a PR passed `check:local` twice and still failed `gates`: CI ran the whole `audit:*:strict` glob and `check:local` named three of its audits by hand (OT plan cfecf37f). Two things now keep the two in step:
+
+- `check:local` runs `check:local:audit`, the same glob as CI's `audit:strict`, so a new `audit:<thing>:strict` joins both the moment it is named.
+- `monorepo:check-local-ci-parity` ([scripts/check-local-ci-parity.ts](../../scripts/check-local-ci-parity.ts)) runs in both `gates` and `check:local`. It expands each side through the root `package.json` scripts and the root project's Nx targets to the commands they finally run, so `pnpm run validate:licenses` and `nx run monorepo:validate-licenses` count as the same check, and fails when a `gates` step runs one `check:local` does not. A gate that genuinely cannot run locally (today only the GraphQL breaking-change gate, which needs the PR's title and base) is listed in the script's `EXEMPTIONS` with its reason; an exemption CI stops running fails the check too.
+
+The guard covers only the `gates` job. `build` runs affected lint, typecheck, test and codegen per shard, which `check:local` mirrors through its `check:local:affected-*` steps; those are command-for-command already and are not compared.
+
 ## Local commands (mirror CI)
 
 Run from the repo root after `pnpm install` and with Nx SHAs set when comparing to `main`:

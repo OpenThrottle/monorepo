@@ -743,8 +743,8 @@ One selector per clause:
 | camelCase variables (PascalCase components, UPPER_CASE constants) | `variable`                       |
 
 **The file-name clause is enforced by an audit, not ESLint** — `naming-convention` operates on
-identifiers and cannot see file names. `pnpm run audit:file-name-casing:strict` (run in CI via
-`audit:strict`) fails on a file in any application, package or tool that is named for one of its
+identifiers and cannot see file names. `pnpm run audit:file-name-casing:strict` (run by
+`audit:strict` in CI and by `check:local`) fails on a file in any application, package or tool that is named for one of its
 exports but not in that export's casing: a single-export file, or a multi-export file whose
 kebab stem names one of its non-constant exports (`resolve-skill-availability.ts` exporting
 `resolveSkillAvailability` and its `SKILL_AVAILABILITY_ENVIRONMENTS` → `resolveSkillAvailability.ts`).

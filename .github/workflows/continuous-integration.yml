@@ -1176,12 +1176,18 @@ jobs:
             | xargs -0 pnpm exec prettier --ignore-unknown --check
 
       # Runs every `audit:*:strict` script except test-coverage, via the glob in
-      # the root `audit:strict`. Today that is component-shape (x2), route-shape,
-      # workspace-deps and third-party-deps. A new strict audit is gated here the
-      # moment it is named `audit:<thing>:strict` — which is why neither
-      # `audit:workspace-deps:strict` nor `audit:third-party-deps:strict` needs a
-      # step of its own. Note `audit:templates-compliance` has no `:strict`
+      # the root `audit:strict`; the glob is the list, so none is named here. A
+      # new strict audit is gated here the moment it is named
+      # `audit:<thing>:strict`, and no audit needs a step of its own. Local
+      # `check:local` runs the same glob through `check:local:audit`. Note `audit:templates-compliance` has no `:strict`
       # variant and so is NOT in this glob, despite the old step name.
+      # Fails when a step in THIS job runs a check that `check:local` does not,
+      # so a new gate here cannot silently skip local parity. A gate that
+      # cannot run locally goes in EXEMPTIONS in scripts/check-local-ci-parity.ts
+      # with its reason. ~1s, no inputs beyond package.json, nx.json and this file.
+      - name: '🪞 check:local runs every gate in this job'
+        run: pnpm exec nx run monorepo:check-local-ci-parity
+
       - name: '🧩 Strict audits (audit:strict)'
         run: pnpm run audit:strict
 

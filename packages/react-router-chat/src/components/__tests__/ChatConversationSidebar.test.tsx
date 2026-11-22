@@ -1,6 +1,6 @@
 import { toast, Toaster } from '@openthrottle/react-router-shadcn';
 import type { RenderResult } from '@testing-library/react';
-import { render } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
@@ -113,8 +113,15 @@ describe('ChatConversationSidebar', () => {
 
   describe('delete', () => {
     // Sonner's store is module-global: clear toasts so tests do not see each other's.
-    afterEach(() => {
+    // A dismissed toast calls setState 200ms later (TIME_BEFORE_UNMOUNT), so wait
+    // for it to leave the DOM; otherwise the timer can outlive the jsdom
+    // environment and throw `window is not defined` after the file finishes.
+    afterEach(async () => {
       toast.dismiss();
+
+      await waitFor(() => {
+        expect(document.querySelector('[data-sonner-toast]')).toBeNull();
+      });
     });
 
     test('soft-deletes at once with no confirm dialog', async () => {
