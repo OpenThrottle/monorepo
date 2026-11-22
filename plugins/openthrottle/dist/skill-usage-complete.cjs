@@ -5113,6 +5113,15 @@ var firstNumber = (...candidates) => {
   }
   return void 0;
 };
+var largestModelContextWindow = (modelUsage) => {
+  if (!isRecord(modelUsage)) {
+    return void 0;
+  }
+  const windows = Object.values(modelUsage).map((entry) => {
+    return isRecord(entry) ? asFiniteNumber(entry.contextWindow) : void 0;
+  }).filter((value) => value !== void 0 && value > 0);
+  return windows.length > 0 ? Math.max(...windows) : void 0;
+};
 var safeParseRecord = (json) => {
   if (json === "") {
     return null;
@@ -5193,6 +5202,12 @@ var normalizeUsage2 = (input) => {
     usage.cost
   );
   const model = asNonEmptyString2(meta.model) ?? asNonEmptyString2(usage.model) ?? (isRecord(meta.modelUsage) ? Object.keys(meta.modelUsage)[0] : void 0);
+  const contextTokens = firstNumber(meta.contextTokens, usage.contextTokens);
+  const contextWindowTokens = firstNumber(
+    meta.contextWindow,
+    usage.contextWindow,
+    largestModelContextWindow(meta.modelUsage)
+  );
   const summable = [inputTokens, outputTokens].filter(
     (value) => value !== void 0
   );
@@ -5200,6 +5215,8 @@ var normalizeUsage2 = (input) => {
   return {
     ...cacheReadTokens !== void 0 ? { cacheReadTokens } : {},
     ...cacheWriteTokens !== void 0 ? { cacheWriteTokens } : {},
+    ...contextTokens !== void 0 ? { contextTokens } : {},
+    ...contextWindowTokens !== void 0 ? { contextWindowTokens } : {},
     ...costUsd !== void 0 ? { costUsd } : {},
     ...inputTokens !== void 0 ? { inputTokens } : {},
     ...model !== void 0 ? { model } : {},
