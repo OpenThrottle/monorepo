@@ -38,6 +38,7 @@ import type {
   RunPlanJobData,
   RunPlanOrchestratorJobData,
 } from '../../../queues/plans/plans.types.ts';
+import { CheckoutPathService } from '../../../services/checkout-path/checkout-path.service.ts';
 import type { QueuesService } from '../../queues/queues-service/queues-service.service.ts';
 import type { WorkLedgerCaptureService } from '../../work-ledger/work-ledger-capture/work-ledger-capture.service.ts';
 import { buildRunPlanOrchestratorJobData } from '../enqueue-plan-ralph-tuning/enqueue-plan-ralph-tuning.utils.ts';
@@ -201,6 +202,9 @@ describe('PlanEnqueueService', () => {
   });
 
   const service = new PlanEnqueueService(
+    // The real resolver over the mocked checkouts repository, so the workspace tests below
+    // still pin plan-enqueue's end-to-end messages and path form.
+    new CheckoutPathService(mockRepositoryCheckoutsRepository, mockLogger),
     mockDataSource,
     mockLogger,
     mockNotificationsService,
@@ -208,7 +212,6 @@ describe('PlanEnqueueService', () => {
     asMock<PlansRepository>(mockPlansRepository),
     mockPlanStatusService,
     mockQueuesService,
-    mockRepositoryCheckoutsRepository,
     asMock<TasksRepository>(mockTasksRepository),
     mockWorkLedgerCapture,
     mockPlansQueue,
@@ -360,6 +363,44 @@ describe('PlanEnqueueService', () => {
         repositoryId: checkout.repositoryId,
         workingDirectory: existingDir,
       });
+    });
+
+    test('stores the host-truthful path, not the container view, under the workspace bridge', async () => {
+      // Map a fake host root onto existingDir's parent, so only the container view exists on disk
+      // and the host form is what the job payload must carry (consumers translate at use).
+      const containerParent = join(existingDir, '..');
+      const leaf = existingDir.slice(containerParent.length + 1);
+      const hostPath = `/host-workspaces/${leaf}`;
+      vi.stubEnv('OPENTHROTTLE_HOST_WORKSPACES_DIR', '/host-workspaces');
+      vi.stubEnv('OPENTHROTTLE_CONTAINER_WORKSPACES_DIR', containerParent);
+      mockFindByIdForUser.mockResolvedValue(
+        createMock<RepositoryCheckout>({
+          filesystemPath: hostPath,
+          id: checkout.id,
+          repositoryId: checkout.repositoryId,
+        }),
+      );
+
+      try {
+        await service.enqueueOrchestrator({
+          actorUserId: 'user-1',
+          branch: 'feature/test',
+          checkoutId: checkout.id,
+          mode: null,
+          planId: mockPlan.id,
+          priority: null,
+          taskId: null,
+          workingDirectory: null,
+        });
+      } finally {
+        vi.unstubAllEnvs();
+      }
+
+      expect(mockEnqueuePlanRalphOrchestrator).toHaveBeenCalledWith(
+        expect.objectContaining({
+          jobData: expect.objectContaining({ workingDirectory: hostPath }),
+        }),
+      );
     });
 
     test('resolves repositoryId to the user single checkout', async () => {

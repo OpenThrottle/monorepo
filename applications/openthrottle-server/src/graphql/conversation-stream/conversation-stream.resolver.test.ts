@@ -11,6 +11,8 @@ import type {
   AgentConversationsRepository,
   CustomPrompt,
   CustomPromptsRepository,
+  RepositoryCheckout,
+  RepositoryCheckoutsRepository,
   UserDisabledAgentClisRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import type {
@@ -31,8 +33,7 @@ import type {
 } from '@openthrottle/openthrottle-agentic-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { WorkspaceLocalRepositoriesService } from '../../services/workspace-local-repositories/workspace-local-repositories.service.ts';
-import type { WorkspaceLocalRepository } from '../../services/workspace-local-repositories/workspace-local-repositories.types.ts';
+import { CheckoutPathService } from '../../services/checkout-path/checkout-path.service.ts';
 import { TURN_IN_PROGRESS_ERROR } from './conversation-stream.constants.ts';
 import { ConversationStreamResolver } from './conversation-stream.resolver.ts';
 import type { ConversationStreamService } from './conversation-stream.service.ts';
@@ -88,7 +89,7 @@ function build(): {
   messages: AgentConversationMessagesRepositoryMock;
   modelDiscovery: NestjsModelDiscoveryService;
   personaFindOne: ReturnType<typeof vi.fn>;
-  repositories: WorkspaceLocalRepositoriesService;
+  repositories: RepositoryCheckoutsRepository;
   resolver: ConversationStreamResolver;
   streamService: ConversationStreamService;
 } {
@@ -112,7 +113,9 @@ function build(): {
   const modelDiscovery = createMock<NestjsModelDiscoveryService>({
     discover: vi.fn().mockResolvedValue(discovery),
   });
-  const repositories = createMock<WorkspaceLocalRepositoriesService>({
+  // The real CheckoutPathService over a mocked checkouts repository, so these
+  // tests keep pinning the ownership check and the spawn cwd end to end.
+  const repositories = createMock<RepositoryCheckoutsRepository>({
     findByIdForUser: vi.fn().mockResolvedValue(null),
   });
   const streamService = createMock<ConversationStreamService>({
@@ -131,13 +134,13 @@ function build(): {
     warn: vi.fn(),
   });
   const resolver = new ConversationStreamResolver(
+    new CheckoutPathService(repositories, logger),
     disabledAgentClis,
     createMock<AgentConversationsRepository>(conversations),
     customPrompts,
     logger,
     createMock<AgentConversationMessagesRepository>(messages),
     modelDiscovery,
-    repositories,
     streamService,
   );
   return {
@@ -205,7 +208,7 @@ describe('ConversationStreamResolver.startConversationStream', () => {
   it('threads @-mention fileMentions onto the run for structured context injection', async () => {
     const { repositories, resolver, streamService } = build();
     vi.mocked(repositories.findByIdForUser).mockResolvedValue(
-      createMock<WorkspaceLocalRepository>({
+      createMock<RepositoryCheckout>({
         filesystemPath: '/repo/checkout',
       }),
     );
@@ -237,7 +240,7 @@ describe('ConversationStreamResolver.startConversationStream', () => {
   it('narrows reasoning + service tier onto the run for a CLI backend', async () => {
     const { repositories, resolver, streamService } = build();
     vi.mocked(repositories.findByIdForUser).mockResolvedValue(
-      createMock<WorkspaceLocalRepository>({
+      createMock<RepositoryCheckout>({
         filesystemPath: '/repo/checkout',
       }),
     );
@@ -330,7 +333,7 @@ describe('ConversationStreamResolver.startConversationStream', () => {
   it('drops an unrecognized reasoning/tier string (transport guard) to null', async () => {
     const { repositories, resolver, streamService } = build();
     vi.mocked(repositories.findByIdForUser).mockResolvedValue(
-      createMock<WorkspaceLocalRepository>({
+      createMock<RepositoryCheckout>({
         filesystemPath: '/repo/checkout',
       }),
     );
@@ -384,7 +387,7 @@ describe('ConversationStreamResolver.startConversationStream', () => {
   it('Private mode with a CLI backend runs a fresh session with no metadata reads/writes', async () => {
     const { conversations, repositories, resolver, streamService } = build();
     vi.mocked(repositories.findByIdForUser).mockResolvedValue(
-      createMock<WorkspaceLocalRepository>({
+      createMock<RepositoryCheckout>({
         filesystemPath: '/repo/checkout',
       }),
     );
@@ -445,7 +448,7 @@ describe('ConversationStreamResolver.startConversationStream', () => {
   it('routes a cursor backend: resolves the repo cwd, records the repo, and starts the stream WITHOUT minting (mint is deferred to the stream)', async () => {
     const { conversations, repositories, resolver, streamService } = build();
     vi.mocked(repositories.findByIdForUser).mockResolvedValue(
-      createMock<WorkspaceLocalRepository>({
+      createMock<RepositoryCheckout>({
         filesystemPath: '/repo/checkout',
       }),
     );
@@ -485,7 +488,7 @@ describe('ConversationStreamResolver.startConversationStream', () => {
   it('resolves a cursor persona system prompt from the custom_prompts registry by id', async () => {
     const { personaFindOne, repositories, resolver, streamService } = build();
     vi.mocked(repositories.findByIdForUser).mockResolvedValue(
-      createMock<WorkspaceLocalRepository>({
+      createMock<RepositoryCheckout>({
         filesystemPath: '/repo/checkout',
       }),
     );
@@ -519,7 +522,7 @@ describe('ConversationStreamResolver.startConversationStream', () => {
   it('ignores a persona id the caller cannot see or that is not a persona', async () => {
     const { personaFindOne, repositories, resolver, streamService } = build();
     vi.mocked(repositories.findByIdForUser).mockResolvedValue(
-      createMock<WorkspaceLocalRepository>({
+      createMock<RepositoryCheckout>({
         filesystemPath: '/repo/checkout',
       }),
     );
@@ -558,7 +561,7 @@ describe('ConversationStreamResolver.startConversationStream', () => {
   it('routes a claude backend: mints a UUID session (no create round-trip), resumeSession false', async () => {
     const { conversations, repositories, resolver, streamService } = build();
     vi.mocked(repositories.findByIdForUser).mockResolvedValue(
-      createMock<WorkspaceLocalRepository>({
+      createMock<RepositoryCheckout>({
         filesystemPath: '/repo/checkout',
       }),
     );
@@ -595,7 +598,7 @@ describe('ConversationStreamResolver.startConversationStream', () => {
   it('routes an opencode backend: no session id up front (opencode mints it), resumeSession false', async () => {
     const { conversations, repositories, resolver, streamService } = build();
     vi.mocked(repositories.findByIdForUser).mockResolvedValue(
-      createMock<WorkspaceLocalRepository>({
+      createMock<RepositoryCheckout>({
         filesystemPath: '/repo/checkout',
       }),
     );
@@ -630,7 +633,7 @@ describe('ConversationStreamResolver.startConversationStream', () => {
   it('routes a base-URL-capable CLI backend against a discovered local endpoint', async () => {
     const { repositories, resolver, streamService } = build();
     vi.mocked(repositories.findByIdForUser).mockResolvedValue(
-      createMock<WorkspaceLocalRepository>({
+      createMock<RepositoryCheckout>({
         filesystemPath: '/repo/checkout',
       }),
     );
@@ -659,7 +662,7 @@ describe('ConversationStreamResolver.startConversationStream', () => {
   it('rejects a non-base-URL-capable CLI backend (claude) targeting a local endpoint', async () => {
     const { repositories, resolver, streamService } = build();
     vi.mocked(repositories.findByIdForUser).mockResolvedValue(
-      createMock<WorkspaceLocalRepository>({
+      createMock<RepositoryCheckout>({
         filesystemPath: '/repo/checkout',
       }),
     );
@@ -683,7 +686,7 @@ describe('ConversationStreamResolver.startConversationStream', () => {
   it('rejects a CLI + baseUrl not present in discovery (SSRF guard)', async () => {
     const { repositories, resolver, streamService } = build();
     vi.mocked(repositories.findByIdForUser).mockResolvedValue(
-      createMock<WorkspaceLocalRepository>({
+      createMock<RepositoryCheckout>({
         filesystemPath: '/repo/checkout',
       }),
     );
@@ -705,7 +708,7 @@ describe('ConversationStreamResolver.startConversationStream', () => {
   it('resumes an existing CLI session from conversation metadata without re-minting', async () => {
     const { conversations, repositories, resolver, streamService } = build();
     vi.mocked(repositories.findByIdForUser).mockResolvedValue(
-      createMock<WorkspaceLocalRepository>({
+      createMock<RepositoryCheckout>({
         filesystemPath: '/repo/checkout',
       }),
     );
@@ -789,7 +792,7 @@ describe('ConversationStreamResolver.startConversationStream', () => {
     const { repositories, resolver, streamService } = build();
     vi.mocked(repositories.findByIdForUser).mockImplementation((id: string) =>
       Promise.resolve(
-        createMock<WorkspaceLocalRepository>({
+        createMock<RepositoryCheckout>({
           filesystemPath: `/repo/${id}`,
         }),
       ),
@@ -820,7 +823,7 @@ describe('ConversationStreamResolver.startConversationStream', () => {
         return Promise.resolve(null);
       }
       return Promise.resolve(
-        createMock<WorkspaceLocalRepository>({
+        createMock<RepositoryCheckout>({
           filesystemPath: '/repo/repo-primary',
         }),
       );
@@ -843,7 +846,7 @@ describe('ConversationStreamResolver.startConversationStream', () => {
     const { repositories, resolver, streamService } = build();
     vi.mocked(repositories.findByIdForUser).mockImplementation((id: string) =>
       Promise.resolve(
-        createMock<WorkspaceLocalRepository>({
+        createMock<RepositoryCheckout>({
           filesystemPath: `/repo/${id}`,
         }),
       ),
@@ -873,7 +876,7 @@ describe('ConversationStreamResolver.startConversationStream', () => {
   it('honors a legacy single repositoryId as a one-element list', async () => {
     const { repositories, resolver, streamService } = build();
     vi.mocked(repositories.findByIdForUser).mockResolvedValue(
-      createMock<WorkspaceLocalRepository>({
+      createMock<RepositoryCheckout>({
         filesystemPath: '/repo/legacy',
       }),
     );
@@ -899,7 +902,7 @@ describe('ConversationStreamResolver.startConversationStream', () => {
     const { repositories, resolver, streamService } = build();
     vi.mocked(repositories.findByIdForUser).mockImplementation((id: string) =>
       Promise.resolve(
-        createMock<WorkspaceLocalRepository>({
+        createMock<RepositoryCheckout>({
           filesystemPath: `/repo/${id}`,
         }),
       ),
@@ -1099,7 +1102,7 @@ describe('ConversationStreamResolver.conversationStreamChunkAdded', () => {
     ): ReturnType<typeof build> => {
       const built = build();
       vi.mocked(built.repositories.findByIdForUser).mockResolvedValue(
-        createMock<WorkspaceLocalRepository>({
+        createMock<RepositoryCheckout>({
           filesystemPath: '/repo/checkout',
         }),
       );

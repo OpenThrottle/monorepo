@@ -17,7 +17,7 @@ import {
 } from '@openthrottle/nestjs-repositories-server';
 
 import { AgentAccountStampingModule } from '../../services/agent-account-stamping/agent-account-stamping.module.ts';
-import { WorkspaceLocalRepositoriesModule } from '../../services/workspace-local-repositories/workspace-local-repositories.module.ts';
+import { CheckoutPathModule } from '../../services/checkout-path/checkout-path.module.ts';
 import { ConversationStreamResolver } from './conversation-stream.resolver.ts';
 import { ConversationStreamService } from './conversation-stream.service.ts';
 
@@ -29,9 +29,9 @@ import { ConversationStreamService } from './conversation-stream.service.ts';
     CustomPromptsModule,
     UserDisabledAgentClisModule,
     AgentAccountStampingModule,
+    CheckoutPathModule,
     LoggerModule,
     NestjsModelDiscoveryModule,
-    WorkspaceLocalRepositoriesModule,
   ],
   providers: [ConversationStreamResolver, ConversationStreamService],
 })

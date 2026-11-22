@@ -97,7 +97,7 @@ export const resolveScheduledAgentJobCwd = (
  * @description THE cwd precedence ladder for a scheduled agent run, documented in one place:
  *
  * 1. `checkoutPath` — the schedule's `repository_checkout_id` resolved to a directory
- *    (ownership-checked + `toContainerPath`-translated by `ScheduledAgentJobCheckoutPathService`).
+ *    (ownership-checked + `toContainerPath`-translated by `CheckoutPathService`).
  *    Callers pass the already-resolved path so this stays synchronous and side-effect free.
  * 2. `explicitCwd` — the legacy/deprecated free-text `cwd` column (legacy rows, power users).
  * 3. `WORKSPACE_ROOT`, else the detected OpenThrottle root, else `process.cwd()` — today's behavior,

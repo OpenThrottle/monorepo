@@ -11,12 +11,12 @@ import { LoggerModule } from '@openthrottle/nestjs-modules';
 import {
   PlanRunsModule,
   PlansModule,
-  RepositoryCheckoutsModule,
   TasksModule,
 } from '@openthrottle/nestjs-repositories-server';
 
 import { NotificationsModule } from '../../../notifications/notifications.module.ts';
 import { PlansQueueProducerModule } from '../../../queues/plans/producer/producer.module.ts';
+import { CheckoutPathModule } from '../../../services/checkout-path/checkout-path.module.ts';
 import { QueuesServiceModule } from '../../queues/queues-service/queues-service.module.ts';
 import { WorkLedgerGraphqlModule } from '../../work-ledger/work-ledger.module.ts';
 import { PlanStatusModule } from '../plan-status/plan-status.module.ts';
@@ -25,6 +25,7 @@ import { PlanEnqueueService } from './plan-enqueue.service.ts';
 @Module({
   exports: [PlanEnqueueService],
   imports: [
+    CheckoutPathModule,
     LoggerModule,
     NotificationsModule,
     PlanRunsModule,
@@ -32,7 +33,6 @@ import { PlanEnqueueService } from './plan-enqueue.service.ts';
     PlansQueueProducerModule,
     PlanStatusModule,
     QueuesServiceModule,
-    RepositoryCheckoutsModule,
     TasksModule,
     WorkLedgerGraphqlModule,
   ],

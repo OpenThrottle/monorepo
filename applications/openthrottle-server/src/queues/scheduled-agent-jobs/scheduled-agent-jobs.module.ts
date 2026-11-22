@@ -7,7 +7,7 @@ import {
 } from '@openthrottle/nestjs-repositories-server';
 
 import { NotificationsModule } from '../../notifications/notifications.module.ts';
-import { ScheduledAgentJobCheckoutPathModule } from '../../services/scheduled-agent-job-checkout-path/scheduled-agent-job-checkout-path.module.ts';
+import { CheckoutPathModule } from '../../services/checkout-path/checkout-path.module.ts';
 import { ScheduledAgentJobDirectoryLockService } from './directory-lock/directory-lock.service.ts';
 import { ScheduledAgentJobFailureNotifierService } from './failure-notifier/failure-notifier.service.ts';
 import { ScheduledAgentJobsQueueProducerModule } from './producer/producer.module.ts';
@@ -37,7 +37,7 @@ import { ScheduledAgentJobUsageLimitResumeService } from './usage-limit-resume/u
     NestjsRedisModule,
     ScheduledAgentJobRunsModule,
     ScheduledAgentJobsModule,
-    ScheduledAgentJobCheckoutPathModule,
+    CheckoutPathModule,
     NotificationsModule,
     ScheduledAgentJobsQueueProducerModule,
   ],
