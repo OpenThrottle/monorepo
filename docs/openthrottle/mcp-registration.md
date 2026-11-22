@@ -221,14 +221,22 @@ The committed configs leave the default alone, so every session in this repo pay
 {
   "mcpServers": {
     "openthrottle-mcp": {
-      "args": ["./scripts/run-openthrottle-mcp.sh", "--toolsets=blog,admin"],
+      "args": [
+        "-c",
+        "<walk-up snippet from .mcp.json>",
+        "mcp-launcher",
+        "scripts/run-openthrottle-mcp.sh",
+        "--toolsets=blog,admin"
+      ],
       "command": "bash"
     }
   }
 }
 ```
 
-**VS Code** (`.vscode/mcp.json`): the same `args` under `servers`, with `"type": "stdio"`. **OpenCode** (`opencode.json`): append the flag to the `command` array, `["bash", "./scripts/run-openthrottle-mcp.sh", "--toolsets=blog"]`. **Any client with an `env` block** can set `"OPENTHROTTLE_MCP_TOOLSETS": "blog"` there instead. A shell export also reaches the launcher, which inherits its environment. The launcher does **not** read this variable from `.env`.
+The committed `args` run a short inline `bash -c` that walks up from the client's cwd to the folder holding `scripts/run-openthrottle-mcp.sh`. Clients find the config by walking up but spawn the server with their own cwd, so a plain `./scripts/…` path failed in a subdirectory or a nested repo such as `services/*`. Copy the snippet from [`.mcp.json`](../../.mcp.json) and add your flags after the script path; the walk forwards them. A user-level config outside this repo should use the launcher's absolute path instead.
+
+**VS Code** (`.vscode/mcp.json`): the same `args` under `servers`, with `"type": "stdio"`. **OpenCode** (`opencode.json`): append the flag to the end of the `command` array, after `"scripts/run-openthrottle-mcp.sh"`. **Any client with an `env` block** can set `"OPENTHROTTLE_MCP_TOOLSETS": "blog"` there instead. A shell export also reaches the launcher, which inherits its environment. The launcher does **not** read this variable from `.env`.
 
 **Docker HTTP** (`openthrottle-mcp-docker`): set `OPENTHROTTLE_MCP_TOOLSETS` in the root `.env` (`applications/openthrottle/.env` for the consumer install) and restart the `mcp` container. Selection is per process, so every client of that container sees the same toolsets.
 
@@ -245,7 +253,7 @@ These are Tier 2 servers — useful in this repo but **not** OT-native and **not
 ```json
 "github": {
   "command": "bash",
-  "args": ["./scripts/run-github-mcp.sh"]
+  "args": ["-c", "<walk-up snippet from .mcp.json>", "mcp-launcher", "scripts/run-github-mcp.sh"]
 }
 ```
 
