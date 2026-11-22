@@ -12,9 +12,9 @@ import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 
 import { ViewerOAuthScopesDocument } from '../__generated__/graphql.js';
 import { isReadOnlyTool } from '../config/tool-access.ts';
+import type { OAuthScopeLookup } from './createOAuthScopeLookup.ts';
+import { createOAuthScopeLookup } from './createOAuthScopeLookup.ts';
 import { extractBearerToken } from './mcp-http-auth.middleware.ts';
-import type { OAuthScopeLookup } from './oauth-scope-lookup.ts';
-import { createOAuthScopeLookup } from './oauth-scope-lookup.ts';
 import type {
   McpHttpAuthMode,
   McpPublicAuthMode,

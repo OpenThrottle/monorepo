@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { createOAuthScopeLookup } from '../oauth-scope-lookup.ts';
+import { createOAuthScopeLookup } from '../createOAuthScopeLookup.ts';
 
 describe('createOAuthScopeLookup', () => {
   it('caches per token until the TTL passes', async () => {
