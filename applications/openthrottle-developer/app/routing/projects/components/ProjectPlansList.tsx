@@ -1,12 +1,9 @@
 import { cn } from '@openthrottle/react-router-shadcn';
 import type { GlobalPopoverAction } from '@openthrottle/react-router-ui-global';
-import { GlobalPopover } from '@openthrottle/react-router-ui-global';
 import * as React from 'react';
-import { Link } from 'react-router';
 
 import type { ProjectPlanRowFragment } from '~/__generated__/graphql';
-import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
-import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
+import { ProjectPlanRow } from '~/routing/projects/components/ProjectPlanRow';
 import { PROJECT_PLANS_COPY } from '~/routing/projects/data/data.copy';
 
 export interface ProjectPlansListProps {
@@ -22,8 +19,9 @@ export interface ProjectPlansListProps {
 /**
  * @description One page of the project's plans in project order, each row with
  * its absolute position, status, task progress, a link to the plan (its PR lives
- * on the plan's runs, so the plan page is the PR entry point) and a
- * GlobalPopover with Move up / Move down / Remove. A move posts only the plan
+ * on the plan's runs, so the plan page is the PR entry point), a GlobalPopover
+ * with Move up / Move down / Remove, and an inline expand for the plan's tasks
+ * (see {@link ProjectPlanRow}). A move posts only the plan
  * and a direction (`moveProjectPlan`); the server swaps it with its neighbour in
  * the full order, so the first row of a page can move onto the previous page.
  */
@@ -83,12 +81,6 @@ export const ProjectPlansList = (
   };
 
   // Markup
-  const renderStatus = (status: string): React.ReactNode => {
-    if (isPlanStatusKey(status)) {
-      return <PlanStatusBadge status={status} />;
-    }
-    return status;
-  };
 
   // Life Cycle
 
@@ -110,34 +102,12 @@ export const ProjectPlansList = (
       data-testid="ProjectPlansList"
     >
       {plans.map((plan, index) => (
-        <li
-          className="flex items-center justify-between gap-3 p-3"
+        <ProjectPlanRow
+          actions={buildActions(plan, index)}
           key={plan.id}
-        >
-          <div className="flex min-w-0 items-center gap-3">
-            <span className="text-muted-foreground w-6 text-right text-xs tabular-nums">
-              {offset + index + 1}
-            </span>
-            <div className="min-w-0">
-              <Link
-                className="hover:text-primary truncate text-sm font-medium underline-offset-2 hover:underline"
-                to={`/plans/${plan.id}`}
-              >
-                {plan.title}
-              </Link>
-              <p className="text-muted-foreground text-xs">
-                {plan.tasksCompletedCount}/{plan.taskCount} tasks
-              </p>
-            </div>
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
-            {renderStatus(plan.status)}
-            <GlobalPopover
-              actions={buildActions(plan, index)}
-              ariaLabel={`${PROJECT_PLANS_COPY.menuAriaLabelPrefix} ${plan.title}`}
-            />
-          </div>
-        </li>
+          plan={plan}
+          position={offset + index + 1}
+        />
       ))}
     </ol>
   );

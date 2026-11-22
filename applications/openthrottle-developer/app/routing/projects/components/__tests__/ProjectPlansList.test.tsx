@@ -5,7 +5,10 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { PROJECT_PLANS_COPY } from '~/routing/projects/data/data.copy';
+import {
+  PROJECT_PLAN_TASKS_COPY,
+  PROJECT_PLANS_COPY,
+} from '~/routing/projects/data/data.copy';
 
 import type { ProjectPlansListProps } from '../ProjectPlansList';
 import { ProjectPlansList } from '../ProjectPlansList';
@@ -48,6 +51,12 @@ describe('ProjectPlansList Component', () => {
           return {};
         },
         path: '/',
+      },
+      {
+        loader: () => {
+          return { kind: 'loaded', planId: 'plan-a', tasks: [] };
+        },
+        path: '/resources/project-plan-tasks',
       },
     ]);
     component = render(<RoutesStub />);
@@ -98,6 +107,31 @@ describe('ProjectPlansList Component', () => {
         direction: 'UP',
         intent: 'moveProjectPlan',
         planId: 'plan-b',
+      });
+    });
+
+    test('Move down still submits while a row is expanded', async () => {
+      const user = userEvent.setup();
+      await user.click(
+        component.getByRole('button', {
+          name: `${PROJECT_PLAN_TASKS_COPY.toggleAriaLabelPrefix} First plan`,
+        }),
+      );
+      await user.click(
+        component.getByRole('button', {
+          name: `${PROJECT_PLANS_COPY.menuAriaLabelPrefix} First plan`,
+        }),
+      );
+      await user.click(
+        await component.findByRole('menuitem', {
+          name: PROJECT_PLANS_COPY.moveDown,
+        }),
+      );
+      await waitFor(() => expect(submitted).toHaveLength(1));
+      expect(submitted[0]).toMatchObject({
+        direction: 'DOWN',
+        intent: 'moveProjectPlan',
+        planId: 'plan-a',
       });
     });
 
