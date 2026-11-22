@@ -67,27 +67,45 @@ export const ChatMentionPopover = (
 
   const listMarkup = (
     <ul aria-label="File mentions" id={listboxId} role="listbox">
-      {results.map((path, index) => (
-        <li
-          aria-selected={index === activeIndex}
-          className={cn(
-            'cursor-pointer px-3 py-1.5 text-sm',
-            index === activeIndex && 'bg-accent text-accent-foreground',
-            index !== activeIndex && 'text-foreground',
-          )}
-          id={optionId(index)}
-          key={path}
-          // mousedown (not click) so the textarea does not blur first.
-          onMouseDown={(event) => {
-            event.preventDefault();
-            onSelectOption(path);
-          }}
-          onMouseEnter={() => onHoverOption(index)}
-          role="option"
-        >
-          {path}
-        </li>
-      ))}
+      {results.map((path, index) => {
+        const slashIndex = path.lastIndexOf('/');
+        const fileName = path.slice(slashIndex + 1);
+        const folder = slashIndex === -1 ? '' : path.slice(0, slashIndex);
+
+        return (
+          <li
+            aria-label={path}
+            aria-selected={index === activeIndex}
+            className={cn(
+              'cursor-pointer px-3 py-1.5 text-sm',
+              index === activeIndex && 'bg-accent text-accent-foreground',
+              index !== activeIndex && 'text-foreground',
+            )}
+            id={optionId(index)}
+            key={path}
+            // mousedown (not click) so the textarea does not blur first.
+            onMouseDown={(event) => {
+              event.preventDefault();
+              onSelectOption(path);
+            }}
+            onMouseEnter={() => onHoverOption(index)}
+            role="option"
+          >
+            <span className="block truncate">{fileName}</span>
+            {folder !== '' && (
+              <span
+                className={cn(
+                  'block truncate text-xs',
+                  index === activeIndex && 'text-accent-foreground/85',
+                  index !== activeIndex && 'text-muted-foreground',
+                )}
+              >
+                {folder}
+              </span>
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 

@@ -1,5 +1,5 @@
 import type { RenderResult } from '@testing-library/react';
-import { render } from '@testing-library/react';
+import { render, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
@@ -51,8 +51,23 @@ describe('ChatMentionPopover', () => {
 
     expect(component.getByRole('listbox')).toBeInTheDocument();
     expect(component.getAllByRole('option')).toHaveLength(2);
-    expect(component.getByText('src/a.ts')).toBeInTheDocument();
-    expect(component.getByText('src/b.ts')).toBeInTheDocument();
+    expect(component.getByRole('option', { name: 'src/a.ts' })).toBeVisible();
+    expect(component.getByRole('option', { name: 'src/b.ts' })).toBeVisible();
+  });
+
+  test('shows the file name as the label with the folder beneath it', () => {
+    const component = renderPopover({ results: ['src/deep/a.ts'] });
+
+    const option = component.getByRole('option', { name: 'src/deep/a.ts' });
+    expect(within(option).getByText('a.ts')).toBeInTheDocument();
+    expect(within(option).getByText('src/deep')).toBeInTheDocument();
+  });
+
+  test('omits the folder line for a root-level file', () => {
+    const component = renderPopover({ results: ['README.md'] });
+
+    const option = component.getByRole('option', { name: 'README.md' });
+    expect(option.querySelectorAll('span')).toHaveLength(1);
   });
 
   test('marks the active option as selected', () => {
@@ -68,7 +83,7 @@ describe('ChatMentionPopover', () => {
     const component = renderPopover({ onHoverOption });
     const user = userEvent.setup();
 
-    await user.hover(component.getByText('src/b.ts'));
+    await user.hover(component.getByRole('option', { name: 'src/b.ts' }));
 
     expect(onHoverOption).toHaveBeenCalledWith(1);
   });
@@ -78,7 +93,7 @@ describe('ChatMentionPopover', () => {
     const component = renderPopover({ onSelectOption });
     const user = userEvent.setup();
 
-    await user.click(component.getByText('src/a.ts'));
+    await user.click(component.getByRole('option', { name: 'src/a.ts' }));
 
     expect(onSelectOption).toHaveBeenCalledWith('src/a.ts');
   });

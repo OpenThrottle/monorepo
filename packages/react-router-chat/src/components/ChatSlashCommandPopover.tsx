@@ -91,7 +91,13 @@ export const ChatSlashCommandPopover = (
         >
           <span className="font-medium whitespace-nowrap">/{command.slug}</span>
           {command.description && (
-            <span className="text-muted-foreground truncate">
+            <span
+              className={cn(
+                'truncate',
+                index === activeIndex && 'text-accent-foreground/85',
+                index !== activeIndex && 'text-muted-foreground',
+              )}
+            >
               {command.description}
             </span>
           )}

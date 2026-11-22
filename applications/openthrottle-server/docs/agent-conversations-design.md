@@ -61,6 +61,7 @@ Permissions: `settings:read` for queries, `settings:write` for mutations.
 | `createAgentConversation`      | Optional explicit create; title may instead be set on first persist turn                                                                                                                    |
 | `archiveAgentConversation`     | Sets `status=archived` (a user-visible "put away" state)                                                                                                                                    |
 | `deleteAgentConversation`      | Soft-delete: sets `status=deleted`; row + messages retained, hidden from the default list (reversible; a later purge job may hard-delete). Distinct from archive. Added by plan `16c97e11`. |
+| `restoreAgentConversation`     | Undo a soft-delete: `deleted` -> `active` (clears `deleted_at`); any other status is returned unchanged with no write. Backs the sidebar's 5-second Undo toast.                             |
 | `updateAgentConversationTitle` | Updates `title` on an owned conversation (also backs inline rename)                                                                                                                         |
 
 ### Lifecycle (`status`)

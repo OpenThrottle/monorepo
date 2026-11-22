@@ -3,6 +3,7 @@ import * as React from 'react';
 
 import { CHAT_COMPOSER_QUEUE_COPY } from '../data/data.copy';
 import type { ChatTokenUsage } from '../types';
+import { ChatContextMeter } from './ChatContextMeter';
 import { ChatUsageCounter } from './ChatUsageCounter';
 
 export interface ChatComposerFooterProps {
@@ -15,6 +16,8 @@ export interface ChatComposerFooterProps {
   readonly onStop?: () => void;
   /** Cumulative session usage; the counter is hidden when omitted. */
   readonly sessionUsage?: ChatTokenUsage;
+  /** Render the {@link ChatContextMeter} beside the counter (opt-in). */
+  readonly showContextMeter: boolean;
   readonly stopLabel: string;
   readonly submitLabel: string;
   /** Optional controls docked to the left of the send/stop action. */
@@ -40,6 +43,7 @@ export const ChatComposerFooter = (
     isStreaming,
     onStop,
     sessionUsage,
+    showContextMeter,
     stopLabel,
     submitLabel,
     toolbar,
@@ -93,7 +97,10 @@ export const ChatComposerFooter = (
       )}
     >
       {toolbar}
-      <div className="flex items-center gap-3">
+      <div className="flex shrink-0 items-center gap-3">
+        {showContextMeter && sessionUsage !== undefined && (
+          <ChatContextMeter usage={sessionUsage} />
+        )}
         {sessionUsage !== undefined && (
           <ChatUsageCounter streaming={isStreaming} usage={sessionUsage} />
         )}

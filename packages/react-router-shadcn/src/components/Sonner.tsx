@@ -156,7 +156,14 @@ export const Toaster = React.forwardRef<
       ref={ref}
       style={toasterStyle}
       theme={resolvedTheme}
-      toastOptions={{ classNames: typedToastClassNames }}
+      toastOptions={{
+        classNames: {
+          ...typedToastClassNames,
+          // A modal (Radix Dialog/Sheet) sets `pointer-events: none` on <body>,
+          // which toasts would inherit, leaving an action like Undo unclickable.
+          toast: 'pointer-events-auto',
+        },
+      }}
       {...rest}
     />
   );

@@ -138,6 +138,7 @@ export const ChatDialog = (props: ChatDialogProps): React.ReactElement => {
           onStop={composer?.onStop}
           onSubmit={onSendMessage}
           sessionUsage={composer?.sessionUsage}
+          showContextMeter={composer?.showContextMeter}
           toolbar={
             composer !== undefined ? (
               <ChatComposerToolbar {...composer} />

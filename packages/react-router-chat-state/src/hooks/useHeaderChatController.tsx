@@ -16,11 +16,12 @@ import {
   useConversationList,
 } from '@openthrottle/react-router-chat';
 import type { GraphqlWsClient } from '@openthrottle/react-router-graphql';
-import { useAtom } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 import * as React from 'react';
 import { useFetcher } from 'react-router';
 
 import { capabilitiesForChatOption } from '../config/chat-capabilities';
+import { chatContextMeterAtom } from '../data/data.atom.chat-context-meter';
 import { chatToolbarStateAtom } from '../data/data.atom.chat-toolbar';
 import { EMPTY_CHAT_OPTIONS } from '../data/data.chat-options';
 import type { HeaderChatOptionsCache } from '../types';
@@ -102,6 +103,7 @@ export function useHeaderChatController(
   const turn = useAgenticChatTurn({ streamClient, streamDocument });
   const conversationList = useConversationList({ enabled });
   const [toolbarState, setToolbarState] = useAtom(chatToolbarStateAtom);
+  const showContextMeter = useAtomValue(chatContextMeterAtom);
   // Dedupes the "new conversation created" refresh to one per conversation id.
   const refreshedForIdRef = React.useRef<string | null>(null);
   // Elevated permission modes decay to the safe default once per browser session.
@@ -248,6 +250,7 @@ export function useHeaderChatController(
     onLoadMore: conversationList.loadMore,
     onNewChat: onStartNewChat,
     onRename: conversationList.rename,
+    onRestore: conversationList.restore,
     onSelect: (id: string): void => turn.restore({ conversationId: id }),
     totalCount: conversationList.totalCount,
   };
@@ -285,6 +288,7 @@ export function useHeaderChatController(
     selectedCheckoutIds: repositoryIds,
     serviceTier,
     sessionUsage: turn.sessionUsage,
+    showContextMeter,
   };
 
   // Life Cycle

@@ -154,6 +154,7 @@ import {
   RepeatableJobsInput,
   ReplaceAgentTrajectoryInput,
   ReschedulePlanRunInput,
+  RestoreAgentConversationInput,
   RetryJobInput,
   ReviewCycleTimeInput,
   RolloutEvaluationReason,
@@ -1854,6 +1855,14 @@ export function ReschedulePlanRunInputSchema(): z.ZodObject<
     planId: z.string().min(1),
     planRunId: z.string().min(1),
     scheduledFor: definedNonNullAnySchema,
+  });
+}
+
+export function RestoreAgentConversationInputSchema(): z.ZodObject<
+  Properties<RestoreAgentConversationInput>
+> {
+  return z.object({
+    conversationId: z.string().min(1),
   });
 }
 

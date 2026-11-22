@@ -37,6 +37,8 @@ export function createAgentConversationsRepositoryMock(): AgentConversationsRepo
     listConversationsForUser: vi.fn(async () => {
       return [];
     }),
+    restoreConversation:
+      vi.fn<AgentConversationsRepository['restoreConversation']>(notFound),
     softDeleteConversation:
       vi.fn<AgentConversationsRepository['softDeleteConversation']>(notFound),
     updateConversationTitle:

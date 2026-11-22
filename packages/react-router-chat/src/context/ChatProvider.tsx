@@ -48,6 +48,8 @@ export interface ChatComposerControls extends Omit<
    * the consumer owns the total. Omit to hide the counter.
    */
   readonly sessionUsage?: ChatTokenUsage;
+  /** Opt in to the composer's context-window meter (see `ChatContextMeter`). */
+  readonly showContextMeter?: boolean;
 }
 
 export interface ChatContextValue {

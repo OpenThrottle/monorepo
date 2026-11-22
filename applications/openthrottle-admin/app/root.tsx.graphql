@@ -59,6 +59,15 @@ mutation deleteAgentConversation($input: DeleteAgentConversationInput!) {
   }
 }
 
+mutation restoreAgentConversation($input: RestoreAgentConversationInput!) {
+  restoreAgentConversation(input: $input) {
+    id
+    status
+    title
+    updatedAt
+  }
+}
+
 mutation updateAgentConversationTitle(
   $input: UpdateAgentConversationTitleInput!
 ) {

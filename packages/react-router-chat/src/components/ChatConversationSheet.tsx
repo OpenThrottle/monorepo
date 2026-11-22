@@ -80,6 +80,18 @@ export const ChatConversationSheet = (
     setOpen(false);
   };
 
+  // A toast (e.g. a delete's Undo) renders outside the sheet, so pressing it
+  // would otherwise count as an outside click and close the list it acts on.
+  const handleInteractOutside = (event: Event): void => {
+    const target = event.target;
+    if (
+      target instanceof Element &&
+      target.closest('[data-sonner-toaster]') !== null
+    ) {
+      event.preventDefault();
+    }
+  };
+
   // Markup
 
   // Life Cycle
@@ -108,6 +120,7 @@ export const ChatConversationSheet = (
       <SheetContent
         className="flex flex-col gap-0 p-0"
         data-testid="ChatConversationSheet"
+        onInteractOutside={handleInteractOutside}
         side={side}
       >
         <SheetHeader className="flex-row items-center justify-between gap-2 space-y-0 border-b px-4 py-3 pr-12 text-left">

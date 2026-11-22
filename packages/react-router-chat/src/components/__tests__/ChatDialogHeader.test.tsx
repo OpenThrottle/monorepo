@@ -72,6 +72,7 @@ describe('ChatDialogHeader', () => {
         onDelete: vi.fn(),
         onNewChat: vi.fn(),
         onRename: vi.fn(),
+        onRestore: vi.fn(),
         onSelect,
         totalCount: CONVERSATIONS.length,
       },

@@ -6,7 +6,7 @@ import type { UseConversationListResult } from '~/routing/home/hooks/useConversa
 export interface HomeConversationToolbarProps {
   /** Id of the conversation currently loaded in the thread, if any. */
   activeConversationId: string | null;
-  /** Persisted-conversation list backing the sheet (list + rename + delete). */
+  /** Persisted-conversation list backing the sheet (list + rename + delete/undo). */
   conversationList: UseConversationListResult;
   /** Clears the thread for a new conversation. */
   onNewChat: () => void;
@@ -65,6 +65,7 @@ export const HomeConversationToolbar = (
         onNewChat={onNewChat}
         onOpenChange={handleOpenChange}
         onRename={conversationList.rename}
+        onRestore={conversationList.restore}
         onRetry={conversationList.refresh}
         onSelect={onSelectConversation}
         side="left"

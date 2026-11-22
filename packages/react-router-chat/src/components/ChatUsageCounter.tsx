@@ -62,7 +62,7 @@ export const ChatUsageCounter = (
     <span
       aria-label={`${intent}: ${label}`}
       className={cn(
-        'text-muted-foreground inline-flex items-center gap-1.5 text-[0.7rem] tabular-nums',
+        'text-muted-foreground inline-flex items-center gap-1.5 text-[0.7rem] whitespace-nowrap tabular-nums',
         className,
       )}
       data-testid="ChatUsageCounter"

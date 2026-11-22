@@ -29,7 +29,7 @@ const renderGroup = (props: ChatToolCallGroupProps): RenderResult => {
 };
 
 describe('ChatToolCallGroup Component', () => {
-  test('summarizes the count and the active (running) step in the header', () => {
+  test('summarizes the sentence and the active (running) step in the header', () => {
     const component = renderGroup({
       tools: [
         tool({ name: 'getMcpTools', sortOrder: 0, status: 'succeeded' }),
@@ -41,13 +41,13 @@ describe('ChatToolCallGroup Component', () => {
     // rendered while the group is collapsed.
     const trigger = component.getByTestId('ChatToolCallGroup-trigger');
     expect(trigger).toHaveTextContent('shell');
-    expect(trigger).toHaveTextContent('· 2 actions');
+    expect(trigger).toHaveTextContent('· Ran 1 command and used 1 other tool');
     // aggregate is running while a member is still running
     expect(trigger).toHaveTextContent('running');
   });
 
-  test('the collapsed header names the active tool beside the count', () => {
-    // The exact spot that regressed to `name · 10 actions`: ten real reads whose
+  test('the collapsed header names the active tool beside the sentence summary', () => {
+    // The exact spot that regressed to `name · 10 actions` (now a sentence): ten real reads whose
     // header carried no information at all.
     const component = renderGroup({
       tools: Array.from({ length: 10 }, (_unused, index) =>
@@ -58,7 +58,7 @@ describe('ChatToolCallGroup Component', () => {
     const trigger = component.getByTestId('ChatToolCallGroup-trigger');
     expect(trigger).toHaveAttribute('aria-expanded', 'false');
     expect(trigger).toHaveTextContent('view_file');
-    expect(trigger).toHaveTextContent('· 10 actions');
+    expect(trigger).toHaveTextContent('· Read 10 files');
     expect(trigger).not.toHaveTextContent(/\bname\b/);
   });
 
@@ -80,7 +80,7 @@ describe('ChatToolCallGroup Component', () => {
     ).toHaveClass('truncate');
     expect(
       component.getByTestId('ChatToolCallGroup-trigger'),
-    ).toHaveTextContent('· 1 actions');
+    ).toHaveTextContent('· Used 1 tool');
   });
 
   test('a completed group shows a succeeded pill and the last step', () => {

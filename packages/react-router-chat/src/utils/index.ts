@@ -76,5 +76,6 @@ export * from './checkout-groups';
 export * from './checkoutSearchFilter';
 export * from './describeCheckouts';
 export * from './formatUsageLimitMessage';
+export * from './fuzzy-match';
 export * from './repository-identity';
 export * from './toggleCheckoutSelection';

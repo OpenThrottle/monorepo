@@ -219,6 +219,61 @@ describe('AgentConversationsRepository', () => {
     });
   });
 
+  describe('restoreConversation', () => {
+    it('sets a deleted conversation back to active and clears deleted_at', async () => {
+      mockRepository.findOne
+        .mockResolvedValueOnce({
+          ...mockConversation,
+          deletedAt: new Date('2026-11-18T00:00:00.000Z'),
+          status: AGENT_CONVERSATION_STATUSES.deleted,
+        })
+        .mockResolvedValueOnce({
+          ...mockConversation,
+          deletedAt: null,
+          status: AGENT_CONVERSATION_STATUSES.active,
+        });
+
+      const result = await repository.restoreConversation(
+        userId,
+        conversationId,
+      );
+
+      expect(mockRepository.findOne).toHaveBeenNthCalledWith(1, {
+        where: { id: conversationId, userId },
+        withDeleted: true,
+      });
+      expect(mockRepository.update).toHaveBeenCalledWith(
+        { id: conversationId, userId },
+        { deletedAt: null, status: AGENT_CONVERSATION_STATUSES.active },
+      );
+      expect(result.status).toBe(AGENT_CONVERSATION_STATUSES.active);
+    });
+
+    it('returns a non-deleted conversation unchanged without writing', async () => {
+      mockRepository.findOne.mockResolvedValue({
+        ...mockConversation,
+        status: AGENT_CONVERSATION_STATUSES.archived,
+      });
+
+      const result = await repository.restoreConversation(
+        userId,
+        conversationId,
+      );
+
+      expect(result.status).toBe(AGENT_CONVERSATION_STATUSES.archived);
+      expect(mockRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('throws when the conversation does not exist or is not owned', async () => {
+      mockRepository.findOne.mockResolvedValue(null);
+
+      await expect(
+        repository.restoreConversation(userId, conversationId),
+      ).rejects.toBeInstanceOf(NotFoundException);
+      expect(mockRepository.update).not.toHaveBeenCalled();
+    });
+  });
+
   describe('updateConversationTitle', () => {
     it('updates the title of an owned conversation', async () => {
       const result = await repository.updateConversationTitle(

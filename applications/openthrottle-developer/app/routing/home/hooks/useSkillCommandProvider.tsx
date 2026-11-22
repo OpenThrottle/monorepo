@@ -2,6 +2,10 @@ import type {
   ChatSlashCommand,
   ChatSlashCommandProvider,
 } from '@openthrottle/react-router-chat';
+import {
+  fuzzyScoreSkill,
+  rankByFuzzyMatch,
+} from '@openthrottle/react-router-chat';
 import * as React from 'react';
 
 import { MAX_SKILL_SUGGESTIONS } from '~/routing/home/config/composer-suggestions';
@@ -68,16 +72,8 @@ export const useSkillCommandProvider = (): ChatSlashCommandProvider => {
         query: string,
       ): Promise<readonly ChatSlashCommand[]> => {
         const skills = await loadListing();
-        const trimmed = query.trim().toLowerCase();
-        if (trimmed === '') {
-          return skills.slice(0, MAX_SKILL_SUGGESTIONS);
-        }
-        const matches = skills.filter(
-          (skill) =>
-            skill.slug.toLowerCase().includes(trimmed) ||
-            skill.description.toLowerCase().includes(trimmed),
-        );
-        return matches.slice(0, MAX_SKILL_SUGGESTIONS);
+        const ranked = rankByFuzzyMatch(skills, query, fuzzyScoreSkill);
+        return ranked.slice(0, MAX_SKILL_SUGGESTIONS);
       },
     };
   }, []);

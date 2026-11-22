@@ -156,6 +156,45 @@ export class AgentConversationsRepository extends BaseRepository<
   }
 
   /**
+   * @description Restores a soft-deleted owned conversation: sets `status` back to `'active'` and
+   * clears `deleted_at` in one statement, then returns the row. A conversation in any other status
+   * (active or archived, e.g. a stale second restore) is returned unchanged with no write.
+   * @throws NotFoundException when it does not exist or is someone else's.
+   */
+  async restoreConversation(
+    userId: string,
+    conversationId: string,
+  ): Promise<AgentConversation> {
+    const conversation = await this.repository.findOne({
+      where: { id: conversationId, userId },
+      withDeleted: true,
+    });
+
+    if (!conversation) {
+      throw new NotFoundException('Agent conversation not found');
+    }
+
+    if (conversation.status !== AGENT_CONVERSATION_STATUSES.deleted) {
+      return conversation;
+    }
+
+    await this.repository.update(
+      { id: conversationId, userId },
+      { deletedAt: null, status: AGENT_CONVERSATION_STATUSES.active },
+    );
+
+    const restored = await this.repository.findOne({
+      where: { id: conversationId, userId },
+    });
+
+    if (!restored) {
+      throw new NotFoundException('Agent conversation not found');
+    }
+
+    return restored;
+  }
+
+  /**
    * @description Updates the title on an owned conversation.
    */
   async updateConversationTitle(

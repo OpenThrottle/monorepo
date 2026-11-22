@@ -2,6 +2,7 @@ import {
   DeleteAgentConversationDocument,
   GetAgentConversationMessagesDocument,
   ListAgentConversationsDocument,
+  RestoreAgentConversationDocument,
   SendAgentMessageDocument,
   UpdateAgentConversationTitleDocument,
 } from '@openthrottle/openthrottle-developer-codegen';
@@ -15,7 +16,7 @@ import { AgentsRunChatTurnInputSchema } from '~/__generated__/schemas';
 
 /**
  * @description Persisted-conversation CRUD (list / load-messages / rename /
- * soft-delete) for the home + header chat sidebar/switcher. The CRUD logic is
+ * soft-delete / restore) for the home + header chat sidebar/switcher. The CRUD logic is
  * single-sourced in `@openthrottle/react-router-chat`
  * ({@link createAgentConversationsApi}); this module only supplies the app's
  * generated documents.
@@ -24,6 +25,7 @@ const agentConversations = createAgentConversationsApi({
   deleteDocument: DeleteAgentConversationDocument,
   getMessagesDocument: GetAgentConversationMessagesDocument,
   listDocument: ListAgentConversationsDocument,
+  restoreDocument: RestoreAgentConversationDocument,
   updateTitleDocument: UpdateAgentConversationTitleDocument,
 });
 
@@ -39,6 +41,8 @@ export const handleLoadAgentConversationMessagesIntent =
   agentConversations.handleLoadAgentConversationMessagesIntent;
 export const handleRenameAgentConversationIntent =
   agentConversations.handleRenameAgentConversationIntent;
+export const handleRestoreAgentConversationIntent =
+  agentConversations.handleRestoreAgentConversationIntent;
 
 // ---------------------------------------------------------------------------
 // Legacy non-streaming MCP-tool-router turn path (deliberately DELIMITED, kept).

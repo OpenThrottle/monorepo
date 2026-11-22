@@ -3,7 +3,12 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { useFileMentionProvider } from '../useFileMentionProvider';
 
-const paths = ['src/App.tsx', 'src/app-shell.ts', 'lib/util.ts'];
+const paths = [
+  'lib/util.ts',
+  'src/app-shell.ts',
+  'src/App.tsx',
+  'docs/app/guide.md',
+];
 
 const okResponse = (): Response => {
   return new Response(
@@ -41,7 +46,12 @@ describe('useFileMentionProvider', () => {
     expect(all).toEqual(paths);
 
     const filtered = await provider!.onQueryFiles('APP');
-    expect(filtered).toEqual(['src/App.tsx', 'src/app-shell.ts']);
+    // Basename matches first (shorter wins), directory-only matches last.
+    expect(filtered).toEqual([
+      'src/App.tsx',
+      'src/app-shell.ts',
+      'docs/app/guide.md',
+    ]);
 
     // Cached: the second query does not hit the network again.
     expect(fetchMock).toHaveBeenCalledTimes(1);

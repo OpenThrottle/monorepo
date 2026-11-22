@@ -1,8 +1,10 @@
+import { Toaster } from '@openthrottle/react-router-shadcn';
 import { act, render, renderHook } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
+import { CHAT_CONVERSATION_SIDEBAR_COPY } from '../../data/data.chat-conversation-sidebar.copy';
 import type { AgentConversationListItem } from '../../types';
 import { useChatConversationSidebar } from '../useChatConversationSidebar';
 
@@ -37,19 +39,26 @@ const RenameHarness = (props: RenameHarnessProps): React.ReactElement => {
 };
 
 describe('useChatConversationSidebar', () => {
-  test('starts with no editing, no draft, and no pending delete', () => {
+  test('starts with no editing, no draft, and no draft', () => {
     const { result } = renderHook(() =>
-      useChatConversationSidebar({ onDelete: vi.fn(), onRename: vi.fn() }),
+      useChatConversationSidebar({
+        onDelete: vi.fn(),
+        onRename: vi.fn(),
+        onRestore: vi.fn(),
+      }),
     );
     expect(result.current.editingId).toBeNull();
     expect(result.current.draftTitle).toBe('');
-    expect(result.current.pendingDeleteId).toBeNull();
   });
 
   describe('startRename', () => {
     test('seeds the draft from the conversation title', () => {
       const { result } = renderHook(() =>
-        useChatConversationSidebar({ onDelete: vi.fn(), onRename: vi.fn() }),
+        useChatConversationSidebar({
+          onDelete: vi.fn(),
+          onRename: vi.fn(),
+          onRestore: vi.fn(),
+        }),
       );
       act(() => {
         result.current.startRename(conversation);
@@ -60,7 +69,11 @@ describe('useChatConversationSidebar', () => {
 
     test('falls back to an empty draft for a null title', () => {
       const { result } = renderHook(() =>
-        useChatConversationSidebar({ onDelete: vi.fn(), onRename: vi.fn() }),
+        useChatConversationSidebar({
+          onDelete: vi.fn(),
+          onRename: vi.fn(),
+          onRestore: vi.fn(),
+        }),
       );
       act(() => {
         result.current.startRename({ ...conversation, title: null });
@@ -72,7 +85,11 @@ describe('useChatConversationSidebar', () => {
   describe('cancelRename', () => {
     test('clears the editing id and draft', () => {
       const { result } = renderHook(() =>
-        useChatConversationSidebar({ onDelete: vi.fn(), onRename: vi.fn() }),
+        useChatConversationSidebar({
+          onDelete: vi.fn(),
+          onRename: vi.fn(),
+          onRestore: vi.fn(),
+        }),
       );
       act(() => {
         result.current.startRename(conversation);
@@ -88,7 +105,11 @@ describe('useChatConversationSidebar', () => {
   describe('setDraftTitle', () => {
     test('replaces the draft text', () => {
       const { result } = renderHook(() =>
-        useChatConversationSidebar({ onDelete: vi.fn(), onRename: vi.fn() }),
+        useChatConversationSidebar({
+          onDelete: vi.fn(),
+          onRename: vi.fn(),
+          onRestore: vi.fn(),
+        }),
       );
       act(() => {
         result.current.setDraftTitle('New draft');
@@ -102,7 +123,11 @@ describe('useChatConversationSidebar', () => {
       const user = userEvent.setup();
       const onRename = vi.fn();
       const { result } = renderHook(() =>
-        useChatConversationSidebar({ onDelete: vi.fn(), onRename }),
+        useChatConversationSidebar({
+          onDelete: vi.fn(),
+          onRename,
+          onRestore: vi.fn(),
+        }),
       );
       act(() => {
         result.current.startRename(conversation);
@@ -127,7 +152,11 @@ describe('useChatConversationSidebar', () => {
       const user = userEvent.setup();
       const onRename = vi.fn();
       const { result } = renderHook(() =>
-        useChatConversationSidebar({ onDelete: vi.fn(), onRename }),
+        useChatConversationSidebar({
+          onDelete: vi.fn(),
+          onRename,
+          onRestore: vi.fn(),
+        }),
       );
       act(() => {
         result.current.startRename(conversation);
@@ -151,7 +180,11 @@ describe('useChatConversationSidebar', () => {
       const user = userEvent.setup();
       const onRename = vi.fn();
       const { result } = renderHook(() =>
-        useChatConversationSidebar({ onDelete: vi.fn(), onRename }),
+        useChatConversationSidebar({
+          onDelete: vi.fn(),
+          onRename,
+          onRestore: vi.fn(),
+        }),
       );
       act(() => {
         result.current.startRename(conversation);
@@ -176,7 +209,11 @@ describe('useChatConversationSidebar', () => {
       const user = userEvent.setup();
       const onRename = vi.fn();
       const { result } = renderHook(() =>
-        useChatConversationSidebar({ onDelete: vi.fn(), onRename }),
+        useChatConversationSidebar({
+          onDelete: vi.fn(),
+          onRename,
+          onRestore: vi.fn(),
+        }),
       );
       act(() => {
         result.current.startRename(conversation);
@@ -197,55 +234,29 @@ describe('useChatConversationSidebar', () => {
   });
 
   describe('delete flow', () => {
-    test('requestDelete queues a pending delete', () => {
-      const { result } = renderHook(() =>
-        useChatConversationSidebar({ onDelete: vi.fn(), onRename: vi.fn() }),
-      );
-      act(() => {
-        result.current.requestDelete('c1');
-      });
-      expect(result.current.pendingDeleteId).toBe('c1');
-    });
-
-    test('confirmDelete invokes onDelete with the pending id and clears it', () => {
+    test('deleteConversation deletes at once and toasts with an Undo action', async () => {
       const onDelete = vi.fn();
+      const onRestore = vi.fn();
       const { result } = renderHook(() =>
-        useChatConversationSidebar({ onDelete, onRename: vi.fn() }),
+        useChatConversationSidebar({ onDelete, onRename: vi.fn(), onRestore }),
       );
+      const component = render(<Toaster />);
+      const user = userEvent.setup();
+
       act(() => {
-        result.current.requestDelete('c1');
+        result.current.deleteConversation(conversation);
       });
-      act(() => {
-        result.current.confirmDelete();
-      });
+
       expect(onDelete).toHaveBeenCalledWith('c1');
-      expect(result.current.pendingDeleteId).toBeNull();
-    });
+      expect(onRestore).not.toHaveBeenCalled();
 
-    test('confirmDelete is a no-op when nothing is pending', () => {
-      const onDelete = vi.fn();
-      const { result } = renderHook(() =>
-        useChatConversationSidebar({ onDelete, onRename: vi.fn() }),
+      await user.click(
+        await component.findByRole('button', {
+          name: CHAT_CONVERSATION_SIDEBAR_COPY.deleteUndo,
+        }),
       );
-      act(() => {
-        result.current.confirmDelete();
-      });
-      expect(onDelete).not.toHaveBeenCalled();
-    });
 
-    test('resetPendingDelete dismisses without deleting', () => {
-      const onDelete = vi.fn();
-      const { result } = renderHook(() =>
-        useChatConversationSidebar({ onDelete, onRename: vi.fn() }),
-      );
-      act(() => {
-        result.current.requestDelete('c1');
-      });
-      act(() => {
-        result.current.resetPendingDelete();
-      });
-      expect(result.current.pendingDeleteId).toBeNull();
-      expect(onDelete).not.toHaveBeenCalled();
+      expect(onRestore).toHaveBeenCalledWith(conversation);
     });
   });
 });
