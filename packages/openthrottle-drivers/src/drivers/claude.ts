@@ -135,6 +135,11 @@ export const claudeDriver = defineDriver({
   },
   capabilities,
   discoverModels,
+  // An API-key login and an operator-isolated config dir; a subscription login is found through `HOME` + `USER` (Keychain).
+  hostEnv: {
+    keys: ['ANTHROPIC_API_KEY', 'CLAUDE_CONFIG_DIR'],
+    prefixes: [],
+  },
   id: 'claude',
   install: {
     installerShell: 'bash',

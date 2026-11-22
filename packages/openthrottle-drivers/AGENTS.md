@@ -35,6 +35,12 @@ Grok, OpenCode). Each CLI is one `defineDriver(...)` module; a shared engine
   `plan_runs.driver` CHECK (`plan_runs_driver_check`, migration 194) + server
   `PlanRunDriver`/guard enumerate the same set. Add a migration + widen
   those surfaces when you add a runnable id.
+- **The child never inherits `process.env`.** `buildChildEnv` (engine) admits only
+  `BASE_CHILD_ENV_KEYS`, the driver's `hostEnv`, `OPENTHROTTLE_AGENT_ENV_PASSTHROUGH`
+  (exact names) and `config.env`. A CLI that needs a new login variable gets it in its
+  `hostEnv` — never by widening the base or adding a broad prefix. The canaries
+  (`run-agent-prompt/__tests__/child-env.canary.test.ts` and the OT Loop one in the
+  server's `ot-loop.utils.test.ts`) fail if a server secret reaches a child.
 - Built package (real `build`/`build-package`, `exports` → `dist/`) — server consumes
   it at runtime, so relative imports use `.ts` extensions. Tag public API `@public`.
 

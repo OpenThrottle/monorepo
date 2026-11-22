@@ -144,6 +144,18 @@ export const antigravityDriver = defineDriver({
   },
   capabilities,
   discoverModels,
+  // agy authenticates through Google: an API key or application-default credentials.
+  hostEnv: {
+    keys: [
+      'AGY_ADC_AUTH',
+      'GEMINI_API_KEY',
+      'GOOGLE_API_KEY',
+      'GOOGLE_APPLICATION_CREDENTIALS',
+      'GOOGLE_CLOUD_LOCATION',
+      'GOOGLE_CLOUD_PROJECT',
+    ],
+    prefixes: [],
+  },
   id: 'antigravity',
   install: {
     installerShell: 'bash',

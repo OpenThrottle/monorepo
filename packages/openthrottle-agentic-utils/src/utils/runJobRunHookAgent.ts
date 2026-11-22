@@ -32,7 +32,7 @@ export interface RunJobRunHookAgentParams {
   readonly cwd?: string;
   readonly driver: WorkflowConfigRunner;
   readonly effort?: DriverReasoningEffort;
-  /** Extra env merged over `process.env`. */
+  /** Explicit env for the child, layered over the drivers engine's allowlist (never `process.env`). */
   readonly env?: Readonly<Record<string, string>>;
   /** Position of the hook within its phase; log attribution only. */
   readonly hookIndex: number;

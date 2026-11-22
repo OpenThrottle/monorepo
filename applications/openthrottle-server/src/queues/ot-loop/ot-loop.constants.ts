@@ -17,8 +17,9 @@ export const OT_LOOP_NARRATION_PREFIX = '[ot-loop]';
 
 /**
  * @description Environment variables the OT MCP authenticates with (§ 2, prevention). The worker's
- * env sets each to an empty string: a driver's child env is the inherited `process.env` merged
- * under the extra variables, so blanking is the only way to remove a key. The MCP treats a blank
+ * env sets each to an empty string. The drivers engine no longer passes the parent env through, but
+ * an install's `OPENTHROTTLE_AGENT_ENV_PASSTHROUGH` could still name one, and the run's explicit
+ * env wins over it, so the blank holds whatever the operator configures. The MCP treats a blank
  * token as missing and fails auth instead of writing. `OT_MCP_AUTH_TOKEN_ENV_FILE` is blanked too
  * because the MCP re-reads its token from that file mid-session.
  */

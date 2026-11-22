@@ -1,3 +1,5 @@
+import { CHAT_BASE_ENV_KEYS } from '../host-env.ts';
+
 /**
  * Env var pointing headless chat spawns at a dedicated claude config directory
  * (`CLAUDE_CONFIG_DIR`) that loads NO user plugins. Every headless `--print`
@@ -26,16 +28,7 @@ export const CLAUDE_CONFIG_DIR_KEY = 'CLAUDE_CONFIG_DIR';
  * 2.1.270). Shared by the chat spawn and discovery's auth probe so the probe
  * sees exactly the login a chat turn would.
  */
-export const CLAUDE_HOST_ENV_KEYS = [
-  'HOME',
-  'LANG',
-  'LC_ALL',
-  'LOGNAME',
-  'PATH',
-  'TERM',
-  'TMPDIR',
-  'USER',
-] as const;
+export const CLAUDE_HOST_ENV_KEYS = CHAT_BASE_ENV_KEYS;
 
 /**
  * The dedicated plugin-free config dir for headless chat, or undefined to leave

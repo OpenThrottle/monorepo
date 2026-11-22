@@ -118,8 +118,9 @@ Binary overrides — each names the executable for one driver; unset (or blank) 
 One rule (`resolveDriverBinary` in `@openthrottle/openthrottle-drivers`) applies on every
 surface that spawns a CLI: agent discovery and version probes, chat, install/update, and the
 run engine behind plan runs (the OT Loop job) and scheduled agent jobs. The
-run engine reads the override from the child's effective env — the server's `process.env`
-plus any per-run `env` — so a stub named here is the binary a run actually spawns.
+run engine reads the override from the parent's env — the server's `process.env` plus any
+per-run `env` — so a stub named here is the binary a run actually spawns. The child itself
+does not get that env: see [Agent child environment](#agent-child-environment).
 
 | Variable                        | Driver              |
 | ------------------------------- | ------------------- |
@@ -135,6 +136,45 @@ plus any per-run `env` — so a stub named here is the binary a run actually spa
 | `OPENTHROTTLE_CLAUDE_CONFIG_DIR` | `CLAUDE_CONFIG_DIR` handed to spawned Claude runs | ❌                               |
 | `OT_AGENT_CLI_INSTALL_ENABLED`   | Gates server-side install/update of agent CLIs    | ✅ server `.env.default` `false` |
 | `OPENTHROTTLE_AGENT_DEV_CWD`     | Dev-only cwd override for chat streams            | ❌                               |
+
+### Agent child environment
+
+A headless agent CLI — an OT Loop plan run, a scheduled agent job or a job-run / lifecycle hook agent — **does not
+inherit the server's environment.** The drivers engine (`buildAllowlistedChildEnv` in
+`@openthrottle/openthrottle-drivers`) builds the child env from an allowlist:
+
+1. **Base keys**: `HOME`, `LANG`, `LC_ALL`, `LOGNAME`, `PATH`, `SHELL`, `TERM`, `TMPDIR`, `USER`.
+2. **The driver's host-login keys** (`AgentDriver.hostEnv`, the same list the chat adapters use):
+   claude `ANTHROPIC_API_KEY`, `CLAUDE_CONFIG_DIR`; codex `CODEX_HOME`; grok `XAI_API_KEY`;
+   antigravity `AGY_ADC_AUTH`, `GEMINI_API_KEY`, `GOOGLE_API_KEY`, `GOOGLE_APPLICATION_CREDENTIALS`,
+   `GOOGLE_CLOUD_LOCATION`, `GOOGLE_CLOUD_PROJECT`; cursor `CURSOR_*`, `AGENT_CLI_CREDENTIAL_STORE`,
+   `HTTP_PROXY`, `HTTPS_PROXY`, `NO_PROXY`, `XDG_CACHE_HOME`, `XDG_CONFIG_HOME`; opencode none.
+3. **The install's passthrough list**, `OPENTHROTTLE_AGENT_ENV_PASSTHROUGH` (below).
+4. **The run's explicit env**, which wins: OT Loop passes its run identity and sets its OT
+   credentials to empty strings; scheduled jobs and hook agents add nothing.
+
+Everything else (database passwords, JWT secrets, provider, cloud and GitHub tokens) is dropped.
+The engine logs the **names** of the dropped variables, never their values, once per run, at
+debug level on the run's `DriverLogger`.
+
+| Variable                             | Used for                                                                                                                                                                                                | Defaults                                             |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `OPENTHROTTLE_AGENT_ENV_PASSTHROUGH` | Extra host variables every agent child gets, as a comma- or whitespace-separated list of **exact names** (`GH_TOKEN,NX_DAEMON,HTTPS_PROXY`). Wildcards and malformed entries (`NX_*`, `*`) are refused. | Commented out in server `.env.default`; unset → none |
+
+The run's explicit env still wins over a passthrough entry, so naming `OPENTHROTTLE_MCP_AUTH_TOKEN`
+here does not hand OT Loop workers a token: they keep the blank.
+
+**Operator migration note.** Before this change every headless run inherited the whole server
+env. If your agent runs relied on something outside the lists above, name it explicitly:
+
+- `GH_TOKEN` / `GITHUB_TOKEN` — an agent that runs `gh` without a keychain login.
+- `NX_*` — name each one you need (`NX_DAEMON`, `NX_NO_CLOUD`, …); there is no wildcard.
+- Proxy and TLS variables (`HTTP_PROXY`, `HTTPS_PROXY`, `NO_PROXY`, `NODE_EXTRA_CA_CERTS`,
+  `SSL_CERT_FILE`) for drivers other than cursor, which already admits the proxy trio.
+- `SSH_AUTH_SOCK` — an agent that pushes over SSH.
+
+Every name you add is a variable a prompt-injected agent can read; webhook-triggered jobs run
+attacker-authored text ([webhook-triggered-agent-jobs.md](../openthrottle/webhook-triggered-agent-jobs.md), T4).
 
 ### Agent discovery cache (all read in `agent-discovery.service.ts`, none in `.env.default`)
 
@@ -269,7 +309,7 @@ Commented out (documented but inactive): `OPENTHROTTLE_CHECKOUT_ROOT`,
 `OT_AGENT_CLI_INSTALL_ENABLED`, `OPENTHROTTLE_PLAN_RUN_DEBUG`,
 `OT_SERVER_DEV_JSONL_LOGGING`.
 Commented out: `OPENTHROTTLE_WORKER_GRAPHQL_URL`, `OT_SERVER_DEV_JSONL_LOG_DIR`,
-`OT_QUEUE_PREFIX`.
+`OT_QUEUE_PREFIX`, `OPENTHROTTLE_AGENT_ENV_PASSTHROUGH`.
 
 **Shipped in `applications/openthrottle-developer/.env.default`** (2):
 `OPENTHROTTLE_GITHUB_OWNER`, `OPENTHROTTLE_GITHUB_REPO`.

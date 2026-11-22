@@ -95,6 +95,11 @@ export const opencodeDriver = defineDriver({
   },
   capabilities,
   discoverModels,
+  // OpenCode reads its login from its config under `HOME`; the endpoint config travels on the command line.
+  hostEnv: {
+    keys: [],
+    prefixes: [],
+  },
   id: 'opencode',
   install: {
     installerShell: 'bash',

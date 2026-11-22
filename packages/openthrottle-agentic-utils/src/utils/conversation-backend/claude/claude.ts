@@ -16,6 +16,8 @@
 
 import { spawn } from 'node:child_process';
 
+import { claudeDriver } from '@openthrottle/openthrottle-drivers';
+
 import { NdjsonBuffer } from '../cursor-agent/ndjson.ts';
 import {
   resolveAgentTimeouts,
@@ -23,6 +25,7 @@ import {
 } from '../cursor-agent/teardown.ts';
 import { describeExit } from '../describeExit.ts';
 import { withFileMentions } from '../file-mentions.ts';
+import { pickChatHostEnv } from '../host-env.ts';
 import { withKeepalive } from '../keepalive.ts';
 import type {
   ConversationBackend,
@@ -33,21 +36,9 @@ import { CONVERSATION_STREAM_CHUNK_KINDS } from '../types.ts';
 import { buildClaudeArgv, CLAUDE_BIN_ENV, CLAUDE_DEFAULT_BIN } from './argv.ts';
 import {
   CLAUDE_CONFIG_DIR_KEY,
-  CLAUDE_HOST_ENV_KEYS,
   resolveClaudeConfigDirOverride,
 } from './config-dir.ts';
 import { mapClaudeEvent, readClaudeContextTokens } from './events.ts';
-
-/**
- * Env vars the child is allowed to inherit (host login + locale), nothing else.
- * `CLAUDE_CONFIG_DIR` is inherited too, so an operator who already isolates the
- * host claude config dir gets that isolation without the OT-specific override.
- */
-const ALLOWED_ENV_KEYS = [
-  'ANTHROPIC_API_KEY',
-  CLAUDE_CONFIG_DIR_KEY,
-  ...CLAUDE_HOST_ENV_KEYS,
-] as const;
 
 /**
  * Resolve the binary: explicit env override, else `claude` off PATH.
@@ -69,19 +60,7 @@ function buildScrubbedEnv(
   env: NodeJS.ProcessEnv = process.env,
   extra?: Readonly<Record<string, string>>,
 ): NodeJS.ProcessEnv {
-  const scrubbed: NodeJS.ProcessEnv = {};
-  for (const key of ALLOWED_ENV_KEYS) {
-    const value = env[key];
-    if (value !== undefined) {
-      scrubbed[key] = value;
-    }
-  }
-  if (extra !== undefined) {
-    for (const [key, value] of Object.entries(extra)) {
-      scrubbed[key] = value;
-    }
-  }
-  return scrubbed;
+  return pickChatHostEnv(env, claudeDriver.hostEnv, extra);
 }
 
 /**

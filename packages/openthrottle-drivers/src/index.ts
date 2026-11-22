@@ -12,6 +12,7 @@ export * from './run-agent-prompt/index.ts';
 export * from './types/index.ts';
 export * from './utils/account-error.ts';
 export * from './utils/binary.ts';
+export * from './utils/child-env.ts';
 export * from './utils/child-kill.ts';
 export * from './utils/claude-output.ts';
 export * from './utils/cursor-config.ts';

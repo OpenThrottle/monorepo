@@ -124,6 +124,11 @@ export const grokDriver = defineDriver({
   },
   capabilities,
   discoverModels,
+  // Grok authenticates with an xAI API key.
+  hostEnv: {
+    keys: ['XAI_API_KEY'],
+    prefixes: [],
+  },
   id: 'grok',
   install: {
     installerShell: 'bash',

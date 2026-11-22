@@ -112,6 +112,11 @@ export const codexDriver = defineDriver({
     return `${escapeShellArg(config.bin ?? 'codex')} exec${outputFlag} --sandbox workspace-write --skip-git-repo-check${endpointFlags}${effortFlag}${modelFlag} "${safePrompt}"`;
   },
   capabilities,
+  // Codex keeps its login under `CODEX_HOME` (default `~/.codex`).
+  hostEnv: {
+    keys: ['CODEX_HOME'],
+    prefixes: [],
+  },
   id: 'codex',
   install: {
     installerShell: 'sh',

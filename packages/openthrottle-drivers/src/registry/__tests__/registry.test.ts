@@ -29,6 +29,7 @@ const fakeDriver = (id: string): AgentDriver => {
       worktree: false,
       worktreeBase: false,
     },
+    hostEnv: { keys: [], prefixes: [] },
     id,
     label: id,
     versionArgs: ['--version'],

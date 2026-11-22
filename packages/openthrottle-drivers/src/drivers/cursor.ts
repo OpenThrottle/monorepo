@@ -112,6 +112,19 @@ export const cursorDriver = defineDriver({
   // Stops cursor writing a `Co-authored-by: Cursor` trailer — see utils/cursor-config.ts.
   childEnv: cursorAttributionOffEnv,
   discoverModels,
+  // Mirrors the chat adapter's list: the credential-store selector, the proxy trio (cursor has no network route behind a proxy without it), the XDG dirs that locate its config and compile cache, and `CURSOR_*`, which is cursor's own configuration by construction.
+  hostEnv: {
+    keys: [
+      'AGENT_CLI_CREDENTIAL_STORE',
+      'SHELL', // cursor shells out for tool calls; listed so chat (whose base omits it) keeps it.
+      'HTTPS_PROXY',
+      'HTTP_PROXY',
+      'NO_PROXY',
+      'XDG_CACHE_HOME',
+      'XDG_CONFIG_HOME',
+    ],
+    prefixes: ['CURSOR_'],
+  },
   id: 'cursor',
   install: {
     installerShell: 'bash',

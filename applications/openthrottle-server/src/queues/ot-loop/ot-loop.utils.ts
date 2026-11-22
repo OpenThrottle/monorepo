@@ -75,9 +75,9 @@ export const toTimeoutMs = (
 };
 
 /**
- * @description The env override that removes the OT credentials from the worker (§ 2): every
- * credential variable set to an empty string, since a driver's child env is merged over
- * `process.env` and cannot delete a key.
+ * @description The worker's explicit env (§ 2): every OT credential variable set to an empty
+ * string. The engine's allowlist already keeps the server env out; the blanks win over any
+ * passthrough an install configures.
  */
 export const buildWorkerEnv = (): Record<string, string> => {
   return Object.fromEntries(

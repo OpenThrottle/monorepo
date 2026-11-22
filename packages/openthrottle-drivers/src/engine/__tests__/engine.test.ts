@@ -59,6 +59,7 @@ const testDriver: AgentDriver = defineDriver({
     worktree: false,
     worktreeBase: false,
   },
+  hostEnv: { keys: ['ECHO_LOGIN'], prefixes: ['ECHO_CFG_'] },
   id: 'echo',
   label: 'echo-driver',
   versionArgs: ['--version'],
@@ -833,14 +834,14 @@ describe('plugin-dir delivery stamp', () => {
   });
 
   describe('when no plugin dir is carried', () => {
-    it('leaves the env inherited for an empty or blank list', () => {
+    it('does not stamp for an empty or blank list', () => {
       runDriverSync(pluginDriver, {
         iteration: 1,
         pluginDirs: ['  '],
         prompt: 'hi',
       });
 
-      expect(spawnedEnv()).toBeUndefined();
+      expect(spawnedEnv()?.OPENTHROTTLE_HOOK_DELIVERY).toBeUndefined();
     });
 
     it('does not stamp a driver without the pluginDir capability', () => {
@@ -850,7 +851,7 @@ describe('plugin-dir delivery stamp', () => {
         prompt: 'hi',
       });
 
-      expect(spawnedEnv()).toBeUndefined();
+      expect(spawnedEnv()?.OPENTHROTTLE_HOOK_DELIVERY).toBeUndefined();
     });
   });
 });
@@ -905,10 +906,134 @@ describe('driver childEnv', () => {
   });
 
   describe('when the driver adds no childEnv', () => {
-    it('leaves the env inherited', () => {
+    it('adds nothing beyond the allowlist', () => {
       runDriverSync(testDriver, { iteration: 1, prompt: 'hi' });
 
-      expect(spawnedEnv()).toBeUndefined();
+      expect(spawnedEnv()?.[CURSOR_CONFIG_DIR_ENV]).toBeUndefined();
+    });
+  });
+});
+
+describe('allowlisted child env', () => {
+  const SENTINEL = 'sentinel-secret-value';
+
+  beforeEach(() => {
+    vi.mocked(spawnSync).mockReset();
+    vi.mocked(spawnSync).mockReturnValue({
+      output: [''],
+      pid: 0,
+      signal: null,
+      status: 0,
+      stderr: '',
+      stdout: '',
+    });
+    vi.stubEnv('POSTGRES_PASSWORD', SENTINEL);
+    vi.stubEnv('OT_CANARY_SECRET', SENTINEL);
+    vi.stubEnv('ECHO_LOGIN', 'echo-login');
+    vi.stubEnv('ECHO_CFG_DIR', '/cfg');
+    vi.stubEnv('HOME', '/home/agent');
+    vi.stubEnv('PATH', '/usr/bin');
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
+  });
+
+  const spawnedEnv = (): NodeJS.ProcessEnv | undefined => {
+    return vi.mocked(spawnSync).mock.calls[0]?.[2]?.env;
+  };
+
+  describe('when the server env carries secrets', () => {
+    it('keeps every sentinel out of the child', () => {
+      runDriverSync(testDriver, { iteration: 1, prompt: 'hi' });
+
+      expect(Object.values(spawnedEnv() ?? {})).not.toContain(SENTINEL);
+      expect(spawnedEnv()?.POSTGRES_PASSWORD).toBeUndefined();
+    });
+
+    it('keeps the sentinels out on the async path too', async () => {
+      const child = asChildProcess(new EventEmitter());
+      child.stdout = new PassThrough();
+      child.stderr = new PassThrough();
+      vi.mocked(spawn).mockReturnValue(child);
+
+      const promise = runDriverAsync(testDriver, {
+        iteration: 1,
+        prompt: 'go',
+      });
+      child.emit('close', 0);
+      await promise;
+
+      const env = vi.mocked(spawn).mock.calls.at(-1)?.[2]?.env;
+      expect(Object.values(env ?? {})).not.toContain(SENTINEL);
+    });
+  });
+
+  describe('when a key is allowlisted', () => {
+    it('admits base keys, driver keys and driver prefixes', () => {
+      runDriverSync(testDriver, { iteration: 1, prompt: 'hi' });
+
+      expect(spawnedEnv()).toMatchObject({
+        ECHO_CFG_DIR: '/cfg',
+        ECHO_LOGIN: 'echo-login',
+        HOME: '/home/agent',
+        PATH: '/usr/bin',
+      });
+    });
+
+    it('admits the caller env, blank values included', () => {
+      runDriverSync(testDriver, {
+        env: { OPENTHROTTLE_MCP_AUTH_TOKEN: '', OT_PLAN_ID: 'p1' },
+        iteration: 1,
+        prompt: 'hi',
+      });
+
+      expect(spawnedEnv()).toMatchObject({
+        OPENTHROTTLE_MCP_AUTH_TOKEN: '',
+        OT_PLAN_ID: 'p1',
+      });
+    });
+
+    it('admits a name the install passes through', () => {
+      vi.stubEnv('GH_TOKEN', 'gh-value');
+      vi.stubEnv('OPENTHROTTLE_AGENT_ENV_PASSTHROUGH', 'GH_TOKEN');
+      runDriverSync(testDriver, { iteration: 1, prompt: 'hi' });
+
+      expect(spawnedEnv()?.GH_TOKEN).toBe('gh-value');
+      expect(spawnedEnv()?.POSTGRES_PASSWORD).toBeUndefined();
+    });
+  });
+
+  describe('when the passthrough list holds a wildcard', () => {
+    it('never expands it', () => {
+      vi.stubEnv('OPENTHROTTLE_AGENT_ENV_PASSTHROUGH', 'POSTGRES_*,*');
+      runDriverSync(testDriver, { iteration: 1, prompt: 'hi' });
+
+      expect(spawnedEnv()?.POSTGRES_PASSWORD).toBeUndefined();
+    });
+  });
+
+  describe('when a logger is injected', () => {
+    it('logs dropped key names once, never their values', () => {
+      const debug = vi.fn();
+      runDriverSync(
+        testDriver,
+        { iteration: 1, prompt: 'hi' },
+        { logger: { debug, verbose: vi.fn() } },
+      );
+
+      const envLogs = debug.mock.calls.filter(
+        ([message]) => message === 'driver child env allowlisted',
+      );
+      expect(envLogs).toHaveLength(1);
+      expect(envLogs[0]?.[1]).toMatchObject({
+        droppedKeys: expect.arrayContaining([
+          'OT_CANARY_SECRET',
+          'POSTGRES_PASSWORD',
+        ]),
+      });
+      expect(JSON.stringify(debug.mock.calls)).not.toContain(SENTINEL);
     });
   });
 });

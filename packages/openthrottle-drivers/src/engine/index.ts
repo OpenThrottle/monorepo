@@ -21,6 +21,7 @@ import type {
 } from '../types/index.ts';
 import type { AgentAccountError } from '../utils/account-error.ts';
 import { resolveDriverBinary } from '../utils/binary.ts';
+import { buildAllowlistedChildEnv } from '../utils/child-env.ts';
 import { escalateKill } from '../utils/child-kill.ts';
 import type { UsageLimit } from '../utils/claude-output.ts';
 import type { DriverLogger } from '../utils/logger.ts';
@@ -113,25 +114,35 @@ const carriesPluginDir = (
 };
 
 /**
- * @description Child env: `undefined` (inherit `process.env`, the historical behavior) unless the
- * caller supplied extra variables, the driver adds its own ({@link AgentDriver.childEnv}), or the
- * run carries `--plugin-dir`, in which case the child is stamped `OPENTHROTTLE_HOOK_DELIVERY=plugin-dir`.
- * The driver's variables win over `config.env` (cursor's attribution-off config must hold whatever
- * the caller passed), and the stamp wins over both: the hooks must report the leg the run really used.
+ * @description Child env, built from the allowlist and never inherited wholesale
+ * ({@link buildAllowlistedChildEnv}): base keys, the driver's {@link AgentDriver.hostEnv}, the
+ * install's named passthrough list, then the caller's `config.env`. The driver's variables win over
+ * `config.env` (cursor's attribution-off config must hold whatever the caller passed), and the
+ * plugin-dir stamp wins over both: the hooks must report the leg the run really used. The names of
+ * the host variables left behind — never their values — are logged once for the run.
  */
-const mergeChildEnv = (
+const buildChildEnv = (
   driver: AgentDriver,
   config: DriverInvocationConfig,
-): NodeJS.ProcessEnv | undefined => {
+  logger: DriverLogger,
+): NodeJS.ProcessEnv => {
   const stamped = carriesPluginDir(driver, config);
   const driverEnv = driver.childEnv?.({ ...process.env, ...config.env });
-  if (config.env === undefined && driverEnv === undefined && !stamped) {
-    return undefined;
-  }
+  const allowlisted = buildAllowlistedChildEnv({
+    extras: config.env,
+    hostEnv: process.env,
+    hostEnvPolicy: driver.hostEnv,
+  });
+
+  logger.debug('driver child env allowlisted', {
+    droppedKeys: allowlisted.dropped,
+    iteration: config.iteration,
+    refusedPassthrough: allowlisted.refusedPassthrough,
+    runnerLabel: driver.label,
+  });
 
   return {
-    ...process.env,
-    ...config.env,
+    ...allowlisted.env,
     ...driverEnv,
     ...(stamped ? { [HOOK_DELIVERY_ENV]: 'plugin-dir' } : {}),
   };
@@ -238,7 +249,7 @@ export const runDriverSync = (
   const child = spawnSync(command, [], {
     cwd,
     encoding: 'utf-8',
-    env: mergeChildEnv(driver, config),
+    env: buildChildEnv(driver, config, logger),
     shell: true,
     stdio: DRIVER_STDIO,
   });
@@ -315,7 +326,7 @@ export const runDriverAsync = (
 
     const child: ChildProcess = spawn(command, [], {
       cwd,
-      env: mergeChildEnv(driver, config),
+      env: buildChildEnv(driver, config, logger),
       shell: true,
       stdio: DRIVER_STDIO,
     });
