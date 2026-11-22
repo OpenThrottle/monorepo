@@ -129,7 +129,8 @@ export class AgentConversationsRepository extends BaseRepository<
   /**
    * @description Soft deletes an owned conversation: sets `status` to `'deleted'` and stamps
    * `deleted_at` in one statement, then returns the deleted row. Its messages stay until data
-   * retention purges the conversation 30 days later.
+   * retention purges the conversation 30 days later. `updated_at` is left unchanged: deleting is
+   * not activity, so the row keeps its place in the list (trigger from migration 193).
    * @throws NotFoundException when it does not exist, is already deleted or is someone else's.
    */
   async softDeleteConversation(
@@ -159,6 +160,8 @@ export class AgentConversationsRepository extends BaseRepository<
    * @description Restores a soft-deleted owned conversation: sets `status` back to `'active'` and
    * clears `deleted_at` in one statement, then returns the row. A conversation in any other status
    * (active or archived, e.g. a stale second restore) is returned unchanged with no write.
+   * `updated_at` is left unchanged, so an Undo puts the conversation back in its original list
+   * position (trigger from migration 193).
    * @throws NotFoundException when it does not exist or is someone else's.
    */
   async restoreConversation(
