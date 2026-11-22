@@ -744,8 +744,14 @@ jobs:
           # above. Widening `test` stays evidence-gated. Which targets run, and
           # how, is the workflow's business — the partitioner only answers which
           # projects, and which slice of a sharded suite, are mine.
+          #
+          # `check-client-boundary` is a no-op on the React Router apps that pulls
+          # in their `build` via dependsOn — the ONLY app build CI runs. The
+          # `clientNodeBoundary` Vite plugin fails that build when a Node builtin
+          # is reachable from browser code; lint and typecheck pass when that
+          # happens, so this is the only place it is caught (OT plan a69a8b4c).
           if [ -n "$selector" ]; then
-            NX_PROFILE=.nx/profiles/lint-typecheck.json pnpm exec nx affected --exclude="*,$selector" --target=lint,typecheck,bundle-hooks-check --parallel ${{ env.OUTPUT_DEBUG }}
+            NX_PROFILE=.nx/profiles/lint-typecheck.json pnpm exec nx affected --exclude="*,$selector" --target=lint,typecheck,bundle-hooks-check,check-client-boundary --parallel ${{ env.OUTPUT_DEBUG }}
           fi
 
           # `testSelector`, not `selector`: a suite-sharded project is absent from

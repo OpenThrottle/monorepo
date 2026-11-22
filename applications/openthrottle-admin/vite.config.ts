@@ -1,6 +1,7 @@
 import { reactRouter } from '@react-router/dev/vite';
 import tailwindcss from '@tailwindcss/vite';
 import { createAppVersionDefine } from '@tools/dotfiles/app-version';
+import { clientNodeBoundary } from '@tools/dotfiles/client-node-boundary';
 import { reactRouterDevTools } from 'react-router-devtools';
 import type { ConfigEnv } from 'vite';
 import { defineConfig, loadEnv } from 'vite';
@@ -38,6 +39,8 @@ export default (config: ConfigEnv) => {
       devtoolsJson(),
       useReactRouterDevTools && reactRouterDevTools(), // NOTE: Must come before reactRouter()
       reactRouter(),
+      // Fails the client build when a Node builtin is reachable from browser code.
+      clientNodeBoundary(),
       tailwindcss(),
     ],
     resolve: {
