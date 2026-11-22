@@ -1,13 +1,10 @@
 import * as React from 'react';
 
 import { usePointerDrag } from '../hooks/usePointerDrag';
-import { type UseViewportResult } from '../hooks/useViewport';
-import { type FloorElement } from '../types';
-import {
-  computeRotation,
-  computeSize,
-  type SelectionTransform,
-} from '../utils/selection-transform';
+import type { UseViewportResult } from '../hooks/useViewport';
+import type { FloorElement } from '../types';
+import type { SelectionTransform } from '../utils/selection-transform';
+import { computeRotation, computeSize } from '../utils/selection-transform';
 
 /**
  * Props for {@link SelectionHandles}.

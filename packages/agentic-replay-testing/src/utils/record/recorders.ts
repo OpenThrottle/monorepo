@@ -29,10 +29,8 @@ import { fileURLToPath } from 'node:url';
 import type { ConversationStreamChunk } from '@openthrottle/openthrottle-agentic-utils';
 import { getDriver, isDriverId } from '@openthrottle/openthrottle-drivers';
 
-import {
-  type RecordingProfile,
-  SESSION_STRATEGIES,
-} from '../../config/config.backends.ts';
+import type { RecordingProfile } from '../../config/config.backends.ts';
+import { SESSION_STRATEGIES } from '../../config/config.backends.ts';
 import type { PlanRunScenario } from '../../types/plan-run-scenario.ts';
 import type { Scenario } from '../../types/scenario.ts';
 import {
@@ -49,9 +47,9 @@ import {
 import { runPlanRunScenario } from '../plan-run/runPlanRunScenario.ts';
 import { replayPaths } from '../replay/replayPaths.ts';
 import { createSanitizer } from '../sanitizer/sanitizer.ts';
+import type { ConversationState } from '../scenario/drive-turn.ts';
 import {
   advanceConversation,
-  type ConversationState,
   driveScenarioTurn,
   initialConversation,
 } from '../scenario/drive-turn.ts';

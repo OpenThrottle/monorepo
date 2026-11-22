@@ -24,11 +24,11 @@ import {
   GQL_TO_PROMPT_TYPE,
   PROMPT_TYPE_TO_GQL,
 } from '~/routing/agent-search/data/data.prompt-type-maps';
-import {
-  AGENT_ASSET_PROMPT_TYPES,
-  type AgentAssetResult,
-  type AgentSearchCounts,
+import type {
+  AgentAssetResult,
+  AgentSearchCounts,
 } from '~/routing/agent-search/types';
+import { AGENT_ASSET_PROMPT_TYPES } from '~/routing/agent-search/types';
 import { parseAgentSearchParams } from '~/routing/agent-search/utils/parsers';
 
 type HandleData = Route.ComponentProps['loaderData'];

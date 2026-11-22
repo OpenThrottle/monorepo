@@ -1,6 +1,6 @@
+import type { ChatOptionsResponse } from '@openthrottle/react-router-chat-state';
 import {
   buildChatOptionsResponse,
-  type ChatOptionsResponse,
   shouldRevalidateChatOptions,
 } from '@openthrottle/react-router-chat-state';
 

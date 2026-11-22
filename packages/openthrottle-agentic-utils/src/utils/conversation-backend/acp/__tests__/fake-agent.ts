@@ -5,15 +5,14 @@
  * cancel — with no child process.
  */
 
-import {
-  agent,
-  type AgentContext,
-  type ClientConnection,
-  methods,
-  type PromptResponse,
-  type SessionConfigOption,
-  type SessionModeState,
+import type {
+  AgentContext,
+  ClientConnection,
+  PromptResponse,
+  SessionConfigOption,
+  SessionModeState,
 } from '@agentclientprotocol/sdk';
+import { agent, methods } from '@agentclientprotocol/sdk';
 
 import type { AcpAgentSpec } from '../agent-specs.ts';
 import type { AcpLauncher } from '../launcher.ts';

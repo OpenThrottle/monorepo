@@ -1,9 +1,7 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { ConfigService } from '@nestjs/config';
-import {
-  AUTH_PRINCIPAL_KIND_USER,
-  type AuthPrincipal,
-} from '@openthrottle/nestjs-auth';
+import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
+import { AUTH_PRINCIPAL_KIND_USER } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS } from '@openthrottle/nestjs-rbac';
 import type {
   RolesRepository,

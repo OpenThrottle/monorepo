@@ -1,12 +1,12 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import {
-  type DeepPartial,
-  type FindManyOptions,
-  type FindOneOptions,
-  type FindOptionsWhere,
-  In,
-  type Repository,
+import type {
+  DeepPartial,
+  FindManyOptions,
+  FindOneOptions,
+  FindOptionsWhere,
+  Repository,
 } from 'typeorm';
+import { In } from 'typeorm';
 
 import type {
   PersistedModel,

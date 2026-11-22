@@ -14,10 +14,8 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
-  type AuthPrincipal,
-} from '@openthrottle/nestjs-auth';
+import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
+import { AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { RolesRepository } from '@openthrottle/nestjs-repositories-server';
 import { Repository } from 'typeorm';

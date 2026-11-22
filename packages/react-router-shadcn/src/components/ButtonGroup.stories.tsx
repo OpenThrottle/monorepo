@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import { Button } from './Button';
+import type { ButtonGroupProps } from './ButtonGroup';
 import {
   ButtonGroup,
-  type ButtonGroupProps,
   ButtonGroupSeparator,
   ButtonGroupText,
 } from './ButtonGroup';

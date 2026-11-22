@@ -26,12 +26,14 @@ import {
 import { describeExit } from '../describeExit.ts';
 import { withFileMentions } from '../file-mentions.ts';
 import { withKeepalive } from '../keepalive.ts';
+import type {
+  ConversationBackend,
+  ConversationBackendRun,
+  ConversationStreamChunk,
+} from '../types.ts';
 import {
   CONVERSATION_PERMISSION_MODES,
   CONVERSATION_STREAM_CHUNK_KINDS,
-  type ConversationBackend,
-  type ConversationBackendRun,
-  type ConversationStreamChunk,
 } from '../types.ts';
 import {
   buildOpencodeArgv,
@@ -39,9 +41,9 @@ import {
   OPENCODE_DEFAULT_BIN,
 } from './argv.ts';
 import { createOpencodeEventMapper } from './events.ts';
+import type { OpencodeMcpConfigFile } from './mcp-config.ts';
 import {
   LOCAL_ENDPOINT_PROVIDER_ID,
-  type OpencodeMcpConfigFile,
   writeOpencodeMcpConfig,
 } from './mcp-config.ts';
 

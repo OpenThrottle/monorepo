@@ -10,14 +10,16 @@ import { GlobalToolbarSearch } from '@openthrottle/react-router-ui-global';
 import * as React from 'react';
 import { useSearchParams } from 'react-router';
 
+import type {
+  RepositoriesSortBy,
+  RepositoriesSortOrder,
+} from '~/routing/settings/repositories/config/repositories.defaults';
 import {
   REPOSITORIES_DEFAULT_SORT_BY,
   REPOSITORIES_DEFAULT_SORT_ORDER,
   REPOSITORIES_SORT_BY,
   REPOSITORIES_SORT_OPTIONS,
   REPOSITORIES_SORT_ORDER,
-  type RepositoriesSortBy,
-  type RepositoriesSortOrder,
 } from '~/routing/settings/repositories/config/repositories.defaults';
 import { REPOSITORIES_TABLE_COPY } from '~/routing/settings/repositories/data/data.copy';
 

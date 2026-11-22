@@ -1,5 +1,6 @@
 import { Global, Module } from '@nestjs/common';
-import { PUB_SUB, type PubSubEngine } from '@openthrottle/nestjs-graphql';
+import type { PubSubEngine } from '@openthrottle/nestjs-graphql';
+import { PUB_SUB } from '@openthrottle/nestjs-graphql';
 import { KeyedJsonlWriter } from '@openthrottle/nestjs-logging';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 

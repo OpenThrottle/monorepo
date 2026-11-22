@@ -8,11 +8,11 @@
 
 import { claudeEffortFlag } from '@openthrottle/openthrottle-drivers';
 
-import {
-  CONVERSATION_PERMISSION_MODES,
-  type ConversationPermissionMode,
-  type ConversationReasoningEffort,
+import type {
+  ConversationPermissionMode,
+  ConversationReasoningEffort,
 } from '../types.ts';
+import { CONVERSATION_PERMISSION_MODES } from '../types.ts';
 
 /**
  * Env var holding an absolute path to the claude binary; overrides PATH lookup.

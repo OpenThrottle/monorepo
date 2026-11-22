@@ -4,13 +4,15 @@ import {
   PlansRepository,
   UsersRepository,
 } from '@openthrottle/nestjs-repositories-server';
+import type {
+  PlansRepositoryMock,
+  UsersRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import {
   createPlansRepositoryMock,
   createUsersRepositoryMock,
   plansFactory,
-  type PlansRepositoryMock,
   usersFactory,
-  type UsersRepositoryMock,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import { TAG_ACTION_TYPES } from '@openthrottle/openthrottle-skills';
 import { beforeEach, describe, expect, it, vi } from 'vitest';

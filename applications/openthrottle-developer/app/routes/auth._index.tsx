@@ -1,39 +1,31 @@
 import {
-  buildAuthCookie,
   getAuthTokenFromCookie,
   getSafeRedirect,
   REDIRECT_URL_PARAM,
 } from '@openthrottle/react-router-auth';
-import { parseFormData } from '@openthrottle/react-router-graphql';
 import { cn } from '@openthrottle/react-router-shadcn';
 import {
   OpenThrottleAuthForm,
   OpenThrottleLogo,
 } from '@openthrottle/react-router-ui';
-import { GlobalScreen } from '@openthrottle/react-router-ui-global';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalErrorBoundary,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
 import { useAtom } from 'jotai';
-import { animate, useReducedMotion } from 'motion/react';
+import { useReducedMotion } from 'motion/react';
 import * as React from 'react';
 import type { ShouldRevalidateFunction } from 'react-router';
-import { data, redirect, useFetcher, useSearchParams } from 'react-router';
+import { redirect, useFetcher, useSearchParams } from 'react-router';
 
 import type { Route } from '@/app/routes/+types/_index';
-import { LoginInputSchema } from '~/__generated__/schemas';
 import { SITE_SUBDOMAIN, SITE_TITLE } from '~/global/config/settings';
 import { REDUCED_MOTION_MODES } from '~/global/data/data.appearance-config';
 import { configAtom } from '~/global/data/data.atom-config';
-import { callLoginMutation } from '~/global/utils/utils.auth';
+import type { AuthFetcherData } from '~/routing/auth/actions/login';
+import { loginAction } from '~/routing/auth/actions/login';
 import { AuthBackground } from '~/routing/auth/components/AuthBackground';
-import {
-  FORM_FADE_MS,
-  GRAIN_MIXER_REST,
-  GRAIN_REST,
-  HOLD_MS,
-} from '~/routing/auth/config/animation';
-import { assignDocumentLocation } from '~/routing/auth/utils/assignDocumentLocation';
-
-type AuthFetcherData = { error?: string; ok?: boolean };
+import { useLoginExitAnimation } from '~/routing/auth/hooks/useLoginExitAnimation';
 
 export const loader = async (args: Route.LoaderArgs) => {
   const { request, url } = args;
@@ -76,9 +68,6 @@ export default function Component(
   const [config] = useAtom(configAtom);
   const [count, setCount] = React.useState(0);
   const [isChaotic, setIsChaotic] = React.useState(false);
-  const [isExiting, setIsExiting] = React.useState(false);
-  const [_grainOverlay, setGrainOverlay] = React.useState(GRAIN_REST);
-  const [_grainMixer, setGrainMixer] = React.useState(GRAIN_MIXER_REST);
   const [_isMounted, setIsMounted] = React.useState(false);
 
   // Setup
@@ -94,6 +83,11 @@ export default function Component(
   // Where to land after login: the page that sent us here, when it is a safe
   // same-origin path, otherwise /dashboard.
   const redirectUrl = getSafeRedirect(searchParams.get(REDIRECT_URL_PARAM));
+  const { isExiting } = useLoginExitAnimation({
+    isLoginOk: fetcher.data?.ok === true,
+    prefersReducedMotion,
+    redirectUrl,
+  });
 
   // Handlers
   const onIncrementCount = () => {
@@ -132,47 +126,6 @@ export default function Component(
     setIsMounted(true);
   }, []);
 
-  // On successful login: fade the form out (CSS opacity over FORM_FADE_MS) while
-  // the grain overlay tweens to 0, hold on the bare gradient for HOLD_MS, then
-  // do a full-document redirect (not SPA navigate) so the root loader re-runs
-  // server-side with the new cookie and we load with fresh credentials.
-  React.useEffect(() => {
-    if (!fetcher.data?.ok) {
-      return;
-    }
-
-    if (prefersReducedMotion) {
-      assignDocumentLocation(redirectUrl);
-      return;
-    }
-
-    setIsExiting(true);
-
-    const duration = FORM_FADE_MS / 1000;
-    const ease = 'easeOut';
-
-    const grain = animate(GRAIN_REST, 0, {
-      duration,
-      ease,
-      onUpdate: setGrainOverlay,
-    });
-    const mixer = animate(GRAIN_MIXER_REST, 0, {
-      duration,
-      ease,
-      onUpdate: setGrainMixer,
-    });
-
-    const timer = setTimeout(() => {
-      assignDocumentLocation(redirectUrl);
-    }, FORM_FADE_MS + HOLD_MS);
-
-    return () => {
-      grain.stop();
-      mixer.stop();
-      clearTimeout(timer);
-    };
-  }, [fetcher.data, prefersReducedMotion, redirectUrl]);
-
   // 🔌 Short Circuit
 
   return (
@@ -200,37 +153,6 @@ export default function Component(
   );
 }
 
-export const action = async (args: Route.ActionArgs) => {
-  const formData = await args.request.formData();
-  const parsed = parseFormData(formData, LoginInputSchema());
-  if (!parsed.success) {
-    return data<AuthFetcherData>({ error: parsed.error });
-  }
-
-  // parseFormData trims values; the password is sent exactly as typed.
-  const rawPassword = formData.get('password');
-  const password =
-    typeof rawPassword === 'string' ? rawPassword : parsed.data.password;
-
-  try {
-    const token = await callLoginMutation(parsed.data.email, password);
-    if (!token) {
-      return data<AuthFetcherData>({ error: 'Login failed' });
-    }
-
-    // Set the cookie via headers and return data (not a redirect): a fetcher
-    // follows redirects, which would navigate before the exit animation runs.
-    // The client navigates to the redirectUrl target once the choreography
-    // completes.
-    return data<AuthFetcherData>(
-      { ok: true },
-      { headers: { 'Set-Cookie': buildAuthCookie(token) } },
-    );
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Login failed';
-
-    return data<AuthFetcherData>({ error: message });
-  }
-};
+export const action = loginAction;
 
 export const ErrorBoundary = GlobalErrorBoundary;

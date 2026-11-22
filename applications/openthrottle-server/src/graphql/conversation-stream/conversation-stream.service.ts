@@ -8,17 +8,14 @@
 import { randomUUID } from 'node:crypto';
 
 import { Inject, Injectable } from '@nestjs/common';
+import type { NormalizedTokenUsage } from '@openthrottle/agentic-token-usage';
 import {
   hasUsageCounts,
-  type NormalizedTokenUsage,
   normalizeUsage,
   sumUsage,
 } from '@openthrottle/agentic-token-usage';
-import {
-  conversationStreamTopic,
-  PUB_SUB,
-  type PubSubEngine,
-} from '@openthrottle/nestjs-graphql';
+import type { PubSubEngine } from '@openthrottle/nestjs-graphql';
+import { conversationStreamTopic, PUB_SUB } from '@openthrottle/nestjs-graphql';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   AGENT_TOKEN_USAGE_SOURCES,
@@ -27,13 +24,15 @@ import {
   AgentTokenUsageRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import { isRecord } from '@openthrottle/nodejs-utils';
+import type {
+  ConversationBackend,
+  ConversationBackendRun,
+  ConversationStreamChunk,
+} from '@openthrottle/openthrottle-agentic-utils';
 import {
   classifyCursorFailure,
   CONVERSATION_CLI_BACKENDS,
   CONVERSATION_STREAM_CHUNK_KINDS,
-  type ConversationBackend,
-  type ConversationBackendRun,
-  type ConversationStreamChunk,
   createCursorAgentSession,
   isAcpChatEnabled,
   isRetryableCursorFailure,

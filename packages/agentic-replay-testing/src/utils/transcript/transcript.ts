@@ -4,16 +4,18 @@
  * fixture bug, and the caller decides whether to fail a test or a record run.
  */
 
+import type {
+  Transcript,
+  TranscriptHeader,
+  TranscriptLine,
+  TranscriptParseResult,
+  TranscriptSurface,
+} from '../../types/transcript.ts';
 import {
-  type Transcript,
   TRANSCRIPT_CHANNELS,
   TRANSCRIPT_LINE_TYPES,
   TRANSCRIPT_SCHEMA_VERSION,
   TRANSCRIPT_SURFACES,
-  type TranscriptHeader,
-  type TranscriptLine,
-  type TranscriptParseResult,
-  type TranscriptSurface,
 } from '../../types/transcript.ts';
 
 function isRecord(value: unknown): value is Record<string, unknown> {

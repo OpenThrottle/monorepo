@@ -7,10 +7,10 @@ import {
 import * as React from 'react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 
+import type { SkillUsageChartDatum } from '~/global/data/data.skill-usage-chart';
 import {
   SKILL_USAGE_CHART_CONFIG,
   SKILL_USAGE_CHART_SERIES,
-  type SkillUsageChartDatum,
 } from '~/global/data/data.skill-usage-chart';
 import { formatSkillUsageChartDate } from '~/global/utils/formatSkillUsageChartDate';
 

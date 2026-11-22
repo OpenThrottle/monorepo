@@ -4,7 +4,8 @@ import { describe, expect, test, vi } from 'vitest';
 import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
 import { SKILL_DETAIL_COPY } from '~/routing/skills/data/data.copy';
 
-import { useSkillDetail, type UseSkillDetailOptions } from '../useSkillDetail';
+import type { UseSkillDetailOptions } from '../useSkillDetail';
+import { useSkillDetail } from '../useSkillDetail';
 
 const baseEntry = (overrides: Partial<RepoSkillEntry> = {}): RepoSkillEntry => {
   return {

@@ -4,10 +4,10 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
+import type { MigrationFile } from '../check-admin-permission-coverage.ts';
 import {
   adminGrantInStatement,
   findAdminPermissionGaps,
-  type MigrationFile,
   permissionsDefinedInStatement,
 } from '../check-admin-permission-coverage.ts';
 

@@ -2,7 +2,7 @@ import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import { useFloorLayoutEditor } from '../hooks/useFloorLayoutEditor';
-import { type FloorLayout } from '../types';
+import type { FloorLayout } from '../types';
 import { ElementPalette } from './ElementPalette';
 import { FloorCanvas } from './FloorCanvas';
 import { FloorElementView } from './FloorElementView';

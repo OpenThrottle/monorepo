@@ -1,7 +1,5 @@
-import {
-  clearRolloutEvaluationMemoryCache,
-  type RolloutEvaluation,
-} from '@openthrottle/react-router-rollout';
+import type { RolloutEvaluation } from '@openthrottle/react-router-rollout';
+import { clearRolloutEvaluationMemoryCache } from '@openthrottle/react-router-rollout';
 import type { RenderResult } from '@testing-library/react';
 import { render, waitFor } from '@testing-library/react';
 import * as React from 'react';

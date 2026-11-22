@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import type { Attribution } from '../generate-third-party-notices.ts';
 import {
-  type Attribution,
   collectAttributions,
   compareCodeUnits,
   diffManifestLines,

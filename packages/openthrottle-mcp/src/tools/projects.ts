@@ -8,12 +8,12 @@
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import { z } from 'zod';
 
+import type { McpProjectSummaryFragment } from '../__generated__/graphql.js';
 import {
   DeleteProjectDocument,
   McpCreateProjectDocument,
   McpGetProjectDocument,
   McpListProjectsDocument,
-  type McpProjectSummaryFragment,
   McpUpdateProjectDocument,
 } from '../__generated__/graphql.js';
 import {

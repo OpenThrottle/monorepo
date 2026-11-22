@@ -7,10 +7,8 @@
  * against Antigravity CLI 1.1.21.
  */
 
-import {
-  CONVERSATION_PERMISSION_MODES,
-  type ConversationPermissionMode,
-} from '../types.ts';
+import type { ConversationPermissionMode } from '../types.ts';
+import { CONVERSATION_PERMISSION_MODES } from '../types.ts';
 
 /**
  * Env var holding an absolute path to the agy binary; overrides PATH lookup.

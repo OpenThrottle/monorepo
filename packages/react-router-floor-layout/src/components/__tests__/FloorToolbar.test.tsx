@@ -2,7 +2,8 @@ import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import { FloorToolbar, type FloorToolbarProps } from '../FloorToolbar';
+import type { FloorToolbarProps } from '../FloorToolbar';
+import { FloorToolbar } from '../FloorToolbar';
 
 function baseProps(
   overrides: Partial<FloorToolbarProps> = {},

@@ -3,10 +3,10 @@ import { RuleTester } from '@typescript-eslint/rule-tester';
 import type { TSESTree } from '@typescript-eslint/utils';
 import { afterAll, describe, expect, it } from 'vitest';
 
+import type { RenderFunction } from '../preHooksUnpack.ts';
 import {
   findPropsUnpacksAfterHooks,
   preHooksUnpack,
-  type RenderFunction,
 } from '../preHooksUnpack.ts';
 
 // ---------------------------------------------------------------------------

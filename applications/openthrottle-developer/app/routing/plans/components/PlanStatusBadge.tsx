@@ -3,7 +3,8 @@ import { CalendarClock } from 'lucide-react';
 import * as React from 'react';
 import { Link } from 'react-router';
 
-import { type PlanStatusKey, planStatusValues } from '~/routing/plans/types';
+import type { PlanStatusKey } from '~/routing/plans/types';
+import { planStatusValues } from '~/routing/plans/types';
 import { getPlanScheduledForTitle } from '~/routing/plans/utils/plan-scheduled-run-reason';
 import { getPlanStatusBadgeColor } from '~/routing/plans/utils/utils.plans';
 

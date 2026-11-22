@@ -16,9 +16,9 @@ import {
   Resolver,
   Subscription,
 } from '@nestjs/graphql';
+import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
 import {
   AUTH_PRINCIPAL_KIND_USER,
-  type AuthPrincipal,
   CurrentUser,
   Public,
 } from '@openthrottle/nestjs-auth';
@@ -35,13 +35,15 @@ import {
   CustomPromptsRepository,
   UserDisabledAgentClisRepository,
 } from '@openthrottle/nestjs-repositories-server';
+import type {
+  ChatCompletionMessage,
+  ConversationPermissionMode,
+  ConversationReasoningEffort,
+  ConversationServiceTier,
+} from '@openthrottle/openthrottle-agentic-utils';
 import {
   AGENT_CLI_ALLOWLIST,
   backendReplaysFullHistory,
-  type ChatCompletionMessage,
-  type ConversationPermissionMode,
-  type ConversationReasoningEffort,
-  type ConversationServiceTier,
   formatHandoffPreamble,
   maxDirectoriesForBackend,
   resolveAcpPermission,
@@ -61,7 +63,7 @@ import {
   StartConversationStreamResult,
 } from './conversation-stream.object.ts';
 import { ConversationStreamService } from './conversation-stream.service.ts';
-import { type ConversationStreamChunkEnvelope } from './conversation-stream.types.ts';
+import type { ConversationStreamChunkEnvelope } from './conversation-stream.types.ts';
 
 /**
  * Roles the model accepts; persisted `tool` rows are excluded from the prompt.

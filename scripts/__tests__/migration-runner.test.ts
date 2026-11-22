@@ -1,14 +1,16 @@
 import { describe, expect, test } from 'vitest';
 
+import type {
+  AppliedMigration,
+  MigrationSource,
+  MigrationStore,
+} from '../../databases/migration-runner.ts';
 import {
-  type AppliedMigration,
   createChecksum,
   filterSortSqlFiles,
   findChecksumDrift,
   findLedgerOrphans,
   isLedgerCutOver,
-  type MigrationSource,
-  type MigrationStore,
   RETIRED_MIGRATIONS,
   runMigrations,
   selectPendingMigrations,

@@ -1,8 +1,10 @@
 import type { AddressInfo } from 'node:net';
 
 import { ApolloServerPluginCacheControlDisabled } from '@apollo/server/plugin/disabled';
-import { ApolloDriver, type ApolloDriverConfig } from '@nestjs/apollo';
-import { type INestApplication, Module } from '@nestjs/common';
+import type { ApolloDriverConfig } from '@nestjs/apollo';
+import { ApolloDriver } from '@nestjs/apollo';
+import type { INestApplication } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import {
   Field,
   GraphQLModule,

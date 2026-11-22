@@ -8,7 +8,8 @@
  * browser WebSocket is used (no webSocketImpl needed client-side).
  */
 import { IS_BROWSER } from '@openthrottle/react-router-utils';
-import { type Client, type ClientOptions, createClient } from 'graphql-ws';
+import type { Client, ClientOptions } from 'graphql-ws';
+import { createClient } from 'graphql-ws';
 
 /**
  * Browser graphql-ws client handle (null during SSR).

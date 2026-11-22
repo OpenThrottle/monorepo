@@ -9,11 +9,11 @@
 
 import { grokReasoningEffort } from '@openthrottle/openthrottle-drivers';
 
-import {
-  CONVERSATION_PERMISSION_MODES,
-  type ConversationPermissionMode,
-  type ConversationReasoningEffort,
+import type {
+  ConversationPermissionMode,
+  ConversationReasoningEffort,
 } from '../types.ts';
+import { CONVERSATION_PERMISSION_MODES } from '../types.ts';
 
 /**
  * Env var holding an absolute path to the grok binary; overrides PATH lookup.

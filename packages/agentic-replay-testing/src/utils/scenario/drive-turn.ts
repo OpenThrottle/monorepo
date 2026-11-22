@@ -4,21 +4,14 @@
  * the same history and session id its recording did.
  */
 
-import {
-  CONVERSATION_STREAM_CHUNK_KINDS,
-  type ConversationStreamChunk,
-} from '@openthrottle/openthrottle-agentic-utils';
+import type { ConversationStreamChunk } from '@openthrottle/openthrottle-agentic-utils';
+import { CONVERSATION_STREAM_CHUNK_KINDS } from '@openthrottle/openthrottle-agentic-utils';
 
-import {
-  type ReplayProfile,
-  SESSION_STRATEGIES,
-} from '../../config/config.backends.ts';
+import type { ReplayProfile } from '../../config/config.backends.ts';
+import { SESSION_STRATEGIES } from '../../config/config.backends.ts';
 import type { ScenarioTurn } from '../../types/scenario.ts';
-import {
-  type ResolvedScenarioTurn,
-  type ScenarioMessage,
-  scenarioRun,
-} from './scenarioRun.ts';
+import type { ResolvedScenarioTurn, ScenarioMessage } from './scenarioRun.ts';
+import { scenarioRun } from './scenarioRun.ts';
 
 /**
  * What one turn hands the next.

@@ -1,8 +1,10 @@
+import type {
+  ChatModelOption,
+  ChatPersonaOption,
+} from '@openthrottle/react-router-chat';
 import {
   ChatComposer,
   ChatComposerToolbar,
-  type ChatModelOption,
-  type ChatPersonaOption,
   ChatQueuedMessages,
 } from '@openthrottle/react-router-chat';
 import type { ChatAgentRuntime } from '@openthrottle/react-router-chat-state';

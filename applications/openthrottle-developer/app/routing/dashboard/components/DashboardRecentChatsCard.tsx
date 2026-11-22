@@ -1,7 +1,5 @@
-import {
-  type AgentConversationListItem,
-  formatRelativeChatTimestamp,
-} from '@openthrottle/react-router-chat';
+import type { AgentConversationListItem } from '@openthrottle/react-router-chat';
+import { formatRelativeChatTimestamp } from '@openthrottle/react-router-chat';
 import { Button, Card, cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { Link } from 'react-router';

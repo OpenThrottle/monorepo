@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
+import type { SidebarProps } from './index';
 import {
   Sidebar,
   SidebarContent,
@@ -18,7 +19,6 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-  type SidebarProps,
   SidebarProvider,
   SidebarSeparator,
   SidebarTrigger,

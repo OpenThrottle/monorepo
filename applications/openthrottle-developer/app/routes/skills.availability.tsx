@@ -25,11 +25,11 @@ import { SkillAvailabilityPostureCard } from '~/routing/skills/components/SkillA
 import { SkillAvailabilityRulesEditor } from '~/routing/skills/components/SkillAvailabilityRulesEditor';
 import { DOGFOOD_NX_PROJECT_NAME } from '~/routing/skills/config/availability';
 import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/data.copy';
-import {
-  isSkillAvailabilityPosture,
-  type SkillAvailabilityRuleValue,
-  type SkillTagValue,
+import type {
+  SkillAvailabilityRuleValue,
+  SkillTagValue,
 } from '~/routing/skills/utils/skill-availability';
+import { isSkillAvailabilityPosture } from '~/routing/skills/utils/skill-availability';
 import { toEnvironmentValue } from '~/routing/skills/utils/skill-availability-action';
 
 type HandleData = Route.ComponentProps['loaderData'];

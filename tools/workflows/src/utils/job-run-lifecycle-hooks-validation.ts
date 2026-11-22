@@ -7,19 +7,21 @@ import { isAbsolute, resolve } from 'node:path';
 
 import { isRecord } from '@openthrottle/nodejs-utils';
 
+import type {
+  JobRunHookConditions,
+  JobRunHookEntry,
+  JobRunHookOnFailure,
+  JobRunHookPhase,
+  JobRunHookPhaseWire,
+  JobRunHookPromptDelivery,
+  JobRunHookRunKind,
+  JobRunHooksConfig,
+  JobRunHookTaskContext,
+  JobRunHookTaskOutcome,
+} from '../types/job-run-lifecycle-hooks';
 import {
   DEFAULT_JOB_RUN_HOOK_TIMEOUT_SECONDS,
   JOB_RUN_HOOK_SKILL_PATH_PREFIXES,
-  type JobRunHookConditions,
-  type JobRunHookEntry,
-  type JobRunHookOnFailure,
-  type JobRunHookPhase,
-  type JobRunHookPhaseWire,
-  type JobRunHookPromptDelivery,
-  type JobRunHookRunKind,
-  type JobRunHooksConfig,
-  type JobRunHookTaskContext,
-  type JobRunHookTaskOutcome,
   MAX_JOB_RUN_HOOK_STRING_LEN,
   MAX_JOB_RUN_HOOK_TIMEOUT_SECONDS,
   MAX_JOB_RUN_HOOKS_PER_PHASE,

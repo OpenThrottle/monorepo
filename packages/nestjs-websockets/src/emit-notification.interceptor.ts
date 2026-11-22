@@ -5,22 +5,18 @@
  * (e.g. NotificationsService or an adapter that implements {@link EmitNotificationEmitter}).
  */
 
-import {
-  type CallHandler,
-  type ExecutionContext,
-  Inject,
-  Injectable,
-  Logger,
-  type NestInterceptor,
+import type {
+  CallHandler,
+  ExecutionContext,
+  NestInterceptor,
 } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { Observable } from 'rxjs';
 import { tap } from 'rxjs';
 
-import {
-  EMIT_NOTIFICATION_KEY,
-  type EmitNotificationMetadataValue,
-} from './emit-notification.decorator.ts';
+import type { EmitNotificationMetadataValue } from './emit-notification.decorator.ts';
+import { EMIT_NOTIFICATION_KEY } from './emit-notification.decorator.ts';
 
 /**
  * Injection token for the emitter used by {@link EmitNotificationInterceptor}.

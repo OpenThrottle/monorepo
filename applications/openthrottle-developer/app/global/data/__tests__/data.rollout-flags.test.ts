@@ -1,10 +1,8 @@
 import type { RolloutFlagValue } from '@openthrottle/react-router-rollout';
 import { describe, expect, expectTypeOf, test } from 'vitest';
 
-import {
-  type DeveloperRolloutFlags,
-  developerRolloutFlags,
-} from '../data.rollout-flags';
+import type { DeveloperRolloutFlags } from '../data.rollout-flags';
+import { developerRolloutFlags } from '../data.rollout-flags';
 
 describe('developerRolloutFlags', () => {
   test('declares the catalog entries with defaults', () => {

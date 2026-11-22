@@ -17,10 +17,8 @@ import * as React from 'react';
 import { useFetcher } from 'react-router';
 
 import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/data.copy';
-import {
-  isKebabCase,
-  type SkillTagValue,
-} from '~/routing/skills/utils/skill-availability';
+import type { SkillTagValue } from '~/routing/skills/utils/skill-availability';
+import { isKebabCase } from '~/routing/skills/utils/skill-availability';
 
 const COPY = SKILL_AVAILABILITY_COPY.vocabulary;
 

@@ -13,18 +13,13 @@ import { dirname, join } from 'node:path';
 
 import type { ConversationBackendRun } from '@openthrottle/openthrottle-agentic-utils';
 
-import {
-  SESSION_STRATEGIES,
-  type SessionStrategy,
-} from '../../config/config.backends.ts';
+import type { SessionStrategy } from '../../config/config.backends.ts';
+import { SESSION_STRATEGIES } from '../../config/config.backends.ts';
 import type { Transcript } from '../../types/transcript.ts';
 import { placeholderUuid } from '../sanitizer/sanitizer.ts';
 import type { ConversationState } from '../scenario/drive-turn.ts';
-import {
-  type ResolvedScenarioTurn,
-  resolveScenarioTurn,
-  scenarioRun,
-} from '../scenario/scenarioRun.ts';
+import type { ResolvedScenarioTurn } from '../scenario/scenarioRun.ts';
+import { resolveScenarioTurn, scenarioRun } from '../scenario/scenarioRun.ts';
 import { installReplayBin } from './installReplayBin.ts';
 import type { ReplayReport } from './replay-bin.ts';
 

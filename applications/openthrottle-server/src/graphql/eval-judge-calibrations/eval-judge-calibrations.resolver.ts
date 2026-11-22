@@ -9,7 +9,8 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { calibrateJudge } from '@openthrottle/agentic-evals';
-import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
+import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
+import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { GlobalClsService } from '@openthrottle/nestjs-modules';
 import {
   EvalJudgeCalibrationsRepository,

@@ -5,12 +5,8 @@
  * without jsdom pointer plumbing. No React, no DOM.
  */
 
-import {
-  angleBetween,
-  type Point,
-  rotatePoint,
-  snapValueToGrid,
-} from './geometry';
+import type { Point } from './geometry';
+import { angleBetween, rotatePoint, snapValueToGrid } from './geometry';
 
 /** Smallest size (inches) a resize handle can produce. */
 export const MIN_SIZE = 6;

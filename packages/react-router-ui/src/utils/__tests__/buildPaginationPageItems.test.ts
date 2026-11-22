@@ -1,10 +1,8 @@
 import { describe, expect, test } from 'vitest';
 
 import { PAGINATION_CONFIG } from '../../config/pagination';
-import {
-  buildPaginationPageItems,
-  type PaginationPageItem,
-} from '../buildPaginationPageItems';
+import type { PaginationPageItem } from '../buildPaginationPageItems';
+import { buildPaginationPageItems } from '../buildPaginationPageItems';
 
 function pageNumbers(items: readonly PaginationPageItem[]): number[] {
   return items

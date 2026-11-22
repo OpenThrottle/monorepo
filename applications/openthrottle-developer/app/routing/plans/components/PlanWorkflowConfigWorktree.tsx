@@ -14,11 +14,11 @@ import * as React from 'react';
 import { PlanWorkflowConfigWorktreeCleanup } from '~/routing/plans/components/PlanWorkflowConfigWorktreeCleanup';
 import { PlanWorkflowConfigWorktreeCursorFields } from '~/routing/plans/components/PlanWorkflowConfigWorktreeCursorFields';
 import { PLAN_CONFIG_WORKTREE_COPY } from '~/routing/plans/data/data.copy';
-import {
-  WORKFLOW_RALPH_ENV_VARS,
-  type WorkflowRalphRunOptionsInput,
-  type WorkflowRalphWorktreeCli,
+import type {
+  WorkflowRalphRunOptionsInput,
+  WorkflowRalphWorktreeCli,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
+import { WORKFLOW_RALPH_ENV_VARS } from '~/routing/plans/utils/build-workflow-ralph-argv';
 
 export interface PlanWorkflowConfigWorktreeProps {
   heading: string;

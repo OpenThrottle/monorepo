@@ -12,14 +12,12 @@ import { basename } from 'node:path';
 
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import type { PlanRun } from '@openthrottle/nestjs-repositories-server';
 import {
   RepositoriesRepository,
   RepositoryCheckoutsRepository,
 } from '@openthrottle/nestjs-repositories-server';
-import {
-  type PlanRun,
-  PlanRunsRepository,
-} from '@openthrottle/nestjs-repositories-server';
+import { PlanRunsRepository } from '@openthrottle/nestjs-repositories-server';
 
 import { RepositoryInspectionService } from '../../graphql/repository-inspection/repository-inspection.service.ts';
 import type { RegisterPlanRunWorktreeCheckoutParams } from './plan-run-worktree-checkout.types.ts';

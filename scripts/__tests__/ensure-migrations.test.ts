@@ -1,17 +1,17 @@
 import { describe, expect, test, vi } from 'vitest';
 
-import {
-  type AppliedMigration,
-  type MigrationSource,
-  type MigrationStore,
-  runMigrations,
+import type {
+  AppliedMigration,
+  MigrationSource,
+  MigrationStore,
 } from '../../databases/migration-runner.ts';
+import { runMigrations } from '../../databases/migration-runner.ts';
+import type { WaitOptions } from '../ensure-migrations.ts';
 import {
   DEFAULT_ATTEMPTS,
   PostgresUnreachableError,
   preflightAndMigrate,
   waitForReachable,
-  type WaitOptions,
 } from '../ensure-migrations.ts';
 
 const noSleep = async (): Promise<void> => {};

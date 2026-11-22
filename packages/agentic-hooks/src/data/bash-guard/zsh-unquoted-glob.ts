@@ -22,13 +22,13 @@
  */
 import { readQuotedChars } from './readQuotedChars.ts';
 import { stripCommandPrefixes } from './shell-words.ts';
-import {
-  BASH_RULE_ALLOW,
-  type BashGuardContext,
-  type BashGuardRule,
-  type BashRuleVerdict,
-  type BashSegment,
+import type {
+  BashGuardContext,
+  BashGuardRule,
+  BashRuleVerdict,
+  BashSegment,
 } from './types.ts';
+import { BASH_RULE_ALLOW } from './types.ts';
 
 /**
  * Where an unquoted glob sits in one word: in a value after an unquoted `=`

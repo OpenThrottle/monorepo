@@ -5,9 +5,9 @@ import * as React from 'react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { CHAT_TOOLBAR_SESSION_SENTINEL_KEY } from '../../config/chat-session-permission-decay';
+import type { ChatToolbarState } from '../../data/data.chat-toolbar-state';
 import {
   CHAT_TOOLBAR_STORAGE_KEY,
-  type ChatToolbarState,
   DEFAULT_CHAT_TOOLBAR_STATE,
 } from '../../data/data.chat-toolbar-state';
 import { useSessionPermissionDecay } from '../useSessionPermissionDecay';

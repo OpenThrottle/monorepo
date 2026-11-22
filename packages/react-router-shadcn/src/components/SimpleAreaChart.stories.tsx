@@ -1,9 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
-import {
-  BUILD_DURATIONS,
-  type BuildPoint,
-} from './chart-fixtures.stories-data';
+import type { BuildPoint } from './chart-fixtures.stories-data';
+import { BUILD_DURATIONS } from './chart-fixtures.stories-data';
 import { SimpleAreaChart } from './SimpleAreaChart';
 
 /**

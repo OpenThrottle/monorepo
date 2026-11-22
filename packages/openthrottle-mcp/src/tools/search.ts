@@ -6,12 +6,14 @@
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import { z } from 'zod';
 
+import type {
+  ListPlanSourceFragment,
+  ListSourceInfoFragment,
+  SearchChunkFragment,
+} from '../__generated__/graphql.js';
 import {
   GetDocumentDocument,
-  type ListPlanSourceFragment,
-  type ListSourceInfoFragment,
   ListSourcesDocument,
-  type SearchChunkFragment,
   SearchDocument,
 } from '../__generated__/graphql.js';
 import { getAuthToken } from '../auth/getAuthToken.ts';

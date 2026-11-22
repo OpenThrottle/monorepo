@@ -5,12 +5,14 @@
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import type { z } from 'zod';
 
+import type {
+  DeletePlanOutputInput,
+  PlanOutputStreamChunkFragment,
+} from '../__generated__/graphql.js';
 import {
   AppendPlanOutputDocument,
   DeletePlanOutputDocument,
-  type DeletePlanOutputInput,
   GetPlanOutputStreamChunksDocument,
-  type PlanOutputStreamChunkFragment,
 } from '../__generated__/graphql.js';
 import {
   AppendPlanOutputInputSchema,

@@ -15,11 +15,8 @@
  * @public
  */
 import { stripCommandPrefixes } from './shell-words.ts';
-import {
-  BASH_RULE_ALLOW,
-  type BashGuardRule,
-  type BashSegment,
-} from './types.ts';
+import type { BashGuardRule, BashSegment } from './types.ts';
+import { BASH_RULE_ALLOW } from './types.ts';
 
 /** BSD sed options that take the following word as their value. */
 const VALUE_FLAGS: ReadonlySet<string> = new Set(['-e', '-f']);

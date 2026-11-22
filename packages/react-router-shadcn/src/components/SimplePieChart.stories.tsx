@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
-import { BUILD_STATUS, type StatusSlice } from './chart-fixtures.stories-data';
+import type { StatusSlice } from './chart-fixtures.stories-data';
+import { BUILD_STATUS } from './chart-fixtures.stories-data';
 import { SimplePieChart } from './SimplePieChart';
 
 /**

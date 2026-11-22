@@ -9,11 +9,13 @@ import {
 import * as React from 'react';
 import { useSearchParams } from 'react-router';
 
+import type {
+  GithubOrg,
+  GithubRepo,
+} from '~/routing/dashboard/config/config.dashboard';
 import {
   GITHUB_ORGS,
   GITHUB_REPOSITORIES,
-  type GithubOrg,
-  type GithubRepo,
 } from '~/routing/dashboard/config/config.dashboard';
 import { parseDashboardGithubParams } from '~/routing/dashboard/utils/parsers';
 

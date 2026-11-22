@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'vitest';
 
+import type { RunUsage } from '../format-usage';
 import {
   formatRunCost,
   formatRunTotalTokens,
   formatSettingsSnapshot,
   hasRunUsage,
-  type RunUsage,
   runUsageRows,
   runUsageTooltip,
 } from '../format-usage';

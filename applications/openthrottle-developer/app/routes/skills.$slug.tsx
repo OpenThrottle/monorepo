@@ -1,5 +1,3 @@
-import { ChatDialog } from '@openthrottle/react-router-chat';
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
@@ -12,31 +10,25 @@ import * as React from 'react';
 import { useFetcher } from 'react-router';
 
 import type { Route } from '@/app/routes/+types/skills.$slug';
-import { GetSkillDetailUsageDocument } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
-import {
-  loadComposerModels,
-  loadRepositories,
-} from '~/routing/home/utils/models.server';
 import {
   runSkillRecordTagAction,
   SKILL_RECORD_TAG_INTENTS,
 } from '~/routing/skills/actions/project-skill-tags';
 import { SkillDetailTabs } from '~/routing/skills/components/SkillDetailTabs';
-import { SKILL_USAGE_RANGE_DAYS } from '~/routing/skills/config/skill-usage';
+import { SkillRunConversation } from '~/routing/skills/components/SkillRunConversation';
 import {
   SKILL_DETAIL_COPY,
-  SKILL_RUN_COPY,
   SKILL_WRITE_COPY,
 } from '~/routing/skills/data/data.copy';
 import { useRunSkill } from '~/routing/skills/hooks/useRunSkill';
-import type { SkillDetailUsageData } from '~/routing/skills/types';
+import { loadSkillRunOptions } from '~/routing/skills/utils/loadSkillRunOptions.server';
 import { mergeRepoSkillsWithProjectSkills } from '~/routing/skills/utils/mergeRepoSkillsWithProjectSkills';
 import {
   loadProjectSkillFlags,
   loadSkillTagVocabulary,
 } from '~/routing/skills/utils/skill-index-loaders';
-import { toSkillDetailUsageData } from '~/routing/skills/utils/toSkillDetailUsageData';
+import { loadSkillDetailUsage } from '~/routing/skills/utils/skill-usage-loaders';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -76,37 +68,11 @@ export const loader = async (args: Route.LoaderArgs) => {
   const metadata = isOrphan ? {} : disk.metadata;
   const rawContent = isOrphan ? '' : disk.rawContent;
 
-  // Deferred: the Run-skill modal needs discovered agent+model options and the
-  // registered repositories that satisfy `repositoryId` for CLI backends. Model
-  // discovery probes local model servers (cold-slow), so bundle both into one
-  // naked promise (RR8 Single Fetch streams it) — the skill detail shell paints
-  // immediately and the modal resolves this only when opened. Reuses the SAME
-  // shared discovery helpers as the home composer; no duplication.
-  const runOptions = Promise.all([
-    loadComposerModels(args.request),
-    loadRepositories(args.request),
-  ]).then(([models, repositories]) => ({ models, repositories }));
-
-  // Deferred per-skill usage over a fixed 30-day window (YYYY-MM-DD, matching
-  // the /usage contract). Streamed as a naked promise so the SKILL.md shell
-  // paints immediately. `skillUsage` is guarded by SETTINGS_READ; any failure
-  // (missing permission, server error) resolves to the unavailable sentinel so
-  // the route still renders 200 and degrades to a notice instead of throwing.
-  const end = new Date();
-  const start = new Date(
-    end.getTime() - SKILL_USAGE_RANGE_DAYS * 24 * 60 * 60 * 1000,
-  );
-  const usage: Promise<SkillDetailUsageData> = executeGraphqlWithAuth(
-    args.request,
-    GetSkillDetailUsageDocument,
-    {
-      end: end.toISOString().slice(0, 10),
-      skillName: entry.slug,
-      start: start.toISOString().slice(0, 10),
-    },
-  )
-    .then(({ skillUsage }) => toSkillDetailUsageData(skillUsage))
-    .catch(() => ({ available: false as const }));
+  // Deferred (naked promises, RR8 Single Fetch): the Run-skill modal's
+  // agent/model/repository options and the per-skill 30-day usage. The detail
+  // shell paints immediately; failures degrade inside the loader helpers.
+  const runOptions = loadSkillRunOptions(args.request);
+  const usage = loadSkillDetailUsage(args.request, entry.slug);
 
   return {
     content,
@@ -197,18 +163,7 @@ export default function Component(
         usage={usage}
       />
 
-      {/* Controlled conversation surface: the run streams here once started. The
-          trigger is visually hidden — the skill header's Run-now button drives
-          `open` via the run hook. */}
-      <ChatDialog
-        messages={runSkill.messages}
-        onOpenChange={runSkill.onConversationOpenChange}
-        onSendMessage={runSkill.onSendFollowUp}
-        open={runSkill.conversationOpen}
-        title={SKILL_RUN_COPY.conversationTitle}
-        trigger={<span aria-hidden={true} className="sr-only" />}
-        variant="sheet"
-      />
+      <SkillRunConversation runSkill={runSkill} />
     </GlobalScreen>
   );
 }

@@ -7,11 +7,11 @@
  */
 
 import { Inject, Injectable } from '@nestjs/common';
+import type { PubSubEngine } from '@openthrottle/nestjs-graphql';
 import {
   notificationsFirehoseTopic,
   planLifecycleTopic,
   PUB_SUB,
-  type PubSubEngine,
   systemAlertTopic,
   userNotificationsTopic,
 } from '@openthrottle/nestjs-graphql';

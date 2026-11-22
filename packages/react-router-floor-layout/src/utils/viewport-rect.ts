@@ -3,8 +3,8 @@
  * and find its center. Kept out of `utils/viewport` (pure math, no DOM).
  */
 
-import { type Point } from './geometry';
-import { type ViewportRect } from './viewport';
+import type { Point } from './geometry';
+import type { ViewportRect } from './viewport';
 
 /**
  * The on-screen rectangle of an SVG element, or `null` when it is not mounted.

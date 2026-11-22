@@ -7,14 +7,16 @@
 
 import { NotFoundException } from '@nestjs/common';
 import { Args, ID, Query, Resolver } from '@nestjs/graphql';
+import type {
+  ComparableConfig,
+  EvalReport,
+  ReportCalibration,
+  ReportGrade,
+  ReportTrial,
+} from '@openthrottle/agentic-evals';
 import {
   buildEvalReport,
-  type ComparableConfig,
   compareEvalReports,
-  type EvalReport,
-  type ReportCalibration,
-  type ReportGrade,
-  type ReportTrial,
 } from '@openthrottle/agentic-evals';
 import {
   EvalCasesRepository,

@@ -9,13 +9,15 @@
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import { z } from 'zod';
 
+import type {
+  ScheduledJobFragment,
+  ScheduledJobRunFragment,
+} from '../__generated__/graphql.js';
 import {
   CreateScheduledJobDocument,
   DeleteScheduledJobDocument,
   ListScheduledJobsDocument,
   RunScheduledJobNowDocument,
-  type ScheduledJobFragment,
-  type ScheduledJobRunFragment,
   UpdateScheduledJobDocument,
 } from '../__generated__/graphql.js';
 import {

@@ -14,10 +14,8 @@ import {
   DEFAULT_RALPH_MODEL,
   DEFAULT_RALPH_PROMPT,
 } from './ralph-runtime-config';
-import {
-  buildWorktreeNestedArgv,
-  type RalphWorktreeName,
-} from './ralph-worktree-cli';
+import type { RalphWorktreeName } from './ralph-worktree-cli';
+import { buildWorktreeNestedArgv } from './ralph-worktree-cli';
 
 /**
  * @description Layer 1 (prompt profile), layer 2 (backend), and layer 3 (run tuning) for nested `pnpm exec workflow-ralph`.

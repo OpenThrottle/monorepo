@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import { parseIndexClaims, planStatusClaim, prStateClaim } from '../claims';
+import type { ObservedPlan, ObservedPr } from '../reconcile';
 import {
   formatReconcileReport,
-  type ObservedPlan,
-  type ObservedPr,
   observedPrState,
   prClaimConflicts,
   reconcile,

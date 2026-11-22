@@ -1,14 +1,16 @@
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
+import type {
+  RolloutBooleanFlagKey,
+  RolloutFlagKey,
+  RolloutFlagValue,
+} from '../../index';
 import {
   assertRolloutFlagCatalog,
   defineRolloutFlags,
   isRolloutFlagKind,
   isRolloutFlagValueForKind,
   ROLLOUT_FLAG_KIND,
-  type RolloutBooleanFlagKey,
-  type RolloutFlagKey,
-  type RolloutFlagValue,
 } from '../../index';
 
 describe('ROLLOUT_FLAG_KIND', () => {

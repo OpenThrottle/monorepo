@@ -42,18 +42,20 @@ import { ConfigService } from '@nestjs/config';
 import { AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { SORT_ORDER_GAP } from '@openthrottle/nestjs-postgres';
+import type { Plan } from '@openthrottle/nestjs-repositories-server';
 import {
-  type Plan,
   RULE_APPLICATION_STATES,
   RuleApplicationsRepository,
   SOFT_CLOSED_TASK_STATUS,
   Task,
   TasksRepository,
 } from '@openthrottle/nestjs-repositories-server';
+import type {
+  InjectTaskActionPayload,
+  MatchedTagAction,
+} from '@openthrottle/openthrottle-skills';
 import {
-  type InjectTaskActionPayload,
   injectTaskActionPayloadSchema,
-  type MatchedTagAction,
   TAG_ACTION_TYPES,
 } from '@openthrottle/openthrottle-skills';
 import { DataSource, QueryFailedError } from 'typeorm';

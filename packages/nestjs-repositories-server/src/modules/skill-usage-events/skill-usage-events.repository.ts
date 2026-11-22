@@ -6,7 +6,8 @@ import {
   resolvePagination,
   toLikeContainsPattern,
 } from '@openthrottle/nestjs-postgres';
-import { IsNull, Repository, type SelectQueryBuilder } from 'typeorm';
+import type { SelectQueryBuilder } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 
 import {
   CAPTURE_HEALTH_STREAMS,

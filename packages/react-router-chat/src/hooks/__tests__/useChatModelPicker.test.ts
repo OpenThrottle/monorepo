@@ -3,10 +3,8 @@ import { describe, expect, test, vi } from 'vitest';
 
 import { FAVORITES_GROUP_ID } from '../../data/data.chat-model-picker-favorites';
 import type { ChatModelGroup, ChatModelOption } from '../../types';
-import {
-  useChatModelPicker,
-  type UseChatModelPickerOptions,
-} from '../useChatModelPicker';
+import type { UseChatModelPickerOptions } from '../useChatModelPicker';
+import { useChatModelPicker } from '../useChatModelPicker';
 
 const groups: readonly ChatModelGroup[] = [
   { id: 'claude', label: 'Claude' },

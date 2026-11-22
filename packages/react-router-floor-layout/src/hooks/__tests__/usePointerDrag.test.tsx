@@ -1,10 +1,10 @@
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { type ReactElement } from 'react';
+import type { ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { type PointerDragContext } from '../../types';
-import { type Point } from '../../utils/geometry';
+import type { PointerDragContext } from '../../types';
+import type { Point } from '../../utils/geometry';
 import { usePointerDrag } from '../usePointerDrag';
 
 interface HarnessProps {

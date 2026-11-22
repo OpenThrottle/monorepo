@@ -27,11 +27,8 @@ import { ForbiddenException, Inject } from '@nestjs/common';
 import { Args, Context, Query, Resolver, Subscription } from '@nestjs/graphql';
 import { Throttle } from '@nestjs/throttler';
 import { Public } from '@openthrottle/nestjs-auth';
-import {
-  PUB_SUB,
-  type PubSubEngine,
-  queueJobLogTopic,
-} from '@openthrottle/nestjs-graphql';
+import type { PubSubEngine } from '@openthrottle/nestjs-graphql';
+import { PUB_SUB, queueJobLogTopic } from '@openthrottle/nestjs-graphql';
 
 import { QueueJobLogEventObject } from './queue-job-log-event.object.ts';
 import { QueueJobLogPageObject } from './queue-job-log-page.object.ts';

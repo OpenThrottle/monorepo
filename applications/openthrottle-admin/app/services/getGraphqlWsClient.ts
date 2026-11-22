@@ -9,10 +9,8 @@
  * HttpOnly cookie never leaves the admin-app origin and reconnects
  * re-authenticate without a page reload. Mirrors the developer app's client.
  */
-import {
-  createGraphqlWsClient,
-  type GraphqlWsClient,
-} from '@openthrottle/react-router-graphql';
+import type { GraphqlWsClient } from '@openthrottle/react-router-graphql';
+import { createGraphqlWsClient } from '@openthrottle/react-router-graphql';
 import { IS_BROWSER } from '@openthrottle/react-router-utils';
 
 let cached: GraphqlWsClient | null = null;

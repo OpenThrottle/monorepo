@@ -3,7 +3,8 @@
  */
 
 import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
+import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
+import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { GlobalClsService } from '@openthrottle/nestjs-modules';
 import type { Note } from '@openthrottle/nestjs-repositories-server';
 import { NotesRepository } from '@openthrottle/nestjs-repositories-server';

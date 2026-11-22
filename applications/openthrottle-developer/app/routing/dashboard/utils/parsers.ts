@@ -1,8 +1,10 @@
+import type {
+  GithubOrg,
+  GithubRepo,
+} from '~/routing/dashboard/config/config.dashboard';
 import {
   GITHUB_ORGS,
   GITHUB_REPOSITORIES,
-  type GithubOrg,
-  type GithubRepo,
 } from '~/routing/dashboard/config/config.dashboard';
 
 const DEFAULT_OWNER: GithubOrg = 'openthrottle';

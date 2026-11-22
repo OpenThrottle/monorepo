@@ -1,10 +1,8 @@
 import { describe, expect, test } from 'vitest';
 
 import { buildWorkflowRalphTuningDiffLabels } from '../buildWorkflowRalphTuningDiffLabels';
-import {
-  getDefaultWorkflowRalphRunOptionsInput,
-  type WorkflowRalphRunOptionsInput,
-} from '../workflow-ralph-config';
+import type { WorkflowRalphRunOptionsInput } from '../workflow-ralph-config';
+import { getDefaultWorkflowRalphRunOptionsInput } from '../workflow-ralph-config';
 
 const baseline: WorkflowRalphRunOptionsInput =
   getDefaultWorkflowRalphRunOptionsInput({ planId: 'plan-1' });

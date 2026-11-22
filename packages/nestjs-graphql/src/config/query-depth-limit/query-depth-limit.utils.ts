@@ -8,16 +8,15 @@
  * tree, so no extra runtime dependency (e.g. `graphql-depth-limit`) is needed.
  */
 
-import {
-  type ASTNode,
-  type DefinitionNode,
-  type FragmentDefinitionNode,
-  GraphQLError,
-  Kind,
-  type OperationDefinitionNode,
-  type ValidationContext,
-  type ValidationRule,
+import type {
+  ASTNode,
+  DefinitionNode,
+  FragmentDefinitionNode,
+  OperationDefinitionNode,
+  ValidationContext,
+  ValidationRule,
 } from 'graphql';
+import { GraphQLError, Kind } from 'graphql';
 
 /** Introspection meta-fields are exempt from depth counting (codegen/devtools). */
 const isIntrospectionField = (name: string): boolean => {

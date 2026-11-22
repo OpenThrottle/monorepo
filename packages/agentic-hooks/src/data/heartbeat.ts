@@ -30,7 +30,8 @@ import { logHookError } from '../utils/logging.ts';
 import { postGraphqlMutation } from './graphql.ts';
 import { resolveTelemetryDir } from './jsonl.ts';
 import { DEFAULT_POST_TIMEOUT_MS } from './persist.ts';
-import { type BufferStats, readBufferStats } from './readBufferStats.ts';
+import type { BufferStats } from './readBufferStats.ts';
+import { readBufferStats } from './readBufferStats.ts';
 
 /** The one mutation a heartbeat sends. */
 export const RECORD_TELEMETRY_HEARTBEAT_MUTATION = `

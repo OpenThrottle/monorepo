@@ -15,10 +15,8 @@
  * passed through verbatim.
  */
 
-import {
-  CONVERSATION_PERMISSION_MODES,
-  type ConversationPermissionMode,
-} from '../types.ts';
+import type { ConversationPermissionMode } from '../types.ts';
+import { CONVERSATION_PERMISSION_MODES } from '../types.ts';
 
 /**
  * Env var holding an absolute path to the cursor-agent binary; overrides PATH lookup.

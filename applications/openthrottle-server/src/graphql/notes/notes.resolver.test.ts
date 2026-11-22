@@ -1,13 +1,9 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
-import {
-  AUTH_PRINCIPAL_KIND_USER,
-  type AuthPrincipal,
-} from '@openthrottle/nestjs-auth';
-import {
-  GlobalClsService,
-  type GlobalClsUser,
-} from '@openthrottle/nestjs-modules';
+import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
+import { AUTH_PRINCIPAL_KIND_USER } from '@openthrottle/nestjs-auth';
+import type { GlobalClsUser } from '@openthrottle/nestjs-modules';
+import { GlobalClsService } from '@openthrottle/nestjs-modules';
 import type { Note } from '@openthrottle/nestjs-repositories-server';
 import { NotesRepository } from '@openthrottle/nestjs-repositories-server';
 import { createNotesRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';

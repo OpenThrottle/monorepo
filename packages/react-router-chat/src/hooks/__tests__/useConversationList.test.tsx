@@ -7,10 +7,8 @@ import { describe, expect, test } from 'vitest';
 
 import { AGENT_CONVERSATIONS_ACTION } from '../../data/data.chat-conversation-actions';
 import { CHAT_CONVERSATION_SIDEBAR_COPY } from '../../data/data.chat-conversation-sidebar.copy';
-import {
-  useConversationList,
-  type UseConversationListResult,
-} from '../useConversationList';
+import type { UseConversationListResult } from '../useConversationList';
+import { useConversationList } from '../useConversationList';
 
 function conversationsPage(
   offset: number,

@@ -5,10 +5,8 @@
  * degraded UUID so callers that omit both, or send a malformed anonymousId,
  * still get evaluations (shared bucket).
  */
-import {
-  AUTH_PRINCIPAL_KIND_USER,
-  type AuthPrincipal,
-} from '@openthrottle/nestjs-auth';
+import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
+import { AUTH_PRINCIPAL_KIND_USER } from '@openthrottle/nestjs-auth';
 
 import {
   ROLLOUT_ANONYMOUS_ID_PATTERN,

@@ -5,7 +5,8 @@
  * schema is the migration branch point — loading a different version throws.
  */
 
-import { type FloorLayout, floorLayoutSchema } from '../types';
+import type { FloorLayout } from '../types';
+import { floorLayoutSchema } from '../types';
 
 /**
  * Validate a layout and serialize it to a JSON string.

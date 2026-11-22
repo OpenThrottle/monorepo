@@ -5,12 +5,12 @@
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import { z } from 'zod';
 
+import type { NoteFragment } from '../__generated__/graphql.js';
 import {
   CreateNoteDocument,
   DeleteNoteDocument,
   GetNoteDocument,
   GetNotesDocument,
-  type NoteFragment,
   UpdateNoteDocument,
 } from '../__generated__/graphql.js';
 import {

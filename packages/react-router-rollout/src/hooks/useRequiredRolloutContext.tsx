@@ -1,6 +1,7 @@
 import * as React from 'react';
 
-import { RolloutContext, type RolloutContextValue } from '../data';
+import type { RolloutContextValue } from '../data';
+import { RolloutContext } from '../data';
 import type { RolloutFlagCatalog } from '../types';
 
 /**

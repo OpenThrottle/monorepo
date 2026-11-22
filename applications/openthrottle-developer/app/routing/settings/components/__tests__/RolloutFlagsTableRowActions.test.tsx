@@ -5,10 +5,8 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import {
-  type RolloutFlagFieldsFragment,
-  RolloutFlagKind,
-} from '~/__generated__/graphql';
+import type { RolloutFlagFieldsFragment } from '~/__generated__/graphql';
+import { RolloutFlagKind } from '~/__generated__/graphql';
 import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
 
 import type { RolloutFlagsTableRowActionsProps } from '../RolloutFlagsTableRowActions';

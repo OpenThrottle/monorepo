@@ -11,10 +11,8 @@ import {
 } from '~/__generated__/graphql';
 import { CreateServiceAccountCredentialInputSchema } from '~/__generated__/schemas';
 import { toErrorMessage } from '~/global/utils/utils.error-message';
-import {
-  parseExpiresAtFromFormData,
-  type SettingsKeysActionData,
-} from '~/routing/settings/utils/settings-keys-action';
+import type { SettingsKeysActionData } from '~/routing/settings/utils/settings-keys-action';
+import { parseExpiresAtFromFormData } from '~/routing/settings/utils/settings-keys-action';
 
 export const createServiceAccountCredential = async (
   args: Route.ActionArgs,

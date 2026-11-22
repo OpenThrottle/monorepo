@@ -1,6 +1,6 @@
+import type { ChatModelOption } from '@openthrottle/react-router-chat';
 import {
   ChatCheckoutSelector,
-  type ChatModelOption,
   ChatModelPicker,
 } from '@openthrottle/react-router-chat';
 import {

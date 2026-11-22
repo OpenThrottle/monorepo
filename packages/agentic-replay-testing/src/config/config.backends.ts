@@ -4,16 +4,17 @@
  * configuration rather than protocol.
  */
 
+import type { ConversationBackend } from '@openthrottle/openthrottle-agentic-utils';
 import {
   antigravityConversationBackend,
   claudeConversationBackend,
   codexConversationBackend,
-  type ConversationBackend,
   createCursorAgentSession,
   cursorAgentConversationBackend,
   opencodeConversationBackend,
 } from '@openthrottle/openthrottle-agentic-utils';
-import { type DriverId, getDriver } from '@openthrottle/openthrottle-drivers';
+import type { DriverId } from '@openthrottle/openthrottle-drivers';
+import { getDriver } from '@openthrottle/openthrottle-drivers';
 
 import { DEFAULT_REDACT_KEYS } from '../utils/sanitizer/sanitizer.ts';
 

@@ -30,9 +30,9 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
+import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
 import {
   AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
-  type AuthPrincipal,
   CurrentUser,
 } from '@openthrottle/nestjs-auth';
 import { isUniqueViolation } from '@openthrottle/nestjs-postgres';

@@ -15,10 +15,8 @@
  * BullMQ processor doing the append (see the log-tail API design doc).
  */
 
-import {
-  type PubSubEngine,
-  queueJobLogTopic,
-} from '@openthrottle/nestjs-graphql';
+import type { PubSubEngine } from '@openthrottle/nestjs-graphql';
+import { queueJobLogTopic } from '@openthrottle/nestjs-graphql';
 import type { KeyedJsonlRunRecord } from '@openthrottle/nestjs-logging';
 
 import { encodeQueueJobLogCursor } from '../cursor/cursor.utils.ts';

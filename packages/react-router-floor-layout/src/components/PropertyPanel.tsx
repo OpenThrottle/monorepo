@@ -1,7 +1,7 @@
 import { Button, cn, Input, Label } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { type DisplayUnit, type FloorElement } from '../types';
+import type { DisplayUnit, FloorElement } from '../types';
 import { formatDimensions } from '../utils/units';
 import { NumberField } from './NumberField';
 

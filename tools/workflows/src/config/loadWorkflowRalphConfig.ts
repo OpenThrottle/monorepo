@@ -8,13 +8,13 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { isRecord } from '@openthrottle/nodejs-utils';
+import type { WorkflowDebugLevel } from '@openthrottle/openthrottle-agentic-utils';
 import {
   isWorkflowVerboseEnvTruthy,
   readWorkflowDebugLevelFromEnv,
   WORKFLOW_RALPH_DEBUG_ENV,
   WORKFLOW_RALPH_DEBUG_LEGACY_ENV,
   WORKFLOW_RALPH_VERBOSE_ENV,
-  type WorkflowDebugLevel,
 } from '@openthrottle/openthrottle-agentic-utils';
 
 import type { Writable } from '../type.ts';
@@ -26,10 +26,8 @@ import {
   DEFAULT_RALPH_RUNNER,
   parseRalphExecutionBackendId,
 } from '../utils/ralph-execution-backend.ts';
-import {
-  WORKFLOW_RALPH_TRANSPORT_ENV,
-  type WorkflowRalphTransport,
-} from '../utils/workflow-transport.ts';
+import type { WorkflowRalphTransport } from '../utils/workflow-transport.ts';
+import { WORKFLOW_RALPH_TRANSPORT_ENV } from '../utils/workflow-transport.ts';
 import type {
   WorkflowRalphDefaultsDebug,
   WorkflowRalphDefaultsDiagnosticsJson,

@@ -4,7 +4,8 @@
  */
 
 import type { ThemeMode } from '@openthrottle/react-router-utils';
-import { type LucideIcon, MonitorIcon, MoonIcon, SunIcon } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import { MonitorIcon, MoonIcon, SunIcon } from 'lucide-react';
 
 export interface ThemeToggleOption {
   readonly icon: LucideIcon;

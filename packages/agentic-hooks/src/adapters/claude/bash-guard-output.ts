@@ -14,12 +14,8 @@
  */
 import { isRecord } from '@openthrottle/nodejs-utils';
 
-import {
-  type BashGuardContext,
-  type BashGuardResult,
-  evaluateBashGuard,
-  formatBashGuardFindings,
-} from '../../index.ts';
+import type { BashGuardContext, BashGuardResult } from '../../index.ts';
+import { evaluateBashGuard, formatBashGuardFindings } from '../../index.ts';
 
 /** The command and directory of a `Bash` PreToolUse payload. */
 export interface ClaudeBashCall {

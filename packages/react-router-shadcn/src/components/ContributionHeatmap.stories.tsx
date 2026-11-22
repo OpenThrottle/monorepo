@@ -1,9 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
-import {
-  ContributionHeatmap,
-  type ContributionHeatmapValue,
-} from './ContributionHeatmap';
+import type { ContributionHeatmapValue } from './ContributionHeatmap';
+import { ContributionHeatmap } from './ContributionHeatmap';
 
 const END_DATE = '2026-08-16';
 

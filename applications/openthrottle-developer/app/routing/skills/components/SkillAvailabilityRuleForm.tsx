@@ -12,12 +12,12 @@ import * as React from 'react';
 import { SkillAvailabilityRuleRemoveButton } from '~/routing/skills/components/SkillAvailabilityRuleRemoveButton';
 import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/data.copy';
 import { useSkillAvailabilityRuleForm } from '~/routing/skills/hooks/useSkillAvailabilityRuleForm';
+import type { SkillAvailabilityRuleValue } from '~/routing/skills/utils/skill-availability';
 import {
   environmentChoiceToValue,
   serializeList,
   SKILL_AVAILABILITY_ENVIRONMENT_ALL,
   SKILL_AVAILABILITY_ENVIRONMENTS,
-  type SkillAvailabilityRuleValue,
 } from '~/routing/skills/utils/skill-availability';
 
 const COPY = SKILL_AVAILABILITY_COPY.rules;

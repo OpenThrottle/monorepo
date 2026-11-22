@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'vitest';
 
+import type { RulePreviewRequest } from '../rule-preview-params';
 import {
   buildRulePreviewQuery,
   normalizeRuleFormChoice,
   parseRulePreviewEnvironment,
   parseRulePreviewQuery,
-  type RulePreviewRequest,
 } from '../rule-preview-params';
 
 const request: RulePreviewRequest = {

@@ -1,4 +1,5 @@
-import { createParamDecorator, type ExecutionContext } from '@nestjs/common';
+import type { ExecutionContext } from '@nestjs/common';
+import { createParamDecorator } from '@nestjs/common';
 
 import type { AuthPrincipal } from '../auth-principal/auth-principal.types.ts';
 import {

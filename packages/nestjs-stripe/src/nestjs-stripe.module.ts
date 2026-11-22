@@ -2,7 +2,8 @@
  * @description Nest module: Stripe Checkout, catalog (products), webhook HTTP controller, and GraphQL webhook mutation. App supplies persistence via {@link StripeModuleAsyncOptions.useFactory}.
  */
 
-import { type DynamicModule, Module } from '@nestjs/common';
+import type { DynamicModule } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 
 import { CheckoutService } from './checkout/checkout.service.ts';
 import { StripeProductResolver } from './graphql/stripe-product/stripe-product.resolver.ts';

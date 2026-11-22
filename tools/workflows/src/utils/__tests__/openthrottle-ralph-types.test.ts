@@ -4,11 +4,10 @@
 
 import { describe, expect, it } from 'vitest';
 
+import type { PlanRow, TaskRow } from '../openthrottle-ralph-types';
 import {
   areAllTasksTerminal,
   formatPlanAndTasksForPrompt,
-  type PlanRow,
-  type TaskRow,
 } from '../openthrottle-ralph-types';
 
 const PLAN_ID = '9207a6b7-4de7-4e06-8d10-779503b497ae';

@@ -1,10 +1,10 @@
 import { describe, expect, test } from 'vitest';
 
 import { validateWorkflowRalphRunOptionsState } from '../validateWorkflowRalphRunOptionsState';
+import type { WorkflowRalphRunOptionsInput } from '../workflow-ralph-config';
 import {
   DEFAULT_RALPH_PROMPT,
   getDefaultWorkflowRalphRunOptionsInput,
-  type WorkflowRalphRunOptionsInput,
 } from '../workflow-ralph-config';
 
 const VALID_PLAN_ID = '77cb14a0-5eb0-4061-87ea-d618b85e8818';

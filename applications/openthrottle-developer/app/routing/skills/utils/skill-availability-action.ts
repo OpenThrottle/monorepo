@@ -3,10 +3,10 @@ import { z } from 'zod/v3';
 
 import type { SkillAvailabilityRuleInput } from '~/__generated__/graphql';
 import { SkillAvailabilityRuleInputSchema } from '~/__generated__/schemas';
+import type { SkillAvailabilityEnvironment } from '~/routing/skills/utils/skill-availability';
 import {
   isSkillAvailabilityEnvironment,
   parseListField,
-  type SkillAvailabilityEnvironment,
 } from '~/routing/skills/utils/skill-availability';
 
 /** Narrow a server `environment` string to a known env, degrading unknown values to null (all). */

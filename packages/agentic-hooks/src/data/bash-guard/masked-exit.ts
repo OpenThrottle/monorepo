@@ -23,14 +23,14 @@
  * @public
  */
 import { stripCommandPrefixes } from './shell-words.ts';
-import {
-  BASH_RULE_ALLOW,
-  type BashGuardRule,
-  type BashOperator,
-  type BashRuleVerdict,
-  type BashSegment,
-  type ParsedBashCommand,
+import type {
+  BashGuardRule,
+  BashOperator,
+  BashRuleVerdict,
+  BashSegment,
+  ParsedBashCommand,
 } from './types.ts';
+import { BASH_RULE_ALLOW } from './types.ts';
 
 /** @public */
 export const MASKED_EXIT_TRAILING_RULE_ID = 'masked-exit-trailing';

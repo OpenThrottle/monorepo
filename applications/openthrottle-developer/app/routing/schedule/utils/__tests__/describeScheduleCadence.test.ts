@@ -2,10 +2,8 @@ import { describe, expect, test } from 'vitest';
 
 import { SCHEDULE_CADENCE_COPY } from '~/routing/schedule/data/data.copy';
 
-import {
-  describeScheduleCadence,
-  type ScheduleCadenceFields,
-} from '../describeScheduleCadence';
+import type { ScheduleCadenceFields } from '../describeScheduleCadence';
+import { describeScheduleCadence } from '../describeScheduleCadence';
 
 const cadence = (overrides: Partial<ScheduleCadenceFields>): string => {
   return describeScheduleCadence({

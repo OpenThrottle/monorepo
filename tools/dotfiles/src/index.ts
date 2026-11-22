@@ -632,9 +632,20 @@ export const eslintConfig = tslint.config([
       // documented idiom (and a top-level import of the module you are mocking
       // is exactly what those files avoid), and `typeof import('monaco-editor')`
       // exists so the editor bundle stays lazily loaded.
+      //
+      // `consistent-type-imports` on its own accepts an inline specifier
+      // (`import { type X, Y }`), so AGENTS.md's "`import type` at the top
+      // level" rule was not actually enforced. `consistent-type-specifier-style`
+      // rejects the inline form and autofixes it into a separate top-level
+      // `import type`; `fixStyle` makes this rule's own fixes emit the same
+      // shape, so the two never fight. The decorator-metadata guard above still
+      // applies: an injected class stays a value import.
       '@typescript-eslint/consistent-type-imports': [
         'error',
-        { disallowTypeAnnotations: false },
+        {
+          disallowTypeAnnotations: false,
+          fixStyle: 'separate-type-imports',
+        },
       ],
       // `naming-conventions.mdc`, translated selector by selector. Only the
       // clauses the rule can actually express are here — the doc's file-name
@@ -665,6 +676,9 @@ export const eslintConfig = tslint.config([
           selector: 'variable',
         },
       ],
+      // Paired with `consistent-type-imports` above: rejects inline
+      // `import { type X }` and autofixes it into a top-level `import type`.
+      'import-x/consistent-type-specifier-style': ['error', 'prefer-top-level'],
     },
   },
 

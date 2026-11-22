@@ -1,4 +1,4 @@
-import * as FEATURE_FLAGS from '@openthrottle/react-router-utils/src/config/features';
+import { FEATURE_FLAGS } from '@openthrottle/react-router-utils';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 

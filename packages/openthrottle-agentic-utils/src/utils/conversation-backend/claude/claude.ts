@@ -24,12 +24,12 @@ import {
 import { describeExit } from '../describeExit.ts';
 import { withFileMentions } from '../file-mentions.ts';
 import { withKeepalive } from '../keepalive.ts';
-import {
-  CONVERSATION_STREAM_CHUNK_KINDS,
-  type ConversationBackend,
-  type ConversationBackendRun,
-  type ConversationStreamChunk,
+import type {
+  ConversationBackend,
+  ConversationBackendRun,
+  ConversationStreamChunk,
 } from '../types.ts';
+import { CONVERSATION_STREAM_CHUNK_KINDS } from '../types.ts';
 import { buildClaudeArgv, CLAUDE_BIN_ENV, CLAUDE_DEFAULT_BIN } from './argv.ts';
 import {
   CLAUDE_CONFIG_DIR_KEY,

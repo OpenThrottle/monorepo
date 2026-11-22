@@ -10,10 +10,8 @@ import {
   GET_STARTED_STEP_COPY,
 } from '~/routing/dashboard/data/data.copy';
 import { GET_STARTED_STEPS } from '~/routing/dashboard/data/data.get-started-steps';
-import {
-  isOnboardingComplete,
-  type OnboardingCompletion,
-} from '~/routing/dashboard/utils/onboarding-steps';
+import type { OnboardingCompletion } from '~/routing/dashboard/utils/onboarding-steps';
+import { isOnboardingComplete } from '~/routing/dashboard/utils/onboarding-steps';
 
 export interface DashboardGetStartedCardProps {
   className?: string;

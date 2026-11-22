@@ -1,10 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import {
-  decidePlanAutoClose,
-  lookupTaskPlan,
-  type TaskPlanLookup,
-} from '../plan-auto-close.ts';
+import type { TaskPlanLookup } from '../plan-auto-close.ts';
+import { decidePlanAutoClose, lookupTaskPlan } from '../plan-auto-close.ts';
 
 const TASK_ID = '11111111-1111-4111-8111-111111111111';
 const PLAN_ID = '586bcff7-dbef-4e2c-ae22-d3f9210b2a39';

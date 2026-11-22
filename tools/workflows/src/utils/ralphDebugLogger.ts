@@ -2,13 +2,13 @@
  * @description Opt-in debug logging for Ralph / workflow-ralph. When disabled, {@link ralphDebugLogger} methods are no-ops (no branches in hot paths beyond one indirect call). Enable with {@link RALPH_DEBUG_ENV} or {@link RALPH_DEBUG_ENV_LEGACY}; verbose lines with {@link RALPH_VERBOSE_ENV} or `WORKFLOW_RALPH_DEBUG=verbose`.
  */
 
+import type { WorkflowDebugLevel } from '@openthrottle/openthrottle-agentic-utils';
 import {
   isWorkflowVerboseEnvTruthy,
   readWorkflowDebugLevelFromEnv,
   WORKFLOW_RALPH_DEBUG_ENV,
   WORKFLOW_RALPH_DEBUG_LEGACY_ENV,
   WORKFLOW_RALPH_VERBOSE_ENV,
-  type WorkflowDebugLevel,
 } from '@openthrottle/openthrottle-agentic-utils';
 import type { WorkflowConfigDebug } from '@openthrottle/openthrottle-agentic-workflow';
 

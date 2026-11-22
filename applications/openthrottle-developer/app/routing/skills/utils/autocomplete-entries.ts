@@ -5,14 +5,10 @@ import {
   SkillAvailabilityDocument,
 } from '~/__generated__/graphql';
 import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
-import {
-  mergeRepoSkillsWithProjectSkills,
-  type ProjectSkillFlagRow,
-} from '~/routing/skills/utils/mergeRepoSkillsWithProjectSkills';
-import {
-  mergeRepoSkillsWithSkillAvailability,
-  type SkillAvailabilityRow,
-} from '~/routing/skills/utils/mergeRepoSkillsWithSkillAvailability';
+import type { ProjectSkillFlagRow } from '~/routing/skills/utils/mergeRepoSkillsWithProjectSkills';
+import { mergeRepoSkillsWithProjectSkills } from '~/routing/skills/utils/mergeRepoSkillsWithProjectSkills';
+import type { SkillAvailabilityRow } from '~/routing/skills/utils/mergeRepoSkillsWithSkillAvailability';
+import { mergeRepoSkillsWithSkillAvailability } from '~/routing/skills/utils/mergeRepoSkillsWithSkillAvailability';
 
 /** One skill offered to the composer's `/`-command provider. */
 export interface SkillAutocompleteEntry {

@@ -3,11 +3,11 @@
  */
 
 import { ForbiddenException } from '@nestjs/common';
-import {
-  AUTH_PRINCIPAL_KIND_USER,
-  type AuthPrincipal,
-  type UserAuthPrincipal,
+import type {
+  AuthPrincipal,
+  UserAuthPrincipal,
 } from '@openthrottle/nestjs-auth';
+import { AUTH_PRINCIPAL_KIND_USER } from '@openthrottle/nestjs-auth';
 
 export const assertHumanAuthPrincipal = (
   principal: AuthPrincipal | undefined,

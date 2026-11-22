@@ -15,23 +15,26 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
+import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
+import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { GlobalClsService } from '@openthrottle/nestjs-modules';
+import type {
+  EvalAuthMode,
+  EvalGraderKind,
+  EvalGradeVerdict,
+  EvalRunStatus,
+  EvalTrialStatus,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   EVAL_AUTH_MODE,
   EVAL_GRADE_VERDICT,
   EVAL_GRADER_KIND,
   EVAL_RUN_STATUS,
   EVAL_TRIAL_STATUS,
-  type EvalAuthMode,
   EvalDatasetsRepository,
-  type EvalGraderKind,
   EvalGradesRepository,
-  type EvalGradeVerdict,
   EvalRunsRepository,
-  type EvalRunStatus,
   EvalTrialsRepository,
-  type EvalTrialStatus,
 } from '@openthrottle/nestjs-repositories-server';
 
 import {

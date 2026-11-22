@@ -1,11 +1,10 @@
 import type { ThemeTokenName } from '@openthrottle/react-router-shadcn';
-import { GaugeIcon, type LucideIcon, MonitorIcon } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import { GaugeIcon, MonitorIcon } from 'lucide-react';
 import type * as React from 'react';
 
-import {
-  REDUCED_MOTION_MODES,
-  type ReducedMotionMode,
-} from '~/global/data/data.appearance-config';
+import type { ReducedMotionMode } from '~/global/data/data.appearance-config';
+import { REDUCED_MOTION_MODES } from '~/global/data/data.appearance-config';
 import { AppearanceBrandColorField } from '~/routing/settings/components/AppearanceBrandColorField';
 import { AppearanceContextMeterField } from '~/routing/settings/components/AppearanceContextMeterField';
 import { AppearanceMotionField } from '~/routing/settings/components/AppearanceMotionField';

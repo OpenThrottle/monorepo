@@ -2,20 +2,22 @@ import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { GlobalClsService } from '@openthrottle/nestjs-modules';
+import type {
+  EvalDataset,
+  EvalGrade,
+  EvalHumanLabel,
+  EvalRun,
+  EvalTrial,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   EVAL_GRADE_VERDICT,
   EVAL_GRADER_KIND,
   EVAL_RUN_STATUS,
   EVAL_TRIAL_STATUS,
-  type EvalDataset,
   EvalDatasetsRepository,
-  type EvalGrade,
   EvalGradesRepository,
-  type EvalHumanLabel,
   EvalHumanLabelsRepository,
-  type EvalRun,
   EvalRunsRepository,
-  type EvalTrial,
   EvalTrialsRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import {

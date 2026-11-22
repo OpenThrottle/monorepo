@@ -23,10 +23,8 @@ import {
   workflowWorkingDirectoryAtom,
 } from '~/routing/plans/data/data.atom-plan';
 import { resolveDefaultRunBranch } from '~/routing/plans/utils/plan-run-branch';
-import {
-  getWorkflowRunSeedValues,
-  type WorkflowRunSeedPlan,
-} from '~/routing/plans/utils/workflow-run-atom-state';
+import type { WorkflowRunSeedPlan } from '~/routing/plans/utils/workflow-run-atom-state';
+import { getWorkflowRunSeedValues } from '~/routing/plans/utils/workflow-run-atom-state';
 
 export interface PlanRunConfigStoreProviderProps {
   readonly children: React.ReactNode;

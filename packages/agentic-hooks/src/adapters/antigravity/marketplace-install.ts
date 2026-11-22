@@ -14,9 +14,9 @@ import path from 'node:path';
 
 import { isRecord } from '@openthrottle/nodejs-utils';
 
+import type { MarketplaceInstall } from '../../data/heartbeat.ts';
 import {
   isReadableDirectory,
-  type MarketplaceInstall,
   readFirstManifestVersion,
   UNKNOWN_MARKETPLACE_INSTALL,
 } from '../../data/heartbeat.ts';

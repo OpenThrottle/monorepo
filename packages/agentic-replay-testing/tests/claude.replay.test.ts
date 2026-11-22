@@ -6,17 +6,15 @@
  * made of the real CLI's output.
  */
 
-import {
-  CONVERSATION_STREAM_CHUNK_KINDS,
-  type ConversationStreamChunk,
-} from '@openthrottle/openthrottle-agentic-utils';
+import type { ConversationStreamChunk } from '@openthrottle/openthrottle-agentic-utils';
+import { CONVERSATION_STREAM_CHUNK_KINDS } from '@openthrottle/openthrottle-agentic-utils';
 import { describe, expect, it } from 'vitest';
 
+import type { ReplayFixtureResult } from '../src/index.ts';
 import {
   CLAUDE_RECORDING_PROFILE,
   replayFixture,
   replayFixturePath,
-  type ReplayFixtureResult,
 } from '../src/index.ts';
 
 const replayClaude = async (path: string): Promise<ReplayFixtureResult> => {

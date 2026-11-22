@@ -1,8 +1,8 @@
-import {
-  NOTIFICATION_EVENT_NAMES,
-  type NotificationEventName,
-  type NotificationPayload,
+import type {
+  NotificationEventName,
+  NotificationPayload,
 } from '@openthrottle/openthrottle-notifications';
+import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 

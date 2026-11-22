@@ -1,10 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import { CONVERSATION_KEEPALIVE_CHUNK, withKeepalive } from '../keepalive.ts';
-import {
-  CONVERSATION_STREAM_CHUNK_KINDS,
-  type ConversationStreamChunk,
-} from '../types.ts';
+import type { ConversationStreamChunk } from '../types.ts';
+import { CONVERSATION_STREAM_CHUNK_KINDS } from '../types.ts';
 
 const text = (delta: string): ConversationStreamChunk => {
   return {

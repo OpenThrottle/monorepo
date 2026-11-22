@@ -21,10 +21,8 @@ import type {
   RequestPermissionResponse,
 } from '@agentclientprotocol/sdk';
 
-import {
-  CONVERSATION_PERMISSION_MODES,
-  type ConversationPermissionMode,
-} from '../types.ts';
+import type { ConversationPermissionMode } from '../types.ts';
+import { CONVERSATION_PERMISSION_MODES } from '../types.ts';
 
 /** Tool kinds `autoAcceptEdits` allows without asking. */
 const EDIT_TOOL_KINDS: ReadonlySet<string> = new Set([

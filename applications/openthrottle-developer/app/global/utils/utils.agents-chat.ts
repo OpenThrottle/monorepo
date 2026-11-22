@@ -6,10 +6,8 @@ import {
   SendAgentMessageDocument,
   UpdateAgentConversationTitleDocument,
 } from '@openthrottle/openthrottle-developer-codegen';
-import {
-  type ChatTurnResult,
-  createAgentConversationsApi,
-} from '@openthrottle/react-router-chat';
+import type { ChatTurnResult } from '@openthrottle/react-router-chat';
+import { createAgentConversationsApi } from '@openthrottle/react-router-chat';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 
 import { AgentsRunChatTurnInputSchema } from '~/__generated__/schemas';

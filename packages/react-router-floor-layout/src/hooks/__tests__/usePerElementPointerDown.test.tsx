@@ -1,6 +1,6 @@
 import { act, render, renderHook } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { type PointerEvent as ReactPointerEvent } from 'react';
+import type { PointerEvent as ReactPointerEvent } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { usePerElementPointerDown } from '../usePerElementPointerDown';

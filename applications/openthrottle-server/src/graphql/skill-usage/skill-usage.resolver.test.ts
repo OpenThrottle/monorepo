@@ -1,14 +1,16 @@
 import { BadRequestException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { PERMISSIONS, PERMISSIONS_KEY } from '@openthrottle/nestjs-rbac';
+import type {
+  SkillUsageEvent,
+  SkillUsageOutcome,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   RolesRepository,
   SKILL_USAGE_OUTCOMES,
   SKILL_USAGE_PRIVACY_LEVELS,
   SKILL_USAGE_SCOPES,
-  type SkillUsageEvent,
   SkillUsageEventsRepository,
-  type SkillUsageOutcome,
   SkillUsageOutcomesRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import {

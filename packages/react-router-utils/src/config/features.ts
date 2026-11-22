@@ -65,3 +65,14 @@ export const FEATURE_BLOG_ENABLED = parseEnvBoolean(
   ENV_SOURCE.FEATURE_BLOG_ENABLED,
   false,
 );
+
+/**
+ * @description Every build-time feature flag above, keyed by its env name, for
+ * surfaces that list them all (the developer app's Settings → Feature flags).
+ */
+export const FEATURE_FLAGS = {
+  FEATURE_BETA_PREVIEW,
+  FEATURE_BLOG_ENABLED,
+  FEATURE_CHARLIE_PREVIEW,
+  FEATURE_DELTA_PREVIEW,
+} as const;

@@ -12,10 +12,8 @@ import {
   ONBOARDING_STATE_VERSION,
   ONBOARDING_STORAGE_KEY,
 } from '~/routing/dashboard/data/data.onboarding-state';
-import {
-  ONBOARDING_STEP_ID,
-  type OnboardingCompletion,
-} from '~/routing/dashboard/utils/onboarding-steps';
+import type { OnboardingCompletion } from '~/routing/dashboard/utils/onboarding-steps';
+import { ONBOARDING_STEP_ID } from '~/routing/dashboard/utils/onboarding-steps';
 
 import { SettingsOnboardingRestore } from '../SettingsOnboardingRestore';
 

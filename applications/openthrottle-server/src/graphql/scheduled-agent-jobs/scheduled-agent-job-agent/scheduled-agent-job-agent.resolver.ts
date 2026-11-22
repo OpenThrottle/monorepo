@@ -8,7 +8,8 @@
  */
 import { UseGuards } from '@nestjs/common';
 import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
+import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
+import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import { UserDisabledAgentClisRepository } from '@openthrottle/nestjs-repositories-server';
 

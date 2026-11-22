@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
+import type { AvatarProps } from './Avatar';
 import {
   Avatar,
   AvatarBadge,
@@ -7,7 +8,6 @@ import {
   AvatarGroup,
   AvatarGroupCount,
   AvatarImage,
-  type AvatarProps,
 } from './Avatar';
 
 /**

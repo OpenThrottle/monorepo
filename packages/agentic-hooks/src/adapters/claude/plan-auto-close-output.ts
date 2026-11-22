@@ -10,7 +10,8 @@
  */
 import { isRecord } from '@openthrottle/nodejs-utils';
 
-import { decidePlanAutoClose, type TaskPlanLookupFn } from '../../index.ts';
+import type { TaskPlanLookupFn } from '../../index.ts';
+import { decidePlanAutoClose } from '../../index.ts';
 
 /** Tool-name suffix this hook applies to; MCP prefixes vary by host. */
 const UPDATE_TASK_SUFFIX = '__update_task';

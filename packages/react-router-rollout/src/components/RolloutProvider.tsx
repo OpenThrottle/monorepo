@@ -1,10 +1,8 @@
 import * as React from 'react';
 
 import { RolloutContext } from '../data';
-import {
-  useRolloutProvider,
-  type UseRolloutProviderOptions,
-} from '../hooks/useRolloutProvider';
+import type { UseRolloutProviderOptions } from '../hooks/useRolloutProvider';
+import { useRolloutProvider } from '../hooks/useRolloutProvider';
 import type { RolloutFlagCatalog } from '../types';
 
 export interface RolloutProviderProps<

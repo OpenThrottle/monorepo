@@ -11,10 +11,8 @@ import { firstValueFrom, of } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { EmitNotificationMetadata } from './emit-notification.decorator.ts';
-import {
-  type EmitNotificationEmitter,
-  EmitNotificationInterceptor,
-} from './emit-notification.interceptor.ts';
+import type { EmitNotificationEmitter } from './emit-notification.interceptor.ts';
+import { EmitNotificationInterceptor } from './emit-notification.interceptor.ts';
 
 function createMockContext(handler: () => void): ExecutionContext {
   return asMock<ExecutionContext>({

@@ -14,11 +14,8 @@
  * @public
  */
 import { readQuotedChars } from './readQuotedChars.ts';
-import {
-  BASH_RULE_ALLOW,
-  type BashGuardRule,
-  type BashRuleVerdict,
-} from './types.ts';
+import type { BashGuardRule, BashRuleVerdict } from './types.ts';
+import { BASH_RULE_ALLOW } from './types.ts';
 
 const MODIFIER_LETTERS = 'hterlaAuqQ';
 const NAME_START = /[A-Za-z_]/;

@@ -13,12 +13,8 @@
  */
 import { isRecord } from '@openthrottle/nodejs-utils';
 
-import {
-  decideKickoffBrief,
-  KICKOFF_ALLOW,
-  type KickoffDecision,
-  type OtIdLookup,
-} from '../../index.ts';
+import type { KickoffDecision, OtIdLookup } from '../../index.ts';
+import { decideKickoffBrief, KICKOFF_ALLOW } from '../../index.ts';
 
 /** Tool-name suffixes this guard applies to; MCP prefixes vary by host. */
 const KICKOFF_TOOL_SUFFIXES = [

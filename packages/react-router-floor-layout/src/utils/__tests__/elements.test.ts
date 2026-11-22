@@ -1,11 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  type FloorElement,
-  floorElementSchema,
-  FloorElementType,
-  FloorLayer,
-} from '../../types';
+import type { FloorElement } from '../../types';
+import { floorElementSchema, FloorElementType, FloorLayer } from '../../types';
 import {
   createFloorElement,
   floorBounds,

@@ -1,6 +1,6 @@
+import type { NormalizedTokenUsage } from '@openthrottle/agentic-token-usage';
 import {
   hasUsageCounts,
-  type NormalizedTokenUsage,
   normalizeUsage,
   sumUsage,
 } from '@openthrottle/agentic-token-usage';

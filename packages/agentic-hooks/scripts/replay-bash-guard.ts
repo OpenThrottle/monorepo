@@ -32,13 +32,12 @@ import path from 'node:path';
 
 import { isRecord } from '@openthrottle/nodejs-utils';
 
+import type { PullRequestQuery, PullRequestState } from '../src/index.ts';
 import {
   BASH_GUARD_RULES,
   createFsGlobMatcher,
   createGhPrLookup,
   evaluateBashGuard,
-  type PullRequestQuery,
-  type PullRequestState,
 } from '../src/index.ts';
 
 interface BashCall {

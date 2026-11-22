@@ -9,7 +9,7 @@
 
 import { useCallback, useRef, useState } from 'react';
 
-import { type FloorLayout } from '../types';
+import type { FloorLayout } from '../types';
 
 interface HistoryState {
   readonly future: readonly FloorLayout[];

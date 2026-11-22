@@ -24,11 +24,11 @@ import { SettingsKeysIntroduction } from '~/routing/settings/components/Settings
 import { SettingsKeysTable } from '~/routing/settings/components/SettingsKeysTable';
 import { SettingsKeysToolbar } from '~/routing/settings/components/SettingsKeysToolbar';
 import { SETTINGS_KEYS_ONBOARDING } from '~/routing/settings/data/data.copy';
+import type { SettingsKeysActionData } from '~/routing/settings/utils/settings-keys-action';
 import {
   resolveSelectedServiceAccountId,
   SETTINGS_KEYS_ACCOUNT_SEARCH_PARAM,
   SETTINGS_KEYS_PROBE_SERVICE_ACCOUNT_ID,
-  type SettingsKeysActionData,
 } from '~/routing/settings/utils/settings-keys-action';
 
 type HandleData = Route.ComponentProps['loaderData'];

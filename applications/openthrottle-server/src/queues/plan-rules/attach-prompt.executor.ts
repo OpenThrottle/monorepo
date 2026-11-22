@@ -30,14 +30,14 @@
 
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import type { CustomPrompt } from '@openthrottle/nestjs-repositories-server';
 import {
-  type CustomPrompt,
   CustomPromptsRepository,
   RULE_APPLICATION_STATES,
   RuleApplicationsRepository,
 } from '@openthrottle/nestjs-repositories-server';
+import type { AttachPromptActionPayload } from '@openthrottle/openthrottle-skills';
 import {
-  type AttachPromptActionPayload,
   attachPromptActionPayloadSchema,
   TAG_ACTION_TYPES,
 } from '@openthrottle/openthrottle-skills';

@@ -13,10 +13,8 @@ import { BadRequestException } from '@nestjs/common';
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
 import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import {
-  type TelemetryHeartbeat,
-  TelemetryHeartbeatsRepository,
-} from '@openthrottle/nestjs-repositories-server';
+import type { TelemetryHeartbeat } from '@openthrottle/nestjs-repositories-server';
+import { TelemetryHeartbeatsRepository } from '@openthrottle/nestjs-repositories-server';
 import { getOpenThrottleRoot } from '@openthrottle/openthrottle-agentic-utils';
 
 import { NotificationsService } from '../../notifications/notifications.service.ts';

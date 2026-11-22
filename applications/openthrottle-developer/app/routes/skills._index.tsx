@@ -1,41 +1,21 @@
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { OpenThrottlePagination } from '@openthrottle/react-router-ui';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
-  GlobalFeatureOnboarding,
   GlobalFeatureOnboardingModal,
   GlobalScreen,
-  readSearchParam,
 } from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
-import {
-  mergeRouteModuleMeta,
-  parsePaginationLimit,
-  parsePaginationPage,
-} from '@openthrottle/react-router-utils';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import * as React from 'react';
-import { Await, useFetcher, useSearchParams } from 'react-router';
+import { Await } from 'react-router';
 
 import type { Route } from '@/app/routes/+types/skills._index';
-import { GetUsageSkillUsageDocument } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
-import {
-  runSkillRecordTagAction,
-  SKILL_RECORD_TAG_INTENTS,
-} from '~/routing/skills/actions/project-skill-tags';
+import { runSkillRecordTagAction } from '~/routing/skills/actions/project-skill-tags';
+import { SkillsIndexContent } from '~/routing/skills/components/SkillsIndexContent';
 import { SkillsIndexUsage } from '~/routing/skills/components/SkillsIndexUsage';
 import { SkillsIntroduction } from '~/routing/skills/components/SkillsIntroduction';
-import { SkillsTable } from '~/routing/skills/components/SkillsTable';
-import { SkillsToolbar } from '~/routing/skills/components/SkillsToolbar';
 import { SKILL_USAGE_RANGE_DAYS } from '~/routing/skills/config/skill-usage';
 import { SKILLS_ONBOARDING } from '~/routing/skills/data/data.copy';
-import type { SkillsIndexUsageData } from '~/routing/skills/types';
-import { filterSkillsByQuery } from '~/routing/skills/utils/filterSkillsByQuery';
-import {
-  filterSkillsBySource,
-  parseSkillSourceFilter,
-  type SkillSourceFilter,
-} from '~/routing/skills/utils/filterSkillsBySource';
 import { mergeRepoSkillsWithProjectSkills } from '~/routing/skills/utils/mergeRepoSkillsWithProjectSkills';
 import { mergeRepoSkillsWithSkillAvailability } from '~/routing/skills/utils/mergeRepoSkillsWithSkillAvailability';
 import {
@@ -43,7 +23,7 @@ import {
   loadSkillAvailability,
   loadSkillTagVocabulary,
 } from '~/routing/skills/utils/skill-index-loaders';
-import { toSkillsIndexUsageData } from '~/routing/skills/utils/toSkillsIndexUsageData';
+import { loadSkillsIndexUsage } from '~/routing/skills/utils/skill-usage-loaders';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -84,28 +64,10 @@ export const loader = async (args: Route.LoaderArgs) => {
   // uses to 404, so neither depends on DB ingest/auth state (mirrors /usage).
   const presentSlugs = diskEntries.map((entry) => entry.slug);
 
-  // Deferred aggregate usage over a fixed 30-day window (YYYY-MM-DD, matching
-  // the /usage contract; all skills, no scope/branch/cwd filter). Streamed as a
-  // naked promise so the skills list + table paint immediately. `skillUsage` is
-  // guarded by SETTINGS_READ; any failure resolves to the unavailable sentinel
-  // so the route still renders 200 and degrades to a notice instead of throwing.
-  const end = new Date();
-  const start = new Date(
-    end.getTime() - SKILL_USAGE_RANGE_DAYS * 24 * 60 * 60 * 1000,
-  );
-  const usage: Promise<SkillsIndexUsageData> = executeGraphqlWithAuth(
-    args.request,
-    GetUsageSkillUsageDocument,
-    {
-      cwd: null,
-      end: end.toISOString().slice(0, 10),
-      gitBranch: null,
-      scope: null,
-      start: start.toISOString().slice(0, 10),
-    },
-  )
-    .then(({ skillUsage }) => toSkillsIndexUsageData(skillUsage))
-    .catch(() => ({ available: false as const }));
+  // Deferred aggregate usage over a fixed 30-day window, streamed as a naked
+  // promise (RR8 Single Fetch) so the skills list + table paint immediately.
+  // Failures resolve to the unavailable sentinel inside the loader helper.
+  const usage = loadSkillsIndexUsage(args.request);
 
   return { entries, presentSlugs, tagVocabulary, usage };
 };
@@ -124,124 +86,12 @@ export default function Component(
   const { entries, presentSlugs, tagVocabulary, usage } = props.loaderData;
 
   // Hooks
-  const [searchParams, setSearchParams] = useSearchParams();
-  const tagFetcher = useFetcher<typeof action>();
 
   // Setup
-  // The URL owns the source filter (no useState): refresh, Back/Forward, and a
-  // shared link all restore the same segment. `all` is the default and is
-  // written as an *absent* param, so bare `/skills` is the canonical full list.
-  const sourceFilter = parseSkillSourceFilter(searchParams.get('source'));
-  const search = readSearchParam(searchParams);
-  const filteredEntries = React.useMemo(
-    () => [
-      ...filterSkillsByQuery(
-        filterSkillsBySource(entries, sourceFilter),
-        search,
-      ),
-    ],
-    [entries, search, sourceFilter],
-  );
-  // A genuinely-new user has no discovered SKILL.md at all and no active
-  // search/source filter — show the teaching pitch instead of the toolbar,
-  // table, and pager. Gated on the pre-filter `entries` so a zero-result
-  // *filtered* view still falls through to SkillsTable -> SkillsEmpty with its
-  // clear-search affordance.
-  const isFiltered = search.trim().length > 0 || sourceFilter !== 'all';
-  const isNewUser = entries.length === 0 && !isFiltered;
-  const isTagging = tagFetcher.state !== 'idle';
-  const taggingSlug = String(tagFetcher.formData?.get('slug') ?? '');
-  const pendingSlug = isTagging ? taggingSlug : undefined;
-
-  const limit = parsePaginationLimit(searchParams.get('limit'));
-  const totalCount = filteredEntries.length;
-  const totalPages = Math.max(1, Math.ceil(totalCount / limit));
-  // Clamp so a stale/out-of-range ?page never renders an empty slice.
-  const page = Math.min(
-    parsePaginationPage(searchParams.get('page')),
-    totalPages,
-  );
-
-  const offset = (page - 1) * limit;
-  const pageEntries = React.useMemo(
-    () => filteredEntries.slice(offset, offset + limit),
-    [filteredEntries, limit, offset],
-  );
 
   // Handlers
-  const handleSourceFilterChange = (filter: SkillSourceFilter): void => {
-    // One mutation: write (or clear) `source` and reset to page 1 so the user
-    // is never stranded on an out-of-range page after the filtered set
-    // shrinks. Sibling params (`search`, `limit`, `modal`) are preserved, and
-    // this is a push so Back undoes the filter change.
-    setSearchParams(
-      (prev) => {
-        const next = new URLSearchParams(prev);
-        if (filter === 'all') {
-          next.delete('source');
-        } else {
-          next.set('source', filter);
-        }
-        next.delete('page');
-
-        return next;
-      },
-      { preventScrollReset: true },
-    );
-  };
-
-  const submitTagIntent = (
-    intent: string,
-    slug: string,
-    tag?: string,
-  ): void => {
-    const payload: Record<string, string> = { intent, slug };
-    if (tag != null) {
-      payload.tag = tag;
-    }
-    void tagFetcher.submit(payload, { method: 'post' });
-  };
 
   // Markup
-  const onboarding = <GlobalFeatureOnboarding content={SKILLS_ONBOARDING} />;
-  const skillsListing = (
-    <>
-      <div className="flex flex-col gap-4">
-        <SkillsToolbar
-          onSourceFilterChange={handleSourceFilterChange}
-          sourceFilter={sourceFilter}
-        />
-        <SkillsTable
-          entries={pageEntries}
-          isFiltered={isFiltered}
-          onAddTag={(slug, tag) =>
-            submitTagIntent(SKILL_RECORD_TAG_INTENTS.ADD_TAG, slug, tag)
-          }
-          onRemoveOrphan={(slug) =>
-            submitTagIntent(SKILL_RECORD_TAG_INTENTS.REMOVE_ORPHAN, slug)
-          }
-          onRemoveTag={(slug, tag) =>
-            submitTagIntent(SKILL_RECORD_TAG_INTENTS.REMOVE_TAG, slug, tag)
-          }
-          pendingSlug={pendingSlug}
-          vocabulary={tagVocabulary}
-        />
-      </div>
-
-      <OpenThrottlePagination
-        basePath="/skills"
-        className="mt-8"
-        limit={limit}
-        page={page}
-        // The skills list filters client-side on `?search=` and
-        // `?source=`, neither of which the extras contract models — clone
-        // the live query string so a page change keeps the filtered set.
-        preserveSearchParams={true}
-        resultLabel="skills"
-        total={totalCount}
-      />
-    </>
-  );
 
   // Life Cycle
 
@@ -252,7 +102,7 @@ export default function Component(
       <GlobalScreen>
         <SkillsIntroduction />
 
-        {isNewUser ? onboarding : skillsListing}
+        <SkillsIndexContent entries={entries} tagVocabulary={tagVocabulary} />
 
         {/* Deferred aggregate usage: RR8 streams the loader promise so the
             skills list above paints first and the chart + leaderboard hydrate

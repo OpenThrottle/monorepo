@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import type { RunFile } from '../gh-pr-lookup.ts';
 import {
   createGhPrLookup,
   ghPrViewArgs,
   parseGhPrView,
-  type RunFile,
 } from '../gh-pr-lookup.ts';
 
 describe('ghPrViewArgs', () => {

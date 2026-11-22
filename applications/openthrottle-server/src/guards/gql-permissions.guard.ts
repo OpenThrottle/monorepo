@@ -4,11 +4,8 @@
  * so `request.user` is a normalized {@link AuthPrincipal} (human JWT or service account).
  */
 
-import {
-  type ExecutionContext,
-  ForbiddenException,
-  Injectable,
-} from '@nestjs/common';
+import type { ExecutionContext } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import {
   getAuthPrincipalFromRequest,

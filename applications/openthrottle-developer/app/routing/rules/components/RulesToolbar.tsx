@@ -12,12 +12,12 @@ import * as React from 'react';
 import { Link, useSearchParams } from 'react-router';
 
 import { RULES_COPY } from '../data/data.copy';
+import type { RulesEnabledFilter } from '../utils/parsers';
 import {
   isRulesEnabledFilter,
   parseRulesEnabledFilterFromSearchParams,
   parseRulesScopeFromSearchParams,
   RULES_SCOPE_ALL,
-  type RulesEnabledFilter,
 } from '../utils/parsers';
 import type { RulesRepositoryOption } from '../utils/rule-groups';
 import { RulesScopeFilter } from './RulesScopeFilter';

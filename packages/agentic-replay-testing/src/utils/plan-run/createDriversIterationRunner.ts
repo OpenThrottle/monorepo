@@ -10,11 +10,8 @@
 
 import type { WorkflowRalphIterationRunner } from '@openthrottle/openthrottle-agentic-ralph';
 import { withStructuredOutput } from '@openthrottle/openthrottle-agentic-utils';
-import {
-  type DriverChunk,
-  getDriver,
-  runDriverAsync,
-} from '@openthrottle/openthrottle-drivers';
+import type { DriverChunk } from '@openthrottle/openthrottle-drivers';
+import { getDriver, runDriverAsync } from '@openthrottle/openthrottle-drivers';
 
 /**
  * Build the runner.

@@ -16,7 +16,8 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
+import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
+import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import type { ScheduledAgentJob } from '@openthrottle/nestjs-repositories-server';

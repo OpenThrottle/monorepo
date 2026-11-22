@@ -1,7 +1,8 @@
 import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { type FloorElement, FloorElementType } from '../types';
+import type { FloorElement } from '../types';
+import { FloorElementType } from '../types';
 import { describeFloorElement } from '../utils/elements';
 import { seatPositions } from '../utils/seats';
 

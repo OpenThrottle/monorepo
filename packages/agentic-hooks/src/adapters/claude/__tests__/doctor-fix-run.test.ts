@@ -5,9 +5,9 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import type { PluginFixPlan } from '../doctor-fix.ts';
+import type { PluginFixIo } from '../doctor-fix-run.ts';
 import {
   PLUGIN_FIX_OUTCOME,
-  type PluginFixIo,
   resolveClaudeBinary,
   resolvePluginFixPlan,
   runPluginFix,

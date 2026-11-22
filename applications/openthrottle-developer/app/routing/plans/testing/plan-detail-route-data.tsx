@@ -12,7 +12,8 @@
  * navigate must await the result (findBy queries or waitFor) since the loader
  * revalidation is async.
  */
-import { render, type RenderResult } from '@testing-library/react';
+import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 

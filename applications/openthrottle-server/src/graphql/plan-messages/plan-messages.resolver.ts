@@ -20,16 +20,13 @@ import {
   Resolver,
   Subscription,
 } from '@nestjs/graphql';
-import {
-  type AuthPrincipal,
-  CurrentUser,
-  Public,
-} from '@openthrottle/nestjs-auth';
+import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
+import { CurrentUser, Public } from '@openthrottle/nestjs-auth';
+import type { PubSubEngine } from '@openthrottle/nestjs-graphql';
 import {
   planMessagesTopic,
   planOutputTopic,
   PUB_SUB,
-  type PubSubEngine,
 } from '@openthrottle/nestjs-graphql';
 import { GlobalClsService } from '@openthrottle/nestjs-modules';
 import type {

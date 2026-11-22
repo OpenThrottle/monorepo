@@ -10,11 +10,8 @@
  * (the live layout is rebuilt during a drag).
  */
 
-import {
-  type PointerEvent as ReactPointerEvent,
-  useCallback,
-  useRef,
-} from 'react';
+import type { PointerEvent as ReactPointerEvent } from 'react';
+import { useCallback, useRef } from 'react';
 
 /**
  * Configuration for {@link usePerElementPointerDown}.

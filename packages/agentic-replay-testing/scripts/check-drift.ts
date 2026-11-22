@@ -25,13 +25,12 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 
+import type { DriftFinding, RecordingProfile } from '../src/index.ts';
 import {
   compareTranscripts,
-  type DriftFinding,
   parseTranscript,
   PLAN_RUN_SCENARIOS,
   RECORDING_PROFILES,
-  type RecordingProfile,
   recordPlanRunScenario,
   recordScenario,
   SCENARIOS,

@@ -1,17 +1,19 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import type { Plan } from '@openthrottle/nestjs-repositories-server';
 import {
-  type Plan,
   PlansRepository,
   UsersRepository,
 } from '@openthrottle/nestjs-repositories-server';
+import type {
+  TagActionEvaluationContext,
+  TagActionRuleInput,
+} from '@openthrottle/openthrottle-skills';
 import {
   evaluateTagActionRules,
   explainTagActionRuleMatch,
   rankMatchedTagActions,
   scoreTagActionSpecificity,
   SKILL_AVAILABILITY_ENVIRONMENTS,
-  type TagActionEvaluationContext,
-  type TagActionRuleInput,
 } from '@openthrottle/openthrottle-skills';
 
 import { TagsService } from '../tags/tags.service.ts';

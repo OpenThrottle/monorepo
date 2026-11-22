@@ -4,13 +4,9 @@
  * undo/redo history (full-layout snapshots).
  */
 
-import {
-  DisplayUnit,
-  FLOOR_LAYOUT_SCHEMA_VERSION,
-  type FloorElement,
-  type FloorLayout,
-} from '../types';
-import { type Point } from './geometry';
+import type { FloorElement, FloorLayout } from '../types';
+import { DisplayUnit, FLOOR_LAYOUT_SCHEMA_VERSION } from '../types';
+import type { Point } from './geometry';
 
 /**
  * Editable fields for {@link updateElement}. `seats` applies to tables only.

@@ -12,12 +12,14 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
+import type {
+  DeliveryLeg,
+  HeartbeatReceipt,
+  MarketplaceInstall,
+} from '../../data/heartbeat.ts';
 import {
-  type DeliveryLeg,
   detectDeliveryLeg,
-  type HeartbeatReceipt,
   isPathInside,
-  type MarketplaceInstall,
   readFirstManifestVersion,
   readTextOrNull,
   sendHeartbeat,

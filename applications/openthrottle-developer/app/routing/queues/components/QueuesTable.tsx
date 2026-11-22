@@ -4,10 +4,8 @@ import * as React from 'react';
 import { useFetcher } from 'react-router';
 
 import type { QueueCardFragment } from '~/__generated__/graphql';
-import {
-  buildQueuesTableColumns,
-  type QueueControlIntent,
-} from '~/routing/queues/utils/buildQueuesTableColumns';
+import type { QueueControlIntent } from '~/routing/queues/utils/buildQueuesTableColumns';
+import { buildQueuesTableColumns } from '~/routing/queues/utils/buildQueuesTableColumns';
 import { queueRowId } from '~/routing/queues/utils/queues-table';
 
 export interface QueuesTableProps {

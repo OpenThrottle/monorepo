@@ -7,9 +7,9 @@ import {
   AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
   AUTH_PRINCIPAL_KIND_USER,
 } from '@openthrottle/nestjs-auth';
+import type { GlobalClsStore } from '@openthrottle/nestjs-modules';
 import {
   GlobalClsModule,
-  type GlobalClsStore,
   globalClsUserFromJwtLike,
 } from '@openthrottle/nestjs-modules';
 import {

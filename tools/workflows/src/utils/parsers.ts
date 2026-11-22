@@ -13,9 +13,9 @@ import {
 import { MESSAGE_OUTRO } from '../config/messages';
 import { showRalphUsage } from '../utils/index';
 import { parseRalphExecutionBackendId } from './ralph-execution-backend';
+import type { RalphPromptProfileKind } from './ralph-prompt-resolution';
 import {
   formatRalphPromptFileProfileLabel,
-  type RalphPromptProfileKind,
   readRalphPromptFilesUtf8,
   readRalphPromptStdinUtf8,
   resolveRalphPromptFromSeed,
@@ -26,9 +26,9 @@ import {
   mergeRalphRuntimeSeed,
   resolveIterationTimeoutMs,
 } from './ralph-runtime-config';
+import type { RalphWorktreeName } from './ralph-worktree-cli';
 import {
   RALPH_WORKTREE_FLAG_ONLY,
-  type RalphWorktreeName,
   resolveRalphWorktreeName,
 } from './ralph-worktree-cli';
 import type { RalphDebugLevel } from './ralphDebugLogger';

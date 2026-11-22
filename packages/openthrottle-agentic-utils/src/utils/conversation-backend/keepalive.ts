@@ -20,10 +20,8 @@
  * shown to the client.
  */
 
-import {
-  CONVERSATION_STREAM_CHUNK_KINDS,
-  type ConversationStreamChunk,
-} from './types.ts';
+import type { ConversationStreamChunk } from './types.ts';
+import { CONVERSATION_STREAM_CHUNK_KINDS } from './types.ts';
 
 /**
  * The single liveness chunk a backend emits when a stdout read produced no

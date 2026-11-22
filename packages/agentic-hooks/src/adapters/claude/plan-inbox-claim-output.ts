@@ -22,13 +22,12 @@ import {
   readRunIdentityEnv,
 } from '@openthrottle/openthrottle-agentic-utils';
 
+import type { PlanInboxClaimFn, PlanInboxMessage } from '../../index.ts';
 import {
   CLAIM_THROTTLE_WINDOW_MS,
   defaultClaimStateDir,
   isDestructiveCommand,
   logHookError,
-  type PlanInboxClaimFn,
-  type PlanInboxMessage,
   tryTakeClaimSlot,
 } from '../../index.ts';
 import { readTranscriptTail } from './plan-run-task-guard-output.ts';

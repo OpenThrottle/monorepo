@@ -1,8 +1,8 @@
 import * as React from 'react';
 
 import { CARET_MOVEMENT_KEYS } from '../data/data.chat-caret-movement-keys';
+import type { ActiveSlashCommand } from '../slash-commands';
 import {
-  type ActiveSlashCommand,
   detectActiveSlashCommand,
   insertSlashCommand,
 } from '../slash-commands';

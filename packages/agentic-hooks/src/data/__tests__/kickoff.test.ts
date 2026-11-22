@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import type { OtIdLookup } from '../kickoff.ts';
 import {
   decideKickoffBrief,
   lookupOtId,
-  type OtIdLookup,
   parseKickoffPlanId,
 } from '../kickoff.ts';
 

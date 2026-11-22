@@ -1,10 +1,8 @@
 import { Button, ButtonGroup } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import {
-  AGENT_CLI_FILTERS,
-  type AgentCliFilter,
-} from '~/routing/settings/data/data.agent-clis';
+import type { AgentCliFilter } from '~/routing/settings/data/data.agent-clis';
+import { AGENT_CLI_FILTERS } from '~/routing/settings/data/data.agent-clis';
 import {
   SETTINGS_AGENTS_COPY,
   SETTINGS_AGENTS_FILTER_LABELS,

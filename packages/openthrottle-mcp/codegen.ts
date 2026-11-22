@@ -1,7 +1,5 @@
-import {
-  type CodegenConfig,
-  defineCodegen,
-} from '@openthrottle/graphql-codegen';
+import type { CodegenConfig } from '@openthrottle/graphql-codegen';
+import { defineCodegen } from '@openthrottle/graphql-codegen';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 

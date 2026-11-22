@@ -2,7 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import { Tabs } from './Tabs';
 import { TabsContent } from './TabsContent';
-import { TabsList, type TabsListProps } from './TabsList';
+import type { TabsListProps } from './TabsList';
+import { TabsList } from './TabsList';
 import { TabsTrigger } from './TabsTrigger';
 
 const LIST_VARIANTS: readonly NonNullable<TabsListProps['variant']>[] = [

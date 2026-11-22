@@ -17,11 +17,8 @@ import {
   Subscription,
 } from '@nestjs/graphql';
 import { Public } from '@openthrottle/nestjs-auth';
-import {
-  planOutputTopic,
-  PUB_SUB,
-  type PubSubEngine,
-} from '@openthrottle/nestjs-graphql';
+import type { PubSubEngine } from '@openthrottle/nestjs-graphql';
+import { planOutputTopic, PUB_SUB } from '@openthrottle/nestjs-graphql';
 import { resolvePagination } from '@openthrottle/nestjs-postgres';
 import type { PlanOutputStreamChunk } from '@openthrottle/nestjs-repositories-server';
 import {

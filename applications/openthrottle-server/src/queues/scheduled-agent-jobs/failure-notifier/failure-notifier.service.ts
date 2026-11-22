@@ -1,11 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { ScheduledAgentJobsRepository } from '@openthrottle/nestjs-repositories-server';
-import {
-  type NotificationSeverity,
-  SCHEDULED_RUN_FAILURE_REASONS,
-  type ScheduledRunFailureReason,
+import type {
+  NotificationSeverity,
+  ScheduledRunFailureReason,
 } from '@openthrottle/openthrottle-notifications';
+import { SCHEDULED_RUN_FAILURE_REASONS } from '@openthrottle/openthrottle-notifications';
 
 import { NotificationsService } from '../../../notifications/notifications.service.ts';
 import { SCHEDULED_RUN_FAILURE_CHANNELS } from '../scheduled-run-failure-channels.token.ts';

@@ -1,7 +1,5 @@
-import {
-  isRolloutFlagKind,
-  type RolloutFlagKind,
-} from '../config/rollout-flag-kind';
+import type { RolloutFlagKind } from '../config/rollout-flag-kind';
+import { isRolloutFlagKind } from '../config/rollout-flag-kind';
 import type { RolloutFlagValueByKind } from '../types';
 import { isRolloutFlagValueForKind } from './assertRolloutFlagCatalog';
 

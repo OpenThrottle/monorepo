@@ -10,15 +10,13 @@ import {
 } from '@openthrottle/react-router-chat';
 import { describe, expect, test } from 'vitest';
 
+import type { ChatToolbarState } from '../../data/data.chat-toolbar-state';
 import {
   CHAT_TOOLBAR_STATE_VERSION,
-  type ChatToolbarState,
   DEFAULT_CHAT_TOOLBAR_STATE,
 } from '../../data/data.chat-toolbar-state';
-import {
-  reconcileChatToolbarState,
-  type ReconcileRepositoryOption,
-} from '../reconcileChatToolbarState';
+import type { ReconcileRepositoryOption } from '../reconcileChatToolbarState';
+import { reconcileChatToolbarState } from '../reconcileChatToolbarState';
 
 const cliModel: ChatModelOption = {
   description: 'Agent CLI',

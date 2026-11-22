@@ -13,11 +13,11 @@ import * as React from 'react';
 import type { ScheduledJobDetailFragment } from '~/__generated__/graphql';
 import { ScheduleMisfireFields } from '~/routing/schedule/components/ScheduleMisfireFields';
 import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
+import type { ScheduleKind } from '~/routing/schedule/data/data.schedule-kind';
 import {
   SCHEDULE_INTERVAL_DEFAULT_MINUTES,
   SCHEDULE_KIND,
   SCHEDULE_KIND_OPTIONS,
-  type ScheduleKind,
 } from '~/routing/schedule/data/data.schedule-kind';
 
 export interface ScheduleKindFieldsProps {

@@ -4,17 +4,12 @@
  * literal `replayFixturePath(...)` calls in the test files themselves.
  */
 
-import {
-  CONVERSATION_STREAM_CHUNK_KINDS,
-  type ConversationStreamChunk,
-} from '@openthrottle/openthrottle-agentic-utils';
+import type { ConversationStreamChunk } from '@openthrottle/openthrottle-agentic-utils';
+import { CONVERSATION_STREAM_CHUNK_KINDS } from '@openthrottle/openthrottle-agentic-utils';
 import { expect } from 'vitest';
 
-import {
-  replayFixture,
-  type ReplayFixtureResult,
-  type ReplayProfile,
-} from '../../src/index.ts';
+import type { ReplayFixtureResult, ReplayProfile } from '../../src/index.ts';
+import { replayFixture } from '../../src/index.ts';
 
 /** Replay through `profile`, asserting the bin matched the argv strictly. */
 export async function replayStrict(

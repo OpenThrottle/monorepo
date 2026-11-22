@@ -5,11 +5,11 @@
 import { executeGraphql } from '@openthrottle/nodejs-graphql';
 import { z } from 'zod';
 
-import {
-  type EmbeddingsHealthFragment,
-  GetServerHealthWithEmbeddingsDocument,
-  type ServerHealthWithEmbeddingsFragment,
+import type {
+  EmbeddingsHealthFragment,
+  ServerHealthWithEmbeddingsFragment,
 } from '../__generated__/graphql.js';
+import { GetServerHealthWithEmbeddingsDocument } from '../__generated__/graphql.js';
 import type { ToolsetName } from '../config/toolsets.ts';
 import {
   disabledToolsets,

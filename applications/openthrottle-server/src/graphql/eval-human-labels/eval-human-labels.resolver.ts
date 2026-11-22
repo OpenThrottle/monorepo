@@ -12,12 +12,13 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
+import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
+import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { GlobalClsService } from '@openthrottle/nestjs-modules';
+import type { EvalLabelVerdict } from '@openthrottle/nestjs-repositories-server';
 import {
   EVAL_LABEL_VERDICT,
   EvalHumanLabelsRepository,
-  type EvalLabelVerdict,
 } from '@openthrottle/nestjs-repositories-server';
 import { QueryFailedError } from 'typeorm';
 

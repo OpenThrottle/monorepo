@@ -19,10 +19,8 @@ import type { UseAgenticChatTurnResult } from '~/routing/home/hooks/useAgenticCh
 import type { UseConversationListResult } from '~/routing/home/hooks/useConversationList';
 import type { RepositoryOption } from '~/routing/home/utils/models.server';
 
-import {
-  useHomeComposer,
-  type UseHomeComposerOptions,
-} from '../useHomeComposer';
+import type { UseHomeComposerOptions } from '../useHomeComposer';
+import { useHomeComposer } from '../useHomeComposer';
 
 // No live ws client: useVoiceInput's transcription stream and useSubscription
 // both no-op on a null client, so tests exercise composer state, not sockets.

@@ -1,16 +1,15 @@
 import { describe, expect, test } from 'vitest';
 
+import type { TagActionCondition } from '../explainTagActionRuleMatch.ts';
 import {
   explainTagActionRuleMatch,
   TAG_ACTION_CONDITIONS,
-  type TagActionCondition,
 } from '../explainTagActionRuleMatch.ts';
-import {
-  evaluateTagActionRules,
-  TAG_ACTION_TYPES,
-  type TagActionEvaluationContext,
-  type TagActionRuleInput,
+import type {
+  TagActionEvaluationContext,
+  TagActionRuleInput,
 } from '../tag-actions.ts';
+import { evaluateTagActionRules, TAG_ACTION_TYPES } from '../tag-actions.ts';
 
 const context: TagActionEvaluationContext = {
   effectiveTags: ['backend', 'spike'],

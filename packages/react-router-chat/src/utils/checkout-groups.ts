@@ -1,4 +1,5 @@
-import { ChatCheckoutKind, type ChatCheckoutOption } from '../types';
+import type { ChatCheckoutOption } from '../types';
+import { ChatCheckoutKind } from '../types';
 import { parseRepositoryRemote } from './repository-identity';
 
 /**

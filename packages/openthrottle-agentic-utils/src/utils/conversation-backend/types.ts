@@ -10,10 +10,8 @@
  * client renderer can derive from a single source.
  */
 
-import {
-  DRIVER_REASONING_EFFORTS,
-  type DriverReasoningEffort,
-} from '@openthrottle/openthrottle-drivers';
+import type { DriverReasoningEffort } from '@openthrottle/openthrottle-drivers';
+import { DRIVER_REASONING_EFFORTS } from '@openthrottle/openthrottle-drivers';
 
 import type { ChatCompletionMessage } from '../chat-completions/index.ts';
 

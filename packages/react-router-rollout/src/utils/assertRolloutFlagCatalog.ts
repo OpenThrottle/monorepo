@@ -1,7 +1,7 @@
+import type { RolloutFlagKind } from '../config/rollout-flag-kind';
 import {
   isRolloutFlagKind,
   ROLLOUT_FLAG_KIND,
-  type RolloutFlagKind,
 } from '../config/rollout-flag-kind';
 import type { RolloutFlagValueByKind, RolloutJsonValue } from '../types';
 

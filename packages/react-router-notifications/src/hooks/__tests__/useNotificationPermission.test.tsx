@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { type NotificationPermissionState } from '../../types';
+import type { NotificationPermissionState } from '../../types';
 import { useNotificationPermission } from '../useNotificationPermission';
 
 function TestConsumer(): React.ReactElement {

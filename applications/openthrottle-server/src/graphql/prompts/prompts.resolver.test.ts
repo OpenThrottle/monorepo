@@ -10,11 +10,13 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
+import type {
+  ServiceAccountAuthPrincipal,
+  UserAuthPrincipal,
+} from '@openthrottle/nestjs-auth';
 import {
   AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
   AUTH_PRINCIPAL_KIND_USER,
-  type ServiceAccountAuthPrincipal,
-  type UserAuthPrincipal,
 } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS } from '@openthrottle/nestjs-rbac';
 import type { CustomPrompt } from '@openthrottle/nestjs-repositories-server';

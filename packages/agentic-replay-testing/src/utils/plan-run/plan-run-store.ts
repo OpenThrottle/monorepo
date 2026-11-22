@@ -6,18 +6,20 @@
  * records every status change and output chunk for the test to assert on.
  */
 
+import type {
+  GetPlanQuery,
+  GetTasksByPlanIdQuery,
+  WorkflowExecuteGraphqlV2,
+} from '@openthrottle/openthrottle-agentic-ralph';
 import {
   AppendPlanOutputDocument,
   GetPlanDocument,
-  type GetPlanQuery,
   GetServerHealthDocument,
   GetTaskDocument,
   GetTasksByPlanIdDocument,
-  type GetTasksByPlanIdQuery,
   RecordAgentTrajectoryDocument,
   UpdatePlanDocument,
   UpdateTaskDocument,
-  type WorkflowExecuteGraphqlV2,
 } from '@openthrottle/openthrottle-agentic-ralph';
 
 import type { PlanRunScenario } from '../../types/plan-run-scenario.ts';

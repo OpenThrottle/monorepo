@@ -6,10 +6,8 @@
  */
 
 import { createMock } from '@golevelup/ts-vitest';
-import {
-  AUTH_PRINCIPAL_KIND_USER,
-  type AuthPrincipal,
-} from '@openthrottle/nestjs-auth';
+import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
+import { AUTH_PRINCIPAL_KIND_USER } from '@openthrottle/nestjs-auth';
 import type {
   UserDisabledAgentClisRepository,
   UserFavoriteAgentModelsRepository,

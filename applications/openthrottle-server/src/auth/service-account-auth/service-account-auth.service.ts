@@ -3,10 +3,8 @@
  */
 
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import {
-  authPrincipalFromServiceAccountId,
-  type ServiceAccountAuthPrincipal,
-} from '@openthrottle/nestjs-auth';
+import type { ServiceAccountAuthPrincipal } from '@openthrottle/nestjs-auth';
+import { authPrincipalFromServiceAccountId } from '@openthrottle/nestjs-auth';
 import {
   normalizeServiceAccountBearerToken,
   ServiceAccountCredentialsRepository,

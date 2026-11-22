@@ -15,10 +15,8 @@
  * route so the surfaces cannot drift.
  */
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import {
-  type GraphqlWsClient,
-  useSubscription,
-} from '@openthrottle/react-router-graphql';
+import type { GraphqlWsClient } from '@openthrottle/react-router-graphql';
+import { useSubscription } from '@openthrottle/react-router-graphql';
 import * as React from 'react';
 
 import type {

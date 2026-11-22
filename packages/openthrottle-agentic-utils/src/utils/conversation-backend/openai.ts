@@ -13,10 +13,10 @@ import type {
   ConversationBackendRun,
   ConversationStreamChunk,
 } from './types.ts';
+import type { ConversationReasoningEffort } from './types.ts';
 import {
   CONVERSATION_REASONING_EFFORTS,
   CONVERSATION_STREAM_CHUNK_KINDS,
-  type ConversationReasoningEffort,
 } from './types.ts';
 
 /**

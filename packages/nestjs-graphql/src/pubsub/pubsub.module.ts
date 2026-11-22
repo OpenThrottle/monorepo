@@ -1,9 +1,5 @@
-import {
-  Global,
-  Inject,
-  Module,
-  type OnApplicationShutdown,
-} from '@nestjs/common';
+import type { OnApplicationShutdown } from '@nestjs/common';
+import { Global, Inject, Module } from '@nestjs/common';
 import { LoggerModule, LoggerService } from '@openthrottle/nestjs-modules';
 import { createRedisClient } from '@openthrottle/nestjs-redis';
 import type { PubSubEngine } from 'graphql-subscriptions';

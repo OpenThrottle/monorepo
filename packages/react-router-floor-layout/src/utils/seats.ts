@@ -5,8 +5,9 @@
  * `rotation` transform (applied by the view) rotates the chairs with the table.
  */
 
-import { FloorElementType, type TableElement } from '../types';
-import { type Point } from './geometry';
+import type { TableElement } from '../types';
+import { FloorElementType } from '../types';
+import type { Point } from './geometry';
 
 /** Default gap (inches) from the table edge to a chair-glyph center. */
 const DEFAULT_SEAT_OFFSET = 10;

@@ -3,11 +3,11 @@ import * as React from 'react';
 import { useSearchParams } from 'react-router';
 
 import { AGENT_SEARCH_TAB_LABEL } from '~/routing/agent-search/data/data.agent-search-tabs';
-import {
-  AGENT_SEARCH_TABS,
-  type AgentSearchCounts,
-  type AgentSearchTab,
+import type {
+  AgentSearchCounts,
+  AgentSearchTab,
 } from '~/routing/agent-search/types';
+import { AGENT_SEARCH_TABS } from '~/routing/agent-search/types';
 
 export interface AgentSearchTabsProps {
   counts: AgentSearchCounts;

@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
+import type { RulesListFilterable } from '~/routing/rules/utils/parsers';
 import {
   filterRulesList,
   isRulesEnabledFilter,
@@ -7,7 +8,6 @@ import {
   parseRulesScopeFromSearchParams,
   parseRulesSearchFromSearchParams,
   RULES_ENABLED_FILTERS,
-  type RulesListFilterable,
 } from '~/routing/rules/utils/parsers';
 
 const rule = (

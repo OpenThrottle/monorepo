@@ -14,10 +14,10 @@
 import { spawn } from 'node:child_process';
 import { appendFileSync, writeFileSync } from 'node:fs';
 
+import type { TranscriptLine } from '../../types/transcript.ts';
 import {
   TRANSCRIPT_CHANNELS,
   TRANSCRIPT_LINE_TYPES,
-  type TranscriptLine,
 } from '../../types/transcript.ts';
 
 /** @public */

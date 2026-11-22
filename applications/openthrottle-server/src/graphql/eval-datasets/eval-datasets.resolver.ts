@@ -15,18 +15,21 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
+import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
+import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { GlobalClsService } from '@openthrottle/nestjs-modules';
+import type {
+  AgentTrajectory,
+  CreateEvalCaseInput,
+  EvalDatasetTarget,
+  EvalSplit,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   AgentTrajectoriesRepository,
-  type AgentTrajectory,
-  type CreateEvalCaseInput,
   EVAL_DATASET_TARGET,
   EVAL_SPLIT,
   EvalCasesRepository,
   EvalDatasetsRepository,
-  type EvalDatasetTarget,
-  type EvalSplit,
 } from '@openthrottle/nestjs-repositories-server';
 
 import { CreateEvalDatasetFromTrajectoriesInput } from './create-eval-dataset-from-trajectories.input.ts';

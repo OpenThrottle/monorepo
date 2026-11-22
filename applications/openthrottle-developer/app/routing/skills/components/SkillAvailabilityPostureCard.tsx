@@ -21,10 +21,8 @@ import * as React from 'react';
 import { useFetcher } from 'react-router';
 
 import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/data.copy';
-import {
-  isSkillAvailabilityPosture,
-  type SkillAvailabilityPosture,
-} from '~/routing/skills/utils/skill-availability';
+import type { SkillAvailabilityPosture } from '~/routing/skills/utils/skill-availability';
+import { isSkillAvailabilityPosture } from '~/routing/skills/utils/skill-availability';
 
 const COPY = SKILL_AVAILABILITY_COPY.posture;
 
