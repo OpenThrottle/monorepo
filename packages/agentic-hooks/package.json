@@ -125,6 +125,8 @@
     "./src/adapters/claude/outcome.ts",
     "./src/adapters/claude/plan-auto-close.ts",
     "./src/adapters/claude/plan-inbox-claim.ts",
+    "./src/adapters/claude/plan-narration.ts",
+    "./src/adapters/claude/plan-run-invariants.ts",
     "./src/adapters/claude/plan-run-janitor.ts",
     "./src/adapters/claude/plan-run-task-guard.ts",
     "./src/adapters/claude/require-ot-plan-kickoff.ts",

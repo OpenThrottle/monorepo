@@ -37,6 +37,10 @@ marketplace installs them from `plugins-dist`. Hooks ship nowhere else: there ar
   duration), `jsonl.ts`, `plan-runs.ts` (backstop notes under `~/.openthrottle/skill-usage/plan-runs/<repo-hash>/`, never `<repo>/.cache/`). Token usage: `token-usage.ts` (row mapping + batch POST,
   `persistTokenUsage` in `persist.ts`, buffered to `token-usage.jsonl`), `checkpoints.ts` (per-session
   byte offsets, `checkpoints/<session>.json`) and `read-new.ts` (complete-lines-only readers).
+  Plan-run workflow: `findPlanRunBinding.ts` (the session's run, plan and in-flight tasks, derived
+  from the transcript behind a `PlanRunTranscriptAdapter`), `plan-narration.ts`,
+  `plan-run-invariants.ts`, `plan-auto-close.ts` and `claimPlanInbox.ts`. A new workflow hook reads
+  the binding; it never re-scans the transcript for `register_plan_run` itself.
   Keep the word "cursor" out of the core: the neutrality test bans it.
 - `scripts/bundle-hooks.ts` — the deterministic esbuild bundler and the generator for every plugin
   payload (stubs, manifests, `hooks.json`, READMEs, the dev marketplace). Its payload definitions and
@@ -104,6 +108,27 @@ Each of these is a rule you can fail, not a description.
 - **Producer ids are durable data.** `<TOOL>_SOURCE` values land in `skill_usage_events.source` and
   `skill_usage_outcomes.source`, which are free-text and un-constrained precisely so that adding a
   producer needs no migration. Renaming one silently splits a tool's history in two.
+
+## Harness layer vs plan-run layer
+
+Two hook systems touch a plan run. Keep them apart.
+
+- **Harness layer (this package).** The agent CLI fires these hooks on its own events: tool calls,
+  turn ends, session start. They ship as the `plugins/` payloads, run in the agent's process tree and
+  see only what the CLI hands them (the payload and the transcript). The `openthrottle-workflow`
+  hooks bind to a run through the session's own `register_plan_run`. An interactive `/ot-loop` has
+  one; a headless worker spawned by Ralph or OT Loop does not, so in a worker every workflow hook is
+  a no-op except `plan-inbox-claim`, which also reads the run identity env the orchestrator exports.
+  What each CLI can fire: [agent-cli-hook-capability-matrix.md](../../docs/monorepo/agent-cli-hook-capability-matrix.md).
+- **Plan-run layer.** A plan's `jobRunHooksJson` (`tools/workflows/src/types/job-run-lifecycle-hooks.ts`,
+  OT `1bee2916`): `beforeAll` / `beforeEach` / `afterEach` / `afterAll` prompt-profile and skill
+  hooks that the runner (the `workflow-ralph` CLI or the BullMQ worker) fires around a run and its
+  iterations. They change what the agent is told. They never see a tool call.
+
+When both are active for one run (a queued plan whose worker spawns Claude Code with these
+plugins), they do not coordinate and need not. The runner fires its phases around each iteration,
+and inside the iteration the harness hooks observe the agent. Neither writes the other's state,
+and both are fail-open, so a failure in one never blocks the other.
 
 ## Pointers
 

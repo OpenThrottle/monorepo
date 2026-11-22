@@ -16,11 +16,7 @@
  * `additionalContext` and lets the call proceed.
  */
 import { isRecord } from '@openthrottle/nodejs-utils';
-import {
-  claudeSessionToolUsesOf,
-  findClaudeSessionPlanRunId,
-  readRunIdentityEnv,
-} from '@openthrottle/openthrottle-agentic-utils';
+import { readRunIdentityEnv } from '@openthrottle/openthrottle-agentic-utils';
 
 import type { PlanInboxClaimFn, PlanInboxMessage } from '../../index.ts';
 import {
@@ -30,13 +26,10 @@ import {
   logHookError,
   tryTakeClaimSlot,
 } from '../../index.ts';
+import { findClaudePlanRunBinding } from './plan-run-binding.ts';
 import { readTranscriptTail } from './plan-run-task-guard-output.ts';
 
 const DELEGATION_TOOL_NAMES: ReadonlySet<string> = new Set(['Agent', 'Task']);
-const REGISTER_RUN_SUFFIX = '__register_plan_run';
-const SETTLE_RUN_SUFFIX = '__settle_plan_run';
-const UPDATE_TASK_SUFFIX = '__update_task';
-const IN_PROGRESS = 'IN_PROGRESS';
 const STEER = 'STEER';
 
 /** A plan run the session registered and has not yet settled. */
@@ -83,38 +76,12 @@ const readCandidate = (raw: unknown): InboxCandidate | null => {
 export const findActivePlanRun = (
   events: readonly unknown[],
 ): ActivePlanRun | null => {
-  let run: { eventIndex: number; planId: unknown } | null = null;
-  let taskId: string | null = null;
-
-  for (const [eventIndex, event] of events.entries()) {
-    for (const use of claudeSessionToolUsesOf(event)) {
-      if (use.name.endsWith(REGISTER_RUN_SUFFIX)) {
-        run = { eventIndex, planId: use.input.planId };
-        taskId = null;
-      } else if (use.name.endsWith(SETTLE_RUN_SUFFIX)) {
-        run = null;
-        taskId = null;
-      } else if (use.name.endsWith(UPDATE_TASK_SUFFIX) && run !== null) {
-        const { id, status } = use.input;
-        if (typeof id !== 'string' || id === '') continue;
-        if (typeof status !== 'string' || status === '') continue;
-        if (status.toUpperCase() === IN_PROGRESS) {
-          taskId = id;
-        } else if (id === taskId) {
-          // The in-flight task left IN_PROGRESS (completed, blocked, skipped): none is in flight.
-          taskId = null;
-        }
-      }
-    }
-  }
-
-  if (run === null || typeof run.planId !== 'string' || run.planId === '') {
-    return null;
-  }
+  const binding = findClaudePlanRunBinding(events);
+  if (binding.kind !== 'active' || binding.planId === null) return null;
   return {
-    planId: run.planId,
-    planRunId: findClaudeSessionPlanRunId(events.slice(run.eventIndex)) ?? null,
-    taskId,
+    planId: binding.planId,
+    planRunId: binding.planRunId,
+    taskId: binding.currentTaskId,
   };
 };
 

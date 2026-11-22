@@ -13,12 +13,9 @@ import fs from 'node:fs';
 import os from 'node:os';
 
 import { isRecord } from '@openthrottle/nodejs-utils';
-import {
-  claudeSessionToolUsesOf,
-  findClaudeSessionPlanRunId,
-} from '@openthrottle/openthrottle-agentic-utils';
 
 import { logHookError, readNewBytes } from '../../index.ts';
+import { findClaudePlanRunBinding } from './plan-run-binding.ts';
 
 /** Most bytes of the transcript tail read per edit; a run registered before it is not seen. */
 export const PLAN_RUN_GUARD_MAX_TAIL_BYTES = 6 * 1024 * 1024;
@@ -31,19 +28,11 @@ const EDIT_TOOL_NAMES: ReadonlySet<string> = new Set([
   'Write',
 ]);
 
-const REGISTER_RUN_SUFFIX = '__register_plan_run';
-const SETTLE_RUN_SUFFIX = '__settle_plan_run';
-const UPDATE_TASK_SUFFIX = '__update_task';
 const IN_PROGRESS = 'IN_PROGRESS';
 
 /** The outcome of the decision: pass, or flag with the run the edit belongs to. */
 export type PlanRunTaskVerdict =
   { readonly kind: 'flag'; readonly runId: string } | { readonly kind: 'pass' };
-
-interface ActiveRun {
-  readonly eventIndex: number;
-  readonly planId: string | null;
-}
 
 /**
  * @description Decide, from the parsed transcript lines before an edit,
@@ -62,36 +51,14 @@ interface ActiveRun {
 export const decidePlanRunTask = (
   events: readonly unknown[],
 ): PlanRunTaskVerdict => {
-  let run: ActiveRun | null = null;
-  let latestStatus: string | null = null;
-
-  for (const [eventIndex, event] of events.entries()) {
-    for (const use of claudeSessionToolUsesOf(event)) {
-      if (use.name.endsWith(REGISTER_RUN_SUFFIX)) {
-        const { planId } = use.input;
-        run = {
-          eventIndex,
-          planId: typeof planId === 'string' ? planId : null,
-        };
-        latestStatus = null;
-      } else if (use.name.endsWith(SETTLE_RUN_SUFFIX)) {
-        run = null;
-      } else if (use.name.endsWith(UPDATE_TASK_SUFFIX) && run !== null) {
-        const { status } = use.input;
-        if (typeof status === 'string' && status !== '') {
-          latestStatus = status.toUpperCase();
-        }
-      }
-    }
+  const binding = findClaudePlanRunBinding(events);
+  if (binding.kind !== 'active' || binding.latestStatus === IN_PROGRESS) {
+    return { kind: 'pass' };
   }
-
-  if (run === null || latestStatus === IN_PROGRESS) return { kind: 'pass' };
-
-  const runId =
-    findClaudeSessionPlanRunId(events.slice(run.eventIndex)) ??
-    run.planId ??
-    'unknown';
-  return { kind: 'flag', runId };
+  return {
+    kind: 'flag',
+    runId: binding.planRunId ?? binding.planId ?? 'unknown',
+  };
 };
 
 /** The message shown to the agent for a flagged edit. */

@@ -215,6 +215,16 @@ const CLAUDE_WORKFLOW_ENTRIES: readonly PluginEntry[] = [
     kind: 'hook',
   },
   {
+    entry: 'adapters/claude/plan-narration.ts',
+    file: 'plan-narration.cjs',
+    kind: 'hook',
+  },
+  {
+    entry: 'adapters/claude/plan-run-invariants.ts',
+    file: 'plan-run-invariants.cjs',
+    kind: 'hook',
+  },
+  {
     entry: 'adapters/claude/plan-run-janitor.ts',
     file: 'plan-run-janitor.cjs',
     kind: 'hook',
@@ -511,7 +521,7 @@ const PLUGIN_PAYLOADS: readonly PluginPayload[] = [
     ],
     bundles: CLAUDE_WORKFLOW_ENTRIES,
     dependencies: ['openthrottle'],
-    description: `OpenThrottle plan-run workflow hooks for Claude Code: delivers plan inbox messages before destructive steps, warns on edits with no task in progress, reports plan auto-close, settles abandoned runs, and requires an OT plan for session kickoffs.`,
+    description: `OpenThrottle plan-run workflow hooks for Claude Code: delivers plan inbox messages before destructive steps, warns on edits with no task in progress, reports plan auto-close, narrates task transitions the model left unnarrated, warns on a second task going in progress or a committed task left in progress, settles abandoned runs, and requires an OT plan for session kickoffs.`,
     disableRows: [
       ['`/plugin uninstall openthrottle-workflow`', 'removes it entirely'],
     ],
@@ -529,10 +539,17 @@ const PLUGIN_PAYLOADS: readonly PluginPayload[] = [
         '`hooks/require-ot-plan-kickoff.cjs`',
       ],
       [
-        '`PostToolUse` (matcher `mcp__.*__update_task`)',
-        '`hooks/plan-auto-close.cjs`',
+        '`PreToolUse` (matcher `mcp__.*__update_task`)',
+        '`hooks/plan-run-invariants.cjs`',
       ],
-      ['`Stop`', '`hooks/plan-run-janitor.cjs`'],
+      [
+        '`PostToolUse` (matcher `mcp__.*__update_task`)',
+        '`hooks/plan-auto-close.cjs`, `hooks/plan-narration.cjs`',
+      ],
+      [
+        '`Stop`',
+        '`hooks/plan-run-janitor.cjs`, `hooks/plan-narration.cjs`, `hooks/plan-run-invariants.cjs`',
+      ],
     ],
     installLines: [
       '```bash',
@@ -553,6 +570,12 @@ const PLUGIN_PAYLOADS: readonly PluginPayload[] = [
               {
                 command: command('plan-auto-close.cjs'),
                 statusMessage: 'Report plan auto-close (PostToolUse)',
+                timeout: 10,
+                type: 'command',
+              },
+              {
+                command: command('plan-narration.cjs'),
+                statusMessage: 'Narrate the task transition (PostToolUse)',
                 timeout: 10,
                 type: 'command',
               },
@@ -593,6 +616,17 @@ const PLUGIN_PAYLOADS: readonly PluginPayload[] = [
             ],
             matcher: 'Bash|Agent|Task',
           },
+          {
+            hooks: [
+              {
+                command: command('plan-run-invariants.cjs'),
+                statusMessage: 'Plan-run invariants (PreToolUse)',
+                timeout: 10,
+                type: 'command',
+              },
+            ],
+            matcher: 'mcp__.*__update_task',
+          },
         ],
         Stop: [
           {
@@ -600,6 +634,18 @@ const PLUGIN_PAYLOADS: readonly PluginPayload[] = [
               {
                 command: command('plan-run-janitor.cjs'),
                 statusMessage: 'Settle abandoned plan runs (Stop)',
+                type: 'command',
+              },
+              {
+                command: command('plan-narration.cjs'),
+                statusMessage: 'Narrate unnarrated plan tasks (Stop)',
+                timeout: 10,
+                type: 'command',
+              },
+              {
+                command: command('plan-run-invariants.cjs'),
+                statusMessage: 'Plan-run invariants (Stop)',
+                timeout: 10,
                 type: 'command',
               },
             ],
@@ -614,7 +660,11 @@ const PLUGIN_PAYLOADS: readonly PluginPayload[] = [
       'run it claims the plan inbox before a subagent delegation or a destructive command, so a',
       "human's STEER lands before the step rather than after it; it warns when an edit is about",
       'to happen with no task `IN_PROGRESS`; it tells the agent when completing a task closed the',
-      'plan; and on `Stop` it settles plan runs whose session is provably gone.',
+      'plan; it writes a `[hook:narration]` chunk to the plan output stream for a task transition',
+      'the model did not narrate; it warns when a task goes `IN_PROGRESS` while another still is;',
+      'and on `Stop` it settles plan runs whose session is provably gone, summarizes any task the',
+      'run moved with no narration at all, and warns about a task left `IN_PROGRESS` after its',
+      'work was committed.',
       '',
       'Outside a plan run, and with no OpenThrottle server configured, every hook is a no-op.',
       'Plan-run notes live under `~/.openthrottle/`, never in your repository.',
