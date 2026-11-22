@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
-import { Button, type ButtonProps } from './Button';
+import type { ButtonProps } from './Button';
+import { Button } from './Button';
 
 /**
  * `cva()` returns a bare class-building function — it does not expose its

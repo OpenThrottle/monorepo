@@ -4,7 +4,8 @@ import * as React from 'react';
 
 import { CHECKOUT_ROW_MAX_CHARS } from '../data/data.checkout-row';
 import { CHAT_CHECKOUT_ROW_COPY } from '../data/data.copy';
-import { ChatCheckoutKind, type ChatCheckoutOption } from '../types';
+import type { ChatCheckoutOption } from '../types';
+import { ChatCheckoutKind } from '../types';
 import {
   shortenBranchName,
   shortenCheckoutPath,

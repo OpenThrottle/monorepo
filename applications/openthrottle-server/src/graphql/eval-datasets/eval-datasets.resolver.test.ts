@@ -6,13 +6,15 @@ import {
 } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { GlobalClsService } from '@openthrottle/nestjs-modules';
+import type {
+  AgentTrajectory,
+  EvalDataset,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   AgentTrajectoriesRepository,
-  type AgentTrajectory,
   EVAL_DATASET_TARGET,
   EVAL_SPLIT,
   EvalCasesRepository,
-  type EvalDataset,
   EvalDatasetsRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import {

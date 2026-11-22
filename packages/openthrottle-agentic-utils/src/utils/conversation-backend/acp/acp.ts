@@ -24,32 +24,33 @@
 
 import { randomUUID } from 'node:crypto';
 
-import {
-  client,
-  type ClientConnection,
-  methods,
-  PROTOCOL_VERSION,
-  type RequestPermissionRequest,
-  type RequestPermissionResponse,
-  type SessionConfigOption,
-  type SessionModeState,
-  type SessionUpdate,
+import type {
+  ClientConnection,
+  RequestPermissionRequest,
+  RequestPermissionResponse,
+  SessionConfigOption,
+  SessionModeState,
+  SessionUpdate,
 } from '@agentclientprotocol/sdk';
+import { client, methods, PROTOCOL_VERSION } from '@agentclientprotocol/sdk';
 import { isRecord } from '@openthrottle/nodejs-utils';
 
 import { withFileMentions } from '../file-mentions.ts';
 import { CONVERSATION_KEEPALIVE_CHUNK } from '../keepalive.ts';
+import type {
+  ConversationBackend,
+  ConversationBackendRun,
+  ConversationStreamChunk,
+} from '../types.ts';
 import {
   CONVERSATION_PERMISSION_MODES,
   CONVERSATION_STREAM_CHUNK_KINDS,
-  type ConversationBackend,
-  type ConversationBackendRun,
-  type ConversationStreamChunk,
 } from '../types.ts';
 import type { AcpAgentSpec } from './agent-specs.ts';
 import { AsyncQueue } from './AsyncQueue.ts';
 import { acpTerminalChunk, createAcpUpdateMapper } from './events.ts';
-import { type AcpLauncher, spawnAcpAgent } from './launcher.ts';
+import type { AcpLauncher } from './launcher.ts';
+import { spawnAcpAgent } from './launcher.ts';
 import {
   awaitAcpPermission,
   decideAcpPermission,

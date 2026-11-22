@@ -15,9 +15,9 @@ import * as React from 'react';
 import { redirect } from 'react-router';
 
 import type { Route } from '@/app/routes/+types/schedule.create';
+import type { CreateScheduledAgentJobInputType } from '~/__generated__/graphql';
 import {
   CreateScheduledAgentJobDocument,
-  type CreateScheduledAgentJobInputType,
   ScheduleFormAgentClisDocument,
   ScheduleRepositoryOptionsDocument,
 } from '~/__generated__/graphql';

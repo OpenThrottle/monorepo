@@ -25,9 +25,9 @@ import {
   Resolver,
   Subscription,
 } from '@nestjs/graphql';
+import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
 import {
   AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
-  type AuthPrincipal,
   CurrentUser,
   Public,
 } from '@openthrottle/nestjs-auth';

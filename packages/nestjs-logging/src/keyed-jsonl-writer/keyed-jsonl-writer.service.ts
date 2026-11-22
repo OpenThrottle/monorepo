@@ -1,4 +1,5 @@
-import { type FileHandle, mkdir, open } from 'node:fs/promises';
+import type { FileHandle } from 'node:fs/promises';
+import { mkdir, open } from 'node:fs/promises';
 import * as path from 'node:path';
 
 import { Injectable } from '@nestjs/common';

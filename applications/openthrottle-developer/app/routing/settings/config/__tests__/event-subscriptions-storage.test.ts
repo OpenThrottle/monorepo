@@ -5,10 +5,10 @@
 
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
+import type { EventSubscriptionId } from '~/routing/settings/config/event-subscriptions';
 import {
   buildInitialSubscriptions,
   EVENT_SUBSCRIPTION_ROWS,
-  type EventSubscriptionId,
 } from '~/routing/settings/config/event-subscriptions';
 import {
   EVENT_SUBSCRIPTIONS_STORAGE_KEY,

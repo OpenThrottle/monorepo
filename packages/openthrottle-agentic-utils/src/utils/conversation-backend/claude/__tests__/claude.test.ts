@@ -5,10 +5,10 @@ import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { AGENT_IDLE_TIMEOUT_MS_ENV } from '../../cursor-agent/teardown.ts';
+import type { ConversationStreamChunk } from '../../types.ts';
 import {
   CONVERSATION_PERMISSION_MODES,
   CONVERSATION_STREAM_CHUNK_KINDS,
-  type ConversationStreamChunk,
 } from '../../types.ts';
 import { CLAUDE_BIN_ENV } from '../argv.ts';
 import { claudeConversationBackend } from '../claude.ts';

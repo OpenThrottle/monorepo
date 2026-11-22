@@ -8,6 +8,7 @@
 
 import { buildPlanRunWorktreeName } from '@openthrottle/openthrottle-plan-config';
 
+import type { WorkflowRalphRunOptionsInput } from './workflow-ralph-config';
 import {
   DEFAULT_RALPH_ITERATIONS,
   DEFAULT_RALPH_MODEL,
@@ -15,7 +16,6 @@ import {
   DEFAULT_RALPH_RUNNER,
   PLAN_RUN_BULLMQ_QUEUE_NAME,
   WORKFLOW_RALPH_WORKTREE_FLAG_ONLY,
-  type WorkflowRalphRunOptionsInput,
 } from './workflow-ralph-config';
 
 /**

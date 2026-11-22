@@ -30,15 +30,17 @@ import {
   ROLE_PERMISSIONS,
   ROLES,
 } from '@openthrottle/nestjs-rbac';
+import type {
+  BlogAuthor,
+  BlogPost,
+  BlogTag,
+  ServiceAccount,
+} from '@openthrottle/nestjs-repositories-server';
 import {
-  type BlogAuthor,
   BlogAuthorsRepository,
-  type BlogPost,
   BlogPostsRepository,
-  type BlogTag,
   BlogTagsRepository,
   RolesRepository,
-  type ServiceAccount,
   ServiceAccountsRepository,
   UsersRepository,
 } from '@openthrottle/nestjs-repositories-server';

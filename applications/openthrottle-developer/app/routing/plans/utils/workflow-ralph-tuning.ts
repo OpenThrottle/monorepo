@@ -15,6 +15,7 @@ import {
   formatWorkflowRalphCommandLine,
   resolveWorkflowRalphWorktreeArgvValue,
 } from './workflow-ralph-argv-builder';
+import type { WorkflowRalphRunOptionsInput } from './workflow-ralph-config';
 import {
   DEFAULT_RALPH_ITERATIONS,
   DEFAULT_RALPH_MODEL,
@@ -24,7 +25,6 @@ import {
   PLAN_RUN_BULLMQ_QUEUE_NAME,
   WORKFLOW_RALPH_CONFIG_PRECEDENCE,
   WORKFLOW_RALPH_WORKTREE_FLAG_ONLY,
-  type WorkflowRalphRunOptionsInput,
 } from './workflow-ralph-config';
 
 /**

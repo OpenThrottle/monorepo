@@ -5,10 +5,10 @@
  */
 
 import { createMock } from '@golevelup/ts-vitest';
+import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
 import {
   AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
   AUTH_PRINCIPAL_KIND_USER,
-  type AuthPrincipal,
 } from '@openthrottle/nestjs-auth';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {

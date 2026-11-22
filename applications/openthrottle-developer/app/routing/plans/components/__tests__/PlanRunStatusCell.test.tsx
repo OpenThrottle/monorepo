@@ -1,15 +1,14 @@
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
-import { render, type RenderResult } from '@testing-library/react';
+import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
 
 import { PLAN_RUN_STATUS_CELL_COPY } from '~/routing/plans/data/data.copy';
 
-import {
-  PlanRunStatusCell,
-  type PlanRunStatusCellProps,
-} from '../PlanRunStatusCell';
+import type { PlanRunStatusCellProps } from '../PlanRunStatusCell';
+import { PlanRunStatusCell } from '../PlanRunStatusCell';
 
 const RESETS_AT = '2026-11-01T17:00:00.000Z';
 const FIRES_AT = '2026-11-03T17:30:00.000Z';

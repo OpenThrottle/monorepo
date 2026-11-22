@@ -1,4 +1,5 @@
-import { APP_NAME, type ThemeMode } from '@openthrottle/react-router-utils';
+import type { ThemeMode } from '@openthrottle/react-router-utils';
+import { APP_NAME } from '@openthrottle/react-router-utils';
 
 /** localStorage key for persisted appearance preferences. */
 export const CONFIG_STORAGE_KEY = `${APP_NAME}:settings:appearance`;

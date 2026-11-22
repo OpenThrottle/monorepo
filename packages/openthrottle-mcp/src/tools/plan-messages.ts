@@ -7,10 +7,12 @@
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import type { z } from 'zod';
 
+import type {
+  ClaimPlanMessagesResultFragment,
+  PlanMessageFieldsFragment,
+} from '../__generated__/graphql.js';
 import {
   ClaimPlanMessagesDocument,
-  type ClaimPlanMessagesResultFragment,
-  type PlanMessageFieldsFragment,
   PostPlanMessageDocument,
 } from '../__generated__/graphql.js';
 import {

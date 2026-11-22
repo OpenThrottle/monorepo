@@ -4,13 +4,8 @@
  * wrapper and all the tricky coordinate math is unit-testable in isolation.
  */
 
-import {
-  clampValue,
-  distance,
-  midpoint,
-  type Point,
-  type Size,
-} from './geometry';
+import type { Point, Size } from './geometry';
+import { clampValue, distance, midpoint } from './geometry';
 
 /**
  * An SVG `viewBox` expressed in world units (inches).

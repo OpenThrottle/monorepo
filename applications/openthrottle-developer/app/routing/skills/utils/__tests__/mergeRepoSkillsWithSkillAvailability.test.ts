@@ -1,10 +1,8 @@
 import { describe, expect, test } from 'vitest';
 
 import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
-import {
-  mergeRepoSkillsWithSkillAvailability,
-  type SkillAvailabilityRow,
-} from '~/routing/skills/utils/mergeRepoSkillsWithSkillAvailability';
+import type { SkillAvailabilityRow } from '~/routing/skills/utils/mergeRepoSkillsWithSkillAvailability';
+import { mergeRepoSkillsWithSkillAvailability } from '~/routing/skills/utils/mergeRepoSkillsWithSkillAvailability';
 
 const diskEntry = (
   slug: string,

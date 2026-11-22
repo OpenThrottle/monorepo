@@ -7,8 +7,8 @@
 import os from 'node:os';
 import path from 'node:path';
 
+import type { HeartbeatReceipt } from '../../data/heartbeat.ts';
 import {
-  type HeartbeatReceipt,
   readFirstManifestVersion,
   readTextOrNull,
   sendHeartbeat,

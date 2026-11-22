@@ -10,10 +10,10 @@
  * about what a failure is.
  */
 
+import type { CursorFailureKind } from '@openthrottle/openthrottle-agentic-utils';
 import {
   classifyCursorFailure,
   CURSOR_FAILURE_KINDS,
-  type CursorFailureKind,
   stripAnsi,
 } from '@openthrottle/openthrottle-agentic-utils';
 

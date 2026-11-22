@@ -1,7 +1,5 @@
-import {
-  NOTIFICATION_EVENT_NAMES,
-  type NotificationPayload,
-} from '@openthrottle/openthrottle-notifications';
+import type { NotificationPayload } from '@openthrottle/openthrottle-notifications';
+import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
 import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';

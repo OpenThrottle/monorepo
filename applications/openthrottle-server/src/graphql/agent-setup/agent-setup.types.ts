@@ -1,4 +1,4 @@
-import { type AgentSetupMode } from '@openthrottle/openthrottle-agentic-utils';
+import type { AgentSetupMode } from '@openthrottle/openthrottle-agentic-utils';
 
 /** A single chunk published to `agent-setup:<runId>:stream`. */
 export interface AgentSetupStreamChunkPayload {

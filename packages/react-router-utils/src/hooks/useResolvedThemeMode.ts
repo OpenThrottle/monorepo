@@ -2,11 +2,8 @@ import { useEffect, useState } from 'react';
 
 import { PREFERS_DARK_QUERY } from '../config/color-scheme';
 import { prefersColorSchemeDark } from '../utils/prefersColorSchemeDark';
-import {
-  type ResolvedThemeMode,
-  resolveThemeMode,
-  type ThemeMode,
-} from '../utils/theme';
+import type { ResolvedThemeMode, ThemeMode } from '../utils/theme';
+import { resolveThemeMode } from '../utils/theme';
 
 /**
  * @public

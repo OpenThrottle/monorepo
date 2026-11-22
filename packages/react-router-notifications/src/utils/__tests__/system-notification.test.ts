@@ -6,15 +6,8 @@
 
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
 import type { NavigateFunction } from 'react-router';
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  type Mock,
-  test,
-  vi,
-} from 'vitest';
+import type { Mock } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { NOTIFICATIONS_STORAGE_KEY } from '../../config/index';
 import { DEFAULT_NOTIFICATIONS_STORAGE_KEY } from '../../data/data.notifications-store.context';

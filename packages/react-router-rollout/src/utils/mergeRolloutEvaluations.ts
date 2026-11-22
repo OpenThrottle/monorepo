@@ -1,16 +1,14 @@
-import {
-  isRolloutFlagKind,
-  type RolloutFlagKind,
-} from '../config/rollout-flag-kind';
+import type { RolloutFlagKind } from '../config/rollout-flag-kind';
+import { isRolloutFlagKind } from '../config/rollout-flag-kind';
 import type {
   RolloutEvaluation,
   RolloutFlagCatalog,
   RolloutFlagValueByKind,
 } from '../types';
+import type { RolloutResolvedValues } from './defaultsFromCatalog';
 import {
   defaultsFromCatalog,
   freezeResolvedValues,
-  type RolloutResolvedValues,
 } from './defaultsFromCatalog';
 import { parseRolloutValueJson } from './parseRolloutValueJson';
 

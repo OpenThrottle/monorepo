@@ -1,8 +1,8 @@
 import { BadRequestException } from '@nestjs/common';
+import type { TagActionType } from '@openthrottle/openthrottle-skills';
 import {
   isTagActionType,
   TAG_ACTION_TYPES,
-  type TagActionType,
 } from '@openthrottle/openthrottle-skills';
 
 /**

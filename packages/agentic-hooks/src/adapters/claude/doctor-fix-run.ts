@@ -9,11 +9,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import readline from 'node:readline/promises';
 
+import type { PluginFixPlan } from './doctor-fix.ts';
 import {
   formatPluginFixCommand,
   parseMarketplaceKnown,
   planPluginFix,
-  type PluginFixPlan,
 } from './doctor-fix.ts';
 import { resolvePayloadVersion } from './doctor-run.ts';
 import {

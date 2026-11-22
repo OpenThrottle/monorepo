@@ -23,9 +23,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 
+import type { PlanRunScenarioSynthetic } from '../src/index.ts';
 import {
   PLAN_RUN_SCENARIOS,
-  type PlanRunScenarioSynthetic,
   RECORDING_PROFILES,
   recordPlanRunScenario,
   recordScenario,

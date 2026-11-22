@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
-import { Badge, type BadgeProps } from './Badge';
+import type { BadgeProps } from './Badge';
+import { Badge } from './Badge';
 
 /**
  * `cva()` does not expose its variant map at runtime, so these lists are

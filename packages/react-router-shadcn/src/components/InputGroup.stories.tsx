@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import { InputGroup } from './InputGroup';
-import { InputGroupAddon, type InputGroupAddonProps } from './InputGroupAddon';
+import type { InputGroupAddonProps } from './InputGroupAddon';
+import { InputGroupAddon } from './InputGroupAddon';
 import { InputGroupButton } from './InputGroupButton';
 import { InputGroupInput } from './InputGroupInput';
 import { InputGroupText } from './InputGroupText';

@@ -1,4 +1,5 @@
-import { PubSub, type PubSubEngine } from 'graphql-subscriptions';
+import type { PubSubEngine } from 'graphql-subscriptions';
+import { PubSub } from 'graphql-subscriptions';
 
 import type { CreatePubSubOptions } from './pubsub.types.ts';
 import { RedisPubSubEngine } from './redis-pubsub-engine.strategy.ts';

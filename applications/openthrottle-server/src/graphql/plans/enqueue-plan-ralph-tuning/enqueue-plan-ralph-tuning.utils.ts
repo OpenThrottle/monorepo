@@ -4,9 +4,9 @@
  * `RunPlanOrchestratorJobData` and are built elsewhere when the enqueue API supports them.
  */
 
+import type { ConversationReasoningEffort } from '@openthrottle/openthrottle-agentic-utils';
 import {
   CONVERSATION_REASONING_EFFORTS,
-  type ConversationReasoningEffort,
   getWorkspacePathMapping,
   parseWorkflowRunnerId,
   toContainerPath,

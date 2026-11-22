@@ -1,7 +1,5 @@
-import {
-  useAgenticChatTurn as useSharedAgenticChatTurn,
-  type UseAgenticChatTurnResult as SharedAgenticChatTurnResult,
-} from '@openthrottle/react-router-chat';
+import type { UseAgenticChatTurnResult as SharedAgenticChatTurnResult } from '@openthrottle/react-router-chat';
+import { useAgenticChatTurn as useSharedAgenticChatTurn } from '@openthrottle/react-router-chat';
 
 import { ConversationStreamChunkAddedDocument } from '~/__generated__/graphql';
 import { getGraphqlWsClient } from '~/services/getGraphqlWsClient';

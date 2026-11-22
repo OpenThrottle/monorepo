@@ -10,9 +10,9 @@
  */
 import path from 'node:path';
 
+import type { MarketplaceInstall } from '../../data/heartbeat.ts';
 import {
   listSubdirectoriesNewestFirst,
-  type MarketplaceInstall,
   readFirstManifestVersion,
   UNKNOWN_MARKETPLACE_INSTALL,
 } from '../../data/heartbeat.ts';

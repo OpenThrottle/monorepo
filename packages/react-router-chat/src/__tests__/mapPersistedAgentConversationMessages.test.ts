@@ -1,8 +1,6 @@
 import { buildAgentsChatAssistantFooter } from '../agents-chat-footer';
-import {
-  mapPersistedAgentConversationMessages,
-  type PersistedAgentConversationMessage,
-} from '../mapPersistedAgentConversationMessages';
+import type { PersistedAgentConversationMessage } from '../mapPersistedAgentConversationMessages';
+import { mapPersistedAgentConversationMessages } from '../mapPersistedAgentConversationMessages';
 
 describe('mapPersistedAgentConversationMessages', () => {
   const baseMessage = (

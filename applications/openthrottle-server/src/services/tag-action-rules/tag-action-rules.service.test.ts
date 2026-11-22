@@ -1,10 +1,10 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { TagActionRulesRepository } from '@openthrottle/nestjs-repositories-server';
+import type { TagActionRulesRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import {
   createTagActionRulesRepositoryMock,
   tagActionRulesFactory,
-  type TagActionRulesRepositoryMock,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 

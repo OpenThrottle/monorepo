@@ -6,7 +6,8 @@
 
 import { Field, ObjectType } from '@nestjs/graphql';
 
-import { ID_REF_KIND, type IdRefKind } from './id-refs.enum.ts';
+import type { IdRefKind } from './id-refs.enum.ts';
+import { ID_REF_KIND } from './id-refs.enum.ts';
 
 @ObjectType()
 export class IdRefObject {

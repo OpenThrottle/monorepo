@@ -15,11 +15,13 @@ import { buildCodexArgv } from '../codex/argv.ts';
 import { buildCursorAgentArgv } from '../cursor-agent/argv.ts';
 import { buildGrokArgv } from '../grok/argv.ts';
 import { buildOpencodeArgv } from '../opencode/argv.ts';
+import type {
+  ConversationPermissionMode,
+  ConversationReasoningEffort,
+} from '../types.ts';
 import {
   CONVERSATION_PERMISSION_MODES,
   CONVERSATION_REASONING_EFFORTS,
-  type ConversationPermissionMode,
-  type ConversationReasoningEffort,
 } from '../types.ts';
 
 const ALL_REASONING = Object.values(CONVERSATION_REASONING_EFFORTS);

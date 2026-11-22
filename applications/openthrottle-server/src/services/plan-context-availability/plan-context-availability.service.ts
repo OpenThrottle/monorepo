@@ -40,17 +40,19 @@ import {
   TasksRepository,
   UsersRepository,
 } from '@openthrottle/nestjs-repositories-server';
+import type {
+  SkillAvailabilityInput,
+  SkillAvailabilityRule,
+  SkillAvailabilityRuleSet,
+  TagActionRuleInput,
+} from '@openthrottle/openthrottle-skills';
 import {
   availabilityExceptionActionPayloadSchema,
   evaluateTagActionRules,
   rankMatchedTagActions,
   resolveSkillAvailability,
   scoreTagActionSpecificity,
-  type SkillAvailabilityInput,
-  type SkillAvailabilityRule,
-  type SkillAvailabilityRuleSet,
   TAG_ACTION_TYPES,
-  type TagActionRuleInput,
 } from '@openthrottle/openthrottle-skills';
 
 import { ProjectSkillsService } from '../project-skills/project-skills.service.ts';

@@ -6,11 +6,13 @@
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import type { z } from 'zod';
 
+import type {
+  ActivityByDateFragment,
+  LastActivityFragment,
+} from '../__generated__/graphql.js';
 import {
-  type ActivityByDateFragment,
   GetActivityByDateDocument,
   GetLastActivityDocument,
-  type LastActivityFragment,
 } from '../__generated__/graphql.js';
 import {
   ActivityByDateInputSchema,

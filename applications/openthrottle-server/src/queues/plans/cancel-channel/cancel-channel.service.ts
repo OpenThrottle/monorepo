@@ -1,9 +1,8 @@
-import {
-  Inject,
-  Injectable,
-  type OnApplicationBootstrap,
-  type OnApplicationShutdown,
+import type {
+  OnApplicationBootstrap,
+  OnApplicationShutdown,
 } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import {
   parsePlanIdFromCancelTopic,
   PLAN_CANCEL_TOPIC_PATTERN,

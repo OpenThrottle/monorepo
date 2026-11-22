@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import type { Transcript } from '../../../types/transcript.ts';
 import {
-  type Transcript,
   TRANSCRIPT_LINE_TYPES,
   TRANSCRIPT_SCHEMA_VERSION,
   TRANSCRIPT_SURFACES,

@@ -1,6 +1,7 @@
 import { RalphNestedDebugCli } from '@openthrottle/openthrottle-developer-codegen';
 import { describe, expect, test } from 'vitest';
 
+import type { WorkflowRalphRunOptionsInput } from '../build-workflow-ralph-argv';
 import {
   buildRalphPlanRunTuningInputFromWorkflowRunOptions,
   buildWorkflowRalphDebugBundleText,
@@ -19,7 +20,6 @@ import {
   resolveWorkflowRalphWorktreeArgvValue,
   validateWorkflowRalphRunOptionsState,
   WORKFLOW_RALPH_WORKTREE_FLAG_ONLY,
-  type WorkflowRalphRunOptionsInput,
 } from '../build-workflow-ralph-argv';
 
 function asMock<T>(value: unknown): T;

@@ -1,7 +1,5 @@
-import {
-  NOTIFICATION_EVENT_NAMES,
-  type NotificationEventName,
-} from '@openthrottle/openthrottle-notifications';
+import type { NotificationEventName } from '@openthrottle/openthrottle-notifications';
+import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
 
 /**
  * @description Multiselect option for filtering debugger events by Socket.IO event name.

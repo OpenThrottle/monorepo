@@ -1,6 +1,7 @@
 import type { AddressInfo } from 'node:net';
 
-import { Controller, Get, type INestApplication, Module } from '@nestjs/common';
+import type { INestApplication } from '@nestjs/common';
+import { Controller, Get, Module } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { afterEach, describe, expect, it } from 'vitest';
 

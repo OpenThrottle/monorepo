@@ -1,11 +1,11 @@
 import { IGNORED_TRACED_PATTERNS } from '../data/data.stage.ts';
 import { findNearestSlot, slotOf } from './findNearestSlot.ts';
 import { isExcludedFile } from './isExcludedFile.ts';
+import type { StorePackage } from './parse-store-path.ts';
 import {
   parseStoreDirPath,
   parseStoreFilePath,
   parseStoreOwner,
-  type StorePackage,
 } from './parse-store-path.ts';
 
 /** A dependency symlink the tracer walked through, resolved to its target. */

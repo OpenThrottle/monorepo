@@ -1,7 +1,7 @@
+import type { HeaderChatSurface } from '@openthrottle/react-router-chat-state';
 import {
   CHAT_TOOLBAR_CONTEXT_SOURCES,
   CHAT_TOOLBAR_PERSONAS,
-  type HeaderChatSurface,
   useHeaderChatController as useSharedHeaderChatController,
 } from '@openthrottle/react-router-chat-state';
 

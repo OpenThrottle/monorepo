@@ -4,7 +4,7 @@ import type {
   PlansRepository,
   TasksRepository,
 } from '@openthrottle/nestjs-repositories-server';
-import { type JobRunHookPhase, type JobRunHooksConfig } from '@tools/workflows';
+import type { JobRunHookPhase, JobRunHooksConfig } from '@tools/workflows';
 
 import type { RunPlanJobData } from '../plans/plans.types.ts';
 export type PlanQueueJobCompletedPayload = {

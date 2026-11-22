@@ -32,12 +32,12 @@ import { warnUnsupportedAdditionalDirectories } from '../capabilities.ts';
 import { describeExit } from '../describeExit.ts';
 import { withFileMentions } from '../file-mentions.ts';
 import { withKeepalive } from '../keepalive.ts';
-import {
-  CONVERSATION_STREAM_CHUNK_KINDS,
-  type ConversationBackend,
-  type ConversationBackendRun,
-  type ConversationStreamChunk,
+import type {
+  ConversationBackend,
+  ConversationBackendRun,
+  ConversationStreamChunk,
 } from '../types.ts';
+import { CONVERSATION_STREAM_CHUNK_KINDS } from '../types.ts';
 import {
   buildCursorAgentArgv,
   CURSOR_AGENT_BIN_ENV,

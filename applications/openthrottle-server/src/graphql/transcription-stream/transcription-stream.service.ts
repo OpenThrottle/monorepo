@@ -20,9 +20,9 @@
 import { randomUUID } from 'node:crypto';
 
 import { Inject, Injectable } from '@nestjs/common';
+import type { PubSubEngine } from '@openthrottle/nestjs-graphql';
 import {
   PUB_SUB,
-  type PubSubEngine,
   transcriptionStreamTopic,
 } from '@openthrottle/nestjs-graphql';
 import { LoggerService } from '@openthrottle/nestjs-modules';

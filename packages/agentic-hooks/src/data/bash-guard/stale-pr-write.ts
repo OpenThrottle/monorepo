@@ -16,15 +16,15 @@
  */
 import { logHookError } from '../../utils/logging.ts';
 import { stripCommandPrefixes } from './shell-words.ts';
-import {
-  BASH_RULE_ALLOW,
-  type BashGuardContext,
-  type BashGuardRule,
-  type BashRuleVerdict,
-  type BashSegment,
-  type PullRequestQuery,
-  type PullRequestState,
+import type {
+  BashGuardContext,
+  BashGuardRule,
+  BashRuleVerdict,
+  BashSegment,
+  PullRequestQuery,
+  PullRequestState,
 } from './types.ts';
+import { BASH_RULE_ALLOW } from './types.ts';
 
 /** @public */
 export const STALE_PR_WRITE_RULE_ID = 'stale-pr-write';

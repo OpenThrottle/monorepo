@@ -12,10 +12,8 @@ import {
   ROOT_VALUE,
 } from '~/routing/plans/utils/plan-workflow-config-workspace-selector';
 
-import {
-  usePlanWorkflowConfigWorkspaceSelector,
-  type UsePlanWorkflowConfigWorkspaceSelectorOptions,
-} from '../usePlanWorkflowConfigWorkspaceSelector';
+import type { UsePlanWorkflowConfigWorkspaceSelectorOptions } from '../usePlanWorkflowConfigWorkspaceSelector';
+import { usePlanWorkflowConfigWorkspaceSelector } from '../usePlanWorkflowConfigWorkspaceSelector';
 
 const checkout = (
   id: string,

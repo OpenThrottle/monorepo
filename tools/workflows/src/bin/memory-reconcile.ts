@@ -19,10 +19,9 @@ import {
   checkIndexIntegrity,
   formatIntegrityReport,
 } from '../memory-reconcile/integrity';
+import type { ObservedPlan, ObservedPr } from '../memory-reconcile/reconcile';
 import {
   formatReconcileReport,
-  type ObservedPlan,
-  type ObservedPr,
   reconcile,
 } from '../memory-reconcile/reconcile';
 import { listAllPlansGraphql } from '../utils/openthrottle-ralph-graphql';

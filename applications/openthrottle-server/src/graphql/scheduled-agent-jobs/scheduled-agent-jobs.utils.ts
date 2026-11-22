@@ -1,8 +1,6 @@
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
-import {
-  AUTH_PRINCIPAL_KIND_USER,
-  type AuthPrincipal,
-} from '@openthrottle/nestjs-auth';
+import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
+import { AUTH_PRINCIPAL_KIND_USER } from '@openthrottle/nestjs-auth';
 import type {
   ScheduledAgentJob,
   UserDisabledAgentClisRepository,

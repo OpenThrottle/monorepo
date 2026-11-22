@@ -14,24 +14,16 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import {
-  type FloorElement,
-  type FloorElementType,
-  type FloorLayout,
-} from '../types';
+import type { FloorElement, FloorElementType, FloorLayout } from '../types';
 import { createElementId } from '../utils/createElementId';
 import { createFloorElement, floorBounds } from '../utils/elements';
-import {
-  clampPointToRect,
-  type Point,
-  type Rect,
-  snapValueToGrid,
-} from '../utils/geometry';
+import type { Point, Rect } from '../utils/geometry';
+import { clampPointToRect, snapValueToGrid } from '../utils/geometry';
 import { isEditableTarget } from '../utils/isEditableTarget';
+import type { ElementPatch } from '../utils/layout-operations';
 import {
   addElement,
   createEmptyLayout,
-  type ElementPatch,
   moveElement,
   removeElement,
   updateElement,
@@ -39,7 +31,8 @@ import {
 import { ROTATE_SNAP_DEGREES } from '../utils/selection-transform';
 import { useFloorLayoutHistory } from './useFloorLayoutHistory';
 import { useSelectionKeyboard } from './useSelectionKeyboard';
-import { useViewport, type UseViewportResult } from './useViewport';
+import type { UseViewportResult } from './useViewport';
+import { useViewport } from './useViewport';
 
 /**
  * Configuration for {@link useFloorLayoutEditor}.

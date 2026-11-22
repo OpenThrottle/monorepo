@@ -4,7 +4,8 @@
 
 import { ConfigService } from '@nestjs/config';
 import { Args, Context, Mutation, Resolver } from '@nestjs/graphql';
-import { type AuthPrincipal, CurrentUser } from '@openthrottle/nestjs-auth';
+import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
+import { CurrentUser } from '@openthrottle/nestjs-auth';
 import {
   McpDeveloperMcpSurface,
   withMcpDeveloperAuthTokenAsync,

@@ -13,16 +13,10 @@ import {
 } from '@openthrottle/react-router-utils';
 import { CalendarClockIcon } from 'lucide-react';
 import * as React from 'react';
-import { Form, Link, redirect } from 'react-router';
+import { Form, Link } from 'react-router';
 
 import type { Route } from '@/app/routes/+types/schedule.$jobId._index';
-import {
-  ApproveScheduledAgentJobDocument,
-  DeleteScheduledAgentJobDocument,
-  RunScheduledAgentJobNowDocument,
-  ScheduledAgentJobDetailDocument,
-  SetScheduledAgentJobEnabledDocument,
-} from '~/__generated__/graphql';
+import { ScheduledAgentJobDetailDocument } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import { ScheduleApprovalNotice } from '~/routing/schedule/components/ScheduleApprovalNotice';
 import { ScheduleDetailSummary } from '~/routing/schedule/components/ScheduleDetailSummary';
@@ -30,10 +24,7 @@ import { ScheduleDetailTabs } from '~/routing/schedule/components/ScheduleDetail
 import { ScheduleRunNowButton } from '~/routing/schedule/components/ScheduleRunNowButton';
 import { ScheduleWebhookTab } from '~/routing/schedule/components/ScheduleWebhookTab';
 import { useScheduleWebhookReveal } from '~/routing/schedule/hooks/useScheduleWebhookReveal';
-import {
-  isWebhookIntent,
-  runWebhookIntent,
-} from '~/routing/schedule/utils/runWebhookIntent';
+import { runScheduleJobAction } from '~/routing/schedule/utils/runScheduleJobAction';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -175,65 +166,7 @@ export default function Component(
 }
 
 export const action = async (args: Route.ActionArgs) => {
-  const { jobId } = args.params;
-  const form = await args.request.formData();
-  const intent = form.get('intent');
-
-  try {
-    if (intent === 'run-now') {
-      const { runScheduledAgentJobNow } = await executeGraphqlWithAuth(
-        args.request,
-        RunScheduledAgentJobNowDocument,
-        {
-          id: jobId,
-        },
-      );
-      return { ok: true, runId: runScheduledAgentJobNow.id };
-    }
-
-    if (intent === 'approve') {
-      await executeGraphqlWithAuth(
-        args.request,
-        ApproveScheduledAgentJobDocument,
-        { id: jobId },
-      );
-      return { ok: true };
-    }
-
-    if (isWebhookIntent(intent)) {
-      return await runWebhookIntent(args.request, jobId, intent, form);
-    }
-
-    if (intent === 'toggle-enabled') {
-      const enabled = form.get('enabled') === 'true';
-      await executeGraphqlWithAuth(
-        args.request,
-        SetScheduledAgentJobEnabledDocument,
-        { input: { enabled, id: jobId } },
-      );
-      return { ok: true };
-    }
-
-    if (intent === 'delete') {
-      await executeGraphqlWithAuth(
-        args.request,
-        DeleteScheduledAgentJobDocument,
-        {
-          id: jobId,
-        },
-      );
-      return redirect('/schedule');
-    }
-
-    return { error: 'Unknown action.' };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Action failed.';
-
-    // A webhook failure shows inside the webhook form, not in the page-level alert.
-    return typeof intent === 'string' && intent.startsWith('webhook-')
-      ? { webhookError: message }
-      : { error: message };
-  }
+  return runScheduleJobAction(args.request, args.params.jobId);
 };
 
 export const ErrorBoundary = GlobalErrorBoundary;

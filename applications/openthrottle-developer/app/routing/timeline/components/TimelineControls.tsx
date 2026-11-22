@@ -6,10 +6,10 @@ import * as React from 'react';
 import { useSearchParams } from 'react-router';
 
 import type { TimelineLaneGrouping } from '~/__generated__/graphql';
+import type { TimelineWindowPreset } from '~/routing/timeline/config/defaults';
 import {
   TIMELINE_GROUPINGS,
   TIMELINE_WINDOW_PRESETS,
-  type TimelineWindowPreset,
 } from '~/routing/timeline/config/defaults';
 import {
   TIMELINE_CONTROLS_COPY,

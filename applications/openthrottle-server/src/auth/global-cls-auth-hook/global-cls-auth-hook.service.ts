@@ -3,12 +3,11 @@
  */
 
 import { Injectable } from '@nestjs/common';
+import type { AuthPrincipal, JwtPayload } from '@openthrottle/nestjs-auth';
 import {
   AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
   AUTH_PRINCIPAL_KIND_USER,
-  type AuthPrincipal,
   authPrincipalFromJwtPayload,
-  type JwtPayload,
 } from '@openthrottle/nestjs-auth';
 import {
   GlobalClsService,

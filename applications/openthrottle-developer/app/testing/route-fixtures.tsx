@@ -6,7 +6,8 @@
  */
 
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
-import { render, type RenderResult } from '@testing-library/react';
+import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import type { RouteObject } from 'react-router';
 import {

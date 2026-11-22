@@ -24,10 +24,10 @@ import { shouldRunJobRunHook } from './job-run-lifecycle-hooks-validation';
 import { resolveJobRunHookTimeoutSeconds } from './job-run-lifecycle-hooks-validation';
 import { DEFAULT_RALPH_RUNNER } from './ralph-execution-backend';
 import { resolveRalphPromptFromSeed } from './ralph-prompt-resolution';
+import type { RalphRuntimeSeed } from './ralph-runtime-config';
 import {
   DEFAULT_RALPH_ITERATIONS,
   DEFAULT_RALPH_MODEL,
-  type RalphRuntimeSeed,
 } from './ralph-runtime-config';
 
 export interface JobRunHookIterationParams {

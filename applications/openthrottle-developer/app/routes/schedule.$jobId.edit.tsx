@@ -17,12 +17,12 @@ import * as React from 'react';
 import { redirect } from 'react-router';
 
 import type { Route } from '@/app/routes/+types/schedule.$jobId.edit';
+import type { UpdateScheduledAgentJobInputType } from '~/__generated__/graphql';
 import {
   ScheduledAgentJobDetailDocument,
   ScheduleFormAgentClisDocument,
   ScheduleRepositoryOptionsDocument,
   UpdateScheduledAgentJobDocument,
-  type UpdateScheduledAgentJobInputType,
 } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import { ScheduleForm } from '~/routing/schedule/components/ScheduleForm';

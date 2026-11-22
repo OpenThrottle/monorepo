@@ -2,10 +2,8 @@
  * @description Registers the knowledge-base chunk resource (read chunk by id via GraphQL getDocument).
  */
 
-import {
-  type McpServer,
-  ResourceTemplate,
-} from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 
 import { GetDocumentDocument } from '../__generated__/graphql.js';

@@ -10,10 +10,10 @@ import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import type { RecordingProfile } from '../../../config/config.backends.ts';
 import {
   CLAUDE_RECORDING_PROFILE,
   RECORDING_PROFILES,
-  type RecordingProfile,
 } from '../../../config/config.backends.ts';
 import { PLAN_RUN_SCENARIOS } from '../../../data/data.plan-run-scenarios.ts';
 import { SCENARIOS } from '../../../data/data.scenarios.ts';

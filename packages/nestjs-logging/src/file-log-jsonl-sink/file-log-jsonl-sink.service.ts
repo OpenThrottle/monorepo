@@ -1,21 +1,9 @@
-import {
-  type FileHandle,
-  mkdir,
-  open,
-  rename,
-  rm,
-  stat,
-} from 'node:fs/promises';
+import type { FileHandle } from 'node:fs/promises';
+import { mkdir, open, rename, rm, stat } from 'node:fs/promises';
 import * as path from 'node:path';
 
-import {
-  Inject,
-  Injectable,
-  Logger,
-  type OnModuleDestroy,
-  type OnModuleInit,
-  Optional,
-} from '@nestjs/common';
+import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 
 import type {
   JsonlRotationPolicy,

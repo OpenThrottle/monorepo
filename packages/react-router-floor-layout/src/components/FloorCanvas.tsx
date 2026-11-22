@@ -3,14 +3,11 @@ import * as React from 'react';
 
 import { usePerElementPointerDown } from '../hooks/usePerElementPointerDown';
 import { usePointerDrag } from '../hooks/usePointerDrag';
-import { type UseViewportResult } from '../hooks/useViewport';
-import { type FloorLayout } from '../types';
+import type { UseViewportResult } from '../hooks/useViewport';
+import type { FloorLayout } from '../types';
 import { floorBounds, sortElementsByLayer } from '../utils/elements';
-import {
-  clampPointToRect,
-  type Point,
-  snapPointToGrid,
-} from '../utils/geometry';
+import type { Point } from '../utils/geometry';
+import { clampPointToRect, snapPointToGrid } from '../utils/geometry';
 import { FloorElementView } from './FloorElementView';
 import { FloorGrid } from './FloorGrid';
 

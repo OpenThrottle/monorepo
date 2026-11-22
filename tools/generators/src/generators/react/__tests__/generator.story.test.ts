@@ -32,7 +32,8 @@ const componentsRoot = 'packages/react-router-shadcn/src/components';
 /** A two-group `cva` component — the Button-shaped reference case. */
 const CVA_COMPONENT = `
 import * as React from 'react';
-import { cva, type VariantProps } from 'class-variance-authority';
+import type { VariantProps } from 'class-variance-authority';
+import { cva } from 'class-variance-authority';
 
 export const badgeVariants = cva('inline-flex', {
   defaultVariants: { size: 'default', variant: 'default' },
@@ -87,7 +88,7 @@ describe('storyGenerator', () => {
       "import type { Meta, StoryObj } from '@storybook/react-vite'",
     );
     expect(source).toContain(
-      "import { TestBadge, type TestBadgeProps } from './TestBadge'",
+      "import type { TestBadgeProps } from './TestBadge';\nimport { TestBadge } from './TestBadge'",
     );
     expect(source).toContain('satisfies Meta<typeof TestBadge>');
     expect(source).toContain("title: 'Components/TestBadge'");

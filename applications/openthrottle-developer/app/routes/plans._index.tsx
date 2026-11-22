@@ -1,4 +1,3 @@
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { OpenThrottlePagination } from '@openthrottle/react-router-ui';
 import {
   GlobalErrorBoundary,
@@ -6,36 +5,26 @@ import {
   GlobalFeatureOnboardingModal,
   GlobalScreen,
   GlobalStatsPanel,
-  readSearchParam,
   ROUTE_STATS_URL,
   shouldRevalidateIgnoringParams,
 } from '@openthrottle/react-router-ui-global';
-import {
-  mergeRouteModuleMeta,
-  parsePagination,
-} from '@openthrottle/react-router-utils';
+import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import * as React from 'react';
 import type { RouteMatch } from 'react-router';
 import { useSearchParams } from 'react-router';
 
 import type { Route } from '@/app/routes/+types/plans._index';
-import {
-  GetPlanAssigneeOptionsDocument,
-  GetPlanCountsByStatusDocument,
-  GetPlansByStatusDocument,
-} from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import { PlansIntroduction } from '~/routing/plans/components/PlansIntroduction';
 import { PlansStats } from '~/routing/plans/components/PlansStats';
 import { PlansTable } from '~/routing/plans/components/PlansTable';
 import { PlansToolbar } from '~/routing/plans/components/PlansToolbar';
-import { parseStatusesFromSearchParams } from '~/routing/plans/config/status-options';
 import { PLANS_ONBOARDING } from '~/routing/plans/data/data.copy';
 import { usePlansIndexRevalidation } from '~/routing/plans/hooks/usePlansIndexRevalidation';
+import { loadPlansIndex } from '~/routing/plans/utils/loadPlansIndex.server';
 import {
   buildStatusFilterUrls,
   hasActivePlansFilters,
-  parseAssigneesFromSearchParams,
   parsePlansSortFromSearch,
 } from '~/routing/plans/utils/parsers';
 
@@ -45,52 +34,7 @@ export const handle = {
 };
 
 export const loader = async (args: Route.LoaderArgs) => {
-  const url = args.url;
-
-  const searchParams = url?.searchParams ?? new URLSearchParams();
-  const statuses = parseStatusesFromSearchParams(searchParams);
-  const assignees = parseAssigneesFromSearchParams(searchParams);
-  const { limit, offset, page } = parsePagination(searchParams);
-  const q = readSearchParam(searchParams);
-  const titleSubstring = q.length > 0 ? q : null;
-
-  const [result, assigneeOptionsResult, statusCountsResult] = await Promise.all(
-    [
-      executeGraphqlWithAuth(args.request, GetPlansByStatusDocument, {
-        input: {
-          assignees: assignees.length > 0 ? assignees : null,
-          limit,
-          offset,
-          statuses: statuses.length > 0 ? statuses : null,
-          titleSubstring,
-        },
-      }),
-      executeGraphqlWithAuth(
-        args.request,
-        GetPlanAssigneeOptionsDocument,
-      ).catch(() => null),
-      // Feeds only the collapsible stat cards, so a failure degrades to zeros
-      // rather than failing the list.
-      executeGraphqlWithAuth(args.request, GetPlanCountsByStatusDocument).catch(
-        () => null,
-      ),
-    ],
-  );
-
-  const assigneeOptions: string[] =
-    assigneeOptionsResult?.listDistinctAuthorsAndAssignees ?? [];
-
-  return {
-    assigneeOptions,
-    assignees,
-    limit,
-    page,
-    plans: result.listPlansByStatus.items,
-    statusCounts: statusCountsResult?.planCountsByStatus ?? [],
-    statuses,
-    totalCount: result.listPlansByStatus.totalCount,
-    totalCountAll: result.allPlansCount.totalCount,
-  };
+  return loadPlansIndex(args.request, args.url);
 };
 
 export const links: Route.LinksFunction = () => {

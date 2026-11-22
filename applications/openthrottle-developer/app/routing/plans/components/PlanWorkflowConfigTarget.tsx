@@ -11,11 +11,11 @@ import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 import * as React from 'react';
 
 import { PLAN_WORKFLOW_CONFIG_TARGET_COPY } from '~/routing/plans/data/data.copy';
-import {
-  isUuid,
-  type WorkflowRalphRunOptionsInput,
-  type WorkflowRalphTargetMode,
+import type {
+  WorkflowRalphRunOptionsInput,
+  WorkflowRalphTargetMode,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
+import { isUuid } from '~/routing/plans/utils/build-workflow-ralph-argv';
 
 export interface PlanWorkflowConfigTargetProps {
   heading: string;

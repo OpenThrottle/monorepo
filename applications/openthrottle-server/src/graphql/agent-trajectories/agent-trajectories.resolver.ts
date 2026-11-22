@@ -7,10 +7,10 @@
 
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
+import type { AgentTrajectorySource } from '@openthrottle/nestjs-repositories-server';
 import {
   AGENT_TRAJECTORY_SOURCE,
   AgentTrajectoriesRepository,
-  type AgentTrajectorySource,
 } from '@openthrottle/nestjs-repositories-server';
 import {
   capTrajectory,

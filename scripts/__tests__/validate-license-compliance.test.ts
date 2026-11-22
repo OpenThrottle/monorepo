@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
+import type {
+  LicensePolicy,
+  PnpmLicensesOutput,
+} from '../validate-license-compliance.ts';
 import {
   evaluateCompliance,
   formatReport,
   hasPlatformConstraints,
   isExpressionAllowed,
-  type LicensePolicy,
-  type PnpmLicensesOutput,
   resolveEffectiveLicense,
   tokenizeSpdx,
 } from '../validate-license-compliance.ts';

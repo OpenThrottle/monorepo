@@ -3,6 +3,10 @@ import * as React from 'react';
 import { useFetcher } from 'react-router';
 
 import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/data.copy';
+import type {
+  SkillAvailabilityEnvironmentChoice,
+  SkillAvailabilityRuleValue,
+} from '~/routing/skills/utils/skill-availability';
 import {
   environmentValueToChoice,
   findInvalidSlugs,
@@ -10,8 +14,6 @@ import {
   parseSlugInput,
   ruleHasAnyEntry,
   SKILL_AVAILABILITY_EMPTY_RULE,
-  type SkillAvailabilityEnvironmentChoice,
-  type SkillAvailabilityRuleValue,
 } from '~/routing/skills/utils/skill-availability';
 
 export interface UseSkillAvailabilityRuleFormOptions {

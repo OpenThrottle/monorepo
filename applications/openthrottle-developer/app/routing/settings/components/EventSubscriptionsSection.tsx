@@ -6,10 +6,8 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import {
-  EVENT_SUBSCRIPTION_ROWS,
-  type EventSubscriptionId,
-} from '~/routing/settings/config/event-subscriptions';
+import type { EventSubscriptionId } from '~/routing/settings/config/event-subscriptions';
+import { EVENT_SUBSCRIPTION_ROWS } from '~/routing/settings/config/event-subscriptions';
 import {
   getEventSubscriptionsFromStorage,
   setEventSubscriptionsInStorage,

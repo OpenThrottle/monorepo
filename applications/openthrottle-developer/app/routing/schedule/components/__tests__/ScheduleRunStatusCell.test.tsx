@@ -1,14 +1,13 @@
-import { render, type RenderResult } from '@testing-library/react';
+import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
 import { SCHEDULE_RUN_STATUS_CELL_COPY } from '~/routing/schedule/data/data.copy';
 import { RUN_STATUS_LABEL } from '~/routing/schedule/data/data.run-status';
 
-import {
-  ScheduleRunStatusCell,
-  type ScheduleRunStatusCellProps,
-} from '../ScheduleRunStatusCell';
+import type { ScheduleRunStatusCellProps } from '../ScheduleRunStatusCell';
+import { ScheduleRunStatusCell } from '../ScheduleRunStatusCell';
 
 const RESETS_AT = '2026-11-01T17:00:00.000Z';
 const USAGE_LIMITED_LABEL = RUN_STATUS_LABEL.usage_limited ?? 'usage_limited';

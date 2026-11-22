@@ -2,11 +2,11 @@
  * @description Persistence helpers for agentsRunChatTurn (human JWT user-scoped).
  */
 import { NotFoundException } from '@nestjs/common';
-import {
-  AUTH_PRINCIPAL_KIND_USER,
-  type AuthPrincipal,
-  type UserAuthPrincipal,
+import type {
+  AuthPrincipal,
+  UserAuthPrincipal,
 } from '@openthrottle/nestjs-auth';
+import { AUTH_PRINCIPAL_KIND_USER } from '@openthrottle/nestjs-auth';
 import type {
   AgentConversationMessagesRepository,
   AgentConversationsRepository,

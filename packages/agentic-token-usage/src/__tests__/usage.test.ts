@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
+import type { NormalizedTokenUsage } from '../usage.ts';
 import {
   formatTokenCount,
   formatUsageCost,
   hasUsageCounts,
-  type NormalizedTokenUsage,
   normalizeUsage,
   sumUsage,
 } from '../usage.ts';

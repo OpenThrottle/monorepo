@@ -3,10 +3,10 @@ import { IS_BROWSER, useIsHydrated } from '@openthrottle/react-router-utils';
 import * as React from 'react';
 import { isRouteErrorResponse, useRouteError } from 'react-router';
 
+import type { ClientErrorKind } from '../utils/client-error-diagnostics';
 import {
   bucketRouteHttpStatus,
   classifyClientError,
-  type ClientErrorKind,
   createIncidentReferenceId,
   incidentClassificationSummary,
   inferJavascriptErrorSubtype,

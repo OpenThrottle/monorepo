@@ -11,8 +11,8 @@
  */
 
 import { createMock } from '@golevelup/ts-vitest';
+import type { PreparedReplay } from '@openthrottle/agentic-replay-testing';
 import {
-  type PreparedReplay,
   prepareReplay,
   replayFixturePath,
   withBinEnv,

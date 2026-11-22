@@ -1,10 +1,8 @@
 import { Input, Label, Switch } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import {
-  WORKFLOW_RALPH_ENV_VARS,
-  type WorkflowRalphRunOptionsInput,
-} from '~/routing/plans/utils/build-workflow-ralph-argv';
+import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
+import { WORKFLOW_RALPH_ENV_VARS } from '~/routing/plans/utils/build-workflow-ralph-argv';
 
 export interface PlanWorkflowConfigWorktreeCursorFieldsProps {
   input: WorkflowRalphRunOptionsInput;

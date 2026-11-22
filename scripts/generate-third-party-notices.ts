@@ -6,10 +6,12 @@ import { fileURLToPath } from 'node:url';
 
 import { hasFlag } from './utils/args.ts';
 import { createLogger } from './utils/logger.ts';
+import type {
+  LicensePolicy,
+  PnpmLicensesOutput,
+} from './validate-license-compliance.ts';
 import {
   collectPlatformSpecificPackages,
-  type LicensePolicy,
-  type PnpmLicensesOutput,
   readInstalledLicenses,
   resolveEffectiveLicense,
 } from './validate-license-compliance.ts';

@@ -5,7 +5,8 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
-import { firstValueFrom, isObservable, type Observable } from 'rxjs';
+import type { Observable } from 'rxjs';
+import { firstValueFrom, isObservable } from 'rxjs';
 
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator.ts';
 import { JWT_STRATEGY_NAME } from '../strategies/jwt.strategy.ts';

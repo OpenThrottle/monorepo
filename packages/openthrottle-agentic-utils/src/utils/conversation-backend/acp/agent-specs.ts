@@ -44,10 +44,8 @@ import {
   CURSOR_AGENT_DEFAULT_BIN,
 } from '../cursor-agent/argv.ts';
 import { buildCursorAgentEnv } from '../cursor-agent/cursor-agent.ts';
-import {
-  CONVERSATION_PERMISSION_MODES,
-  type ConversationPermissionMode,
-} from '../types.ts';
+import type { ConversationPermissionMode } from '../types.ts';
+import { CONVERSATION_PERMISSION_MODES } from '../types.ts';
 
 /**
  * How to launch one ACP-speaking agent CLI.

@@ -4,11 +4,8 @@ import {
   rankMatchedTagActions,
   scoreTagActionSpecificity,
 } from '../rankMatchedTagActions.ts';
-import {
-  type MatchedTagAction,
-  TAG_ACTION_TYPES,
-  type TagActionRuleScope,
-} from '../tag-actions.ts';
+import type { MatchedTagAction, TagActionRuleScope } from '../tag-actions.ts';
+import { TAG_ACTION_TYPES } from '../tag-actions.ts';
 
 const globalScope: TagActionRuleScope = {
   environment: null,

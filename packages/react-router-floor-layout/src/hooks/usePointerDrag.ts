@@ -9,21 +9,12 @@
  * rotate, and resize gestures — the consumer decides what to do with each frame.
  */
 
-import {
-  type PointerEvent as ReactPointerEvent,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import type { PointerEvent as ReactPointerEvent } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { type PointerDragContext } from '../types';
-import {
-  clampPointToRect,
-  type Point,
-  type Rect,
-  snapPointToGrid,
-} from '../utils/geometry';
+import type { PointerDragContext } from '../types';
+import type { Point, Rect } from '../utils/geometry';
+import { clampPointToRect, snapPointToGrid } from '../utils/geometry';
 
 /**
  * Configuration for {@link usePointerDrag}.

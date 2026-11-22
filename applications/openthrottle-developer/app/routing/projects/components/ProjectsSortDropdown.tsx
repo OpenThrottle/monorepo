@@ -8,11 +8,13 @@ import {
 import * as React from 'react';
 
 import { PROJECTS_SORT_OPTIONS } from '~/routing/projects/config';
+import type {
+  ProjectsSortBy,
+  ProjectsSortOrder,
+} from '~/routing/prompts/config/types';
 import {
   PROJECTS_SORT_BY,
   PROJECTS_SORT_ORDER,
-  type ProjectsSortBy,
-  type ProjectsSortOrder,
 } from '~/routing/prompts/config/types';
 
 export interface ProjectsSortDropdownProps {

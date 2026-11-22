@@ -7,10 +7,9 @@ import path from 'node:path';
 
 import { isRecord } from '@openthrottle/nodejs-utils';
 
+import type { DeliveryLeg, MarketplaceInstall } from '../../data/heartbeat.ts';
 import {
-  type DeliveryLeg,
   detectDeliveryLeg as detectNeutralDeliveryLeg,
-  type MarketplaceInstall,
   UNKNOWN_MARKETPLACE_INSTALL,
 } from '../../data/heartbeat.ts';
 

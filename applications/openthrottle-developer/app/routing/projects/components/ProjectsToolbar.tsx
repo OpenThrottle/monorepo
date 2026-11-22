@@ -8,11 +8,13 @@ import * as React from 'react';
 import { Link, useSearchParams } from 'react-router';
 
 import { ProjectsSortDropdown } from '~/routing/projects/components/ProjectsSortDropdown';
+import type {
+  ProjectsSortBy,
+  ProjectsSortOrder,
+} from '~/routing/prompts/config/types';
 import {
   PROJECTS_SORT_BY,
   PROJECTS_SORT_ORDER,
-  type ProjectsSortBy,
-  type ProjectsSortOrder,
 } from '~/routing/prompts/config/types';
 
 type ViewMode = 'table' | 'card';

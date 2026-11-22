@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
 import { FloorElementType } from '../../types';
-import { type Point } from '../../utils/geometry';
+import type { Point } from '../../utils/geometry';
 import { ElementPalette } from '../ElementPalette';
 
 const identity = (client: Point): Point => {

@@ -7,11 +7,11 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { getRecentWorkspacePaths } from '~/routing/plans/utils/workspace-path';
 
-import {
-  usePlanToolbar,
-  type UsePlanToolbarOptions,
-  type UsePlanToolbarResult,
+import type {
+  UsePlanToolbarOptions,
+  UsePlanToolbarResult,
 } from '../usePlanToolbar';
+import { usePlanToolbar } from '../usePlanToolbar';
 
 vi.mock('@openthrottle/react-router-shadcn', () => ({
   toast: { error: vi.fn(), success: vi.fn() },

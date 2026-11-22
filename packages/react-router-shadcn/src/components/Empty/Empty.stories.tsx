@@ -5,7 +5,8 @@ import { Empty } from './Empty';
 import { EmptyContent } from './EmptyContent';
 import { EmptyDescription } from './EmptyDescription';
 import { EmptyHeader } from './EmptyHeader';
-import { EmptyMedia, type EmptyMediaProps } from './EmptyMedia';
+import type { EmptyMediaProps } from './EmptyMedia';
+import { EmptyMedia } from './EmptyMedia';
 import { EmptyTitle } from './EmptyTitle';
 
 const MEDIA_VARIANTS: readonly NonNullable<EmptyMediaProps['variant']>[] = [

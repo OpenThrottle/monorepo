@@ -7,7 +7,8 @@
 import type { RecordingProfile } from '../../config/config.backends.ts';
 import type { TranscriptHeader } from '../../types/transcript.ts';
 import { replayPaths } from '../replay/replayPaths.ts';
-import { findSanitizerLeaks, type Sanitizer } from '../sanitizer/sanitizer.ts';
+import type { Sanitizer } from '../sanitizer/sanitizer.ts';
+import { findSanitizerLeaks } from '../sanitizer/sanitizer.ts';
 import {
   parseTranscript,
   serializeTranscript,

@@ -1,8 +1,6 @@
 import type { NotificationEventName } from '@openthrottle/openthrottle-notifications';
-import {
-  NOTIFICATION_EVENT_NAMES,
-  type NotificationPayload,
-} from '@openthrottle/openthrottle-notifications';
+import type { NotificationPayload } from '@openthrottle/openthrottle-notifications';
+import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import type { RenderResult } from '@testing-library/react';
 import { render, within } from '@testing-library/react';

@@ -22,10 +22,10 @@
 import * as React from 'react';
 
 import { subscribeToNotificationsPreferenceStorageEvents } from '../utils/subscribeToNotificationsPreferenceStorageEvents';
+import type { SystemNotificationsPreference } from '../utils/system-notification';
 import {
   getSystemNotificationsPreference,
   setSystemNotificationsPreference,
-  type SystemNotificationsPreference,
 } from '../utils/system-notification';
 
 /** @public */

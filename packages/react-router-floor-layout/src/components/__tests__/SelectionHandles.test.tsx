@@ -3,10 +3,11 @@ import userEvent from '@testing-library/user-event';
 import { createRef } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { type UseViewportResult } from '../../hooks/useViewport';
-import { type FloorElement, FloorElementType } from '../../types';
+import type { UseViewportResult } from '../../hooks/useViewport';
+import type { FloorElement } from '../../types';
+import { FloorElementType } from '../../types';
 import { createFloorElement } from '../../utils/elements';
-import { type Point } from '../../utils/geometry';
+import type { Point } from '../../utils/geometry';
 import { SelectionHandles } from '../SelectionHandles';
 
 function element(): FloorElement {

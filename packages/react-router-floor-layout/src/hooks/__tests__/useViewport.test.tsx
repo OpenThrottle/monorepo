@@ -1,11 +1,12 @@
 import { act, renderHook } from '@testing-library/react';
-import {
-  type PointerEvent as ReactPointerEvent,
-  type WheelEvent as ReactWheelEvent,
+import type {
+  PointerEvent as ReactPointerEvent,
+  WheelEvent as ReactWheelEvent,
 } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { useViewport, type UseViewportResult } from '../useViewport';
+import type { UseViewportResult } from '../useViewport';
+import { useViewport } from '../useViewport';
 
 /**
  * Present a structural test double as its real type. The public overload hands

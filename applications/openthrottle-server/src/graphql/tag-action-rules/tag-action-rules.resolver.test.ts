@@ -1,9 +1,9 @@
 import { BadRequestException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
+import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
 import {
   AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
   AUTH_PRINCIPAL_KIND_USER,
-  type AuthPrincipal,
 } from '@openthrottle/nestjs-auth';
 import {
   PlansRepository,
@@ -12,6 +12,10 @@ import {
   TagActionRulesRepository,
   UsersRepository,
 } from '@openthrottle/nestjs-repositories-server';
+import type {
+  RuleApplicationsRepositoryMock,
+  TagActionRulesRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import {
   createPlansRepositoryMock,
   createRolesRepositoryMock,
@@ -20,9 +24,7 @@ import {
   createUsersRepositoryMock,
   plansFactory,
   ruleApplicationsFactory,
-  type RuleApplicationsRepositoryMock,
   tagActionRulesFactory,
-  type TagActionRulesRepositoryMock,
   usersFactory,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import { TAG_ACTION_TYPES } from '@openthrottle/openthrottle-skills';

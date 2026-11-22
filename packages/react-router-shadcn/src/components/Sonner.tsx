@@ -7,11 +7,8 @@ import {
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import * as React from 'react';
-import {
-  toast as sonnerToast,
-  Toaster as Sonner,
-  type ToasterProps as SonnerToasterProps,
-} from 'sonner';
+import type { ToasterProps as SonnerToasterProps } from 'sonner';
+import { toast as sonnerToast, Toaster as Sonner } from 'sonner';
 
 import { isRenderableMessage } from '../utils/isRenderableMessage';
 

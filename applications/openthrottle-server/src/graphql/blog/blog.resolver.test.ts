@@ -1,9 +1,11 @@
 import { Test } from '@nestjs/testing';
+import type {
+  BlogAuthor,
+  BlogPost,
+  BlogTag,
+} from '@openthrottle/nestjs-repositories-server';
 import {
-  type BlogAuthor,
-  type BlogPost,
   BlogPostsRepository,
-  type BlogTag,
   BlogTagsRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import {

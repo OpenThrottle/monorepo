@@ -43,7 +43,8 @@ import {
   usersFactory,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
-import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
+import type { Mock } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { ProjectSkillsService } from '../project-skills/project-skills.service.ts';
 import type { SkillAvailabilityService } from '../skill-availability/skill-availability.service.ts';

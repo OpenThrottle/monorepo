@@ -1,14 +1,13 @@
-import { render, type RenderResult } from '@testing-library/react';
+import type { RenderResult } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
 import { WorkspaceEditorId } from '~/__generated__/graphql';
 import { DefaultEditorContext } from '~/global/config/DefaultEditorContext';
 
-import {
-  PlanRunProvenanceCell,
-  type PlanRunProvenanceCellProps,
-} from '../PlanRunProvenanceCell';
+import type { PlanRunProvenanceCellProps } from '../PlanRunProvenanceCell';
+import { PlanRunProvenanceCell } from '../PlanRunProvenanceCell';
 
 const renderCell = (props: PlanRunProvenanceCellProps): RenderResult => {
   return render(<PlanRunProvenanceCell {...props} />);

@@ -1,17 +1,19 @@
 import { NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
+import type {
+  EvalCase,
+  EvalDataset,
+  EvalGrade,
+  EvalJudgeCalibration,
+  EvalRun,
+  EvalTrial,
+} from '@openthrottle/nestjs-repositories-server';
 import {
-  type EvalCase,
   EvalCasesRepository,
-  type EvalDataset,
   EvalDatasetsRepository,
-  type EvalGrade,
   EvalGradesRepository,
-  type EvalJudgeCalibration,
   EvalJudgeCalibrationsRepository,
-  type EvalRun,
   EvalRunsRepository,
-  type EvalTrial,
   EvalTrialsRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import {

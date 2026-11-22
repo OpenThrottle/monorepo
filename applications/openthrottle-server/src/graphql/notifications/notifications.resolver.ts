@@ -11,11 +11,11 @@
 import { ForbiddenException, Inject } from '@nestjs/common';
 import { Args, Context, ID, Resolver, Subscription } from '@nestjs/graphql';
 import { Public } from '@openthrottle/nestjs-auth';
+import type { PubSubEngine } from '@openthrottle/nestjs-graphql';
 import {
   notificationsFirehoseTopic,
   planLifecycleTopic,
   PUB_SUB,
-  type PubSubEngine,
 } from '@openthrottle/nestjs-graphql';
 
 import { NotificationEvent } from './notification-event.object.ts';

@@ -7,10 +7,8 @@
 
 import { Field, ObjectType } from '@nestjs/graphql';
 
-import {
-  type BlogReferenceEntity,
-  BlogReferenceEntityEnum,
-} from './blog-reference-entity.enum.ts';
+import type { BlogReferenceEntity } from './blog-reference-entity.enum.ts';
+import { BlogReferenceEntityEnum } from './blog-reference-entity.enum.ts';
 
 @ObjectType()
 export class BlogReferenceNotFoundError {

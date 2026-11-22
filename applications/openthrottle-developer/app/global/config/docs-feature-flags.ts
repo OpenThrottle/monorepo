@@ -5,7 +5,7 @@
  * and without it.
  *
  * These are distinct from the build-time env flags in
- * `@openthrottle/react-router-utils/src/config/features` (e.g.
+ * `@openthrottle/react-router-utils` (`FEATURE_FLAGS`, e.g.
  * `FEATURE_BETA_PREVIEW`): those are sourced from env at server start, whereas
  * these are read per-user from `localStorage` in the browser and resolve to the
  * defaults below on the server (SSR-safe). See

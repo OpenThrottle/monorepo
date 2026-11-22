@@ -8,12 +8,14 @@ import {
 } from 'node:fs';
 import { join, sep } from 'node:path';
 
+import type {
+  SkillsLockMap,
+  SkillSource,
+} from '@openthrottle/openthrottle-skills';
 import {
   deriveSkillSourceUrl,
   parseSkillsLockFile,
   SKILLS_LOCK_FILENAME,
-  type SkillsLockMap,
-  type SkillSource,
 } from '@openthrottle/openthrottle-skills';
 
 import type {

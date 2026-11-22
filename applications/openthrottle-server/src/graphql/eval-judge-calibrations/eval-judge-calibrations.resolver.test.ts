@@ -2,12 +2,14 @@ import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { GlobalClsService } from '@openthrottle/nestjs-modules';
+import type {
+  EvalJudgeCalibration,
+  EvalJudgePair,
+  EvalJudgePairs,
+  EvalRun,
+} from '@openthrottle/nestjs-repositories-server';
 import {
-  type EvalJudgeCalibration,
   EvalJudgeCalibrationsRepository,
-  type EvalJudgePair,
-  type EvalJudgePairs,
-  type EvalRun,
   EvalRunsRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import {

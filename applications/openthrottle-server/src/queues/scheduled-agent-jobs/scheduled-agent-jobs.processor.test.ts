@@ -16,19 +16,10 @@ import {
   createScheduledAgentJobsRepositoryMock,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
-import {
-  RUN_AGENT_STATUS,
-  type RunAgentPromptResult,
-} from '@openthrottle/openthrottle-drivers';
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  type Mock,
-  vi,
-} from 'vitest';
+import type { RunAgentPromptResult } from '@openthrottle/openthrottle-drivers';
+import { RUN_AGENT_STATUS } from '@openthrottle/openthrottle-drivers';
+import type { Mock } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CheckoutPathService } from '../../services/checkout-path/checkout-path.service.ts';
 import type { BullMqRunOutputRetentionService } from '../bullmq-run-output/retention/retention.service.ts';

@@ -28,13 +28,15 @@
 import type { PromptResponse, SessionUpdate } from '@agentclientprotocol/sdk';
 import { isRecord } from '@openthrottle/nodejs-utils';
 
+import type {
+  ConversationStreamChunk,
+  ConversationStreamChunkKind,
+} from '../types.ts';
 import {
   CONVERSATION_DENIED_ACTIONS_KEY,
   CONVERSATION_STREAM_CHUNK_KINDS,
   CONVERSATION_TOOL_DENIED_ERROR,
   CONVERSATION_TOOL_NOT_RUN_KEY,
-  type ConversationStreamChunk,
-  type ConversationStreamChunkKind,
 } from '../types.ts';
 
 /** Accumulated state of one tool call across its updates. */

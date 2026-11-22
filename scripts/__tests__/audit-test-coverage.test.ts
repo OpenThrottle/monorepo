@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
+import type { CoverageEntry, CoverageStatus } from '../audit-test-coverage.ts';
 import {
   analyzeCoverage,
   classify,
-  type CoverageEntry,
-  type CoverageStatus,
   hasStrictFailure,
   rollup,
 } from '../audit-test-coverage.ts';

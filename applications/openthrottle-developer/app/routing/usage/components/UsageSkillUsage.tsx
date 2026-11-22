@@ -12,10 +12,8 @@ import { SkillUsageDailyChart } from '~/global/components/SkillUsageDailyChart';
 import { SkillUsageLeaderboard } from '~/routing/usage/components/SkillUsageLeaderboard';
 import { UsageSkillUsageFilters } from '~/routing/usage/components/UsageSkillUsageFilters';
 import { UsageSkillUsageSummary } from '~/routing/usage/components/UsageSkillUsageSummary';
-import {
-  SKILL_USAGE_COPY,
-  type SkillUsageScopeFilter,
-} from '~/routing/usage/data/data.skill-usage-copy';
+import type { SkillUsageScopeFilter } from '~/routing/usage/data/data.skill-usage-copy';
+import { SKILL_USAGE_COPY } from '~/routing/usage/data/data.skill-usage-copy';
 import type { UsageBranchOption } from '~/routing/usage/types';
 import { partitionSkillUsageByPresence } from '~/routing/usage/utils/partitionSkillUsageByPresence';
 

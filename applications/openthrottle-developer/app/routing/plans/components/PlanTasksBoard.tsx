@@ -9,12 +9,12 @@ import { DraggablePlanTaskCard } from '~/routing/plans/components/DraggablePlanT
 import { PlanTasksColumnDrop } from '~/routing/plans/components/PlanTasksColumnDrop';
 import { usePlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
 import { usePlanManagedTaskIds } from '~/routing/plans/hooks/usePlanManagedTaskIds';
+import type { PlanTaskBoardGroupKey } from '~/routing/plans/utils/groupPlanTasksByStatus';
 import {
   getPlanTaskBoardColumnId,
   getPlanTaskBoardColumnTitle,
   groupPlanTasksByStatus,
   PLAN_TASK_BOARD_COLUMN_ORDER,
-  type PlanTaskBoardGroupKey,
 } from '~/routing/plans/utils/groupPlanTasksByStatus';
 import { filterOutHookTasks } from '~/routing/plans/utils/hook-tasks';
 import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';

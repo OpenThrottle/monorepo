@@ -10,10 +10,8 @@ import type {
 } from '~/__generated__/graphql';
 import { PLAN_RUN_WORKSPACE_SELECTOR_COPY } from '~/routing/plans/data/data.copy';
 
-import {
-  PlanWorkflowConfigWorkspaceSelector,
-  type PlanWorkflowConfigWorkspaceSelectorProps,
-} from '../PlanWorkflowConfigWorkspaceSelector';
+import type { PlanWorkflowConfigWorkspaceSelectorProps } from '../PlanWorkflowConfigWorkspaceSelector';
+import { PlanWorkflowConfigWorkspaceSelector } from '../PlanWorkflowConfigWorkspaceSelector';
 
 const checkout = (
   overrides: Partial<PlanRunConfigCheckoutFragment>,

@@ -23,6 +23,7 @@ import {
 import { resolveTelemetryDir } from '../../data/jsonl.ts';
 import { readBufferStats } from '../../data/readBufferStats.ts';
 import { readTruncatedRepoOptIns } from '../../utils/privacy.ts';
+import type { DoctorCheck, EnvLayer, HealthProbe } from './doctor-checks.ts';
 import {
   checkBuffer,
   checkEndpoint,
@@ -32,9 +33,6 @@ import {
   checkPrivacyOptIns,
   checkReachability,
   checkToken,
-  type DoctorCheck,
-  type EnvLayer,
-  type HealthProbe,
   parseHeartbeatReceipt,
 } from './doctor-checks.ts';
 import {

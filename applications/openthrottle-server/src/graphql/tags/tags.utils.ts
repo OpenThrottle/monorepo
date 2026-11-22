@@ -1,7 +1,5 @@
-import {
-  AUTH_PRINCIPAL_KIND_USER,
-  type AuthPrincipal,
-} from '@openthrottle/nestjs-auth';
+import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
+import { AUTH_PRINCIPAL_KIND_USER } from '@openthrottle/nestjs-auth';
 import type { ServiceAccountsRepository } from '@openthrottle/nestjs-repositories-server';
 
 import type { TagCaller } from '../../services/tags/tags.types.ts';

@@ -9,10 +9,8 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import type { RepositoryOption } from '~/routing/home/utils/models.server';
 
-import {
-  useRunSkillDialog,
-  type UseRunSkillDialogOptions,
-} from '../useRunSkillDialog';
+import type { UseRunSkillDialogOptions } from '../useRunSkillDialog';
+import { useRunSkillDialog } from '../useRunSkillDialog';
 
 const store = getDefaultStore();
 

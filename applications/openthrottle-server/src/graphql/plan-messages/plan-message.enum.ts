@@ -5,11 +5,13 @@
  */
 
 import { registerEnumType } from '@nestjs/graphql';
+import type {
+  PlanMessageKind as PlanMessageKindValue,
+  PlanMessageStatus as PlanMessageStatusValue,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   PLAN_MESSAGE_KIND,
   PLAN_MESSAGE_STATUS,
-  type PlanMessageKind as PlanMessageKindValue,
-  type PlanMessageStatus as PlanMessageStatusValue,
 } from '@openthrottle/nestjs-repositories-server';
 
 registerEnumType(PLAN_MESSAGE_KIND, {

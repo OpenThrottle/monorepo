@@ -7,11 +7,8 @@
 import { spawn } from 'node:child_process';
 import { Readable, Writable } from 'node:stream';
 
-import {
-  type ClientApp,
-  type ClientConnection,
-  ndJsonStream,
-} from '@agentclientprotocol/sdk';
+import type { ClientApp, ClientConnection } from '@agentclientprotocol/sdk';
+import { ndJsonStream } from '@agentclientprotocol/sdk';
 
 import {
   resolveAgentTimeouts,

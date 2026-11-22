@@ -13,11 +13,13 @@
  * (before → task → after), not through the phase-based runner.
  */
 
+import type {
+  JobRunHookPhase,
+  JobRunHookSkill,
+} from '../types/job-run-lifecycle-hooks';
 import {
   defaultJobRunHookOnFailure,
   JOB_RUN_HOOK_SKILL_PATH_PREFIXES,
-  type JobRunHookPhase,
-  type JobRunHookSkill,
 } from '../types/job-run-lifecycle-hooks';
 
 /**

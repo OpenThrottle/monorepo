@@ -9,12 +9,12 @@
 
 import { describe, expect, it } from 'vitest';
 
+import type { ReplayPlanRunResult } from '../src/index.ts';
 import {
   PLAN_RUN_PLAN_ID,
   planRunTaskId,
   replayFixturePath,
   replayPlanRun,
-  type ReplayPlanRunResult,
 } from '../src/index.ts';
 
 const TASK = planRunTaskId(0);

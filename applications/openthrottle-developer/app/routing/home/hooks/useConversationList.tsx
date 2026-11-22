@@ -1,8 +1,8 @@
-import {
-  useConversationList as useSharedConversationList,
-  type UseConversationListOptions as SharedConversationListOptions,
-  type UseConversationListResult as SharedConversationListResult,
+import type {
+  UseConversationListOptions as SharedConversationListOptions,
+  UseConversationListResult as SharedConversationListResult,
 } from '@openthrottle/react-router-chat';
+import { useConversationList as useSharedConversationList } from '@openthrottle/react-router-chat';
 
 /** The shared hook's result, re-typed here so existing importers keep this path. */
 export type UseConversationListResult = SharedConversationListResult;

@@ -3,12 +3,9 @@
  */
 
 import { ELEMENT_DEFAULTS, ELEMENT_LAYER } from '../data/data.elements';
-import {
-  type FloorElement,
-  FloorElementType,
-  type FloorLayout,
-} from '../types';
-import { type Point, type Rect } from './geometry';
+import type { FloorElement, FloorLayout } from '../types';
+import { FloorElementType } from '../types';
+import type { Point, Rect } from './geometry';
 
 /**
  * The floor rectangle (world inches) an element's center is clamped to.

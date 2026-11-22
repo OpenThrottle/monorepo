@@ -5,10 +5,8 @@ import { describe, expect, test } from 'vitest';
 
 import { PROMPTS_DEFAULT_CONTENT } from '~/routing/prompts/config';
 
-import {
-  usePromptCreateForm,
-  type UsePromptCreateFormResult,
-} from '../usePromptCreateForm';
+import type { UsePromptCreateFormResult } from '../usePromptCreateForm';
+import { usePromptCreateForm } from '../usePromptCreateForm';
 
 function renderPromptCreateForm(): {
   readonly value: { current: UsePromptCreateFormResult | null };

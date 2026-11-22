@@ -1,8 +1,5 @@
-import {
-  type Theme,
-  THEME_TOKEN_NAMES,
-  type ThemeTokens,
-} from './theme-contract';
+import type { Theme, ThemeTokens } from './theme-contract';
+import { THEME_TOKEN_NAMES } from './theme-contract';
 
 const renderTokenBlock = (tokens: ThemeTokens): string => {
   return THEME_TOKEN_NAMES.map((name) => `  --${name}: ${tokens[name]};`).join(

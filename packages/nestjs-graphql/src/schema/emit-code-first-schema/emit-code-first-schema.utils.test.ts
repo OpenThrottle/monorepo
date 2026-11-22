@@ -2,8 +2,10 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { ApolloDriver, type ApolloDriverConfig } from '@nestjs/apollo';
-import { Inject, Injectable, Module, type Type } from '@nestjs/common';
+import type { ApolloDriverConfig } from '@nestjs/apollo';
+import { ApolloDriver } from '@nestjs/apollo';
+import type { Type } from '@nestjs/common';
+import { Inject, Injectable, Module } from '@nestjs/common';
 import {
   Field,
   GraphQLModule,

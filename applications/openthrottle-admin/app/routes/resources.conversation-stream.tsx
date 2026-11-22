@@ -1,7 +1,5 @@
-import {
-  type ChatStartActionResult,
-  createConversationStreamAction,
-} from '@openthrottle/react-router-chat';
+import type { ChatStartActionResult } from '@openthrottle/react-router-chat';
+import { createConversationStreamAction } from '@openthrottle/react-router-chat';
 
 import type { Route } from '@/app/routes/+types/resources.conversation-stream';
 import {

@@ -34,10 +34,8 @@ import {
   RalphPlanRunTuningInputSchema,
 } from '~/__generated__/schemas';
 import { parseJobRunHooksJsonFromPlan } from '~/routing/plans/utils/job-run-hooks-ui';
-import {
-  parsePlanRunEffort,
-  type PlanRunModelSelection,
-} from '~/routing/plans/utils/plan-run-model-effort';
+import type { PlanRunModelSelection } from '~/routing/plans/utils/plan-run-model-effort';
+import { parsePlanRunEffort } from '~/routing/plans/utils/plan-run-model-effort';
 import {
   isPlanRunRunner,
   mergeOtLoopFields,

@@ -27,12 +27,12 @@ import {
 import { describeExit } from '../describeExit.ts';
 import { withFileMentions } from '../file-mentions.ts';
 import { withKeepalive } from '../keepalive.ts';
-import {
-  CONVERSATION_STREAM_CHUNK_KINDS,
-  type ConversationBackend,
-  type ConversationBackendRun,
-  type ConversationStreamChunk,
+import type {
+  ConversationBackend,
+  ConversationBackendRun,
+  ConversationStreamChunk,
 } from '../types.ts';
+import { CONVERSATION_STREAM_CHUNK_KINDS } from '../types.ts';
 import { buildCodexArgv, CODEX_BIN_ENV, CODEX_DEFAULT_BIN } from './argv.ts';
 import type { CodexEventMapper } from './events.ts';
 import { createCodexEventMapper } from './events.ts';

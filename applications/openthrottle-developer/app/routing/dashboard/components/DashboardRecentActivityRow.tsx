@@ -2,9 +2,9 @@ import { TableCell, TableRow } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { Link } from 'react-router';
 
+import type { ActivityRow } from '~/routing/dashboard/utils/recent-activity';
 import {
   activityDetailHref,
-  type ActivityRow,
   commitLinkAriaLabel,
   outputLinkAriaLabel,
   planCellContent,

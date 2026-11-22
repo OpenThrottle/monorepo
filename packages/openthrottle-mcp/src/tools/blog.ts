@@ -11,22 +11,24 @@ import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 // from zod/v3): `.extend` on a generated schema only keeps its type in the same major.
 import { z } from 'zod/v3';
 
+import type {
+  BlogAdminPostResultFragment,
+  BlogAuthorFragment,
+  BlogPostAdminSummaryFieldsFragment,
+  BlogTagFragment,
+  CreateBlogPostResultFragment,
+  SetBlogPostTagsResultFragment,
+  UpdateBlogPostInput,
+  UpdateBlogPostResultFragment,
+} from '../__generated__/graphql.js';
 import {
-  type BlogAdminPostResultFragment,
-  type BlogAuthorFragment,
-  type BlogPostAdminSummaryFieldsFragment,
-  type BlogTagFragment,
   CreateBlogPostDocument,
-  type CreateBlogPostResultFragment,
   GetBlogPostDocument,
   ListBlogAuthorsDocument,
   ListBlogPostsDocument,
   ListBlogTagsDocument,
   SetBlogPostTagsDocument,
-  type SetBlogPostTagsResultFragment,
   UpdateBlogPostDocument,
-  type UpdateBlogPostInput,
-  type UpdateBlogPostResultFragment,
 } from '../__generated__/graphql.js';
 import {
   BlogPostStateSchema,

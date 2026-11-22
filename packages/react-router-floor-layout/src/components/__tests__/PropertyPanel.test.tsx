@@ -2,9 +2,11 @@ import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import { DisplayUnit, type FloorElement, FloorElementType } from '../../types';
+import type { FloorElement } from '../../types';
+import { DisplayUnit, FloorElementType } from '../../types';
 import { createFloorElement } from '../../utils/elements';
-import { type ElementEditPatch, PropertyPanel } from '../PropertyPanel';
+import type { ElementEditPatch } from '../PropertyPanel';
+import { PropertyPanel } from '../PropertyPanel';
 
 function tableFixture(): FloorElement {
   return {

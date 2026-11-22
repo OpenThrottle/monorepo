@@ -1,7 +1,8 @@
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import { FloorElementType, type FloorLayout } from '../../types';
+import type { FloorLayout } from '../../types';
+import { FloorElementType } from '../../types';
 import { createFloorElement } from '../../utils/elements';
 import { addElement, createEmptyLayout } from '../../utils/layout-operations';
 import { FloorLayoutEditor } from '../FloorLayoutEditor';

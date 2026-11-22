@@ -10,10 +10,8 @@ import { SkillIntroductionBadges } from '~/routing/skills/components/SkillIntrod
 import { SkillOrphanRemoveButton } from '~/routing/skills/components/SkillOrphanRemoveButton';
 import type { RunSkillRunOptions } from '~/routing/skills/components/SkillRunControl';
 import { SkillRunControl } from '~/routing/skills/components/SkillRunControl';
-import {
-  SkillTagChips,
-  type SkillTagVocabularyOption,
-} from '~/routing/skills/components/SkillTagChips';
+import type { SkillTagVocabularyOption } from '~/routing/skills/components/SkillTagChips';
+import { SkillTagChips } from '~/routing/skills/components/SkillTagChips';
 import {
   SKILL_DETAIL_COPY,
   SKILL_RECORD_TAGS_COPY,

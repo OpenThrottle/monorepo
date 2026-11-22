@@ -5,6 +5,10 @@
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import { z } from 'zod';
 
+import type {
+  PromoteTaskToPlanResultFragment,
+  TaskFragment,
+} from '../__generated__/graphql.js';
 import {
   CreateTaskDocument,
   CreateTasksDocument,
@@ -15,9 +19,7 @@ import {
   GetTasksDocument,
   PlanTaskStatus,
   PromoteTaskToPlanDocument,
-  type PromoteTaskToPlanResultFragment,
   ReorderPlanTasksDocument,
-  type TaskFragment,
   UpdateTaskDocument,
 } from '../__generated__/graphql.js';
 import {

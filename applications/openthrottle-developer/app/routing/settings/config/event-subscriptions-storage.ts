@@ -1,9 +1,7 @@
 import { IS_BROWSER } from '@openthrottle/react-router-utils';
 
-import {
-  buildInitialSubscriptions,
-  type EventSubscriptionId,
-} from '~/routing/settings/config/event-subscriptions';
+import type { EventSubscriptionId } from '~/routing/settings/config/event-subscriptions';
+import { buildInitialSubscriptions } from '~/routing/settings/config/event-subscriptions';
 
 /**
  * @description localStorage key for persisted event subscription toggles (developer app).

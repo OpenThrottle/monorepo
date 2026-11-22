@@ -5,14 +5,11 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { DoctorCheck } from '../doctor-checks.ts';
-import {
-  renderDoctorHuman,
-  renderDoctorJson,
-  type Scrubber,
-} from '../doctor-render.ts';
+import type { Scrubber } from '../doctor-render.ts';
+import { renderDoctorHuman, renderDoctorJson } from '../doctor-render.ts';
+import type { DoctorFetch } from '../doctor-run.ts';
 import {
   collectChecks,
-  type DoctorFetch,
   originOf,
   probeHealth,
   resolvePayloadVersion,

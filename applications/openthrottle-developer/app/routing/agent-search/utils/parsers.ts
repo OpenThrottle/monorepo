@@ -2,10 +2,8 @@
  * @description Parses `/agent-search` URL params into typed query, tab, and project scope.
  */
 
-import {
-  AGENT_SEARCH_TABS,
-  type AgentSearchTab,
-} from '~/routing/agent-search/types';
+import type { AgentSearchTab } from '~/routing/agent-search/types';
+import { AGENT_SEARCH_TABS } from '~/routing/agent-search/types';
 
 /** Parsed agent-search URL parameters. */
 export interface ParsedAgentSearchParams {

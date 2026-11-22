@@ -1,4 +1,5 @@
-import { Inject, Module, type OnApplicationShutdown } from '@nestjs/common';
+import type { OnApplicationShutdown } from '@nestjs/common';
+import { Inject, Module } from '@nestjs/common';
 import { LoggerModule, LoggerService } from '@openthrottle/nestjs-modules';
 import type { Redis } from 'ioredis';
 

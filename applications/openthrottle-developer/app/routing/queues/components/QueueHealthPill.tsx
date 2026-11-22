@@ -2,10 +2,8 @@ import { Badge, cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import { QUEUE_HEALTH_DOT_CLASS } from '~/routing/queues/data/data.queue-health-display';
-import {
-  computeQueueHealth,
-  type QueueHealthCounts,
-} from '~/routing/queues/utils/computeQueueHealth';
+import type { QueueHealthCounts } from '~/routing/queues/utils/computeQueueHealth';
+import { computeQueueHealth } from '~/routing/queues/utils/computeQueueHealth';
 
 export interface QueueHealthPillProps extends QueueHealthCounts {
   className?: string;

@@ -3,7 +3,8 @@ import * as React from 'react';
 import { describe, expect, expectTypeOf, test, vi } from 'vitest';
 
 import { RolloutProvider } from '../../components/RolloutProvider';
-import { defineRolloutFlags, type RolloutFlagKey } from '../../index';
+import type { RolloutFlagKey } from '../../index';
+import { defineRolloutFlags } from '../../index';
 import { useRolloutFlag } from '../useRolloutFlag';
 
 const flags = defineRolloutFlags({

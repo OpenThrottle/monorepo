@@ -1,6 +1,5 @@
+import type { CanActivate, ExecutionContext } from '@nestjs/common';
 import {
-  type CanActivate,
-  type ExecutionContext,
   ForbiddenException,
   Injectable,
   UnauthorizedException,
@@ -8,11 +7,13 @@ import {
 import { Reflector } from '@nestjs/core';
 import type { GqlContextType } from '@nestjs/graphql';
 import { GqlExecutionContext } from '@nestjs/graphql';
+import type {
+  AuthenticatedRequest,
+  UserAuthPrincipal,
+} from '@openthrottle/nestjs-auth';
 import {
-  type AuthenticatedRequest,
   getAuthPrincipalFromRequest,
   IS_PUBLIC_KEY,
-  type UserAuthPrincipal,
 } from '@openthrottle/nestjs-auth';
 import { getRequestFromExecutionContext } from '@openthrottle/nestjs-auth';
 import { scopesAllowWrite } from '@openthrottle/nestjs-repositories-server';

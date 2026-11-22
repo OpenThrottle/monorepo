@@ -27,20 +27,16 @@ import {
   withPathPrepended,
   writePathAlias,
 } from '../bin/stub-bin.ts';
-import {
-  runPlanRunScenario,
-  type RunPlanRunScenarioResult,
-} from '../plan-run/runPlanRunScenario.ts';
+import type { RunPlanRunScenarioResult } from '../plan-run/runPlanRunScenario.ts';
+import { runPlanRunScenario } from '../plan-run/runPlanRunScenario.ts';
+import type { ConversationState } from '../scenario/drive-turn.ts';
 import {
   advanceConversation,
-  type ConversationState,
   driveScenarioTurn,
   initialConversation,
 } from '../scenario/drive-turn.ts';
-import {
-  type ResolvedScenarioTurn,
-  transcriptStem,
-} from '../scenario/scenarioRun.ts';
+import type { ResolvedScenarioTurn } from '../scenario/scenarioRun.ts';
+import { transcriptStem } from '../scenario/scenarioRun.ts';
 import { installReplayBin } from './installReplayBin.ts';
 import { prepareReplay, replaySessionStart } from './prepareReplay.ts';
 import type { ReplayReport } from './replay-bin.ts';

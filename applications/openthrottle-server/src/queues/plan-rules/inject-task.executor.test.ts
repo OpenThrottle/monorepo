@@ -26,7 +26,8 @@ import { asMock } from '@openthrottle/nestjs-testing';
 import type { MatchedTagAction } from '@openthrottle/openthrottle-skills';
 import type { DataSource } from 'typeorm';
 import { QueryFailedError } from 'typeorm';
-import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
+import type { Mock } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account/status-change-system-account.service.ts';
 import type { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture/work-ledger-capture.service.ts';

@@ -1,7 +1,9 @@
+import type {
+  InjectTaskActionPayload,
+  MatchedTagAction,
+} from '@openthrottle/openthrottle-skills';
 import {
-  type InjectTaskActionPayload,
   injectTaskActionPayloadSchema,
-  type MatchedTagAction,
   rankMatchedTagActions,
   SKILL_AVAILABILITY_ENVIRONMENTS,
   TAG_ACTION_TYPES,

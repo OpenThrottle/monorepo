@@ -1,6 +1,7 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { isRecord } from '@openthrottle/nodejs-utils';
-import { type DocumentNode, parse } from 'graphql';
+import type { DocumentNode } from 'graphql';
+import { parse } from 'graphql';
 import { describe, expect, it, vi } from 'vitest';
 
 import type {

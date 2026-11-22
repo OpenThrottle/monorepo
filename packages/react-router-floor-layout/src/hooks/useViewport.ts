@@ -10,25 +10,21 @@
  * hook stays a thin, testable state wrapper.
  */
 
-import {
-  type PointerEvent as ReactPointerEvent,
-  type RefObject,
-  useCallback,
-  useMemo,
-  useRef,
-  useState,
-  type WheelEvent as ReactWheelEvent,
+import type {
+  PointerEvent as ReactPointerEvent,
+  RefObject,
+  WheelEvent as ReactWheelEvent,
 } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 
-import { type Point, type Size } from '../utils/geometry';
+import type { Point, Size } from '../utils/geometry';
+import type { ViewBox, ZoomLimits } from '../utils/viewport';
 import {
   clientToWorld as clientToWorldMath,
   fitViewBox,
   panViewBoxByClient,
   pinchViewBox,
-  type ViewBox,
   viewBoxToString,
-  type ZoomLimits,
   zoomViewBoxAt,
 } from '../utils/viewport';
 import { pointerCenter, rectOf } from '../utils/viewport-rect';

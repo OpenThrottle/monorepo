@@ -7,9 +7,9 @@
 
 import { describe, expect, it } from 'vitest';
 
+import type { MaterializedHookTask } from '../hook-task-to-job-run-hook';
 import {
   hookTaskPhase,
-  type MaterializedHookTask,
   projectHookTasksToJobRunHookEntries,
   projectHookTaskToJobRunHookEntry,
   skillSlugToSkillPath,

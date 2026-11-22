@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 <% if (variantGroups.length > 0) { -%>
-import { <%= name %>, type <%= name %>Props } from './<%= name %>';
+import type { <%= name %>Props } from './<%= name %>';
+import { <%= name %> } from './<%= name %>';
 <% } else { -%>
 import { <%= name %> } from './<%= name %>';
 <% } -%>

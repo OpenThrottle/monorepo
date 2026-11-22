@@ -1,9 +1,8 @@
-import { type DynamicModule, Module } from '@nestjs/common';
+import type { DynamicModule } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
-import {
-  ThrottlerModule,
-  type ThrottlerModuleOptions,
-} from '@nestjs/throttler';
+import type { ThrottlerModuleOptions } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 import type {
   NestjsThrottlerModuleAsyncOptions,

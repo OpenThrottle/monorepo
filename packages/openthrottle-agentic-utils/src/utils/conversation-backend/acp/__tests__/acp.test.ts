@@ -3,12 +3,12 @@
  * ACP agent: the real SDK on both sides, no child process.
  */
 
-import {
-  methods,
-  type PermissionOption,
-  type PromptResponse,
-  type SessionConfigOption,
+import type {
+  PermissionOption,
+  PromptResponse,
+  SessionConfigOption,
 } from '@agentclientprotocol/sdk';
+import { methods } from '@agentclientprotocol/sdk';
 import { describe, expect, it } from 'vitest';
 
 import type {
@@ -17,12 +17,8 @@ import type {
 } from '../../types.ts';
 import { createAcpConversationBackend } from '../acp.ts';
 import { resolveAcpPermission } from '../permissions.ts';
-import {
-  createFakeLauncher,
-  FAKE_SPEC,
-  type FakeTurn,
-  modelOption,
-} from './fake-agent.ts';
+import type { FakeTurn } from './fake-agent.ts';
+import { createFakeLauncher, FAKE_SPEC, modelOption } from './fake-agent.ts';
 
 const END_TURN: PromptResponse = { stopReason: 'end_turn' };
 

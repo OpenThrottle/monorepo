@@ -4,10 +4,8 @@ import * as React from 'react';
 import { createRoutesStub, useSearchParams } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import {
-  useDebouncedSearchParam,
-  type UseDebouncedSearchParamOptions,
-} from '../useDebouncedSearchParam';
+import type { UseDebouncedSearchParamOptions } from '../useDebouncedSearchParam';
+import { useDebouncedSearchParam } from '../useDebouncedSearchParam';
 
 const DISPLAY_ID = 'search-params-string';
 

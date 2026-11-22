@@ -21,12 +21,8 @@
  */
 import { isRecord } from '@openthrottle/nodejs-utils';
 
-import {
-  type BashGuardContext,
-  type BashGuardResult,
-  evaluateBashGuard,
-  formatBashGuardFindings,
-} from '../../index.ts';
+import type { BashGuardContext, BashGuardResult } from '../../index.ts';
+import { evaluateBashGuard, formatBashGuardFindings } from '../../index.ts';
 
 /** The rendered allow. Also the entrypoint's answer on any internal failure. */
 export const CURSOR_SHELL_ALLOW = `${JSON.stringify({ permission: 'allow' })}\n`;

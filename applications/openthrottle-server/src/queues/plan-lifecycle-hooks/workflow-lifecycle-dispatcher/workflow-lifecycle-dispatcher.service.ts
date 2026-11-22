@@ -15,11 +15,10 @@ import type {
   WorkflowPlanLifecyclePhase,
   WorkflowTaskLifecyclePhase,
 } from '@openthrottle/openthrottle-agentic-workflow';
+import type { JobRunHookPhase, JobRunHookRunKind } from '@tools/workflows';
 import {
   isPlanScopedJobRunHookPhase,
   isTaskScopedJobRunHookPhase,
-  type JobRunHookPhase,
-  type JobRunHookRunKind,
   shouldRunJobRunHook,
   sortJobRunHookEntries,
 } from '@tools/workflows';

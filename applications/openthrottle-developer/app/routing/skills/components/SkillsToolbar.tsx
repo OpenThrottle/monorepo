@@ -17,10 +17,8 @@ import {
   SKILLS_SEARCH_COPY,
   SKILLS_SOURCE_COPY,
 } from '~/routing/skills/data/data.copy';
-import {
-  isSkillSourceFilter,
-  type SkillSourceFilter,
-} from '~/routing/skills/utils/filterSkillsBySource';
+import type { SkillSourceFilter } from '~/routing/skills/utils/filterSkillsBySource';
+import { isSkillSourceFilter } from '~/routing/skills/utils/filterSkillsBySource';
 
 export interface SkillsToolbarProps {
   className?: string;

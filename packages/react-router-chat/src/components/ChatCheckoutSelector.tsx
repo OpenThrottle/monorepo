@@ -13,10 +13,8 @@ import * as React from 'react';
 import type { ChatCheckoutOption } from '../types';
 import { groupCheckoutOptions } from '../utils/checkout-groups';
 import { checkoutSearchFilter } from '../utils/checkoutSearchFilter';
-import {
-  type ChatCheckoutDescriptor,
-  describeCheckouts,
-} from '../utils/describeCheckouts';
+import type { ChatCheckoutDescriptor } from '../utils/describeCheckouts';
+import { describeCheckouts } from '../utils/describeCheckouts';
 import { toggleCheckoutSelection } from '../utils/toggleCheckoutSelection';
 import { ChatCheckoutSelectorRow } from './ChatCheckoutSelectorRow';
 import { ChatCheckoutSelectorTrigger } from './ChatCheckoutSelectorTrigger';

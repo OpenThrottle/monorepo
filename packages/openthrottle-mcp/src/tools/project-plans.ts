@@ -9,9 +9,9 @@
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import { z } from 'zod';
 
+import type { ProjectPlanFragment } from '../__generated__/graphql.js';
 import {
   AddPlanToProjectDocument,
-  type ProjectPlanFragment,
   ProjectPlansDocument,
   RemovePlanFromProjectDocument,
   ReorderProjectPlansDocument,

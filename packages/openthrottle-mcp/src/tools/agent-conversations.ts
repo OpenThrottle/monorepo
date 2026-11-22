@@ -6,9 +6,11 @@
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import { z } from 'zod';
 
+import type {
+  AgentConversationFragment,
+  AgentConversationMessageFragment,
+} from '../__generated__/graphql.js';
 import {
-  type AgentConversationFragment,
-  type AgentConversationMessageFragment,
   GetAgentConversationDocument,
   GetAgentConversationMessagesDocument,
   ListAgentConversationsDocument,

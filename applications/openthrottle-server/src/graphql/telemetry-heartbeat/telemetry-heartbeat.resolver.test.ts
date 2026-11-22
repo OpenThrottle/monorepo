@@ -2,14 +2,10 @@ import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import {
-  type TelemetryHeartbeat,
-  TelemetryHeartbeatsRepository,
-} from '@openthrottle/nestjs-repositories-server';
-import {
-  createTelemetryHeartbeatsRepositoryMock,
-  type TelemetryHeartbeatsRepositoryMock,
-} from '@openthrottle/nestjs-repositories-server/testing';
+import type { TelemetryHeartbeat } from '@openthrottle/nestjs-repositories-server';
+import { TelemetryHeartbeatsRepository } from '@openthrottle/nestjs-repositories-server';
+import type { TelemetryHeartbeatsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import { createTelemetryHeartbeatsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { NotificationsService } from '../../notifications/notifications.service.ts';

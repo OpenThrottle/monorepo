@@ -15,10 +15,8 @@ import {
   WORKFLOW_RALPH_OT_ROOT_ENV,
 } from '@openthrottle/openthrottle-agentic-utils';
 
-import {
-  WORKFLOW_RALPH_TRANSPORT_ENV,
-  type WorkflowRalphTransport,
-} from '../utils/workflow-transport.ts';
+import type { WorkflowRalphTransport } from '../utils/workflow-transport.ts';
+import { WORKFLOW_RALPH_TRANSPORT_ENV } from '../utils/workflow-transport.ts';
 import { loadWorkflowRalphConfig } from './loadWorkflowRalphConfig.ts';
 
 /**

@@ -1,13 +1,13 @@
 import { RalphNestedDebugCli } from '@openthrottle/openthrottle-developer-codegen';
 import { describe, expect, test } from 'vitest';
 
+import type { WorkflowRalphRunOptionsInput } from '../workflow-ralph-config';
 import {
   DEFAULT_RALPH_ITERATIONS,
   DEFAULT_RALPH_MODEL,
   DEFAULT_RALPH_PROMPT,
   PLAN_RUN_BULLMQ_QUEUE_NAME,
   WORKFLOW_RALPH_CONFIG_PRECEDENCE,
-  type WorkflowRalphRunOptionsInput,
 } from '../workflow-ralph-config';
 import {
   buildRalphPlanRunTuningInputFromWorkflowRunOptions,

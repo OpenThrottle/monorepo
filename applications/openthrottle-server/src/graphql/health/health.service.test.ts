@@ -3,7 +3,8 @@
  * redis (ok/unconfigured/unreachable), websocket, and aggregated server health.
  */
 
-import { createMock, type DeepMocked } from '@golevelup/ts-vitest';
+import type { DeepMocked } from '@golevelup/ts-vitest';
+import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { getDataSourceToken } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';

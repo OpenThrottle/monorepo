@@ -6,15 +6,17 @@ import { isRecord } from '@openthrottle/nodejs-utils';
 import type { WorkflowLifecycleDispatcher } from '@openthrottle/openthrottle-agentic-workflow';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type {
+  PlanWithTagsFragment,
+  TaskFragment,
+} from '../../__generated__/graphql.ts';
 import {
   AppendPlanOutputDocument,
   GetPlanDocument,
   GetServerHealthDocument,
   GetTaskDocument,
   GetTasksByPlanIdDocument,
-  type PlanWithTagsFragment,
   RecordAgentTrajectoryDocument,
-  type TaskFragment,
   UpdatePlanDocument,
   UpdateTaskDocument,
 } from '../../__generated__/graphql.ts';

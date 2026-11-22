@@ -1,4 +1,5 @@
-import { buildSchema, parse, validate, type ValidationRule } from 'graphql';
+import type { ValidationRule } from 'graphql';
+import { buildSchema, parse, validate } from 'graphql';
 import { describe, expect, it } from 'vitest';
 
 import { createQueryDepthLimitRule } from './query-depth-limit.utils.ts';

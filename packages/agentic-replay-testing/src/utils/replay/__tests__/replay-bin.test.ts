@@ -7,14 +7,15 @@ import { CONVERSATION_STREAM_CHUNK_KINDS } from '@openthrottle/openthrottle-agen
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { CLAUDE_RECORDING_PROFILE } from '../../../config/config.backends.ts';
+import type { Transcript } from '../../../types/transcript.ts';
 import {
-  type Transcript,
   TRANSCRIPT_LINE_TYPES,
   TRANSCRIPT_SCHEMA_VERSION,
   TRANSCRIPT_SURFACES,
 } from '../../../types/transcript.ts';
 import { serializeTranscript } from '../../transcript/transcript.ts';
-import { installReplayBin, type ReplayBin } from '../installReplayBin.ts';
+import type { ReplayBin } from '../installReplayBin.ts';
+import { installReplayBin } from '../installReplayBin.ts';
 import { replayFixturePath } from '../prepareReplay.ts';
 import {
   compareOutbound,

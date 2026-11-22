@@ -26,10 +26,10 @@ import {
   resolvePluginFixPlan,
   runPluginFix,
 } from './doctor-fix-run.ts';
+import type { Scrubber } from './doctor-render.ts';
 import {
   renderDoctorHuman,
   renderDoctorJson,
-  type Scrubber,
   scrubText,
 } from './doctor-render.ts';
 import { collectChecks } from './doctor-run.ts';

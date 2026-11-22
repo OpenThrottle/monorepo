@@ -1,13 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
+import type { ViewBox, ViewportRect } from '../viewport';
 import {
   clientToWorld,
   fitViewBox,
   panViewBoxByClient,
   pinchViewBox,
-  type ViewBox,
   viewBoxToString,
-  type ViewportRect,
   zoomViewBoxAt,
 } from '../viewport';
 

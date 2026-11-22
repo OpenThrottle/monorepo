@@ -10,10 +10,10 @@ import {
   GLOBAL_METRICS_STORAGE_KEY,
   GLOBAL_METRICS_VALID_INTERVALS,
 } from '../config';
+import type { MetricsChartDatum } from '../utils/storage';
 import {
   getStoredMetricsCollapsed,
   getStoredPollIntervalMs,
-  type MetricsChartDatum,
   readStoredMetricsChartHistory,
   trimMetricsChartData,
   writeStoredMetricsChartHistory,

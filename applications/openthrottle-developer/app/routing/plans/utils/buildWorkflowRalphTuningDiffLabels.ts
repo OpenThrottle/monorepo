@@ -5,11 +5,11 @@
  * for the same target.
  */
 
+import type { WorkflowRalphRunOptionsInput } from './workflow-ralph-config';
 import {
   DEFAULT_RALPH_MODEL,
   getWorkflowRalphUiBaselineForDiff,
   parseWorkflowRunIterationTimeoutSeconds,
-  type WorkflowRalphRunOptionsInput,
 } from './workflow-ralph-config';
 
 /**

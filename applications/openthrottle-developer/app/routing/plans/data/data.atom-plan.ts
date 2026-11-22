@@ -4,6 +4,7 @@ import type {
 } from '@openthrottle/openthrottle-plan-config';
 import { atom } from 'jotai';
 
+import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import {
   buildRalphPlanRunTuningInputFromWorkflowRunOptions,
   buildWorkflowRalphOptionArgs,
@@ -11,10 +12,9 @@ import {
   getDefaultWorkflowRalphRunOptionsInput,
   parseWorkflowRunIterationTimeoutSeconds,
   validateWorkflowRalphRunOptionsState,
-  type WorkflowRalphRunOptionsInput,
 } from '~/routing/plans/utils/build-workflow-ralph-argv';
+import type { JobRunHookDraftRow } from '~/routing/plans/utils/job-run-hooks-ui';
 import {
-  type JobRunHookDraftRow,
   normalizeJobRunHookDraftRows,
   serializeJobRunHooksConfig,
   validateJobRunHooksDraftRows,

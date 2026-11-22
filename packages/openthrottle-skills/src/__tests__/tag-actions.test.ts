@@ -1,5 +1,9 @@
 import { describe, expect, it, test } from 'vitest';
 
+import type {
+  TagActionEvaluationContext,
+  TagActionRuleInput,
+} from '../tag-actions.ts';
 import {
   attachPromptActionPayloadSchema,
   availabilityExceptionActionPayloadSchema,
@@ -8,8 +12,6 @@ import {
   isTagActionType,
   parseTagActionPayload,
   TAG_ACTION_TYPES,
-  type TagActionEvaluationContext,
-  type TagActionRuleInput,
 } from '../tag-actions.ts';
 
 const baseRule: TagActionRuleInput = {

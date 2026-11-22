@@ -1,4 +1,5 @@
-import { Redis, type RedisOptions } from 'ioredis';
+import type { RedisOptions } from 'ioredis';
+import { Redis } from 'ioredis';
 
 import { redisConfig } from '../config.constants';
 import type { RedisClientLogger } from './redis-client.types.ts';

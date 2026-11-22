@@ -1,8 +1,8 @@
-import {
-  type ChatCompletionMessage,
-  type ConversationPermissionMode,
-  type ConversationReasoningEffort,
-  type ConversationServiceTier,
+import type {
+  ChatCompletionMessage,
+  ConversationPermissionMode,
+  ConversationReasoningEffort,
+  ConversationServiceTier,
 } from '@openthrottle/openthrottle-agentic-utils';
 /**
  * @description Shared shapes for the conversation streaming feature. The publish

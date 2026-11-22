@@ -4,18 +4,14 @@
  * {@link useFloorLayoutHistory} for undo/redo).
  */
 
-import {
-  type Dispatch,
-  type SetStateAction,
-  useCallback,
-  useState,
-} from 'react';
+import type { Dispatch, SetStateAction } from 'react';
+import { useCallback, useState } from 'react';
 
-import { type FloorElement, type FloorLayout } from '../types';
-import { type Point } from '../utils/geometry';
+import type { FloorElement, FloorLayout } from '../types';
+import type { Point } from '../utils/geometry';
+import type { ElementPatch } from '../utils/layout-operations';
 import {
   addElement,
-  type ElementPatch,
   moveElement,
   removeElement,
   updateElement,

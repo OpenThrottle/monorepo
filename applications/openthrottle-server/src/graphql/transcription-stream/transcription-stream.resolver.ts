@@ -21,9 +21,9 @@ import {
   Subscription,
 } from '@nestjs/graphql';
 import { Public } from '@openthrottle/nestjs-auth';
+import type { PubSubEngine } from '@openthrottle/nestjs-graphql';
 import {
   PUB_SUB,
-  type PubSubEngine,
   transcriptionStreamTopic,
 } from '@openthrottle/nestjs-graphql';
 
@@ -32,7 +32,7 @@ import {
   TranscriptionStreamChunkObject,
 } from './transcription-stream.object.ts';
 import { TranscriptionStreamService } from './transcription-stream.service.ts';
-import { type TranscriptionStreamChunkPayload } from './transcription-stream.types.ts';
+import type { TranscriptionStreamChunkPayload } from './transcription-stream.types.ts';
 
 /** Execution context shape for graphql-ws operations (see app.module context). */
 interface GraphqlWsExecutionContext {

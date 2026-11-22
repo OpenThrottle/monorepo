@@ -26,7 +26,8 @@ import {
   createTaskTagsRepositoryMock,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
-import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
+import type { Mock } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GitHubForgeService } from '../../services/source-control/github-forge/github-forge.service.ts';
 import { GitLabForgeService } from '../../services/source-control/gitlab-forge/gitlab-forge.service.ts';

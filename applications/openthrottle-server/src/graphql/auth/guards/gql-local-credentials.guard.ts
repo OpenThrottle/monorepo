@@ -2,12 +2,8 @@
  * @description Copies GraphQL login mutation input onto the request body so AuthGuard('local') can read credentials. Run before AuthGuard('local') on the login mutation. Validates the credential shape/length first and rejects malformed input before it reaches Passport's LocalStrategy.
  */
 
-import {
-  type CanActivate,
-  type ExecutionContext,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import type { CanActivate, ExecutionContext } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 

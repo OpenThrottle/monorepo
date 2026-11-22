@@ -8,11 +8,11 @@ import type {
   RolloutFetchEvaluations,
   RolloutHydrationState,
 } from '../types';
+import type { RolloutResolvedValues } from '../utils';
 import {
   defaultsFromCatalog,
   mergeRolloutEvaluations,
   readRolloutEvaluationCache,
-  type RolloutResolvedValues,
   toError,
   writeRolloutEvaluationCache,
 } from '../utils';

@@ -1,8 +1,10 @@
-import { cva, type VariantProps } from 'class-variance-authority';
+import type { VariantProps } from 'class-variance-authority';
+import { cva } from 'class-variance-authority';
 import * as React from 'react';
 
 import { cn } from '../utils/cn';
-import { Button, type ButtonProps } from './Button';
+import type { ButtonProps } from './Button';
+import { Button } from './Button';
 
 const inputGroupButtonVariants = cva(
   'flex items-center gap-2 text-sm shadow-none',

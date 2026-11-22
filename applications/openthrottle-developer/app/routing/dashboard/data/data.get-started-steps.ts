@@ -1,7 +1,5 @@
-import {
-  ONBOARDING_STEP_ID,
-  type OnboardingStepId,
-} from '~/routing/dashboard/utils/onboarding-steps';
+import type { OnboardingStepId } from '~/routing/dashboard/utils/onboarding-steps';
+import { ONBOARDING_STEP_ID } from '~/routing/dashboard/utils/onboarding-steps';
 
 /**
  * Static metadata for one Get Started checklist step: its stable id (the join

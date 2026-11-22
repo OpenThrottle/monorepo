@@ -23,10 +23,8 @@ import { join } from 'node:path';
 
 import { isRecord } from '@openthrottle/nodejs-utils';
 
-import {
-  CONVERSATION_PERMISSION_MODES,
-  type ConversationPermissionMode,
-} from '../types.ts';
+import type { ConversationPermissionMode } from '../types.ts';
+import { CONVERSATION_PERMISSION_MODES } from '../types.ts';
 
 /** opencode's per-server MCP config shape (local/stdio server). */
 interface OpencodeMcpServer {
