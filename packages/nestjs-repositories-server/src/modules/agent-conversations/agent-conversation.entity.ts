@@ -2,7 +2,9 @@
  * @description TypeORM entity for the openthrottle `agent_conversations` table: user-scoped
  * persisted chat threads. Extends `BaseModel`: a user deletes a conversation, so a delete is soft
  * (it stamps `deleted_at` and sets `status` to `'deleted'`), and data retention purges it, with
- * its messages, 30 days later. Matches databases/openthrottle/migrations (051, 081, 180).
+ * its messages, 30 days later. `updatedAt` orders the conversation list, and the table's trigger
+ * keeps it unchanged on soft delete and restore, overriding the value TypeORM sends. Matches
+ * databases/openthrottle/migrations (051, 081, 180, 193).
  * @public
  */
 
