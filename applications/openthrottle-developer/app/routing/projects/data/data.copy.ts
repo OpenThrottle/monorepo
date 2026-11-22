@@ -37,3 +37,14 @@ export const PROJECT_PLANS_COPY = {
   openPlan: `Open plan`,
   remove: `Remove from project`,
 } as const;
+
+export const PROJECT_PLAN_TASKS_COPY = {
+  empty: `This plan has no tasks yet.`,
+  error: `Couldn't load this plan's tasks.`,
+  loading: `Loading tasks…`,
+  retry: `Retry`,
+  showAllPrefix: `Show all`,
+  showAllSuffix: `tasks`,
+  showFewer: `Show fewer`,
+  toggleAriaLabelPrefix: `Tasks for`,
+} as const;

@@ -1,0 +1,12 @@
+fragment ProjectPlanTaskRow on TaskObject {
+  id
+  sortOrder
+  status
+  title
+}
+
+query getProjectPlanTasks($input: TasksByPlanIdInput!) {
+  tasksByPlanId(input: $input) {
+    ...ProjectPlanTaskRow
+  }
+}

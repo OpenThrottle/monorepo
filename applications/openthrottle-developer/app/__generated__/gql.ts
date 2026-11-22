@@ -53,6 +53,7 @@ type Documents = {
   'mutation createQueue($input: CreateQueueInput!) {\n  createQueue(input: $input) {\n    error\n    queueName\n    success\n  }\n}': typeof types.CreateQueueDocument;
   'mutation InstallAgentCli($backend: String!) {\n  installAgentCli(backend: $backend) {\n    backend\n    disabled\n    errorMessage\n    mode\n    runId\n  }\n}\n\nmutation UpdateAgentCli($backend: String!) {\n  updateAgentCli(backend: $backend) {\n    backend\n    disabled\n    errorMessage\n    mode\n    runId\n  }\n}': typeof types.InstallAgentCliDocument;
   'query getBackgroundActivities {\n  backgroundActivities {\n    ...BackgroundActivityFields\n  }\n}': typeof types.GetBackgroundActivitiesDocument;
+  'fragment ProjectPlanTaskRow on TaskObject {\n  id\n  sortOrder\n  status\n  title\n}\n\nquery getProjectPlanTasks($input: TasksByPlanIdInput!) {\n  tasksByPlanId(input: $input) {\n    ...ProjectPlanTaskRow\n  }\n}': typeof types.ProjectPlanTaskRowFragmentDoc;
   'fragment IdRefMatch on IdRefObject {\n  id\n  kind\n  planId\n  planTitle\n  status\n  title\n}\n\nquery resolveIdRef($ref: String!) {\n  resolveIdRef(ref: $ref) {\n    ...IdRefMatch\n  }\n}': typeof types.IdRefMatchFragmentDoc;
   'fragment RulePreviewCondition on TagActionConditionObject {\n  actual\n  condition\n  expected\n  passed\n}\n\nfragment RulePreviewNonMatch on TagActionRulePreviewNonMatchObject {\n  conditions {\n    ...RulePreviewCondition\n  }\n  failedOnlyOnEnvironment\n  id\n  missingTags\n  projectId\n  repositoryId\n  status\n  title\n}\n\nfragment RulePreview on TagActionRulePreviewObject {\n  cap\n  environment\n  evaluated\n  matched {\n    id\n    projectId\n    repositoryId\n    status\n    title\n  }\n  matchedCount\n  nonMatching {\n    ...RulePreviewNonMatch\n  }\n  specificity\n  truncated\n}\n\nquery RulePreview($environment: String, $input: UpsertTagActionRuleInput!) {\n  previewTagActionRule(environment: $environment, input: $input) {\n    ...RulePreview\n  }\n}': typeof types.RulePreviewConditionFragmentDoc;
   'fragment UsageBranchOption on SkillUsageGitBranchObject {\n  branch\n  count\n}\n\nquery getUsageBranchSearch($start: String!, $end: String!, $query: String, $limit: Int) {\n  skillUsageGitBranches(start: $start, end: $end, query: $query, limit: $limit) {\n    hasMore\n    items {\n      ...UsageBranchOption\n    }\n  }\n}': typeof types.UsageBranchOptionFragmentDoc;
@@ -169,6 +170,8 @@ const documents: Documents = {
     types.InstallAgentCliDocument,
   'query getBackgroundActivities {\n  backgroundActivities {\n    ...BackgroundActivityFields\n  }\n}':
     types.GetBackgroundActivitiesDocument,
+  'fragment ProjectPlanTaskRow on TaskObject {\n  id\n  sortOrder\n  status\n  title\n}\n\nquery getProjectPlanTasks($input: TasksByPlanIdInput!) {\n  tasksByPlanId(input: $input) {\n    ...ProjectPlanTaskRow\n  }\n}':
+    types.ProjectPlanTaskRowFragmentDoc,
   'fragment IdRefMatch on IdRefObject {\n  id\n  kind\n  planId\n  planTitle\n  status\n  title\n}\n\nquery resolveIdRef($ref: String!) {\n  resolveIdRef(ref: $ref) {\n    ...IdRefMatch\n  }\n}':
     types.IdRefMatchFragmentDoc,
   'fragment RulePreviewCondition on TagActionConditionObject {\n  actual\n  condition\n  expected\n  passed\n}\n\nfragment RulePreviewNonMatch on TagActionRulePreviewNonMatchObject {\n  conditions {\n    ...RulePreviewCondition\n  }\n  failedOnlyOnEnvironment\n  id\n  missingTags\n  projectId\n  repositoryId\n  status\n  title\n}\n\nfragment RulePreview on TagActionRulePreviewObject {\n  cap\n  environment\n  evaluated\n  matched {\n    id\n    projectId\n    repositoryId\n    status\n    title\n  }\n  matchedCount\n  nonMatching {\n    ...RulePreviewNonMatch\n  }\n  specificity\n  truncated\n}\n\nquery RulePreview($environment: String, $input: UpsertTagActionRuleInput!) {\n  previewTagActionRule(environment: $environment, input: $input) {\n    ...RulePreview\n  }\n}':
@@ -493,6 +496,12 @@ export function graphql(
 export function graphql(
   source: 'query getBackgroundActivities {\n  backgroundActivities {\n    ...BackgroundActivityFields\n  }\n}',
 ): (typeof documents)['query getBackgroundActivities {\n  backgroundActivities {\n    ...BackgroundActivityFields\n  }\n}'];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: 'fragment ProjectPlanTaskRow on TaskObject {\n  id\n  sortOrder\n  status\n  title\n}\n\nquery getProjectPlanTasks($input: TasksByPlanIdInput!) {\n  tasksByPlanId(input: $input) {\n    ...ProjectPlanTaskRow\n  }\n}',
+): (typeof documents)['fragment ProjectPlanTaskRow on TaskObject {\n  id\n  sortOrder\n  status\n  title\n}\n\nquery getProjectPlanTasks($input: TasksByPlanIdInput!) {\n  tasksByPlanId(input: $input) {\n    ...ProjectPlanTaskRow\n  }\n}'];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

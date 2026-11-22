@@ -13826,6 +13826,29 @@ export type GetBackgroundActivitiesQuery = {
   }>;
 };
 
+export type ProjectPlanTaskRowFragment = {
+  __typename?: 'TaskObject';
+  id: string;
+  sortOrder: number;
+  status: string;
+  title: string;
+};
+
+export type GetProjectPlanTasksQueryVariables = Exact<{
+  input: TasksByPlanIdInput;
+}>;
+
+export type GetProjectPlanTasksQuery = {
+  __typename?: 'Query';
+  tasksByPlanId: Array<{
+    __typename?: 'TaskObject';
+    id: string;
+    sortOrder: number;
+    status: string;
+    title: string;
+  }>;
+};
+
 export type IdRefMatchFragment = {
   __typename?: 'IdRefObject';
   id: string;
@@ -21388,6 +21411,28 @@ export const QueueCardFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<QueueCardFragment, unknown>;
+export const ProjectPlanTaskRowFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ProjectPlanTaskRow' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TaskObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<ProjectPlanTaskRowFragment, unknown>;
 export const IdRefMatchFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -36369,6 +36414,80 @@ export const GetBackgroundActivitiesDocument = {
 } as unknown as DocumentNode<
   GetBackgroundActivitiesQuery,
   GetBackgroundActivitiesQueryVariables
+>;
+export const GetProjectPlanTasksDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getProjectPlanTasks' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'TasksByPlanIdInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'tasksByPlanId' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'ProjectPlanTaskRow' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ProjectPlanTaskRow' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TaskObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetProjectPlanTasksQuery,
+  GetProjectPlanTasksQueryVariables
 >;
 export const ResolveIdRefDocument = {
   kind: 'Document',
