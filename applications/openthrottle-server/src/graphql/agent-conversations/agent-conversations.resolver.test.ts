@@ -265,6 +265,35 @@ describe('AgentConversationsResolver', () => {
     });
   });
 
+  describe('restoreAgentConversation', () => {
+    test('restores an owned conversation via the repository', async () => {
+      vi.mocked(
+        agentConversationsRepository.restoreConversation,
+      ).mockResolvedValue(mockConversation);
+
+      const result = await resolver.restoreAgentConversation(humanPrincipal, {
+        conversationId: mockConversation.id,
+      });
+
+      expect(result.status).toBe(AGENT_CONVERSATION_STATUSES.active);
+      expect(
+        agentConversationsRepository.restoreConversation,
+      ).toHaveBeenCalledWith(humanPrincipal.sub, mockConversation.id);
+    });
+
+    test('propagates when the conversation is not owned', async () => {
+      vi.mocked(
+        agentConversationsRepository.restoreConversation,
+      ).mockRejectedValue(new Error('Agent conversation not found'));
+
+      await expect(
+        resolver.restoreAgentConversation(humanPrincipal, {
+          conversationId: 'not-mine',
+        }),
+      ).rejects.toThrow('not found');
+    });
+  });
+
   describe('updateAgentConversationTitle', () => {
     test('delegates to service', async () => {
       const updated = { ...mockConversation, title: 'Renamed' };

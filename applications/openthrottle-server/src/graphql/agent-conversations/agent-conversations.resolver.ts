@@ -25,6 +25,7 @@ import {
   DeleteAgentConversationInput,
   GetAgentConversationMessagesInput,
   ListAgentConversationsInput,
+  RestoreAgentConversationInput,
   UpdateAgentConversationTitleInput,
 } from './agent-conversation.input.ts';
 import {
@@ -221,6 +222,26 @@ export class AgentConversationsResolver {
 
     const conversation =
       await this.agentConversationsRepository.softDeleteConversation(
+        user.sub,
+        input.conversationId,
+      );
+
+    return toAgentConversationObject(conversation);
+  }
+
+  @Mutation(() => AgentConversationObject, {
+    description: `Restore a soft-deleted owned agent conversation (deleted -> active). A conversation in any other status is returned unchanged.`,
+  })
+  @Permissions(PERMISSIONS.SETTINGS_WRITE)
+  async restoreAgentConversation(
+    @CurrentUser() principal: AuthPrincipal | undefined,
+    @Args('input', { type: () => RestoreAgentConversationInput })
+    input: RestoreAgentConversationInput,
+  ): Promise<AgentConversationObject> {
+    const user = assertHumanAuthPrincipal(principal);
+
+    const conversation =
+      await this.agentConversationsRepository.restoreConversation(
         user.sub,
         input.conversationId,
       );

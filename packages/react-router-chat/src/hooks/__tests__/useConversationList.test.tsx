@@ -1,10 +1,12 @@
-import { render, waitFor } from '@testing-library/react';
+import { Toaster } from '@openthrottle/react-router-shadcn';
+import { act, render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
 import { AGENT_CONVERSATIONS_ACTION } from '../../data/data.chat-conversation-actions';
+import { CHAT_CONVERSATION_SIDEBAR_COPY } from '../../data/data.chat-conversation-sidebar.copy';
 import {
   useConversationList,
   type UseConversationListResult,
@@ -19,6 +21,13 @@ function conversationsPage(
     title: `Conversation ${offset + index}`,
   }));
 }
+
+const RESTORED = {
+  id: 'conv-restored',
+  status: 'active',
+  title: 'Restored',
+  updatedAt: '2026-07-01T00:00:00.000Z',
+};
 
 interface HarnessProps {
   readonly enabled: boolean;
@@ -54,6 +63,30 @@ function Harness({ enabled, onRender }: HarnessProps): React.ReactElement {
       >
         Remove
       </button>
+      <button
+        data-testid="restore"
+        onClick={() => list.restore(RESTORED)}
+        type="button"
+      >
+        Restore
+      </button>
+      <button
+        data-testid="restore-listed"
+        onClick={() => {
+          const first = list.conversations[0];
+          if (first) {
+            list.restore(first);
+          }
+        }}
+        type="button"
+      >
+        Restore listed
+      </button>
+      <ul data-testid="ids">
+        {list.conversations.map((conversation) => (
+          <li key={conversation.id}>{conversation.id}</li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -232,6 +265,214 @@ describe('useConversationList', () => {
       expect(latest.current?.conversations).toHaveLength(0);
     });
     expect(latest.current?.totalCount).toBe(0);
+  });
+
+  describe('restore', () => {
+    const listAction = (
+      page: {
+        id: string;
+        title: string;
+        updatedAt?: string;
+        status?: string;
+      }[],
+      onRestore?: () => unknown,
+    ) => {
+      return async ({ request }: { request: Request }): Promise<unknown> => {
+        const body = await request.formData();
+        if (body.get('intent') === 'list') {
+          return { conversations: page, totalCount: page.length };
+        }
+        return onRestore?.() ?? { conversation: null, errorMessage: null };
+      };
+    };
+
+    test('re-inserts the row in its updatedAt slot and increments totalCount', async () => {
+      const page = [
+        {
+          id: 'a',
+          status: 'active',
+          title: 'A',
+          updatedAt: '2026-08-01T00:00:00.000Z',
+        },
+        {
+          id: 'b',
+          status: 'active',
+          title: 'B',
+          updatedAt: '2026-06-01T00:00:00.000Z',
+        },
+      ];
+      const { getByTestId, latest } = renderConversationList(listAction(page));
+
+      await waitFor(() => {
+        expect(latest.current?.conversations).toHaveLength(2);
+      });
+
+      const user = userEvent.setup();
+      await user.click(getByTestId('restore'));
+
+      await waitFor(() => {
+        expect(
+          latest.current?.conversations.map((conversation) => conversation.id),
+        ).toEqual(['a', 'conv-restored', 'b']);
+      });
+      expect(latest.current?.totalCount).toBe(3);
+    });
+
+    test('re-inserts a deleted row when called through the restore captured before the delete', async () => {
+      const row = {
+        id: 'a',
+        status: 'active',
+        title: 'A',
+        updatedAt: '2026-08-01T00:00:00.000Z',
+      };
+      const page = [
+        row,
+        {
+          id: 'b',
+          status: 'active',
+          title: 'B',
+          updatedAt: '2026-06-01T00:00:00.000Z',
+        },
+      ];
+      const { latest } = renderConversationList(listAction(page));
+
+      await waitFor(() => {
+        expect(latest.current?.conversations).toHaveLength(2);
+      });
+
+      // An Undo toast holds the `restore` from the render that deleted the row.
+      const capturedRestore = latest.current?.restore;
+      act(() => {
+        latest.current?.remove('a');
+      });
+      await waitFor(() => {
+        expect(latest.current?.conversations).toHaveLength(1);
+      });
+
+      act(() => {
+        capturedRestore?.(row);
+      });
+
+      await waitFor(() => {
+        expect(
+          latest.current?.conversations.map((conversation) => conversation.id),
+        ).toEqual(['a', 'b']);
+      });
+      expect(latest.current?.totalCount).toBe(2);
+    });
+
+    test('orders by time, not string, when updatedAt is Date#toString output', async () => {
+      // As the list action serializes it. Lexically 'Sun…' < 'Tue…' would put
+      // the restored row first; by time it belongs between the two.
+      const page = [
+        {
+          id: 'a',
+          status: 'active',
+          title: 'A',
+          updatedAt: `Sun Aug 02 2026 00:00:00 GMT+0000 (Coordinated Universal Time)`,
+        },
+        {
+          id: 'b',
+          status: 'active',
+          title: 'B',
+          updatedAt: `Mon Jun 01 2026 00:00:00 GMT+0000 (Coordinated Universal Time)`,
+        },
+      ];
+      const { latest } = renderConversationList(listAction(page));
+
+      await waitFor(() => {
+        expect(latest.current?.conversations).toHaveLength(2);
+      });
+
+      act(() => {
+        latest.current?.restore({
+          id: 'r',
+          status: 'active',
+          title: 'R',
+          updatedAt: `Tue Jul 07 2026 00:00:00 GMT+0000 (Coordinated Universal Time)`,
+        });
+      });
+
+      await waitFor(() => {
+        expect(
+          latest.current?.conversations.map((conversation) => conversation.id),
+        ).toEqual(['a', 'r', 'b']);
+      });
+    });
+
+    test('does not double-count a row that is already listed', async () => {
+      const page = [
+        {
+          id: 'a',
+          status: 'active',
+          title: 'A',
+          updatedAt: '2026-08-01T00:00:00.000Z',
+        },
+      ];
+      const { getByTestId, latest } = renderConversationList(listAction(page));
+
+      await waitFor(() => {
+        expect(latest.current?.conversations).toHaveLength(1);
+      });
+
+      const user = userEvent.setup();
+      await user.click(getByTestId('restore-listed'));
+
+      await waitFor(() => {
+        expect(latest.current?.conversations).toHaveLength(1);
+      });
+      expect(latest.current?.totalCount).toBe(1);
+    });
+
+    test('posts the restore intent', async () => {
+      let intent: FormDataEntryValue | null = null;
+      const { getByTestId, latest } = renderConversationList(
+        async ({ request }) => {
+          const body = await request.formData();
+          if (body.get('intent') === 'list') {
+            return { conversations: [], totalCount: 0 };
+          }
+          intent = body.get('intent');
+          return { conversation: null, errorMessage: null };
+        },
+      );
+
+      await waitFor(() => {
+        expect(latest.current).not.toBeNull();
+      });
+
+      const user = userEvent.setup();
+      await user.click(getByTestId('restore'));
+
+      await waitFor(() => {
+        expect(intent).toBe('restore');
+      });
+    });
+
+    test('a failed restore rolls the row back and shows an error toast', async () => {
+      const toaster = render(<Toaster />);
+      const { getByTestId, latest } = renderConversationList(
+        listAction([], () => ({
+          conversation: null,
+          errorMessage: 'Agent conversation not found',
+        })),
+      );
+
+      await waitFor(() => {
+        expect(latest.current).not.toBeNull();
+      });
+
+      const user = userEvent.setup();
+      await user.click(getByTestId('restore'));
+
+      expect(
+        await toaster.findByText(CHAT_CONVERSATION_SIDEBAR_COPY.restoreFailed),
+      ).toBeInTheDocument();
+      await waitFor(() => {
+        expect(latest.current?.conversations).toHaveLength(0);
+      });
+      expect(latest.current?.totalCount).toBe(0);
+    });
   });
 
   test('a list read does not re-run the page loader, a rename does', async () => {

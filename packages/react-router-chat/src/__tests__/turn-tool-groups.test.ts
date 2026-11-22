@@ -5,6 +5,7 @@ import {
   aggregateToolStatus,
   buildTurnTimeline,
   foldTurnActivity,
+  summarizeToolGroup,
 } from '../turn-tool-groups';
 import type {
   ChatTurnEvent,
@@ -339,5 +340,143 @@ describe('foldTurnActivity', () => {
         'permission',
       );
     });
+  });
+});
+
+const named = (...names: readonly string[]): ChatTurnToolEvent[] => {
+  return names.map((name, index) => tool({ name, sortOrder: index }));
+};
+
+describe('summarizeToolGroup', () => {
+  test.each([
+    [
+      'Claude',
+      [
+        'Bash',
+        'Edit',
+        'MultiEdit',
+        'Write',
+        'NotebookEdit',
+        'Read',
+        'Grep',
+        'Glob',
+        'LS',
+        'WebFetch',
+        'WebSearch',
+      ],
+      'Ran 1 command, edited 4 files, read 1 file, ran 3 searches and fetched 2 web pages',
+    ],
+    [
+      'Codex',
+      [
+        'shell',
+        'local_shell',
+        'exec_command',
+        'command_execution',
+        'apply_patch',
+        'file_change',
+        'web_search',
+      ],
+      'Ran 4 commands, edited 2 files and fetched 1 web page',
+    ],
+    [
+      'Gemini',
+      [
+        'run_shell_command',
+        'replace',
+        'write_file',
+        'read_file',
+        'read_many_files',
+        'list_directory',
+        'glob',
+        'search_file_content',
+        'google_web_search',
+        'web_fetch',
+      ],
+      'Ran 1 command, edited 2 files, read 2 files, ran 3 searches and fetched 2 web pages',
+    ],
+    [
+      'Cursor',
+      ['shell', 'read', 'edit', 'grep', 'glob', 'ls', 'run_terminal_cmd'],
+      'Ran 2 commands, edited 1 file, read 1 file and ran 3 searches',
+    ],
+    [
+      'OpenCode',
+      [
+        'bash',
+        'read',
+        'edit',
+        'write',
+        'patch',
+        'grep',
+        'glob',
+        'list',
+        'webfetch',
+      ],
+      'Ran 1 command, edited 3 files, read 1 file, ran 3 searches and fetched 1 web page',
+    ],
+    [
+      'Antigravity',
+      [
+        'run_command',
+        'run_terminal_command',
+        'view_file',
+        'write_to_file',
+        'edit_file',
+      ],
+      'Ran 2 commands, edited 2 files and read 1 file',
+    ],
+  ])('categorizes %s tool names', (_backend, names, expected) => {
+    expect(summarizeToolGroup(named(...names))).toBe(expected);
+  });
+
+  test('matches names case-insensitively and treats - as _', () => {
+    expect(summarizeToolGroup(named('BASH', 'bash', 'Run-Shell-Command'))).toBe(
+      'Ran 3 commands',
+    );
+  });
+
+  test('uses singular and plural forms', () => {
+    expect(summarizeToolGroup(named('bash'))).toBe('Ran 1 command');
+    expect(summarizeToolGroup(named('bash', 'bash'))).toBe('Ran 2 commands');
+    expect(summarizeToolGroup(named('edit'))).toBe('Edited 1 file');
+    expect(summarizeToolGroup(named('read', 'read'))).toBe('Read 2 files');
+    expect(summarizeToolGroup(named('grep'))).toBe('Ran 1 search');
+    expect(summarizeToolGroup(named('grep', 'glob'))).toBe('Ran 2 searches');
+    expect(summarizeToolGroup(named('webfetch'))).toBe('Fetched 1 web page');
+  });
+
+  test('reads categories in a fixed order regardless of call order', () => {
+    expect(
+      summarizeToolGroup(named('webfetch', 'grep', 'read', 'edit', 'bash')),
+    ).toBe(
+      'Ran 1 command, edited 1 file, read 1 file, ran 1 search and fetched 1 web page',
+    );
+  });
+
+  test('joins two clauses with "and" and no comma', () => {
+    expect(summarizeToolGroup(named('edit', 'bash', 'bash'))).toBe(
+      'Ran 2 commands and edited 1 file',
+    );
+  });
+
+  test('falls back to "Used N tools" when nothing is categorized', () => {
+    expect(summarizeToolGroup(named('getMcpTools'))).toBe('Used 1 tool');
+    expect(summarizeToolGroup(named('mcp__x__y', 'Task', 'constructor'))).toBe(
+      'Used 3 tools',
+    );
+  });
+
+  test('calls uncategorized tools "other" when mixed with known ones', () => {
+    expect(summarizeToolGroup(named('bash', 'mcp__x__y'))).toBe(
+      'Ran 1 command and used 1 other tool',
+    );
+    expect(summarizeToolGroup(named('bash', 'Task', 'mcp__x__y'))).toBe(
+      'Ran 1 command and used 2 other tools',
+    );
+  });
+
+  test('reports an empty group plainly', () => {
+    expect(summarizeToolGroup([])).toBe('No tool calls');
   });
 });

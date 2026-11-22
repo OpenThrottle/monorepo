@@ -3287,6 +3287,8 @@ export type Mutation = {
   reschedulePlanRun: SchedulePlanRunResultObject;
   /** Answer a pending ACP permission request surfaced in an owned conversation: optionId selects one of the offered options, null cancels. Returns false for an unknown or already settled requestId. */
   respondToConversationPermission: Scalars['Boolean']['output'];
+  /** Restore a soft-deleted owned agent conversation (deleted -> active). A conversation in any other status is returned unchanged. */
+  restoreAgentConversation: AgentConversationObject;
   /** Restore a soft-deleted custom prompt */
   restoreCustomPrompt?: Maybe<CustomPromptObject>;
   /** Resume a paused queue so workers pick up jobs again. */
@@ -3966,6 +3968,10 @@ export type MutationRespondToConversationPermissionArgs = {
   conversationId: Scalars['ID']['input'];
   optionId?: InputMaybe<Scalars['String']['input']>;
   requestId: Scalars['String']['input'];
+};
+
+export type MutationRestoreAgentConversationArgs = {
+  input: RestoreAgentConversationInput;
 };
 
 export type MutationRestoreCustomPromptArgs = {
@@ -6668,6 +6674,10 @@ export type ReschedulePlanRunInput = {
   planRunId: Scalars['ID']['input'];
   /** The new absolute instant the run fires at: in the future and within 30 days (SCHEDULED_PLAN_RUN_MAX_HORIZON_DAYS), the same rule as schedulePlanRun. */
   scheduledFor: Scalars['DateTime']['input'];
+};
+
+export type RestoreAgentConversationInput = {
+  conversationId: Scalars['ID']['input'];
 };
 
 export type RetryJobInput = {
@@ -9437,6 +9447,21 @@ export type DeleteAgentConversationMutationVariables = Exact<{
 export type DeleteAgentConversationMutation = {
   __typename?: 'Mutation';
   deleteAgentConversation: {
+    __typename?: 'AgentConversationObject';
+    id: string;
+    status: string;
+    title?: string | null;
+    updatedAt: any;
+  };
+};
+
+export type RestoreAgentConversationMutationVariables = Exact<{
+  input: RestoreAgentConversationInput;
+}>;
+
+export type RestoreAgentConversationMutation = {
+  __typename?: 'Mutation';
+  restoreAgentConversation: {
     __typename?: 'AgentConversationObject';
     id: string;
     status: string;
@@ -24998,6 +25023,63 @@ export const DeleteAgentConversationDocument = {
 } as unknown as DocumentNode<
   DeleteAgentConversationMutation,
   DeleteAgentConversationMutationVariables
+>;
+export const RestoreAgentConversationDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'restoreAgentConversation' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'RestoreAgentConversationInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'restoreAgentConversation' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  RestoreAgentConversationMutation,
+  RestoreAgentConversationMutationVariables
 >;
 export const UpdateAgentConversationTitleDocument = {
   kind: 'Document',

@@ -22,6 +22,7 @@ import {
   decodeChatOption,
   reconcileChatToolbarState,
   toCheckoutOptions,
+  useChatDraft,
   writeChatToolbarBackendPref,
 } from '@openthrottle/react-router-chat-state';
 import { useAtom } from 'jotai';
@@ -74,6 +75,7 @@ export interface UseHomeComposerResult {
   readonly persist: boolean;
   readonly personaId: string | undefined;
   readonly personas: readonly ChatPersonaOption[];
+  readonly promptHistory: readonly string[];
   readonly reasoning: ChatReasoningLevel | undefined;
   readonly rememberPermissionMode: boolean;
   readonly repositoryId: string | undefined;
@@ -114,7 +116,11 @@ export const useHomeComposer = (
   } = options;
 
   // Hooks
-  const [draft, setDraft] = React.useState('');
+  // Unsent text is saved per conversation (a new chat drafts under a shared
+  // 'new' key), so it survives navigation and reloads.
+  const { clearDraft, draft, setDraft } = useChatDraft({
+    conversationId: turn.conversationId,
+  });
 
   // Toolbar selections persist across reloads in a localStorage-backed atom.
   // Each per-field setter writes only its own key; absent id fields fall back to
@@ -203,6 +209,15 @@ export const useHomeComposer = (
     () => toCheckoutOptions(repositories),
     [repositories],
   );
+  // The conversation's sent prompts, oldest first, for ArrowUp recall; a
+  // restored conversation brings its history with it.
+  const promptHistory = React.useMemo(
+    () =>
+      turn.messages
+        .filter((message) => message.role === 'user')
+        .map((message) => message.body),
+    [turn.messages],
+  );
 
   // Handlers
   const setMode = (mode: ChatComposerMode): void => {
@@ -286,6 +301,7 @@ export const useHomeComposer = (
     });
 
     turn.submitTurn(trimmed, fields);
+    clearDraft();
   };
 
   // Markup
@@ -330,6 +346,7 @@ export const useHomeComposer = (
     persist,
     personaId,
     personas,
+    promptHistory,
     reasoning,
     rememberPermissionMode,
     repositoryId,

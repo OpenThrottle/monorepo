@@ -72,6 +72,16 @@ describe('useSkillCommandProvider', () => {
     expect(fetchMock).toHaveBeenCalledWith('/skills/autocomplete');
   });
 
+  test('ranks slug matches above description-only matches', async () => {
+    const { result } = renderHook(() => useSkillCommandProvider());
+
+    // `graph` is graphify's slug prefix and appears in no other skill slug.
+    const ranked = await result.current.onQuerySkills('audit');
+    expect(ranked.map((skill) => skill.slug)).toEqual(['improve']);
+    const slugFirst = await result.current.onQuerySkills('man');
+    expect(slugFirst[0]?.slug).toBe('manual');
+  });
+
   test('de-duplicates concurrent first fetches', async () => {
     const { result } = renderHook(() => useSkillCommandProvider());
     const provider = result.current;

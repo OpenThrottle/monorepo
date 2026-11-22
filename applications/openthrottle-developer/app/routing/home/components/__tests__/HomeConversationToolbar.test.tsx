@@ -1,10 +1,16 @@
-import { TooltipProvider } from '@openthrottle/react-router-shadcn';
+import {
+  toast,
+  Toaster,
+  TooltipProvider,
+} from '@openthrottle/react-router-shadcn';
 import type { RenderResult } from '@testing-library/react';
 import { render } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import userEvent, {
+  PointerEventsCheckLevel,
+} from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { UseConversationListResult } from '~/routing/home/hooks/useConversationList';
 
@@ -21,6 +27,7 @@ const buildConversationList = (): UseConversationListResult => {
     refresh: vi.fn(),
     remove: vi.fn(),
     rename: vi.fn(),
+    restore: vi.fn(),
     totalCount: 0,
   };
 };
@@ -30,6 +37,7 @@ const renderToolbar = (props: HomeConversationToolbarProps): RenderResult => {
     return (
       <TooltipProvider>
         <HomeConversationToolbar {...props} />
+        <Toaster />
       </TooltipProvider>
     );
   };
@@ -81,6 +89,45 @@ describe('HomeConversationToolbar Component', () => {
       expect(
         component.queryByTestId('ChatConversationSidebar-empty'),
       ).not.toBeInTheDocument();
+    });
+  });
+
+  describe('when a conversation is deleted', () => {
+    afterEach(() => {
+      // Sonner's store is module-global; clear it between tests.
+      toast.dismiss();
+    });
+
+    test('shows an Undo toast whose action restores it', async () => {
+      const row = {
+        id: 'conv-1',
+        status: 'active',
+        title: 'Refactor the auth guard',
+        updatedAt: '2026-07-29T12:00:00.000Z',
+      };
+      const conversationList: UseConversationListResult = {
+        ...buildConversationList(),
+        conversations: [row],
+        totalCount: 1,
+      };
+      component.unmount();
+      component = renderToolbar({ ...props, conversationList });
+      // The open sheet is a modal dialog, so Radix sets `pointer-events: none` on
+      // the body; Sonner's CSS (absent in jsdom) re-enables it on the toast.
+      const user = userEvent.setup({
+        pointerEventsCheck: PointerEventsCheckLevel.Never,
+      });
+
+      await user.click(component.getByRole('button'));
+      await user.click(
+        await component.findByTestId('ChatConversationSidebar-delete-conv-1'),
+      );
+
+      expect(conversationList.remove).toHaveBeenCalledWith('conv-1');
+
+      await user.click(await component.findByRole('button', { name: 'Undo' }));
+
+      expect(conversationList.restore).toHaveBeenCalledWith(row);
     });
   });
 });

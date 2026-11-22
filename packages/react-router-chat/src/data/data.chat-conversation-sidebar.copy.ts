@@ -4,16 +4,15 @@
  * @public
  */
 export const CHAT_CONVERSATION_SIDEBAR_COPY = {
-  deleteConfirmAction: 'Delete',
-  deleteConfirmCancel: 'Cancel',
-  deleteConfirmDescription: `This removes the conversation from your list. Its messages are retained and can be restored later.`,
-  deleteConfirmTitle: 'Delete conversation?',
+  deleteUndo: 'Undo',
+  deletedToast: 'Conversation deleted',
   emptyDescription: 'Your saved conversations will appear here.',
   emptyTitle: 'No conversations yet',
   errorTitle: 'Could not load conversations',
   loadMore: 'Load more',
   newChat: 'New chat',
   renamePlaceholder: 'Conversation title',
+  restoreFailed: 'Could not restore the conversation',
   retry: 'Retry',
   switcherDescription: `Browse, restore, rename, or delete your saved conversations.`,
   title: 'Conversations',

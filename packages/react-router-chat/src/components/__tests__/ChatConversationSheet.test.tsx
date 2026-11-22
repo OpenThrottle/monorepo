@@ -30,6 +30,7 @@ const renderSheet = (
         onDelete={vi.fn()}
         onNewChat={vi.fn()}
         onRename={vi.fn()}
+        onRestore={vi.fn()}
         onSelect={vi.fn()}
         totalCount={CONVERSATIONS.length}
         {...overrides}

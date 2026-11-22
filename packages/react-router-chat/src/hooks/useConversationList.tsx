@@ -1,7 +1,9 @@
+import { toast } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { useFetcher } from 'react-router';
 
 import { AGENT_CONVERSATIONS_ACTION } from '../data/data.chat-conversation-actions';
+import { CHAT_CONVERSATION_SIDEBAR_COPY } from '../data/data.chat-conversation-sidebar.copy';
 import type {
   AgentConversationListItem,
   ListAgentConversationsResult,
@@ -38,14 +40,16 @@ export interface UseConversationListResult {
   readonly remove: (conversationId: string) => void;
   /** Optimistically rename a conversation, then persist it. */
   readonly rename: (conversationId: string, title: string) => void;
+  /** Undo a {@link remove}: re-list the conversation in its slot, then persist it. */
+  readonly restore: (conversation: AgentConversationListItem) => void;
   /** Server-side total (drives the sidebar's load-more affordance). */
   readonly totalCount: number;
 }
 
 /**
  * @description Owns the conversations-list state for the header switcher /
- * sidebar: paginated fetch + accumulate (dedup by id), optimistic rename +
- * soft-delete, and a refresh used when a new conversation appears server-side.
+ * sidebar: paginated fetch + accumulate (dedup by id), optimistic rename,
+ * soft-delete and its undo (restore), and a refresh used when a new conversation appears server-side.
  * Posts every op to the route-independent `/resources/agent-conversations`
  * action so the home route and the header switcher — across both apps — share
  * one code path. Nothing is fetched while `enabled` is false.
@@ -59,12 +63,21 @@ export function useConversationList(
   // Hooks
   const listFetcher = useFetcher<ListAgentConversationsResult>();
   const mutateFetcher = useFetcher<MutateAgentConversationResult>();
+  // Restore gets its own fetcher: a quick Undo right after a delete must not
+  // abort the delete request still on the same fetcher.
+  const restoreFetcher = useFetcher<MutateAgentConversationResult>();
   const [conversations, setConversations] = React.useState<
     AgentConversationListItem[]
   >([]);
   const [totalCount, setTotalCount] = React.useState(0);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const loadedOnce = React.useRef(false);
+  // Id of the conversation whose restore is in flight, so a failed restore
+  // rolls back its optimistic re-insert.
+  const restoringId = React.useRef<string | null>(null);
+  // Latest list for `restore`: a toast's Undo calls the `restore` captured when
+  // the row was deleted, whose `conversations` still holds that row.
+  const latestConversations = React.useRef(conversations);
 
   // Setup
   /** Conversations fetched per page (matches the server's default list limit). */
@@ -124,9 +137,49 @@ export function useConversationList(
     );
   };
 
+  const restore = (conversation: AgentConversationListItem): void => {
+    const alreadyListed = latestConversations.current.some(
+      (row) => row.id === conversation.id,
+    );
+
+    if (!alreadyListed) {
+      // Newest-activity-first: the first row older than the restored one
+      // marks its slot. Compared as parsed times, not strings: the list
+      // serializes `updatedAt` as `Date#toString()`, which does not sort.
+      setConversations((previous) => {
+        if (previous.some((row) => row.id === conversation.id)) {
+          return previous;
+        }
+
+        const restoredAt = Date.parse(conversation.updatedAt);
+        const slot = previous.findIndex(
+          (row) => Date.parse(row.updatedAt) < restoredAt,
+        );
+        const index = slot === -1 ? previous.length : slot;
+
+        return [
+          ...previous.slice(0, index),
+          conversation,
+          ...previous.slice(index),
+        ];
+      });
+      setTotalCount((previous) => previous + 1);
+    }
+
+    restoringId.current = conversation.id;
+    restoreFetcher.submit(
+      { conversationId: conversation.id, intent: 'restore' },
+      { action: AGENT_CONVERSATIONS_ACTION, method: 'post' },
+    );
+  };
+
   // Markup
 
   // Life Cycle
+  React.useEffect(() => {
+    latestConversations.current = conversations;
+  }, [conversations]);
+
   // Initial load (once), deferred until the host enables it — a logged-out
   // page must fire no request at the protected list action.
   React.useEffect(() => {
@@ -165,6 +218,28 @@ export function useConversationList(
     });
   }, [listFetcher.data]);
 
+  // A failed restore: undo the optimistic re-insert and tell the user.
+  React.useEffect(() => {
+    const data = restoreFetcher.data;
+    const failedId = restoringId.current;
+    if (!data || failedId == null) {
+      return;
+    }
+
+    restoringId.current = null;
+    if (data.errorMessage == null) {
+      return;
+    }
+
+    setConversations((previous) =>
+      previous.filter((conversation) => conversation.id !== failedId),
+    );
+    setTotalCount((previous) => Math.max(previous - 1, 0));
+    toast.error(CHAT_CONVERSATION_SIDEBAR_COPY.restoreFailed, {
+      description: data.errorMessage,
+    });
+  }, [restoreFetcher.data]);
+
   // 🔌 Short Circuit
 
   return {
@@ -176,6 +251,7 @@ export function useConversationList(
     refresh,
     remove,
     rename,
+    restore,
     totalCount,
   };
 }

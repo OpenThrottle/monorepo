@@ -12,11 +12,16 @@ export * from './config/chat-capabilities';
 export * from './config/chat-session-permission-decay';
 
 // 📦 Data / Atoms
+export * from './data/data.atom.chat-context-meter';
+export * from './data/data.atom.chat-drafts';
 export * from './data/data.atom.chat-toolbar';
+export * from './data/data.chat-context-meter-state';
+export * from './data/data.chat-drafts-state';
 export * from './data/data.chat-toolbar-seeds';
 export * from './data/data.chat-toolbar-state';
 
 // 🪝 React Hooks
+export * from './hooks/useChatDraft';
 export * from './hooks/useHeaderChatController';
 /**
  * Pre-split public names for the header chat controller's input and result.
@@ -34,9 +39,11 @@ export * from './types';
 // 🛠️ Utilities
 export * from './utils/buildChatTurnFields';
 export * from './utils/chat-discovery-options';
+export * from './utils/chat-drafts';
 export * from './utils/chat-model-option';
 export * from './utils/chat-options-revalidation';
 export * from './utils/decayElevatedPermissionModes';
+export * from './utils/normalizeChatDraftsState';
 export * from './utils/normalizeChatToolbarState';
 export * from './utils/reconcileChatToolbarState';
 export * from './utils/resolveProviderIcon';

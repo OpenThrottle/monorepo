@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { mapClaudeEvent } from '../events.ts';
+import { mapClaudeEvent, readClaudeContextTokens } from '../events.ts';
 
 /** The single chunk an event maps to, or null when it maps to none. */
 const mapOne = (
@@ -364,5 +364,39 @@ describe('mapClaudeEvent', () => {
     });
     expect(ok?.metadata).toMatchObject({ apiErrorStatus: null });
     expect(ok?.metadata).not.toHaveProperty('usageLimit');
+  });
+});
+
+describe('readClaudeContextTokens', () => {
+  const usage = {
+    cache_creation_input_tokens: 40,
+    cache_read_input_tokens: 1030,
+    input_tokens: 5,
+    output_tokens: 25,
+  };
+
+  it('sums prompt, cache and output tokens of a main-thread assistant call', () => {
+    expect(
+      readClaudeContextTokens({
+        message: { usage },
+        parent_tool_use_id: null,
+        type: 'assistant',
+      }),
+    ).toBe(1100);
+  });
+
+  it('ignores subagent messages, other events and missing usage', () => {
+    expect(
+      readClaudeContextTokens({
+        message: { usage },
+        parent_tool_use_id: 'task-1',
+        type: 'assistant',
+      }),
+    ).toBeUndefined();
+    expect(readClaudeContextTokens({ type: 'result', usage })).toBeUndefined();
+    expect(
+      readClaudeContextTokens({ message: {}, type: 'assistant' }),
+    ).toBeUndefined();
+    expect(readClaudeContextTokens('nope')).toBeUndefined();
   });
 });

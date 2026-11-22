@@ -3,6 +3,7 @@ import * as React from 'react';
 
 import { CHAT_COMPOSER_QUEUE_COPY } from '../data/data.copy';
 import { useChatComposerMentions } from '../hooks/useChatComposerMentions';
+import { useChatComposerPromptRecall } from '../hooks/useChatComposerPromptRecall';
 import { useChatComposerSlashCommands } from '../hooks/useChatComposerSlashCommands';
 import type {
   ChatMentionProvider,
@@ -15,56 +16,32 @@ import { ChatComposerInput } from './ChatComposerInput';
 export interface ChatComposerProps {
   readonly className?: string;
   readonly disabled?: boolean;
-  /**
-   * Controlled draft value. Omit for the default uncontrolled draft; provide
-   * together with {@link onDraftChange} when the consumer needs to write into
-   * the draft (e.g. streaming a live voice transcript).
-   */
+  /** Controlled draft; pair with {@link onDraftChange}. Omit for uncontrolled. */
   readonly draft?: string;
   /**
-   * When true, the Send button is replaced by a Stop button wired to
-   * {@link onStop}, and Enter/submit is blocked unless {@link onQueue} is set.
-   * Presentational: the consumer's {@link onStop} decides what stopping does.
+   * Swaps Send for Stop ({@link onStop}) and blocks Enter unless {@link onQueue}
+   * is set. Presentational: the consumer decides what stopping does.
    */
   readonly isStreaming?: boolean;
-  /**
-   * Optional `@`-mention file source. When provided, typing `@` opens a fuzzy
-   * file-picker popover backed by {@link ChatMentionProvider.onQueryFiles} and
-   * inserts the chosen workspace-relative path at the caret. Omit to keep the
-   * composer a plain textarea. Presentational: the package embeds no transport.
-   */
+  /** Optional `@`-mention file source: `@` opens a file picker. */
   readonly mentionProvider?: ChatMentionProvider;
   /** Called with the new draft on user edits and on post-submit clearing (controlled mode). */
   readonly onDraftChange?: (draft: string) => void;
-  /**
-   * Opt in to sending while {@link isStreaming}: Enter and a Queue button beside
-   * Stop hand the trimmed draft here instead of {@link onSubmit}. Omit to keep
-   * submit blocked while streaming.
-   */
+  /** Opt in to sending while {@link isStreaming}: Enter/Queue call this, not {@link onSubmit}. */
   readonly onQueue?: (message: string) => void;
   /** Invoked when the Stop button is pressed while {@link isStreaming}. */
   readonly onStop?: () => void;
   readonly onSubmit: (message: string) => void;
   readonly placeholder?: string;
-  /**
-   * Freeze the draft (e.g. while voice input is recording): the textarea goes
-   * read-only + dimmed and Enter/submit is blocked. The consumer keeps writing
-   * via {@link draft}.
-   */
+  /** Sent prompts, oldest first, for ArrowUp recall; omit to recall this composer's own sends. */
+  readonly promptHistory?: readonly string[];
+  /** Freeze the draft (e.g. while voice input records); the consumer writes via {@link draft}. */
   readonly readOnly?: boolean;
-  /**
-   * Optional cumulative session usage rendered as a muted running token counter
-   * in the footer (live while {@link isStreaming}, a conversation total when
-   * idle). Presentational — the consumer owns the total (summed across turns).
-   * Omit, or pass an all-empty usage, to hide the counter.
-   */
+  /** Cumulative usage for the footer token counter; omit or pass empty to hide. */
   readonly sessionUsage?: ChatTokenUsage;
-  /**
-   * Optional `/`-command skill source. When provided, typing `/` at the start of
-   * a line opens a skill-picker popover backed by
-   * {@link ChatSlashCommandProvider.onQuerySkills} and inserts `/<slug> ` at the
-   * caret. Omit to keep the composer free of a `/`-trigger. Presentational.
-   */
+  /** Opt in to the context-window meter beside the counter (shown only when the backend reports context). */
+  readonly showContextMeter?: boolean;
+  /** Optional `/`-command skill source: `/` at a line start opens a skill picker. */
   readonly slashCommandProvider?: ChatSlashCommandProvider;
   readonly stopLabel?: string;
   readonly submitLabel?: string;
@@ -91,8 +68,10 @@ export const ChatComposer = (props: ChatComposerProps): React.ReactElement => {
     onStop,
     onSubmit,
     placeholder = 'Type a message…',
+    promptHistory,
     readOnly = false,
     sessionUsage,
+    showContextMeter = false,
     slashCommandProvider,
     stopLabel = 'Stop',
     submitLabel = 'Send',
@@ -129,6 +108,13 @@ export const ChatComposer = (props: ChatComposerProps): React.ReactElement => {
     setDraft,
     slashCommandProvider,
   });
+  const recall = useChatComposerPromptRecall({
+    disabled,
+    draft,
+    history: promptHistory,
+    readOnly,
+    setDraft,
+  });
 
   // Setup
   const isQueueing = isStreaming && onQueue !== undefined;
@@ -145,6 +131,7 @@ export const ChatComposer = (props: ChatComposerProps): React.ReactElement => {
     setDraft('');
     mentions.reset();
     slash.reset();
+    recall.onSent(trimmed);
   };
 
   const onFormSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
@@ -157,8 +144,13 @@ export const ChatComposer = (props: ChatComposerProps): React.ReactElement => {
   ): void => {
     // Only one popover can be open at once (`/` is anchored to a line start,
     // `@` scans back mid-text), so the order here is not a precedence conflict —
-    // whichever consumed the key bails before Enter-to-send.
-    if (mentions.handleKeyDown(event) || slash.handleKeyDown(event)) {
+    // whichever consumed the key bails before Enter-to-send. Prompt recall goes
+    // last so an open popover keeps the arrow keys.
+    if (
+      mentions.handleKeyDown(event) ||
+      slash.handleKeyDown(event) ||
+      recall.handleKeyDown(event)
+    ) {
       return;
     }
     if (event.key !== 'Enter' || event.shiftKey) {
@@ -201,6 +193,7 @@ export const ChatComposer = (props: ChatComposerProps): React.ReactElement => {
         isStreaming={isStreaming}
         onStop={onStop}
         sessionUsage={sessionUsage}
+        showContextMeter={showContextMeter}
         stopLabel={stopLabel}
         submitLabel={submitLabel}
         toolbar={toolbar}

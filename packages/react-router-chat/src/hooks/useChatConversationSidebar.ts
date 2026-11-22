@@ -1,19 +1,25 @@
+import { toast } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
+import { CHAT_CONVERSATION_SIDEBAR_COPY } from '../data/data.chat-conversation-sidebar.copy';
 import type { AgentConversationListItem } from '../types';
 
 export interface UseChatConversationSidebarOptions {
-  /** Soft-delete a conversation once its confirm dialog is accepted. */
+  /** Soft-delete a conversation (fired at once; the Undo toast follows). */
   readonly onDelete: (conversationId: string) => void;
   /** Commit an inline rename (only fired with a non-empty, trimmed title). */
   readonly onRename: (conversationId: string, title: string) => void;
+  /** Undo a soft-delete: fired by the toast's Undo action. */
+  readonly onRestore: (conversation: AgentConversationListItem) => void;
 }
 
 export interface UseChatConversationSidebarResult {
   /** Abandon the in-flight rename, discarding the draft. */
   readonly cancelRename: () => void;
-  /** Accept the pending soft-delete (no-op when nothing is pending). */
-  readonly confirmDelete: () => void;
+  /** Soft-delete at once and show a 5-second Undo toast. */
+  readonly deleteConversation: (
+    conversation: AgentConversationListItem,
+  ) => void;
   /** Current rename draft text. */
   readonly draftTitle: string;
   /** Conversation being renamed inline, or null. */
@@ -23,12 +29,6 @@ export interface UseChatConversationSidebarResult {
     event: React.KeyboardEvent<HTMLInputElement>,
     conversationId: string,
   ) => void;
-  /** Conversation queued for deletion (drives the confirm dialog), or null. */
-  readonly pendingDeleteId: string | null;
-  /** Queue a conversation for confirm-guarded deletion. */
-  readonly requestDelete: (conversationId: string) => void;
-  /** Dismiss the delete confirm dialog without deleting. */
-  readonly resetPendingDelete: () => void;
   /** Replace the rename draft text. */
   readonly setDraftTitle: (title: string) => void;
   /** Begin renaming a conversation, seeding the draft from its title. */
@@ -38,24 +38,23 @@ export interface UseChatConversationSidebarResult {
 /**
  * @description Owns {@link ChatConversationSidebar}'s local interaction state —
  * the inline-rename draft (Enter commits, Escape cancels) and the
- * confirm-guarded soft-delete — keeping the component itself presentational. The
- * consumer still owns the data and the `onRename` / `onDelete` effects.
+ * immediate soft-delete with its Undo toast — keeping the component itself presentational. The
+ * consumer still owns the data and the `onRename` / `onDelete` / `onRestore` effects.
  *
  * @public
  */
 export const useChatConversationSidebar = (
   options: UseChatConversationSidebarOptions,
 ): UseChatConversationSidebarResult => {
-  const { onDelete, onRename } = options;
+  const { onDelete, onRename, onRestore } = options;
 
   // Hooks
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [draftTitle, setDraftTitle] = React.useState('');
-  const [pendingDeleteId, setPendingDeleteId] = React.useState<string | null>(
-    null,
-  );
 
   // Setup
+  /** How long the delete Undo toast stays up. */
+  const DELETE_UNDO_TOAST_MS = 5000;
 
   // Handlers
   const startRename = (conversation: AgentConversationListItem): void => {
@@ -89,11 +88,17 @@ export const useChatConversationSidebar = (
     }
   };
 
-  const confirmDelete = (): void => {
-    if (pendingDeleteId != null) {
-      onDelete(pendingDeleteId);
-    }
-    setPendingDeleteId(null);
+  const deleteConversation = (
+    conversation: AgentConversationListItem,
+  ): void => {
+    onDelete(conversation.id);
+    toast(CHAT_CONVERSATION_SIDEBAR_COPY.deletedToast, {
+      action: {
+        label: CHAT_CONVERSATION_SIDEBAR_COPY.deleteUndo,
+        onClick: () => onRestore(conversation),
+      },
+      duration: DELETE_UNDO_TOAST_MS,
+    });
   };
 
   // Markup
@@ -104,13 +109,10 @@ export const useChatConversationSidebar = (
 
   return {
     cancelRename,
-    confirmDelete,
+    deleteConversation,
     draftTitle,
     editingId,
     onRenameKeyDown,
-    pendingDeleteId,
-    requestDelete: setPendingDeleteId,
-    resetPendingDelete: () => setPendingDeleteId(null),
     setDraftTitle,
     startRename,
   };
