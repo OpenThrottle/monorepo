@@ -23,7 +23,7 @@ import type { ScheduledAgentJobCancellationService } from '../../queues/schedule
 import { ScheduledAgentJobRunEnqueueService } from '../../queues/scheduled-agent-jobs/run-enqueue/run-enqueue.service.ts';
 import type { ScheduledAgentJobPayload } from '../../queues/scheduled-agent-jobs/scheduled-agent-jobs.types.ts';
 import type { ScheduledAgentJobSchedulerService } from '../../queues/scheduled-agent-jobs/scheduler/scheduler.service.ts';
-import type { ScheduledAgentJobCheckoutPathService } from '../../services/scheduled-agent-job-checkout-path/scheduled-agent-job-checkout-path.service.ts';
+import type { CheckoutPathService } from '../../services/checkout-path/checkout-path.service.ts';
 import { ScheduledAgentJobsGraphqlService } from './scheduled-agent-jobs.service.ts';
 
 const jobFixture = (
@@ -48,7 +48,7 @@ const jobFixture = (
 describe('ScheduledAgentJobsGraphqlService', () => {
   let jobsRepository: ScheduledAgentJobsRepositoryMock;
   let runsRepository: ScheduledAgentJobRunsRepositoryMock;
-  let checkoutPaths: ScheduledAgentJobCheckoutPathService;
+  let checkoutPaths: CheckoutPathService;
   let scheduler: ScheduledAgentJobSchedulerService;
   let cancellation: ScheduledAgentJobCancellationService;
   let queue: Queue<ScheduledAgentJobPayload, void>;
@@ -73,7 +73,7 @@ describe('ScheduledAgentJobsGraphqlService', () => {
       createMock<ScheduledAgentJobRun>({ id: 'run-1', status: 'queued' }),
     );
 
-    checkoutPaths = createMock<ScheduledAgentJobCheckoutPathService>({
+    checkoutPaths = createMock<CheckoutPathService>({
       resolve: vi.fn().mockResolvedValue({ path: '/repos/monorepo' }),
     });
     scheduler = createMock<ScheduledAgentJobSchedulerService>({

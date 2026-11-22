@@ -25,8 +25,8 @@ import {
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { ScheduledAgentJobsQueueProducerModule } from '../../queues/scheduled-agent-jobs/producer/producer.module.ts';
+import { CheckoutPathModule } from '../../services/checkout-path/checkout-path.module.ts';
 import { EffectiveUserResolutionModule } from '../../services/effective-user-resolution/effective-user-resolution.module.ts';
-import { ScheduledAgentJobCheckoutPathModule } from '../../services/scheduled-agent-job-checkout-path/scheduled-agent-job-checkout-path.module.ts';
 import { ScheduledAgentJobsLoaders } from './loaders/loaders.service.ts';
 import { ScheduledAgentJobAgentResolver } from './scheduled-agent-job-agent/scheduled-agent-job-agent.resolver.ts';
 import { ScheduledAgentJobAgentService } from './scheduled-agent-job-agent/scheduled-agent-job-agent.service.ts';
@@ -46,7 +46,7 @@ import { ScheduledAgentJobsGraphqlService } from './scheduled-agent-jobs.service
     ScheduledAgentJobsModule,
     ScheduledAgentJobWebhookDeliveriesModule,
     ScheduledAgentJobWebhookTriggersModule,
-    ScheduledAgentJobCheckoutPathModule,
+    CheckoutPathModule,
     ScheduledAgentJobsQueueProducerModule,
     EffectiveUserResolutionModule,
   ],

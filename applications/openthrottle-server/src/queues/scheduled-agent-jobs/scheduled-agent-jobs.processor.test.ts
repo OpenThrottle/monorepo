@@ -30,7 +30,7 @@ import {
   vi,
 } from 'vitest';
 
-import type { ScheduledAgentJobCheckoutPathService } from '../../services/scheduled-agent-job-checkout-path/scheduled-agent-job-checkout-path.service.ts';
+import type { CheckoutPathService } from '../../services/checkout-path/checkout-path.service.ts';
 import type { BullMqRunOutputRetentionService } from '../bullmq-run-output/retention/retention.service.ts';
 import type { ScheduledAgentJobCancellationService } from './cancellation/cancellation.service.ts';
 import type { ScheduledAgentJobDirectoryLockService } from './directory-lock/directory-lock.service.ts';
@@ -121,7 +121,7 @@ const makeJob = (
 describe('ScheduledAgentJobsProcessor', () => {
   let jobsRepository: ScheduledAgentJobsRepositoryMock;
   let runsRepository: ScheduledAgentJobRunsRepositoryMock;
-  let checkoutPaths: ScheduledAgentJobCheckoutPathService;
+  let checkoutPaths: CheckoutPathService;
   let runner: ScheduledAgentRunnerService;
   let cancellation: ScheduledAgentJobCancellationService;
   let directoryLock: ScheduledAgentJobDirectoryLockService;
@@ -148,7 +148,7 @@ describe('ScheduledAgentJobsProcessor', () => {
     runsRepository.markRunFinished.mockResolvedValue(undefined);
     runsRepository.markRunStarted.mockResolvedValue(undefined);
 
-    checkoutPaths = createMock<ScheduledAgentJobCheckoutPathService>({
+    checkoutPaths = createMock<CheckoutPathService>({
       resolve: vi.fn().mockResolvedValue({ error: 'not-found' }),
     });
 

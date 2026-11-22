@@ -47,14 +47,13 @@ import {
   resolveAcpPermission,
   resolveHandoffTokenBudget,
   selectHandoffMessages,
-  toContainerPath,
   toConversationPermissionMode,
   toConversationReasoningEffort,
   toConversationServiceTier,
 } from '@openthrottle/openthrottle-agentic-utils';
 
+import { CheckoutPathService } from '../../services/checkout-path/checkout-path.service.ts';
 import { buildManagedMcpServers } from '../../services/workspace-editor-config/workspace-editor-config.utils.ts';
-import { WorkspaceLocalRepositoriesService } from '../../services/workspace-local-repositories/workspace-local-repositories.service.ts';
 import { TURN_IN_PROGRESS_ERROR } from './conversation-stream.constants.ts';
 import { StartConversationStreamInput } from './conversation-stream.input.ts';
 import {
@@ -244,13 +243,13 @@ const resolveApiBaseUrl = (): string => {
 @Resolver()
 export class ConversationStreamResolver {
   constructor(
+    private readonly checkoutPath: CheckoutPathService,
     private readonly disabledAgentClis: UserDisabledAgentClisRepository,
     private readonly conversations: AgentConversationsRepository,
     private readonly customPrompts: CustomPromptsRepository,
     private readonly logger: LoggerService,
     private readonly messages: AgentConversationMessagesRepository,
     private readonly modelDiscovery: NestjsModelDiscoveryService,
-    private readonly repositories: WorkspaceLocalRepositoriesService,
     private readonly streamService: ConversationStreamService,
   ) {}
 
@@ -578,24 +577,23 @@ export class ConversationStreamResolver {
     if (requestedRepositoryIds.length > 0) {
       // Every id is ownership-checked independently — the client's array is
       // untrusted, and a secondary is granted to the agent just as a primary is.
-      const resolvedRepositories = await Promise.all(
-        requestedRepositoryIds.map((repositoryId) =>
-          this.repositories.findByIdForUser(repositoryId, userId),
+      // The ids are checkout ids (a workspace-local repository's id is its
+      // checkout's). CheckoutPathService resolves each to the process-view path,
+      // so under a containerized server the spawn cwd (and the relative
+      // run-openthrottle-mcp.sh) resolve to a path that exists.
+      const resolvedPaths = await Promise.all(
+        requestedRepositoryIds.map((checkoutId) =>
+          this.checkoutPath.resolve({ checkoutId, ownerUserId: userId }),
         ),
       );
 
-      if (resolvedRepositories.some((repository) => !repository)) {
-        return 'Repository not found.';
+      const paths: string[] = [];
+      for (const resolved of resolvedPaths) {
+        if ('error' in resolved) return 'Repository not found.';
+        paths.push(resolved.path);
       }
 
-      // The DB filesystemPath is host-truthful. Under a containerized server
-      // with the workspace bridge active, translate to the in-container mount so
-      // the spawn cwd (and the relative run-openthrottle-mcp.sh) resolve to a
-      // path that exists. Identity (no-op) on host-run flows. Mirrors the editor
-      // path (workspace-editor-config.service).
-      const [primary, ...secondaries] = resolvedRepositories.map((repository) =>
-        toContainerPath(repository?.filesystemPath ?? ''),
-      );
+      const [primary, ...secondaries] = paths;
       cwd = primary ?? null;
       additionalDirectories.push(...secondaries);
     } else if (!isProduction()) {

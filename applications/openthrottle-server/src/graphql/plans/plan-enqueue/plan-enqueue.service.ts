@@ -28,7 +28,6 @@ import {
   PlanRun,
   PlanRunsRepository,
   PlansRepository,
-  RepositoryCheckoutsRepository,
   TasksRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import {
@@ -58,6 +57,7 @@ import type {
 import type { ScheduledPlanRunFireDecision } from '../../../queues/plans/scheduled-plan-run/scheduled-plan-run.types.ts';
 import { decideScheduledPlanRunFire } from '../../../queues/plans/scheduled-plan-run/scheduled-plan-run.utils.ts';
 import { USAGE_LIMIT_RESUME_JOB_ID_PREFIX } from '../../../queues/usage-limit/usage-limit.constants.ts';
+import { CheckoutPathService } from '../../../services/checkout-path/checkout-path.service.ts';
 import { QueuesService } from '../../queues/queues-service/queues-service.service.ts';
 import { normalizeIdempotencyKey } from '../../queues/queues-service/queues-service.utils.ts';
 import { WorkLedgerCaptureService } from '../../work-ledger/work-ledger-capture/work-ledger-capture.service.ts';
@@ -233,6 +233,7 @@ interface ResolvedWorkspace {
 @Injectable()
 export class PlanEnqueueService {
   constructor(
+    private readonly checkoutPath: CheckoutPathService,
     private readonly dataSource: DataSource,
     private readonly logger: LoggerService,
     private readonly notificationsService: NotificationsService,
@@ -240,7 +241,6 @@ export class PlanEnqueueService {
     private readonly plansRepository: PlansRepository,
     private readonly planStatusService: PlanStatusService,
     private readonly queuesService: QueuesService,
-    private readonly repositoryCheckoutsRepository: RepositoryCheckoutsRepository,
     private readonly tasksRepository: TasksRepository,
     private readonly workLedgerCapture: WorkLedgerCaptureService,
     @InjectQueue(PLANS_QUEUE_NAME)
@@ -771,8 +771,9 @@ export class PlanEnqueueService {
    * user's single checkout of it) → the raw `workingDirectory` escape hatch. Returns the
    * resolved path plus the canonical ids to snapshot on the run. The resolved path is
    * re-validated downstream by {@link buildRunPlanOrchestratorJobData}'s
-   * `validateWorkingDirectory`. Checkout/repository references are scoped to `actorUserId`;
-   * an unauthenticated (service-account/system) enqueue may only use the raw path.
+   * `validateWorkingDirectory`. The lookup, ownership scoping and error messages are
+   * {@link CheckoutPathService.resolveRunWorkspace}'s; an unauthenticated (service-account/system)
+   * enqueue may only use the raw path.
    */
   private async resolveWorkspace(input: {
     readonly actorUserId?: string | null;
@@ -780,64 +781,30 @@ export class PlanEnqueueService {
     readonly repositoryId?: string | null;
     readonly workingDirectory?: string | null;
   }): Promise<ResolvedWorkspace> {
-    const checkoutId = input.checkoutId?.trim() ?? '';
-    const repositoryId = input.repositoryId?.trim() ?? '';
+    const resolved = await this.checkoutPath.resolveRunWorkspace({
+      actorUserId: input.actorUserId,
+      checkoutId: input.checkoutId,
+      repositoryId: input.repositoryId,
+    });
 
-    if (checkoutId !== '') {
-      if (!input.actorUserId) {
-        throw new BadRequestException(
-          'checkoutId can only be resolved for an authenticated user',
-        );
-      }
-      const checkout = await this.repositoryCheckoutsRepository.findByIdForUser(
-        checkoutId,
-        input.actorUserId,
-      );
-      if (!checkout) {
-        throw new BadRequestException(
-          `Checkout not found for this user: ${checkoutId}`,
-        );
-      }
+    if (resolved.kind === 'rejected') {
+      throw new BadRequestException(resolved.message);
+    }
+
+    if (resolved.kind === 'no-reference') {
       return {
-        checkoutId: checkout.id,
-        repositoryId: checkout.repositoryId,
-        workingDirectory: checkout.filesystemPath,
+        checkoutId: null,
+        repositoryId: null,
+        workingDirectory: input.workingDirectory,
       };
     }
 
-    if (repositoryId !== '') {
-      if (!input.actorUserId) {
-        throw new BadRequestException(
-          'repositoryId can only be resolved for an authenticated user',
-        );
-      }
-      const checkouts =
-        await this.repositoryCheckoutsRepository.findByRepositoryIdForUser(
-          repositoryId,
-          input.actorUserId,
-        );
-      const [only] = checkouts;
-      if (!only) {
-        throw new BadRequestException(
-          `No checkout for repository ${repositoryId}; add a folder for it first`,
-        );
-      }
-      if (checkouts.length > 1) {
-        throw new BadRequestException(
-          `Repository ${repositoryId} has multiple checkouts; specify a checkoutId`,
-        );
-      }
-      return {
-        checkoutId: only.id,
-        repositoryId,
-        workingDirectory: only.filesystemPath,
-      };
-    }
-
+    // The host form, not processPath: job data is host-truthful by contract, and its consumers
+    // translate at use (getWorkflowConfigCwd → toContainerPath).
     return {
-      checkoutId: null,
-      repositoryId: null,
-      workingDirectory: input.workingDirectory,
+      checkoutId: resolved.checkoutId,
+      repositoryId: resolved.repositoryId,
+      workingDirectory: resolved.hostPath,
     };
   }
 

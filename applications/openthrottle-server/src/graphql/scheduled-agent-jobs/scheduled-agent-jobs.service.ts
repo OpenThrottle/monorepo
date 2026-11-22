@@ -38,7 +38,7 @@ import { ScheduledAgentJobRunEnqueueService } from '../../queues/scheduled-agent
 import { SCHEDULED_AGENT_JOBS_QUEUE_NAME } from '../../queues/scheduled-agent-jobs/scheduled-agent-jobs.constants.ts';
 import type { ScheduledAgentJobPayload } from '../../queues/scheduled-agent-jobs/scheduled-agent-jobs.types.ts';
 import { ScheduledAgentJobSchedulerService } from '../../queues/scheduled-agent-jobs/scheduler/scheduler.service.ts';
-import { ScheduledAgentJobCheckoutPathService } from '../../services/scheduled-agent-job-checkout-path/scheduled-agent-job-checkout-path.service.ts';
+import { CheckoutPathService } from '../../services/checkout-path/checkout-path.service.ts';
 import type {
   ScheduleSpec,
   ScheduleSpecRequest,
@@ -93,7 +93,7 @@ export class ScheduledAgentJobsGraphqlService {
     private readonly logger: LoggerService,
     private readonly jobsRepository: ScheduledAgentJobsRepository,
     private readonly runsRepository: ScheduledAgentJobRunsRepository,
-    private readonly checkoutPaths: ScheduledAgentJobCheckoutPathService,
+    private readonly checkoutPaths: CheckoutPathService,
     private readonly scheduler: ScheduledAgentJobSchedulerService,
     private readonly cancellation: ScheduledAgentJobCancellationService,
     private readonly runEnqueue: ScheduledAgentJobRunEnqueueService,

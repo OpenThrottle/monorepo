@@ -24,7 +24,7 @@ import {
 } from '@openthrottle/openthrottle-drivers';
 import { SCHEDULED_RUN_FAILURE_REASONS } from '@openthrottle/openthrottle-notifications';
 
-import { ScheduledAgentJobCheckoutPathService } from '../../services/scheduled-agent-job-checkout-path/scheduled-agent-job-checkout-path.service.ts';
+import { CheckoutPathService } from '../../services/checkout-path/checkout-path.service.ts';
 import { closeRunOutputForJob } from '../bullmq-keyed-run-logging/bullmq-keyed-run-logging.utils.ts';
 import { BULLMQ_RUN_OUTPUT_WRITER } from '../bullmq-run-output/bullmq-run-output-writer.token.ts';
 import { BullMqRunOutputRetentionService } from '../bullmq-run-output/retention/retention.service.ts';
@@ -175,7 +175,7 @@ export class ScheduledAgentJobsProcessor
     private readonly logger: LoggerService,
     private readonly jobsRepository: ScheduledAgentJobsRepository,
     private readonly runsRepository: ScheduledAgentJobRunsRepository,
-    private readonly checkoutPaths: ScheduledAgentJobCheckoutPathService,
+    private readonly checkoutPaths: CheckoutPathService,
     private readonly runner: ScheduledAgentRunnerService,
     private readonly cancellation: ScheduledAgentJobCancellationService,
     private readonly directoryLock: ScheduledAgentJobDirectoryLockService,

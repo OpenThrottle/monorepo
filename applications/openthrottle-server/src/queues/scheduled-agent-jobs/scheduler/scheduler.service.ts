@@ -4,7 +4,7 @@ import type { ScheduledAgentJob } from '@openthrottle/nestjs-repositories-server
 import { ScheduledAgentJobRunsRepository } from '@openthrottle/nestjs-repositories-server';
 import type { Queue } from 'bullmq';
 
-import { ScheduledAgentJobCheckoutPathService } from '../../../services/scheduled-agent-job-checkout-path/scheduled-agent-job-checkout-path.service.ts';
+import { CheckoutPathService } from '../../../services/checkout-path/checkout-path.service.ts';
 import {
   isSelfScheduledKind,
   nextSelfScheduledSlot,
@@ -30,7 +30,7 @@ import { buildScheduledAgentJobPayload } from './scheduler.utils.ts';
 @Injectable()
 export class ScheduledAgentJobSchedulerService {
   constructor(
-    private readonly checkoutPaths: ScheduledAgentJobCheckoutPathService,
+    private readonly checkoutPaths: CheckoutPathService,
     @InjectQueue(SCHEDULED_AGENT_JOBS_QUEUE_NAME)
     private readonly queue: Queue<ScheduledAgentJobPayload, void>,
     private readonly runsRepository: ScheduledAgentJobRunsRepository,

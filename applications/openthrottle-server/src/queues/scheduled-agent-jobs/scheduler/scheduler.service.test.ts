@@ -9,7 +9,7 @@ import { asMock } from '@openthrottle/nestjs-testing';
 import type { Job, Queue } from 'bullmq';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { ScheduledAgentJobCheckoutPathService } from '../../../services/scheduled-agent-job-checkout-path/scheduled-agent-job-checkout-path.service.ts';
+import type { CheckoutPathService } from '../../../services/checkout-path/checkout-path.service.ts';
 import type { ScheduledAgentJobPayload } from '../scheduled-agent-jobs.types.ts';
 import { ScheduledAgentJobSchedulerService } from './scheduler.service.ts';
 import { buildScheduledAgentJobPayload } from './scheduler.utils.ts';
@@ -35,13 +35,13 @@ const makeJob = (
 };
 
 describe('ScheduledAgentJobSchedulerService', () => {
-  let checkoutPaths: ScheduledAgentJobCheckoutPathService;
+  let checkoutPaths: CheckoutPathService;
   let runsRepository: ScheduledAgentJobRunsRepositoryMock;
   let queue: Queue<ScheduledAgentJobPayload, void>;
   let service: ScheduledAgentJobSchedulerService;
 
   beforeEach(() => {
-    checkoutPaths = createMock<ScheduledAgentJobCheckoutPathService>({
+    checkoutPaths = createMock<CheckoutPathService>({
       resolve: vi.fn().mockResolvedValue({ path: '/repos/monorepo' }),
     });
     queue = createMock<Queue<ScheduledAgentJobPayload, void>>({
