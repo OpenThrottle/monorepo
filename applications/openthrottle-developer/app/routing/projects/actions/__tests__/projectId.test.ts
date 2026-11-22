@@ -17,10 +17,12 @@ const { executeGraphqlWithAuth } =
 const {
   ProjectDetailAddPlanDocument,
   ProjectDetailAddProjectTagDocument,
+  ProjectDetailCancelProjectRunDocument,
   ProjectDetailLinkRepositoryDocument,
   ProjectDetailMovePlanDocument,
   ProjectDetailRemovePlanDocument,
   ProjectDetailRemoveProjectTagDocument,
+  ProjectDetailRunProjectDocument,
   ProjectDetailUnlinkRepositoryDocument,
 } = await import('~/__generated__/graphql');
 const { runProjectDetailAction } = await import('../projectId');
@@ -180,6 +182,64 @@ describe('projects/actions/projectId tag parser', () => {
       );
 
       expect(result).toEqual({ projectError: 'boom' });
+    });
+  });
+});
+
+describe('projects/actions/projectId project run', () => {
+  beforeEach(() => {
+    mockExecute.mockReset();
+    mockExecute.mockResolvedValue(
+      asMock<Awaited<ReturnType<typeof executeGraphqlWithAuth>>>({}),
+    );
+  });
+
+  test('runProject runs the route project', async () => {
+    const result = await runProjectDetailAction(
+      actionArgs(form({ intent: 'runProject' })),
+    );
+
+    expect(result).toEqual({ projectRunUpdated: true });
+    expect(mockExecute).toHaveBeenCalledWith(
+      expect.any(Request),
+      ProjectDetailRunProjectDocument,
+      { input: { projectId: 'proj-1' } },
+    );
+  });
+
+  test('cancelProjectRun cancels the posted run', async () => {
+    const result = await runProjectDetailAction(
+      actionArgs(form({ intent: 'cancelProjectRun', projectRunId: 'run-1' })),
+    );
+
+    expect(result).toEqual({ projectRunUpdated: true });
+    expect(mockExecute).toHaveBeenCalledWith(
+      expect.any(Request),
+      ProjectDetailCancelProjectRunDocument,
+      { input: { projectRunId: 'run-1' } },
+    );
+  });
+
+  test('cancelProjectRun without a run id is refused without a call', async () => {
+    const result = await runProjectDetailAction(
+      actionArgs(form({ intent: 'cancelProjectRun' })),
+    );
+
+    expect(result).toEqual({ projectRunError: 'Missing project run id.' });
+    expect(mockExecute).not.toHaveBeenCalled();
+  });
+
+  test('a refusal comes back as projectRunError', async () => {
+    mockExecute.mockRejectedValue(
+      new Error('This project already has an active run.'),
+    );
+
+    const result = await runProjectDetailAction(
+      actionArgs(form({ intent: 'runProject' })),
+    );
+
+    expect(result).toEqual({
+      projectRunError: 'This project already has an active run.',
     });
   });
 });

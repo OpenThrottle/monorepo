@@ -10,6 +10,7 @@ import { WorkLedgerGraphqlModule } from '../../graphql/work-ledger/work-ledger.m
 import { NotificationsModule } from '../../notifications/notifications.module.ts';
 import { ForeignSkillInjectionModule } from '../../services/foreign-skill-injection/foreign-skill-injection.module.ts';
 import { WorkspaceEditorConfigModule } from '../../services/workspace-editor-config/workspace-editor-config.module.ts';
+import { ProjectRunsQueueProducerModule } from '../project-runs/producer/producer.module.ts';
 import { PlanRunsStaleSweepProcessor } from './plan-runs-stale-sweep.processor.ts';
 import { PlanRunsStaleSweepQueueProducerModule } from './producer/producer.module.ts';
 import { PlanRunsStaleSweepRepeatableService } from './repeatable/repeatable.service.ts';
@@ -34,6 +35,7 @@ import { PlanRunsStaleSweepRepeatableService } from './repeatable/repeatable.ser
     PlanRunsStaleSweepQueueProducerModule,
     PlansModule,
     PlanStatusModule,
+    ProjectRunsQueueProducerModule,
     WorkLedgerGraphqlModule,
   ],
   providers: [PlanRunsStaleSweepProcessor, PlanRunsStaleSweepRepeatableService],

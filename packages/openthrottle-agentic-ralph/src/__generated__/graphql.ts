@@ -780,6 +780,11 @@ export type CancelPlanRunResultObject = {
   signaledActiveRunToStop: Scalars['Boolean']['output'];
 };
 
+export type CancelProjectRunInput = {
+  /** Project run to cancel */
+  projectRunId: Scalars['ID']['input'];
+};
+
 export type CaptureHealthRowObject = {
   __typename?: 'CaptureHealthRowObject';
   /** Server receipt time of the newest row for this (stream, source). */
@@ -3048,6 +3053,8 @@ export type Mutation = {
   cancelConversationStream: Scalars['Boolean']['output'];
   /** Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token). Also cancels the plan's SCHEDULED runs (delayed job removed, run settled CANCELLED). With planRunId naming a SCHEDULED run of the plan, cancels ONLY that run (its delayed job and row), leaving any other active run, the plan status and the tasks alone; a planRunId that is already settled is a no-op, and one that is QUEUED or IN_PROGRESS is rejected (omit planRunId to stop a live run). Idempotent: once a scheduled run has fired or settled there is nothing left to cancel. */
   cancelPlanRun: CancelPlanRunResultObject;
+  /** Cancel a project run: the plan run it is waiting on is cancelled through the normal plan-run cancel, and the project run settles CANCELLED. A run that already settled is returned unchanged. */
+  cancelProjectRun: ProjectRunObject;
   /** Request cancellation of an in-flight run (durable marker + best-effort in-process abort). */
   cancelScheduledAgentJobRun: ScheduledAgentJobRunObject;
   /** Claim every PENDING STEER/QUEUE message on a plan for delivery at a task boundary. Marks them DELIVERED (stamping the run and task) and records the delivery on the plan output stream in one transaction, so a message is delivered at most once and never unrecorded. Returns STEERs first. */
@@ -3301,6 +3308,8 @@ export type Mutation = {
   revokeServiceAccountCredential: Scalars['Boolean']['output'];
   /** Rotate a webhook trigger (owner only): the token and secret are replaced together and the old URL stops working immediately. Returns the new URL path and secret ONCE. */
   rotateScheduledAgentJobWebhookTrigger: ScheduledAgentJobWebhookTriggerCredentialsObject;
+  /** Run a project: enqueue its plans one after another in project order (each with its own runner, Ralph or OT Loop), one draft PR each, stopping on the first plan that does not finish. The first plan is enqueued before this returns. Resume a STOPPED run by calling this again: finished plans are passed over. Refused with extensions.code PROJECT_RUN_ACTIVE when the project already has an active run, PROJECT_RUN_NOTHING_TO_RUN when every plan is COMPLETED, SKIPPED or CANCELED, NOT_FOUND for an unknown project. */
+  runProject: ProjectRunObject;
   /** Enqueue an immediate one-off run (owner only); allowed even when the schedule is disabled, but refused (SCHEDULED_AGENT_JOB_APPROVAL_PENDING) while the job awaits approval. */
   runScheduledAgentJobNow: ScheduledAgentJobRunObject;
   /** Enqueue an immediate run of one of the caller's own jobs (agent- or human-created). Refused while the job awaits approval. */
@@ -3514,6 +3523,10 @@ export type MutationCancelConversationStreamArgs = {
 
 export type MutationCancelPlanRunArgs = {
   input: CancelPlanRunInput;
+};
+
+export type MutationCancelProjectRunArgs = {
+  input: CancelProjectRunInput;
 };
 
 export type MutationCancelScheduledAgentJobRunArgs = {
@@ -3998,6 +4011,10 @@ export type MutationRotateScheduledAgentJobWebhookTriggerArgs = {
   scheduledAgentJobId: Scalars['ID']['input'];
 };
 
+export type MutationRunProjectArgs = {
+  input: RunProjectInput;
+};
+
 export type MutationRunScheduledAgentJobNowArgs = {
   id: Scalars['ID']['input'];
 };
@@ -4428,6 +4445,8 @@ export type PlanObject = {
   id: Scalars['String']['output'];
   /** Job-run lifecycle hooks stored on the plan ({ hooks: [...] }). */
   jobRunHooksJson: Scalars['String']['output'];
+  /** The newest pull request any run of this plan recorded on the work ledger (number, repo, lifecycle state, forge URL). Null when no run has recorded one. Resolved through a batched loader. */
+  latestPullRequest?: Maybe<PlanRunPullRequestObject>;
   /** @deprecated Free-text label, unrelated to projects and superseded by projectId. */
   project?: Maybe<Scalars['String']['output']>;
   /** Optional. Project UUID (FK to projects table). Null when plan is not linked to a project. */
@@ -4756,9 +4775,13 @@ export type ProcessMetricsSnapshot = {
 
 export type ProjectObject = {
   __typename?: 'ProjectObject';
+  /** The project's active (QUEUED or IN_PROGRESS) run; null when none is. Resolved through the same batched loader as latestProjectRun. */
+  activeProjectRun?: Maybe<ProjectRunObject>;
   createdAt: Scalars['DateTime']['output'];
   description?: Maybe<Scalars['String']['output']>;
   id: Scalars['String']['output'];
+  /** The project's newest run, whatever its status; null when it has never run. Resolved through a batched loader. */
+  latestProjectRun?: Maybe<ProjectRunObject>;
   name: Scalars['String']['output'];
   /**
    * NX project name (e.g. applications/openthrottle-server)
@@ -4810,6 +4833,30 @@ export type ProjectRepositoryObject = {
   id: Scalars['ID']['output'];
   projectId: Scalars['ID']['output'];
   repositoryId: Scalars['ID']['output'];
+};
+
+/** A project run: the project's plans enqueued strictly one after another in project order, each done when its run settles COMPLETED with a draft PR. Resume a STOPPED run by calling runProject again; it passes over finished plans and starts at the one that stopped. */
+export type ProjectRunObject = {
+  __typename?: 'ProjectRunObject';
+  /** When a cancel was requested; null when none was. */
+  cancelRequestedAt?: Maybe<Scalars['DateTime']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  /** The plan the run is on now, or the last one it was on once settled. Null before the first plan is enqueued. */
+  currentPlan?: Maybe<PlanObject>;
+  currentPlanId?: Maybe<Scalars['ID']['output']>;
+  id: Scalars['ID']['output'];
+  projectId: Scalars['ID']['output'];
+  /** When the run reached a terminal status; null while active. */
+  settledAt?: Maybe<Scalars['DateTime']['output']>;
+  /** When the run enqueued its first plan; null until then. */
+  startedAt?: Maybe<Scalars['DateTime']['output']>;
+  /** QUEUED or IN_PROGRESS while active; COMPLETED (every plan done), STOPPED (a plan did not finish; see stoppedByPlan and stoppedReason) or CANCELLED once settled. */
+  status: Scalars['String']['output'];
+  /** For a STOPPED run, the plan that stopped it; a fresh runProject resumes there. Null otherwise. */
+  stoppedByPlan?: Maybe<PlanObject>;
+  stoppedByPlanId?: Maybe<Scalars['ID']['output']>;
+  /** Why a STOPPED run stopped: the plan run status that ended it, a plan already BLOCKED, an unrelated active run on the plan, or an enqueue refusal. Null otherwise. */
+  stoppedReason?: Maybe<Scalars['String']['output']>;
 };
 
 /** A single skill in a project's ingested skill universe, with its static frontmatter tags and tri-state disable-model-invocation flag. */
@@ -5181,6 +5228,8 @@ export type Query = {
   projectPlans: Array<PlanObject>;
   /** One page of a project's live plans in project order (projectSortOrder ascending), plus the project's total live plan count. limit is 1 to 100 (default 25); offset is 0 or more. */
   projectPlansPage: ProjectPlansPageResultObject;
+  /** A project run by id; null when there is none. */
+  projectRun?: Maybe<ProjectRunObject>;
   /** A project's ingested skill universe: slug, static frontmatter tags, and the tri-state static disable-model-invocation flag. Omit projectId to resolve the dogfood monorepo project (nx_project_name = 'monorepo'); returns an empty list when the project or its ingested rows are absent. Display-only in v1 — no per-context effective availability. */
   projectSkills: ProjectSkillsResult;
   /** List all projects, ordered by createdAt descending */
@@ -5625,6 +5674,10 @@ export type QueryProjectPlansArgs = {
 
 export type QueryProjectPlansPageArgs = {
   input: ProjectPlansPageInput;
+};
+
+export type QueryProjectRunArgs = {
+  id: Scalars['ID']['input'];
 };
 
 export type QueryProjectSkillsArgs = {
@@ -6842,6 +6895,11 @@ export type RuleApplicationObject = {
   /** The injected (or pre-satisfying) task; null when not applicable or after a human deleted the task. */
   taskId?: Maybe<Scalars['ID']['output']>;
   updatedAt: Scalars['DateTime']['output'];
+};
+
+export type RunProjectInput = {
+  /** Project to run */
+  projectId: Scalars['ID']['input'];
 };
 
 /** One resolved worktree root and what the depth-1 scan of it found. */

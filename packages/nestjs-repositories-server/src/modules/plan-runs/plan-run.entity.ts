@@ -3,7 +3,7 @@
  * `BaseHardDeleteModel`: a run is history and is never user-deleted, so a delete is real (the
  * only deletes are FK cascades from a removed plan). Its status, heartbeat and cancel marker
  * are written in place, so it declares its own `updated_at`. Matches
- * databases/openthrottle/migrations (038, 047, 053, 076, 080, 087, 110, 138, 140, 150, 176, 192).
+ * databases/openthrottle/migrations (038, 047, 053, 076, 080, 087, 110, 138, 140, 150, 176, 192, 194).
  * @public
  */
 
@@ -112,6 +112,14 @@ export class PlanRun extends BaseHardDeleteModel {
 
   @Column({ name: 'plan_id', type: 'uuid' })
   planId!: string;
+
+  /**
+   * The project run that enqueued this plan run (migration 194), so the project-run advance step
+   * can tell its own run from an unrelated one on the same plan. Null for a plan run started on
+   * its own. FK is ON DELETE SET NULL.
+   */
+  @Column({ name: 'project_run_id', nullable: true, type: 'uuid' })
+  projectRunId!: string | null;
 
   @Column({ default: 'plans', name: 'queue_name', type: 'text' })
   queueName!: string;

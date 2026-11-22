@@ -423,6 +423,20 @@ export const developerMcpToolDefinitions: readonly DeveloperMcpToolDefinition[] 
     ),
     defineTool(
       'core',
+      'run_project',
+      Th.runProjectToolDescription,
+      Th.runProjectToolParameters,
+      Th.runProjectToolHandler,
+    ),
+    defineTool(
+      'scheduling',
+      'cancel_project_run',
+      Th.cancelProjectRunToolDescription,
+      Th.cancelProjectRunToolParameters,
+      Th.cancelProjectRunToolHandler,
+    ),
+    defineTool(
+      'core',
       'reorder_project_plans',
       Th.reorderProjectPlansToolDescription,
       Th.reorderProjectPlansToolParameters,

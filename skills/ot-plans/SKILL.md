@@ -38,6 +38,11 @@ worth knowing, because setting it looks like it should.
 gives the id; pass it as `projectId` to `create_plan`, or use `add_plan_to_project` for an existing
 plan. No match means ask before creating one (`create_project`, admin toolset) — names are not unique.
 
+**Running a whole project:** `run_project({ projectId })` runs its plans strictly in project order,
+one draft PR each, and stops at the first plan that does not finish; call it again to resume there.
+It is a run request like any other — only when told to. Poll `get_project` (`latestProjectRun`).
+[Rules](https://github.com/openthrottle/monorepo/blob/main/docs/workflows/project-runs.md).
+
 `author` / `assignee` come from `GITHUB_USER` when set — why they are already right unprompted.
 
 ## Task sortOrder (execution order)

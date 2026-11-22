@@ -7,10 +7,12 @@ import type { Route } from '@/app/routes/+types/projects.$projectId._index';
 import {
   ProjectDetailAddPlanDocument,
   ProjectDetailAddProjectTagDocument,
+  ProjectDetailCancelProjectRunDocument,
   ProjectDetailLinkRepositoryDocument,
   ProjectDetailMovePlanDocument,
   ProjectDetailRemovePlanDocument,
   ProjectDetailRemoveProjectTagDocument,
+  ProjectDetailRunProjectDocument,
   ProjectDetailUnlinkRepositoryDocument,
 } from '~/__generated__/graphql';
 import {
@@ -88,7 +90,44 @@ const runProjectStructureIntent = async (
 };
 
 /**
- * @description Project detail mutations (tags, linked repositories, ordered plans), dispatched by
+ * @description Starts (or resumes) and cancels the project's run. A refusal (already running,
+ * nothing to run) comes back as `projectRunError` for the run panel to show.
+ */
+const runProjectRunIntent = async (
+  args: Route.ActionArgs,
+  projectId: string,
+  intent: 'cancelProjectRun' | 'runProject',
+  formData: FormData,
+) => {
+  try {
+    if (intent === 'runProject') {
+      await executeGraphqlWithAuth(
+        args.request,
+        ProjectDetailRunProjectDocument,
+        { input: { projectId } },
+      );
+      return { projectRunUpdated: true };
+    }
+
+    const projectRunId = readField(formData, 'projectRunId');
+    if (projectRunId === '') {
+      return { projectRunError: 'Missing project run id.' };
+    }
+    await executeGraphqlWithAuth(
+      args.request,
+      ProjectDetailCancelProjectRunDocument,
+      { input: { projectRunId } },
+    );
+    return { projectRunUpdated: true };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return { projectRunError: message };
+  }
+};
+
+/**
+ * @description Project detail mutations (tags, linked repositories, ordered plans, the project
+ * run), dispatched by
  * `intent`. Extracted from the route action per route-primitive-shape R4 so the
  * route file stays a thin adapter.
  */
@@ -143,6 +182,10 @@ export const runProjectDetailAction = async (args: Route.ActionArgs) => {
       const message = error instanceof Error ? error.message : String(error);
       return { projectError: message };
     }
+  }
+
+  if (intent === 'runProject' || intent === 'cancelProjectRun') {
+    return runProjectRunIntent(args, projectId, intent, formData);
   }
 
   return {};

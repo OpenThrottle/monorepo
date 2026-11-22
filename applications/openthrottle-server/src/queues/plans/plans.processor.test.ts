@@ -48,6 +48,7 @@ import { AgenticRalphOrchestratorService } from '../agentic-ralph/orchestrator/o
 import { BullMqRunOutputRetentionService } from '../bullmq-run-output/retention/retention.service.ts';
 import { OtLoopOrchestratorService } from '../ot-loop/orchestrator/orchestrator.service.ts';
 import { WorkflowLifecycleDispatcherFactory } from '../plan-lifecycle-hooks/workflow-lifecycle-dispatcher/workflow-lifecycle-dispatcher.service.ts';
+import { ProjectRunsEnqueueService } from '../project-runs/enqueue/enqueue.service.ts';
 import {
   PLANS_QUEUE_NAME,
   PLANS_WORKER_LOCK_DURATION_MS,
@@ -172,6 +173,8 @@ planRunsRepository.recordHeartbeatByJob.mockResolvedValue(1);
 planRunsRepository.settleUnsettledRunByJob.mockResolvedValue(true);
 planRunsRepository.transitionScheduledRun.mockResolvedValue(true);
 const mockRecordSettledRunArtifacts = vi.fn().mockResolvedValue(undefined);
+const mockEnqueueAdvanceForJob = vi.fn().mockResolvedValue(undefined);
+const mockEnqueueAdvanceForPlanRun = vi.fn().mockResolvedValue(undefined);
 const mockFireScheduledRun = vi.fn().mockResolvedValue({ kind: 'fire' });
 const mockReprojectScheduledRun = vi
   .fn()
@@ -461,6 +464,13 @@ describe('PlansProcessor', () => {
           provide: SettleRunLedgerService,
           useValue: createMock<SettleRunLedgerService>({
             recordSettledRunArtifacts: mockRecordSettledRunArtifacts,
+          }),
+        },
+        {
+          provide: ProjectRunsEnqueueService,
+          useValue: createMock<ProjectRunsEnqueueService>({
+            enqueueAdvanceForJob: mockEnqueueAdvanceForJob,
+            enqueueAdvanceForPlanRun: mockEnqueueAdvanceForPlanRun,
           }),
         },
       ],
@@ -787,6 +797,13 @@ describe('PlansProcessor', () => {
         planRun: settledRun,
         prNumber: 42,
       });
+      // The project-run trigger fires after the ledger write, so the advance sees the PR.
+      expect(mockEnqueueAdvanceForPlanRun).toHaveBeenCalledWith(settledRun);
+      expect(
+        mockRecordSettledRunArtifacts.mock.invocationCallOrder[0],
+      ).toBeLessThan(
+        mockEnqueueAdvanceForPlanRun.mock.invocationCallOrder[0] ?? 0,
+      );
     });
 
     it('settles the row to FAILED when the orchestrator outcome is failed', async () => {
@@ -1083,6 +1100,10 @@ describe('PlansProcessor', () => {
         planId,
       });
       expect(planRunsRepository.settleRunByJob).not.toHaveBeenCalled();
+      expect(mockEnqueueAdvanceForJob).toHaveBeenCalledWith(
+        PLANS_QUEUE_NAME,
+        'job-1',
+      );
     });
   });
 
@@ -2186,6 +2207,10 @@ describe('PlansProcessor', () => {
         PLANS_QUEUE_NAME,
         'job-retry-1',
         PLAN_RUN_STATUS.FAILED,
+      );
+      expect(mockEnqueueAdvanceForJob).toHaveBeenCalledWith(
+        PLANS_QUEUE_NAME,
+        'job-retry-1',
       );
     });
 

@@ -16,6 +16,7 @@ import type { PlanStatusService } from '../../graphql/plans/plan-status/plan-sta
 import type { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account/status-change-system-account.service.ts';
 import type { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture/work-ledger-capture.service.ts';
 import type { NotificationsService } from '../../notifications/notifications.service.ts';
+import type { ProjectRunsEnqueueService } from '../project-runs/enqueue/enqueue.service.ts';
 import { PlanRunsStaleSweepProcessor } from './plan-runs-stale-sweep.processor.ts';
 import type { PlanRunsStaleSweepJob } from './plan-runs-stale-sweep.types.ts';
 
@@ -39,6 +40,8 @@ const unsupervisedRun = (id: string, planId: string): PlanRun => {
     status: 'IN_PROGRESS',
   });
 };
+
+const enqueueAdvanceForPlanRun = vi.fn().mockResolvedValue(undefined);
 
 describe('PlanRunsStaleSweepProcessor', () => {
   const planRunsRepository = createPlanRunsRepositoryMock();
@@ -126,6 +129,7 @@ describe('PlanRunsStaleSweepProcessor', () => {
     });
     dataSource = asMock<DataSource>({ transaction: taskManagerTransaction });
 
+    enqueueAdvanceForPlanRun.mockClear();
     processor = new PlanRunsStaleSweepProcessor(
       dataSource,
       createMock<LoggerService>(),
@@ -136,6 +140,7 @@ describe('PlanRunsStaleSweepProcessor', () => {
       createMock<PlanRunsRepository>(planRunsRepository),
       plansRepository,
       planStatusService,
+      createMock<ProjectRunsEnqueueService>({ enqueueAdvanceForPlanRun }),
       statusChangeSystemAccount,
       createMock<WorkLedgerCaptureService>({
         recordStatusChange: mockRecordStatusChange,
@@ -167,6 +172,10 @@ describe('PlanRunsStaleSweepProcessor', () => {
     expect(planRunsRepository.settleStaleRun).toHaveBeenCalledWith(
       'run-1',
       PLAN_RUN_SETTLED_REASON.HEARTBEAT_LOST,
+    );
+    // The project run waiting on it (if any) is advanced off the swept row.
+    expect(enqueueAdvanceForPlanRun).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'run-1', status: 'STALE' }),
     );
     // Routed through the applyStatusChange chokepoint (PlanStatusService.writeGuardedStatus),
     // attributed to the status-change-system service account, in place of the old bare
@@ -386,6 +395,7 @@ describe('PlanRunsStaleSweepProcessor', () => {
 
     expect(planFindOne).not.toHaveBeenCalled();
     expect(writeGuardedStatus).not.toHaveBeenCalled();
+    expect(enqueueAdvanceForPlanRun).not.toHaveBeenCalled();
   });
 
   describe('a SCHEDULED run is not a stale run', () => {

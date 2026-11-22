@@ -22,6 +22,7 @@ import { PlanRulesQueueProducerModule } from '../../../queues/plan-rules/produce
 import { PlanRunWorktreeReaperQueueProducerModule } from '../../../queues/plan-run-worktree-reaper/producer/producer.module.ts';
 import { PlanRunsStaleSweepQueueProducerModule } from '../../../queues/plan-runs-stale-sweep/producer/producer.module.ts';
 import { PlansQueueProducerModule } from '../../../queues/plans/producer/producer.module.ts';
+import { ProjectRunsQueueProducerModule } from '../../../queues/project-runs/producer/producer.module.ts';
 import { ScheduledAgentJobsQueueProducerModule } from '../../../queues/scheduled-agent-jobs/producer/producer.module.ts';
 import { TaggingQueueProducerModule } from '../../../queues/tagging/producer/producer.module.ts';
 import { TaskPromotionQueueProducerModule } from '../../../queues/task-promotion/producer/producer.module.ts';
@@ -46,6 +47,7 @@ import { QueuesService } from './queues-service.service.ts';
     PlanRunsStaleSweepQueueProducerModule,
     PlanRunWorktreeReaperQueueProducerModule,
     PlansQueueProducerModule,
+    ProjectRunsQueueProducerModule,
     ScheduledAgentJobsQueueProducerModule,
     TaggingQueueProducerModule,
     TaskPromotionQueueProducerModule,

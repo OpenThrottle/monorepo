@@ -3,6 +3,7 @@ import { OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
 import { AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT } from '@openthrottle/nestjs-auth';
 import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import type { PlanRun } from '@openthrottle/nestjs-repositories-server';
 import {
   PLAN_RUN_SETTLED_REASON,
   PLAN_RUN_STATUS,
@@ -18,6 +19,7 @@ import { applyBulkTaskStatusChange } from '../../graphql/work-ledger/bulk-task-s
 import { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account/status-change-system-account.service.ts';
 import { WorkLedgerCaptureService } from '../../graphql/work-ledger/work-ledger-capture/work-ledger-capture.service.ts';
 import { NotificationsService } from '../../notifications/notifications.service.ts';
+import { ProjectRunsEnqueueService } from '../project-runs/enqueue/enqueue.service.ts';
 import {
   PLAN_RUNS_STALE_SWEEP_BATCH_SIZE,
   PLAN_RUNS_STALE_SWEEP_QUEUE_NAME,
@@ -64,6 +66,7 @@ export class PlanRunsStaleSweepProcessor
     private readonly planRunsRepository: PlanRunsRepository,
     private readonly plansRepository: PlansRepository,
     private readonly planStatusService: PlanStatusService,
+    private readonly projectRunsEnqueue: ProjectRunsEnqueueService,
     private readonly statusChangeSystemAccount: StatusChangeSystemAccountService,
     private readonly workLedgerCapture: WorkLedgerCaptureService,
   ) {
@@ -108,6 +111,7 @@ export class PlanRunsStaleSweepProcessor
 
     let swept = 0;
     const affectedPlanIds = new Set<string>();
+    const settledRuns: PlanRun[] = [];
 
     for (const run of staleRuns) {
       // eslint-disable-next-line no-await-in-loop -- sequential DB writes, one stale run at a time
@@ -118,6 +122,7 @@ export class PlanRunsStaleSweepProcessor
       if (settled?.status === PLAN_RUN_STATUS.STALE) {
         swept += 1;
         affectedPlanIds.add(run.planId);
+        settledRuns.push(settled);
       }
     }
 
@@ -132,6 +137,13 @@ export class PlanRunsStaleSweepProcessor
 
     const { unsupervisedExamined, unsupervisedSwept } =
       await this.sweepUnsupervisedPlanRuns();
+
+    // A project run waiting on a swept run stops on it. Best-effort; never throws.
+    await Promise.all(
+      settledRuns.map(async (settled) => {
+        return this.projectRunsEnqueue.enqueueAdvanceForPlanRun(settled);
+      }),
+    );
 
     return {
       examined: staleRuns.length,
@@ -164,6 +176,7 @@ export class PlanRunsStaleSweepProcessor
     );
 
     let unsupervisedSwept = 0;
+    const settledRuns: PlanRun[] = [];
     for (const run of runs) {
       // eslint-disable-next-line no-await-in-loop -- sequential DB writes, one stale run at a time
       const settled = await this.planRunsRepository.settleStaleRun(
@@ -172,12 +185,19 @@ export class PlanRunsStaleSweepProcessor
       );
       if (settled?.status === PLAN_RUN_STATUS.STALE) {
         unsupervisedSwept += 1;
+        settledRuns.push(settled);
         this.logger.info(
           `Settled unsupervised run ${run.id} (plan ${run.planId}) to STALE on age; plan/task status untouched`,
           PlanRunsStaleSweepProcessor.name,
         );
       }
     }
+
+    await Promise.all(
+      settledRuns.map(async (settled) => {
+        return this.projectRunsEnqueue.enqueueAdvanceForPlanRun(settled);
+      }),
+    );
 
     return { unsupervisedExamined: runs.length, unsupervisedSwept };
   }

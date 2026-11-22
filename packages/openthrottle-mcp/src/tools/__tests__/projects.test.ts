@@ -173,6 +173,7 @@ describe('getProjectToolHandler', () => {
           project: {
             createdAt: '2026-11-01T00:00:00.000Z',
             id: projectId,
+            latestProjectRun: null,
             planCount: 2,
           },
         },
@@ -182,6 +183,40 @@ describe('getProjectToolHandler', () => {
         expect.anything(),
         { id: projectId },
       );
+    });
+
+    it('includes the newest project run so an agent can poll run_project', async () => {
+      vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
+        project: {
+          ...buildProject('OpenThrottle CMS'),
+          latestProjectRun: {
+            cancelRequestedAt: null,
+            createdAt: '2026-11-22T00:00:00.000Z',
+            currentPlan: { id: 'plan-2', title: 'Second' },
+            id: 'run-1',
+            projectId,
+            settledAt: '2026-11-22T01:00:00.000Z',
+            startedAt: '2026-11-22T00:00:01.000Z',
+            status: 'STOPPED',
+            stoppedByPlan: { id: 'plan-2', title: 'Second' },
+            stoppedReason: 'Plan run x settled FAILED.',
+          },
+        },
+      });
+
+      const result = await getProjectToolHandler({ id: projectId });
+
+      expect(result).toMatchObject({
+        structuredContent: {
+          project: {
+            latestProjectRun: {
+              id: 'run-1',
+              status: 'STOPPED',
+              stoppedByPlan: { id: 'plan-2', title: 'Second' },
+            },
+          },
+        },
+      });
     });
   });
 

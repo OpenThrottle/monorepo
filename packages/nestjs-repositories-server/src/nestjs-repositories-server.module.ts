@@ -28,6 +28,7 @@ import { PlanRunsModule } from './modules/plan-runs/plan-runs.module.ts';
 import { PlanTagsModule } from './modules/plan-tags/plan-tags.module.ts';
 import { PlansModule } from './modules/plans/plans.module.ts';
 import { ProjectRepositoriesModule } from './modules/project-repositories/project-repositories.module.ts';
+import { ProjectRunsModule } from './modules/project-runs/project-runs.module.ts';
 import { ProjectSkillsModule } from './modules/project-skills/project-skills.module.ts';
 import { ProjectTagsModule } from './modules/project-tags/project-tags.module.ts';
 import { ProjectsModule } from './modules/projects/projects.module.ts';
@@ -100,6 +101,7 @@ import { WorktreeRemovalsModule } from './modules/worktree-removals/worktree-rem
     PlanTagsModule,
     PlansModule,
     ProjectRepositoriesModule,
+    ProjectRunsModule,
     ProjectSkillsModule,
     ProjectTagsModule,
     ProjectsModule,
@@ -163,6 +165,7 @@ import { WorktreeRemovalsModule } from './modules/worktree-removals/worktree-rem
     PlanTagsModule,
     PlansModule,
     ProjectRepositoriesModule,
+    ProjectRunsModule,
     ProjectSkillsModule,
     ProjectTagsModule,
     ProjectsModule,

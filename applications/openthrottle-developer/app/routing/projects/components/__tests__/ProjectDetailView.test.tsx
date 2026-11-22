@@ -1,5 +1,5 @@
 import type { RenderResult } from '@testing-library/react';
-import { render } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
@@ -25,13 +25,14 @@ describe('ProjectDetailView Component', () => {
   beforeEach(() => {
     props = {
       availablePlans: [],
-      availableRepositories: [],
+      availableRepositories: Promise.resolve([]),
       page: 1,
       pageOffset: 0,
       plans: [
         {
           __typename: 'PlanObject',
           id: 'plan-1',
+          latestPullRequest: null,
           projectSortOrder: 1000,
           status: 'PENDING',
           taskCount: 2,
@@ -59,6 +60,25 @@ describe('ProjectDetailView Component', () => {
       component.getByRole('heading', { name: 'Test Project' }),
     ).toBeInTheDocument();
     expect(component.getByText('A test project.')).toBeInTheDocument();
+  });
+
+  test('offers the streamed-in repositories in the link picker', async () => {
+    props.availableRepositories = Promise.resolve([
+      {
+        __typename: 'RepositoryObject',
+        defaultBranch: 'main',
+        id: 'repo-1',
+        name: 'monorepo',
+        normalizedRemoteUrl: 'github.com/openthrottle/monorepo',
+      },
+    ]);
+    renderView();
+
+    await waitFor(() => {
+      expect(
+        component.getByRole('option', { name: 'monorepo' }),
+      ).toBeInTheDocument();
+    });
   });
 
   test('renders the repositories and plans sections, with no tasks table', () => {

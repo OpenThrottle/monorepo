@@ -71,6 +71,7 @@ import { DataSource, In } from 'typeorm';
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { PlanRulesEvaluationService } from '../../queues/plan-rules/evaluation/evaluation.service.ts';
 import { PLAN_RULES_TRIGGER_KINDS } from '../../queues/plan-rules/plan-rules.constants.ts';
+import { ProjectRunsEnqueueService } from '../../queues/project-runs/enqueue/enqueue.service.ts';
 import { TaggingEnqueueService } from '../../queues/tagging/enqueue/enqueue.service.ts';
 import { TAGGING_ENTITY_TYPES } from '../../queues/tagging/tagging.constants.ts';
 import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service.ts';
@@ -333,6 +334,7 @@ export class PlansResolver {
     private readonly planRunWorktreeCheckoutService: PlanRunWorktreeCheckoutService,
     private readonly planStatusService: PlanStatusService,
     private readonly plansRepository: PlansRepository,
+    private readonly projectRunsEnqueue: ProjectRunsEnqueueService,
     private readonly taggingEnqueueService: TaggingEnqueueService,
     private readonly tasksRepository: TasksRepository,
     private readonly settleRunLedgerService: SettleRunLedgerService,
@@ -641,6 +643,9 @@ export class PlansResolver {
       });
     }
 
+    // After the ledger write, so a project run that started this run sees its PR. Never throws.
+    await this.projectRunsEnqueue.enqueueAdvanceForPlanRun(run);
+
     return run ? this.mapPlanRunObject(run) : null;
   }
 
@@ -657,6 +662,8 @@ export class PlansResolver {
       input.planRunId,
       reason ? reason : undefined,
     );
+
+    await this.projectRunsEnqueue.enqueueAdvanceForPlanRun(run);
 
     return run ? this.mapPlanRunObject(run) : null;
   }

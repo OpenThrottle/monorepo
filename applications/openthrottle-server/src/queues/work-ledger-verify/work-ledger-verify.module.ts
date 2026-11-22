@@ -8,6 +8,7 @@ import {
 } from '@openthrottle/nestjs-repositories-server';
 
 import { SourceControlModule } from '../../services/source-control/source-control.module.ts';
+import { ProjectRunsQueueProducerModule } from '../project-runs/producer/producer.module.ts';
 import { TaggingQueueProducerModule } from '../tagging/producer/producer.module.ts';
 import { WorkLedgerVerifyQueueProducerModule } from './producer/producer.module.ts';
 import { WorkLedgerVerifyRepeatableService } from './repeatable/repeatable.service.ts';
@@ -24,6 +25,7 @@ import { WorkLedgerVerifyProcessor } from './work-ledger-verify.processor.ts';
   imports: [
     LoggerModule,
     PlanRunsModule,
+    ProjectRunsQueueProducerModule,
     SourceControlModule,
     TaggingQueueProducerModule,
     WorkArtifactsModule,

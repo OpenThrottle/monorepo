@@ -123,6 +123,7 @@ import { PlanRulesQueueModule } from './queues/plan-rules/plan-rules.module.ts';
 import { PlanRunWorktreeReaperQueueModule } from './queues/plan-run-worktree-reaper/plan-run-worktree-reaper.module.ts';
 import { PlanRunsStaleSweepQueueModule } from './queues/plan-runs-stale-sweep/plan-runs-stale-sweep.module.ts';
 import { PlansQueueModule } from './queues/plans/plans.module.ts';
+import { ProjectRunsQueueModule } from './queues/project-runs/project-runs.module.ts';
 import { ScheduledAgentJobsQueueModule } from './queues/scheduled-agent-jobs/scheduled-agent-jobs.module.ts';
 import { TaggingQueueModule } from './queues/tagging/tagging.module.ts';
 import { TaskPromotionQueueModule } from './queues/task-promotion/task-promotion.module.ts';
@@ -282,6 +283,7 @@ export const buildImports = (role: ProcessRole): AppModuleImports => {
       PlanRunWorktreeReaperQueueModule,
       PlanRunsStaleSweepQueueModule,
       PlansQueueModule,
+      ProjectRunsQueueModule,
       ScheduledAgentJobsQueueModule,
       TaggingQueueModule,
       TaskPromotionQueueModule,

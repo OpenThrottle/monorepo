@@ -27,6 +27,9 @@ query McpListProjects {
 query McpGetProject($id: ID!) {
   project(id: $id) {
     createdAt
+    latestProjectRun {
+      ...McpProjectRun
+    }
     ...McpProjectSummary
   }
 }

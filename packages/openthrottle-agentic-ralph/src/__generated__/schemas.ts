@@ -24,6 +24,7 @@ import {
   BlogReferenceEntity,
   CalibrateJudgeForRunInput,
   CancelPlanRunInput,
+  CancelProjectRunInput,
   ClaimPlanMessagesInput,
   CleanQueueInput,
   CloneCmsFragmentInput,
@@ -162,6 +163,7 @@ import {
   RolloutFallthroughInput,
   RolloutFlagKind,
   RolloutFlagVariationInput,
+  RunProjectInput,
   SchedulePlanRunInput,
   ScheduledAgentJobWebhookFilterInputType,
   SearchInput,
@@ -528,6 +530,14 @@ export function CancelPlanRunInputSchema(): z.ZodObject<
   return z.object({
     planId: z.string().min(1),
     planRunId: z.string().nullish(),
+  });
+}
+
+export function CancelProjectRunInputSchema(): z.ZodObject<
+  Properties<CancelProjectRunInput>
+> {
+  return z.object({
+    projectRunId: z.string().min(1),
   });
 }
 
@@ -1908,6 +1918,14 @@ export function RolloutFlagVariationInputSchema(): z.ZodObject<
     description: z.string().nullish(),
     name: z.string().nullish(),
     valueJson: z.string().min(1),
+  });
+}
+
+export function RunProjectInputSchema(): z.ZodObject<
+  Properties<RunProjectInput>
+> {
+  return z.object({
+    projectId: z.string().min(1),
   });
 }
 

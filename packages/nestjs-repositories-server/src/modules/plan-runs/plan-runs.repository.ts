@@ -88,6 +88,7 @@ export class PlanRunsRepository extends BaseRepository<
       executionBackend: input.executionBackend,
       model: input.model ?? null,
       planId: input.planId,
+      projectRunId: input.projectRunId ?? null,
       queueName: input.queueName,
       resumeOfRunId: input.resumeOfRunId ?? null,
       runConfigSnapshot,

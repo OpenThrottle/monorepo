@@ -18,6 +18,7 @@ import {
   PlanRunPullRequestObject,
 } from '../plan.object.ts';
 import { PlanRunLoaders } from './loaders/loaders.service.ts';
+import { toPlanRunPullRequestObject } from './plan-run-object.utils.ts';
 
 // @authz-stance: authenticated-only (Path A — see OT plan 18e16dfc-4f22-43f9-9b77-6fc90309b60a).
 // Field resolvers on a PlanRunObject already fetched by an authenticated parent
@@ -77,23 +78,6 @@ export class PlanRunObjectResolver {
       return null;
     }
 
-    const repo = String(artifact.payload.repo ?? '');
-    const number = Number(artifact.payload.number ?? 0);
-    const forge = this.sourceControlService.forgeForPayload(artifact.payload);
-    if (
-      repo === '' ||
-      !Number.isInteger(number) ||
-      number <= 0 ||
-      forge == null
-    ) {
-      return null;
-    }
-
-    return {
-      number,
-      repo,
-      state: artifact.lifecycle,
-      url: forge.pullRequestUrl(repo, number),
-    };
+    return toPlanRunPullRequestObject(artifact, this.sourceControlService);
   }
 }

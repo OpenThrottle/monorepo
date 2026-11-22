@@ -595,6 +595,28 @@ export class McpDeveloperMcpSurface {
   }
 
   @Tool({
+    description: Th.runProjectToolDescription,
+    name: 'run_project',
+    parameters: asMcpParameters(Th.runProjectToolParameters),
+  })
+  runProject(
+    args: Parameters<typeof Th.runProjectToolHandler>[0],
+  ): ReturnType<typeof Th.runProjectToolHandler> {
+    return Th.runProjectToolHandler(args);
+  }
+
+  @Tool({
+    description: Th.cancelProjectRunToolDescription,
+    name: 'cancel_project_run',
+    parameters: asMcpParameters(Th.cancelProjectRunToolParameters),
+  })
+  cancelProjectRun(
+    args: Parameters<typeof Th.cancelProjectRunToolHandler>[0],
+  ): ReturnType<typeof Th.cancelProjectRunToolHandler> {
+    return Th.cancelProjectRunToolHandler(args);
+  }
+
+  @Tool({
     description: Th.reorderProjectPlansToolDescription,
     name: 'reorder_project_plans',
     parameters: asMcpParameters(Th.reorderProjectPlansToolParameters),

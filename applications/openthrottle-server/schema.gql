@@ -661,6 +661,16 @@ type ProjectObject {
   tasks: [TaskObject!]
   updatedAt: DateTime!
 
+  """
+  The project's newest run, whatever its status; null when it has never run. Resolved through a batched loader.
+  """
+  latestProjectRun: ProjectRunObject
+
+  """
+  The project's active (QUEUED or IN_PROGRESS) run; null when none is. Resolved through the same batched loader as latestProjectRun.
+  """
+  activeProjectRun: ProjectRunObject
+
   """Tags attached to this project, alphabetically by tag."""
   tags: [ProjectTagObject!]!
 }
@@ -728,6 +738,11 @@ type PlanObject {
   tasksCompletedCount: Int!
   title: String!
   updatedAt: DateTime!
+
+  """
+  The newest pull request any run of this plan recorded on the work ledger (number, repo, lifecycle state, forge URL). Null when no run has recorded one. Resolved through a batched loader.
+  """
+  latestPullRequest: PlanRunPullRequestObject
 
   """Job-run lifecycle hooks stored on the plan ({ hooks: [...] })."""
   jobRunHooksJson: String!
@@ -4055,6 +4070,45 @@ type ProjectSkillsResult {
   orphanSlugs: [String!]!
 }
 
+"""
+A project run: the project's plans enqueued strictly one after another in project order, each done when its run settles COMPLETED with a draft PR. Resume a STOPPED run by calling runProject again; it passes over finished plans and starts at the one that stopped.
+"""
+type ProjectRunObject {
+  """When a cancel was requested; null when none was."""
+  cancelRequestedAt: DateTime
+  createdAt: DateTime!
+
+  """
+  The plan the run is on now, or the last one it was on once settled. Null before the first plan is enqueued.
+  """
+  currentPlan: PlanObject
+  currentPlanId: ID
+  id: ID!
+  projectId: ID!
+
+  """When the run reached a terminal status; null while active."""
+  settledAt: DateTime
+
+  """When the run enqueued its first plan; null until then."""
+  startedAt: DateTime
+
+  """
+  QUEUED or IN_PROGRESS while active; COMPLETED (every plan done), STOPPED (a plan did not finish; see stoppedByPlan and stoppedReason) or CANCELLED once settled.
+  """
+  status: String!
+
+  """
+  For a STOPPED run, the plan that stopped it; a fresh runProject resumes there. Null otherwise.
+  """
+  stoppedByPlan: PlanObject
+  stoppedByPlanId: ID
+
+  """
+  Why a STOPPED run stopped: the plan run status that ended it, a plan already BLOCKED, an unrelated active run on the plan, or an enqueue refusal. Null otherwise.
+  """
+  stoppedReason: String
+}
+
 type ProjectPlansPageResultObject {
   """Whether rows remain after this page"""
   hasNextPage: Boolean!
@@ -6965,6 +7019,9 @@ type Query {
   """
   projectSkills(projectId: ID): ProjectSkillsResult!
 
+  """A project run by id; null when there is none."""
+  projectRun(id: ID!): ProjectRunObject
+
   """Get a project by ID"""
   project(id: ID!): ProjectObject
 
@@ -8410,6 +8467,16 @@ type Mutation {
   Remove a tag from a project_skills row. Returns false when the row or tag is absent (never a 500). Omit projectId to target the dogfood monorepo project.
   """
   removeProjectSkillTag(input: RemoveProjectSkillTagInput!): Boolean!
+
+  """
+  Run a project: enqueue its plans one after another in project order (each with its own runner, Ralph or OT Loop), one draft PR each, stopping on the first plan that does not finish. The first plan is enqueued before this returns. Resume a STOPPED run by calling this again: finished plans are passed over. Refused with extensions.code PROJECT_RUN_ACTIVE when the project already has an active run, PROJECT_RUN_NOTHING_TO_RUN when every plan is COMPLETED, SKIPPED or CANCELED, NOT_FOUND for an unknown project.
+  """
+  runProject(input: RunProjectInput!): ProjectRunObject!
+
+  """
+  Cancel a project run: the plan run it is waiting on is cancelled through the normal plan-run cancel, and the project run settles CANCELLED. A run that already settled is returned unchanged.
+  """
+  cancelProjectRun(input: CancelProjectRunInput!): ProjectRunObject!
 
   """Create a project"""
   createProject(input: CreateProjectInput!): ProjectObject!
@@ -10338,6 +10405,16 @@ input RemoveProjectSkillTagInput {
 
   """Tag slug to remove."""
   tag: String!
+}
+
+input RunProjectInput {
+  """Project to run"""
+  projectId: ID!
+}
+
+input CancelProjectRunInput {
+  """Project run to cancel"""
+  projectRunId: ID!
 }
 
 input CreateProjectInput {

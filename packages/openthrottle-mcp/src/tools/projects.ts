@@ -25,6 +25,8 @@ import { getAuthToken } from '../auth/getAuthToken.ts';
 import type { GenericResult } from '../types/index.ts';
 import { invalidArgsContent } from '../utils/errors.ts';
 import { runTool } from '../utils/runTool.ts';
+import type { ProjectRunSummary } from './project-runs.ts';
+import { toProjectRunSummary } from './project-runs.ts';
 
 type ProjectRepositorySummary = {
   readonly id: string;
@@ -43,6 +45,11 @@ type ProjectSummary = {
 
 interface ProjectDetail extends ProjectSummary {
   readonly createdAt: string;
+}
+
+/** What get_project returns: the detail plus the project's newest run, for polling a run_project. */
+interface ProjectDetailWithRun extends ProjectDetail {
+  readonly latestProjectRun: ProjectRunSummary | null;
 }
 
 /**
@@ -134,17 +141,17 @@ export const getProjectToolParameters = z
   })
   .strict();
 
-export const getProjectToolDescription = `Fetch one OpenThrottle project by id: name, description, planCount, linked repositories and timestamps. Errors when the project does not exist or is deleted. For its plans in order, use get_project_plans.`;
+export const getProjectToolDescription = `Fetch one OpenThrottle project by id: name, description, planCount, linked repositories, timestamps and latestProjectRun (run_project status). Errors when the project does not exist or is deleted. For its plans in order, use get_project_plans.`;
 
 export async function getProjectToolHandler(
   args: z.infer<typeof getProjectToolParameters>,
-): Promise<GenericResult<{ project: ProjectDetail }>> {
+): Promise<GenericResult<{ project: ProjectDetailWithRun }>> {
   const parsed = getProjectToolParameters.safeParse(args);
   if (!parsed.success) {
     return invalidArgsContent(parsed.error);
   }
 
-  return runTool<{ project: ProjectDetail }>('get_project', async () => {
+  return runTool<{ project: ProjectDetailWithRun }>('get_project', async () => {
     const token = getAuthToken();
     const result = await executeGraphqlWithAuth(token, McpGetProjectDocument, {
       id: parsed.data.id,
@@ -154,7 +161,12 @@ export async function getProjectToolHandler(
       return null;
     }
 
-    const project = toProjectDetail(found);
+    const latestRun = found.latestProjectRun ?? null;
+    const project: ProjectDetailWithRun = {
+      ...toProjectDetail(found),
+      latestProjectRun:
+        latestRun === null ? null : toProjectRunSummary(latestRun),
+    };
     return {
       structuredContent: { project },
       text: toProjectText('Project', project),

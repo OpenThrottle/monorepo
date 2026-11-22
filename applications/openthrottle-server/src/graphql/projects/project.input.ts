@@ -109,3 +109,15 @@ export class ReorderProjectPlansInput {
   @Field(() => ID, { description: 'Project whose plans are being reordered' })
   projectId!: string;
 }
+
+@InputType()
+export class RunProjectInput {
+  @Field(() => ID, { description: 'Project to run' })
+  projectId!: string;
+}
+
+@InputType()
+export class CancelProjectRunInput {
+  @Field(() => ID, { description: 'Project run to cancel' })
+  projectRunId!: string;
+}
