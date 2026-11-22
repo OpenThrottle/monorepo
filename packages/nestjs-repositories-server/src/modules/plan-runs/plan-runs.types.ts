@@ -88,6 +88,8 @@ export interface RecordQueuedPlanRunInput {
   /** Resolved agent model id (queryable projection of run_config_snapshot.ralph.model). */
   readonly model?: string | null;
   readonly planId: string;
+  /** The project run that enqueued this run (migration 194); omit/null for a run started on its own. */
+  readonly projectRunId?: string | null;
   readonly queueName: string;
   /** The usage-limited run this run continues (migration 138); omit/null for an ordinary run. */
   readonly resumeOfRunId?: string | null;

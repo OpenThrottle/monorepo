@@ -19,6 +19,7 @@ import {
 import { NotificationsModule } from '../../notifications/notifications.module.ts';
 import { PlanRulesQueueProducerModule } from '../../queues/plan-rules/producer/producer.module.ts';
 import { PlansQueueProducerModule } from '../../queues/plans/producer/producer.module.ts';
+import { ProjectRunsQueueProducerModule } from '../../queues/project-runs/producer/producer.module.ts';
 import { TaggingQueueProducerModule } from '../../queues/tagging/producer/producer.module.ts';
 import { EffectiveUserResolutionModule } from '../../services/effective-user-resolution/effective-user-resolution.module.ts';
 import { EmbedderModule } from '../../services/embedder/embedder.module.ts';
@@ -31,6 +32,8 @@ import { QueuesGraphqlModule } from '../queues/queues.module.ts';
 import { WorkLedgerGraphqlModule } from '../work-ledger/work-ledger.module.ts';
 import { PlansLoaders } from './loaders/loaders.service.ts';
 import { PlanEnqueueModule } from './plan-enqueue/plan-enqueue.module.ts';
+import { PlanLatestPullRequestLoaders } from './plan-latest-pull-request/loaders/loaders.service.ts';
+import { PlanLatestPullRequestResolver } from './plan-latest-pull-request/plan-latest-pull-request.resolver.ts';
 import { PlanRunLoaders } from './plan-run-object/loaders/loaders.service.ts';
 import { PlanRunObjectResolver } from './plan-run-object/plan-run-object.resolver.ts';
 import { PlanStatusModule } from './plan-status/plan-status.module.ts';
@@ -51,6 +54,7 @@ import { PlansResolver } from './plans.resolver.ts';
     PlansModule,
     PlansQueueProducerModule,
     PlanStatusModule,
+    ProjectRunsQueueProducerModule,
     ProjectsModule,
     QueuesGraphqlModule,
     RepositoryCheckoutsModule,
@@ -65,6 +69,8 @@ import { PlansResolver } from './plans.resolver.ts';
     WorktreeCheckoutPruneModule,
   ],
   providers: [
+    PlanLatestPullRequestLoaders,
+    PlanLatestPullRequestResolver,
     PlanRunLoaders,
     PlanRunObjectResolver,
     PlansLoaders,

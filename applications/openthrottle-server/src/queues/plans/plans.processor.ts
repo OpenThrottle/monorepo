@@ -70,6 +70,7 @@ import {
 // import { DelayedError } from 'bullmq';
 import { OtLoopOrchestratorService } from '../ot-loop/orchestrator/orchestrator.service.ts';
 import { WorkflowLifecycleDispatcherFactory } from '../plan-lifecycle-hooks/workflow-lifecycle-dispatcher/workflow-lifecycle-dispatcher.service.ts';
+import { ProjectRunsEnqueueService } from '../project-runs/enqueue/enqueue.service.ts';
 import { resolveRepeatablesOwner } from '../repeatable-job/repeatable-job.utils.ts';
 import {
   PLANS_QUEUE_NAME,
@@ -161,6 +162,7 @@ export class PlansProcessor
     private readonly plansRepository: PlansRepository,
     private readonly planStatusService: PlanStatusService,
     private readonly processMetrics: ProcessMetricsService,
+    private readonly projectRunsEnqueue: ProjectRunsEnqueueService,
     private readonly scheduledPlanRun: ScheduledPlanRunService,
     private readonly settleRunLedger: SettleRunLedgerService,
     private readonly statusChangeSystemAccount: StatusChangeSystemAccountService,
@@ -597,11 +599,18 @@ export class PlansProcessor
   /** Settles this job's run FAILED only while it is still QUEUED / IN_PROGRESS. Never throws. */
   private async settleUnsettledRunFailedSafe(jobId: string): Promise<void> {
     try {
-      await this.planRunsRepository.settleUnsettledRunByJob(
+      const settled = await this.planRunsRepository.settleUnsettledRunByJob(
         PLANS_QUEUE_NAME,
         jobId,
         PLAN_RUN_STATUS.FAILED,
       );
+
+      if (settled) {
+        await this.projectRunsEnqueue.enqueueAdvanceForJob(
+          PLANS_QUEUE_NAME,
+          jobId,
+        );
+      }
     } catch (error) {
       this.logger.warn(
         `Failed to settle plan_runs status: jobId=${jobId}, status=FAILED, error=${error instanceof Error ? error.message : String(error)}`,
@@ -1290,6 +1299,9 @@ export class PlansProcessor
           prNumber: settleArtifacts.prNumber ?? null,
         });
       }
+
+      // After the ledger write, so the project run sees this run's PR when it advances.
+      await this.projectRunsEnqueue.enqueueAdvanceForPlanRun(run);
     } catch (error) {
       this.logger.warn(
         `Failed to settle plan_runs status: jobId=${bullmqJobId}, status=${status}, error=${error instanceof Error ? error.message : String(error)}`,
@@ -1685,6 +1697,12 @@ export class PlansProcessor
         limit: outcome.usageLimit,
         planId: data.planId,
       });
+      // After the continuation is enqueued (or the plan held), so the project run that started
+      // this run either waits on the continuation or stops.
+      await this.projectRunsEnqueue.enqueueAdvanceForJob(
+        PLANS_QUEUE_NAME,
+        jobId,
+      );
 
       this.notifications.emitQueueJobCompleted({
         jobType: 'plans',

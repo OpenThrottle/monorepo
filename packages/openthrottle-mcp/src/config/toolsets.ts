@@ -34,7 +34,7 @@ export const TOOLSET_DESCRIPTIONS: Readonly<Record<ToolsetName, string>> = {
   agents: 'local agent CLIs and models; agent conversations',
   blog: 'blog posts, tags and authors',
   core: `plans, tasks, notes, plan output and runs, work sessions, knowledge base`,
-  scheduling: `scheduled agent jobs: create, list, update, delete, run now (capped, idempotent, optional approval)`,
+  scheduling: `scheduled agent jobs: create, list, update, delete, run now (capped, idempotent, optional approval); cancel a project run`,
 };
 
 /** @description The toolset served whatever the configuration says. */

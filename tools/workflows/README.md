@@ -43,6 +43,10 @@ a pure state machine in `packages/openthrottle-agentic-loop` (`runOtLoop`), wire
 
 Contract and ownership split: [docs/workflows/ot-loop-job.md](../../docs/workflows/ot-loop-job.md).
 
+### Project runs sequence plans on the same queue
+
+A **project run** enqueues a project's plans one after another through the same enqueue pipeline (each plan keeps its own runner), waits for each run to settle with a draft PR, and stops on the first plan that does not. Lifecycle, stop/resume rules, triggers and the reconcile sweep: [docs/workflows/project-runs.md](../../docs/workflows/project-runs.md).
+
 ## Target architecture (Phase 2)
 
 > **Forward-looking.** The sections above describe how Ralph runs **today** (three surfaces, two

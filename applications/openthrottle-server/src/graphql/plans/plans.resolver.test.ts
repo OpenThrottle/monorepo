@@ -42,6 +42,7 @@ import { PlanCancelChannelService } from '../../queues/plans/cancel-channel/canc
 import { PLANS_QUEUE_NAME } from '../../queues/plans/plans.constants.ts';
 import type { RunPlanJobData } from '../../queues/plans/plans.types.ts';
 import { PlanRunCancellationService } from '../../queues/plans/run-cancellation/run-cancellation.service.ts';
+import { ProjectRunsEnqueueService } from '../../queues/project-runs/enqueue/enqueue.service.ts';
 import { TaggingEnqueueService } from '../../queues/tagging/enqueue/enqueue.service.ts';
 import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service.ts';
 import { EmbedderService } from '../../services/embedder/embedder.service.ts';
@@ -76,6 +77,8 @@ afterEach(() => {
 });
 
 const IN_PROGRESS_TRANSITION_FORBIDDEN_MESSAGE = `Cannot transition to IN_PROGRESS: only PENDING, QUEUED, SCHEDULED, or already IN_PROGRESS plans may enter this state.`;
+
+const mockEnqueueAdvanceForPlanRun = vi.fn().mockResolvedValue(undefined);
 
 describe('PlansResolver', () => {
   let resolver: PlansResolver;
@@ -305,6 +308,12 @@ describe('PlansResolver', () => {
         {
           provide: TaggingEnqueueService,
           useValue: createMock<TaggingEnqueueService>(),
+        },
+        {
+          provide: ProjectRunsEnqueueService,
+          useValue: createMock<ProjectRunsEnqueueService>({
+            enqueueAdvanceForPlanRun: mockEnqueueAdvanceForPlanRun,
+          }),
         },
         {
           provide: PlanProjectMembershipService,
@@ -1675,6 +1684,10 @@ describe('PlansResolver', () => {
         'cli-run-1',
         'CANCELLED',
         null,
+      );
+      // A project run that started this run (if any) is advanced off the settled row.
+      expect(mockEnqueueAdvanceForPlanRun).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'cli-run-1', status: 'CANCELLED' }),
       );
       expect(result).toEqual(
         expect.objectContaining({ hostname: null, status: 'CANCELLED' }),

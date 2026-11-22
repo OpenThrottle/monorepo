@@ -118,15 +118,15 @@ Which of these a client sees depends on its [toolsets](#toolsets). GraphQL-only 
 
 ## Toolsets
 
-Tools are grouped into named toolsets so a session only pays for the schemas it uses. With no configuration a client gets **`core`** (49 tools, ~40.1 KB of `tools/list` schemas, against ~72.5 KB for everything).
+Tools are grouped into named toolsets so a session only pays for the schemas it uses. With no configuration a client gets **`core`** (50 tools, ~40.6 KB of `tools/list` schemas, against ~75.2 KB for everything).
 
-| Toolset      | Tools | Contents                                                                                                                                                                                                          |
-| ------------ | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `core`       | 49    | Plans, tasks, notes, projects (`list_projects`, `get_project`, plan membership), plan output, plan runs, work sessions and the work ledger, plan inbox, knowledge base (`semantic_search`, …), activity, `health` |
-| `admin`      | 28    | Skill, plan, task and project tags; tag-action rules; skill availability; `create_project`, `update_project`, `delete_project`                                                                                    |
-| `blog`       | 7     | [Blog authoring tools](#blog-authoring-tools-draft-only)                                                                                                                                                          |
-| `agents`     | 5     | `discover_agent_clis`, `discover_local_models`, and the [agent conversation read tools](#agent-conversation-read-tools)                                                                                           |
-| `scheduling` | 5     | [Scheduled agent job tools](#scheduled-job-tools) (`create_scheduled_job`, `list_scheduled_jobs`, `update_scheduled_job`, `delete_scheduled_job`, `run_scheduled_job_now`)                                        |
+| Toolset      | Tools | Contents                                                                                                                                                                                                                                          |
+| ------------ | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `core`       | 50    | Plans, tasks, notes, projects (`list_projects`, `get_project`, plan membership, [`run_project`](#project-runs)), plan output, plan runs, work sessions and the work ledger, plan inbox, knowledge base (`semantic_search`, …), activity, `health` |
+| `admin`      | 28    | Skill, plan, task and project tags; tag-action rules; skill availability; `create_project`, `update_project`, `delete_project`                                                                                                                    |
+| `blog`       | 7     | [Blog authoring tools](#blog-authoring-tools-draft-only)                                                                                                                                                                                          |
+| `agents`     | 5     | `discover_agent_clis`, `discover_local_models`, and the [agent conversation read tools](#agent-conversation-read-tools)                                                                                                                           |
+| `scheduling` | 6     | [Scheduled agent job tools](#scheduled-job-tools) (`create_scheduled_job`, `list_scheduled_jobs`, `update_scheduled_job`, `delete_scheduled_job`, `run_scheduled_job_now`) and [`cancel_project_run`](#project-runs)                              |
 
 Turn more on with a comma list of names, or `all`:
 
@@ -173,6 +173,17 @@ deepest containing checkout wins) and ignores anything it cannot own. It never f
   `process.cwd()` is the server's own directory; it sends no `workspacePath` at all. The capture is
   gated on `runServerLocal` rather than module load precisely so importing the shared tool handlers
   cannot pick up a bogus path.
+
+## Project runs
+
+`run_project({ projectId })` (core) runs a project's plans **strictly one after another** in project
+order, each with its own runner (Ralph or OT Loop), **one draft PR per plan**. A plan is done when
+its run settles COMPLETED with a PR; the first plan that does not finish stops the run (`STOPPED`,
+with `stoppedByPlan` and `stoppedReason`). **To resume, call `run_project` again**: finished plans
+are passed over, so the new run starts at the plan that stopped. Poll with `get_project`, whose
+`latestProjectRun` carries the status and current plan. `cancel_project_run({ projectRunId })`
+lives in the `scheduling` toolset to keep `core` under its byte budget; the project page has a
+Cancel button too. Lifecycle: [project-runs.md](../../docs/workflows/project-runs.md).
 
 ## Scheduled job tools
 

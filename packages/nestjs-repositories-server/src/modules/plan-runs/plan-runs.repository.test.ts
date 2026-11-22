@@ -28,6 +28,7 @@ const buildRun = (overrides: Partial<PlanRun> = {}): PlanRun => {
     model: null,
     pid: null,
     planId: 'plan-1',
+    projectRunId: null,
     queueName: 'plans',
     resumeOfRunId: null,
     runConfigSnapshot: null,

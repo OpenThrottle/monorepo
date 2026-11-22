@@ -11,7 +11,7 @@ import {
   OpenThrottlePagination,
 } from '@openthrottle/react-router-ui';
 import * as React from 'react';
-import { Link, useFetcher } from 'react-router';
+import { Await, Link, useFetcher } from 'react-router';
 
 import type { Route } from '@/app/routes/+types/projects.$projectId._index';
 import type { ProjectPageDetailsFragment } from '~/__generated__/graphql';
@@ -19,9 +19,15 @@ import { PlanTagChips } from '~/routing/plans/components/PlanTagChips';
 import { ProjectPlanAdd } from '~/routing/projects/components/ProjectPlanAdd';
 import { ProjectPlansList } from '~/routing/projects/components/ProjectPlansList';
 import { ProjectRepositories } from '~/routing/projects/components/ProjectRepositories';
+import { ProjectRunPanel } from '~/routing/projects/components/ProjectRunPanel';
 import { PROJECT_PLANS_PAGE_LIMIT } from '~/routing/projects/config/projects.defaults';
 import { PROJECT_PLANS_COPY } from '~/routing/projects/data/data.copy';
+import { useProjectRunAutoRefresh } from '~/routing/projects/hooks/useProjectRunAutoRefresh';
 import { formatProjectDate } from '~/routing/projects/utils/format';
+import {
+  getProjectRunPlanMarkers,
+  getProjectRunState,
+} from '~/routing/projects/utils/project-runs';
 
 type ProjectDetailLoaderData = Route.ComponentProps['loaderData'];
 
@@ -57,12 +63,38 @@ export const ProjectDetailView = (
 
   // Hooks
   const tagFetcher = useFetcher();
+  useProjectRunAutoRefresh({
+    isActive: getProjectRunState(project.latestProjectRun) === 'running',
+  });
 
   // Setup
+  const latestRun = project.latestProjectRun ?? null;
+  const { currentPlanId, stoppedByPlanId } =
+    getProjectRunPlanMarkers(latestRun);
 
   // Handlers
 
   // Markup
+  // The link picker's candidates stream in; until then (or if they fail) the
+  // linked repositories render with an empty picker.
+  const repositoriesFallback = (
+    <ProjectRepositories available={[]} linked={project.repositories} />
+  );
+  const repositoriesSection = (
+    <React.Suspense fallback={repositoriesFallback}>
+      <Await
+        errorElement={repositoriesFallback}
+        resolve={availableRepositories}
+      >
+        {(available) => (
+          <ProjectRepositories
+            available={available}
+            linked={project.repositories}
+          />
+        )}
+      </Await>
+    </React.Suspense>
+  );
 
   // Life Cycle
 
@@ -137,10 +169,9 @@ export const ProjectDetailView = (
         </CardContent>
       </Card>
 
-      <ProjectRepositories
-        available={availableRepositories}
-        linked={project.repositories}
-      />
+      <ProjectRunPanel run={latestRun} />
+
+      {repositoriesSection}
 
       <section aria-labelledby="project-plans-heading" className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -150,8 +181,10 @@ export const ProjectDetailView = (
           <ProjectPlanAdd plans={availablePlans} />
         </div>
         <ProjectPlansList
+          currentPlanId={currentPlanId}
           offset={pageOffset}
           plans={plans}
+          stoppedByPlanId={stoppedByPlanId}
           totalCount={plansTotal}
         />
         <OpenThrottlePagination

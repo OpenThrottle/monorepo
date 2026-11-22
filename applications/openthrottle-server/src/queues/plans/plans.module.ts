@@ -21,6 +21,7 @@ import { PlanRunWorktreeCleanupModule } from '../../services/plan-run-worktree-c
 import { AgenticRalphModule } from '../agentic-ralph/agentic-ralph.module.ts';
 import { OtLoopModule } from '../ot-loop/ot-loop.module.ts';
 import { PlanLifecycleHooksQueueProducerModule } from '../plan-lifecycle-hooks/producer/producer.module.ts';
+import { ProjectRunsQueueProducerModule } from '../project-runs/producer/producer.module.ts';
 import { PlansProcessor } from './plans.processor.ts';
 import { PlansQueueProducerModule } from './producer/producer.module.ts';
 import { ScheduledPlanRunService } from './scheduled-plan-run/scheduled-plan-run.service.ts';
@@ -63,6 +64,7 @@ import { WorkLedgerRunService } from './work-ledger-run/work-ledger-run.service.
     PlansModule,
     PlansQueueProducerModule,
     PlanStatusModule,
+    ProjectRunsQueueProducerModule,
     ServiceAccountCredentialsModule,
     ServiceAccountsModule,
     TasksModule,

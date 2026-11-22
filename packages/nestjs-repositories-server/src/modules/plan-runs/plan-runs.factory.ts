@@ -32,6 +32,7 @@ export const planRunsFactory = Factory.define<PlanRun>(() => {
     model: null,
     pid: null,
     planId: faker.string.uuid(),
+    projectRunId: null,
     queueName: 'plans',
     resumeOfRunId: null,
     runConfigSnapshot: null,

@@ -2,6 +2,9 @@ fragment ProjectPageDetails on ProjectObject {
   createdAt
   description
   id
+  latestProjectRun {
+    ...ProjectRunPanelDetails
+  }
   name
   repositories {
     ...ProjectRepositoryRow
@@ -17,9 +20,8 @@ fragment ProjectPageDetails on ProjectObject {
 }
 
 query getProjectById($id: ID!, $limit: Int!, $offset: Int!) {
-  # Candidates for the "add existing plan" and "link repository" pickers. The
-  # plans list is bounded; a plan already in this project is filtered out in
-  # the loader.
+  # Candidates for the "add existing plan" picker. The plans list is bounded; a
+  # plan already in this project is filtered out in the loader.
   availablePlans: plans(limit: 500) {
     id
     projectId
@@ -46,7 +48,11 @@ query getProjectById($id: ID!, $limit: Int!, $offset: Int!) {
     }
     totalCount
   }
+}
 
+# Deferred: workspaceRepositories refreshes checkout snapshots and costs ~1.3s
+# cold, so it streams into the repository picker instead of blocking the page.
+query ProjectDetailWorkspaceRepositories {
   workspaceRepositories {
     ...ProjectRepositoryRow
   }
@@ -79,6 +85,11 @@ fragment ProjectRepositoryRow on RepositoryObject {
 
 fragment ProjectPlanRow on PlanObject {
   id
+  latestPullRequest {
+    number
+    state
+    url
+  }
   projectSortOrder
   status
   taskCount
@@ -111,6 +122,37 @@ mutation ProjectDetailRemovePlan($input: RemovePlanFromProjectInput!) {
 
 mutation ProjectDetailMovePlan($input: MoveProjectPlanInput!) {
   moveProjectPlan(input: $input) {
+    id
+  }
+}
+
+fragment ProjectRunPanelPlan on PlanObject {
+  id
+  title
+}
+
+fragment ProjectRunPanelDetails on ProjectRunObject {
+  cancelRequestedAt
+  currentPlan {
+    ...ProjectRunPanelPlan
+  }
+  id
+  settledAt
+  status
+  stoppedByPlan {
+    ...ProjectRunPanelPlan
+  }
+  stoppedReason
+}
+
+mutation ProjectDetailRunProject($input: RunProjectInput!) {
+  runProject(input: $input) {
+    id
+  }
+}
+
+mutation ProjectDetailCancelProjectRun($input: CancelProjectRunInput!) {
+  cancelProjectRun(input: $input) {
     id
   }
 }

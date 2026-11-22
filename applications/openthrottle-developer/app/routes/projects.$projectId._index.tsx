@@ -9,8 +9,12 @@ import {
 import * as React from 'react';
 
 import type { Route } from '@/app/routes/+types/projects.$projectId._index';
-import { GetProjectByIdDocument } from '~/__generated__/graphql';
+import {
+  GetProjectByIdDocument,
+  ProjectDetailWorkspaceRepositoriesDocument,
+} from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
+import { markDeferredHandled } from '~/global/utils/markDeferredHandled';
 import { runProjectDetailAction } from '~/routing/projects/actions/projectId';
 import { ProjectDetailView } from '~/routing/projects/components/ProjectDetailView';
 import { ProjectNotFound } from '~/routing/projects/components/ProjectNotFound';
@@ -34,24 +38,32 @@ export const loader = async (args: Route.LoaderArgs) => {
   const page = parsePaginationPage(args.url.searchParams.get('page'));
   const offset = (page - 1) * PROJECT_PLANS_PAGE_LIMIT;
 
-  const {
-    availablePlans,
-    project,
-    projectPlansPage,
-    skillTagVocabulary,
-    workspaceRepositories,
-  } = await executeGraphqlWithAuth(args.request, GetProjectByIdDocument, {
-    id: projectId,
-    limit: PROJECT_PLANS_PAGE_LIMIT,
-    offset,
+  // Deferred: workspaceRepositories refreshes checkout snapshots (~1.3s cold),
+  // so it streams into the repository picker instead of holding the page. Issued
+  // before the critical await so nothing waterfalls; marked handled so a
+  // rejection reaches its errorElement rather than the process.
+  const workspaceRepositories = executeGraphqlWithAuth(
+    args.request,
+    ProjectDetailWorkspaceRepositoriesDocument,
+    {},
+  ).then((result) => {
+    return result.workspaceRepositories;
   });
+  markDeferredHandled([workspaceRepositories]);
+
+  const { availablePlans, project, projectPlansPage, skillTagVocabulary } =
+    await executeGraphqlWithAuth(args.request, GetProjectByIdDocument, {
+      id: projectId,
+      limit: PROJECT_PLANS_PAGE_LIMIT,
+      offset,
+    });
+  const linkedRepositories = project?.repositories ?? [];
 
   return {
     availablePlans: getAvailablePlans(availablePlans, projectId),
-    availableRepositories: getUnlinkedRepositories(
-      workspaceRepositories,
-      project?.repositories ?? [],
-    ),
+    availableRepositories: workspaceRepositories.then((repositories) => {
+      return getUnlinkedRepositories(repositories, linkedRepositories);
+    }),
     page,
     pageOffset: offset,
     project,

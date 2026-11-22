@@ -154,6 +154,8 @@ interface EnqueueOrchestratorParams {
   readonly mode?: 'plan' | 'task' | null;
   readonly planId: string;
   readonly priority?: number | null;
+  /** The project run enqueuing this plan run (migration 194); stamped on plan_runs.project_run_id. */
+  readonly projectRunId?: string | null;
   readonly ralph?: RalphPlanRunTuningInput | null;
   /** Portable repository id; resolved to the user's single checkout when checkoutId is omitted. */
   readonly repositoryId?: string | null;
@@ -330,6 +332,7 @@ export class PlanEnqueueService {
       mode,
       planId,
       priority,
+      projectRunId,
       ralph,
       repositoryId,
       runner,
@@ -377,6 +380,7 @@ export class PlanEnqueueService {
       executionBackend: jobData.executionBackend ?? 'cursor',
       model: runConfigSnapshot.ralph.model ?? null,
       planId,
+      projectRunId: projectRunId ?? null,
       runConfigSnapshot,
       runKind: 'orchestrator',
       scheduledRunPolicy: cancelScheduled === true ? 'cancel' : 'reject',
@@ -743,6 +747,8 @@ export class PlanEnqueueService {
       executionBackend: limitedRun.executionBackend,
       model: limitedRun.model,
       planId: limitedRun.planId,
+      // A continuation stays part of the project run that started the limited run.
+      projectRunId: limitedRun.projectRunId,
       resumeOfRunId: limitedRun.id,
       runConfigSnapshot: limitedRun.runConfigSnapshot,
       runKind: 'orchestrator',
@@ -828,6 +834,7 @@ export class PlanEnqueueService {
     executionBackend: ExecutionBackend;
     model?: string | null;
     planId: string;
+    projectRunId?: string | null;
     resumeOfRunId?: string | null;
     runConfigSnapshot: ReturnType<
       typeof buildPlanRunConfigSnapshotFromJobData
@@ -855,6 +862,7 @@ export class PlanEnqueueService {
       executionBackend,
       model,
       planId,
+      projectRunId,
       resumeOfRunId,
       runConfigSnapshot,
       runKind,
@@ -885,6 +893,7 @@ export class PlanEnqueueService {
           executionBackend,
           model: model ?? null,
           planId,
+          projectRunId: projectRunId ?? null,
           queueName: PLANS_QUEUE_NAME,
           resumeOfRunId: resumeOfRunId ?? null,
           runConfigSnapshot,

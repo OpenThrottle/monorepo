@@ -16,6 +16,7 @@ import { shouldFireLifecycleTriggers } from '../../graphql/work-ledger/artifact-
 import { REACHABLE_COMPARE_STATUSES } from '../../services/source-control/source-control.constants.ts';
 import { SourceControlService } from '../../services/source-control/source-control.service.ts';
 import type { SourceControlForge } from '../../services/source-control/source-control.types.ts';
+import { ProjectRunsEnqueueService } from '../project-runs/enqueue/enqueue.service.ts';
 import { TaggingEnqueueService } from '../tagging/enqueue/enqueue.service.ts';
 import {
   WORK_LEDGER_VERIFY_BATCH_SIZE,
@@ -76,6 +77,7 @@ export class WorkLedgerVerifyProcessor
   constructor(
     private readonly logger: LoggerService,
     private readonly planRunsRepository: PlanRunsRepository,
+    private readonly projectRunsEnqueue: ProjectRunsEnqueueService,
     private readonly sourceControlService: SourceControlService,
     private readonly taggingEnqueueService: TaggingEnqueueService,
     private readonly workArtifactsRepository: WorkArtifactsRepository,
@@ -468,6 +470,8 @@ export class WorkLedgerVerifyProcessor
           planRunId,
           outcome,
         );
+
+      await this.projectRunsEnqueue.enqueueAdvanceForPlanRun(settled);
 
       return settled == null ? 0 : 1;
     } catch (error) {

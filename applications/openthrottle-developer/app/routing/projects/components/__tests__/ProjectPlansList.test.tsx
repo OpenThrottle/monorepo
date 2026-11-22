@@ -5,7 +5,10 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { PROJECT_PLANS_COPY } from '~/routing/projects/data/data.copy';
+import {
+  PROJECT_PLANS_COPY,
+  PROJECT_RUN_COPY,
+} from '~/routing/projects/data/data.copy';
 
 import type { ProjectPlansListProps } from '../ProjectPlansList';
 import { ProjectPlansList } from '../ProjectPlansList';
@@ -18,6 +21,7 @@ const plan = (
   return {
     __typename: 'PlanObject',
     id,
+    latestPullRequest: null,
     projectSortOrder: 1000,
     status,
     taskCount: 4,
@@ -118,6 +122,57 @@ describe('ProjectPlansList Component', () => {
         intent: 'removePlanFromProject',
         planId: 'plan-a',
       });
+    });
+  });
+
+  describe('with a recorded pull request', () => {
+    beforeEach(() => {
+      props = {
+        ...props,
+        plans: [
+          {
+            ...plan('plan-a', 'First plan', 'COMPLETED'),
+            latestPullRequest: {
+              __typename: 'PlanRunPullRequestObject',
+              number: 42,
+              state: 'open',
+              url: 'https://github.com/OpenThrottle/monorepo/pull/42',
+            },
+          },
+          plan('plan-b', 'Second plan', 'PENDING'),
+        ],
+      };
+      renderList();
+    });
+
+    test('links the row out to its pull request', () => {
+      const link = component.getByRole('link', {
+        name: `${PROJECT_PLANS_COPY.pullRequestAriaLabelPrefix} #42 open`,
+      });
+      expect(link).toHaveAttribute(
+        'href',
+        'https://github.com/OpenThrottle/monorepo/pull/42',
+      );
+      expect(link).toHaveAttribute('target', '_blank');
+    });
+
+    test('shows no pull request link on a plan without one', () => {
+      expect(
+        component.getAllByRole('link', {
+          name: new RegExp(PROJECT_PLANS_COPY.pullRequestAriaLabelPrefix),
+        }),
+      ).toHaveLength(1);
+    });
+  });
+
+  describe('during a project run', () => {
+    test('marks the current plan and the plan the run stopped at', () => {
+      props = { ...props, currentPlanId: 'plan-a', stoppedByPlanId: 'plan-b' };
+      renderList();
+
+      const [first, second] = component.getAllByRole('listitem');
+      expect(first).toHaveTextContent(PROJECT_RUN_COPY.currentPlanLabel);
+      expect(second).toHaveTextContent(PROJECT_RUN_COPY.stoppedLabel);
     });
   });
 

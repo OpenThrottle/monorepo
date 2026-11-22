@@ -17,10 +17,8 @@ import {
   WorkSessionsRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import DataLoader from 'dataloader';
-import { In } from 'typeorm';
 
-/** work_artifacts.type for a pull-request artifact (see artifact-type-registry). */
-const PULL_REQUEST_ARTIFACT_TYPE = 'pull_request';
+import { findLatestPullRequestArtifactsByPlanRunIds } from '../plan-run-object.utils.ts';
 
 @Injectable({ scope: Scope.REQUEST })
 export class PlanRunLoaders {
@@ -37,46 +35,16 @@ export class PlanRunLoaders {
   ) {
     this.checkoutLoader = createEntityByIdLoader(repositoryCheckoutsRepository);
 
-    /*
-      Two queries for the whole batch: every session bridged to one of the runs,
-      then every pull_request artifact on those sessions, newest first. The first
-      artifact seen for a run is therefore its most recently produced one, which
-      is what the per-run findOne({ order: producedAt DESC }) used to return.
-    */
     this.pullRequestArtifactByPlanRunIdLoader = new DataLoader<
       string,
       WorkArtifact | null
     >(async (planRunIds) => {
-      const sessions = await workSessionsRepository.findBy({
-        where: { planRunId: In([...planRunIds]) },
-      });
-
-      const planRunIdBySessionId = new Map<string, string>();
-      for (const session of sessions) {
-        if (session.planRunId !== null) {
-          planRunIdBySessionId.set(session.id, session.planRunId);
-        }
-      }
-
-      if (planRunIdBySessionId.size === 0) {
-        return planRunIds.map(() => null);
-      }
-
-      const artifacts = await workArtifactsRepository.findBy({
-        order: { producedAt: 'DESC' },
-        where: {
-          sessionId: In([...planRunIdBySessionId.keys()]),
-          type: PULL_REQUEST_ARTIFACT_TYPE,
-        },
-      });
-
-      const latestByPlanRunId = new Map<string, WorkArtifact>();
-      for (const artifact of artifacts) {
-        const planRunId = planRunIdBySessionId.get(artifact.sessionId);
-        if (planRunId !== undefined && !latestByPlanRunId.has(planRunId)) {
-          latestByPlanRunId.set(planRunId, artifact);
-        }
-      }
+      const latestByPlanRunId =
+        await findLatestPullRequestArtifactsByPlanRunIds(
+          workSessionsRepository,
+          workArtifactsRepository,
+          planRunIds,
+        );
 
       return planRunIds.map((id) => latestByPlanRunId.get(id) ?? null);
     });

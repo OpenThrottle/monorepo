@@ -2,7 +2,10 @@ import { createMock } from '@golevelup/ts-vitest';
 import type { ConfigService } from '@nestjs/config';
 import type { GitHubService } from '@openthrottle/nestjs-github';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type { PlanRunsRepository } from '@openthrottle/nestjs-repositories-server';
+import type {
+  PlanRun,
+  PlanRunsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import type {
   WorkArtifact,
   WorkArtifactsRepository,
@@ -29,6 +32,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GitHubForgeService } from '../../services/source-control/github-forge/github-forge.service.ts';
 import { GitLabForgeService } from '../../services/source-control/gitlab-forge/gitlab-forge.service.ts';
 import { SourceControlService } from '../../services/source-control/source-control.service.ts';
+import type { ProjectRunsEnqueueService } from '../project-runs/enqueue/enqueue.service.ts';
 import type { TaggingEnqueueService } from '../tagging/enqueue/enqueue.service.ts';
 import { WorkLedgerVerifyProcessor } from './work-ledger-verify.processor.ts';
 import type { WorkLedgerVerifyJob } from './work-ledger-verify.types.ts';
@@ -77,6 +81,8 @@ const commitDetail = {
   sha: 'abc',
 };
 
+const enqueueAdvanceForPlanRun = vi.fn().mockResolvedValue(undefined);
+
 describe('WorkLedgerVerifyProcessor', () => {
   let githubService: GitHubService;
   let artifactRepo: WorkArtifactsRepositoryMock;
@@ -102,9 +108,11 @@ describe('WorkLedgerVerifyProcessor', () => {
     // Both sweeps call find(); default everything to empty and let each test opt in.
     artifactRepo.findBy.mockResolvedValue([]);
 
+    enqueueAdvanceForPlanRun.mockClear();
     processor = new WorkLedgerVerifyProcessor(
       createMock<LoggerService>(),
       createMock<PlanRunsRepository>(createPlanRunsRepositoryMock()),
+      createMock<ProjectRunsEnqueueService>({ enqueueAdvanceForPlanRun }),
       new SourceControlService(
         new GitHubForgeService(githubService),
         new GitLabForgeService(createMock<ConfigService>()),
@@ -318,9 +326,11 @@ describe('WorkLedgerVerifyProcessor pull_request sweep', () => {
       createMock<WorkSession>({ id: 'sess-1', planRunId: 'run-1' }),
     );
 
+    enqueueAdvanceForPlanRun.mockClear();
     processor = new WorkLedgerVerifyProcessor(
       createMock<LoggerService>(),
       createMock<PlanRunsRepository>(planRunsRepository),
+      createMock<ProjectRunsEnqueueService>({ enqueueAdvanceForPlanRun }),
       new SourceControlService(
         new GitHubForgeService(githubService),
         new GitLabForgeService(createMock<ConfigService>()),
@@ -395,6 +405,28 @@ describe('WorkLedgerVerifyProcessor pull_request sweep', () => {
     expect(
       planRunsRepository.settleUnsupervisedRunForPullRequest,
     ).toHaveBeenNthCalledWith(2, 'run-1', 'closed');
+  });
+
+  it('advances the project run behind a run it settles', async () => {
+    onlyPulls([pullArtifact()]);
+    vi.mocked(githubService.getPullDetail).mockResolvedValue({
+      ...pullDetail,
+      mergeCommitSha: 'squash-sha',
+      mergedAt: '2026-09-01T00:00:00Z',
+      state: 'closed',
+    });
+    const settled = createMock<PlanRun>({
+      id: 'run-1',
+      projectRunId: 'project-run-1',
+      status: 'COMPLETED',
+    });
+    planRunsRepository.settleUnsupervisedRunForPullRequest.mockResolvedValue(
+      settled,
+    );
+
+    await processor.process(job);
+
+    expect(enqueueAdvanceForPlanRun).toHaveBeenCalledWith(settled);
   });
 
   it('settles nothing for an open PR or a session with no plan run', async () => {

@@ -1,0 +1,37 @@
+# MCP-only GraphQL documents: running a project (its plans one after another, one draft PR each).
+# Mirrors the runProject / cancelProjectRun mutations exposed by openthrottle-server.
+# Selection sets are alphabetized.
+
+fragment McpProjectRunPlan on PlanObject {
+  id
+  title
+}
+
+fragment McpProjectRun on ProjectRunObject {
+  cancelRequestedAt
+  createdAt
+  currentPlan {
+    ...McpProjectRunPlan
+  }
+  id
+  projectId
+  settledAt
+  startedAt
+  status
+  stoppedByPlan {
+    ...McpProjectRunPlan
+  }
+  stoppedReason
+}
+
+mutation McpRunProject($input: RunProjectInput!) {
+  runProject(input: $input) {
+    ...McpProjectRun
+  }
+}
+
+mutation McpCancelProjectRun($input: CancelProjectRunInput!) {
+  cancelProjectRun(input: $input) {
+    ...McpProjectRun
+  }
+}
