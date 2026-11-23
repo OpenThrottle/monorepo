@@ -17,7 +17,7 @@ import { ListChevronsUpDownIcon } from 'lucide-react';
  */
 export const PLANS_ONBOARDING = {
   icon: ListChevronsUpDownIcon,
-  internalUsage: `Every feature we ship starts as a plan we create from the editor via MCP — "Create a plan. …", whatever detail we have, and @-mentions of the files that matter. Ralph executes the tasks one at a time; each commit carries its Plan-Id and Task-Id so shipped work on main traces straight back to the plan that asked for it.`,
+  internalUsage: `Every feature we ship starts as a plan we create from the editor via MCP — "Create a plan. …", whatever detail we have, and @-mentions of the files that matter. OT Loop executes the tasks one at a time; each commit carries its Plan-Id and Task-Id so shipped work on main traces straight back to the plan that asked for it.`,
   steps: [
     `In your editor, start with "Create a plan. Xxxx" — replace Xxxx with a short title.`,
     `Give as little or as much detail as you like after that.`,
@@ -28,7 +28,7 @@ export const PLANS_ONBOARDING = {
   title: `Plans`,
   useCases: [
     `Break an idea or PRD into an ordered list of executable tasks.`,
-    `Drive agentic execution (Ralph) task-by-task with status tracking.`,
+    `Drive agentic execution task-by-task with status tracking.`,
     `Trace shipped commits on main back to the plan and task that drove them.`,
   ],
   whatItIs: `A plan is OpenThrottle's record of intended work — what you decided to build, broken into tasks with status, assignee, and summaries. Plans can be worked by hand or executed agentically, with commits linked back for traceability.`,
@@ -164,22 +164,18 @@ export const OUTPUT_STREAM_COPY = {
 } as const;
 
 /**
- * @description The runner choice (Ralph | OT Loop) and the OT Loop fields shown in the
- * Run dialog and the Configuration tab. The validation list is an optional override:
+ * @description The OT Loop fields shown in the Run dialog and the Configuration tab. The validation list is an optional override:
  * empty falls back to the repo's `.openthrottle/ot-loop.json`, then the Nx default
  * (docs/workflows/ot-loop-job.md § 6). Retries are an integer 0..5 (default 2).
  */
-export const PLAN_RUN_RUNNER_COPY = {
-  groupLabel: `Runner`,
-  headingConfiguration: `Runner`,
+export const PLAN_RUN_OT_LOOP_COPY = {
+  headingConfiguration: `Validation`,
   maxRetriesHint: (defaultRetries: number, max: number): string =>
     `Whole number from 0 to ${max}. Leave blank for ${defaultRetries}.`,
   maxRetriesInvalid: (max: number): string =>
     `Retries must be a whole number from 0 to ${max}.`,
   maxRetriesLabel: `Retries per task`,
   otLoopHelp: `OT Loop runs one fresh worker per task and validates each before moving on. Operator messages reach the worker as guidance. "Stop after this task" is not honoured; use Cancel to stop a run.`,
-  otLoopLabel: `OT Loop`,
-  ralphLabel: `Ralph`,
   scope: `saved to the plan`,
   validationHint: `One command per line. Leave empty to use the repo's .openthrottle/ot-loop.json, else the Nx default.`,
   validationLabel: `Validation commands (override)`,
@@ -224,21 +220,11 @@ export const PLAN_DEFERRED_SECTION_COPY = {
 
 /**
  * @description The plan Details "Runs" card ({@link PlanWorkflowRunTransparency}): what is about
- * to run, what just ran, the run history, and a collapsed CLI & debug section. `empty` replaces the
+ * to run, what just ran, the run history, and a collapsed run tuning section. `empty` replaces the
  * three run sections when the plan has never run and nothing is scheduled; `time` backs
  * `formatRunTime`.
  */
 export const PLAN_RUN_TRANSPARENCY_COPY = {
-  cli: {
-    configurationLink: `Configuration tab`,
-    copyDebugBundle: `Copy debug bundle`,
-    diffEmpty: `Matches the defaults — the CLI needs only --plan or --task.`,
-    diffHeading: `Differs from defaults`,
-    heading: `CLI & debug`,
-    precedenceLabel: `Precedence:`,
-    precedenceSuffix: `Edit the CLI layer on the`,
-    queueLinkPrefix: `Queue:`,
-  },
   description: `Scheduled, active and past runs of this plan.`,
   empty: {
     description: `Use Run or Schedule in the toolbar to start this plan.`,
@@ -255,7 +241,7 @@ export const PLAN_RUN_TRANSPARENCY_COPY = {
     columns: {
       branch: `Branch / PR`,
       expand: `Details`,
-      modelBackend: `Model / backend`,
+      modelDriver: `Model / driver`,
       status: `Status`,
       when: `When`,
     },
@@ -267,8 +253,8 @@ export const PLAN_RUN_TRANSPARENCY_COPY = {
       effort: `Effort`,
       finished: `Finished`,
       jobId: `Job id`,
-      modelBackend: `Model / backend`,
-      noJob: `No job (CLI or orchestrator run)`,
+      modelDriver: `Model / driver`,
+      noJob: `No job (interactive or orchestrator run)`,
       none: `—`,
       rssEnd: `RSS end (MB)`,
       runKind: `Kind`,
@@ -295,6 +281,14 @@ export const PLAN_RUN_TRANSPARENCY_COPY = {
     unknown: `Time unknown`,
   },
   title: `Runs`,
+  tuning: {
+    configurationLink: `Configuration tab`,
+    configurationSuffix: `Edit the run options on the`,
+    diffEmpty: `Matches the defaults.`,
+    diffHeading: `Differs from defaults`,
+    heading: `Run tuning`,
+    queueLinkPrefix: `Queue:`,
+  },
   upcoming: {
     backstopMeta: `Details appear once this run is in the run history.`,
     firesLabel: `Fires`,
@@ -407,7 +401,7 @@ export const PLAN_TOOLBAR_COPY = {
   settleRunPendingLabel: `Settling…`,
   settleRunSuccessToast: `Run recorded as STALE — contact lost. Its worktree is released; plan and task status are unchanged.`,
   settleRunTriggerTitle: `Close the books on an interactive run that has lost contact: it cannot be verified or stopped, and until it is settled its worktree stays held.`,
-  workflowRunBlockedFallback: `Fix workflow run options in Configuration (aligned with workflow-ralph argv).`,
+  workflowRunBlockedFallback: `Fix the run options in Configuration.`,
 } as const;
 
 /**
@@ -429,18 +423,27 @@ export const PLAN_TASK_TOOLBAR_COPY = {
 } as const;
 
 /**
+ * @description Copy for the Configuration tab's Run Tuning fieldset: the agent timeout and the
+ * model / effort pair.
+ */
+export const PLAN_CONFIG_TUNING_COPY = {
+  explainer: `Control the run by choosing a model and effort, or by limiting how long one agent worker may run.`,
+  timeoutAriaLabel: `Agent timeout in seconds`,
+  timeoutHint: `Longest one agent worker may run, in seconds; empty uses the default.`,
+  timeoutLabel: `Agent timeout (seconds)`,
+  timeoutPlaceholder: `e.g. 1800`,
+} as const;
+
+/**
  * @description Copy for the Configuration tab's worktree fieldset. Queued runs get a worktree that
- * OpenThrottle creates itself (the agent CLI's own `-w` stays off), so the wording here talks about
- * the worktree the run works in rather than about a CLI flag.
+ * OpenThrottle creates itself, so the wording here talks about the worktree the run works in.
  */
 export const PLAN_CONFIG_WORKTREE_COPY = {
   autoNameHint: (derivedName: string): string =>
     `Leave blank to use ${derivedName}, derived from the plan id. One worktree per plan, reused across runs, so its branch accumulates the plan's work.`,
-  explainer: `Queued runs execute in a git worktree OpenThrottle creates for them, so each run has its own branch, set up by the repo's own worktree provisioner when it has one. Turn this off only to run in the base checkout.`,
-  modeLabel: `Worktree`,
-  modeOmitLabel: `Off (run in the base checkout)`,
+  explainer: `Queued runs execute in a git worktree OpenThrottle creates for them, so each run has its own branch, set up by the repo's own worktree provisioner when it has one.`,
+  nameAriaLabel: `Worktree name`,
   nameLabel: `Worktree name`,
-  offWarning: `With the worktree off, the run works directly in the base checkout — its edits land in whatever branch that checkout has open.`,
 } as const;
 
 /**
@@ -448,7 +451,6 @@ export const PLAN_CONFIG_WORKTREE_COPY = {
  * tab. Removal goes through the ot-worktree destroy action and always keeps the branch.
  */
 export const PLAN_CONFIG_WORKTREE_CLEANUP_COPY = {
-  disabledHint: `Turn the worktree on to choose what happens to it after a run.`,
   hint: `Removing the worktree keeps its branch, so a later run checks it out again. A run that fails, is cancelled, or leaves uncommitted or unpushed work always keeps its worktree.`,
   keepLabel: `Keep the worktree`,
   label: `After the run`,
@@ -472,16 +474,16 @@ export const PLAN_RUN_WORKSPACE_SELECTOR_COPY = {
 /**
  * @description Copy for the shared plan-run model picker and effort control, used by the
  * Configuration tab and the Run dialog so both surfaces say the same thing. `effortDisabledReason`
- * is the tooltip for a backend with no reasoning knob (cursor bakes effort into the model id):
+ * is the tooltip for a driver with no reasoning knob (cursor bakes effort into the model id):
  * it names the fix rather than just refusing.
  */
 export const PLAN_RUN_MODEL_EFFORT_COPY = {
   effortDisabledLabel: `Effort`,
-  effortDisabledReason: (backendLabel: string): string =>
-    `${backendLabel} has no separate effort setting: effort is part of the model you pick. Choose a different model variant (for example a -high or -low model id) to change it.`,
-  effortHint: `Reasoning effort for the run. Leave unset to use the runner's default.`,
+  effortDisabledReason: (driverLabel: string): string =>
+    `${driverLabel} has no separate effort setting: effort is part of the model you pick. Choose a different model variant (for example a -high or -low model id) to change it.`,
+  effortHint: `Reasoning effort for the run. Leave unset to use the agent's default.`,
   effortLabel: `Effort`,
-  modelHint: `Models the selected runner can run. Picking one also selects its runner; the default model is omitted.`,
+  modelHint: `Models the selected agent can run. Picking one also selects its agent; the default model is omitted.`,
   modelLabel: `Model`,
   modelsError: `Could not load the model list.`,
   noModelsNotice: `No agent models were discovered. Check Settings → Agents.`,
@@ -675,9 +677,9 @@ export const PLAN_TASK_ROW_ACTIONS_COPY = {
 
 /**
  * @description Copy for {@link PlanRunDialog}: the Run now / Schedule dialog.
- * Model and effort are PLAN settings (the action saves them to the run config),
- * iterations is this-run-only, and the workspace is read-only here, so each
- * section says which of the three it is.
+ * Model, effort and the OT Loop settings are PLAN settings (the action saves them
+ * to the run config) and the workspace is read-only here, so each section says
+ * which it is.
  */
 export const PLAN_RUN_DIALOG_COPY = {
   cancelLabel: `Cancel`,
@@ -685,15 +687,10 @@ export const PLAN_RUN_DIALOG_COPY = {
   checkoutNone: `No checkout selected`,
   configurationLinkLabel: `Change in Configuration`,
   description: `Run this plan now, or schedule it for later. The run uses the plan's saved run configuration plus the settings below.`,
-  iterationsHint: (planIterations: number): string =>
-    `Resets to the plan's configured ${planIterations} each time this dialog opens. Not saved to the plan.`,
-  iterationsInvalid: `Iterations must be a whole number of at least 1.`,
-  iterationsLabel: `Iterations`,
-  iterationsScope: `this run only`,
   modeRunLabel: `Run now`,
   modeScheduleLabel: `Schedule`,
   planSettingsHeading: `Plan settings`,
-  planSettingsNotice: `Changing the runner, model, effort or OT Loop settings changes this plan's run config. They are saved to the plan, not just to this run.`,
+  planSettingsNotice: `Changing the model, effort or OT Loop settings changes this plan's run config. They are saved to the plan, not just to this run.`,
   relativeIn: (count: number, unit: 'day' | 'hour' | 'minute'): string =>
     `in about ${count} ${unit}${count === 1 ? '' : 's'}`,
   relativeInLessThanMinute: `in less than a minute`,
@@ -719,7 +716,20 @@ export const PLAN_RUN_DIALOG_COPY = {
   workspaceNotice: `Read-only here. Branch and checkout come from this plan's Configuration.`,
 } as const;
 
-/** Inline warning under the workflow-ralph `--plan` / `--task` id field. */
+/**
+ * @description Copy for the Configuration tab's header bar ({@link PlanWorkflowConfigActions}):
+ * the title, the Reset / Save buttons and the note on what the toolbar's Run buttons use.
+ */
+export const PLAN_WORKFLOW_CONFIG_ACTIONS_COPY = {
+  heading: `Run configuration`,
+  note: `Run / Add to Queue uses the options in this section (or the defaults if you have not changed them). The worker always runs this plan.`,
+  noteLabel: `Toolbar queue:`,
+  resetLabel: `Reset run options to defaults`,
+  saveLabel: `Save to plan`,
+  savePendingLabel: `Saving…`,
+} as const;
+
+/** Inline warning under the plan / task id field. */
 export const PLAN_WORKFLOW_CONFIG_TARGET_COPY = {
-  invalidIdWarning: `Value does not match a UUID pattern; CLI validation may fail.`,
+  invalidIdWarning: `Value does not match a UUID pattern; validation may fail.`,
 } as const;

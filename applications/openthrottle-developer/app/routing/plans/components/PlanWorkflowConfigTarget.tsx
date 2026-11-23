@@ -12,17 +12,15 @@ import * as React from 'react';
 
 import { PLAN_WORKFLOW_CONFIG_TARGET_COPY } from '~/routing/plans/data/data.copy';
 import type {
-  WorkflowRalphRunOptionsInput,
-  WorkflowRalphTargetMode,
-} from '~/routing/plans/utils/build-workflow-ralph-argv';
-import { isUuid } from '~/routing/plans/utils/build-workflow-ralph-argv';
+  PlanRunOptions,
+  PlanRunTargetMode,
+} from '~/routing/plans/utils/plan-run-options';
+import { isUuid } from '~/routing/plans/utils/plan-run-options';
 
 export interface PlanWorkflowConfigTargetProps {
   heading: string;
-  input: WorkflowRalphRunOptionsInput;
-  setInput: (
-    updater: React.SetStateAction<WorkflowRalphRunOptionsInput>,
-  ) => void;
+  input: PlanRunOptions;
+  setInput: (updater: React.SetStateAction<PlanRunOptions>) => void;
 }
 
 export const PlanWorkflowConfigTarget = (
@@ -33,8 +31,7 @@ export const PlanWorkflowConfigTarget = (
   // Hooks
 
   // Setup
-  const targetModeLabel =
-    input.targetMode === 'plan' ? 'Plan (--plan)' : 'Task (--task)';
+  const targetModeLabel = input.targetMode === 'plan' ? 'Plan' : 'Task';
   const isPlanMode = input.targetMode === 'plan';
   const isTaskMode = input.targetMode === 'task';
 
@@ -46,7 +43,7 @@ export const PlanWorkflowConfigTarget = (
     : activeTaskId !== '' && !isUuid(activeTaskId);
 
   // Handlers
-  const handleTargetModeChange = (value: WorkflowRalphTargetMode): void => {
+  const handleTargetModeChange = (value: PlanRunTargetMode): void => {
     setInput((prev) => ({ ...prev, targetMode: value }));
   };
 
@@ -63,10 +60,8 @@ export const PlanWorkflowConfigTarget = (
       legend={heading}
     >
       <p className="text-muted-foreground text-xs">
-        For the CLI preview: one of <code className="text-xs">--plan</code> or{' '}
-        <code className="text-xs">--task</code>. Queued runs always target this
-        plan; switching to task mode here only changes the preview and copyable
-        command, not the BullMQ job.
+        The target saved with the plan's run configuration: this plan, or a
+        single task. Runs queued from this page always target the plan.
       </p>
       <div className="space-y-2">
         <Label htmlFor="workflow-config-target-mode">Target mode</Label>
@@ -88,18 +83,18 @@ export const PlanWorkflowConfigTarget = (
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="plan">Plan (--plan)</SelectItem>
-            <SelectItem value="task">Task (--task)</SelectItem>
+            <SelectItem value="plan">Plan</SelectItem>
+            <SelectItem value="task">Task</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       {isPlanMode && (
         <div className="space-y-2">
-          <Label htmlFor="workflow-run-plan-id">--plan</Label>
+          <Label htmlFor="workflow-run-plan-id">Plan ID</Label>
           <Input
             aria-describedby="workflow-run-plan-id-hint"
-            aria-label="Plan UUID for --plan"
+            aria-label="Plan UUID"
             autoComplete="off"
             data-testid="workflow-run-plan-id-input"
             id="workflow-run-plan-id"
@@ -120,10 +115,10 @@ export const PlanWorkflowConfigTarget = (
       )}
       {!isPlanMode && (
         <div className="space-y-2">
-          <Label htmlFor="workflow-run-task-id">--task</Label>
+          <Label htmlFor="workflow-run-task-id">Task ID</Label>
           <Input
             aria-describedby="workflow-run-task-id-hint"
-            aria-label="Task UUID for --task"
+            aria-label="Task UUID"
             autoComplete="off"
             data-testid="workflow-run-task-id-input"
             id="workflow-run-task-id"

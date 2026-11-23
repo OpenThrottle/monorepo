@@ -10,15 +10,13 @@ import * as React from 'react';
 
 import { PLAN_CONFIG_WORKTREE_CLEANUP_COPY } from '~/routing/plans/data/data.copy';
 import type {
-  WorkflowRalphRunOptionsInput,
-  WorkflowRalphWorktreeCleanup,
-} from '~/routing/plans/utils/build-workflow-ralph-argv';
+  PlanRunOptions,
+  PlanRunWorktreeCleanup,
+} from '~/routing/plans/utils/plan-run-options';
 
 export interface PlanWorkflowConfigWorktreeCleanupProps {
-  input: WorkflowRalphRunOptionsInput;
-  setInput: (
-    updater: React.SetStateAction<WorkflowRalphRunOptionsInput>,
-  ) => void;
+  input: PlanRunOptions;
+  setInput: (updater: React.SetStateAction<PlanRunOptions>) => void;
 }
 
 export const PlanWorkflowConfigWorktreeCleanup = (
@@ -29,11 +27,6 @@ export const PlanWorkflowConfigWorktreeCleanup = (
   // Hooks
 
   // Setup
-  const isWorktreeOff = input.worktreeCli === 'omit';
-  const hint = isWorktreeOff
-    ? PLAN_CONFIG_WORKTREE_CLEANUP_COPY.disabledHint
-    : PLAN_CONFIG_WORKTREE_CLEANUP_COPY.hint;
-
   const isKeep = input.worktreeCleanup === 'keep';
   const cleanupLabel = isKeep
     ? PLAN_CONFIG_WORKTREE_CLEANUP_COPY.keepLabel
@@ -42,7 +35,7 @@ export const PlanWorkflowConfigWorktreeCleanup = (
   // Handlers
   const handleValueChange = (value: string): void => {
     if (value !== 'keep' && value !== 'on-pr') return;
-    const next: WorkflowRalphWorktreeCleanup = value;
+    const next: PlanRunWorktreeCleanup = value;
     setInput((prev) => ({ ...prev, worktreeCleanup: next }));
   };
 
@@ -57,11 +50,7 @@ export const PlanWorkflowConfigWorktreeCleanup = (
       <Label htmlFor="workflow-run-worktree-cleanup">
         {PLAN_CONFIG_WORKTREE_CLEANUP_COPY.label}
       </Label>
-      <Select
-        disabled={isWorktreeOff}
-        onValueChange={handleValueChange}
-        value={input.worktreeCleanup}
-      >
+      <Select onValueChange={handleValueChange} value={input.worktreeCleanup}>
         <SelectTrigger
           aria-describedby="workflow-run-worktree-cleanup-hint"
           className="max-w-md"
@@ -82,7 +71,7 @@ export const PlanWorkflowConfigWorktreeCleanup = (
         className="text-muted-foreground text-xs"
         id="workflow-run-worktree-cleanup-hint"
       >
-        {hint}
+        {PLAN_CONFIG_WORKTREE_CLEANUP_COPY.hint}
       </p>
     </div>
   );

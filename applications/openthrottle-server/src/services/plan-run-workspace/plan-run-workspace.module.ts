@@ -1,5 +1,5 @@
 /**
- * @description Shared run-start workspace setup for the in-process plan runners (Ralph and OT Loop):
+ * @description Shared run-start workspace setup for the OT Loop plan runner:
  * worktree provisioning, checkout registration, snapshot rewrite, MCP preflight, foreign-skill
  * injection and config load.
  */

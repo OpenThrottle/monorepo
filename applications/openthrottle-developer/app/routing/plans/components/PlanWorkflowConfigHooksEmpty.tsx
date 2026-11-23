@@ -25,7 +25,7 @@ export const PlanWorkflowConfigHooksEmpty = (
       data-testid="PlanWorkflowConfigHooksEmpty"
     >
       <p className="text-muted-foreground text-sm">
-        No hooks configured. The worker runs Ralph only (unchanged from plans
+        No hooks configured. The worker runs the plan only (unchanged from plans
         without hooks).
       </p>
     </div>

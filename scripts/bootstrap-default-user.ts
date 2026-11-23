@@ -104,12 +104,12 @@ async function ensureAllRoles(
  * Bootstrap service accounts that act as the default user (see
  * scripts/bootstrap-service-account-credentials.ts for their credentials).
  */
-const ACTING_SERVICE_ACCOUNT_NAMES = ['openthrottle-mcp', 'workflow-ralph'];
+const ACTING_SERVICE_ACCOUNT_NAMES = ['openthrottle-mcp', 'plan-runner'];
 
 /**
  * Link each bootstrap service account to the default user via
  * acting_user_id so user-scoped conveniences (e.g. plan workspace seeding)
- * resolve for MCP/Ralph callers. Only fills a NULL link — an explicit link to
+ * resolve for MCP and plan-run callers. Only fills a NULL link — an explicit link to
  * a different user is respected. Idempotent.
  */
 async function linkActingUser(

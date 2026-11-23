@@ -16,12 +16,12 @@ import type {
   PlanRunHistoryEntryFragment,
   PlanRunJobMetricsEntryFragment,
 } from '~/__generated__/graphql';
-import { PlanWorkflowRunCliDebug } from '~/routing/plans/components/PlanWorkflowRunCliDebug';
 import { PlanWorkflowRunLatest } from '~/routing/plans/components/PlanWorkflowRunLatest';
 import { PlanWorkflowRunTransparencyAuditTable } from '~/routing/plans/components/PlanWorkflowRunTransparencyAuditTable';
+import { PlanWorkflowRunTuningSummary } from '~/routing/plans/components/PlanWorkflowRunTuningSummary';
 import { PlanWorkflowRunUpcoming } from '~/routing/plans/components/PlanWorkflowRunUpcoming';
 import { PLAN_RUN_TRANSPARENCY_COPY } from '~/routing/plans/data/data.copy';
-import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
+import type { PlanRunOptions } from '~/routing/plans/utils/plan-run-options';
 
 export interface PlanWorkflowRunTransparencyProps {
   readonly planId: string;
@@ -32,7 +32,7 @@ export interface PlanWorkflowRunTransparencyProps {
   readonly scheduledRunAt: string | null;
   /** `plan.scheduledRunId`: a scheduled run can exist outside the fetched history window. */
   readonly scheduledRunId: string | null;
-  readonly workflowInput: WorkflowRalphRunOptionsInput;
+  readonly workflowInput: PlanRunOptions;
   readonly workflowTimeout: string;
   readonly workingDirectory: string;
 }
@@ -40,7 +40,7 @@ export interface PlanWorkflowRunTransparencyProps {
 /**
  * @description The plan Details "Runs" card. Runs lead, in this order: Upcoming (scheduled runs),
  * Latest run (the active or most recent run), Run history; then a collapsed CLI & debug section
- * ({@link PlanWorkflowRunCliDebug}). A plan that has never run and has nothing scheduled shows one
+ * ({@link PlanWorkflowRunTuningSummary}). A plan that has never run and has nothing scheduled shows one
  * `Empty` in place of the three run sections.
  */
 export const PlanWorkflowRunTransparency = (
@@ -115,7 +115,7 @@ export const PlanWorkflowRunTransparency = (
           id="plan-workflow-run-transparency"
         >
           {runSections}
-          <PlanWorkflowRunCliDebug
+          <PlanWorkflowRunTuningSummary
             planId={planId}
             workflowInput={workflowInput}
             workflowTimeout={workflowTimeout}

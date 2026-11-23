@@ -88,7 +88,7 @@ query getTasksByPlanId($input: TasksByPlanIdInput!) {
 
 # A queued run, as the Run dialog toasts it.
 fragment EnqueuePlanRunResult on EnqueuePlanRunResultObject {
-  executionBackend
+  driver
   jobId
   planId
   queuePosition
@@ -97,7 +97,7 @@ fragment EnqueuePlanRunResult on EnqueuePlanRunResultObject {
 
 # A scheduled run, as the Run dialog toasts it.
 fragment SchedulePlanRunResult on SchedulePlanRunResultObject {
-  executionBackend
+  driver
   jobId
   planId
   planRunId
@@ -134,7 +134,7 @@ fragment PlanOutputChunk on PlanOutputStreamChunkObject {
 
 # One completed BullMQ job's metrics, joined onto Run history rows by job id.
 fragment PlanRunJobMetricsEntry on PlanRunMetricsEntry {
-  executionBackend
+  driver
   finishedOn
   jobId
   taskRunMetrics {
@@ -153,7 +153,7 @@ fragment PlanRunHistoryEntry on PlanRunObject {
     kind
   }
   createdAt
-  executionBackend
+  driver
   heartbeatExpected
   id
   isStale

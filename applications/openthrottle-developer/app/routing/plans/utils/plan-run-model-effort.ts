@@ -2,7 +2,7 @@
  * @description Pure helpers behind the shared plan-run model picker and effort
  * control (`PlanRunModelPicker`, `PlanRunEffortControl`). The picker speaks the
  * chat composer's option ids (`cursor|gpt-5.2`); a plan stores `model` and
- * `executionBackend` separately (`runConfigJson.ralph`), so these map between
+ * `driver` separately in its run config, so these map between
  * the two without either side learning the other's shape.
  */
 
@@ -14,17 +14,17 @@ import {
   encodeCliOptionId,
 } from '@openthrottle/react-router-chat-state';
 
-import { isExecutionBackend } from '~/routing/plans/utils/plan-workflow-config-execution';
-import type { WorkflowRalphExecutionBackendUi } from '~/routing/plans/utils/workflow-ralph-config';
-import { DEFAULT_RALPH_MODEL } from '~/routing/plans/utils/workflow-ralph-config';
+import type { PlanRunDriverUi } from '~/routing/plans/utils/plan-run-options';
+import { DEFAULT_RUN_MODEL } from '~/routing/plans/utils/plan-run-options';
+import { isSelectablePlanRunDriver } from '~/routing/plans/utils/plan-workflow-config-execution';
 
 /**
  * @description What picking a model writes to the plan: the model id and the
- * backend it belongs to. They always travel together so a plan can never hold a
+ * driver it belongs to. They always travel together so a plan can never hold a
  * `claude` model on the `cursor` runner.
  */
 export interface PlanRunModelSelection {
-  readonly backend: WorkflowRalphExecutionBackendUi;
+  readonly driver: PlanRunDriverUi;
   readonly model: string;
 }
 
@@ -44,42 +44,39 @@ export const filterPlanRunnableModels = (
     return (
       decoded !== null &&
       decoded.baseUrl === undefined &&
-      isExecutionBackend(decoded.backend)
+      isSelectablePlanRunDriver(decoded.backend)
     );
   });
 };
 
 /**
- * @description The option id to highlight for a plan's stored `backend` + `model`,
+ * @description The option id to highlight for a plan's stored `driver` + `model`,
  * or `undefined` when no option matches (the picker then shows its placeholder).
- * The default model (`auto`, or empty) also matches a driver's bare-backend
+ * The default model (`auto`, or empty) also matches a driver's bare-driver
  * option, which discovery emits when the driver lists no models.
  */
 export const toPlanRunModelOptionId = (
-  backend: WorkflowRalphExecutionBackendUi,
+  driver: PlanRunDriverUi,
   model: string,
   models: readonly ChatModelOption[],
 ): string | undefined => {
   const trimmed = model.trim();
   const ids = new Set(models.map((option) => option.id));
-  const named = encodeCliOptionId(
-    backend,
-    trimmed === '' ? undefined : trimmed,
-  );
+  const named = encodeCliOptionId(driver, trimmed === '' ? undefined : trimmed);
 
   if (ids.has(named)) {
     return named;
   }
 
-  const isDefaultModel = trimmed === '' || trimmed === DEFAULT_RALPH_MODEL;
+  const isDefaultModel = trimmed === '' || trimmed === DEFAULT_RUN_MODEL;
 
-  return isDefaultModel && ids.has(backend) ? backend : undefined;
+  return isDefaultModel && ids.has(driver) ? driver : undefined;
 };
 
 /**
- * @description Splits a picked option id into the plan's `backend` + `model`.
- * A bare-backend option (no model override) resolves to the default model.
- * `null` for an id the plan cannot run (malformed, other backend, endpoint).
+ * @description Splits a picked option id into the plan's `driver` + `model`.
+ * A bare-driver option (no model override) resolves to the default model.
+ * `null` for an id the plan cannot run (malformed, other driver, endpoint).
  */
 export const parsePlanRunModelOptionId = (
   optionId: string,
@@ -89,14 +86,14 @@ export const parsePlanRunModelOptionId = (
   if (
     decoded === null ||
     decoded.baseUrl !== undefined ||
-    !isExecutionBackend(decoded.backend)
+    !isSelectablePlanRunDriver(decoded.backend)
   ) {
     return null;
   }
 
   return {
-    backend: decoded.backend,
-    model: decoded.model ?? DEFAULT_RALPH_MODEL,
+    driver: decoded.backend,
+    model: decoded.model ?? DEFAULT_RUN_MODEL,
   };
 };
 
@@ -112,11 +109,11 @@ export const parsePlanRunEffort = (
 
 /**
  * @description The effort to keep after the runner changes: the current one when
- * the new backend's `reasoningLevels` still include it, otherwise `''` (unset).
- * Stops a plan from carrying an effort its backend would ignore or clamp.
+ * the new driver's `reasoningLevels` still include it, otherwise `''` (unset).
+ * Stops a plan from carrying an effort its driver would ignore or clamp.
  */
 export const reconcilePlanRunEffort = (
-  backend: WorkflowRalphExecutionBackendUi,
+  driver: PlanRunDriverUi,
   effort: string,
 ): string => {
   const level = parsePlanRunEffort(effort);
@@ -125,6 +122,6 @@ export const reconcilePlanRunEffort = (
     return '';
   }
 
-  const { reasoningLevels } = capabilitiesForChatOption({ backend });
+  const { reasoningLevels } = capabilitiesForChatOption({ backend: driver });
   return reasoningLevels.includes(level) ? level : '';
 };

@@ -62,7 +62,7 @@ export const PlanDetailRoute = (
     onSaveRunConfig,
     onToggleExpanded,
     planOutputChunks,
-    ralphTuningJson,
+    runTuningJson,
     repositoryId,
     resolvedTaskCount,
     runConfigSaveBlocked,
@@ -131,10 +131,10 @@ export const PlanDetailRoute = (
             planId={plan.id}
             planStatus={plan.status}
             planTitle={plan.title ?? 'Untitled'}
-            ralphTuningJson={ralphTuningJson}
             repositories={loaderData.workspaceRepositories}
             repositoryId={repositoryId}
             runConfigJson={plan.runConfigJson}
+            runTuningJson={runTuningJson}
             runnableTaskCount={plan.runnableTaskCount}
             scheduledRunAt={plan.scheduledRunAt}
             scheduledRunId={plan.scheduledRunId}

@@ -2,9 +2,9 @@
  * @description Plan-run lifecycle tools: register_plan_run, settle_plan_run,
  * register_plan_run_worktree_checkout, get_plan_runs.
  *
- * These give an INTERACTIVE loop the run row a queued Ralph run has always had, so a run
+ * These give an INTERACTIVE loop the run row a queued run has always had, so a run
  * driven from an agent turn stops being invisible to run provenance. They are thin
- * wrappers over mutations that already exist for the detached workflow-ralph CLI; the
+ * wrappers over the registerPlanRun and settlePlanRun mutations; the
  * domain logic that makes them safe — the heartbeat exemption, the cancel floor — lives
  * server-side, not here.
  *
@@ -19,17 +19,17 @@ import { hostname as osHostname } from 'os';
 import { z } from 'zod';
 
 import type {
-  CliPlanRunFragment,
+  DetachedPlanRunFragment,
   PlanRunWithCheckoutFragment,
 } from '../__generated__/graphql.js';
 import {
   GetPlanRunsDocument,
-  RegisterCliPlanRunDocument,
+  RegisterPlanRunDocument,
   RegisterPlanRunWorktreeCheckoutDocument,
-  SettleCliPlanRunDocument,
+  SettlePlanRunDocument,
 } from '../__generated__/graphql.js';
 import { getAuthToken } from '../auth/getAuthToken.ts';
-import { resolveExecutionBackend } from '../config/execution-backend.ts';
+import { resolveDriver } from '../config/driver.ts';
 import {
   forgetPlanRunForBackstop,
   rememberPlanRunForBackstop,
@@ -40,18 +40,20 @@ import { runTool } from '../utils/runTool.ts';
 
 // ── register_plan_run ────────────────────────────────────────────────────────
 
-type RegisterPlanRunResult = GenericResult<{ run: CliPlanRunFragment | null }>;
+type RegisterPlanRunResult = GenericResult<{
+  run: DetachedPlanRunFragment | null;
+}>;
 
 export const registerPlanRunToolParameters = z
   .object({
     branch: z.string().nullable().optional(),
-    executionBackend: z.string().nullable().optional(),
+    driver: z.string().nullable().optional(),
     model: z.string().nullable().optional(),
     planId: z.string().uuid(),
   })
   .strict();
 
-export const registerPlanRunToolDescription = `Open a plan_runs row for the interactive loop you are about to drive, so the run is attributable: which agent, which model, which branch, when it started. Call it once at loop setup and carry the returned run id for the rest of the run. Pass the model you are actually running as — or omit it if you cannot determine one, since null is a legible answer and a plausible-looking guess is not. executionBackend is detected from the launching harness and only used if detection finds nothing; do not declare it otherwise. Best-effort: if this fails, say so and keep working. IMPORTANT: nothing server-side will ever settle this row, so you must call settle_plan_run on every exit path — COMPLETED when the PR opens, CANCELLED on a deliberate stop, FAILED when you give up.`;
+export const registerPlanRunToolDescription = `Open a plan_runs row for the interactive loop you are about to drive, so the run is attributable: which agent, which model, which branch, when it started. Call it once at loop setup and carry the returned run id for the rest of the run. Pass the model you are actually running as — or omit it if you cannot determine one, since null is a legible answer and a plausible-looking guess is not. driver is detected from the launching harness and only used if detection finds nothing; do not declare it otherwise. Best-effort: if this fails, say so and keep working. IMPORTANT: nothing server-side will ever settle this row, so you must call settle_plan_run on every exit path — COMPLETED when the PR opens, CANCELLED on a deliberate stop, FAILED when you give up.`;
 
 export async function registerPlanRunToolHandler(
   args: z.infer<typeof registerPlanRunToolParameters>,
@@ -61,27 +63,25 @@ export async function registerPlanRunToolHandler(
     return invalidArgsContent(parsed.error);
   }
 
-  return runTool<{ run: CliPlanRunFragment | null }>(
+  return runTool<{ run: DetachedPlanRunFragment | null }>(
     'register_plan_run',
     async () => {
-      // Detection wins over the declared value; see config/execution-backend.ts.
-      const executionBackend = resolveExecutionBackend(
-        parsed.data.executionBackend,
-      );
-      if (executionBackend === null) {
+      // Detection wins over the declared value; see config/driver.ts.
+      const driver = resolveDriver(parsed.data.driver);
+      if (driver === null) {
         throw new Error(
-          'Could not determine the execution backend: nothing was detected from the launching harness and none was declared. Pass executionBackend explicitly.',
+          'Could not determine the driver: nothing was detected from the launching harness and none was declared. Pass driver explicitly.',
         );
       }
 
       const token = getAuthToken();
       const result = await executeGraphqlWithAuth(
         token,
-        RegisterCliPlanRunDocument,
+        RegisterPlanRunDocument,
         {
           input: {
             branch: parsed.data.branch ?? null,
-            executionBackend,
+            driver,
             // The whole point. An agent turn owns no timer, so this row must be exempt
             // from the stale sweep (which would reset the plan and its IN_PROGRESS tasks
             // to PENDING underneath live work), from isStale, and from the destructive
@@ -99,7 +99,7 @@ export async function registerPlanRunToolHandler(
         },
       );
 
-      const run = result?.registerCliPlanRun ?? null;
+      const run = result?.registerPlanRun ?? null;
       if (!run) return null;
 
       rememberPlanRunForBackstop(parsed.data.planId, run.id);
@@ -110,7 +110,7 @@ export async function registerPlanRunToolHandler(
         `Plan run registered. Run id: ${run.id}`,
         `Carry this id and settle it when the loop stops — nothing else will.`,
         ``,
-        `backend: ${run.executionBackend}  model: ${run.model ?? '(none declared)'}  branch: ${run.branch ?? '(none)'}`,
+        `driver: ${run.driver}  model: ${run.model ?? '(none declared)'}  branch: ${run.branch ?? '(none)'}`,
         `heartbeatExpected: ${run.heartbeatExpected} (exempt from the stale sweep, so cancellation reaches you only if you poll cancelRequestedAt)`,
       ].join('\n');
 
@@ -121,7 +121,9 @@ export async function registerPlanRunToolHandler(
 
 // ── settle_plan_run ──────────────────────────────────────────────────────────
 
-type SettlePlanRunResult = GenericResult<{ run: CliPlanRunFragment | null }>;
+type SettlePlanRunResult = GenericResult<{
+  run: DetachedPlanRunFragment | null;
+}>;
 
 export const settlePlanRunToolParameters = z
   .object({
@@ -142,7 +144,7 @@ export async function settlePlanRunToolHandler(
     return invalidArgsContent(parsed.error);
   }
 
-  return runTool<{ run: CliPlanRunFragment | null }>(
+  return runTool<{ run: DetachedPlanRunFragment | null }>(
     'settle_plan_run',
     async () => {
       const token = getAuthToken();
@@ -150,7 +152,7 @@ export async function settlePlanRunToolHandler(
       // re-validating the same rule in two places that can drift apart.
       const result = await executeGraphqlWithAuth(
         token,
-        SettleCliPlanRunDocument,
+        SettlePlanRunDocument,
         {
           input: {
             headSha: parsed.data.headSha ?? null,
@@ -165,7 +167,7 @@ export async function settlePlanRunToolHandler(
       // terminal, there is nothing left for the janitor to do either.
       forgetPlanRunForBackstop();
 
-      const run = result?.settleCliPlanRun ?? null;
+      const run = result?.settlePlanRun ?? null;
       if (!run) {
         // A soft no-op, not an error: the Stop-hook backstop and the loop can both try to
         // settle the same run, and neither should get an error it will retry in a loop.
@@ -255,7 +257,7 @@ export const getPlanRunsToolParameters = z
   })
   .strict();
 
-export const getPlanRunsToolDescription = `List the plan runs recorded for a plan, newest first: status, agent backend, model, branch, run kind, timings, and the worktree it ran in. Use it to attribute an executed plan to the agent and model that ran it, and — during a loop — to poll cancelRequestedAt at task boundaries, which is the ONLY way a Kill reaches an interactive run. Read heartbeatExpected next to isStale: on a run that does not heartbeat, isStale false means "nobody knows", not "verified live". A USAGE_LIMITED run stopped cleanly on a subscription usage limit (usageLimitResetsAt says when it lifts); a run whose resumeOfRunId is set is the automatic continuation of that limited run.`;
+export const getPlanRunsToolDescription = `List the plan runs recorded for a plan, newest first: status, agent driver, model, branch, run kind, timings, and the worktree it ran in. Use it to attribute an executed plan to the agent and model that ran it, and — during a loop — to poll cancelRequestedAt at task boundaries, which is the ONLY way a Kill reaches an interactive run. Read heartbeatExpected next to isStale: on a run that does not heartbeat, isStale false means "nobody knows", not "verified live". A USAGE_LIMITED run stopped cleanly on a subscription usage limit (usageLimitResetsAt says when it lifts); a run whose resumeOfRunId is set is the automatic continuation of that limited run.`;
 
 export async function getPlanRunsToolHandler(
   args: z.infer<typeof getPlanRunsToolParameters>,

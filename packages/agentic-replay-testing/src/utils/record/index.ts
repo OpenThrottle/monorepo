@@ -3,9 +3,6 @@ export {
   type FixtureTextResult,
 } from './buildFixtureText.ts';
 export {
-  recordPlanRunScenario,
-  type RecordPlanRunScenarioOptions,
-  type RecordPlanRunScenarioResult,
   recordScenario,
   type RecordScenarioOptions,
   type RecordScenarioResult,

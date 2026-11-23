@@ -1,5 +1,5 @@
 /**
- * @description Finds BullMQ plan Ralph jobs (spawn and orchestrator job names) for a OpenThrottle plan id and
+ * @description Finds BullMQ plan-run jobs for an OpenThrottle plan id and
  * removes non-active jobs. Active (locked) jobs cannot be removed from outside the worker; callers should
  * surface those ids separately.
  */
@@ -8,7 +8,7 @@ import type { JobType } from 'bullmq';
 import type { Queue } from 'bullmq';
 
 import type { RunPlanJobData } from '../../../queues/plans/plans.types.ts';
-import { isPlanRalphBullJobName } from '../../../queues/plans/plans.utils.ts';
+import { isPlanRunBullJobName } from '../../../queues/plans/plans.utils.ts';
 
 const PLAN_RUN_SCAN_STATES: readonly JobType[] = [
   'waiting',
@@ -21,7 +21,7 @@ const PLAN_RUN_SCAN_STATES: readonly JobType[] = [
 interface CancelPlanRunJobsResult {
   /** BullMQ job ids that were active/locked and could not be removed without worker cooperation. */
   readonly lockedActiveJobIds: readonly string[];
-  /** Number of plan Ralph jobs whose payload matched `planId` (before removal attempts). */
+  /** Number of plan-run jobs whose payload matched `planId` (before removal attempts). */
   readonly matchingJobCount: number;
   /** BullMQ job ids successfully removed (waiting, delayed, paused, prioritized). */
   readonly removedJobIds: readonly string[];
@@ -37,7 +37,7 @@ export const cancelPlanRunJobsForPlan = async (
   const jobs = await queue.getJobs([...PLAN_RUN_SCAN_STATES], 0, 1000);
   const matching = jobs.filter(
     (j) =>
-      isPlanRalphBullJobName(j.name) &&
+      isPlanRunBullJobName(j.name) &&
       typeof j.data?.planId === 'string' &&
       j.data.planId === planId,
   );

@@ -15,7 +15,7 @@ describe('toEnvironmentValue', () => {
   test('returns the environment when it is a known value', () => {
     expect(toEnvironmentValue('ci')).toBe('ci');
     expect(toEnvironmentValue('interactive')).toBe('interactive');
-    expect(toEnvironmentValue('ralph')).toBe('ralph');
+    expect(toEnvironmentValue('headless')).toBe('headless');
   });
 
   test('degrades an unknown environment string to null', () => {

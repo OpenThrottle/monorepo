@@ -3,18 +3,17 @@
  */
 
 import { isRecord } from '@openthrottle/nodejs-utils';
+
+import type { PlanRunOptions } from '~/routing/plans/utils/plan-run-options';
 import {
-  DEFAULT_PLAN_RUN_RALPH_ITERATIONS,
-  DEFAULT_PLAN_RUN_RALPH_RUNNER,
-} from '@openthrottle/openthrottle-plan-config';
+  DEFAULT_RUN_DRIVER,
+  formatPlanRunDriverLabel,
+} from '~/routing/plans/utils/plan-run-options';
 
-import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
-import { formatWorkflowRalphExecutionBackendLabel } from '~/routing/plans/utils/build-workflow-ralph-argv';
-
-interface PlanRunSnapshotRalphShape {
+/** @description The agent tuning block of a run snapshot (the snapshot's `run` block). */
+interface PlanRunSnapshotAgentShape {
+  readonly driver: string | undefined;
   readonly effort: string | undefined;
-  readonly executionBackend: string | undefined;
-  readonly iterations: number | undefined;
   readonly model: string | undefined;
 }
 
@@ -29,28 +28,23 @@ const readString = (value: unknown): string | undefined => {
   return typeof value === 'string' ? value : undefined;
 };
 
-const readNumber = (value: unknown): number | undefined => {
-  return typeof value === 'number' ? value : undefined;
-};
-
 interface PlanRunSnapshotShape {
-  readonly ralph?: PlanRunSnapshotRalphShape;
+  readonly agent?: PlanRunSnapshotAgentShape;
   readonly workspace?: {
     readonly workingDirectory?: string;
   };
 }
 
-const parseSnapshotRalph = (
+const parseSnapshotAgent = (
   raw: unknown,
-): PlanRunSnapshotRalphShape | undefined => {
+): PlanRunSnapshotAgentShape | undefined => {
   if (!isRecord(raw)) {
     return undefined;
   }
 
   return {
+    driver: readString(raw.driver),
     effort: readNonEmptyString(raw.effort),
-    executionBackend: readString(raw.executionBackend),
-    iterations: readNumber(raw.iterations),
     model: readNonEmptyString(raw.model),
   };
 };
@@ -83,10 +77,10 @@ const parseSnapshot = (
     return null;
   }
 
-  const ralph = parseSnapshotRalph(parsed.ralph);
+  const agent = parseSnapshotAgent(parsed.run);
   const workspace = parseSnapshotWorkspace(parsed.workspace);
 
-  return { ralph, workspace };
+  return { agent, workspace };
 };
 
 /**
@@ -95,7 +89,7 @@ const parseSnapshot = (
 export const buildPlanRunSnapshotDiffLabels = (
   runConfigSnapshotJson: string | null | undefined,
   current: {
-    readonly workflowInput: WorkflowRalphRunOptionsInput;
+    readonly workflowInput: PlanRunOptions;
     readonly workingDirectory: string;
   },
 ): string[] => {
@@ -105,25 +99,12 @@ export const buildPlanRunSnapshotDiffLabels = (
   }
 
   const labels: string[] = [];
-  const snapshotBackend =
-    snapshot.ralph?.executionBackend ?? DEFAULT_PLAN_RUN_RALPH_RUNNER;
-  const currentBackend =
-    current.workflowInput.executionBackend ?? DEFAULT_PLAN_RUN_RALPH_RUNNER;
+  const snapshotDriver = snapshot.agent?.driver ?? DEFAULT_RUN_DRIVER;
+  const currentDriver = current.workflowInput.driver ?? DEFAULT_RUN_DRIVER;
 
-  if (snapshotBackend !== currentBackend) {
+  if (snapshotDriver !== currentDriver) {
     labels.push(
-      `Backend: ${formatWorkflowRalphExecutionBackendLabel(snapshotBackend)} → ${formatWorkflowRalphExecutionBackendLabel(currentBackend)} (current)`,
-    );
-  }
-
-  const snapshotIterations =
-    snapshot.ralph?.iterations ?? DEFAULT_PLAN_RUN_RALPH_ITERATIONS;
-  const currentIterations =
-    current.workflowInput.iterations ?? DEFAULT_PLAN_RUN_RALPH_ITERATIONS;
-
-  if (snapshotIterations !== currentIterations) {
-    labels.push(
-      `Iterations: ${snapshotIterations} → ${currentIterations} (current)`,
+      `Driver: ${formatPlanRunDriverLabel(snapshotDriver)} → ${formatPlanRunDriverLabel(currentDriver)} (current)`,
     );
   }
 
@@ -157,17 +138,17 @@ export const readPlanRunSnapshotWorkspacePath = (
 
 /**
  * @description The reasoning effort a run was enqueued with, from
- * `run_config_snapshot.ralph.effort`; null when the snapshot is missing or recorded none.
+ * the run config snapshot; null when the snapshot is missing or recorded none.
  */
 export const readPlanRunSnapshotEffort = (
   runConfigSnapshotJson: string | null | undefined,
 ): string | null => {
-  return parseSnapshot(runConfigSnapshotJson)?.ralph?.effort ?? null;
+  return parseSnapshot(runConfigSnapshotJson)?.agent?.effort ?? null;
 };
 
 /**
  * @description The model a run used: the row's own `model` column when set, else the
- * snapshot's `ralph.model`; null when neither recorded one.
+ * snapshot's recorded model; null when neither recorded one.
  */
 export const readPlanRunModel = (row: {
   readonly model?: string | null;
@@ -178,5 +159,5 @@ export const readPlanRunModel = (row: {
     return own;
   }
 
-  return parseSnapshot(row.runConfigSnapshotJson)?.ralph?.model ?? null;
+  return parseSnapshot(row.runConfigSnapshotJson)?.agent?.model ?? null;
 };

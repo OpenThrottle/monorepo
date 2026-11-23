@@ -6,10 +6,6 @@
  * production conversation backend. The backend builds the argv, scrubs the env
  * and spawns exactly as it does in production; nothing here rebuilds an argv,
  * so a recorded argv is by construction what production sends.
- *
- * `recordPlanRunScenario` records a plan-run scenario: the REAL Ralph
- * orchestrator runs against the in-memory store, with the CLI's bare command
- * name resolving to the shim on PATH.
  */
 
 import { execFileSync } from 'node:child_process';
@@ -27,24 +23,16 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import type { ConversationStreamChunk } from '@openthrottle/openthrottle-agentic-utils';
-import { getDriver, isDriverId } from '@openthrottle/openthrottle-drivers';
 
 import type { RecordingProfile } from '../../config/config.backends.ts';
 import { SESSION_STRATEGIES } from '../../config/config.backends.ts';
-import type { PlanRunScenario } from '../../types/plan-run-scenario.ts';
 import type { Scenario } from '../../types/scenario.ts';
 import {
   TRANSCRIPT_LINE_TYPES,
   TRANSCRIPT_SCHEMA_VERSION,
   TRANSCRIPT_SURFACES,
 } from '../../types/transcript.ts';
-import {
-  withBinEnv,
-  withPathPrepended,
-  writeNodeBin,
-  writePathAlias,
-} from '../bin/stub-bin.ts';
-import { runPlanRunScenario } from '../plan-run/runPlanRunScenario.ts';
+import { withBinEnv, writeNodeBin } from '../bin/stub-bin.ts';
 import { replayPaths } from '../replay/replayPaths.ts';
 import { createSanitizer } from '../sanitizer/sanitizer.ts';
 import type { ConversationState } from '../scenario/drive-turn.ts';
@@ -199,102 +187,6 @@ export async function recordScenario(
       writeFileSync(file, text, 'utf8');
     }
     return { files: pending.map(({ file }) => file), ok: true };
-  } finally {
-    rmSync(cwd, { force: true, recursive: true });
-    rmSync(shimDir, { force: true, recursive: true });
-  }
-}
-
-/** @public */
-export interface RecordPlanRunScenarioOptions {
-  readonly model: string | null;
-  readonly outDir: string;
-  readonly profile: RecordingProfile;
-  /** Absolute path of the real CLI binary. */
-  readonly realBin: string;
-  readonly scenario: PlanRunScenario;
-}
-
-/** @public */
-export type RecordPlanRunScenarioResult =
-  | { readonly error: string; readonly ok: false }
-  | { readonly file: string; readonly ok: true };
-
-/**
- * Record the scenario's single agent spawn and write its transcript.
- *
- * @public
- */
-export async function recordPlanRunScenario(
-  options: RecordPlanRunScenarioOptions,
-): Promise<RecordPlanRunScenarioResult> {
-  const { profile, scenario } = options;
-  const runner = profile.backend;
-  if (!isDriverId(runner)) {
-    return { error: `${runner} is not a driver id`, ok: false };
-  }
-
-  const cwd = mkdtempSync(join(tmpdir(), 'ot-replay-cwd-'));
-  const shimDir = mkdtempSync(join(tmpdir(), 'ot-replay-shim-'));
-  const capturePath = join(shimDir, 'capture.ndjson');
-  const cliVersion = execFileSync(options.realBin, [...profile.versionArgs], {
-    encoding: 'utf8',
-  }).trim();
-
-  try {
-    const shim = writeNodeBin({
-      dir: shimDir,
-      entry: 'runRecordingShim',
-      modulePath: RECORDING_SHIM_PATH,
-      name: 'recording-shim',
-      options: { capturePath, realBin: options.realBin },
-    });
-    writePathAlias(shimDir, getDriver(runner).binary, shim);
-
-    await withPathPrepended(shimDir, async () => {
-      await runPlanRunScenario({
-        cwd,
-        model: options.model ?? 'auto',
-        runner,
-        scenario,
-      });
-    });
-
-    if (!existsSync(capturePath)) {
-      return {
-        error: `${scenario.slug}: the agent was never spawned`,
-        ok: false,
-      };
-    }
-
-    const sanitizer = createSanitizer({
-      paths: replayPaths(cwd),
-      redactKeys: profile.redactKeys,
-    });
-    const fixture = buildFixtureText(
-      profile,
-      sanitizer,
-      readFileSync(capturePath, 'utf8'),
-      {
-        backend: profile.backend,
-        cliVersion,
-        model: options.model,
-        recordedAt: new Date().toISOString(),
-        scenario: scenario.slug,
-        schemaVersion: TRANSCRIPT_SCHEMA_VERSION,
-        surface: TRANSCRIPT_SURFACES.planRun,
-        type: TRANSCRIPT_LINE_TYPES.header,
-      },
-      cwd,
-    );
-    if (!fixture.ok) {
-      return { error: `${scenario.slug}: ${fixture.error}`, ok: false };
-    }
-
-    mkdirSync(options.outDir, { recursive: true });
-    const file = join(options.outDir, `${scenario.slug}.ndjson`);
-    writeFileSync(file, fixture.text, 'utf8');
-    return { file, ok: true };
   } finally {
     rmSync(cwd, { force: true, recursive: true });
     rmSync(shimDir, { force: true, recursive: true });

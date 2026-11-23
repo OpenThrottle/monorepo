@@ -37,7 +37,7 @@ const ROLE_NAMES = ['admin', 'user', 'viewer'] as const;
 
 const BOOTSTRAP_ACCOUNTS = [
   { envVar: 'OPENTHROTTLE_MCP_AUTH_TOKEN', label: 'bootstrap-openthrottle-mcp', name: 'openthrottle-mcp' }, // prettier-ignore
-  { envVar: 'OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN', label: 'bootstrap-workflow-ralph', name: 'workflow-ralph' }, // prettier-ignore
+  { envVar: 'OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN', label: 'bootstrap-plan-runner', name: 'plan-runner' }, // prettier-ignore
 ] as const;
 
 async function ensureDefaultUser(

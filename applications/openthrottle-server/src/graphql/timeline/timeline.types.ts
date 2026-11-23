@@ -5,11 +5,11 @@ export type TimelineLane = {
 
 /**
  * The facts a row can be grouped by. Every field is optional because no single
- * source carries all of them — a task has a plan but no backend, a grilling
+ * source carries all of them — a task has a plan but no driver, a grilling
  * event has a branch but no plan.
  */
 export type TimelineLaneFacts = {
-  readonly backend?: string | null;
+  readonly driver?: string | null;
   readonly branch?: string | null;
   readonly checkoutId?: string | null;
   readonly planId?: string | null;

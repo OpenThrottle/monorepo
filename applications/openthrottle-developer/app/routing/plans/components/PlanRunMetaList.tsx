@@ -11,7 +11,7 @@ export interface PlanRunMetaListProps {
 }
 
 /**
- * @description A run's "model · effort · backend · workspace" line for the Runs card. Items stack
+ * @description A run's "model · effort · driver · workspace" line for the Runs card. Items stack
  * one per line on narrow screens and run inline, dot-separated, from `sm` up. The workspace path is
  * monospaced and truncates, with the full path on hover. Renders nothing for no items.
  */

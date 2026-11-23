@@ -2,11 +2,10 @@
 
 The OT-central contract for invoking agent CLIs (Claude Code, Codex, Cursor, Antigravity,
 Grok, OpenCode). Each CLI is one `defineDriver(...)` module; a shared engine
-(`runDriverSync`/`runDriverAsync`) runs it. Extracted from
-`tools/workflows/src/bin/runIteration.ts`.
+(`runDriverSync`/`runDriverAsync`) runs it.
 
-**Consumed by:** `@tools/workflows` (run-iteration adapter),
-`@openthrottle/openthrottle-agentic-utils` + `@openthrottle/openthrottle-agentic-workflow`
+**Consumed by:** `@openthrottle/openthrottle-agentic-loop`,
+`@openthrottle/openthrottle-agentic-utils`, `@openthrottle/openthrottle-plan-config`
 (runner-id re-exports), and transitively `openthrottle-server`.
 
 ## Layout
@@ -24,19 +23,17 @@ Grok, OpenCode). Each CLI is one `defineDriver(...)` module; a shared engine
 ## Invariants & gotchas
 
 - **Node-only.** Uses `child_process`; never import from browser/RR code.
-- **Leaf package.** Zero workspace dependencies — the agentic packages and
-  tools/workflows depend on THIS, not the reverse. Do not import from
+- **Leaf package.** Zero workspace dependencies — the agentic packages
+  depend on THIS, not the reverse. Do not import from
   `openthrottle-agentic-*` here (it would create a cycle).
 - **Registry ↔ drivers split** avoids a cycle: driver modules import `defineDriver`
   from `registry/`, so the assembled `DRIVER_REGISTRY`/`getDriver` live in
   `drivers/index.ts`, not `registry/`. Keep it that way.
 - **`DRIVER_REGISTRY` is `Record<DriverId, AgentDriver>`** — adding an id to `DRIVERS` fails to compile until a module is registered. `ALL_DRIVERS` derives from that map.
-- **Byte-identical parity** with the legacy builders is a hard contract for
-  `claude`/`cursor`: the unchanged `tools/workflows` `run-iteration.test.ts` runs
-  against these drivers. Claude emits `claude -p …` (NOT `--bare`). Don't "fix" it.
-- **Widening `DRIVER_IDS` ripples**: `WORKFLOW_RUNNER_IDS` derives from it, and the
-  `plan_runs.execution_backend` CHECK (databases/openthrottle/migrations/079) + server
-  `PlanRunExecutionBackend`/guard enumerate the same set. Add a migration + widen
+- **Argv parity** is a hard contract for `claude`/`cursor`: their tests pin the exact argv. Claude emits `claude -p …` (NOT `--bare`). Don't "fix" it.
+- **Widening `DRIVER_IDS` ripples**: the runner-id helpers in agentic-utils derive from it, and the
+  `plan_runs.driver` CHECK (`plan_runs_driver_check`, migration 194) + server
+  `PlanRunDriver`/guard enumerate the same set. Add a migration + widen
   those surfaces when you add a runnable id.
 - Built package (real `build`/`build-package`, `exports` → `dist/`) — server consumes
   it at runtime, so relative imports use `.ts` extensions. Tag public API `@public`.
@@ -73,5 +70,4 @@ and prefer the localhost vantage.
 ## Pointers
 
 - [README.md](./README.md) — API list, capability matrix, "adding a new agent CLI".
-- [tools/workflows/README.md](../../tools/workflows/README.md) — Ralph "which path runs when".
 - [../AGENTS.md](../AGENTS.md) — parent-tier package conventions.

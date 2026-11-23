@@ -1,6 +1,5 @@
 /**
- * @description Claude Code CLI driver: headless/print mode (`claude -p …`). Ported byte-for-byte
- * from tools/workflows' `buildClaudeShellCommand`. Uses `--permission-mode acceptEdits` so common
+ * @description Claude Code CLI driver: headless/print mode (`claude -p …`). Uses `--permission-mode acceptEdits` so common
  * file edits don't block; omits `--model` when unset or `auto` (Claude uses its own defaults).
  * Emits `--output-format stream-json --verbose` and supplies `parseOutput` so a subscription usage
  * limit is detectable (see `utils/claude-output.ts`).

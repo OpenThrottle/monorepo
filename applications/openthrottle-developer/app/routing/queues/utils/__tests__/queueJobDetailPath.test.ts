@@ -5,8 +5,8 @@ import { queueJobDetailPath } from '../queueJobDetailPath';
 describe('queueJobDetailPath', () => {
   test('encodes queue name and job id in the path', () => {
     expect(queueJobDetailPath('Plans', 'job-1')).toBe('/queues/Plans/job-1');
-    expect(queueJobDetailPath('Plans', 'ralph-orch:abc')).toBe(
-      '/queues/Plans/ralph-orch%3Aabc',
+    expect(queueJobDetailPath('Plans', 'orch:abc')).toBe(
+      '/queues/Plans/orch%3Aabc',
     );
   });
 

@@ -33,13 +33,13 @@ export class StartWorkSessionInput {
   onBehalfOfUserId!: string | null;
 
   @Field(() => ID, {
-    description: `plan_runs.id when this session is a Ralph run`,
+    description: `plan_runs.id when this session is a plan run`,
     nullable: true,
   })
   planRunId!: string | null;
 
   @Field(() => String, {
-    description: `Tool that produced the work: developer-app | openthrottle-mcp | workflow-ralph | MCP clientInfo.name`,
+    description: `Tool that produced the work: developer-app | openthrottle-mcp | MCP clientInfo.name`,
   })
   toolName!: string;
 

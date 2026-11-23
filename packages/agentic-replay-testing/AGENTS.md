@@ -24,9 +24,6 @@ service and backend with no agentic-utils mock (ids seeded, `Date` frozen).
   recorder and replay must agree on).
 - [src/utils/scenario/](src/utils/scenario/) — `scenarioRun`: the ONE place a scenario turn becomes
   a `ConversationBackendRun`, shared by recorder and replay so their argv can only differ for real.
-- [src/utils/plan-run/](src/utils/plan-run/) — the in-memory OT store, the drivers-engine
-  iteration runner, and `runPlanRunScenario` (the real orchestrator); `replayPlanRun` /
-  `recordPlanRunScenario` sit in `replay/` and `record/`.
 - [src/config/config.backends.ts](src/config/config.backends.ts) — per-backend recording profiles:
   bin env, redact keys, host-only stdout lines to drop.
 - [src/data/data.scenarios.ts](src/data/data.scenarios.ts) — the shared scenarios.
@@ -53,28 +50,13 @@ service and backend with no agentic-utils mock (ids seeded, `Date` frozen).
   `process.cwd()` is resolved, a backend-built argv is not.
 - **Consumers compile this source against their own `lib`.** openthrottle-server has no ES2023
   (`toSorted`, `findLast`), so `src/` (non-test) code avoids them; tests may use them.
-- **Plan-run spawns resolve the CLI off PATH** (`sh -c 'claude -p …'`), not through `*_BIN` — the
-  bin goes in as a bare-name alias via `writePathAlias` + `withPathPrepended`.
-- **Plan-run prompts must be byte-identical**: placeholder ids from the start (`PLAN_RUN_PLAN_ID`,
-  `planRunTaskId`), fixed timestamps, no hook plugin dirs, and the checkout path tokenized as
-  `<OT_ROOT>` (derived from `replayPaths.ts`'s own location). Changing any orchestrator prompt text
-  makes the plan-run replays fail by design — re-record them.
 - **Profiles derive bin env, binary and version flags from the drivers registry** (`profileFor`).
   Adding a backend = one profile with its `sessionStrategy`, `redactKeys` and `dropStdoutLine`, then
   record and inspect the transcripts for host config before committing.
-- **Synthetic plan-run scenarios** (`synthetic: { backend, bin }`) cover failures no real account
-  reproduces on demand (an org out of credit). `record` runs them against the stand-in
-  `scripts/synthetic/<bin>/runSyntheticCli.ts` (exports `runSyntheticCli`) for that one backend only; argv is still
-  the real orchestrator's. `check-drift` skips them. Edit the stand-in and re-record, never the
-  fixture.
-- **The plan-run harness clears `WORKFLOW_RALPH_OT_ROOT`** for the run, so a session launched by a
-  plan run (which inherits it, pointing at another checkout) still builds the recorded prompt.
 - **A failed scenario writes nothing.** `permission-denied` fails a backend whose supervised posture
   lets the write through — never hand-add that transcript. cursor runs non-`fullAccess` postures as
   `--mode ask`, and opencode writes `edit`/`bash: ask` into its temp config; both were refused here
   before that.
-- **Plan-run cwds are git repositories** (`runPlanRunScenario` runs `git init`), as real plan runs
-  are; codex refuses to run outside one.
 - **One sanitizer instance per scenario** (all its turns), so a session id one turn reports and the
   next sends back share a placeholder.
 - **One sanitizer instance per transcript** Its UUID map is stateful so a session id in argv and the

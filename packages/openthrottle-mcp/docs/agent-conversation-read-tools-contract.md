@@ -9,13 +9,13 @@ Design contract for three read-only MCP tools in `@openthrottle/openthrottle-mcp
 | Data store             | MCP tools                                                                              | Use for                                                                              |
 | ---------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
 | `agent_conversation_*` | `agent_conversation_list`, `agent_conversation_get`, `agent_conversation_get_messages` | Developer UI web chat threads persisted via `agentsRunChatTurn` with `persist: true` |
-| `plan_output_stream`   | `get_plan_output`, `append_plan_output`                                                | Ralph / workflow iteration logs tied to a plan                                       |
+| `plan_output_stream`   | `get_plan_output`, `append_plan_output`                                                | Plan-run iteration logs tied to a plan                                               |
 
 **Do not** expose `plan_output_stream` through conversation tools. **Do not** write agent conversations from MCP in v1 (no append/create/archive MCP tools unless `AGENTS_CHAT_ALLOW_MUTATIONS` extends later).
 
 Each tool **description** must end with this inline boundary warning:
 
-> Web chat threads only — use `get_plan_output` for Ralph/plan iteration logs.
+> Web chat threads only — use `get_plan_output` for plan iteration logs.
 
 ## Auth (human JWT, user-scoped)
 
@@ -30,7 +30,7 @@ Results are always scoped to the authenticated human user's rows (`user_id` matc
 
 ## Tool naming (grill-me Q1, Q2)
 
-All tools use the `agent_conversation_` prefix to disambiguate from plan/Ralph tools.
+All tools use the `agent_conversation_` prefix to disambiguate from plan tools.
 
 | MCP tool name                     | GraphQL operation              |
 | --------------------------------- | ------------------------------ |
@@ -44,7 +44,7 @@ Implementation files (follow-up tasks): `src/tools/agent-conversations.ts`, regi
 
 **Description (full string for registry):**
 
-List persisted web chat conversations for the authenticated human user. Optional status filter (default `active`), limit, and offset. Web chat threads only — use `get_plan_output` for Ralph/plan iteration logs.
+List persisted web chat conversations for the authenticated human user. Optional status filter (default `active`), limit, and offset. Web chat threads only — use `get_plan_output` for plan iteration logs.
 
 **Parameters (MCP args → GraphQL `ListAgentConversationsInput`):**
 
@@ -88,7 +88,7 @@ query listAgentConversations($input: ListAgentConversationsInput) {
 
 **Description (full string for registry):**
 
-Fetch one persisted web chat conversation by id for the authenticated human user. Returns null when not found or not owned. Web chat threads only — use `get_plan_output` for Ralph/plan iteration logs.
+Fetch one persisted web chat conversation by id for the authenticated human user. Returns null when not found or not owned. Web chat threads only — use `get_plan_output` for plan iteration logs.
 
 **Parameters (grill-me Q9 — match GraphQL arg name):**
 
@@ -122,7 +122,7 @@ query getAgentConversation($id: ID!) {
 
 **Description (full string for registry):**
 
-List messages for an owned web chat conversation ordered by sort_order ascending. Optional limit and offset. Web chat threads only — use `get_plan_output` for Ralph/plan iteration logs.
+List messages for an owned web chat conversation ordered by sort_order ascending. Optional limit and offset. Web chat threads only — use `get_plan_output` for plan iteration logs.
 
 **Parameters (grill-me Q9 — match GraphQL field names):**
 

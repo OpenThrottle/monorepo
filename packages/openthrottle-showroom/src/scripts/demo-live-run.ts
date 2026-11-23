@@ -3,7 +3,7 @@
  *
  * Three episodes need a run that reads as live: 15-kill-runaway-run is entirely
  * about killing one, 12-watch-run-live needs a stream that is genuinely current,
- * and 11-ralph-one-task opens on a task in progress. The seed deliberately gives
+ * and 11-plan-run-one-task opens on a task in progress. The seed deliberately gives
  * them the opposite — every imported run is coerced to `COMPLETED`, because an
  * `IN_PROGRESS` run with no heartbeat is swept stale within two minutes, the
  * plan reconciles back to `PENDING`, and take 1 and take 7 disagree on the

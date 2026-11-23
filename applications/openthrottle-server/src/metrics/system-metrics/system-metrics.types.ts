@@ -1,7 +1,7 @@
 /**
  * @description Types for the /metrics/system endpoint.
  * Provides system-level metrics for live profiling: load average, CPU pressure (Linux PSI),
- * and count of active Ralph child processes.
+ * and count of active plan-run child processes.
  */
 
 /**

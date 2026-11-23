@@ -74,8 +74,10 @@ export const RuleFormMatchSection = (
   // Select labels render as SelectValue children, so they are present in the SSR markup.
   // Select labels render as SelectValue children, so they are present in the SSR markup.
   const statusLabel = status === ANY ? RULES_COPY.anyOption : status;
-  const environmentLabel =
-    environment === ANY ? RULES_COPY.anyOption : environment;
+  const isAnyEnvironment = environment === ANY;
+  const environmentLabel = isAnyEnvironment
+    ? RULES_COPY.anyOption
+    : environment;
 
   // Handlers
 

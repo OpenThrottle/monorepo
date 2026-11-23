@@ -190,7 +190,7 @@ built JavaScript, so nothing ever hands a consumer their raw TypeScript.
 ##### History: the six codegen opt-outs, and how they were closed
 
 There used to be a second exemption, covering six projects whose program included GraphQL
-Codegen output — `openthrottle-developer`, `openthrottle-admin`, `openthrottle-agentic-ralph`,
+Codegen output — `openthrottle-developer`, `openthrottle-admin`, the agentic runner package (since deleted),
 `openthrottle-mcp`, `openthrottle-developer-codegen`, and `react-router-ui-global`. Codegen
 emitted `export enum` into `__generated__/graphql.ts`, a compiler flag cannot be scoped to
 exclude a directory, and nothing can lint a file codegen overwrites — so generated code was
@@ -298,12 +298,12 @@ already ESM.)
 
 ### What the last exemption taught us about source-first ESM packages
 
-`@openthrottle/nestjs-agentic-workflow` was the final holdout, and the two defects behind it
-were both in `@openthrottle/openthrottle-agentic-ralph` — a source-first **ESM** package.
-Neither was visible until something resolved ralph from _built_ code, and both are now
+A NestJS package (since deleted) was the final holdout, and the two defects behind it
+were both in a source-first **ESM** package (since deleted).
+Neither was visible until something resolved it from _built_ code, and both are now
 prevented at the codegen config rather than fixed per package:
 
-1. **`.js` specifiers in a source-first package.** ralph's `codegen.ts` set
+1. **`.js` specifiers in a source-first package.** That package's `codegen.ts` set
    `importExtension: '.js'`, and a dozen hand-written files followed suit. That is correct
    for an ESM package that is **built** (`@openthrottle/openthrottle-mcp` — NodeNext source
    must name the emitted `.js`) and wrong for one that is **source-first**, where consumers

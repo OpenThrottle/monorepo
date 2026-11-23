@@ -1,26 +1,29 @@
 import { describe, expect, test } from 'vitest';
 
 import {
-  EXECUTION_BACKENDS,
-  isExecutionBackend,
+  isSelectablePlanRunDriver,
+  PLAN_RUN_SELECTABLE_DRIVERS,
 } from '../plan-workflow-config-execution';
 
-describe('EXECUTION_BACKENDS', () => {
+describe('PLAN_RUN_SELECTABLE_DRIVERS', () => {
   test('lists cursor then claude in display order', () => {
-    expect(EXECUTION_BACKENDS).toEqual(['cursor', 'claude']);
+    expect(PLAN_RUN_SELECTABLE_DRIVERS).toEqual(['cursor', 'claude']);
   });
 });
 
-describe('isExecutionBackend', () => {
-  test.each(EXECUTION_BACKENDS)('accepts known backend %s', (backend) => {
-    expect(isExecutionBackend(backend)).toBe(true);
-  });
+describe('isSelectablePlanRunDriver', () => {
+  test.each(PLAN_RUN_SELECTABLE_DRIVERS)(
+    'accepts known driver %s',
+    (driver) => {
+      expect(isSelectablePlanRunDriver(driver)).toBe(true);
+    },
+  );
 
-  test('rejects an unknown backend', () => {
-    expect(isExecutionBackend('codex')).toBe(false);
+  test('rejects an unknown driver', () => {
+    expect(isSelectablePlanRunDriver('codex')).toBe(false);
   });
 
   test('rejects an empty string', () => {
-    expect(isExecutionBackend('')).toBe(false);
+    expect(isSelectablePlanRunDriver('')).toBe(false);
   });
 });

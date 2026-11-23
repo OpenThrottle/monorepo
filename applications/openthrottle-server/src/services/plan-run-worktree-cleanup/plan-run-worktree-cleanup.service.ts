@@ -6,7 +6,7 @@
  *   1. the run was provisioned into its own worktree (not the base checkout);
  *   2. it finished `workflow_complete` or `workflow_tasks_exhausted`;
  *   3. the host finalize step opened a PR;
- *   4. the plan's `ralph.worktreeCleanup` is not `'keep'` (read at teardown time, so it holds for
+ *   4. the plan's `run.worktreeCleanup` is not `'keep'` (read at teardown time, so it holds for
  *      every enqueue path and a mid-run switch to `'keep'` is honoured).
  * The teardown service then applies its own guards (clean, pushed, no live run) and has the final
  * say. Whatever happens, ONE plan_output line records it. Never throws: the run is already
@@ -114,7 +114,7 @@ export class PlanRunWorktreeCleanupService {
     return { kind: 'attempted', result };
   }
 
-  /** The plan's `ralph.worktreeCleanup`, or null when the plan cannot be read. */
+  /** The plan's `run.worktreeCleanup`, or null when the plan cannot be read. */
   private async readWorktreeCleanupSetting(
     planId: string,
   ): Promise<'keep' | 'on-pr' | null> {
@@ -125,7 +125,7 @@ export class PlanRunWorktreeCleanupService {
       if (plan === null) return null;
 
       // An unparsable stored config reads as the defaults, exactly as the Configuration tab shows it.
-      return planRunConfigFromPlanStorage(plan.runConfig, { planId }).ralph
+      return planRunConfigFromPlanStorage(plan.runConfig, { planId }).run
         .worktreeCleanup;
     } catch (error) {
       this.logger.warn(

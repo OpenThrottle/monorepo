@@ -61,7 +61,7 @@ describe('WorkflowLifecycleDispatcherFactory', () => {
           {
             kind: 'prompt_profile',
             phase: 'beforeAll',
-            prompt: '/agents/ralph',
+            prompt: '/agents/plan-run',
             promptDelivery: 'named',
           },
         ],
@@ -97,7 +97,7 @@ describe('WorkflowLifecycleDispatcherFactory', () => {
             kind: 'prompt_profile',
             onFailure: 'block',
             phase: 'beforeAll',
-            prompt: '/agents/ralph',
+            prompt: '/agents/plan-run',
             promptDelivery: 'named',
           },
         ],

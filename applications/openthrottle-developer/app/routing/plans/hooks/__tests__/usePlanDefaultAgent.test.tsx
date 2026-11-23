@@ -7,7 +7,7 @@ import { usePlanDefaultAgent } from '~/routing/plans/hooks/usePlanDefaultAgent';
 import type { DefaultAgentDraft } from '~/routing/settings/utils/user-preferences';
 
 const agent: DefaultAgentDraft = {
-  backend: 'claude',
+  driver: 'claude',
   effort: 'high',
   model: 'opus',
 };

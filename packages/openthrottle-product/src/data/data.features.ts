@@ -152,11 +152,7 @@ export const PRODUCT_FEATURES = [
     body: `OpenThrottle ships foundational runners and loops rather than one fixed agent. Today's starting points work a plan one task at a time: select, work, validate, commit. Choose one, change its prompts, hooks and model routing, or build your own.`,
     emoji: '🔁',
     evidence: {
-      docs: [
-        'docs/workflows/ot-loop-job.md',
-        'docs/workflows/ralph-design.md',
-        'skills/ot-loop/SKILL.md',
-      ],
+      docs: ['docs/workflows/ot-loop-job.md', 'skills/ot-loop/SKILL.md'],
       planIds: [],
       prs: [501, 629, 717],
     },

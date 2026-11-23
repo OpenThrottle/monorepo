@@ -55,8 +55,8 @@ export const QueueJobPayload = (
       legend="Job payload (data)"
     >
       <p className="text-muted-foreground text-sm">
-        Raw JSON stored on the job. May include `ralph` tuning; treat as
-        sensitive in shared environments.
+        Raw JSON stored on the job. May include run tuning; treat as sensitive
+        in shared environments.
       </p>
 
       <div className="relative">{hasPayload ? payloadBlock : noPayload}</div>

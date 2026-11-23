@@ -14,8 +14,8 @@ export type SkillAvailabilityPosture =
 /** Environment qualifiers a rule can be scoped to (design "Attribute model"). */
 export const SKILL_AVAILABILITY_ENVIRONMENTS = [
   'ci',
+  'headless',
   'interactive',
-  'ralph',
 ] as const;
 
 export type SkillAvailabilityEnvironment =

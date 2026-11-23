@@ -1,13 +1,17 @@
 /**
  * @description Client-side job-run lifecycle hooks: parse, validate, and serialize for plan UI + enqueue.
- * Constants align with `tools/workflows/src/types/job-run-lifecycle-hooks.ts` (no Node `fs` import).
+ * Constants align with `@openthrottle/openthrottle-agentic-utils` job-run lifecycle hooks (no Node `fs` import).
  */
 
 import { isRecord } from '@openthrottle/nodejs-utils';
 
-import { DEFAULT_RALPH_PROMPT } from '~/routing/plans/utils/build-workflow-ralph-argv';
+/**
+ * @description A new named-prompt hook starts blank: there is no default prompt profile, so the
+ * editor asks for one (validation reports a blank name until it is filled).
+ */
+export const BLANK_JOB_RUN_HOOK_PROMPT = '';
 
-/** When a hook runs relative to the main Ralph/orchestrator run. */
+/** When a hook runs relative to the main plan run. */
 export type JobRunHookPhase = 'after_run' | 'before_run';
 
 /** How hook failure affects the job. */
@@ -251,7 +255,7 @@ const parseHookEntryFromRecord = (
     };
   }
 
-  const named = prompt ?? target ?? DEFAULT_RALPH_PROMPT;
+  const named = prompt ?? target ?? BLANK_JOB_RUN_HOOK_PROMPT;
   return {
     ...base,
     kind: 'prompt_profile',
@@ -310,7 +314,7 @@ export const createDefaultJobRunHookDraftRow = (): JobRunHookDraftRow => {
     draftId: crypto.randomUUID(),
     kind: 'prompt_profile',
     phase: 'before_run',
-    prompt: DEFAULT_RALPH_PROMPT,
+    prompt: BLANK_JOB_RUN_HOOK_PROMPT,
     promptDelivery: 'named',
   };
 };

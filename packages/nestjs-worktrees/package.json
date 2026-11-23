@@ -1,6 +1,6 @@
 {
   "name": "@openthrottle/nestjs-worktrees",
-  "description": "NestJS module for git worktree workflows: WorktreeTargetsTracker from WORKTREE_TARGETS, plus runWorktreeWorkflow and runChildJob (argv aligned with @tools/workflows) for queue processors.",
+  "description": "NestJS module for git worktree workflows: WorktreeTargetsTracker from WORKTREE_TARGETS, plus runWorktreeWorkflow and the child-job types for queue processors.",
   "version": "1.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
@@ -9,9 +9,7 @@
   },
   "dependencies": {
     "@openthrottle/openthrottle-agentic-utils": "workspace:^",
-    "@openthrottle/openthrottle-agentic-workflow": "workspace:^",
     "@openthrottle/openthrottle-mcp": "workspace:^",
-    "@tools/workflows": "workspace:^",
     "async-mutex": "catalog:"
   },
   "devDependencies": {

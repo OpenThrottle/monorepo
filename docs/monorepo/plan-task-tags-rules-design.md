@@ -123,14 +123,14 @@ match half and an action half.
 **Match.** All of these must hold (AND semantics), checked by the pure
 `evaluateTagActionRules`:
 
-| Condition       | Rule value                           | Passes when                                                        |
-| --------------- | ------------------------------------ | ------------------------------------------------------------------ |
-| enabled         | `true`                               | always required                                                    |
-| `tag_all`       | list of tags                         | every listed tag is in the effective set; empty matches every plan |
-| `status`        | plan status or NULL                  | NULL, or equal to the plan's status                                |
-| `repository_id` | repository or NULL                   | NULL, or equal to `plans.repository_id`                            |
-| `environment`   | `ci`, `interactive`, `ralph` or NULL | NULL, or equal to the evaluation's environment                     |
-| `project_id`    | project or NULL                      | NULL, or equal to the plan's project                               |
+| Condition       | Rule value                              | Passes when                                                        |
+| --------------- | --------------------------------------- | ------------------------------------------------------------------ |
+| enabled         | `true`                                  | always required                                                    |
+| `tag_all`       | list of tags                            | every listed tag is in the effective set; empty matches every plan |
+| `status`        | plan status or NULL                     | NULL, or equal to the plan's status                                |
+| `repository_id` | repository or NULL                      | NULL, or equal to `plans.repository_id`                            |
+| `environment`   | `ci`, `interactive`, `headless` or NULL | NULL, or equal to the evaluation's environment                     |
+| `project_id`    | project or NULL                         | NULL, or equal to the plan's project                               |
 
 The evaluator returns every match in input order. It does no I/O, so the same function
 backs the worker, the plan-context read and the preview.
@@ -206,13 +206,13 @@ is down; the next trigger re-evaluates the whole plan anyway.
 
 Passes are deduplicated per plan **and environment** (`keepLastIfActive`), so a burst of
 edits collapses into one pass. The environment is in the key because rules apply once
-per `(rule, plan)`: a null-environment pass replacing a pending `ralph` one would drop
-the `ralph`-only matches.
+per `(rule, plan)`: a null-environment pass replacing a pending `headless` one would drop
+the `headless`-only matches.
 
 **The environment is on the job, and no trigger supplies one yet.** Every current
 trigger passes `null`. An environment-qualified rule therefore does not match a worker
 pass today; it takes effect only on plan-context reads, where the caller declares its
-environment (Ralph says `ralph`, the developer app `interactive`, CI `ci`). That is why
+environment (a headless plan run says `headless`, the developer app `interactive`, CI `ci`). That is why
 the rule form tells users to leave environment blank for a rule meant to inject or
 promote tasks.
 
@@ -428,7 +428,7 @@ deleted when the rule stops matching, is disabled or is deleted:
 - **Background triggers carry no environment.** GraphQL-triggered passes carry the
   environment from the `x-ot-environment` header, which openthrottle-mcp's stdio server
   sets from its launch environment (explicit `OPENTHROTTLE_MCP_ENVIRONMENT`, then `CI`,
-  then an orchestrator's run identity as `ralph`, then an agent harness as
+  then an orchestrator's run identity as `headless`, then an agent harness as
   `interactive`). Developer-app edits and the tagging worker carry `null`, so they skip
   environment-qualified rules. A pass never orphans the ledger rows of a rule qualified
   on another environment.

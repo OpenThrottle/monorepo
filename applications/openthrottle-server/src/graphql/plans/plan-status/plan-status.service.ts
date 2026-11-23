@@ -1,7 +1,7 @@
 /**
  * @description Owns plan status-transition policy and cancellation orchestration, extracted from
  * {@link PlansResolver} so the resolver no longer carries transition rules. Centralizes the
- * openthrottle-ralph IN_PROGRESS transition policy, status persistence, and the cancel-plan-run flow
+ * IN_PROGRESS transition policy, status persistence, and the cancel-plan-run flow
  * (queue cancellation + active-run abort + plan/task status reset).
  */
 import { InjectQueue } from '@nestjs/bullmq';
@@ -80,7 +80,7 @@ function normalizePlanStatusForPolicy(status: string): string {
 }
 
 /**
- * @description openthrottle-ralph parity: `UPDATE … SET status = 'IN_PROGRESS' WHERE status != 'IN_PROGRESS'`.
+ * @description IN_PROGRESS transition: `UPDATE … SET status = 'IN_PROGRESS' WHERE status != 'IN_PROGRESS'`.
  * Allows `PENDING`, `QUEUED`, `SCHEDULED` and idempotent `IN_PROGRESS` → `IN_PROGRESS`. A SCHEDULED plan
  * was PENDING or BACKLOG before it was scheduled (D2); work starting on it (an interactive loop, a task
  * going IN_PROGRESS) moves it on and cancels the scheduled run (D7).
@@ -193,7 +193,7 @@ export class PlanStatusService {
   /**
    * @description Resolves the next status for a partial plan update. Returns `{ nextStatus }` when
    * the status should change, or `null` when it should stay unchanged (no-op, idempotent, or a
-   * forbidden IN_PROGRESS transition that is silently left in place — openthrottle-ralph parity).
+   * forbidden IN_PROGRESS transition that is silently left in place).
    */
   resolveStatusChange(
     currentStatus: string,

@@ -9,11 +9,9 @@ const __dirname = dirname(__filename);
 const config: CodegenConfig = defineCodegen({
   dirname: __dirname,
   documents: [
-    // Phase 1 codegen dedupe: shared plan/task/note/project/commit operations + fragments
-    // are consumed from the canonical agentic-ralph set rather than duplicated here.
-    // See docs/workflows/ralph-mcp-vs-graphql-consolidation-adr.md.
-    '../openthrottle-agentic-ralph/src/graphql/ralph/**/*.graphql',
-    // MCP-only documents (agent-conversation feature).
+    // Every .graphql document this package owns, including src/graphql/operations/: the shared
+    // plan/task/note/project/commit operations and fragments that openthrottle-server's
+    // codegen also reads.
     'src/**/*.graphql',
     'src/**/*.ts',
     '!src/__generated__/**/*',

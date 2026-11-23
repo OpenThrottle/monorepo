@@ -21,13 +21,13 @@ describe('PlanRunEffortControl Component', () => {
 
   beforeEach(() => {
     props = {
-      backend: 'claude',
+      driver: 'claude',
       effort: 'high',
       onEffortChange: vi.fn(),
     };
   });
 
-  describe('when the backend has a reasoning knob (claude)', () => {
+  describe('when the driver has a reasoning knob (claude)', () => {
     test('is enabled and reflects the stored effort', () => {
       const component = renderControl();
 
@@ -70,9 +70,9 @@ describe('PlanRunEffortControl Component', () => {
     });
   });
 
-  describe('when the backend has no reasoning knob (cursor)', () => {
+  describe('when the driver has no reasoning knob (cursor)', () => {
     beforeEach(() => {
-      props = { ...props, backend: 'cursor', effort: '' };
+      props = { ...props, driver: 'cursor', effort: '' };
     });
 
     test('renders disabled instead of disappearing', () => {

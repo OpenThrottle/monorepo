@@ -193,4 +193,4 @@ lock at all — pin `SCHEDULED_AGENT_JOBS_CONCURRENCY=1` there.
 - Cross-process run cancellation (a pub/sub channel); today `cancelScheduledAgentJobRun` sets a
   durable marker + best-effort in-process abort.
 - UI polish: a live-tail log console, the chat model-picker rail, and a visual cron builder.
-- Repository targeting for Ralph plan runs, which resolve their working directory separately.
+- Repository targeting for plan runs, which resolve their working directory separately.

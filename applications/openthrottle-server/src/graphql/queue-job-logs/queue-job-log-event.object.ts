@@ -31,7 +31,7 @@ export class QueueJobLogEventObject {
   queueName!: string;
 
   @Field(() => String, {
-    description: `Origin layer, e.g. plans-queue | workflow-queue | ralph-shim.`,
+    description: `Origin layer, e.g. plans-queue | workflow-queue.`,
   })
   source!: string;
 

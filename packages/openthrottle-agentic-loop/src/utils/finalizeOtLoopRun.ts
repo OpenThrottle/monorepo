@@ -3,35 +3,34 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import type {
-  WorkflowExecuteGraphqlV2,
-  WorkflowRalphCommandResult,
-  WorkflowRalphCommandRunner,
-  WorkflowRalphIterationOnChunk,
-  WorkflowRunResult,
-} from '@openthrottle/openthrottle-agentic-ralph';
-import {
-  finalizeHandoffOwed,
-  finalizePlanRun,
-} from '@openthrottle/openthrottle-agentic-ralph';
+  PlanRunCommandResult,
+  PlanRunCommandRunner,
+  PlanRunOnChunk,
+} from '@openthrottle/openthrottle-agentic-utils';
 
+import type {
+  PlanRunFinalizePort,
+  WorkflowRunResult,
+} from '../contract/index.ts';
 import {
   COMMIT_TEMP_PREFIX,
   FINALIZE_PRIOR_REASONS,
   SQUASH_FALLBACK_SUBJECT,
 } from '../data/data.git.ts';
 import { appendCommitFooters } from './commit.ts';
+import { finalizeHandoffOwed, finalizePlanRun } from './finalizePlanRun.ts';
 
 /** @public */
 export interface FinalizeOtLoopRunParams {
   readonly baseBranch: string;
   readonly cwd: string;
   readonly draftDir: string | undefined;
-  readonly executeGraphqlV2: WorkflowExecuteGraphqlV2;
-  readonly onChunk: WorkflowRalphIterationOnChunk | undefined;
+  readonly onChunk: PlanRunOnChunk | undefined;
   /** `complete` (every task resolved) or `tasks_blocked` (any BLOCKED); the PR is a draft either way. */
   readonly outcome: 'complete' | 'tasks_blocked';
   readonly planId: string;
-  readonly runCommand: WorkflowRalphCommandRunner;
+  readonly port: PlanRunFinalizePort;
+  readonly runCommand: PlanRunCommandRunner;
   /** Squash commit header; `undefined` reuses the oldest commit's header in the range. */
   readonly squashSubject: string | undefined;
   /** Ids of the plan's COMPLETED tasks from OT, in task order; commitless tasks are carried too. */
@@ -48,9 +47,7 @@ type Step<T> = Failure | { readonly ok: true; readonly value: T };
 
 interface Context {
   readonly baseBranch: string;
-  readonly git: (
-    args: readonly string[],
-  ) => Promise<WorkflowRalphCommandResult>;
+  readonly git: (args: readonly string[]) => Promise<PlanRunCommandResult>;
   readonly params: FinalizeOtLoopRunParams;
   readonly rev: (
     args: readonly string[],
@@ -76,7 +73,7 @@ const TASK_ID_FOOTER = /^Task-Id:[ \t]*(\S+)[ \t]*$/gm;
 const CARRIED_FOOTER =
   /^((?:Closes|Fixes|Resolves) #\d+|BREAKING CHANGE:.*)$/gm;
 
-const outputOf = (result: WorkflowRalphCommandResult): string => {
+const outputOf = (result: PlanRunCommandResult): string => {
   return result.stderr.trim() || result.stdout.trim();
 };
 
@@ -370,7 +367,7 @@ const guardFailure = (files: readonly string[], base: string): Failure => {
 const commitSquash = async (
   ctx: Context,
   message: string,
-): Promise<WorkflowRalphCommandResult> => {
+): Promise<PlanRunCommandResult> => {
   const dir = await mkdtemp(join(tmpdir(), COMMIT_TEMP_PREFIX));
 
   try {
@@ -500,9 +497,7 @@ export const finalizeOtLoopRun = async (
   params: FinalizeOtLoopRunParams,
 ): Promise<WorkflowRunResult> => {
   const { baseBranch, cwd, runCommand } = params;
-  const git = (
-    args: readonly string[],
-  ): Promise<WorkflowRalphCommandResult> => {
+  const git = (args: readonly string[]): Promise<PlanRunCommandResult> => {
     return runCommand({ args, command: 'git', cwd });
   };
   const rev = async (
@@ -521,10 +516,10 @@ export const finalizeOtLoopRun = async (
     return finalizeHandoffOwed({
       cwd,
       detail: step.detail,
-      executeGraphqlV2: params.executeGraphqlV2,
       onChunk: params.onChunk,
       owedStep: step.owedStep,
       planId: params.planId,
+      port: params.port,
     });
   };
 
@@ -552,10 +547,10 @@ export const finalizeOtLoopRun = async (
     baseBranch,
     cwd,
     draftDir: params.draftDir,
-    executeGraphqlV2: params.executeGraphqlV2,
     markReady: false,
     onChunk: params.onChunk,
     planId: params.planId,
+    port: params.port,
     priorReason: FINALIZE_PRIOR_REASONS[params.outcome],
     runCommand,
   });

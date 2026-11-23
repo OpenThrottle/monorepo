@@ -23,7 +23,7 @@ describe('PlanRunModelPicker Component', () => {
 
   beforeEach(() => {
     props = {
-      backend: 'cursor',
+      driver: 'cursor',
       model: 'gpt-5.2',
       models: MOCK_PLAN_RUN_MODELS,
       onChange: vi.fn(),
@@ -38,7 +38,7 @@ describe('PlanRunModelPicker Component', () => {
     );
   });
 
-  test('writes the model and the backend it belongs to when another runner is picked', async () => {
+  test('writes the model and the driver it belongs to when another runner is picked', async () => {
     const user = userEvent.setup();
     const component = renderPicker();
 
@@ -49,7 +49,7 @@ describe('PlanRunModelPicker Component', () => {
     );
 
     expect(props.onChange).toHaveBeenCalledWith({
-      backend: 'claude',
+      driver: 'claude',
       model: 'opus',
     });
   });

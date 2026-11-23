@@ -58,7 +58,7 @@ export const workSessionsFactory = Factory.define<WorkSessionFactoryData>(
       planRunId: null,
       startedAt,
       summary: null,
-      toolName: 'workflow-ralph',
+      toolName: 'plan-runner',
       toolVersion: null,
     };
   },

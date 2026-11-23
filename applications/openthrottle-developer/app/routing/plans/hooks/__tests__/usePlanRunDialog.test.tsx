@@ -55,13 +55,12 @@ describe('usePlanRunDialog', () => {
       open: true,
       planId: 'plan-1',
       planStatus: 'PENDING',
-      ralphTuningJson: '',
       repositoryId: '',
       runConfigJson: buildPlanRunConfigJson({
-        executionBackend: 'claude',
-        iterations: 3,
+        driver: 'claude',
         model: 'opus',
       }),
+      runTuningJson: '',
       scheduledRunAt: null,
       workflowRunBlocked: false,
       workflowRunBlockedReason: undefined,
@@ -77,36 +76,34 @@ describe('usePlanRunDialog', () => {
     const { result } = renderDialogHook(options);
 
     expect(result.current.draft).toMatchObject({
-      backend: 'claude',
-      iterationsText: '3',
+      driver: 'claude',
       mode: 'run',
       model: 'opus',
     });
-    expect(result.current.planIterations).toBe(3);
     expect(result.current.blockedReason).toBeNull();
   });
 
-  test('picking a model writes backend + model together and drops an unsupported effort', () => {
+  test('picking a model writes driver + model together and drops an unsupported effort', () => {
     options = {
       ...options,
       runConfigJson: buildPlanRunConfigJson({
+        driver: 'claude',
         effort: 'high',
-        executionBackend: 'claude',
       }),
     };
     const { result } = renderDialogHook(options);
 
     act(() =>
-      result.current.onModelChange({ backend: 'cursor', model: 'gpt-5' }),
+      result.current.onModelChange({ driver: 'cursor', model: 'gpt-5' }),
     );
 
     expect(result.current.draft).toMatchObject({
-      backend: 'cursor',
+      driver: 'cursor',
       effort: '',
       model: 'gpt-5',
     });
     expect(result.current.fields).toMatchObject({
-      backend: 'cursor',
+      driver: 'cursor',
       model: 'gpt-5',
     });
     expect(result.current.fields).not.toHaveProperty('effort');

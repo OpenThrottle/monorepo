@@ -15,10 +15,10 @@ export class JobObject {
   data!: string | null;
 
   @Field(() => String, {
-    description: `Execution backend selected once for this plan run. Present for plans queue jobs.`,
+    description: `Agent driver selected once for this plan run. Present for plans queue jobs.`,
     nullable: true,
   })
-  executionBackend!: string | null;
+  driver!: string | null;
 
   @Field(() => String, {
     description: 'Error message if the job failed.',

@@ -17,7 +17,7 @@ const promptRow = (
     onFailure: undefined,
     order,
     phase,
-    prompt: '/agents-ralph',
+    prompt: '/my-prompt',
     promptDelivery: 'named',
     timeoutSeconds: undefined,
   };

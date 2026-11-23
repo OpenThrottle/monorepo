@@ -34,15 +34,15 @@ describe('PlanRulesEvaluationService.enqueueEvaluation', () => {
   });
 
   it('enqueues with a plan-scoped deduplication id and keepLastIfActive', async () => {
-    await service.enqueueEvaluation(planId, 'task-created', 'ralph');
+    await service.enqueueEvaluation(planId, 'task-created', 'headless');
 
     expect(queue.add).toHaveBeenCalledTimes(1);
     expect(queue.add).toHaveBeenCalledWith(
       PLAN_RULES_EVALUATE_JOB_NAME,
-      { environment: 'ralph', planId, triggerKind: 'task-created' },
+      { environment: 'headless', planId, triggerKind: 'task-created' },
       {
         deduplication: {
-          id: planRulesEvaluationDedupId(planId, 'ralph'),
+          id: planRulesEvaluationDedupId(planId, 'headless'),
           keepLastIfActive: true,
         },
       },
@@ -74,9 +74,9 @@ describe('PlanRulesEvaluationService.enqueueEvaluation', () => {
   });
 
   it('keeps passes for different environments of one plan from collapsing', async () => {
-    await service.enqueueEvaluation(planId, 'status-changed', 'ralph');
+    await service.enqueueEvaluation(planId, 'status-changed', 'headless');
     await service.enqueueEvaluation(planId, 'status-changed', null);
-    await service.enqueueEvaluation(planId, 'status-changed', 'ralph');
+    await service.enqueueEvaluation(planId, 'status-changed', 'headless');
 
     const dedupIds = vi
       .mocked(queue.add)
@@ -104,9 +104,9 @@ describe('PlanRulesEvaluationService.enqueueEvaluation', () => {
 
     it('reads a known environment from the request header', () => {
       vi.mocked(globalCls.isActive).mockReturnValue(true);
-      vi.mocked(globalCls.get).mockReturnValue('Ralph');
+      vi.mocked(globalCls.get).mockReturnValue('Headless');
 
-      expect(service.requestEnvironment()).toBe('ralph');
+      expect(service.requestEnvironment()).toBe('headless');
     });
 
     it('is null for a missing or unknown header value', () => {

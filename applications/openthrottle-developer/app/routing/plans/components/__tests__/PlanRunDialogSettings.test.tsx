@@ -6,7 +6,7 @@ import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { PLAN_RUN_RUNNER_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_RUN_OT_LOOP_COPY } from '~/routing/plans/data/data.copy';
 
 import type { PlanRunDialogSettingsProps } from '../PlanRunDialogSettings';
 import { PlanRunDialogSettings } from '../PlanRunDialogSettings';
@@ -31,23 +31,17 @@ describe('PlanRunDialogSettings Component', () => {
 
   beforeEach(() => {
     props = {
-      backend: 'claude',
+      driver: 'claude',
       effort: 'high',
-      iterationsError: undefined,
-      iterationsText: '5',
       model: 'opus',
       models: Promise.resolve(MODELS),
       onEffortChange: vi.fn(),
-      onIterationsChange: vi.fn(),
       onModelChange: vi.fn(),
       onOtLoopMaxRetriesChange: vi.fn(),
       onOtLoopValidationChange: vi.fn(),
-      onRunnerChange: vi.fn(),
       otLoopMaxRetriesError: undefined,
       otLoopMaxRetriesText: '',
       otLoopValidationText: '',
-      planIterations: 5,
-      runner: 'ralph',
     };
   });
 
@@ -62,87 +56,42 @@ describe('PlanRunDialogSettings Component', () => {
     ).toHaveTextContent('High');
   });
 
-  test('presents iterations as this run only and says what it resets to', async () => {
-    const component = await renderSettings();
-
-    expect(component.getByText('this run only')).toBeInTheDocument();
-    expect(component.getByText(/configured 5/)).toBeInTheDocument();
-    expect(component.getByLabelText('Iterations')).toHaveValue(5);
-  });
-
-  test('reports an iterations edit', async () => {
-    const user = userEvent.setup();
-    const component = await renderSettings();
-
-    await user.type(component.getByLabelText('Iterations'), '0');
-
-    expect(props.onIterationsChange).toHaveBeenLastCalledWith('50');
-  });
-
-  test('marks the iterations field invalid on error', async () => {
-    props = { ...props, iterationsError: 'Iterations must be a whole number.' };
-    const component = await renderSettings();
-
-    expect(component.getByLabelText('Iterations')).toHaveAttribute(
-      'aria-invalid',
-      'true',
-    );
-  });
-
-  describe('runner', () => {
-    test('reports a runner change', async () => {
-      const user = userEvent.setup();
+  describe('OT Loop fields', () => {
+    test('has no runner choice or iterations field', async () => {
       const component = await renderSettings();
 
-      await user.click(
-        component.getByRole('radio', {
-          name: PLAN_RUN_RUNNER_COPY.otLoopLabel,
-        }),
-      );
-
-      expect(props.onRunnerChange).toHaveBeenCalledWith('ot-loop');
-    });
-
-    test('Ralph shows iterations and hides the OT Loop fields', async () => {
-      const component = await renderSettings();
-
-      expect(component.getByLabelText('Iterations')).toBeInTheDocument();
-      expect(
-        component.queryByTestId('PlanRunOtLoopFields'),
-      ).not.toBeInTheDocument();
-    });
-
-    test('OT Loop hides iterations and shows validation and retries', async () => {
-      props = { ...props, runner: 'ot-loop' };
-      const component = await renderSettings();
-
+      expect(component.queryByRole('radio')).not.toBeInTheDocument();
       expect(component.queryByLabelText('Iterations')).not.toBeInTheDocument();
+    });
+
+    test('shows validation and retries', async () => {
+      const component = await renderSettings();
+
       expect(
         component.getByRole('textbox', {
-          name: PLAN_RUN_RUNNER_COPY.validationLabel,
+          name: PLAN_RUN_OT_LOOP_COPY.validationLabel,
         }),
       ).toBeInTheDocument();
       expect(
         component.getByRole('spinbutton', {
-          name: PLAN_RUN_RUNNER_COPY.maxRetriesLabel,
+          name: PLAN_RUN_OT_LOOP_COPY.maxRetriesLabel,
         }),
       ).toBeInTheDocument();
     });
 
-    test('OT Loop edits are reported', async () => {
+    test('edits are reported', async () => {
       const user = userEvent.setup();
-      props = { ...props, runner: 'ot-loop' };
       const component = await renderSettings();
 
       await user.type(
         component.getByRole('textbox', {
-          name: PLAN_RUN_RUNNER_COPY.validationLabel,
+          name: PLAN_RUN_OT_LOOP_COPY.validationLabel,
         }),
         'x',
       );
       await user.type(
         component.getByRole('spinbutton', {
-          name: PLAN_RUN_RUNNER_COPY.maxRetriesLabel,
+          name: PLAN_RUN_OT_LOOP_COPY.maxRetriesLabel,
         }),
         '2',
       );

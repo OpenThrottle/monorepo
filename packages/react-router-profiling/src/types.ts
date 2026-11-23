@@ -1,5 +1,5 @@
 /**
- * @description Types for server and task-run metrics. Align with tools/workflows/docs/server-and-task-metrics.md and openthrottle-server ProcessMetricsSnapshot / TaskRunMetrics.
+ * @description Types for server and task-run metrics. Align with openthrottle-server ProcessMetricsSnapshot / TaskRunMetrics.
  */
 
 /** Process memory and CPU snapshot (units: MB for memory, ms for CPU). Same shape as REST GET /metrics and GraphQL serverMetrics. */

@@ -95,7 +95,7 @@ describe('ambient work-session propagation', () => {
   });
 
   it('mutations carry the captured agent environment as X-OT-Environment', async () => {
-    captureStdioAgentEnvironment('ralph');
+    captureStdioAgentEnvironment('headless');
     mockExecute
       .mockResolvedValueOnce({ startWorkSession: { id: 'sess-1' } })
       .mockResolvedValueOnce({ updateTask: { id: 'task-1' } });
@@ -107,7 +107,10 @@ describe('ambient work-session propagation', () => {
       expect.anything(),
       { input: expect.objectContaining({ id: 'task-1' }) },
       {
-        headers: { 'X-OT-Environment': 'ralph', 'X-OT-Session-Id': 'sess-1' },
+        headers: {
+          'X-OT-Environment': 'headless',
+          'X-OT-Session-Id': 'sess-1',
+        },
       },
     );
   });

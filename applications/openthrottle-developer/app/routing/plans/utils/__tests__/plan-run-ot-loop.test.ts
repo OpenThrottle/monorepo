@@ -2,11 +2,10 @@ import { describe, expect, test } from 'vitest';
 
 import {
   formatOtLoopCommandsText,
-  isPlanRunRunner,
   mergeOtLoopFields,
   parseOtLoopCommandsText,
   parseOtLoopMaxRetriesText,
-  resolvePlanRunRunner,
+  PLAN_RUN_OT_LOOP_SETTINGS_FIELD,
 } from '../plan-run-ot-loop';
 
 describe('plan-run-ot-loop utils', () => {
@@ -33,11 +32,8 @@ describe('plan-run-ot-loop utils', () => {
     expect(parseOtLoopMaxRetriesText(text)).toBe(expected);
   });
 
-  test('isPlanRunRunner accepts only the two runners; absent resolves to ralph', () => {
-    expect(isPlanRunRunner('ot-loop')).toBe(true);
-    expect(isPlanRunRunner('ralph')).toBe(true);
-    expect(isPlanRunRunner('turbo')).toBe(false);
-    expect(resolvePlanRunRunner(undefined)).toBe('ralph');
+  test('the form field that marks the OT Loop settings is otLoopSettings', () => {
+    expect(PLAN_RUN_OT_LOOP_SETTINGS_FIELD).toBe('otLoopSettings');
   });
 
   describe('mergeOtLoopFields', () => {

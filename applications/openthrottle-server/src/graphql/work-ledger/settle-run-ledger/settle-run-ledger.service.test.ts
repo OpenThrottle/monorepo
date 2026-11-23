@@ -342,7 +342,7 @@ describe('SettleRunLedgerService', () => {
   });
 
   /**
-   * Mirrors a service-account `enqueuePlanRalphOrchestrator`: actor_user_id is null, so enqueue
+   * Mirrors a service-account `enqueuePlanRun`: actor_user_id is null, so enqueue
    * could only take a raw workingDirectory and the orchestrator skipped worktree checkout
    * registration — the run reaches settle with no checkout_id at all (run f38ce1aa / PR #627).
    */

@@ -1,0 +1,107 @@
+mutation createNote($input: CreateNoteInput!) {
+  createNote(input: $input) {
+    ...Note
+  }
+}
+
+mutation deleteNote($id: ID!) {
+  deleteNote(id: $id)
+}
+
+mutation updateNote($input: UpdateNoteInput!) {
+  updateNote(input: $input) {
+    ...Note
+  }
+}
+
+mutation createPlan($input: CreatePlanInput!) {
+  createPlan(input: $input) {
+    ...Plan
+  }
+}
+
+mutation updatePlan($input: UpdatePlanInput!) {
+  updatePlan(input: $input) {
+    ...Plan
+  }
+}
+
+mutation deletePlan($input: DeletePlanInput!) {
+  deletePlan(input: $input)
+}
+
+mutation createTask($input: CreateTaskInput!) {
+  createTask(input: $input) {
+    ...Task
+  }
+}
+
+mutation createTasks($input: CreateTasksInput!) {
+  createTasks(input: $input) {
+    tasks {
+      ...Task
+    }
+    totalCount
+  }
+}
+
+mutation createPlans($input: CreatePlansInput!) {
+  createPlans(input: $input) {
+    plans {
+      ...Plan
+    }
+    totalCount
+  }
+}
+
+mutation updateTask($input: UpdateTaskInput!) {
+  updateTask(input: $input) {
+    ...Task
+  }
+}
+
+mutation deleteTask($input: DeleteTaskInput!) {
+  deleteTask(input: $input)
+}
+
+mutation promoteTaskToPlan($input: PromoteTaskToPlanInput!) {
+  promoteTaskToPlan(input: $input) {
+    ...PromoteTaskToPlanResult
+  }
+}
+
+mutation reorderPlanTasks($input: ReorderPlanTasksInput!) {
+  reorderPlanTasks(input: $input) {
+    ...Task
+  }
+}
+
+mutation appendPlanOutput($input: AppendPlanOutputInput!) {
+  appendPlanOutput(input: $input) {
+    ...PlanOutputStreamChunk
+  }
+}
+
+mutation registerPlanRun($input: RegisterPlanRunInput!) {
+  registerPlanRun(input: $input) {
+    ...DetachedPlanRun
+  }
+}
+
+mutation settlePlanRun($input: SettlePlanRunInput!) {
+  settlePlanRun(input: $input) {
+    ...DetachedPlanRun
+  }
+}
+
+mutation registerPlanRunWorktreeCheckout(
+  $input: RegisterPlanRunWorktreeCheckoutInput!
+) {
+  registerPlanRunWorktreeCheckout(input: $input) {
+    ...PlanRunWithCheckout
+  }
+}
+
+mutation deleteProject($input: DeleteProjectInput!) {
+  deleteProject(input: $input)
+}

@@ -1,7 +1,7 @@
 import { createMock } from '@golevelup/ts-vitest';
 import type { KeyedJsonlWriter } from '@openthrottle/nestjs-logging';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type { ChildJobStreamChunk } from '@tools/workflows';
+import type { ChildJobStreamChunk } from '@openthrottle/nestjs-worktrees';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { RUN_OUTPUT_SOURCE } from './bullmq-keyed-run-logging.constants.ts';
@@ -21,7 +21,7 @@ describe('classifyRunOutputSource', () => {
     it('tags pnpm recursive exec failures as spawn', () => {
       expect(
         classifyRunOutputSource({
-          data: 'ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL Command "workflow-ralph" not found',
+          data: 'ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL Command "plan-run" not found',
           stream: 'stderr',
         }),
       ).toBe(RUN_OUTPUT_SOURCE.spawn);
@@ -37,23 +37,23 @@ describe('classifyRunOutputSource', () => {
     });
   });
 
-  describe('when the chunk is a workflow-ralph CLI/debug line', () => {
-    it('tags the debug logger prefix as workflow-ralph', () => {
+  describe('when the chunk is a plan-run orchestrator/debug line', () => {
+    it('tags the debug logger prefix as plan-run', () => {
       expect(
         classifyRunOutputSource({
-          data: '[workflow-ralph:debug] main: iteration start',
+          data: '[plan-run:debug] main: iteration start',
           stream: 'stderr',
         }),
-      ).toBe(RUN_OUTPUT_SOURCE.workflowRalph);
+      ).toBe(RUN_OUTPUT_SOURCE.planRun);
     });
 
-    it('tags emoji-bulleted orchestration lines as workflow-ralph', () => {
+    it('tags emoji-bulleted orchestration lines as plan-run', () => {
       expect(
         classifyRunOutputSource({
           data: ' - 📌 Set task abc to IN_PROGRESS for this iteration.',
           stream: 'stdout',
         }),
-      ).toBe(RUN_OUTPUT_SOURCE.workflowRalph);
+      ).toBe(RUN_OUTPUT_SOURCE.planRun);
     });
   });
 
@@ -86,15 +86,15 @@ describe('appendChildJobChunkToRunOutput', () => {
 
   it('writes a JSONL chunk tagged with the classified source', () => {
     const chunk: ChildJobStreamChunk = {
-      data: '[workflow-ralph:debug] hello',
+      data: '[plan-run:debug] hello',
       stream: 'stderr',
     };
 
     appendChildJobChunkToRunOutput(writer, QUEUE, JOB_ID, chunk);
 
     expect(writer.appendRunChunk).toHaveBeenCalledWith(QUEUE, JOB_ID, {
-      data: '[workflow-ralph:debug] hello',
-      source: RUN_OUTPUT_SOURCE.workflowRalph,
+      data: '[plan-run:debug] hello',
+      source: RUN_OUTPUT_SOURCE.planRun,
       type: 'stderr',
     });
   });
@@ -181,12 +181,12 @@ describe('createSpawnRunOutputHandlers', () => {
 
     expect(writer.appendRunChunk).toHaveBeenCalledWith(QUEUE, JOB_ID, {
       data: ' - ✅ Marked task abc completed.\n',
-      source: RUN_OUTPUT_SOURCE.workflowRalph,
+      source: RUN_OUTPUT_SOURCE.planRun,
       type: 'stdout',
     });
     expect(logger.info).toHaveBeenCalledWith(
       ' - ✅ Marked task abc completed.',
-      'PlansProcessor [workflow-ralph]',
+      'PlansProcessor [plan-run]',
     );
   });
 

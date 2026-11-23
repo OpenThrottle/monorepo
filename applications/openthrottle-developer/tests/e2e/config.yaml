@@ -2,7 +2,7 @@
 #
 # This file is consumed by `maestro test ... --config config.yaml` (or when
 # `config.yaml` is auto-discovered from the workspace root).
-# The Ralph plan keeps Maestro assets fully decoupled from `app/`; everything lives
+# The E2E plan keeps Maestro assets fully decoupled from `app/`; everything lives
 # under `applications/openthrottle-developer/tests/e2e/` so flows resolve relative
 # to this directory when Maestro is invoked from here.
 #

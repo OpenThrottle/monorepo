@@ -5,7 +5,7 @@
  *
  * Read per turn, not at import, so flipping it needs no server restart. Only
  * drivers with an {@link ACP_AGENT_SPECS} entry can be routed; the rest ignore
- * the flag. Plan runs (Ralph, scheduled jobs, ot-loop), hooks and
+ * the flag. Plan runs (scheduled jobs, ot-loop), hooks and
  * `--plugin-dir` injection never go through here — this is chat only.
  *
  * Hooks do not fire inside an ACP turn either: `cursor-agent acp`

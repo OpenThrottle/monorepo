@@ -23,11 +23,11 @@ const span = (
   overrides: Partial<TimelineSpanRowFragment> = {},
 ): TimelineSpanRowFragment => {
   return {
-    backend: 'claude',
     branch: null,
     checkoutId: null,
     conversationId: null,
     derivedEnd: false,
+    driver: 'claude',
     endsAt: '2026-09-01T03:00:00Z',
     id: 'span-1',
     kind: TimelineSpanKind.PlanRun,

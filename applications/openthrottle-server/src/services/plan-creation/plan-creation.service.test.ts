@@ -789,23 +789,23 @@ describe('PlanCreationService', () => {
       };
     };
 
-    const expectRalph = (
-      expected: Partial<PlanRunConfigStorage['ralph']>,
+    const expectRun = (
+      expected: Partial<PlanRunConfigStorage['run']>,
     ): void => {
       expect(plansRepository.create).toHaveBeenCalledWith(
         expect.objectContaining({
           runConfig: expect.objectContaining({
-            ralph: expect.objectContaining(expected),
+            run: expect.objectContaining(expected),
           }),
         }),
       );
     };
 
-    const systemRalph = getDefaultPlanRunConfigStorage().ralph;
+    const systemRun = getDefaultPlanRunConfigStorage().run;
     const systemAgent = {
-      effort: systemRalph.effort,
-      executionBackend: systemRalph.executionBackend,
-      model: systemRalph.model,
+      driver: systemRun.driver,
+      effort: systemRun.effort,
+      model: systemRun.model,
     };
 
     beforeEach(() => {
@@ -818,7 +818,7 @@ describe('PlanCreationService', () => {
       await service.createPlanFromInput(input(), USER);
 
       expect(getForUser).toHaveBeenCalledWith(USER);
-      expectRalph(systemAgent);
+      expectRun(systemAgent);
     });
 
     it('stamps the user default agent, model and effort', async () => {
@@ -832,9 +832,9 @@ describe('PlanCreationService', () => {
 
       expect(isEnabled).toHaveBeenCalledWith(USER, 'claude');
       expect(isModelEnabled).toHaveBeenCalledWith(USER, 'claude', 'opus');
-      expectRalph({
+      expectRun({
+        driver: 'claude',
         effort: 'high',
-        executionBackend: 'claude',
         model: 'opus',
       });
     });
@@ -848,7 +848,7 @@ describe('PlanCreationService', () => {
 
       await service.createPlanFromInput(input(), USER);
 
-      expectRalph({ effort: '', executionBackend: 'claude', model: 'opus' });
+      expectRun({ driver: 'claude', effort: '', model: 'opus' });
     });
 
     it('reads the preference of the human behind a service account', async () => {
@@ -862,7 +862,7 @@ describe('PlanCreationService', () => {
       await service.createPlanFromInput(input(), 'sa-1');
 
       expect(getForUser).toHaveBeenCalledWith('user-linked');
-      expectRalph({ executionBackend: 'claude', model: 'opus' });
+      expectRun({ driver: 'claude', model: 'opus' });
     });
 
     it('falls back to the system default when the agent is disabled', async () => {
@@ -875,7 +875,7 @@ describe('PlanCreationService', () => {
 
       await service.createPlanFromInput(input(), USER);
 
-      expectRalph(systemAgent);
+      expectRun(systemAgent);
     });
 
     it('falls back to the system default when the model is disabled', async () => {
@@ -888,7 +888,7 @@ describe('PlanCreationService', () => {
 
       await service.createPlanFromInput(input(), USER);
 
-      expectRalph(systemAgent);
+      expectRun(systemAgent);
     });
 
     it('falls back to the system default when the backend is no longer a known driver', async () => {
@@ -900,7 +900,7 @@ describe('PlanCreationService', () => {
 
       await service.createPlanFromInput(input(), USER);
 
-      expectRalph(systemAgent);
+      expectRun(systemAgent);
     });
 
     it('never overrides an explicit runConfigJson', async () => {
@@ -917,14 +917,14 @@ describe('PlanCreationService', () => {
       );
 
       expect(getForUser).not.toHaveBeenCalled();
-      expectRalph(systemAgent);
+      expectRun(systemAgent);
     });
 
     it('does not look up preferences without an authenticated user', async () => {
       await service.createPlanFromInput(input());
 
       expect(getForUser).not.toHaveBeenCalled();
-      expectRalph(systemAgent);
+      expectRun(systemAgent);
     });
 
     it('still creates the plan with the system default when the lookup throws', async () => {
@@ -933,7 +933,7 @@ describe('PlanCreationService', () => {
       const plan = await service.createPlanFromInput(input(), USER);
 
       expect(plan).toBeDefined();
-      expectRalph(systemAgent);
+      expectRun(systemAgent);
     });
   });
 });

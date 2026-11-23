@@ -1,7 +1,7 @@
 /*
  * LOCKSTEP. skills/ot-loop/SKILL.md § "The loop (one task at a time)" is the CANONICAL statement
- * of the per-task discipline. This file is a DELIBERATE RESTATEMENT of it in code (the third, after
- * skills/agents-ralph/SKILL.md). A change to that section must land here in the same PR. Design
+ * of the per-task discipline. This file is a DELIBERATE RESTATEMENT of it in code (after
+ * skills/ot-loop/SKILL.md). A change to that section must land here in the same PR. Design
  * and deliberate divergences (inbox handling, thin tasks): docs/workflows/ot-loop-job.md.
  */
 import type { LoopOutcome, RunOtLoopOptions } from '../contract/index.ts';

@@ -15,7 +15,6 @@ import {
   vi,
 } from 'vitest';
 
-import { RUN_PLAN_ORCHESTRATOR_JOB_NAME } from '../../../queues/agentic-ralph/agentic-ralph.constants.ts';
 import { AGENTIC_TEST_QUEUE_NAME } from '../../../queues/agentic-test/agentic-test.constants.ts';
 import type {
   AgenticTestJobPayload,
@@ -24,6 +23,7 @@ import type {
 import { DAILY_STATS_QUEUE_NAME } from '../../../queues/daily-stats/daily-stats.constants.ts';
 import type { AggregateDailyStatsJobData } from '../../../queues/daily-stats/daily-stats.types.ts';
 import { DATABASE_BACKUP_QUEUE_NAME } from '../../../queues/database-backup/database-backup.constants.ts';
+import { RUN_PLAN_ORCHESTRATOR_JOB_NAME } from '../../../queues/plans/plans.constants.ts';
 import { PLANS_QUEUE_NAME } from '../../../queues/plans/plans.constants.ts';
 import type {
   RunPlanJobData,
@@ -494,7 +494,7 @@ describe('QueuesService', () => {
       expect(result.hasNext).toBe(false);
       expect(result.jobs).toHaveLength(1);
       expect(result.jobs[0]).toMatchObject({
-        executionBackend: 'cursor',
+        driver: 'cursor',
         id: 'j1',
         name: 'run-plan',
         state: 'completed',
@@ -569,7 +569,7 @@ describe('QueuesService', () => {
 
       expect(result).not.toBeNull();
       expect(result).toMatchObject({
-        executionBackend: 'cursor',
+        driver: 'cursor',
         id: 'job-99',
         name: 'run-plan',
         state: 'completed',
@@ -629,16 +629,16 @@ describe('QueuesService', () => {
       expect(result).toHaveLength(2);
       expect(result[0]?.id).toBe('j1');
       expect(result[1]?.id).toBe('j3');
-      expect(result[0]?.executionBackend).toBe('cursor');
+      expect(result[0]?.driver).toBe('cursor');
       expect(result[0]?.data).toBe(
         JSON.stringify({ planId: 'plan-a', runKind: 'orchestrator' }),
       );
     });
 
-    test('reads execution backend from completed plan run job data', async () => {
+    test('reads driver from completed plan run job data', async () => {
       const job = createMockJob({
         data: {
-          executionBackend: 'claude',
+          driver: 'claude',
           planId: 'plan-a',
           runKind: 'orchestrator',
         },
@@ -649,7 +649,7 @@ describe('QueuesService', () => {
       const result = await service.getCompletedJobsByPlanId('plan-a', 10);
 
       expect(result).toHaveLength(1);
-      expect(result[0]?.executionBackend).toBe('claude');
+      expect(result[0]?.driver).toBe('claude');
     });
 
     test('caps limit at 500', async () => {
@@ -836,7 +836,7 @@ describe('QueuesService', () => {
     });
   });
 
-  describe('enqueuePlanRalphOrchestrator', () => {
+  describe('enqueuePlanRun', () => {
     const orchJobData: RunPlanOrchestratorJobData = {
       planId: '80864bba-630a-451d-bfd2-4b25ec202381',
       runKind: 'orchestrator',
@@ -844,7 +844,7 @@ describe('QueuesService', () => {
 
     test('returns error when runKind is not orchestrator', async () => {
       mockAdd.mockClear();
-      const bad = await service.enqueuePlanRalphOrchestrator({
+      const bad = await service.enqueuePlanRun({
         jobData: {
           planId: '80864bba-630a-451d-bfd2-4b25ec202381',
           // @ts-expect-error deliberately invalid runKind to exercise the guard
@@ -858,7 +858,7 @@ describe('QueuesService', () => {
     test('enqueues with job name run-plan-orchestrator and priority', async () => {
       mockAdd.mockClear();
 
-      const result = await service.enqueuePlanRalphOrchestrator({
+      const result = await service.enqueuePlanRun({
         jobData: orchJobData,
         priority: 5,
       });
@@ -874,8 +874,8 @@ describe('QueuesService', () => {
     test('passes idempotencyKey as BullMQ jobId', async () => {
       mockAdd.mockClear();
 
-      const result = await service.enqueuePlanRalphOrchestrator({
-        idempotencyKey: 'ralph-orch:80864bba',
+      const result = await service.enqueuePlanRun({
+        idempotencyKey: 'plan-run:80864bba',
         jobData: orchJobData,
         priority: 10,
       });
@@ -884,19 +884,19 @@ describe('QueuesService', () => {
       expect(mockAdd).toHaveBeenCalledWith(
         RUN_PLAN_ORCHESTRATOR_JOB_NAME,
         orchJobData,
-        { jobId: 'ralph-orch:80864bba', priority: 10 },
+        { jobId: 'plan-run:80864bba', priority: 10 },
       );
     });
 
     test('passes delayMs as a BullMQ delay alongside the jobId, and omits it when zero', async () => {
       mockAdd.mockClear();
 
-      await service.enqueuePlanRalphOrchestrator({
+      await service.enqueuePlanRun({
         delayMs: 90_000,
         idempotencyKey: 'usage-limit-resume-run-1',
         jobData: orchJobData,
       });
-      await service.enqueuePlanRalphOrchestrator({
+      await service.enqueuePlanRun({
         delayMs: 0,
         jobData: orchJobData,
       });
@@ -918,7 +918,7 @@ describe('QueuesService', () => {
     test('returns error when idempotencyKey has invalid characters', async () => {
       mockAdd.mockClear();
 
-      const result = await service.enqueuePlanRalphOrchestrator({
+      const result = await service.enqueuePlanRun({
         idempotencyKey: 'has spaces',
         jobData: orchJobData,
       });
@@ -932,7 +932,7 @@ describe('QueuesService', () => {
     test('returns error when add throws', async () => {
       mockAdd.mockRejectedValueOnce(new Error('redis down'));
 
-      const result = await service.enqueuePlanRalphOrchestrator({
+      const result = await service.enqueuePlanRun({
         jobData: orchJobData,
       });
 

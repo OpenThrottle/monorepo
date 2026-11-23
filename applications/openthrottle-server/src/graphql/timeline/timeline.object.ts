@@ -10,10 +10,10 @@ import { TimelineMarkerKind, TimelineSpanKind } from './timeline.enum.ts';
 @ObjectType()
 export class TimelineSpanObject {
   @Field(() => String, {
-    description: `Execution backend / tool name / driver id, when the source carries one.`,
+    description: `Agent driver or tool name, when the source carries one.`,
     nullable: true,
   })
-  backend!: string | null;
+  driver!: string | null;
 
   @Field(() => String, {
     description: `Git branch the work ran on, when known.`,

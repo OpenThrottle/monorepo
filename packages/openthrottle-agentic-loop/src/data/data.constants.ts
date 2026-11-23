@@ -62,7 +62,7 @@ export const OUTPUT_BUFFER_MAX_CHARS = 128 * 1024;
 export const OT_LOOP_CONFIG_PATH = '.openthrottle/ot-loop.json';
 
 /** @description Message of the `none` resolution result (§ 6). */
-export const OT_LOOP_NEEDS_VALIDATION_MESSAGE = `OT Loop needs a validation command: set otLoop.validationCommands on the plan or add .openthrottle/ot-loop.json`;
+export const OT_LOOP_NEEDS_VALIDATION_MESSAGE = `OT Loop needs a validation command: set run.validationCommands on the plan or add .openthrottle/ot-loop.json`;
 
 /** @description Output batch flush threshold in bytes (§ 10). */
 export const SINK_MAX_BYTES = 4 * 1024;

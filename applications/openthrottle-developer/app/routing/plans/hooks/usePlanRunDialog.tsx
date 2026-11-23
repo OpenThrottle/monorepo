@@ -1,6 +1,6 @@
 /**
  * @description All non-presentational state behind {@link PlanRunDialog}: the draft
- * (mode, model, effort, iterations, schedule) rebuilt from the plan's `runConfigJson`
+ * (mode, model, effort, OT Loop settings, schedule) rebuilt from the plan's `runConfigJson`
  * each time the dialog opens, the named reason a submit is blocked, the hidden form
  * fields, and the action fetcher. This dialog reads the PLAN's saved run config, not
  * the chat toolbar atom. Extracted per component-primitive-shape R7.
@@ -11,27 +11,22 @@ import { useFetcher } from 'react-router';
 
 import type { action } from '~/routes/plans.$planId._index';
 import { PLAN_RUN_DIALOG_CLOCK_TICK_MS } from '~/routing/plans/config/defaults';
-import {
-  PLAN_RUN_DIALOG_COPY,
-  PLAN_RUN_RUNNER_COPY,
-} from '~/routing/plans/data/data.copy';
+import { PLAN_RUN_OT_LOOP_COPY } from '~/routing/plans/data/data.copy';
 import { usePlanDefaultAgent } from '~/routing/plans/hooks/usePlanDefaultAgent';
 import type { UsePlanRunDialogConfirmResult } from '~/routing/plans/hooks/usePlanRunDialogConfirm';
 import { usePlanRunDialogConfirm } from '~/routing/plans/hooks/usePlanRunDialogConfirm';
 import type {
   PlanRunDialogDraft,
   PlanRunDialogMode,
-  PlanRunDialogRunnerSettings,
+  PlanRunDialogOtLoopSettings,
   PlanRunDialogSubmission,
 } from '~/routing/plans/types';
 import { getPlanRunDialogScheduleFeedback } from '~/routing/plans/utils/getPlanRunDialogScheduleFeedback';
 import {
   buildPlanRunDialogFields,
   createPlanRunDialogDraft,
-  getPlanConfiguredIterations,
   getPlanRunDialogBlockedReason,
   getPlanRunDialogInstant,
-  parsePlanRunDialogIterations,
 } from '~/routing/plans/utils/plan-run-dialog';
 import type { PlanRunModelSelection } from '~/routing/plans/utils/plan-run-model-effort';
 import { reconcilePlanRunEffort } from '~/routing/plans/utils/plan-run-model-effort';
@@ -55,10 +50,10 @@ export interface UsePlanRunDialogOptions {
   readonly open: boolean;
   readonly planId: string;
   readonly planStatus: string | undefined;
-  readonly ralphTuningJson: string;
   readonly repositoryId: string;
   /** @description The plan's saved run config; the draft resets from it on every open. */
   readonly runConfigJson: string | null | undefined;
+  readonly runTuningJson: string;
   /** @description The plan's scheduled run; non-null makes a submit ask to unschedule/replace first. */
   readonly scheduledRunAt: Date | string | null | undefined;
   readonly workflowRunBlocked: boolean;
@@ -78,18 +73,14 @@ export interface UsePlanRunDialogResult {
   /** @description Hidden form fields for the action, blanks omitted. */
   readonly fields: Readonly<Record<string, string>>;
   readonly isSubmitting: boolean;
-  readonly iterationsError: string | undefined;
   readonly onEffortChange: (effort: string) => void;
-  readonly onIterationsChange: (iterationsText: string) => void;
   readonly onModeChange: (mode: PlanRunDialogMode) => void;
   readonly onModelChange: (selection: PlanRunModelSelection) => void;
   readonly onScheduleDateChange: (date: Date | undefined) => void;
   readonly onScheduleTimeChange: (time: string) => void;
   readonly onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
-  /** @description The plan's configured iterations, for the "resets to" hint. */
-  readonly planIterations: number;
-  /** @description The runner choice and OT Loop fields, spread onto the settings section. */
-  readonly runnerSettings: PlanRunDialogRunnerSettings;
+  /** @description The OT Loop fields, spread onto the settings section. */
+  readonly otLoopSettings: PlanRunDialogOtLoopSettings;
   readonly scheduleError: string | null;
   /** @description "fires 3:00 PM PST, in about 4 hours"; `undefined` until a future instant is picked. */
   readonly scheduleSummary: string | undefined;
@@ -109,9 +100,9 @@ export const usePlanRunDialog = (
     open,
     planId,
     planStatus,
-    ralphTuningJson,
     repositoryId,
     runConfigJson,
+    runTuningJson,
     scheduledRunAt,
     workflowRunBlocked,
     workflowRunBlockedReason,
@@ -140,17 +131,10 @@ export const usePlanRunDialog = (
   // Setup
   const isSubmitting = fetcher.state !== 'idle';
   const instant = getPlanRunDialogInstant(draft);
-  const iterations = parsePlanRunDialogIterations(draft.iterationsText);
-  // Iterations is Ralph-only and retries are OT Loop-only; the hidden one never blocks.
-  const isOtLoop = draft.runner === 'ot-loop';
-  const isIterationsInvalid = iterations === null && !isOtLoop;
-  const iterationsError = isIterationsInvalid
-    ? PLAN_RUN_DIALOG_COPY.iterationsInvalid
-    : undefined;
   const retries = parseOtLoopMaxRetriesText(draft.otLoopMaxRetriesText);
-  const isRetriesInvalid = isOtLoop && retries === null;
+  const isRetriesInvalid = retries === null;
   const otLoopMaxRetriesError = isRetriesInvalid
-    ? PLAN_RUN_RUNNER_COPY.maxRetriesInvalid(MAX_PLAN_RUN_OT_LOOP_RETRIES)
+    ? PLAN_RUN_OT_LOOP_COPY.maxRetriesInvalid(MAX_PLAN_RUN_OT_LOOP_RETRIES)
     : undefined;
   const isScheduleMode = draft.mode === 'schedule';
   const { scheduleError, scheduleSummary } = getPlanRunDialogScheduleFeedback({
@@ -166,17 +150,15 @@ export const usePlanRunDialog = (
       workflowRunBlocked,
       workflowRunBlockedReason,
     }) ??
-    iterationsError ??
     otLoopMaxRetriesError ??
     scheduleError;
   const fields = buildPlanRunDialogFields({
     branch,
     checkoutId,
     draft,
-    iterations,
     jobRunHooksJson,
-    ralphTuningJson,
     repositoryId,
+    runTuningJson,
     scheduledFor: instant,
     workingDirectory,
   });
@@ -203,9 +185,9 @@ export const usePlanRunDialog = (
   const onModelChange = (selection: PlanRunModelSelection): void => {
     return setDraft((previous) => ({
       ...previous,
-      backend: selection.backend,
-      // Drop an effort the new runner would ignore or clamp.
-      effort: reconcilePlanRunEffort(selection.backend, previous.effort),
+      driver: selection.driver,
+      // Drop an effort the new agent would ignore or clamp.
+      effort: reconcilePlanRunEffort(selection.driver, previous.effort),
       model: selection.model,
     }));
   };
@@ -308,25 +290,20 @@ export const usePlanRunDialog = (
     fetcher,
     fields,
     isSubmitting,
-    iterationsError,
     onEffortChange: (effort) => patchDraft({ effort }),
-    onIterationsChange: (iterationsText) => patchDraft({ iterationsText }),
     onModeChange: (nextMode) => patchDraft({ mode: nextMode }),
     onModelChange,
     onScheduleDateChange: (scheduleDate) => patchDraft({ scheduleDate }),
     onScheduleTimeChange: (scheduleTime) => patchDraft({ scheduleTime }),
     onSubmit,
-    planIterations: getPlanConfiguredIterations(planId, runConfigJson),
-    runnerSettings: {
+    otLoopSettings: {
       onOtLoopMaxRetriesChange: (otLoopMaxRetriesText) =>
         patchDraft({ otLoopMaxRetriesText }),
       onOtLoopValidationChange: (otLoopValidationText) =>
         patchDraft({ otLoopValidationText }),
-      onRunnerChange: (runner) => patchDraft({ runner }),
       otLoopMaxRetriesError,
       otLoopMaxRetriesText: draft.otLoopMaxRetriesText,
       otLoopValidationText: draft.otLoopValidationText,
-      runner: draft.runner,
     },
     scheduleError,
     scheduleSummary,

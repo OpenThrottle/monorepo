@@ -16,7 +16,7 @@ import {
 } from 'vitest';
 
 import {
-  PLAN_RUN_RUNNER_COPY,
+  PLAN_RUN_OT_LOOP_COPY,
   PLAN_SCHEDULE_CONFIRM_COPY,
 } from '~/routing/plans/data/data.copy';
 import { formatPlanScheduledFor } from '~/routing/plans/utils/formatPlanScheduledFor';
@@ -125,9 +125,8 @@ describe('PlanRunDialog Component', () => {
       planStatus: 'PENDING',
       repositoryId: '',
       runConfigJson: buildPlanRunConfigJson({
+        driver: 'claude',
         effort: 'high',
-        executionBackend: 'claude',
-        iterations: 7,
         model: 'opus',
       }),
       workingDirectory: '',
@@ -193,7 +192,7 @@ describe('PlanRunDialog Component', () => {
       const component = await renderDialog({
         props: {
           runConfigJson: buildPlanRunConfigJson({
-            executionBackend: 'cursor',
+            driver: 'cursor',
             model: 'auto',
           }),
         },
@@ -208,44 +207,11 @@ describe('PlanRunDialog Component', () => {
       );
     });
 
-    test('labels iterations as this run only and names the plan value it resets to', async () => {
+    test('has no iterations field', async () => {
       const component = await renderDialog();
 
-      expect(component.getByText('this run only')).toBeInTheDocument();
-      expect(component.getByText(/configured 7/)).toBeInTheDocument();
-      expect(component.getByLabelText('Iterations')).toHaveValue(7);
-    });
-
-    test('resets iterations to the plan value each time the dialog opens', async () => {
-      const user = userEvent.setup();
-      const component = await renderDialog();
-      const iterations = component.getByLabelText('Iterations');
-
-      await user.clear(iterations);
-      await user.type(iterations, '12');
-      expect(field(component, 'iterations')).toBe('12');
-
-      await user.click(component.getByRole('button', { name: 'Cancel' }));
-      await waitFor(() =>
-        expect(component.queryByTestId('PlanRunDialog')).toBeNull(),
-      );
-      await user.click(component.getByRole('button', { name: 'open dialog' }));
-
-      expect(await component.findByLabelText('Iterations')).toHaveValue(7);
-      expect(field(component, 'iterations')).toBe('7');
-    });
-
-    test('blocks submit on an invalid iterations count', async () => {
-      const user = userEvent.setup();
-      const component = await renderDialog();
-
-      await user.clear(component.getByLabelText('Iterations'));
-      await user.type(component.getByLabelText('Iterations'), '0');
-
-      expect(component.getByRole('button', { name: 'Run now' })).toBeDisabled();
-      expect(
-        component.getByTestId('PlanRunDialog-blocked-reason'),
-      ).toHaveTextContent('whole number of at least 1');
+      expect(component.queryByRole('radio')).not.toBeInTheDocument();
+      expect(component.queryByLabelText('Iterations')).not.toBeInTheDocument();
     });
   });
 
@@ -354,11 +320,10 @@ describe('PlanRunDialog Component', () => {
   });
 
   describe('form fields', () => {
-    test('Run now carries iterations, backend, model and effort', async () => {
+    test('Run now carries driver, model and effort', async () => {
       const component = await renderDialog();
 
-      expect(field(component, 'iterations')).toBe('7');
-      expect(field(component, 'backend')).toBe('claude');
+      expect(field(component, 'driver')).toBe('claude');
       expect(field(component, 'model')).toBe('opus');
       expect(field(component, 'effort')).toBe('high');
       expect(field(component, 'branch')).toBe('feat/run-dialog');
@@ -371,77 +336,69 @@ describe('PlanRunDialog Component', () => {
 
       expect(field(component, 'intent')).toBe('schedulePlanRun');
       expect(field(component, 'scheduledFor')).toBe('2026-11-02T21:00:00.000Z');
-      expect(field(component, 'iterations')).toBe('7');
-      expect(field(component, 'backend')).toBe('claude');
+      expect(field(component, 'driver')).toBe('claude');
     });
   });
 
-  describe('runner', () => {
+  describe('OT Loop settings', () => {
     const otLoopConfig = (): string => {
+      const stored = JSON.parse(buildPlanRunConfigJson());
+
       return JSON.stringify({
-        ...JSON.parse(buildPlanRunConfigJson({ iterations: 7 })),
-        otLoop: { maxRetries: 1, validationCommands: ['pnpm test'] },
-        runner: 'ot-loop',
+        ...stored,
+        run: {
+          ...stored.run,
+          maxRetries: 1,
+          validationCommands: ['pnpm test'],
+        },
       });
     };
 
-    test('opens on Ralph when the plan names no runner and sends runner=ralph', async () => {
+    test('always shows the OT Loop fields and posts the OT Loop settings marker', async () => {
       const component = await renderDialog();
 
       expect(
-        component.getByRole('radio', { name: PLAN_RUN_RUNNER_COPY.ralphLabel }),
-      ).toBeChecked();
-      expect(field(component, 'runner')).toBe('ralph');
-      expect(field(component, 'iterations')).toBe('7');
+        component.getByRole('textbox', {
+          name: PLAN_RUN_OT_LOOP_COPY.validationLabel,
+        }),
+      ).toBeInTheDocument();
+      expect(field(component, 'otLoopSettings')).toBe('true');
     });
 
-    test('choosing OT Loop hides iterations and sends runner and the OT Loop fields', async () => {
+    test('typing the OT Loop fields sends them', async () => {
       const user = userEvent.setup();
       const component = await renderDialog();
 
-      await user.click(
-        component.getByRole('radio', {
-          name: PLAN_RUN_RUNNER_COPY.otLoopLabel,
-        }),
-      );
       await user.type(
         component.getByRole('textbox', {
-          name: PLAN_RUN_RUNNER_COPY.validationLabel,
+          name: PLAN_RUN_OT_LOOP_COPY.validationLabel,
         }),
         'pnpm nx run a:test',
       );
       await user.type(
         component.getByRole('spinbutton', {
-          name: PLAN_RUN_RUNNER_COPY.maxRetriesLabel,
+          name: PLAN_RUN_OT_LOOP_COPY.maxRetriesLabel,
         }),
         '3',
       );
 
-      expect(component.queryByLabelText('Iterations')).not.toBeInTheDocument();
-      expect(field(component, 'runner')).toBe('ot-loop');
-      expect(field(component, 'iterations')).toBeNull();
       expect(field(component, 'otLoopValidationCommands')).toBe(
         'pnpm nx run a:test',
       );
       expect(field(component, 'otLoopMaxRetries')).toBe('3');
     });
 
-    test('opens on OT Loop with the plan values when the plan runs OT Loop', async () => {
+    test('opens with the plan values', async () => {
       const component = await renderDialog({
         props: { runConfigJson: otLoopConfig() },
       });
 
       expect(
-        component.getByRole('radio', {
-          name: PLAN_RUN_RUNNER_COPY.otLoopLabel,
-        }),
-      ).toBeChecked();
-      expect(
         component.getByRole('textbox', {
-          name: PLAN_RUN_RUNNER_COPY.validationLabel,
+          name: PLAN_RUN_OT_LOOP_COPY.validationLabel,
         }),
       ).toHaveValue('pnpm test');
-      expect(field(component, 'runner')).toBe('ot-loop');
+      expect(field(component, 'otLoopSettings')).toBe('true');
     });
 
     test('an out-of-range retry count blocks submit with the reason', async () => {
@@ -451,18 +408,18 @@ describe('PlanRunDialog Component', () => {
       });
 
       const retries = component.getByRole('spinbutton', {
-        name: PLAN_RUN_RUNNER_COPY.maxRetriesLabel,
+        name: PLAN_RUN_OT_LOOP_COPY.maxRetriesLabel,
       });
       await user.type(retries, '9');
 
       expect(component.getByRole('button', { name: 'Run now' })).toBeDisabled();
       expect(retries).toBeInvalid();
       expect(retries).toHaveAccessibleDescription(
-        PLAN_RUN_RUNNER_COPY.maxRetriesInvalid(5),
+        PLAN_RUN_OT_LOOP_COPY.maxRetriesInvalid(5),
       );
     });
 
-    test('submitting OT Loop posts the runner to the action', async () => {
+    test('submitting posts the OT Loop fields to the action', async () => {
       const user = userEvent.setup();
       const component = await renderDialog({
         actionResult: { runPlan: { jobId: 'job-1', planId: 'plan-1' } },
@@ -475,8 +432,8 @@ describe('PlanRunDialog Component', () => {
       expect(submitted[0]).toMatchObject({
         intent: 'runPlan',
         otLoopMaxRetries: '1',
+        otLoopSettings: 'true',
         otLoopValidationCommands: 'pnpm test',
-        runner: 'ot-loop',
       });
       expect(submitted[0]).not.toHaveProperty('iterations');
     });
@@ -486,7 +443,7 @@ describe('PlanRunDialog Component', () => {
     test('posts the form, reports success, and closes', async () => {
       const user = userEvent.setup();
       const result = {
-        executionBackend: 'claude',
+        driver: 'claude',
         jobId: 'job-9',
         planId: 'plan-1',
       };
@@ -501,11 +458,10 @@ describe('PlanRunDialog Component', () => {
       );
       expect(props.onOpenChange).toHaveBeenCalledWith(false);
       expect(submitted[0]).toMatchObject({
-        backend: 'claude',
         branch: 'feat/run-dialog',
+        driver: 'claude',
         effort: 'high',
         intent: 'runPlan',
-        iterations: '7',
         model: 'opus',
       });
     });
@@ -564,11 +520,10 @@ describe('PlanRunDialog Component', () => {
 
       await waitFor(() => expect(submitted).toHaveLength(1));
       expect(submitted[0]).toMatchObject({
-        backend: 'claude',
         branch: 'feat/run-dialog',
         cancelScheduled: 'true',
+        driver: 'claude',
         intent: 'runPlan',
-        iterations: '7',
         model: 'opus',
       });
     });

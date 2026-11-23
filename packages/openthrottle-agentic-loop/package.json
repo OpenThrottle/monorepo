@@ -5,7 +5,8 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@openthrottle/openthrottle-agentic-ralph": "workspace:^"
+    "@openthrottle/openthrottle-agentic-utils": "workspace:^",
+    "@openthrottle/openthrottle-drivers": "workspace:^"
   },
   "description": "OT Loop core: the pure, dependency-injected parent state machine that runs a plan one task at a time (select, start, work, validate, complete or block, commit). No NestJS, GraphQL or process spawning.",
   "devDependencies": {

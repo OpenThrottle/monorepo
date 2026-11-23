@@ -110,9 +110,9 @@ export function isDisabledAgentClisMetrics(
 /** Narrows `metrics.plan_runs` back to {@link PlanRunsMetrics}. */
 export function isPlanRunsMetrics(value: unknown): value is PlanRunsMetrics {
   return hasFields(value, [
-    'byBackendKindStatus',
+    'byDriverKindStatus',
     'runsPerPlan',
-    'successRateByBackend',
+    'successRateByDriver',
     'totalInWindow',
   ]);
 }

@@ -74,7 +74,7 @@ export interface ResolverFs {
   readFile(path: string): Promise<string | undefined>;
 }
 
-/** @description The plan's `runConfigJson.otLoop` tuning that affects validation. @public */
+/** @description The plan's `runConfigJson.run` tuning that affects validation. @public */
 export interface OtLoopTuning {
   readonly validationCommands: readonly string[] | undefined;
 }

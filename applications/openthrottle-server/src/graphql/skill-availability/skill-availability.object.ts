@@ -18,7 +18,7 @@ export class SkillAvailabilityRuleObject {
   id!: string;
 
   @Field(() => String, {
-    description: `Environment qualifier: null applies to all environments; a value (ci | interactive | ralph) scopes the rule to that environment.`,
+    description: `Environment qualifier: null applies to all environments; a known environment name (such as ci or interactive) scopes the rule to that environment.`,
     nullable: true,
   })
   environment!: string | null;

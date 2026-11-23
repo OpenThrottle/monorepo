@@ -22,10 +22,9 @@ folders mirror the intended surface area.
 ## What does NOT belong here
 
 - **Consumer-specific types.** Keep exports generic — do not couple this package to another
-  package's domain types. For example, Ralph's `asExecuteGraphqlV2` (typed to
-  `WorkflowExecuteGraphqlV2`) must **not** move here verbatim (it would make nestjs-testing
-  depend on the workflows package); callers should instead write
-  `asMock<WorkflowExecuteGraphqlV2>(...)`.
+  package's domain types. For example, a helper typed to the OT Loop job's GraphQL executor must **not** move here
+  verbatim (it would make nestjs-testing depend on the agentic packages); callers should instead
+  write `asMock<OtLoopExecuteGraphql>(...)`.
 - React Router / jsdom test setup — that lives in `@openthrottle/react-router-testing`.
 
 ## Pointers

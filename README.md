@@ -108,8 +108,8 @@ OpenThrottle is a AI Harness built in a NX monorepo using NodeJS, TypeScript, Po
 ├── packages               # Shared packages that can also be published
 ├── scripts                # Scripts to make life easier (Bash + TypeScript)
 ├── services               # Shared or standalone services
-├── skills                 # Custom agent skills (Ralph, code review, generators, …)
-└── tools                  # Nx plugins, templates, workflows (see tools/)
+├── skills                 # Custom agent skills (OT Loop, code review, generators, …)
+└── tools                  # Nx plugins, templates, generators (see tools/)
 ```
 
 ## 🚦 Project status

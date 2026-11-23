@@ -11,37 +11,37 @@ import * as React from 'react';
 
 import { PLAN_RUN_MODEL_EFFORT_COPY } from '~/routing/plans/data/data.copy';
 import { parsePlanRunEffort } from '~/routing/plans/utils/plan-run-model-effort';
-import type { WorkflowRalphExecutionBackendUi } from '~/routing/plans/utils/workflow-ralph-config';
-import { formatWorkflowRalphExecutionBackendLabel } from '~/routing/plans/utils/workflow-ralph-config';
+import type { PlanRunDriverUi } from '~/routing/plans/utils/plan-run-options';
+import { formatPlanRunDriverLabel } from '~/routing/plans/utils/plan-run-options';
 
 export interface PlanRunEffortControlProps {
-  /** @description Stored `runConfigJson.ralph.executionBackend`; decides which levels exist. */
-  backend: WorkflowRalphExecutionBackendUi;
   className?: string;
+  /** @description The plan's stored agent driver; decides which levels exist. */
+  driver: PlanRunDriverUi;
 
-  /** @description Stored `runConfigJson.ralph.effort`; empty means unset. */
+  /** @description The plan's stored effort; empty means unset. */
   effort: string;
   onEffortChange: (effort: string) => void;
 }
 
 /**
  * @description State-free reasoning-effort control for plan runs, shared by the
- * Configuration tab and the Run dialog. Levels come from the selected backend's
- * `reasoningLevels` in `chat-capabilities`, never a local list. A backend with no
+ * Configuration tab and the Run dialog. Levels come from the selected driver's
+ * `reasoningLevels` in `chat-capabilities`, never a local list. A driver with no
  * reasoning knob (cursor: effort is part of the model id) renders disabled with
  * the reason in a tooltip rather than vanishing.
  */
 export const PlanRunEffortControl = (
   props: PlanRunEffortControlProps,
 ): React.ReactElement => {
-  const { backend, className, effort, onEffortChange } = props;
+  const { driver, className, effort, onEffortChange } = props;
 
   // Hooks
   const reasonId = React.useId();
 
   // Setup
   const copy = PLAN_RUN_MODEL_EFFORT_COPY;
-  const capabilities = capabilitiesForChatOption({ backend });
+  const capabilities = capabilitiesForChatOption({ backend: driver });
   const hasEffort = capabilities.reasoningLevels.length > 0;
 
   // Handlers
@@ -62,9 +62,7 @@ export const PlanRunEffortControl = (
     );
   }
 
-  const reason = copy.effortDisabledReason(
-    formatWorkflowRalphExecutionBackendLabel(backend),
-  );
+  const reason = copy.effortDisabledReason(formatPlanRunDriverLabel(driver));
 
   return (
     <Tooltip delayDuration={200}>

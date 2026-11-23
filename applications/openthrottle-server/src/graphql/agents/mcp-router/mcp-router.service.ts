@@ -214,7 +214,7 @@ export class AgentsMcpRouter {
       if (
         /\bplan\s+output\b/.test(lower) ||
         /\boutput\s+stream\b/.test(lower) ||
-        /\bralph\s+output\b/.test(lower) ||
+        /\bplan\s+run\s+output\b/.test(lower) ||
         /\biteration\s+log\b/.test(lower)
       ) {
         return {

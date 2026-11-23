@@ -65,7 +65,7 @@ describe('usePlanToolbarRunDialog', () => {
       result.current.onSubmitted({
         mode: 'run',
         result: {
-          executionBackend: 'claude',
+          driver: 'claude',
           jobId: 'job-42',
           planId: 'plan-1',
           queuePosition: 1,
@@ -92,7 +92,7 @@ describe('usePlanToolbarRunDialog', () => {
       result.current.onSubmitted({
         mode: 'schedule',
         result: {
-          executionBackend: 'claude',
+          driver: 'claude',
           jobId: 'job-7',
           planId: 'plan-1',
           planRunId: 'run-7',

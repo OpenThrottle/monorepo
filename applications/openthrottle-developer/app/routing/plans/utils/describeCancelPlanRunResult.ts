@@ -25,7 +25,7 @@ export const describeCancelPlanRunResult = (
       return `Run cancelled — removed ${count} queued job${count === 1 ? '' : 's'} from the queue.`;
     }
     case 'RUN_STOPPING':
-      return 'Run stopping — signaled the worker to terminate the active run (Ralph may take a moment to shut down).';
+      return 'Run stopping — signaled the worker to terminate the active run (it may take a moment to shut down).';
     case 'CANCELLATION_REQUESTED':
       return 'Cancellation requested — the run stops at its next checkpoint.';
     case 'NO_ACTIVE_RUN':

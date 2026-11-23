@@ -26,8 +26,8 @@ describe('constants', () => {
   test('SKILL_AVAILABILITY_ENVIRONMENTS has the known environments', () => {
     expect(SKILL_AVAILABILITY_ENVIRONMENTS).toEqual([
       'ci',
+      'headless',
       'interactive',
-      'ralph',
     ]);
   });
 
@@ -88,7 +88,7 @@ describe('isSkillAvailabilityEnvironment', () => {
   test('accepts known environments', () => {
     expect(isSkillAvailabilityEnvironment('ci')).toBe(true);
     expect(isSkillAvailabilityEnvironment('interactive')).toBe(true);
-    expect(isSkillAvailabilityEnvironment('ralph')).toBe(true);
+    expect(isSkillAvailabilityEnvironment('headless')).toBe(true);
   });
 
   test('rejects the all sentinel and unknown values', () => {
@@ -210,7 +210,7 @@ describe('environmentChoiceToValue', () => {
   test('passes real environments through unchanged', () => {
     expect(environmentChoiceToValue('ci')).toBe('ci');
     expect(environmentChoiceToValue('interactive')).toBe('interactive');
-    expect(environmentChoiceToValue('ralph')).toBe('ralph');
+    expect(environmentChoiceToValue('headless')).toBe('headless');
   });
 });
 

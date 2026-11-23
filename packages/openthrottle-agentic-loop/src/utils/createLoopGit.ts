@@ -3,9 +3,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import type {
-  WorkflowRalphCommandResult,
-  WorkflowRalphCommandRunner,
-} from '@openthrottle/openthrottle-agentic-ralph';
+  PlanRunCommandResult,
+  PlanRunCommandRunner,
+} from '@openthrottle/openthrottle-agentic-utils';
 
 import type {
   DiscardTaskChangesResult,
@@ -25,10 +25,10 @@ import { prepareResultDir } from './worker-result.ts';
 export interface CreateLoopGitOptions {
   readonly cwd: string;
   readonly lint: CommitMessageLinter;
-  readonly runCommand: WorkflowRalphCommandRunner;
+  readonly runCommand: PlanRunCommandRunner;
 }
 
-const combinedOutput = (result: WorkflowRalphCommandResult): string => {
+const combinedOutput = (result: PlanRunCommandResult): string => {
   return `${result.stdout}\n${result.stderr}`.trim();
 };
 
@@ -41,9 +41,7 @@ const combinedOutput = (result: WorkflowRalphCommandResult): string => {
 export const createLoopGit = (options: CreateLoopGitOptions): LoopGit => {
   const { cwd, lint, runCommand } = options;
 
-  const git = (
-    args: readonly string[],
-  ): Promise<WorkflowRalphCommandResult> => {
+  const git = (args: readonly string[]): Promise<PlanRunCommandResult> => {
     return runCommand({ args, command: 'git', cwd });
   };
 

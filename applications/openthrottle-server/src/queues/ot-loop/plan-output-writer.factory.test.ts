@@ -1,7 +1,7 @@
 import { asMock } from '@openthrottle/nestjs-testing';
-import { AppendPlanOutputDocument } from '@openthrottle/openthrottle-agentic-ralph';
 import { describe, expect, it, vi } from 'vitest';
 
+import { AppendPlanOutputDocument } from '../../__generated__/graphql.ts';
 import type { OtLoopExecuteGraphql } from './ot-loop.types.ts';
 import { createPlanOutputWriter } from './plan-output-writer.factory.ts';
 

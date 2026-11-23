@@ -189,7 +189,7 @@ Opt-in: the [`scheduling` toolset](#toolsets). `create_scheduled_job`, `list_sch
 
 Opt-in: the [`agents` toolset](#toolsets).
 
-Three **read-only** MCP tools expose persisted **web chat** thread history from `agent_conversation_*` tables via GraphQL. They mirror the developer UI chat persistence layer — not Ralph iteration logs.
+Three **read-only** MCP tools expose persisted **web chat** thread history from `agent_conversation_*` tables via GraphQL. They mirror the developer UI chat persistence layer — not plan-run iteration logs.
 
 **Prerequisite:** Parent plan `4fa6d16c-a1d4-4aba-923c-52e35e3deb66` (Postgres tables, GraphQL CRUD, `agentsRunChatTurn`, developer UI resumable chat). **Write tools** (append/create/archive via MCP) are deferred until `AGENTS_CHAT_ALLOW_MUTATIONS` extends the policy.
 
@@ -198,16 +198,16 @@ Three **read-only** MCP tools expose persisted **web chat** thread history from 
 | Data                   | MCP tools                                                                              | Use for                                                                  |
 | ---------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
 | `agent_conversation_*` | `agent_conversation_list`, `agent_conversation_get`, `agent_conversation_get_messages` | Developer UI web chat threads (`agentsRunChatTurn` with `persist: true`) |
-| `plan_output_stream`   | `get_plan_output`, `append_plan_output`, `delete_plan_output`                          | Ralph / workflow iteration logs tied to a plan                           |
+| `plan_output_stream`   | `get_plan_output`, `append_plan_output`, `delete_plan_output`                          | Plan-run iteration logs tied to a plan                                   |
 | `plan_messages`        | `post_plan_message`, `claim_plan_messages`                                             | Human STEER / QUEUE messages to a live run, and post-run FEEDBACK        |
 
 `claim_plan_messages` is the only delivery path: at a task boundary it marks every pending
 STEER/QUEUE message DELIVERED and records the delivery on `plan_output_stream` in one
 transaction. Listing and withdrawing messages are developer-UI actions, not MCP tools.
 
-Each tool description ends with: _Web chat threads only — use `get_plan_output` for Ralph/plan iteration logs._
+Each tool description ends with: _Web chat threads only — use `get_plan_output` for plan iteration logs._
 
-Do **not** use conversation tools for Ralph logs; do **not** expose `plan_output_stream` through conversation tools.
+Do **not** use conversation tools for plan-run logs; do **not** expose `plan_output_stream` through conversation tools.
 
 #### `delete_plan_output`
 

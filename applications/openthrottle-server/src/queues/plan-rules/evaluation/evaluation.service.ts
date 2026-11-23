@@ -39,9 +39,9 @@ export class PlanRulesEvaluationService {
   /**
    * @description The environment the current GraphQL request claims to run in, from the
    * `x-ot-environment` header the openthrottle-mcp stdio server sets from its launch environment
-   * (`ci` under CI, `ralph` when an orchestrator spawned the agent, `interactive` for an agent
+   * (`ci` under CI, `headless` when an orchestrator spawned the agent, `interactive` for an agent
    * harness with neither). Null outside a request context, without the header, or for a value
-   * outside `ci | interactive | ralph`. The developer UI sends no header, so a human's edit is a
+   * outside `ci | headless | interactive`. The developer UI sends no header, so a human's edit is a
    * null pass. A claim, not a proof: it only selects which of the plan OWNER's own rules apply, so
    * a caller that misstates it misconfigures nothing but its own pass.
    */
@@ -55,7 +55,7 @@ export class PlanRulesEvaluationService {
    * @description Enqueues one full-evaluation pass for the plan. Fire-and-forget
    * from mutation paths; never throws.
    *
-   * `environment` is the caller's environment (`ci | interactive | ralph`) when
+   * `environment` is the caller's environment (`ci | headless | interactive`) when
    * the trigger genuinely knows it, else null; the worker evaluates with it, so
    * environment-qualified rules match only for a matching environment. Every
    * caller states it explicitly: request-scoped callers (resolvers) pass
@@ -65,8 +65,8 @@ export class PlanRulesEvaluationService {
    * a burst of triggers for one plan in one environment collapses into at most
    * one active + one waiting pass (last write wins). Passes for different
    * environments of the same plan do not collapse, because rules are apply-once
-   * per (rule, plan) and a null pass replacing a pending `ralph` one would drop
-   * the ralph-only matches; they can therefore overlap on the same plan, which
+   * per (rule, plan) and a null pass replacing a pending `headless` one would drop
+   * the headless-only matches; they can therefore overlap on the same plan, which
    * the ledger fingerprint check, the deterministic reconcile targets and the
    * worker's out-of-environment orphan exclusion make safe.
    * Distinct plans keep distinct dedup ids, so they still evaluate in parallel.

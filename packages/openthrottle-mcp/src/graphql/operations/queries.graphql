@@ -1,0 +1,114 @@
+query getNote($id: ID!) {
+  note(id: $id) {
+    ...Note
+  }
+}
+
+query getNotes {
+  notes {
+    ...Note
+  }
+}
+
+# tags are selected on the read queries only, not in the shared Plan fragment, so
+# plan mutations do not pay a tag lookup they never return to anyone.
+query getPlan($id: ID!) {
+  plan(id: $id) {
+    ...PlanWithTags
+  }
+}
+
+query listPlansByStatus($input: ListPlansByStatusInput!) {
+  listPlansByStatus(input: $input) {
+    items {
+      ...PlanWithTags
+    }
+    totalCount
+  }
+}
+
+query getTask($id: ID!) {
+  task(id: $id) {
+    ...Task
+  }
+}
+
+query getTasksByPlanId($input: TasksByPlanIdInput!) {
+  tasksByPlanId(input: $input) {
+    ...Task
+  }
+}
+
+query getRemainingTasksByPlanId($input: RemainingTasksByPlanIdInput!) {
+  remainingTasksByPlanId(input: $input) {
+    ...Task
+  }
+}
+
+query getTasks($limit: Int) {
+  tasks(limit: $limit) {
+    ...Task
+  }
+}
+
+query getActivityByDate($input: ActivityByDateInput!) {
+  activityByDate(input: $input) {
+    ...ActivityByDate
+  }
+}
+
+query getLastActivity($input: LastActivityInput!) {
+  lastActivity(input: $input) {
+    ...LastActivity
+  }
+}
+
+query getPlanOutputStreamChunks($input: ListPlanOutputStreamChunksInput!) {
+  planOutputStreamChunks(input: $input) {
+    ...PlanOutputStreamChunk
+  }
+}
+
+query search($input: SearchInput!) {
+  search(input: $input) {
+    chunks {
+      ...SearchChunk
+    }
+    mode
+    reason
+  }
+}
+
+query getDocument($id: String!) {
+  getDocument(id: $id) {
+    ...SearchChunk
+  }
+}
+
+query listSources {
+  listSources {
+    plans {
+      ...ListPlanSource
+    }
+    sources {
+      ...ListSourceInfo
+    }
+  }
+}
+
+# The full provenance read of a plan's runs.
+query getPlanRuns($input: PlanRunsByPlanIdInput!) {
+  planRunsByPlanId(input: $input) {
+    ...PlanRunWithCheckout
+  }
+}
+
+# The OT Loop job folds messages an in-worker hook claimed for its run into its guidance list
+# (docs/workflows/ot-loop-job.md § 9).
+query deliveredPlanMessages($input: ListPlanMessagesInput!) {
+  planMessages(input: $input) {
+    body
+    id
+    planRunId
+  }
+}

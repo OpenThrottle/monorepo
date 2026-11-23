@@ -20,7 +20,7 @@ describe('plan-run-model-effort', () => {
       ).toEqual(['cursor|auto', 'cursor|gpt-5.2', 'claude|opus']);
     });
 
-    test('drops driver x endpoint joins and non-plan backends', () => {
+    test('drops driver x endpoint joins and non-plan drivers', () => {
       expect(
         filterPlanRunnableModels([
           { id: 'claude|http://host:1/v1::m', label: 'm' },
@@ -31,19 +31,19 @@ describe('plan-run-model-effort', () => {
   });
 
   describe('toPlanRunModelOptionId', () => {
-    test('matches a named model on its backend', () => {
+    test('matches a named model on its driver', () => {
       expect(
         toPlanRunModelOptionId('cursor', 'gpt-5.2', MOCK_PLAN_RUN_MODELS),
       ).toBe('cursor|gpt-5.2');
     });
 
-    test('does not match a model on the wrong backend', () => {
+    test('does not match a model on the wrong driver', () => {
       expect(
         toPlanRunModelOptionId('claude', 'gpt-5.2', MOCK_PLAN_RUN_MODELS),
       ).toBeUndefined();
     });
 
-    test('falls back to the bare-backend option for the default model', () => {
+    test('falls back to the bare-driver option for the default model', () => {
       expect(
         toPlanRunModelOptionId('claude', 'auto', [
           { id: 'claude', label: 'Claude Code' },
@@ -61,16 +61,16 @@ describe('plan-run-model-effort', () => {
   });
 
   describe('parsePlanRunModelOptionId', () => {
-    test('splits a CLI option into backend and model', () => {
+    test('splits a CLI option into driver and model', () => {
       expect(parsePlanRunModelOptionId('claude|opus')).toEqual({
-        backend: 'claude',
+        driver: 'claude',
         model: 'opus',
       });
     });
 
-    test('resolves a bare backend to the default model', () => {
+    test('resolves a bare driver to the default model', () => {
       expect(parsePlanRunModelOptionId('cursor')).toEqual({
-        backend: 'cursor',
+        driver: 'cursor',
         model: 'auto',
       });
     });
@@ -91,15 +91,15 @@ describe('plan-run-model-effort', () => {
   });
 
   describe('reconcilePlanRunEffort', () => {
-    test('keeps an effort the backend advertises', () => {
+    test('keeps an effort the driver advertises', () => {
       expect(reconcilePlanRunEffort('claude', 'max')).toBe('max');
     });
 
-    test('drops an effort the backend does not advertise', () => {
+    test('drops an effort the driver does not advertise', () => {
       expect(reconcilePlanRunEffort('claude', 'ultra')).toBe('');
     });
 
-    test('drops any effort on a backend with no reasoning knob', () => {
+    test('drops any effort on a driver with no reasoning knob', () => {
       expect(reconcilePlanRunEffort('cursor', 'high')).toBe('');
     });
   });

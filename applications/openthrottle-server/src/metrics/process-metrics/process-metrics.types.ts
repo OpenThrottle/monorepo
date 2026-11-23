@@ -1,6 +1,5 @@
 /**
  * @description Snapshot of Node process memory and CPU for server and task-run metrics.
- * Aligns with tools/workflows/docs/server-and-task-metrics.md.
  */
 
 import type {

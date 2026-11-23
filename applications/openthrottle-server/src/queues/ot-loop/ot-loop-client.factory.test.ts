@@ -1,19 +1,19 @@
 import { asMock } from '@openthrottle/nestjs-testing';
-import {
-  AppendPlanOutputDocument,
-  CreateTasksDocument,
-  GetPlanDocument,
-  GetTasksByPlanIdDocument,
-  RalphAttachWorkSessionSubjectDocument,
-  RalphClaimPlanMessagesDocument,
-  RalphDeliveredPlanMessagesDocument,
-  RalphEndWorkSessionDocument,
-  RalphStartWorkSessionDocument,
-  UpdatePlanDocument,
-  UpdateTaskDocument,
-} from '@openthrottle/openthrottle-agentic-ralph';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import {
+  AppendPlanOutputDocument,
+  AttachWorkSessionSubjectDocument,
+  ClaimPlanMessagesDocument,
+  CreateTasksDocument,
+  DeliveredPlanMessagesDocument,
+  EndWorkSessionDocument,
+  GetPlanDocument,
+  GetTasksByPlanIdDocument,
+  StartWorkSessionDocument,
+  UpdatePlanDocument,
+  UpdateTaskDocument,
+} from '../../__generated__/graphql.ts';
 import type {
   OtLoopExecuteGraphql,
   PlanOutputChunk,
@@ -39,7 +39,7 @@ describe('createOtLoopClient', () => {
     },
   };
   const respond = vi.fn((document: unknown): unknown => {
-    if (document === RalphClaimPlanMessagesDocument) {
+    if (document === ClaimPlanMessagesDocument) {
       return {
         claimPlanMessages: {
           messages: [
@@ -50,7 +50,7 @@ describe('createOtLoopClient', () => {
       };
     }
 
-    if (document === RalphDeliveredPlanMessagesDocument) {
+    if (document === DeliveredPlanMessagesDocument) {
       return {
         planMessages: [
           { body: 'job claim', id: 'm1', planRunId: 'run-1' },
@@ -60,7 +60,7 @@ describe('createOtLoopClient', () => {
       };
     }
 
-    if (document === RalphStartWorkSessionDocument) {
+    if (document === StartWorkSessionDocument) {
       return { startWorkSession: { id: 'session-1' } };
     }
 
@@ -126,7 +126,7 @@ describe('createOtLoopClient', () => {
       { body: 'use the helper', id: 'm1' },
       { body: 'also add docs', id: 'm2' },
     ]);
-    expect(callsTo(RalphClaimPlanMessagesDocument)[0]?.variables).toEqual({
+    expect(callsTo(ClaimPlanMessagesDocument)[0]?.variables).toEqual({
       input: { planId: PLAN_ID, planRunId: 'run-1', taskId: 't1' },
     });
   });
@@ -138,7 +138,7 @@ describe('createOtLoopClient', () => {
       { body: 'job claim', id: 'm1' },
       { body: 'hook claim', id: 'm4' },
     ]);
-    expect(callsTo(RalphDeliveredPlanMessagesDocument)[0]?.variables).toEqual({
+    expect(callsTo(DeliveredPlanMessagesDocument)[0]?.variables).toEqual({
       input: { planId: PLAN_ID, statuses: ['DELIVERED'] },
     });
   });
@@ -147,7 +147,7 @@ describe('createOtLoopClient', () => {
     expect(
       await buildClient('run-session', null).listRunDeliveredMessages(),
     ).toEqual([]);
-    expect(callsTo(RalphDeliveredPlanMessagesDocument)).toHaveLength(0);
+    expect(callsTo(DeliveredPlanMessagesDocument)).toHaveLength(0);
   });
 
   it('opens a per-task session declaring the model, then attaches the task as its subject', async () => {
@@ -158,7 +158,7 @@ describe('createOtLoopClient', () => {
     });
 
     expect(id).toBe('session-1');
-    expect(callsTo(RalphStartWorkSessionDocument)[0]?.variables).toEqual({
+    expect(callsTo(StartWorkSessionDocument)[0]?.variables).toEqual({
       input: {
         externalRef: 'job-9',
         model: 'sonnet',
@@ -166,9 +166,7 @@ describe('createOtLoopClient', () => {
         toolName: 'ot-loop',
       },
     });
-    expect(
-      callsTo(RalphAttachWorkSessionSubjectDocument)[0]?.variables,
-    ).toEqual({
+    expect(callsTo(AttachWorkSessionSubjectDocument)[0]?.variables).toEqual({
       input: { planId: PLAN_ID, sessionId: 'session-1', taskId: 't1' },
     });
   });
@@ -176,7 +174,7 @@ describe('createOtLoopClient', () => {
   it('ends exactly the session it is given', async () => {
     await buildClient().endWorkSession('session-1');
 
-    expect(callsTo(RalphEndWorkSessionDocument)[0]?.variables).toEqual({
+    expect(callsTo(EndWorkSessionDocument)[0]?.variables).toEqual({
       input: { sessionId: 'session-1' },
     });
   });

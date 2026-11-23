@@ -14,10 +14,10 @@ import {
 @InputType()
 export class WorkstreamTimelineInput {
   @Field(() => String, {
-    description: `Filter spans to a single execution backend / tool / driver.`,
+    description: `Filter spans to a single agent driver or tool.`,
     nullable: true,
   })
-  backend!: string | null;
+  driver!: string | null;
 
   @Field(() => String, {
     description: `Filter to a single repository checkout (UUID).`,

@@ -163,11 +163,11 @@ describe('OutputStream Component', () => {
     ).toHaveTextContent(OUTPUT_STREAM_COPY.attemptLabel(2));
   });
 
-  test('renders Ralph chunks (kind null) as plain chunks, never as attempts', () => {
+  test('renders chunks with no kind (kind null) as plain chunks, never as attempts', () => {
     const component = renderStream({
       chunks: [
         {
-          content: 'raw ralph text',
+          content: 'raw plain text',
           createdAt: new Date(2026, 10, 11, 10, 0, 0),
           id: 'r1',
           iteration: 1,
@@ -178,7 +178,7 @@ describe('OutputStream Component', () => {
     });
 
     expect(component.queryByTestId('OutputStreamAttempt')).toBeNull();
-    expect(component.getByText('raw ralph text').tagName).toBe('PRE');
+    expect(component.getByText('raw plain text').tagName).toBe('PRE');
     expect(component.getByText('#1')).toBeInTheDocument();
   });
 });

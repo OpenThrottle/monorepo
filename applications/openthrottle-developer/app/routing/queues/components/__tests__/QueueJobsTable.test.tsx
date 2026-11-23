@@ -22,7 +22,7 @@ const jobWithPlan: QueueJobsTableJob = {
   failedReason: null,
   finishedOn: 1_700_000_100_000,
   id: 'job-with-plan',
-  name: 'ralph-run',
+  name: 'plan-run',
   processedOn: null,
   progress: null,
   returnvalue: null,

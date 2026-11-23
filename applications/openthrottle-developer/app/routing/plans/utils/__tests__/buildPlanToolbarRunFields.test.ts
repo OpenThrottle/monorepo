@@ -6,8 +6,8 @@ const base = {
   branch: undefined,
   checkoutId: undefined,
   jobRunHooksJson: '',
-  ralphTuningJson: '',
   repositoryId: undefined,
+  runTuningJson: '',
   workingDirectory: undefined,
 };
 
@@ -15,7 +15,7 @@ describe('buildPlanToolbarRunFields', () => {
   test('always carries the intent and the tuning, even when blank', () => {
     expect(buildPlanToolbarRunFields(base)).toEqual({
       intent: 'runPlan',
-      ralphTuning: '',
+      runTuning: '',
     });
   });
 
@@ -26,16 +26,16 @@ describe('buildPlanToolbarRunFields', () => {
         branch: 'main',
         checkoutId: '',
         jobRunHooksJson: '{"hooks":[]}',
-        ralphTuningJson: '{"iterations":3}',
         repositoryId: 'repo-1',
+        runTuningJson: '{"effort":"low"}',
         workingDirectory: '/work',
       }),
     ).toEqual({
       branch: 'main',
       intent: 'runPlan',
       jobRunHooksJson: '{"hooks":[]}',
-      ralphTuning: '{"iterations":3}',
       repositoryId: 'repo-1',
+      runTuning: '{"effort":"low"}',
       workingDirectory: '/work',
     });
   });

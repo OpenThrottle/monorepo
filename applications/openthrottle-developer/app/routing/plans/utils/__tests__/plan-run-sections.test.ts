@@ -180,27 +180,27 @@ describe('selectLatestRun', () => {
 
 describe('buildPlanRunMetaItems', () => {
   const snapshot = JSON.stringify({
-    ralph: { effort: 'high', model: 'snapshot-model' },
+    run: { effort: 'high', model: 'snapshot-model' },
     workspace: { workingDirectory: '/tmp/worktree' },
   });
 
-  test('orders model, effort, backend, workspace and keeps only requested fields', () => {
+  test('orders model, effort, driver, workspace and keeps only requested fields', () => {
     const items = buildPlanRunMetaItems(
       {
-        executionBackend: 'claude',
+        driver: 'claude',
         model: 'opus',
         runConfigSnapshotJson: snapshot,
       },
       [
         PLAN_RUN_META_FIELDS.workspace,
-        PLAN_RUN_META_FIELDS.backend,
+        PLAN_RUN_META_FIELDS.driver,
         PLAN_RUN_META_FIELDS.model,
       ],
     );
 
     expect(items.map((item) => item.field)).toEqual([
       'model',
-      'backend',
+      'driver',
       'workspace',
     ]);
     expect(items[0]?.value).toBe('opus');
@@ -209,7 +209,7 @@ describe('buildPlanRunMetaItems', () => {
   test('omits what the run did not record', () => {
     expect(
       buildPlanRunMetaItems(
-        { executionBackend: null, model: null, runConfigSnapshotJson: null },
+        { driver: null, model: null, runConfigSnapshotJson: null },
         Object.values(PLAN_RUN_META_FIELDS),
       ),
     ).toEqual([]);

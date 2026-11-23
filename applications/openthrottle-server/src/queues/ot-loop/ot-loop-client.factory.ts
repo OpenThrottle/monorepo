@@ -5,20 +5,20 @@ import type {
   LoopTaskStatus,
 } from '@openthrottle/openthrottle-agentic-loop';
 import { LOOP_OUTPUT_KIND } from '@openthrottle/openthrottle-agentic-loop';
+
 import {
+  AttachWorkSessionSubjectDocument,
+  ClaimPlanMessagesDocument,
   CreateTasksDocument,
+  DeliveredPlanMessagesDocument,
+  EndWorkSessionDocument,
   GetPlanDocument,
   GetTasksByPlanIdDocument,
   PlanMessageStatus,
-  RalphAttachWorkSessionSubjectDocument,
-  RalphClaimPlanMessagesDocument,
-  RalphDeliveredPlanMessagesDocument,
-  RalphEndWorkSessionDocument,
-  RalphStartWorkSessionDocument,
+  StartWorkSessionDocument,
   UpdatePlanDocument,
   UpdateTaskDocument,
-} from '@openthrottle/openthrottle-agentic-ralph';
-
+} from '../../__generated__/graphql.ts';
 import {
   OT_LOOP_NARRATION_PREFIX,
   OT_LOOP_TOOL_NAME,
@@ -31,10 +31,10 @@ import {
 } from './ot-loop.utils.ts';
 
 /**
- * @description The OT Loop `LoopClient` over the worker-scoped GraphQL executor Ralph uses, mirroring
- * its calls: the same `getTasksByPlanId`, `updateTask`, `updatePlan`, `createTasks` and
+ * @description The OT Loop `LoopClient` over the worker-scoped GraphQL executor, using the
+ * same `getTasksByPlanId`, `updateTask`, `updatePlan`, `createTasks` and
  * `appendPlanOutput` documents, plus work-session start/attach/end, the inbox claim and the run's delivered messages. Status
- * writes carry the processor's run session in `X-OT-Session-Id` (as Ralph's do); the per-task
+ * writes carry the processor's run session in `X-OT-Session-Id` ; the per-task
  * sessions opened here are separate rows and are the only ones this client ever ends.
  */
 export const createOtLoopClient = (
@@ -44,7 +44,7 @@ export const createOtLoopClient = (
   const sessionOptions = buildSessionOptions(options.workSessionId);
 
   const claimInbox: LoopClient['claimInbox'] = async ({ taskId }) => {
-    const result = await executeGraphqlV2(RalphClaimPlanMessagesDocument, {
+    const result = await executeGraphqlV2(ClaimPlanMessagesDocument, {
       input: {
         planId,
         taskId,
@@ -65,10 +65,9 @@ export const createOtLoopClient = (
         return [];
       }
 
-      const result = await executeGraphqlV2(
-        RalphDeliveredPlanMessagesDocument,
-        { input: { planId, statuses: [PlanMessageStatus.Delivered] } },
-      );
+      const result = await executeGraphqlV2(DeliveredPlanMessagesDocument, {
+        input: { planId, statuses: [PlanMessageStatus.Delivered] },
+      });
 
       return result.planMessages
         .filter((message) => message.planRunId === planRunId)
@@ -98,7 +97,7 @@ export const createOtLoopClient = (
   };
 
   const startWorkSession: LoopClient['startWorkSession'] = async (input) => {
-    const started = await executeGraphqlV2(RalphStartWorkSessionDocument, {
+    const started = await executeGraphqlV2(StartWorkSessionDocument, {
       input: {
         ...(externalRef !== undefined ? { externalRef } : {}),
         ...(input.model !== undefined ? { model: input.model } : {}),
@@ -108,7 +107,7 @@ export const createOtLoopClient = (
     });
     const sessionId = started.startWorkSession.id;
 
-    await executeGraphqlV2(RalphAttachWorkSessionSubjectDocument, {
+    await executeGraphqlV2(AttachWorkSessionSubjectDocument, {
       input: { planId: input.planId, sessionId, taskId: input.taskId },
     });
 
@@ -148,7 +147,7 @@ export const createOtLoopClient = (
     claimInbox,
     createFollowUps,
     endWorkSession: async (sessionId) => {
-      await executeGraphqlV2(RalphEndWorkSessionDocument, {
+      await executeGraphqlV2(EndWorkSessionDocument, {
         input: { sessionId },
       });
     },

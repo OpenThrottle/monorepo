@@ -1,5 +1,5 @@
 /**
- * @description Handler tests for plan output MCP tools (append_plan_output, get_plan_output) — core Ralph traceability — with mocked GraphQL.
+ * @description Handler tests for plan output MCP tools (append_plan_output, get_plan_output) — core plan-run traceability — with mocked GraphQL.
  */
 
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';

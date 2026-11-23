@@ -1,6 +1,6 @@
 /**
  * @description GraphQL object type for wall-clock duration vs CPU time metrics.
- * Aligns with tools/workflows WallClockMetrics type. Used to determine if jobs
+ * Used to determine if jobs
  * are CPU-bound, I/O-bound, or wait-bound.
  */
 

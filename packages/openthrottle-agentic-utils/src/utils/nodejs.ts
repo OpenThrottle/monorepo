@@ -29,7 +29,7 @@ export interface PinNxWorkspaceRootResult {
  * It sets {@link NX_WORKSPACE_ROOT_PATH_ENV}, disables the Nx daemon (so the graph is built in-process
  * against the pinned root instead of a foreign-cwd daemon), and updates Nx's cached `workspaceRoot`.
  * The returned `restore()` reverts all three. The OpenThrottle root is resolved via
- * {@link getOpenThrottleRoot} (`WORKFLOW_RALPH_OT_ROOT` → `WORKSPACE_ROOT` → module walk-up → cwd).
+ * {@link getOpenThrottleRoot} (`OPENTHROTTLE_PLAN_RUN_OT_ROOT` → `WORKSPACE_ROOT` → module walk-up → cwd).
  * When the root cannot be resolved, this is a no-op and `restore()` does nothing.
  */
 export function pinNxWorkspaceRootToOpenThrottle(
@@ -119,7 +119,7 @@ const prependDirToPath = (
 
 /**
  * Prepends the OpenThrottle `node_modules/.bin` directory ({@link resolveOpenThrottleBinDir}) to PATH
- * so `pnpm exec workflow-ralph` resolves the binary from the OpenThrottle
+ * so `pnpm exec <bin>` resolves the binary from the OpenThrottle
  * monorepo regardless of `cwd`, without relying on the dev shell PATH bleeding in.
  * No-op when the bin directory cannot be resolved or is already on PATH.
  */

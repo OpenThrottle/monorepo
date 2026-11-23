@@ -11,14 +11,14 @@ export const PLAN_RUN_HISTORY_FETCH_LIMIT = 25;
 export const PLAN_RUN_HISTORY_INITIAL_ROWS = 10;
 
 /**
- * @description Column count of the run history table (chevron, When, Status, Model / backend,
+ * @description Column count of the run history table (chevron, When, Status, Model / driver,
  * Branch / PR, actions); the expanded detail row spans all of it.
  */
 export const PLAN_RUN_HISTORY_COLUMN_COUNT = 6;
 
 /** @description The fields a run's meta line can show (see `buildPlanRunMetaItems`). */
 export const PLAN_RUN_META_FIELDS = {
-  backend: 'backend',
+  driver: 'driver',
   effort: 'effort',
   model: 'model',
   workspace: 'workspace',
@@ -29,20 +29,20 @@ export type PlanRunMetaField =
 
 /** @description Upcoming blocks show everything the run was scheduled with. */
 export const PLAN_RUN_UPCOMING_META_FIELDS: readonly PlanRunMetaField[] = [
-  PLAN_RUN_META_FIELDS.backend,
+  PLAN_RUN_META_FIELDS.driver,
   PLAN_RUN_META_FIELDS.effort,
   PLAN_RUN_META_FIELDS.model,
   PLAN_RUN_META_FIELDS.workspace,
 ];
 
-/** @description Run history's Model / backend column; workspace and effort live in the expanded detail. */
+/** @description Run history's Model / driver column; workspace and effort live in the expanded detail. */
 export const PLAN_RUN_HISTORY_META_FIELDS: readonly PlanRunMetaField[] = [
-  PLAN_RUN_META_FIELDS.backend,
+  PLAN_RUN_META_FIELDS.driver,
   PLAN_RUN_META_FIELDS.model,
 ];
 
-/** @description Latest run shows model · backend; provenance carries the workspace. */
+/** @description Latest run shows model · driver; provenance carries the workspace. */
 export const PLAN_RUN_LATEST_META_FIELDS: readonly PlanRunMetaField[] = [
-  PLAN_RUN_META_FIELDS.backend,
+  PLAN_RUN_META_FIELDS.driver,
   PLAN_RUN_META_FIELDS.model,
 ];

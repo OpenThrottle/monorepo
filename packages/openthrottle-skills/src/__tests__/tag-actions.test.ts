@@ -96,26 +96,26 @@ describe('evaluateTagActionRules', () => {
       name: 'unscoped rule matches a repository-less plan',
     },
     {
-      context: { environment: 'ralph' },
+      context: { environment: 'headless' },
       matches: true,
       name: 'NULL environment matches any environment',
     },
     {
       matches: false,
       name: 'environment-qualified rule does not match a null-environment evaluation',
-      rule: { environment: 'ralph' },
+      rule: { environment: 'headless' },
     },
     {
-      context: { environment: 'ralph' },
+      context: { environment: 'headless' },
       matches: true,
       name: 'equal environment matches',
-      rule: { environment: 'ralph' },
+      rule: { environment: 'headless' },
     },
     {
       context: { environment: 'ci' },
       matches: false,
       name: 'different environment does not match',
-      rule: { environment: 'ralph' },
+      rule: { environment: 'headless' },
     },
     {
       matches: true,

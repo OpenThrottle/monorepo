@@ -71,7 +71,7 @@ export const buildSupportBundlePayload = (): SupportBundlePayload => {
     version: 1,
     workflowLogs: {
       apiStatus: 'not_available',
-      hint: 'Server-side workflow-ralph stderr and plan output streaming are not exposed here yet. Use Plan detail for output, or capture stderr from `pnpm exec workflow-ralph --plan <uuid> --debug`. When an operator API exists, this section can tail or link those logs.',
+      hint: 'Server-side agent stderr and plan output streaming are not exposed here yet. Use Plan detail for output. When an operator API exists, this section can tail or link those logs.',
     },
   };
 };

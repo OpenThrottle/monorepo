@@ -7,7 +7,7 @@ import { OffsetPageObject } from '@openthrottle/nestjs-graphql';
 import type {
   PlanData,
   PlanRunData,
-  PlanRunExecutionBackend,
+  PlanRunDriver,
 } from '@openthrottle/nestjs-repositories-server';
 
 import { ProjectObject } from '../projects/project.object.ts';
@@ -142,10 +142,14 @@ export class PlanRefObject {
   title!: string;
 }
 
+/**
+ * @description The GraphQL view of a plan run. The entity's `driver` is exposed as `driver`,
+ * so it is the one {@link PlanRunData} property this class renames.
+ */
 @ObjectType()
-export class PlanRunObject implements PlanRunData {
+export class PlanRunObject implements Omit<PlanRunData, 'driver'> {
   @Field(() => String, {
-    description: `BullMQ job id for this run. Null for detached-CLI runs that carry no queue job.`,
+    description: `BullMQ job id for this run. Null for runs owned outside the queue (such as an interactive /ot-loop).`,
     nullable: true,
   })
   bullmqJobId!: string | null;
@@ -160,9 +164,9 @@ export class PlanRunObject implements PlanRunData {
   createdAt!: Date;
 
   @Field(() => String, {
-    description: `Execution backend selected once for the whole run: cursor or claude.`,
+    description: `Agent driver selected once for the whole run (antigravity, claude, codex, cursor, grok or opencode).`,
   })
-  executionBackend!: PlanRunExecutionBackend;
+  driver!: PlanRunDriver;
 
   @Field(() => String, {
     description: `Host the worker executing this run is on. Null when the run is not actively executing. Diagnostic only — cross-host OS kill is out of scope.`,
@@ -214,13 +218,13 @@ export class PlanRunObject implements PlanRunData {
   resumeOfRunId!: string | null;
 
   @Field(() => String, {
-    description: `Resolved workflow-ralph configuration at enqueue (PlanRunConfigSnapshot v1 JSON). Null for legacy runs.`,
+    description: `Resolved run configuration at enqueue (PlanRunConfigSnapshot v1 JSON). Null for legacy runs.`,
     nullable: true,
   })
   runConfigSnapshotJson!: string | null;
 
   @Field(() => String, {
-    description: 'Ralph run implementation: spawn or orchestrator.',
+    description: 'Run implementation: spawn or orchestrator.',
   })
   runKind!: 'orchestrator' | 'spawn';
 
@@ -334,13 +338,13 @@ export class CreatePlansResultObject {
   totalCount!: number;
 }
 
-/** Result of enqueuePlanRun (and deprecated workflowPlanRun alias): job id, plan id, and queue position for UI feedback. */
+/** Result of enqueuePlanRun: job id, plan id, and queue position for UI feedback. */
 @ObjectType()
 export class EnqueuePlanRunResultObject {
   @Field(() => String, {
-    description: `Execution backend selected once for the whole run: cursor or claude.`,
+    description: `Agent driver selected once for the whole run (antigravity, claude, codex, cursor, grok or opencode).`,
   })
-  executionBackend!: PlanRunExecutionBackend;
+  driver!: PlanRunDriver;
 
   @Field(() => String, { description: 'BullMQ job id' })
   jobId!: string;
@@ -363,9 +367,9 @@ export class EnqueuePlanRunResultObject {
 @ObjectType()
 export class SchedulePlanRunResultObject {
   @Field(() => String, {
-    description: `Execution backend selected once for the whole run: cursor or claude.`,
+    description: `Agent driver selected once for the whole run (antigravity, claude, codex, cursor, grok or opencode).`,
   })
-  executionBackend!: PlanRunExecutionBackend;
+  driver!: PlanRunDriver;
 
   @Field(() => String, {
     description: `BullMQ job id of the delayed job that starts the run (deterministic: scheduled-plan-run-<idempotencyKey | planId-epochMs>).`,
@@ -390,12 +394,12 @@ export class SchedulePlanRunResultObject {
 @ObjectType()
 export class CancelPlanRunResultObject {
   @Field(() => [String], {
-    description: `BullMQ job ids that were active (locked by a worker) and could not be removed from the queue. When "signaledActiveRunToStop" is true, the worker was asked to terminate the Ralph child for this plan.`,
+    description: `BullMQ job ids that were active (locked by a worker) and could not be removed from the queue. When "signaledActiveRunToStop" is true, the worker was asked to stop the run for this plan.`,
   })
   activeJobIdsCouldNotCancel!: string[];
 
   @Field(() => Boolean, {
-    description: `True when an in-flight plan run was signaled to stop (Ralph child receives SIGTERM, then SIGKILL if needed). The BullMQ job may still be active until the worker finishes.`,
+    description: `True when an in-flight plan run was signaled to stop (the run is asked to stop, then killed if needed). The BullMQ job may still be active until the worker finishes.`,
   })
   signaledActiveRunToStop!: boolean;
 

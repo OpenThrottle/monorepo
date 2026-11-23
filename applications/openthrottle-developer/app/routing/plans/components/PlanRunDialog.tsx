@@ -47,15 +47,15 @@ export interface PlanRunDialogProps {
   readonly planId: string;
   readonly planStatus?: string;
 
-  /** @description JSON-serialized Ralph tuning from the Configuration tab (the toolbar's `ralphTuning`). */
-  readonly ralphTuningJson?: string;
-
   /** @description Resolved repositories, only to name the checkout in the read-only summary. */
   readonly repositories?: readonly PlanRunConfigRepositoryFieldsFragment[];
-  readonly repositoryId: string;
 
-  /** @description The plan's saved run config; model, effort and iterations read from it on every open. */
+  readonly repositoryId: string;
+  /** @description The plan's saved run config; model, effort and OT Loop settings read from it on every open. */
   readonly runConfigJson: string | null | undefined;
+
+  /** @description JSON-serialized run tuning from the Configuration tab (the toolbar's `runTuning`). */
+  readonly runTuningJson?: string;
 
   /** @description The plan's scheduled run; non-null makes submit ask to unschedule (Run now) or replace (Schedule). */
   readonly scheduledRunAt?: Date | string | null;
@@ -67,7 +67,7 @@ export interface PlanRunDialogProps {
 /**
  * @description Run now / Schedule dialog for a plan. Reads the plan's `runConfigJson` and posts
  * `runPlan` or `schedulePlanRun` to the plan detail action through a fetcher. Model and effort are
- * PLAN settings the action saves; iterations is this run only. On a scheduled plan a submit first
+ * PLAN settings the action saves, as are the OT Loop settings. On a scheduled plan a submit first
  * asks to unschedule or replace it. State lives in {@link usePlanRunDialog}.
  */
 export const PlanRunDialog = (
@@ -84,7 +84,7 @@ export const PlanRunDialog = (
     open,
     planId,
     planStatus,
-    ralphTuningJson = '',
+    runTuningJson = '',
     repositories = [],
     repositoryId,
     runConfigJson,
@@ -105,9 +105,9 @@ export const PlanRunDialog = (
     open,
     planId,
     planStatus,
-    ralphTuningJson,
     repositoryId,
     runConfigJson,
+    runTuningJson,
     scheduledRunAt,
     workflowRunBlocked,
     workflowRunBlockedReason,
@@ -168,17 +168,13 @@ export const PlanRunDialog = (
           </Tabs>
 
           <PlanRunDialogSettings
-            backend={draft.backend}
+            driver={draft.driver}
             effort={draft.effort}
-            iterationsError={dialog.iterationsError}
-            iterationsText={draft.iterationsText}
             model={draft.model}
             models={models}
             onEffortChange={dialog.onEffortChange}
-            onIterationsChange={dialog.onIterationsChange}
             onModelChange={dialog.onModelChange}
-            planIterations={dialog.planIterations}
-            {...dialog.runnerSettings}
+            {...dialog.otLoopSettings}
           />
 
           <PlanRunDialogWorkspace

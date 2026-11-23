@@ -47,7 +47,7 @@ export const UsageOverview = (
       <div className="text-muted-foreground space-y-4 text-sm md:space-y-8">
         <p>
           Plan and task counts come from OpenThrottle daily stats (last{' '}
-          {rangeDays} days). They approximate automation load from Ralph,
+          {rangeDays} days). They approximate automation load from queued runs,
           workflows, and manual work in the portal. Model token and cost usage
           is on the{' '}
           <Link className="underline" to="/usage/agents">

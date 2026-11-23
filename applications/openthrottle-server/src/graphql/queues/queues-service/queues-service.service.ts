@@ -14,7 +14,6 @@ import { isRecord } from '@openthrottle/nodejs-utils';
 import type { Job, JobState, Queue } from 'bullmq';
 import { Queue as BullQueue } from 'bullmq';
 
-import { RUN_PLAN_ORCHESTRATOR_JOB_NAME } from '../../../queues/agentic-ralph/agentic-ralph.constants.ts';
 import {
   AGENTIC_TEST_JOB_NAME,
   AGENTIC_TEST_QUEUE_NAME,
@@ -22,10 +21,8 @@ import {
 import type { AgenticTestJobPayload } from '../../../queues/agentic-test/agentic-test.types.ts';
 import type { AggregateDailyStatsJobData } from '../../../queues/daily-stats/daily-stats.types.ts';
 import type { DatabaseBackupJobPayload } from '../../../queues/database-backup/database-backup.types.ts';
-import {
-  PLANS_QUEUE_NAME,
-  RUN_PLAN_SPAWN_JOB_NAME,
-} from '../../../queues/plans/plans.constants.ts';
+import { RUN_PLAN_ORCHESTRATOR_JOB_NAME } from '../../../queues/plans/plans.constants.ts';
+import { PLANS_QUEUE_NAME } from '../../../queues/plans/plans.constants.ts';
 import type {
   RunPlanJobData,
   RunPlanOrchestratorJobData,
@@ -33,7 +30,7 @@ import type {
 import { SERVER_QUEUE_NAMES } from '../../../queues/queues.constants.ts';
 import { normalizeIdempotencyKey } from './queues-service.utils.ts';
 
-const DEFAULT_PLAN_RUN_EXECUTION_BACKEND = 'cursor';
+const DEFAULT_PLAN_RUN_DRIVER = 'cursor';
 
 /** @description Job data type for dynamically created queues (no fixed schema). */
 type DynamicJobData = Record<string, unknown>;
@@ -69,7 +66,7 @@ interface QueueStats {
 /** @description Shape of a job returned by getJobs for GraphQL mapping. */
 interface JobDto {
   readonly data: string | null;
-  readonly executionBackend: string | null;
+  readonly driver: string | null;
   readonly failedReason: string | null;
   readonly finishedOn: number | null;
   readonly id: string;
@@ -88,8 +85,8 @@ interface GetJobsResult {
   readonly total: number;
 }
 
-/** @description Payload for {@link QueuesService.enqueuePlanRalphOrchestrator}. */
-interface EnqueuePlanRalphOrchestratorQueuePayload {
+/** @description Payload for {@link QueuesService.enqueuePlanRun}. */
+interface EnqueuePlanRunQueuePayload {
   /** Delay in ms before the job becomes runnable (BullMQ `delay`); omit for an immediate job. */
   readonly delayMs?: number;
   readonly idempotencyKey?: string;
@@ -416,9 +413,9 @@ export class QueuesService implements OnModuleDestroy, OnModuleInit {
   }
 
   /**
-   * @description Extracts the selected execution backend from new plan-run job data, falling back for legacy jobs.
+   * @description Extracts the selected driver from new plan-run job data, falling back for legacy jobs.
    */
-  private getPlanRunExecutionBackend(
+  private getPlanRunDriver(
     data: unknown,
     queueName: string | null,
   ): string | null {
@@ -426,16 +423,16 @@ export class QueuesService implements OnModuleDestroy, OnModuleInit {
       return null;
     }
 
-    if (typeof data.executionBackend === 'string') {
-      return data.executionBackend;
+    if (typeof data.driver === 'string') {
+      return data.driver;
     }
 
-    const ralph = data.ralph;
-    if (isRecord(ralph) && typeof ralph.backend === 'string') {
-      return ralph.backend;
+    const tuning = data.tuning;
+    if (isRecord(tuning) && typeof tuning.driver === 'string') {
+      return tuning.driver;
     }
 
-    return DEFAULT_PLAN_RUN_EXECUTION_BACKEND;
+    return DEFAULT_PLAN_RUN_DRIVER;
   }
 
   /**
@@ -562,11 +559,11 @@ export class QueuesService implements OnModuleDestroy, OnModuleInit {
   }
 
   /**
-   * @description Enqueues an in-process Ralph orchestrator job on the plans queue (`run-plan-orchestrator`).
+   * @description Enqueues an in-process plan-run orchestrator job on the plans queue (`run-plan-orchestrator`).
    * Validates tuning via {@link RunPlanOrchestratorJobData}; optional `idempotencyKey` is passed as BullMQ `jobId` so duplicate adds return the existing job; optional `delayMs` adds the job in the delayed state (used by usage-limit resume).
    */
-  async enqueuePlanRalphOrchestrator(
-    input: EnqueuePlanRalphOrchestratorQueuePayload,
+  async enqueuePlanRun(
+    input: EnqueuePlanRunQueuePayload,
   ): Promise<{ jobId: string } | { error: string }> {
     if (input.jobData.runKind !== 'orchestrator') {
       return { error: 'jobData.runKind must be orchestrator' };
@@ -625,7 +622,7 @@ export class QueuesService implements OnModuleDestroy, OnModuleInit {
       return { error: 'Job not found' };
     }
 
-    const jobName = job.name ?? RUN_PLAN_SPAWN_JOB_NAME;
+    const jobName = job.name ?? RUN_PLAN_ORCHESTRATOR_JOB_NAME;
     const jobData = job.data;
     const newJob = await queue.add(jobName, jobData);
     if (newJob.id == null) {
@@ -763,10 +760,7 @@ export class QueuesService implements OnModuleDestroy, OnModuleInit {
 
     return {
       data,
-      executionBackend: this.getPlanRunExecutionBackend(
-        job.data,
-        job.queueName ?? null,
-      ),
+      driver: this.getPlanRunDriver(job.data, job.queueName ?? null),
       failedReason: job.failedReason ?? null,
       finishedOn: job.finishedOn ?? null,
       id: job.id ?? '',

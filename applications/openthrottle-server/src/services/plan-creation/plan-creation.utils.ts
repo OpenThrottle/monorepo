@@ -3,9 +3,9 @@ import { isDriverId } from '@openthrottle/openthrottle-drivers';
 import type { PlanRunConfigStorage } from '@openthrottle/openthrottle-plan-config';
 
 /**
- * @description Stamps a user's default agent onto a new plan's Ralph run config. The backend,
- * model and effort replace the system defaults (`cursor` / `auto` / `''`); every other Ralph
- * field is kept. A backend the drivers registry no longer knows leaves the config unchanged, so a
+ * @description Stamps a user's default agent onto a new plan's run config. The driver,
+ * model and effort replace the system defaults (`cursor` / `auto` / `''`); every other run
+ * field is kept. A driver the drivers registry no longer knows leaves the config unchanged, so a
  * stale preference falls back to the system default rather than failing plan creation.
  */
 export const applyDefaultAgentToRunConfig = (
@@ -18,10 +18,10 @@ export const applyDefaultAgentToRunConfig = (
 
   return {
     ...runConfig,
-    ralph: {
-      ...runConfig.ralph,
+    run: {
+      ...runConfig.run,
+      driver: agent.backend,
       effort: agent.effort ?? '',
-      executionBackend: agent.backend,
       model: agent.model,
     },
   };

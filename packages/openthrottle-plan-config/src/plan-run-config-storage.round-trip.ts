@@ -2,17 +2,17 @@
  * @description Round-trip between Plan Configuration UI state and `plans.run_config`.
  */
 
-import { DEFAULT_PLAN_RUN_RALPH_DEBUG_CLI } from './plan-run-config-storage.constants.ts';
 import { getDefaultPlanRunConfigStorage } from './plan-run-config-storage.defaults.ts';
 import type {
+  PlanRunConfigOtLoop,
   PlanRunConfigStorage,
-  PlanWorkflowRalphRunOptions,
+  PlanWorkflowRunOptions,
   PlanWorkflowUiState,
 } from './plan-run-config-storage.types.ts';
 import { parsePlanRunConfigStorage } from './plan-run-config-storage.validation.ts';
 
 /**
- * @description Parses optional per-iteration timeout text (seconds); empty omits the CLI flag.
+ * @description Parses optional per-attempt timeout text (seconds); empty omits the timeout.
  */
 export const parsePlanRunIterationTimeoutSeconds = (
   raw: string,
@@ -41,26 +41,21 @@ export const planRunConfigFromWorkflowUiState = (
     planId: workflowInput.planId,
     taskId: workflowInput.taskId,
   });
+  const iterationTimeoutSeconds =
+    parsePlanRunIterationTimeoutSeconds(iterationTimeoutText);
 
   const config: PlanRunConfigStorage = {
     ...defaults,
-    ...(ui.otLoop !== undefined ? { otLoop: ui.otLoop } : {}),
-    ...(ui.runner !== undefined ? { runner: ui.runner } : {}),
-    ralph: {
+    run: {
+      ...ui.otLoop,
       debugCli: workflowInput.debugCli,
+      driver: workflowInput.driver,
       effort: workflowInput.effort.trim(),
-      executionBackend: workflowInput.executionBackend,
-      iterationTimeoutText: iterationTimeoutText.trim(),
-      iterations: workflowInput.iterations,
+      ...(iterationTimeoutSeconds !== undefined
+        ? { iterationTimeoutSeconds }
+        : {}),
       model: workflowInput.model.trim(),
-      project: workflowInput.project.trim(),
-      prompt: workflowInput.prompt.trim(),
-      promptFile: workflowInput.promptFile.trim(),
-      promptLayer: workflowInput.promptLayer,
-      skipWorktreeSetup: workflowInput.skipWorktreeSetup,
-      worktreeBase: workflowInput.worktreeBase.trim(),
       worktreeCleanup: workflowInput.worktreeCleanup,
-      worktreeCli: workflowInput.worktreeCli,
       worktreeName: workflowInput.worktreeName.trim(),
     },
     target: {
@@ -78,6 +73,29 @@ export const planRunConfigFromWorkflowUiState = (
 };
 
 /**
+ * @description Picks the OT Loop validation fields out of a stored run block, or `undefined` when
+ * none is set.
+ */
+export const pickPlanRunConfigOtLoop = (
+  run: PlanRunConfigOtLoop,
+): PlanRunConfigOtLoop | undefined => {
+  const otLoop: PlanRunConfigOtLoop = {
+    ...(run.finalValidationCommands !== undefined
+      ? { finalValidationCommands: run.finalValidationCommands }
+      : {}),
+    ...(run.maxRetries !== undefined ? { maxRetries: run.maxRetries } : {}),
+    ...(run.setupCommands !== undefined
+      ? { setupCommands: run.setupCommands }
+      : {}),
+    ...(run.validationCommands !== undefined
+      ? { validationCommands: run.validationCommands }
+      : {}),
+  };
+
+  return Object.keys(otLoop).length === 0 ? undefined : otLoop;
+};
+
+/**
  * @description Hydrates Configuration tab state from stored `run_config`.
  * `planId` is authoritative for `workflowInput.planId`.
  */
@@ -89,121 +107,32 @@ export const workflowUiStateFromPlanRunConfig = (
   const parsed = parsePlanRunConfigStorage(stored);
   const authoritativePlanId = planId.trim();
   const seedTaskId = options?.taskId?.trim() ?? parsed.target.taskId;
+  const otLoop = pickPlanRunConfigOtLoop(parsed.run);
 
-  const workflowInput: PlanWorkflowRalphRunOptions = {
-    debugCli: parsed.ralph.debugCli,
-    effort: parsed.ralph.effort,
-    executionBackend: parsed.ralph.executionBackend,
-    iterations: parsed.ralph.iterations,
-    model: parsed.ralph.model,
+  const workflowInput: PlanWorkflowRunOptions = {
+    debugCli: parsed.run.debugCli,
+    driver: parsed.run.driver,
+    effort: parsed.run.effort,
+    model: parsed.run.model,
     planId: authoritativePlanId,
-    project: parsed.ralph.project,
-    prompt: parsed.ralph.prompt,
-    promptFile: parsed.ralph.promptFile,
-    promptLayer: parsed.ralph.promptLayer,
-    skipWorktreeSetup: parsed.ralph.skipWorktreeSetup,
     targetMode: parsed.target.mode,
     taskId: parsed.target.mode === 'task' ? parsed.target.taskId : seedTaskId,
-    worktreeBase: parsed.ralph.worktreeBase,
-    worktreeCleanup: parsed.ralph.worktreeCleanup,
-    worktreeCli: parsed.ralph.worktreeCli,
-    worktreeName: parsed.ralph.worktreeName,
+    worktreeCleanup: parsed.run.worktreeCleanup,
+    worktreeName: parsed.run.worktreeName,
   };
+
+  const { iterationTimeoutSeconds } = parsed.run;
+  const hasTimeout = iterationTimeoutSeconds !== undefined;
+  const iterationTimeoutText = hasTimeout
+    ? String(iterationTimeoutSeconds)
+    : '';
 
   return {
     checkoutId: parsed.workspace.checkoutId,
-    iterationTimeoutText: parsed.ralph.iterationTimeoutText,
-    ...(parsed.otLoop !== undefined ? { otLoop: parsed.otLoop } : {}),
+    iterationTimeoutText,
+    ...(otLoop !== undefined ? { otLoop } : {}),
     repositoryId: parsed.workspace.repositoryId,
-    ...(parsed.runner !== undefined ? { runner: parsed.runner } : {}),
     workflowInput,
     workingDirectory: parsed.workspace.workingDirectory,
   };
-};
-
-/**
- * @description Maps stored Ralph UI fields to nested queue tuning (GraphQL `RalphPlanRunTuningInput` shape).
- * Omits keys that match CLI/worker defaults so enqueue can pass `undefined` ralph.
- */
-export const buildRalphPlanRunTuningFromPlanRunConfig = (
-  config: PlanRunConfigStorage,
-): Record<string, string | number | boolean> | undefined => {
-  const parsed = parsePlanRunConfigStorage(config);
-  const { ralph } = parsed;
-  const tuning: Record<string, string | number | boolean> = {};
-
-  if (ralph.executionBackend !== 'cursor') {
-    tuning.backend = ralph.executionBackend;
-  }
-
-  if (ralph.iterations !== 10) {
-    tuning.iterations = ralph.iterations;
-  }
-
-  const timeout = parsePlanRunIterationTimeoutSeconds(
-    ralph.iterationTimeoutText,
-  );
-  if (timeout != null) {
-    tuning.iterationTimeoutSeconds = timeout;
-  }
-
-  const model = ralph.model.trim();
-  if (model !== '' && model !== 'auto') {
-    tuning.model = model;
-  }
-
-  // Unset (empty) keeps the backend's own default, so nothing travels.
-  const effort = ralph.effort.trim();
-  if (effort !== '') {
-    tuning.effort = effort;
-  }
-
-  const project = ralph.project.trim();
-  if (project !== '') {
-    tuning.project = project;
-  }
-
-  if (ralph.promptLayer === 'file') {
-    const path = ralph.promptFile.trim();
-    if (path !== '') {
-      tuning.promptFile = path;
-    }
-  } else {
-    const prompt = ralph.prompt.trim();
-    if (prompt !== '' && prompt !== '/agents-ralph') {
-      tuning.prompt = prompt;
-    }
-  }
-
-  if (ralph.worktreeCli === 'named') {
-    const name = ralph.worktreeName.trim();
-    if (name !== '') {
-      tuning.worktree = name;
-    }
-  }
-
-  if (ralph.executionBackend === 'cursor') {
-    const worktreeBase = ralph.worktreeBase.trim();
-    if (worktreeBase !== '') {
-      tuning.worktreeBase = worktreeBase;
-    }
-
-    if (ralph.skipWorktreeSetup) {
-      tuning.skipWorktreeSetup = true;
-    }
-  }
-
-  // Only a choice that differs from the shared default travels in the payload. The server
-  // injects the default when the key is absent, so an explicit `'omit'` has to be sent —
-  // otherwise a deliberate "no verbose" would be indistinguishable from "unset" and get
-  // the default back.
-  if (ralph.debugCli !== DEFAULT_PLAN_RUN_RALPH_DEBUG_CLI) {
-    tuning.ralphDebugCli = ralph.debugCli;
-  }
-
-  if (Object.keys(tuning).length === 0) {
-    return undefined;
-  }
-
-  return tuning;
 };

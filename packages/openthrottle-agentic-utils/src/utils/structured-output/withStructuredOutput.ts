@@ -3,7 +3,7 @@
  * consumer of the run keeps seeing prose. The driver package cannot do this itself: the per-CLI
  * parsers live here, and this package depends on the drivers, not the other way round. So the
  * structured flag is opt-in on the driver (`outputFormat`) and only switched on by this wrapper,
- * which installs the matching `parseOutput` (Ralph reads its `<promise>…</promise>` markers from the
+ * which installs the matching `parseOutput` (the plan run reads its `<promise>…</promise>` markers from the
  * recovered text) and `renderOutputLine` (plan output and job logs stay readable).
  */
 

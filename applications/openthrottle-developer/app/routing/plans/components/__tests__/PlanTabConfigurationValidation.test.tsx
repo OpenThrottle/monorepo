@@ -4,7 +4,7 @@ import { createStore, Provider } from 'jotai';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
-import { workflowRalphRunOptionsAtom } from '~/routing/plans/data/data.atom-plan';
+import { workflowRunOptionsAtom } from '~/routing/plans/data/data.atom-plan';
 
 import { PlanTabConfigurationValidation } from '../PlanTabConfigurationValidation';
 
@@ -31,15 +31,13 @@ describe('PlanTabConfigurationValidation Component', () => {
 
   test('renders a blocking alert with issue messages when the run options are invalid', () => {
     const store = createStore();
-    const current = store.get(workflowRalphRunOptionsAtom);
-    store.set(workflowRalphRunOptionsAtom, { ...current, iterations: 0 });
+    const current = store.get(workflowRunOptionsAtom);
+    store.set(workflowRunOptionsAtom, { ...current, planId: 'not-a-uuid' });
 
     const component = renderValidation(store);
 
     const alert = component.getByTestId('workflow-run-validation');
     expect(alert).toHaveTextContent('Workflow options blocked until fixed');
-    expect(alert).toHaveTextContent(
-      '--iterations must be a positive integer greater than 0',
-    );
+    expect(alert).toHaveTextContent('Plan must be a OpenThrottle plan UUID');
   });
 });

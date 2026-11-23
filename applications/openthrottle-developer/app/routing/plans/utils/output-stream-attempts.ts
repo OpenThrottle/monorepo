@@ -1,7 +1,7 @@
 /**
  * @description Groups OT Loop task output into attempts. A task's chunks carry a `kind` and the
  * 1-based attempt number as `iteration`; consecutive chunks sharing a (task, attempt) pair form
- * one attempt. Ralph chunks, historical rows and plan-scoped chunks have no kind and stay plain.
+ * one attempt. Historical rows and plan-scoped chunks have no kind and stay plain.
  */
 import { OUTPUT_STREAM_COPY } from '~/routing/plans/data/data.copy';
 import {

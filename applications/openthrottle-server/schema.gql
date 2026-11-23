@@ -732,9 +732,7 @@ type PlanObject {
   """Job-run lifecycle hooks stored on the plan ({ hooks: [...] })."""
   jobRunHooksJson: String!
 
-  """
-  Workflow-ralph run configuration stored on the plan (PlanRunConfigStorage v1).
-  """
+  """Run configuration stored on the plan (PlanRunConfigStorage v1)."""
   runConfigJson: String!
 
   """
@@ -765,7 +763,7 @@ type PlanRefObject {
 
 type PlanRunObject {
   """
-  BullMQ job id for this run. Null for detached-CLI runs that carry no queue job.
+  BullMQ job id for this run. Null for runs owned outside the queue (such as an interactive /ot-loop).
   """
   bullmqJobId: String
 
@@ -775,8 +773,10 @@ type PlanRunObject {
   cancelRequestedAt: DateTime
   createdAt: DateTime!
 
-  """Execution backend selected once for the whole run: cursor or claude."""
-  executionBackend: String!
+  """
+  Agent driver selected once for the whole run (antigravity, claude, codex, cursor, grok or opencode).
+  """
+  driver: String!
 
   """
   Host the worker executing this run is on. Null when the run is not actively executing. Diagnostic only — cross-host OS kill is out of scope.
@@ -817,11 +817,11 @@ type PlanRunObject {
   resumeOfRunId: String
 
   """
-  Resolved workflow-ralph configuration at enqueue (PlanRunConfigSnapshot v1 JSON). Null for legacy runs.
+  Resolved run configuration at enqueue (PlanRunConfigSnapshot v1 JSON). Null for legacy runs.
   """
   runConfigSnapshotJson: String
 
-  """Ralph run implementation: spawn or orchestrator."""
+  """Run implementation: spawn or orchestrator."""
   runKind: String!
 
   """
@@ -907,8 +907,10 @@ type CreatePlansResultObject {
 }
 
 type EnqueuePlanRunResultObject {
-  """Execution backend selected once for the whole run: cursor or claude."""
-  executionBackend: String!
+  """
+  Agent driver selected once for the whole run (antigravity, claude, codex, cursor, grok or opencode).
+  """
+  driver: String!
 
   """BullMQ job id"""
   jobId: String!
@@ -926,8 +928,10 @@ type EnqueuePlanRunResultObject {
 }
 
 type SchedulePlanRunResultObject {
-  """Execution backend selected once for the whole run: cursor or claude."""
-  executionBackend: String!
+  """
+  Agent driver selected once for the whole run (antigravity, claude, codex, cursor, grok or opencode).
+  """
+  driver: String!
 
   """
   BullMQ job id of the delayed job that starts the run (deterministic: scheduled-plan-run-<idempotencyKey | planId-epochMs>).
@@ -948,12 +952,12 @@ type SchedulePlanRunResultObject {
 
 type CancelPlanRunResultObject {
   """
-  BullMQ job ids that were active (locked by a worker) and could not be removed from the queue. When "signaledActiveRunToStop" is true, the worker was asked to terminate the Ralph child for this plan.
+  BullMQ job ids that were active (locked by a worker) and could not be removed from the queue. When "signaledActiveRunToStop" is true, the worker was asked to stop the run for this plan.
   """
   activeJobIdsCouldNotCancel: [String!]!
 
   """
-  True when an in-flight plan run was signaled to stop (Ralph child receives SIGTERM, then SIGKILL if needed). The BullMQ job may still be active until the worker finishes.
+  True when an in-flight plan run was signaled to stop (the run is asked to stop, then killed if needed). The BullMQ job may still be active until the worker finishes.
   """
   signaledActiveRunToStop: Boolean!
 
@@ -3201,9 +3205,9 @@ type JobObject {
   data: String
 
   """
-  Execution backend selected once for this plan run. Present for plans queue jobs.
+  Agent driver selected once for this plan run. Present for plans queue jobs.
   """
-  executionBackend: String
+  driver: String
 
   """Error message if the job failed."""
   failedReason: String
@@ -3360,8 +3364,8 @@ type PlanRunMetricsEntry {
   """Unix timestamp when the job finished."""
   finishedOn: Float
 
-  """Execution backend selected once for the whole run: cursor or claude."""
-  executionBackend: String
+  """Agent driver selected once for the whole run."""
+  driver: String
 
   """
   Task-run metrics (process memory/CPU at start and end). Null if job completed without metrics.
@@ -4159,7 +4163,7 @@ type QueueJobLogEventObject {
   message: String!
   queueName: String!
 
-  """Origin layer, e.g. plans-queue | workflow-queue | ralph-shim."""
+  """Origin layer, e.g. plans-queue | workflow-queue."""
   source: String!
   timestamp: DateTime!
 }
@@ -4833,7 +4837,7 @@ type ServiceAccountObject {
   disabledAt: DateTime
   id: String!
 
-  """Stable identifier (e.g. openthrottle-mcp, workflow-ralph)."""
+  """Stable identifier (e.g. openthrottle-mcp)."""
   name: String!
 }
 
@@ -4931,7 +4935,7 @@ type SkillAvailabilityRuleObject {
   id: ID!
 
   """
-  Environment qualifier: null applies to all environments; a value (ci | interactive | ralph) scopes the rule to that environment.
+  Environment qualifier: null applies to all environments; a known environment name (such as ci or interactive) scopes the rule to that environment.
   """
   environment: String
 
@@ -5251,7 +5255,7 @@ type TagActionRuleObject {
   status: String
 
   """
-  Optional environment qualifier (ci | interactive | ralph); null applies everywhere.
+  Optional environment qualifier (such as ci or interactive); null applies everywhere.
   """
   environment: String
 
@@ -5541,10 +5545,8 @@ type TelemetryHeartbeatObject {
 }
 
 type TimelineSpanObject {
-  """
-  Execution backend / tool name / driver id, when the source carries one.
-  """
-  backend: String
+  """Agent driver or tool name, when the source carries one."""
+  driver: String
 
   """Git branch the work ran on, when known."""
   branch: String
@@ -5594,7 +5596,7 @@ type TimelineSpanObject {
 """Kinds of timeline span (work with a duration)."""
 enum TimelineSpanKind {
   """
-  A queued Ralph plan run (plan_runs). Its end is always derived — the table records no finish timestamp.
+  A queued plan run (plan_runs). Its end is always derived — the table records no finish timestamp.
   """
   PLAN_RUN
 
@@ -6909,7 +6911,7 @@ type Query {
   planOutputStreamChunks(input: ListPlanOutputStreamChunksInput!): [PlanOutputStreamChunkObject!]!
 
   """
-  Recent persisted Ralph plan runs for a plan, newest first. Each row stores exactly one execution backend.
+  Recent persisted plan runs for a plan, newest first. Each row stores exactly one driver.
   """
   planRunsByPlanId(input: PlanRunsByPlanIdInput!): [PlanRunObject!]!
 
@@ -7092,7 +7094,7 @@ type Query {
   listSources: ListSourcesResultObject!
 
   """
-  Resolve every skill's effective disable-model-invocation for a project and environment. Omit projectId to resolve the dogfood monorepo project (nx_project_name = 'monorepo'); returns an empty result when the project or its ingested rows are absent. environment (ci | interactive | ralph, default interactive) is rejected when unknown. Concerns model auto-invocation only — human /skill invocation is never gated.
+  Resolve every skill's effective disable-model-invocation for a project and environment. Omit projectId to resolve the dogfood monorepo project (nx_project_name = 'monorepo'); returns an empty result when the project or its ingested rows are absent. environment (default interactive) is rejected when it is not a known environment. Concerns model auto-invocation only — human /skill invocation is never gated.
   """
   skillAvailability(
     projectId: ID
@@ -7197,7 +7199,7 @@ type Query {
   ruleApplicationsForRule(ruleId: ID!): [RuleApplicationObject!]!
 
   """
-  Dry run: which of the caller's plans a rule would match, and why the rest do not, by the same evaluator the worker uses. Read-only: writes no ledger row and dispatches nothing. Only the match fields (projectId, repositoryId, status, environment, tagAll, actionType) are read, so a half-written actionPayloadJson never blocks it; the rule is evaluated as enabled. `environment` is the environment to evaluate plans in (ci | interactive | ralph); omit it for none — a pass triggered by a developer-app edit or a background job — so an environment-qualified rule then matches nothing. At most the newest 500 plans are evaluated; truncated says so.
+  Dry run: which of the caller's plans a rule would match, and why the rest do not, by the same evaluator the worker uses. Read-only: writes no ledger row and dispatches nothing. Only the match fields (projectId, repositoryId, status, environment, tagAll, actionType) are read, so a half-written actionPayloadJson never blocks it; the rule is evaluated as enabled. `environment` is the environment to evaluate plans in (such as ci or interactive); omit it for none — a pass triggered by a developer-app edit or a background job — so an environment-qualified rule then matches nothing. At most the newest 500 plans are evaluated; truncated says so.
   """
   previewTagActionRule(input: UpsertTagActionRuleInput!, environment: String): TagActionRulePreviewObject!
 
@@ -7840,7 +7842,7 @@ input UpsertTagActionRuleInput {
   """Optional plan-status qualifier (e.g. PENDING)."""
   status: String
 
-  """Optional environment qualifier: ci | interactive | ralph."""
+  """Optional environment qualifier, such as ci or interactive."""
   environment: String
 
   """
@@ -7891,8 +7893,8 @@ input RemainingTasksByPlanIdInput {
 }
 
 input WorkstreamTimelineInput {
-  """Filter spans to a single execution backend / tool / driver."""
-  backend: String
+  """Filter spans to a single agent driver or tool."""
+  driver: String
 
   """Filter to a single repository checkout (UUID)."""
   checkoutId: String
@@ -7929,11 +7931,11 @@ input WorkstreamTimelineInput {
 
 """How timeline rows are grouped into lanes."""
 enum TimelineLaneGrouping {
-  """One lane per execution backend / tool / driver."""
-  BY_BACKEND
-
   """One lane per repository checkout (falling back to branch)."""
   BY_CHECKOUT
+
+  """One lane per agent driver or tool."""
+  BY_DRIVER
 
   """One lane per plan. The default."""
   BY_PLAN
@@ -8313,14 +8315,14 @@ type Mutation {
   deletePlanOutput(input: DeletePlanOutputInput!): DeletePlanOutputResult!
 
   """
-  Register a detached workflow-ralph CLI run as a first-class plan_runs row (bullmqJobId NULL, runKind 'orchestrator', status IN_PROGRESS) so cancelPlanRun has a row to stamp the durable cancel marker on. Creates NO BullMQ job. The CLI calls this on start, polls the marker each iteration boundary, and settles the row via settleCliPlanRun on exit.
+  Register a run whose owner is outside the queue, such as an interactive /ot-loop, as a first-class plan_runs row (bullmqJobId NULL, runKind 'orchestrator', status IN_PROGRESS) so cancelPlanRun has a row to stamp the durable cancel marker on. Creates NO BullMQ job. The owner calls this on start, polls the marker between tasks, and settles the row via settlePlanRun on exit.
   """
-  registerCliPlanRun(input: RegisterCliPlanRunInput!): PlanRunObject!
+  registerPlanRun(input: RegisterPlanRunInput!): PlanRunObject!
 
   """
-  Settle a detached-CLI run row (from registerCliPlanRun) on exit: set the terminal status (COMPLETED, CANCELLED, FAILED, or USAGE_LIMITED) and clear the run-location columns. USAGE_LIMITED also records usageLimitResetsAt / usageLimitType. Settling USAGE_LIMITED schedules no resume: a detached CLI run has no queued job to continue, so it is re-run by hand after the reset. Keyed on the run id. Returns null when the row no longer exists.
+  Settle a run row whose owner is outside the queue, such as an interactive /ot-loop (from registerPlanRun), on exit: set the terminal status (COMPLETED, CANCELLED, FAILED, or USAGE_LIMITED) and clear the run-location columns. USAGE_LIMITED also records usageLimitResetsAt / usageLimitType. Settling USAGE_LIMITED schedules no resume: such a run has no queued job to continue, so it is re-run by hand after the reset. Keyed on the run id. Returns null when the row no longer exists.
   """
-  settleCliPlanRun(input: SettleCliPlanRunInput!): PlanRunObject
+  settlePlanRun(input: SettlePlanRunInput!): PlanRunObject
 
   """
   Force-settle an UNSUPERVISED plan run to STALE — the human escape hatch for a run whose agent is gone. Kill does not help here: cancelling an interactive run only stamps the cancel marker and waits for the agent to poll it, so a dead agent leaves the row IN_PROGRESS forever, reading as live and holding its worktree busy. Refused for a run that heartbeats (it has a sweeper of its own and may be genuinely live) and for one already terminal. Always writes STALE — 'contact lost' is what a human clicking this actually knows. Never touches plan or task status. Returns null when the run did not match.
@@ -8328,7 +8330,7 @@ type Mutation {
   forceSettlePlanRun(input: ForceSettlePlanRunInput!): PlanRunObject
 
   """
-  Bump the liveness heartbeat on a detached-CLI run row (from registerCliPlanRun). The CLI calls this on a ~15s timer so a hard crash (SIGKILL/power-loss) leaves a stale heartbeat the reader/sweeper can detect. Keyed on the run id. Returns null when the row no longer exists.
+  Bump the liveness heartbeat on a run row whose owner is outside the queue (from registerPlanRun). The owner calls this on a timer so a hard crash (SIGKILL/power-loss) leaves a stale heartbeat the reader/sweeper can detect. Keyed on the run id. Returns null when the row no longer exists.
   """
   recordPlanRunHeartbeat(input: RecordPlanRunHeartbeatInput!): PlanRunObject
 
@@ -8367,19 +8369,9 @@ type Mutation {
   evaluatePlanRules(planId: ID!): EvaluatePlanRulesResultObject!
 
   """
-  Canonical mutation to enqueue a spawn plan-run job (nested workflow-ralph in the worker). Used by the Developer app "Run plan" action and external clients. Returns job id, plan id, and queue position. For in-process orchestrator runs use enqueuePlanRalphOrchestrator instead.
+  The single mutation to enqueue a plan run on the OT Loop runner, optionally scoped to one task (mode task). Used by the Developer app "Run plan" action and external clients. Returns job id, plan id, and queue position.
   """
   enqueuePlanRun(input: EnqueuePlanRunInput!): EnqueuePlanRunResultObject!
-
-  """
-  Deprecated alias for enqueuePlanRun. Enqueues a spawn plan-run job with the same input and result shape.
-  """
-  workflowPlanRun(input: EnqueuePlanRunInput!): EnqueuePlanRunResultObject! @deprecated(reason: "Use enqueuePlanRun. Identical spawn enqueue behavior; retained for backward-compatible clients only.")
-
-  """
-  Enqueue an in-process Ralph orchestrator job (GraphQL-backed pipeline, no nested workflow-ralph process). Same queue position and plan/task status updates as enqueuePlanRun.
-  """
-  enqueuePlanRalphOrchestrator(input: EnqueuePlanRalphOrchestratorInput!): EnqueuePlanRunResultObject!
 
   """
   Schedule a plan run for a later instant: the enqueuePlanRun input plus scheduledFor. Records a SCHEDULED plan_runs row with a frozen run config snapshot and a delayed job that starts it. scheduledFor must be in the future and within 30 days (SCHEDULED_PLAN_RUN_MAX_HORIZON_DAYS). Does not change the plan or task statuses (the plan stays as it is until the run fires). Cancel with cancelPlanRun (pass planRunId to cancel just this run).
@@ -8392,7 +8384,7 @@ type Mutation {
   reschedulePlanRun(input: ReschedulePlanRunInput!): SchedulePlanRunResultObject!
 
   """
-  Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token). Also cancels the plan's SCHEDULED runs (delayed job removed, run settled CANCELLED). With planRunId naming a SCHEDULED run of the plan, cancels ONLY that run (its delayed job and row), leaving any other active run, the plan status and the tasks alone; a planRunId that is already settled is a no-op, and one that is QUEUED or IN_PROGRESS is rejected (omit planRunId to stop a live run). Idempotent: once a scheduled run has fired or settled there is nothing left to cancel.
+  Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the run when a job is active (cannot be removed from Redis without the lock token). Also cancels the plan's SCHEDULED runs (delayed job removed, run settled CANCELLED). With planRunId naming a SCHEDULED run of the plan, cancels ONLY that run (its delayed job and row), leaving any other active run, the plan status and the tasks alone; a planRunId that is already settled is a no-op, and one that is QUEUED or IN_PROGRESS is rejected (omit planRunId to stop a live run). Idempotent: once a scheduled run has fired or settled there is nothing left to cancel.
   """
   cancelPlanRun(input: CancelPlanRunInput!): CancelPlanRunResultObject!
 
@@ -8933,11 +8925,11 @@ input StartWorkSessionInput {
   """
   onBehalfOfUserId: ID
 
-  """plan_runs.id when this session is a Ralph run"""
+  """plan_runs.id when this session is a plan run"""
   planRunId: ID
 
   """
-  Tool that produced the work: developer-app | openthrottle-mcp | workflow-ralph | MCP clientInfo.name
+  Tool that produced the work: developer-app | openthrottle-mcp | MCP clientInfo.name
   """
   toolName: String!
 
@@ -9808,24 +9800,24 @@ input DeletePlanOutputInput {
   taskId: ID
 }
 
-input RegisterCliPlanRunInput {
+input RegisterPlanRunInput {
   """
-  OPTIONAL git branch this detached-CLI run operates on. Captured on plan_runs.branch as run provenance. Omit or null → store null; non-empty strings are stored verbatim (no server-side trim/reject — enqueue remains the REQUIRED branch boundary).
+  OPTIONAL git branch this run operates on. Captured on plan_runs.branch as run provenance. Omit or null → store null; non-empty strings are stored verbatim (no server-side trim/reject — enqueue remains the REQUIRED branch boundary).
   """
   branch: String
 
   """
-  Execution backend for this run: antigravity, claude, codex, cursor, grok, or opencode.
+  Agent driver for this run: antigravity, claude, codex, cursor, grok, or opencode.
   """
-  executionBackend: String!
+  driver: String!
 
   """
-  Whether this run's owner bumps its heartbeat on a ~15s timer. Omit or null → true, so the detached workflow-ralph CLI (which does) is unaffected. Pass false for an owner with no timer — an interactive /ot-loop agent turn, where a single test run outlives the staleness cutoff. A false run is exempt from the stale sweep, always reports isStale false, and can never yield RUN_STOPPING on cancel; nothing server-side will ever settle it, so its owner must.
+  Whether this run's owner bumps its heartbeat on a ~15s timer. Omit or null → true. Pass false for an owner with no timer — an interactive /ot-loop agent turn, where a single test run outlives the staleness cutoff. A false run is exempt from the stale sweep, always reports isStale false, and can never yield RUN_STOPPING on cancel; nothing server-side will ever settle it, so its owner must.
   """
   heartbeatExpected: Boolean
 
   """
-  Host the CLI is running on (diagnostic; cleared on settle). Null when unknown.
+  Host the run owner is on (diagnostic; cleared on settle). Null when unknown.
   """
   hostname: String
 
@@ -9834,27 +9826,25 @@ input RegisterCliPlanRunInput {
   """
   model: String
 
-  """
-  OS process id of the CLI process (cleared on settle). Null when unknown.
-  """
+  """OS process id of the run owner (cleared on settle). Null when unknown."""
   pid: Int
 
-  """Plan id this detached-CLI run executes."""
+  """Plan id this run executes."""
   planId: ID!
 
   """
-  Worker/run identifier for the CLI (cleared on settle). Null when unknown.
+  Worker/run identifier of the run owner (cleared on settle). Null when unknown.
   """
   workerId: String
 }
 
-input SettleCliPlanRunInput {
+input SettlePlanRunInput {
   """
   Branch head sha at PR-open. Recorded as a git_commit artifact on COMPLETED; the verifier maps it to its squash commit once the PR merges. Optional — a run that exits without opening a PR has none.
   """
   headSha: String
 
-  """Plan-run row id to settle (returned by registerCliPlanRun)."""
+  """Plan-run row id to settle (returned by registerPlanRun)."""
   planRunId: ID!
 
   """
@@ -9892,7 +9882,7 @@ input ForceSettlePlanRunInput {
 
 input RecordPlanRunHeartbeatInput {
   """
-  Plan-run row id to bump the liveness heartbeat on (returned by registerCliPlanRun).
+  Plan-run row id to bump the liveness heartbeat on (returned by registerPlanRun).
   """
   planRunId: ID!
 }
@@ -9979,7 +9969,7 @@ input CreatePlanInput {
   title: String!
 
   """
-  JSON string of workflow-ralph run configuration (PlanRunConfigStorage v1). Omit to use defaults.
+  JSON string of the plan run configuration (PlanRunConfigStorage v1). Omit to use defaults.
   """
   runConfigJson: String
 
@@ -10020,7 +10010,7 @@ input UpdatePlanInput {
   jobRunHooksJson: String
 
   """
-  JSON string of workflow-ralph run configuration (PlanRunConfigStorage v1). Pass null to reset to default v1 shell; omit to leave unchanged.
+  JSON string of the plan run configuration (PlanRunConfigStorage v1). Pass null to reset to default v1 shell; omit to leave unchanged.
   """
   runConfigJson: String
 }
@@ -10065,14 +10055,9 @@ input EnqueuePlanRunInput {
   priority: Int
 
   """
-  Which runner executes the run: "ralph" (the default) or "ot-loop" (the per-task discipline of /ot-loop run as deterministic job code, with a fresh worker per task). Nullable + additive: omit to use the plan's stored runConfig runner, else Ralph. An unrecognized value is rejected. "ot-loop" is also rejected when the run has no worktree (disableWorktree) or when no validation command resolves (set otLoop.validationCommands on the plan, or commit .openthrottle/ot-loop.json).
+  Optional runtime tuning for the run: driver, model, reasoning effort, agent CLI logging and a worktree name override. Omitted fields keep their defaults.
   """
-  runner: String
-
-  """
-  Optional Ralph / workflow-ralph runtime tuning (iterations, model, backend, etc.). When set, queued workers pass these to nested workflow-ralph; when omitted, defaults come from env and .workflow-ralph.json in the worktree cwd.
-  """
-  ralph: RalphPlanRunTuningInput
+  tuning: PlanRunTuningInput
 
   """
   Optional registered checkout id (highest precedence). Resolved server-side to its filesystem path for this run; when set it overrides repositoryId and workingDirectory.
@@ -10098,131 +10083,59 @@ input EnqueuePlanRunInput {
   Set true to run a SCHEDULED plan now: its scheduled run is cancelled and this run is enqueued in its place, in one transaction. Without it, enqueuing a plan that has a scheduled run fails with extensions.code PLAN_ALREADY_SCHEDULED (plus planRunId and scheduledFor).
   """
   cancelScheduled: Boolean
-}
-
-input RalphPlanRunTuningInput {
-  """Execution backend (e.g. cursor). Omit to use worktree defaults."""
-  backend: String
 
   """
-  Reasoning-effort level for the run: "low", "medium", "high", "extraHigh", "max", or "ultra" (the same vocabulary as the chat composer's reasoning). Nullable + additive: omit to leave the run's effort unchanged. An unrecognized level is rejected. Recorded on the run's runConfigSnapshot and forwarded to the agent CLI, where each backend maps it to its own flag (claude --effort, codex -c model_reasoning_effort=, grok --reasoning-effort, opencode --variant), clamping to its accepted set; a backend with no reasoning knob (antigravity, cursor) ignores it.
+  Omit or "plan" for a plan-scoped run; "task" requires taskId (task-centric run).
+  """
+  mode: PlanRunMode
+
+  """Required when mode is task; must belong to the plan."""
+  taskId: ID
+}
+
+input PlanRunTuningInput {
+  """
+  Agent CLI logging for the run: omit, debug or verbose. Omit this field for the verbose default.
+  """
+  debugCli: PlanRunDebugCli
+
+  """
+  Agent driver to run with (e.g. claude, codex, cursor). Omit to use the default.
+  """
+  driver: String
+
+  """
+  Reasoning-effort level for the run: "low", "medium", "high", "extraHigh", "max", or "ultra" (the same vocabulary as the chat composer's reasoning). Nullable + additive: omit to leave the run's effort unchanged. An unrecognized level is rejected. Recorded on the run's runConfigSnapshot and forwarded to the agent CLI, where each driver maps it to its own flag (claude --effort, codex -c model_reasoning_effort=, grok --reasoning-effort, opencode --variant), clamping to its accepted set; a driver with no reasoning knob (antigravity, cursor) ignores it.
   """
   effort: String
 
-  """Per-iteration timeout in seconds (positive integer)."""
+  """
+  Per-attempt agent timeout in seconds (positive integer). Omit for no timeout.
+  """
   iterationTimeoutSeconds: Int
 
-  """Max Ralph iterations for this run (positive integer)."""
-  iterations: Int
-
-  """Model id passed to workflow-ralph --model."""
+  """Model id passed to the agent CLI."""
   model: String
 
-  """Nx project name for workflow-ralph --project."""
-  project: String
-
-  """Prompt profile path (e.g. /agents-ralph) for --prompt."""
-  prompt: String
-
   """
-  Repo-relative or absolute path for --prompt-file (layer-1 prompt file).
+  Worktree name override for this run. When omitted, OpenThrottle derives plan-<short plan id> and creates that worktree itself. Every run gets a worktree.
   """
-  promptFile: String
-
-  """Whether to pass --debug / --verbose to nested workflow-ralph."""
-  ralphDebugCli: RalphNestedDebugCli
-
-  """
-  Opt out of the worktree default and run in the base checkout. Omit to get the worktree OpenThrottle derives for the plan; only an explicit true disables it.
-  """
-  disableWorktree: Boolean
-
-  """
-  Worktree name for this run. When omitted, OpenThrottle derives plan-<short plan id> and creates that worktree itself; pass disableWorktree to run without one.
-  """
-  worktree: String
-
-  """Cursor-only: branch/ref for --worktree-base."""
-  worktreeBase: String
-
-  """Cursor-only: pass --skip-worktree-setup to cursor-agent."""
-  skipWorktreeSetup: Boolean
+  worktreeName: String
 }
 
 """
-Nested workflow-ralph logging: omit (default CLI/env), --debug, or --verbose.
+Agent CLI logging for a plan run: omit (default), --debug, or --verbose.
 """
-enum RalphNestedDebugCli {
+enum PlanRunDebugCli {
   debug
   omit
   verbose
 }
 
-input EnqueuePlanRalphOrchestratorInput {
-  """
-  Set true to run a SCHEDULED plan now: its scheduled run is cancelled and this run is enqueued in its place, in one transaction. Without it, a plan with a scheduled run fails with extensions.code PLAN_ALREADY_SCHEDULED.
-  """
-  cancelScheduled: Boolean
-
-  """
-  REQUIRED git branch this run operates on. Captured on plan_runs.branch as run provenance (powers branch->PR mapping). Passed explicitly by callers (skills/UI may pre-fill a default from the worktree name / HEAD) and never inferred server-side; enqueue fails fast when missing or blank.
-  """
-  branch: String!
-
-  """
-  Optional dedupe key passed to BullMQ as jobId. Re-enqueue with the same key returns the existing job id.
-  """
-  idempotencyKey: String
-
-  """
-  Omit or "plan" for plan-scoped run; "task" requires taskId (task-centric).
-  """
-  mode: PlanRalphWorkflowMode
-
-  """Plan id to run the orchestrator for"""
-  planId: ID!
-
-  """Job priority (lower = higher priority). Same as enqueuePlanRun."""
-  priority: Int
-
-  """
-  Which runner executes the run: "ralph" (the default) or "ot-loop" (the per-task discipline of /ot-loop run as deterministic job code, with a fresh worker per task). Nullable + additive: omit to use the plan's stored runConfig runner, else Ralph. An unrecognized value is rejected. "ot-loop" is also rejected when the run has no worktree (disableWorktree) or when no validation command resolves (set otLoop.validationCommands on the plan, or commit .openthrottle/ot-loop.json).
-  """
-  runner: String
-
-  """
-  Optional Ralph tuning for the in-process orchestrator (iterations, model, backend, etc.).
-  """
-  ralph: RalphPlanRunTuningInput
-
-  """Required when mode is task; must belong to the plan."""
-  taskId: ID
-
-  """
-  Optional registered checkout id (highest precedence). Resolved server-side to its filesystem path for this run; when set it overrides repositoryId and workingDirectory.
-  """
-  checkoutId: ID
-
-  """
-  Optional registered repository id. Resolved to the enqueuing user's single checkout of that repository (errors when there is no checkout, or when it is ambiguous). Used when checkoutId is omitted.
-  """
-  repositoryId: ID
-
-  """
-  Optional absolute path to a local project directory used as the working directory for this run. Escape hatch used only when checkoutId and repositoryId are omitted. When all three are omitted, defaults to the monorepo root (WORKSPACE_ROOT or process.cwd()). Must be an existing directory; validated server-side.
-  """
-  workingDirectory: String
-
-  """
-  Optional JSON override for job-run lifecycle hooks for this enqueue only ({ hooks: [...] }). When omitted, hooks are copied from the plan.
-  """
-  jobRunHooksJson: String
-}
-
 """
 Plan-scoped run (default) or task-centric run ("task" requires taskId).
 """
-enum PlanRalphWorkflowMode {
+enum PlanRunMode {
   plan
   task
 }
@@ -10247,14 +10160,9 @@ input SchedulePlanRunInput {
   priority: Int
 
   """
-  Which runner executes the run: "ralph" (the default) or "ot-loop" (the per-task discipline of /ot-loop run as deterministic job code, with a fresh worker per task). Nullable + additive: omit to use the plan's stored runConfig runner, else Ralph. An unrecognized value is rejected. "ot-loop" is also rejected when the run has no worktree (disableWorktree) or when no validation command resolves (set otLoop.validationCommands on the plan, or commit .openthrottle/ot-loop.json).
+  Optional runtime tuning for the run: driver, model, reasoning effort, agent CLI logging and a worktree name override. Omitted fields keep their defaults.
   """
-  runner: String
-
-  """
-  Optional Ralph / workflow-ralph runtime tuning (iterations, model, backend, etc.). When set, queued workers pass these to nested workflow-ralph; when omitted, defaults come from env and .workflow-ralph.json in the worktree cwd.
-  """
-  ralph: RalphPlanRunTuningInput
+  tuning: PlanRunTuningInput
 
   """
   Optional registered checkout id (highest precedence). Resolved server-side to its filesystem path for this run; when set it overrides repositoryId and workingDirectory.
@@ -10303,7 +10211,7 @@ input ReschedulePlanRunInput {
 }
 
 input CancelPlanRunInput {
-  """Plan id whose in-queue run-plan (Ralph) job should be cancelled"""
+  """Plan id whose in-queue plan-run job should be cancelled"""
   planId: ID!
 
   """
@@ -10913,7 +10821,7 @@ input RemoveRoleFromServiceAccountInput {
 
 input SkillAvailabilityRuleInput {
   """
-  Environment qualifier: omit/null for all environments, or "ci" | "interactive" | "ralph" to scope the rule.
+  Environment qualifier: omit/null for all environments, or a known environment name (such as "ci" or "interactive") to scope the rule.
   """
   environment: String
 

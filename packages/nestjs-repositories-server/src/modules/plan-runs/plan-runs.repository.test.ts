@@ -20,7 +20,7 @@ const buildRun = (overrides: Partial<PlanRun> = {}): PlanRun => {
     cancelRequestedBy: null,
     checkoutId: null,
     createdAt: new Date('2026-07-21T00:00:00Z'),
-    executionBackend: 'claude',
+    driver: 'claude',
     heartbeatExpected: true,
     hostname: null,
     id: 'run-1',
@@ -118,7 +118,7 @@ describe('PlanRunsRepository', () => {
 
   const enqueueInput = {
     bullmqJobId: 'job-1',
-    executionBackend: 'claude' as const,
+    driver: 'claude' as const,
     planId: 'plan-1',
     queueName: 'plans',
     runKind: 'orchestrator' as const,
@@ -227,7 +227,7 @@ describe('PlanRunsRepository', () => {
   describe('detached-CLI run lifecycle', () => {
     it('registerCliRun inserts a null-job-id orchestrator row IN_PROGRESS with location cols', async () => {
       const result = await service.registerCliRun({
-        executionBackend: 'claude',
+        driver: 'claude',
         hostname: 'laptop-1',
         pid: 9999,
         planId: 'plan-1',
@@ -239,7 +239,7 @@ describe('PlanRunsRepository', () => {
         expect.objectContaining({
           branch: null,
           bullmqJobId: null,
-          executionBackend: 'claude',
+          driver: 'claude',
           hostname: 'laptop-1',
           pid: 9999,
           planId: 'plan-1',
@@ -255,7 +255,7 @@ describe('PlanRunsRepository', () => {
     it('registerCliRun persists a present branch verbatim', async () => {
       await service.registerCliRun({
         branch: '  capture-branch-name  ',
-        executionBackend: 'claude',
+        driver: 'claude',
         hostname: 'laptop-1',
         pid: 9999,
         planId: 'plan-1',
@@ -269,7 +269,7 @@ describe('PlanRunsRepository', () => {
 
     it('registerCliRun stores null when branch is omitted', async () => {
       await service.registerCliRun({
-        executionBackend: 'cursor',
+        driver: 'cursor',
         hostname: null,
         pid: null,
         planId: 'plan-1',
@@ -284,7 +284,7 @@ describe('PlanRunsRepository', () => {
     it('registerCliRun stores null when branch is explicitly null', async () => {
       await service.registerCliRun({
         branch: null,
-        executionBackend: 'cursor',
+        driver: 'cursor',
         hostname: null,
         pid: null,
         planId: 'plan-1',
@@ -298,7 +298,7 @@ describe('PlanRunsRepository', () => {
 
     it('registerCliRun defaults actorUserId to null when omitted', async () => {
       await service.registerCliRun({
-        executionBackend: 'cursor',
+        driver: 'cursor',
         hostname: null,
         pid: null,
         planId: 'plan-1',
@@ -1092,7 +1092,7 @@ describe('PlanRunsRepository', () => {
   describe('heartbeat + staleness', () => {
     it('registerCliRun stamps an initial heartbeat so a fresh run is immediately alive', async () => {
       await service.registerCliRun({
-        executionBackend: 'claude',
+        driver: 'claude',
         hostname: 'laptop-1',
         pid: 1,
         planId: 'plan-1',
@@ -1436,7 +1436,7 @@ describe('PlanRunsRepository', () => {
       });
 
       await service.registerCliRun({
-        executionBackend: 'claude',
+        driver: 'claude',
         heartbeatExpected: false,
         hostname: null,
         pid: null,
@@ -1451,7 +1451,7 @@ describe('PlanRunsRepository', () => {
       // A heartbeating run is the 120s sweep's business; registering one says nothing
       // about an unrelated unsupervised row.
       await service.registerCliRun({
-        executionBackend: 'claude',
+        driver: 'claude',
         hostname: null,
         pid: null,
         planId: 'plan-1',
@@ -1566,7 +1566,7 @@ describe('PlanRunsRepository', () => {
 
     it('registerCliRun defaults heartbeatExpected to true so the CLI is untouched', async () => {
       await service.registerCliRun({
-        executionBackend: 'claude',
+        driver: 'claude',
         hostname: null,
         pid: null,
         planId: 'plan-1',
@@ -1580,7 +1580,7 @@ describe('PlanRunsRepository', () => {
 
     it('registerCliRun persists an explicit heartbeatExpected false', async () => {
       await service.registerCliRun({
-        executionBackend: 'claude',
+        driver: 'claude',
         heartbeatExpected: false,
         hostname: null,
         pid: null,
@@ -1595,7 +1595,7 @@ describe('PlanRunsRepository', () => {
 
     it('registerCliRun persists model, defaulting to null when omitted', async () => {
       await service.registerCliRun({
-        executionBackend: 'claude',
+        driver: 'claude',
         hostname: null,
         model: 'claude-opus-5',
         pid: null,
@@ -1608,7 +1608,7 @@ describe('PlanRunsRepository', () => {
 
       repo.create.mockClear();
       await service.registerCliRun({
-        executionBackend: 'claude',
+        driver: 'claude',
         hostname: null,
         pid: null,
         planId: 'plan-1',
@@ -1726,7 +1726,7 @@ describe('PlanRunsRepository', () => {
 
   describe('setRunConfigSnapshotWorkspace', () => {
     const snapshot = {
-      ralph: { executionBackend: 'cursor' as const },
+      run: { driver: 'cursor' as const },
       target: { mode: 'plan' as const, taskId: '' },
       version: 1 as const,
       workspace: { workingDirectory: '/Users/matt/Development/openthrottle' },

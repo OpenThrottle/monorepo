@@ -77,7 +77,7 @@ VALUES (
 -- ---------------------------------------------------------------------------
 
 INSERT INTO plan_runs (
-  id, plan_id, queue_name, bullmq_job_id, run_kind, execution_backend, status,
+  id, plan_id, queue_name, bullmq_job_id, run_kind, driver, status,
   created_at, updated_at, run_config_snapshot, last_heartbeat_at, heartbeat_expected,
   branch, model, scheduled_for, usage_limit_resets_at, usage_limit_type, resume_of_run_id
 )
@@ -86,7 +86,7 @@ VALUES
   ('fe000000-0000-4000-8000-000000000101', 'fe000000-0000-4000-8000-000000000001', 'plans',
    NULL, 'orchestrator', 'claude', 'SCHEDULED',
    now() - interval '5 minutes', now() - interval '5 minutes',
-   '{"version":1,"target":{"mode":"plan","taskId":""},"ralph":{"executionBackend":"claude","model":"claude-sonnet-5","effort":"high","iterations":10},"workspace":{"workingDirectory":""}}',
+   '{"version":1,"target":{"mode":"plan","taskId":""},"run":{"driver":"claude","model":"claude-sonnet-5","effort":"high"},"workspace":{"workingDirectory":""}}',
    NULL, TRUE, NULL, 'claude-sonnet-5', now() + interval '2 hours', NULL, NULL, NULL),
 
   -- 02 QUEUED, waiting for a worker. No job id and no checkout, so nothing picks it up (see the
@@ -94,14 +94,14 @@ VALUES
   ('fe000000-0000-4000-8000-000000000102', 'fe000000-0000-4000-8000-000000000001', 'plans',
    NULL, 'orchestrator', 'cursor', 'QUEUED',
    now() - interval '1 minute', now() - interval '1 minute',
-   '{"version":1,"target":{"mode":"plan","taskId":""},"ralph":{"executionBackend":"cursor","model":"claude-opus-4.8","effort":"medium","iterations":10},"workspace":{"workingDirectory":""}}',
+   '{"version":1,"target":{"mode":"plan","taskId":""},"run":{"driver":"cursor","model":"claude-opus-4.8","effort":"medium"},"workspace":{"workingDirectory":""}}',
    NULL, TRUE, NULL, 'claude-opus-4.8', NULL, NULL, NULL, NULL),
 
   -- 03 IN_PROGRESS, unsupervised (heartbeat_expected = false) with a fresh heartbeat.
   ('fe000000-0000-4000-8000-000000000103', 'fe000000-0000-4000-8000-000000000001', 'plans',
    NULL, 'orchestrator', 'claude', 'IN_PROGRESS',
    now() - interval '15 minutes', now() - interval '20 seconds',
-   '{"version":1,"target":{"mode":"plan","taskId":""},"ralph":{"executionBackend":"claude","model":"claude-fable-5","effort":"xhigh","iterations":10},"workspace":{"workingDirectory":"/tmp/openthrottle-fixture/run-states"}}',
+   '{"version":1,"target":{"mode":"plan","taskId":""},"run":{"driver":"claude","model":"claude-fable-5","effort":"xhigh"},"workspace":{"workingDirectory":"/tmp/openthrottle-fixture/run-states"}}',
    now() - interval '20 seconds', FALSE, 'openthrottle/fixture-run-states', 'claude-fable-5',
    NULL, NULL, NULL, NULL),
 
@@ -109,14 +109,14 @@ VALUES
   ('fe000000-0000-4000-8000-000000000104', 'fe000000-0000-4000-8000-000000000001', 'plans',
    'fixture-run-states-104', 'spawn', 'claude', 'STALE',
    now() - interval '3 hours', now() - interval '2 hours 50 minutes',
-   '{"version":1,"target":{"mode":"plan","taskId":""},"ralph":{"executionBackend":"claude","model":"claude-sonnet-5","iterations":10},"workspace":{"workingDirectory":""}}',
+   '{"version":1,"target":{"mode":"plan","taskId":""},"run":{"driver":"claude","model":"claude-sonnet-5"},"workspace":{"workingDirectory":""}}',
    now() - interval '2 hours 55 minutes', TRUE, NULL, 'claude-sonnet-5', NULL, NULL, NULL, NULL),
 
   -- 05 USAGE_LIMITED (its limit has since reset; row 06 resumed it).
   ('fe000000-0000-4000-8000-000000000105', 'fe000000-0000-4000-8000-000000000001', 'plans',
    'fixture-run-states-105', 'spawn', 'claude', 'USAGE_LIMITED',
    now() - interval '1 day', now() - interval '23 hours',
-   '{"version":1,"target":{"mode":"plan","taskId":""},"ralph":{"executionBackend":"claude","model":"claude-sonnet-5","effort":"high","iterations":10},"workspace":{"workingDirectory":""}}',
+   '{"version":1,"target":{"mode":"plan","taskId":""},"run":{"driver":"claude","model":"claude-sonnet-5","effort":"high"},"workspace":{"workingDirectory":""}}',
    now() - interval '23 hours', TRUE, 'openthrottle/fixture-run-states', 'claude-sonnet-5',
    NULL, now() - interval '19 hours', 'five_hour', NULL),
 
@@ -124,7 +124,7 @@ VALUES
   ('fe000000-0000-4000-8000-000000000106', 'fe000000-0000-4000-8000-000000000001', 'plans',
    'fixture-run-states-106', 'spawn', 'claude', 'COMPLETED',
    now() - interval '19 hours', now() - interval '18 hours',
-   '{"version":1,"target":{"mode":"plan","taskId":""},"ralph":{"executionBackend":"claude","model":"claude-sonnet-5","effort":"high","iterations":10},"workspace":{"workingDirectory":""}}',
+   '{"version":1,"target":{"mode":"plan","taskId":""},"run":{"driver":"claude","model":"claude-sonnet-5","effort":"high"},"workspace":{"workingDirectory":""}}',
    now() - interval '18 hours', TRUE, 'openthrottle/fixture-run-states', 'claude-sonnet-5',
    NULL, NULL, NULL, 'fe000000-0000-4000-8000-000000000105'),
 
@@ -132,25 +132,25 @@ VALUES
   ('fe000000-0000-4000-8000-000000000107', 'fe000000-0000-4000-8000-000000000001', 'plans',
    NULL, 'orchestrator', 'claude', 'MISSED',
    now() - interval '3 days', now() - interval '2 days',
-   '{"version":1,"target":{"mode":"plan","taskId":""},"ralph":{"executionBackend":"claude","model":"claude-sonnet-5","iterations":10},"workspace":{"workingDirectory":""}}',
+   '{"version":1,"target":{"mode":"plan","taskId":""},"run":{"driver":"claude","model":"claude-sonnet-5"},"workspace":{"workingDirectory":""}}',
    NULL, TRUE, NULL, 'claude-sonnet-5', now() - interval '2 days 1 hour', NULL, NULL, NULL),
 
   -- 08 SUPERSEDED: due while another run of the plan was active.
   ('fe000000-0000-4000-8000-000000000108', 'fe000000-0000-4000-8000-000000000001', 'plans',
    NULL, 'orchestrator', 'claude', 'SUPERSEDED',
    now() - interval '4 days', now() - interval '3 days',
-   '{"version":1,"target":{"mode":"plan","taskId":""},"ralph":{"executionBackend":"claude","model":"claude-sonnet-5","iterations":10},"workspace":{"workingDirectory":""}}',
+   '{"version":1,"target":{"mode":"plan","taskId":""},"run":{"driver":"claude","model":"claude-sonnet-5"},"workspace":{"workingDirectory":""}}',
    NULL, TRUE, NULL, 'claude-sonnet-5', now() - interval '3 days', NULL, NULL, NULL),
 
   -- 09 COMPLETED with a BullMQ job id, branch and (below) a linked PR.
   ('fe000000-0000-4000-8000-000000000109', 'fe000000-0000-4000-8000-000000000001', 'plans',
    'fixture-run-states-109', 'spawn', 'cursor', 'COMPLETED',
    now() - interval '5 days', now() - interval '5 days' + interval '40 minutes',
-   '{"version":1,"target":{"mode":"plan","taskId":""},"ralph":{"executionBackend":"cursor","model":"claude-opus-4.8","effort":"medium","iterations":25},"workspace":{"workingDirectory":"/tmp/openthrottle-fixture/run-states-09"}}',
+   '{"version":1,"target":{"mode":"plan","taskId":""},"run":{"driver":"cursor","model":"claude-opus-4.8","effort":"medium"},"workspace":{"workingDirectory":"/tmp/openthrottle-fixture/run-states-09"}}',
    now() - interval '5 days' + interval '40 minutes', TRUE, 'openthrottle/fixture-run-states-09',
    'claude-opus-4.8', NULL, NULL, NULL, NULL),
 
-  -- 10 COMPLETED CLI/orchestrator run with no job (registered by workflow-ralph).
+  -- 10 COMPLETED CLI/orchestrator run with no job (registered by an interactive /ot-loop session).
   ('fe000000-0000-4000-8000-000000000110', 'fe000000-0000-4000-8000-000000000001', 'plans',
    NULL, 'orchestrator', 'claude', 'COMPLETED',
    now() - interval '9 days', now() - interval '9 days' + interval '25 minutes',
@@ -185,7 +185,7 @@ VALUES
 -- ---------------------------------------------------------------------------
 
 INSERT INTO plan_runs (
-  id, plan_id, queue_name, bullmq_job_id, run_kind, execution_backend, status,
+  id, plan_id, queue_name, bullmq_job_id, run_kind, driver, status,
   created_at, updated_at, run_config_snapshot, last_heartbeat_at, heartbeat_expected,
   branch, model, scheduled_for, settled_reason
 )
@@ -194,7 +194,7 @@ VALUES
   ('fe000000-0000-4000-8000-000000000115', 'fe000000-0000-4000-8000-000000000001', 'plans',
    'fixture-run-states-115', 'spawn', 'codex', 'FAILED',
    now() - interval '6 days', now() - interval '6 days' + interval '7 minutes',
-   '{"version":1,"target":{"mode":"plan","taskId":""},"ralph":{"executionBackend":"codex","model":"gpt-5-codex","iterations":10},"workspace":{"workingDirectory":""}}',
+   '{"version":1,"target":{"mode":"plan","taskId":""},"run":{"driver":"codex","model":"gpt-5-codex"},"workspace":{"workingDirectory":""}}',
    now() - interval '6 days' + interval '7 minutes', TRUE, 'openthrottle/fixture-run-states-15',
    'gpt-5-codex', NULL, NULL),
 
@@ -202,7 +202,7 @@ VALUES
   ('fe000000-0000-4000-8000-000000000116', 'fe000000-0000-4000-8000-000000000001', 'plans',
    'fixture-run-states-116', 'spawn', 'claude', 'CANCELLED',
    now() - interval '7 days', now() - interval '7 days' + interval '12 minutes',
-   '{"version":1,"target":{"mode":"plan","taskId":""},"ralph":{"executionBackend":"claude","model":"claude-sonnet-5","effort":"high","iterations":10},"workspace":{"workingDirectory":""}}',
+   '{"version":1,"target":{"mode":"plan","taskId":""},"run":{"driver":"claude","model":"claude-sonnet-5","effort":"high"},"workspace":{"workingDirectory":""}}',
    now() - interval '7 days' + interval '12 minutes', TRUE, 'openthrottle/fixture-run-states-16',
    'claude-sonnet-5', NULL, NULL),
 
@@ -210,7 +210,7 @@ VALUES
   ('fe000000-0000-4000-8000-000000000117', 'fe000000-0000-4000-8000-000000000001', 'plans',
    NULL, 'orchestrator', 'claude', 'SKIPPED',
    now() - interval '8 days', now() - interval '7 days 23 hours',
-   '{"version":1,"target":{"mode":"plan","taskId":""},"ralph":{"executionBackend":"claude","model":"claude-sonnet-5","iterations":10},"workspace":{"workingDirectory":""}}',
+   '{"version":1,"target":{"mode":"plan","taskId":""},"run":{"driver":"claude","model":"claude-sonnet-5"},"workspace":{"workingDirectory":""}}',
    NULL, TRUE, NULL, 'claude-sonnet-5', now() - interval '7 days 23 hours',
    'Nothing to run: every task was already resolved when the schedule fired.');
 

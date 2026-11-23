@@ -96,7 +96,7 @@ describe('SkillAvailabilityService', () => {
       );
       ruleRepository.listByRuleSetId.mockResolvedValue([
         makeRule({
-          environment: 'ralph',
+          environment: 'headless',
           id: 'rule-1',
           slugAllow: ['git-commit'],
           tagDeny: ['github'],
@@ -110,7 +110,7 @@ describe('SkillAvailabilityService', () => {
         posture: 'deny',
         rules: [
           {
-            environment: 'ralph',
+            environment: 'headless',
             id: 'rule-1',
             slugAllow: ['git-commit'],
             slugDeny: [],

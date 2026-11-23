@@ -310,13 +310,13 @@ export const previewTagActionRuleToolParameters = z
       .string()
       .nullish()
       .describe(
-        `The rule's own environment qualifier (ci | interactive | ralph); omit for a rule that applies everywhere.`,
+        `The rule's own environment qualifier (ci | headless | interactive); omit for a rule that applies everywhere.`,
       ),
     evaluateEnvironment: z
       .string()
       .nullish()
       .describe(
-        'The environment to evaluate your plans in (ci | interactive | ralph). Omit for none: an environment-qualified rule then matches nothing.',
+        'The environment to evaluate your plans in (ci | headless | interactive). Omit for none: an environment-qualified rule then matches nothing.',
       ),
     projectId: z
       .string()

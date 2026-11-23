@@ -74,7 +74,7 @@ describe('KillPlanRunButton', () => {
     expect(trigger).toHaveAttribute('aria-label', 'Kill plan run for Alpha');
     expect(trigger).toHaveAttribute(
       'title',
-      'Cancel the queued worker job or signal an active Ralph run to stop for this plan.',
+      'Cancel the queued worker job or signal an active run to stop for this plan.',
     );
   });
 
@@ -190,7 +190,7 @@ describe('KillPlanRunButton', () => {
 
     await waitFor(() => {
       expect(toastSuccess).toHaveBeenCalledWith(
-        'Run stopping — signaled the worker to terminate the active run (Ralph may take a moment to shut down).',
+        'Run stopping — signaled the worker to terminate the active run (it may take a moment to shut down).',
       );
     });
     expect(toastError).not.toHaveBeenCalled();

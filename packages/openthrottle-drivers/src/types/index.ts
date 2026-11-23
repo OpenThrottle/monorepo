@@ -1,7 +1,7 @@
 /**
  * @description Common typings for the OpenThrottle agent-CLI driver contract. Every agent CLI
  * (Claude Code, Codex, Cursor, Grok, OpenCode, Antigravity) is described by an {@link AgentDriver} and invoked
- * with a {@link DriverInvocationConfig}. Decoupled from Ralph/workflow types on purpose so this
+ * with a {@link DriverInvocationConfig}. Decoupled from workflow types on purpose so this
  * package stays a leaf dependency.
  */
 
@@ -59,8 +59,7 @@ export interface DriverEndpointConfig {
 }
 
 /**
- * @description Per-invocation inputs shared by every driver. Modeled on the legacy
- * `RunIterationConfig` but with no Ralph-specific coupling.
+ * @description Per-invocation inputs shared by every driver. Carries no plan-run-specific coupling.
  * @public
  */
 export interface DriverInvocationConfig {
@@ -158,7 +157,7 @@ export interface DriverCapabilities {
    * against, is recorded in each driver module's JSDoc.
    *
    * Gates {@link appendMcpShellFlags}. Deliberately NOT caller-settable: the only consumers of
-   * `buildShellCommand` are unattended surfaces (scheduled jobs, Ralph) where auto-approving a
+   * `buildShellCommand` are unattended surfaces (scheduled jobs, plan runs) where auto-approving a
    * known checkout's servers is the intent. The chat composer builds its own argv and has a
    * separate, narrower MCP posture — it is unaffected by this capability.
    */

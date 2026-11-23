@@ -31,7 +31,7 @@ immediately.
 On‑disk JSONL record shape (`KeyedJsonlRunRecord`):
 
 ```jsonc
-{ "timestamp": "2026-05-04T23:00:00.000Z", "type": "stdout" | "stderr" | "meta", "data": "<string | object>", "source": "workflow-ralph" }
+{ "timestamp": "2026-05-04T23:00:00.000Z", "type": "stdout" | "stderr" | "meta", "data": "<string | object>", "source": "plan-run" }
 ```
 
 These keyed files are intentionally **not** on the global Socket.IO log hub (see
@@ -57,7 +57,7 @@ type QueueJobLogEvent {
   timestamp: Date!
   level: QueueJobLogLevel!
   message: String!
-  "Origin layer, e.g. plans-queue | workflow-queue | ralph-shim."
+  "Origin layer, e.g. plans-queue | workflow-queue | plan-run."
   source: String!
   queueName: String!
   jobId: String!
@@ -213,8 +213,7 @@ page — **no new route or path logic is needed**, the target already exists:
   `app/routing/queues/utils/queue-job-detail-path.ts` →
   `/queues/${encodeURIComponent(queueName)}/${encodeURIComponent(jobId)}`
   (segments are URL‑encoded, so queue names / job ids with slashes or spaces are
-  safe). This matches the server's `planRunJobDetailPath` in
-  `build-workflow-ralph-argv` — same shape, both produce `/queues/<q>/<j>`.
+  safe). The server builds the same shape for a plan run's job: `/queues/<q>/<j>`.
 
 **Integration:** when rendering a log event, wrap it in a link to
 `queueJobDetailPath(event.queueName, event.jobId)` (e.g. a `<Link to={...}>` on

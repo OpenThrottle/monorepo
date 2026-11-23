@@ -37,13 +37,13 @@ const PACKAGES = [
   '@openthrottle/nestjs-auth',
   '@openthrottle/react-router-chat',
   '@openthrottle/react-router-shadcn',
-  '@tools/workflows',
+  '@tools/generators',
 ];
 
 describe('getIsPackage', () => {
   it('treats scope-prefixed names as packages', () => {
     expect(getIsPackage('@openthrottle/nestjs-auth')).toBe(true);
-    expect(getIsPackage('@tools/workflows')).toBe(true);
+    expect(getIsPackage('@tools/generators')).toBe(true);
   });
 
   it('treats unprefixed names as applications', () => {
@@ -82,7 +82,7 @@ describe('distributeEvenly', () => {
     expect(chunks[0]).toEqual([
       'openthrottle-admin',
       '@openthrottle/nestjs-auth',
-      '@tools/workflows',
+      '@tools/generators',
     ]);
     expect(chunks[1]).toEqual([
       'openthrottle-developer',
@@ -143,8 +143,8 @@ describe('distributeEvenly', () => {
 describe('getExcludeSelector', () => {
   it('negates every project in the chunk by NAME, comma-joined', () => {
     expect(
-      getExcludeSelector(['openthrottle-server', '@tools/workflows']),
-    ).toBe('!openthrottle-server,!@tools/workflows');
+      getExcludeSelector(['openthrottle-server', '@tools/generators']),
+    ).toBe('!openthrottle-server,!@tools/generators');
   });
 
   // Regression guard: `!tag:name:<project>` resolves through the package.json
@@ -213,8 +213,8 @@ describe('getShardSelectionErrors', () => {
   it('reports nothing when the selector round-trips exactly', () => {
     expect(
       getShardSelectionErrors(
-        ['openthrottle-server', '@tools/workflows'],
-        ['@tools/workflows', 'openthrottle-server'],
+        ['openthrottle-server', '@tools/generators'],
+        ['@tools/generators', 'openthrottle-server'],
       ),
     ).toEqual([]);
   });
@@ -300,13 +300,13 @@ describe('getSuiteShardedProjects', () => {
 
 describe('getTestGrouping', () => {
   it('drops the sharded app from the chunk it was dealt to', () => {
-    expect(getTestGrouping([SHARDED_APP, '@tools/workflows'])).toEqual([
-      '@tools/workflows',
+    expect(getTestGrouping([SHARDED_APP, '@tools/generators'])).toEqual([
+      '@tools/generators',
     ]);
   });
 
   it('leaves a chunk without the sharded app untouched', () => {
-    const grouping = ['openthrottle-server', '@tools/workflows'];
+    const grouping = ['openthrottle-server', '@tools/generators'];
 
     expect(getTestGrouping(grouping)).toEqual(grouping);
   });
@@ -426,18 +426,18 @@ describe('getShardOutputs', () => {
 
 describe('formatShardOutputs', () => {
   const outputs = {
-    selector: '!openthrottle-developer,!@tools/workflows',
+    selector: '!openthrottle-developer,!@tools/generators',
     suiteShard: '2/3',
     suiteShardProjects: 'openthrottle-developer',
-    testSelector: '!@tools/workflows',
+    testSelector: '!@tools/generators',
   };
 
   it('emits one key=value per line', () => {
     expect(formatShardOutputs(outputs).split('\n')).toEqual([
-      'selector=!openthrottle-developer,!@tools/workflows',
+      'selector=!openthrottle-developer,!@tools/generators',
       'suiteShard=2/3',
       'suiteShardProjects=openthrottle-developer',
-      'testSelector=!@tools/workflows',
+      'testSelector=!@tools/generators',
     ]);
   });
 

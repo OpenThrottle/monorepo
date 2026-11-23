@@ -32,7 +32,7 @@ export const SettingsLogsServerStreams = (
     >
       <div className="text-muted-foreground space-y-3 text-sm">
         <p>
-          A tail or subscription to workflow-ralph stderr, queue worker logs, or
+          A tail or subscription to agent stderr, queue worker logs, or
           plan-output streams is not wired to this UI yet. Until an
           authenticated operator API exposes those streams, use Plan detail for
           OpenThrottle output and capture CLI stderr per{' '}
@@ -42,7 +42,7 @@ export const SettingsLogsServerStreams = (
             rel="noreferrer"
             target="_blank"
           >
-            tools/workflows README
+            OT Loop job design
           </a>
           .
         </p>

@@ -10,7 +10,7 @@ import type { action } from '~/routes/plans.$planId._index';
 import type { UsePlanRunNowConfirmResult } from '../usePlanRunNowConfirm';
 import { usePlanRunNowConfirm } from '../usePlanRunNowConfirm';
 
-const FIELDS = { branch: 'main', intent: 'runPlan', ralphTuning: '' };
+const FIELDS = { branch: 'main', intent: 'runPlan', runTuning: '' };
 
 describe('usePlanRunNowConfirm', () => {
   let actionResult: unknown;

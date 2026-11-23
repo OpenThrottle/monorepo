@@ -421,7 +421,7 @@ export class TasksRepository extends BaseRepository<Task, TaskCreateInput> {
    * place that writes `plans.status`, so it can attribute the write and capture a status_change
    * artifact. The same status list gates COMPLETED writes inside `applyStatusChange`.
    *
-   * Without the downstream write, the only thing that completes a plan is the Ralph orchestrator's
+   * Without the downstream write, the only thing that completes a plan is the plan-run orchestrator's
    * top-of-loop check, which several exit paths (agent completion signal, max iterations,
    * cancellation) skip — stranding a plan IN_PROGRESS with every task COMPLETED.
    */

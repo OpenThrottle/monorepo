@@ -30,12 +30,12 @@ import {
   PlansRepository,
   TasksRepository,
 } from '@openthrottle/nestjs-repositories-server';
+import { loadPlanRunConfig } from '@openthrottle/openthrottle-agentic-loop';
 import { getWorkflowConfigCwd } from '@openthrottle/openthrottle-agentic-utils';
 import {
   isLifecycleHooksChildJobsEnabled,
   WORKFLOW_EVENT,
-} from '@openthrottle/openthrottle-agentic-workflow';
-import { loadWorkflowRalphConfig } from '@tools/workflows';
+} from '@openthrottle/openthrottle-agentic-utils';
 import type { Queue } from 'bullmq';
 import { UnrecoverableError } from 'bullmq';
 import { In } from 'typeorm';
@@ -55,8 +55,6 @@ import { buildRunSystemCpuMetrics } from '../../metrics/system-metrics/system-me
 import { NotificationsService } from '../../notifications/notifications.service.ts';
 import { PlanRunWorktreeCleanupService } from '../../services/plan-run-worktree-cleanup/plan-run-worktree-cleanup.service.ts';
 import type { ProvisionedPlanRunWorktree } from '../../services/plan-run-worktree-provision/plan-run-worktree-provision.types.ts';
-import { isRunPlanOrchestratorJobData } from '../agentic-ralph/agentic-ralph.utils.ts';
-import { AgenticRalphOrchestratorService } from '../agentic-ralph/orchestrator/orchestrator.service.ts';
 import { closeRunOutputForJob } from '../bullmq-keyed-run-logging/bullmq-keyed-run-logging.utils.ts';
 import { BULLMQ_RUN_OUTPUT_WRITER } from '../bullmq-run-output/bullmq-run-output-writer.token.ts';
 import { BullMqRunOutputRetentionService } from '../bullmq-run-output/retention/retention.service.ts';
@@ -87,6 +85,7 @@ import type { PlanTaskCounts, PlanTaskOutcomeFields } from './plans.types.ts';
 import {
   buildFinishedRunNotification,
   countPlanTasks,
+  isRunPlanOrchestratorJobData,
   resolveIdlePlanStatus,
 } from './plans.utils.ts';
 import { PlanRunCancellationService } from './run-cancellation/run-cancellation.service.ts';
@@ -96,9 +95,6 @@ import { WorkLedgerRunService } from './work-ledger-run/work-ledger-run.service.
 
 const CONCURRENCY = 1;
 
-/** Which runner executes an orchestrator job; the payload's `runner` picks it, absent means Ralph. */
-type WorkflowKind = 'ot-loop' | 'ralph';
-
 /** Whether a worker may claim a run in `status` (see `PLAN_RUN_STARTABLE_STATUSES`). */
 const isStartableRunStatus = (status: string): boolean => {
   return PLAN_RUN_STARTABLE_STATUSES.some((startable) => startable === status);
@@ -107,13 +103,11 @@ const isStartableRunStatus = (status: string): boolean => {
 /**
  * Processes plan-run jobs for the plans queue. Concurrency is derived from the number
  * of configured worktrees (WORKTREE_TARGETS env), defaulting to 1 when no worktrees are configured.
- * When WORKTREE_TARGETS is set, runs the worktree workflow (acquire target → Ralph in worktree →
- * ensure commit → release). Jobs with {@link RunPlanJobData.runKind} `orchestrator` use the
- * in-process GraphQL orchestrator (no spawn, no worktree loop). Otherwise runs Ralph in the
- * process cwd (legacy spawn behavior).
+ * Every job runs in-process on the OT Loop runner ({@link OtLoopOrchestratorService}); there is no
+ * spawn path and no second runner.
  *
  * Stalled job recovery: we set lockDuration, stalledInterval, and maxStalledCount so long-running
- * Ralph jobs are renewed (every lockDuration/2) and, after server restart, interrupted jobs become
+ * OT Loop jobs are renewed (every lockDuration/2) and, after server restart, interrupted jobs become
  * stalled and re-enter the waiting queue within ~lockDuration + stalledInterval.
  *
  * Runs that cannot progress end BLOCKED: when the orchestrator finishes with only BLOCKED tasks
@@ -143,7 +137,6 @@ export class PlansProcessor
   implements OnApplicationShutdown, OnModuleInit
 {
   constructor(
-    private readonly agenticRalphOrchestrator: AgenticRalphOrchestratorService,
     private readonly bullMqRunOutputRetention: BullMqRunOutputRetentionService,
     @Optional()
     @Inject(BULLMQ_RUN_OUTPUT_WRITER)
@@ -200,7 +193,7 @@ export class PlansProcessor
   /**
    * On startup, reset any plan that is IN_PROGRESS but has no active job in the queue (e.g. after server restart). Prevents plans from staying stuck as IN_PROGRESS when the job was interrupted.
    *
-   * A plan whose newest run is a live detached run (an interactive /ot-loop or a workflow-ralph CLI
+   * A plan whose newest run is a live detached run (an interactive /ot-loop
    * run — no BullMQ job by design) is left alone: that run lives outside this process, survives the
    * restart, and is settled by its owner or the sweeps, never by this reconcile.
    */
@@ -662,7 +655,7 @@ export class PlansProcessor
 
     if (
       !isLifecycleHooksChildJobsEnabled({
-        lifecycleHooksChildJobs: loadWorkflowRalphConfig(configCwd, process.env)
+        lifecycleHooksChildJobs: loadPlanRunConfig(configCwd, process.env)
           .lifecycleHooksChildJobs,
       })
     ) {
@@ -672,7 +665,9 @@ export class PlansProcessor
     return this.lifecycleDispatcherFactory.create({
       hooks: job.data.jobRunHooks,
       parentJobId: String(job.id),
-      parentQueueName: PLANS_QUEUE_NAME,
+      // BullMQ resolves a child's parent by `<prefix>:<queue>:<id>`, so the bare queue name
+      // fails with "Missing key for parent job" under any key prefix.
+      parentQueueName: job.queueQualifiedName,
       planRunJobData: job.data,
       signal: abortSignal,
     });
@@ -984,7 +979,7 @@ export class PlansProcessor
       // fails at start (docs/workflows/ot-loop-job.md § 6), so the plan is not stranded IN_PROGRESS.
       const priorPlanStatus = plan?.status ?? null;
 
-      workSessionId = await this.workLedgerRun.openRalphSession({
+      workSessionId = await this.workLedgerRun.openPlanRunSession({
         bullmqJobId: jobId,
         planId,
         queueName,
@@ -1087,9 +1082,9 @@ export class PlansProcessor
       this.bullMqRunOutputRetention.maybePruneAfterJobClose();
       this.planRunCancellation.detach(planId);
       await this.clearRunLocationSafe(queueName, jobId);
-      await this.workLedgerRun.closeRalphSession(
+      await this.workLedgerRun.closePlanRunSession(
         workSessionId,
-        `workflow-ralph run ${jobId}`,
+        `plan run ${jobId}`,
       );
     }
   }
@@ -1231,7 +1226,7 @@ export class PlansProcessor
    * sweeper) and null its run-location columns. When the orchestrator returned
    * settle artifacts (`headSha` / `prNumber`) and the status is COMPLETED, also
    * records work-ledger git_commit + pull_request artifacts (same mechanism as
-   * `settleCliPlanRun`). Never throws — the settle write is diagnostic bookkeeping,
+   * `settlePlanRun`). Never throws — the settle write is diagnostic bookkeeping,
    * not on the critical path of the job outcome itself.
    */
   /**
@@ -1417,7 +1412,7 @@ export class PlansProcessor
   }
 
   /**
-   * Structured JSON log for in-process Ralph orchestrator lifecycle. Uses
+   * Structured JSON log for the OT Loop run lifecycle. Uses
    * {@link WORKFLOW_EVENT}; which pair via shared `correlationId` / `jobId`.
    * Plan id is included here at the application layer only.
    */
@@ -1431,7 +1426,7 @@ export class PlansProcessor
     readonly planId: string;
     readonly queueJobId: string;
     readonly queueName: string;
-    readonly workflowKind: WorkflowKind;
+    readonly workflowKind: 'ot-loop';
   }): void {
     this.logger.info(
       JSON.stringify({
@@ -1493,11 +1488,8 @@ export class PlansProcessor
   }
 
   /**
-   * In-process GraphQL Ralph via {@link AgenticRalphOrchestratorService} and
-   * `@openthrottle/openthrottle-agentic-ralph`, or the OT Loop runner ({@link OtLoopOrchestratorService})
-   * when the payload's `runner` is `'ot-loop'`; both return a `WorkflowRunResult` and share every settle
-   * branch below. Does not use `workflow-ralph` spawn; iteration uses `runIterationAsync` (Cursor or Claude
-   * per job `executionBackend`) in the server process.
+   * Runs the job on the OT Loop runner ({@link OtLoopOrchestratorService}), the only runner, and
+   * settles its `WorkflowRunResult` through the branches below.
    */
   private async processOrchestrator(
     job: RunPlanJob,
@@ -1524,18 +1516,13 @@ export class PlansProcessor
       queueName: PLANS_QUEUE_NAME,
     } as const;
 
-    // Both runners share the one job name; the payload picks the runner, and absent means Ralph so
-    // jobs already persisted in Redis keep working (docs/workflows/ot-loop-job.md § 1).
-    const workflowKind: WorkflowKind =
-      data.runner === 'ot-loop' ? 'ot-loop' : 'ralph';
-
     this.logAgenticOrchestratorRunStructured({
       correlationId: correlation.correlationId,
       phase: 'start',
       planId: data.planId,
       queueJobId: correlation.queueJobId,
       queueName: correlation.queueName,
-      workflowKind,
+      workflowKind: 'ot-loop',
     });
 
     // Filled by the orchestrator once it has provisioned the run's worktree, so teardown acts on
@@ -1544,11 +1531,7 @@ export class PlansProcessor
       worktree: null,
     };
 
-    const isOtLoop = workflowKind === 'ot-loop';
-    const runner = isOtLoop
-      ? this.otLoopOrchestrator
-      : this.agenticRalphOrchestrator;
-    const outcome = await runner.runPlanOrchestratorJob({
+    const outcome = await this.otLoopOrchestrator.runPlanOrchestratorJob({
       correlation,
       jobData: data,
       lifecycleDispatcher,
@@ -1569,7 +1552,7 @@ export class PlansProcessor
       planId: data.planId,
       queueJobId: correlation.queueJobId,
       queueName: correlation.queueName,
-      workflowKind,
+      workflowKind: 'ot-loop',
     });
 
     // Stop the wall-clock heartbeat BEFORE any terminal plan_runs write below: a tick
@@ -1583,7 +1566,7 @@ export class PlansProcessor
 
     if (outcome.status === 'failed') {
       this.logger.warn(
-        `Orchestrator Ralph failed: reason=${outcome.reason}, ${logContext}`,
+        `OT Loop run failed: reason=${outcome.reason}, ${logContext}`,
         PlansProcessor.name,
       );
 
@@ -1602,15 +1585,13 @@ export class PlansProcessor
         failureDescription,
       );
 
-      // OT Loop only: a failure at start (no commands, a red setup) never reached a task, so the plan
-      // goes back to what it was rather than sitting IN_PROGRESS with no run (§ 6).
-      if (workflowKind === 'ot-loop') {
-        await this.restorePlanStatusAfterFailedStart(
-          data.planId,
-          priorPlanStatus,
-          outcome.reason,
-        );
-      }
+      // A failure at start (no commands, a red setup) never reached a task, so the
+      // plan goes back to what it was rather than sitting IN_PROGRESS with no run (§ 6).
+      await this.restorePlanStatusAfterFailedStart(
+        data.planId,
+        priorPlanStatus,
+        outcome.reason,
+      );
 
       await this.completePlanRunWithHooks({
         abortSignal,
@@ -1637,7 +1618,7 @@ export class PlansProcessor
 
     if (outcome.reason === 'workflow_cancelled') {
       this.logger.info(
-        `Orchestrator Ralph cancelled (user or API), ${logContext}`,
+        `OT Loop run cancelled (user or API), ${logContext}`,
         PlansProcessor.name,
       );
 
@@ -1672,7 +1653,7 @@ export class PlansProcessor
 
     if (outcome.reason === 'workflow_usage_limited') {
       this.logger.info(
-        `Orchestrator Ralph stopped on a usage limit (${outcome.usageLimit.rateLimitType ?? 'unknown window'}, resets ${outcome.usageLimit.resetsAt ?? 'unknown'}), ${logContext}`,
+        `OT Loop run stopped on a usage limit (${outcome.usageLimit.rateLimitType ?? 'unknown window'}, resets ${outcome.usageLimit.resetsAt ?? 'unknown'}), ${logContext}`,
         PlansProcessor.name,
       );
 
@@ -1708,7 +1689,7 @@ export class PlansProcessor
     });
 
     this.logger.info(
-      `Orchestrator Ralph finished: reason=${outcome.reason}, jobId=${jobId}, ${logContext}`,
+      `OT Loop run finished: reason=${outcome.reason}, jobId=${jobId}, ${logContext}`,
       PlansProcessor.name,
     );
 

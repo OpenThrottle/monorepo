@@ -2,10 +2,10 @@ import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
-  captureStdioExecutionBackend,
-  detectExecutionBackendFromEnv,
-  resolveExecutionBackend,
-} from '../../config/execution-backend.ts';
+  captureStdioDriver,
+  detectDriverFromEnv,
+  resolveDriver,
+} from '../../config/driver.ts';
 import {
   getPlanRunsToolHandler,
   registerPlanRunToolHandler,
@@ -87,7 +87,7 @@ const planRunRow = (overrides: Record<string, unknown> = {}) => {
     bullmqJobId: null,
     cancelRequestedAt: null,
     createdAt: '2026-09-05T00:00:00.000Z',
-    executionBackend: 'claude',
+    driver: 'claude',
     heartbeatExpected: false,
     id: RUN_ID,
     isStale: false,
@@ -102,44 +102,42 @@ const planRunRow = (overrides: Record<string, unknown> = {}) => {
   };
 };
 
-describe('execution-backend detection', () => {
+describe('driver detection', () => {
   afterEach(() => {
-    captureStdioExecutionBackend(null);
+    captureStdioDriver(null);
   });
 
   it('detects the launching harness from its environment marker', () => {
-    expect(detectExecutionBackendFromEnv({ CLAUDECODE: '1' })).toBe('claude');
-    expect(detectExecutionBackendFromEnv({ CURSOR_AGENT: '1' })).toBe('cursor');
-    expect(detectExecutionBackendFromEnv({ CODEX_SANDBOX: 'seatbelt' })).toBe(
-      'codex',
-    );
+    expect(detectDriverFromEnv({ CLAUDECODE: '1' })).toBe('claude');
+    expect(detectDriverFromEnv({ CURSOR_AGENT: '1' })).toBe('cursor');
+    expect(detectDriverFromEnv({ CODEX_SANDBOX: 'seatbelt' })).toBe('codex');
   });
 
   it('treats a blank marker as absent rather than present', () => {
-    expect(detectExecutionBackendFromEnv({ CLAUDECODE: '   ' })).toBeNull();
+    expect(detectDriverFromEnv({ CLAUDECODE: '   ' })).toBeNull();
   });
 
   it('returns null when nothing matches, which is a legitimate answer', () => {
-    expect(detectExecutionBackendFromEnv({ PATH: '/usr/bin' })).toBeNull();
+    expect(detectDriverFromEnv({ PATH: '/usr/bin' })).toBeNull();
   });
 
   it('never lets a declared value override a detected one', () => {
     // The whole point of detecting. An agent running under cursor-agent that declares
     // "claude" does not produce a slightly-wrong row — it produces one nothing
     // downstream can tell is wrong, in the exact column review exists to read.
-    captureStdioExecutionBackend('cursor');
+    captureStdioDriver('cursor');
 
-    expect(resolveExecutionBackend('claude')).toBe('cursor');
+    expect(resolveDriver('claude')).toBe('cursor');
   });
 
   it('falls back to the declared value only when detection found nothing', () => {
     // This is the HTTP surface's path: it captures nothing, because there the
     // environment describes the server rather than the caller.
-    captureStdioExecutionBackend(null);
+    captureStdioDriver(null);
 
-    expect(resolveExecutionBackend('codex')).toBe('codex');
-    expect(resolveExecutionBackend('  ')).toBeNull();
-    expect(resolveExecutionBackend(null)).toBeNull();
+    expect(resolveDriver('codex')).toBe('codex');
+    expect(resolveDriver('  ')).toBeNull();
+    expect(resolveDriver(null)).toBeNull();
   });
 });
 
@@ -147,19 +145,19 @@ describe('plan-run tools', () => {
   beforeEach(() => {
     process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = 'test-token';
     mockExecute.mockReset();
-    captureStdioExecutionBackend('claude');
+    captureStdioDriver('claude');
   });
 
   afterEach(() => {
     delete process.env.OPENTHROTTLE_MCP_AUTH_TOKEN;
-    captureStdioExecutionBackend(null);
+    captureStdioDriver(null);
   });
 
   it('register_plan_run always opts out of heartbeat-based liveness', async () => {
     // Not configurable on purpose: a true here would put an agent turn back in the
     // stale sweep, which resets the plan and its IN_PROGRESS tasks to PENDING under
     // live work. This is the difference between telemetry and data loss.
-    mockExecute.mockResolvedValueOnce({ registerCliPlanRun: planRunRow() });
+    mockExecute.mockResolvedValueOnce({ registerPlanRun: planRunRow() });
 
     await registerPlanRunToolHandler({
       branch: 'feat/thing',
@@ -170,7 +168,7 @@ describe('plan-run tools', () => {
     expect(mockExecute).toHaveBeenCalledWith('test-token', expect.anything(), {
       input: expect.objectContaining({
         branch: 'feat/thing',
-        executionBackend: 'claude',
+        driver: 'claude',
         heartbeatExpected: false,
         model: 'claude-opus-5',
         planId: PLAN_ID,
@@ -180,7 +178,7 @@ describe('plan-run tools', () => {
 
   it('register_plan_run defaults hostname and pid from this process', async () => {
     // The agent does not reliably know either and would guess.
-    mockExecute.mockResolvedValueOnce({ registerCliPlanRun: planRunRow() });
+    mockExecute.mockResolvedValueOnce({ registerPlanRun: planRunRow() });
 
     await registerPlanRunToolHandler({ planId: PLAN_ID });
 
@@ -190,7 +188,7 @@ describe('plan-run tools', () => {
   });
 
   it('register_plan_run stores null for an omitted model rather than guessing', async () => {
-    mockExecute.mockResolvedValueOnce({ registerCliPlanRun: planRunRow() });
+    mockExecute.mockResolvedValueOnce({ registerPlanRun: planRunRow() });
 
     await registerPlanRunToolHandler({ planId: PLAN_ID });
 
@@ -200,7 +198,7 @@ describe('plan-run tools', () => {
   });
 
   it('register_plan_run leads with the run id, which the agent must carry', async () => {
-    mockExecute.mockResolvedValueOnce({ registerCliPlanRun: planRunRow() });
+    mockExecute.mockResolvedValueOnce({ registerPlanRun: planRunRow() });
 
     const result = await registerPlanRunToolHandler({ planId: PLAN_ID });
 
@@ -209,7 +207,7 @@ describe('plan-run tools', () => {
   });
 
   it('register_plan_run fails clearly when no backend can be determined', async () => {
-    captureStdioExecutionBackend(null);
+    captureStdioDriver(null);
 
     const result = await registerPlanRunToolHandler({ planId: PLAN_ID });
 
@@ -220,7 +218,7 @@ describe('plan-run tools', () => {
   it('settle_plan_run treats an already-settled or unknown run as a no-op', async () => {
     // The loop and the Stop-hook backstop can both try to settle the same run, and
     // neither should get an error it will retry in a loop.
-    mockExecute.mockResolvedValueOnce({ settleCliPlanRun: null });
+    mockExecute.mockResolvedValueOnce({ settlePlanRun: null });
 
     const result = await settlePlanRunToolHandler({
       planRunId: RUN_ID,
@@ -234,7 +232,7 @@ describe('plan-run tools', () => {
   it('settle_plan_run passes the status through for the server to validate', async () => {
     // Deliberately not re-validated here: two copies of the same rule drift apart.
     mockExecute.mockResolvedValueOnce({
-      settleCliPlanRun: planRunRow({ status: 'COMPLETED' }),
+      settlePlanRun: planRunRow({ status: 'COMPLETED' }),
     });
 
     await settlePlanRunToolHandler({ planRunId: RUN_ID, status: 'completed' });
@@ -251,7 +249,7 @@ describe('plan-run tools', () => {
 
   it('settle_plan_run forwards the sha and PR number so the server can record them', async () => {
     mockExecute.mockResolvedValueOnce({
-      settleCliPlanRun: planRunRow({ status: 'COMPLETED' }),
+      settlePlanRun: planRunRow({ status: 'COMPLETED' }),
     });
 
     await settlePlanRunToolHandler({

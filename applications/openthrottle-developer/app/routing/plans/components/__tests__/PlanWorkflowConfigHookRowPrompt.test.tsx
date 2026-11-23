@@ -50,7 +50,7 @@ describe('PlanWorkflowConfigHookRowPrompt Component', () => {
   test('renders the named-prompt input and switches to file delivery', async () => {
     component = render(<PlanWorkflowConfigHookRowPrompt {...props} />);
 
-    const input = component.getByLabelText('Named prompt (--prompt)');
+    const input = component.getByLabelText('Named prompt');
 
     expect(input).toHaveValue(namedRow.prompt);
 

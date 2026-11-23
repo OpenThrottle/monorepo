@@ -23,4 +23,3 @@ Components and hooks for openthrottle-server **process** metrics: a current-snap
 ## Pointers
 
 - [README.md](README.md) — mounting guide and per-component options.
-- [tools/workflows/docs/server-and-task-metrics.md](../../tools/workflows/docs/server-and-task-metrics.md) — the metrics design this package renders.

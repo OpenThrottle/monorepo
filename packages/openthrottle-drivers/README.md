@@ -3,13 +3,13 @@
 The OpenThrottle-central contract for invoking **agent CLIs** (Claude Code, Codex,
 Cursor, Antigravity, Grok, OpenCode). One `defineDriver(...)` call describes a CLI; a shared
 execution engine runs it. Adding a new agent is a single module + test, not edits
-scattered across `tools/workflows` and the agentic packages.
+scattered across the agentic packages.
 
-Extracted and generalized from `tools/workflows/src/bin/runIteration.ts`. This is a
+This is a
 **Node-only** library (uses `child_process`) — do not import it from browser code.
 
-**Consumed by:** `@tools/workflows` (`runIteration.ts` adapter),
-`@openthrottle/openthrottle-agentic-utils` and `@openthrottle/openthrottle-agentic-workflow`
+**Consumed by:** `@openthrottle/openthrottle-agentic-loop`,
+`@openthrottle/openthrottle-agentic-utils` and `@openthrottle/openthrottle-plan-config`
 (runner-id re-exports), and transitively `openthrottle-server`.
 
 ## Public API

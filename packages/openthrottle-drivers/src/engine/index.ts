@@ -1,9 +1,8 @@
 /**
- * @description Driver-agnostic execution engine: `runDriverSync` / `runDriverAsync`. Generalized
- * from tools/workflows' `runShellIterationSync` / `runShellIterationAsync` with identical semantics
+ * @description Driver-agnostic execution engine: `runDriverSync` / `runDriverAsync`. Runs a driver's shell command
  * (`shell: true`, stdout/stderr trim + `\n` merge, spawn-error
  * message passthrough, `<promise>ERROR</promise>` timeout/abort sentinels, streaming chunks,
- * SIGTERM→SIGKILL escalation) but with the Ralph logger replaced by an injectable {@link DriverLogger}.
+ * SIGTERM→SIGKILL escalation) but with the logger replaced by an injectable {@link DriverLogger}.
  * A driver may add `parseOutput` (final text + usage limit from raw stdout) and `renderOutputLine`
  * (live, line-buffered stdout rendering for `onChunk`); drivers without them behave byte-identically.
  *

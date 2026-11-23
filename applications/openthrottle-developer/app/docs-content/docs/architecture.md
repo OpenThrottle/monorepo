@@ -27,14 +27,14 @@ OpenThrottle is an **Nx + pnpm workspace monorepo** (Node >= 26, pnpm only). It 
 
 - `@openthrottle/nestjs-*` — server modules (auth, bullmq, typeorm, redis, graphql, …).
 - `@openthrottle/react-router-*` — shared UI and client libraries consumed by the React Router apps.
-- `openthrottle-agentic-*` — the Ralph agentic tooling.
+- `openthrottle-agentic-*` — the agentic tooling (the OT Loop runner, drivers, hooks).
 - `openthrottle-mcp` — the OpenThrottle MCP server.
 
 Many `react-router-*` packages are **source-first**: they have no `build` target and their `package.json` `main`/`types` point at `./src/index.ts`, so consuming apps' Vite transpiles them directly. Validate these with `lint` / `typecheck` / `test`, then run `dev` or `build` on a consumer app as the integration check.
 
 ### tools/
 
-Nx plugins, `@tools/generators` (scaffolding templates), and `@tools/workflows` (the Ralph CLI).
+Nx plugins and `@tools/generators` (scaffolding templates).
 
 ## Project tags
 

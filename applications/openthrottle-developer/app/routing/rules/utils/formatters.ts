@@ -115,7 +115,10 @@ export const buildRuleScopeTrail = (
   }
 
   if (rule.environment != null && rule.environment !== '') {
-    trail.push({ kind: 'environment', label: rule.environment });
+    trail.push({
+      kind: 'environment',
+      label: rule.environment,
+    });
   }
 
   if (rule.status != null && rule.status !== '') {

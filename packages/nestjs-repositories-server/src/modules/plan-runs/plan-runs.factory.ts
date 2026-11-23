@@ -24,7 +24,7 @@ export const planRunsFactory = Factory.define<PlanRun>(() => {
     cancelRequestedBy: null,
     checkoutId: null,
     createdAt,
-    executionBackend: 'claude',
+    driver: 'claude',
     heartbeatExpected: true,
     hostname: null,
     id: faker.string.uuid(),

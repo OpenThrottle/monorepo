@@ -70,8 +70,8 @@ describe('PlanToolbarRunActions Component', () => {
       newestUnsupervisedUnsettledRunId: null,
       planId: 'plan-1',
       planTitle: 'My Plan',
-      ralphTuningJson: '',
       runConfigJson: '{}',
+      runTuningJson: '',
       workflowRunBlocked: false,
     };
 

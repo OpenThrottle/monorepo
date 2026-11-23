@@ -97,7 +97,7 @@ pnpm exec tsx packages/openthrottle-showroom/src/runner/run.ts \
 - [ ] 🚧 `08-promote-task`
 - [ ] 🚧 `09-tags-and-rules`
 - [ ] `10-notes`
-- [ ] `11-ralph-one-task`
+- [ ] `11-plan-run-one-task`
 - [ ] `12-watch-run-live`
 - [ ] `13-plan-id-traceability`
 - [ ] `14-scheduled-runs`

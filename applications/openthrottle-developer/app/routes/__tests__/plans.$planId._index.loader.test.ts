@@ -398,7 +398,7 @@ describe('routes/plans.$planId._index loader', () => {
       const result = await callLoader();
 
       await expect(result.defaultAgent).resolves.toEqual({
-        backend: 'claude',
+        driver: 'claude',
         effort: 'high',
         model: 'opus',
       });

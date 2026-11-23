@@ -38,7 +38,7 @@ describe('routes/plans.$planId._index action (runPlan)', () => {
     mockExecuteGraphqlWithAuth.mockReset();
   });
 
-  test('calls enqueuePlanRun without ralph when ralphTuning form field is empty', async () => {
+  test('calls enqueuePlanRun without tuning when runTuning form field is empty', async () => {
     mockExecuteGraphqlWithAuth.mockResolvedValue({
       enqueuePlanRun: {
         jobId: 'job-1',
@@ -49,7 +49,7 @@ describe('routes/plans.$planId._index action (runPlan)', () => {
     const formData = new FormData();
     formData.set('intent', 'runPlan');
     formData.set('branch', 'feature/test');
-    formData.set('ralphTuning', '');
+    formData.set('runTuning', '');
 
     const request = new Request(
       'http://localhost/plans/80864bba-630a-451d-bfd2-4b25ec202381',
@@ -121,7 +121,7 @@ describe('routes/plans.$planId._index action (runPlan)', () => {
         {
           kind: 'prompt_profile',
           phase: 'before_run',
-          prompt: '/agents/ralph',
+          prompt: '/my-hook-prompt',
           promptDelivery: 'named',
         },
       ],
@@ -207,7 +207,7 @@ describe('routes/plans.$planId._index action (runPlan)', () => {
     );
   });
 
-  test('passes parsed ralph tuning into enqueuePlanRun when ralphTuning JSON is valid', async () => {
+  test('passes parsed run tuning into enqueuePlanRun when runTuning JSON is valid', async () => {
     mockExecuteGraphqlWithAuth.mockResolvedValue({
       enqueuePlanRun: {
         jobId: 'job-2',
@@ -215,15 +215,15 @@ describe('routes/plans.$planId._index action (runPlan)', () => {
       },
     });
 
-    const ralphPayload = {
-      iterations: 3,
-      project: 'applications/openthrottle-server',
+    const tuningPayload = {
+      iterationTimeoutSeconds: 600,
+      worktreeName: 'plan-80864bba',
     };
 
     const formData = new FormData();
     formData.set('intent', 'runPlan');
     formData.set('branch', 'feature/test');
-    formData.set('ralphTuning', JSON.stringify(ralphPayload));
+    formData.set('runTuning', JSON.stringify(tuningPayload));
 
     const request = new Request(
       'http://localhost/plans/80864bba-630a-451d-bfd2-4b25ec202381',
@@ -249,17 +249,17 @@ describe('routes/plans.$planId._index action (runPlan)', () => {
           branch: 'feature/test',
           planId: '80864bba-630a-451d-bfd2-4b25ec202381',
           priority: 1,
-          ralph: ralphPayload,
+          tuning: tuningPayload,
         },
       },
     );
   });
 
-  test('returns error when ralphTuning JSON is invalid', async () => {
+  test('returns error when runTuning JSON is invalid', async () => {
     const formData = new FormData();
     formData.set('intent', 'runPlan');
     formData.set('branch', 'feature/test');
-    formData.set('ralphTuning', 'not-json');
+    formData.set('runTuning', 'not-json');
 
     const request = new Request(
       'http://localhost/plans/80864bba-630a-451d-bfd2-4b25ec202381',
@@ -299,14 +299,14 @@ describe('routes/plans.$planId._index action (saveRunConfig)', () => {
     });
 
     const configPayload = JSON.stringify({
-      ralph: {
+      run: {
         debugCli: 'omit',
-        executionBackend: 'claude',
+        driver: 'claude',
         iterationTimeoutText: '',
         iterations: 4,
         model: 'auto',
         project: '',
-        prompt: '/agents/ralph',
+        prompt: '/default-prompt',
         promptFile: '',
         promptLayer: 'named',
         skipWorktreeSetup: false,
@@ -651,16 +651,14 @@ describe('routes/plans.$planId._index action (cancelPlanRun with planRunId)', ()
   });
 });
 
-describe('routes/plans.$planId._index action (runPlan iterations + persisted model/effort)', () => {
+describe('routes/plans.$planId._index action (runPlan persisted model/effort + OT Loop settings)', () => {
   const planId = '80864bba-630a-451d-bfd2-4b25ec202381';
   const savedConfig = (
-    ralph: Partial<
-      ReturnType<typeof getDefaultPlanRunConfigStorage>['ralph']
-    > = {},
+    run: Partial<ReturnType<typeof getDefaultPlanRunConfigStorage>['run']> = {},
   ): string => {
     const defaults = getDefaultPlanRunConfigStorage({ planId });
     return serializePlanRunConfigForGraphql(
-      { ...defaults, ralph: { ...defaults.ralph, ...ralph } },
+      { ...defaults, run: { ...defaults.run, ...run } },
       { planId },
     );
   };
@@ -692,7 +690,7 @@ describe('routes/plans.$planId._index action (runPlan iterations + persisted mod
     mockExecuteGraphqlWithAuth.mockReset();
   });
 
-  test('overlays the iterations override onto the tuning and never saves it', async () => {
+  test('passes the toolbar tuning through to the enqueue untouched when nothing is persisted', async () => {
     mockExecuteGraphqlWithAuth.mockResolvedValue({
       enqueuePlanRun: { jobId: 'job-1', planId },
     });
@@ -700,8 +698,7 @@ describe('routes/plans.$planId._index action (runPlan iterations + persisted mod
     const { request, result } = await post({
       branch: 'feature/x',
       intent: 'runPlan',
-      iterations: '25',
-      ralphTuning: JSON.stringify({ iterations: 3, project: 'apps/x' }),
+      runTuning: JSON.stringify({ iterationTimeoutSeconds: 90 }),
     });
 
     expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledTimes(1);
@@ -713,14 +710,14 @@ describe('routes/plans.$planId._index action (runPlan iterations + persisted mod
           branch: 'feature/x',
           planId,
           priority: 1,
-          ralph: { iterations: 25, project: 'apps/x' },
+          tuning: { iterationTimeoutSeconds: 90 },
         },
       },
     );
     expect(result).toEqual({ runPlan: { jobId: 'job-1', planId } });
   });
 
-  test('persists model and effort before enqueuing, keeps iterations out of the saved config', async () => {
+  test('persists model and effort before enqueuing, and the run carries the same selection', async () => {
     mockExecuteGraphqlWithAuth
       .mockResolvedValueOnce({
         plan: { id: planId, runConfigJson: savedConfig() },
@@ -729,13 +726,12 @@ describe('routes/plans.$planId._index action (runPlan iterations + persisted mod
       .mockResolvedValueOnce({ enqueuePlanRun: { jobId: 'job-2', planId } });
 
     const { request } = await post({
-      backend: 'claude',
       branch: 'feature/x',
+      driver: 'claude',
       effort: 'high',
       intent: 'runPlan',
-      iterations: '25',
       model: 'opus',
-      ralphTuning: JSON.stringify({ project: 'apps/x' }),
+      runTuning: JSON.stringify({ iterationTimeoutSeconds: 90 }),
     });
 
     expect(documentsCalled()).toEqual([
@@ -753,15 +749,14 @@ describe('routes/plans.$planId._index action (runPlan iterations + persisted mod
         .input.runConfigJson,
     );
     expect(saved).toMatchObject({
-      ralph: {
+      run: {
+        driver: 'claude',
         effort: 'high',
-        executionBackend: 'claude',
-        iterations: 10,
         model: 'opus',
       },
     });
 
-    // The run carries the same selection plus the per-run iterations.
+    // The run carries the same selection plus the toolbar's tuning.
     expect(mockExecuteGraphqlWithAuth).toHaveBeenLastCalledWith(
       request,
       PlanDetailEnqueuePlanRunDocument,
@@ -770,19 +765,18 @@ describe('routes/plans.$planId._index action (runPlan iterations + persisted mod
           branch: 'feature/x',
           planId,
           priority: 1,
-          ralph: {
-            backend: 'claude',
+          tuning: {
+            driver: 'claude',
             effort: 'high',
-            iterations: 25,
+            iterationTimeoutSeconds: 90,
             model: 'opus',
-            project: 'apps/x',
           },
         },
       },
     );
   });
 
-  test('saves the OT Loop runner and its fields to the plan and sends runner at enqueue', async () => {
+  test('saves the OT Loop fields to the plan and enqueues', async () => {
     mockExecuteGraphqlWithAuth
       .mockResolvedValueOnce({
         plan: { id: planId, runConfigJson: savedConfig() },
@@ -794,8 +788,8 @@ describe('routes/plans.$planId._index action (runPlan iterations + persisted mod
       branch: 'feature/x',
       intent: 'runPlan',
       otLoopMaxRetries: '3',
+      otLoopSettings: 'true',
       otLoopValidationCommands: 'pnpm nx run a:test\npnpm nx run a:lint',
-      runner: 'ot-loop',
     });
 
     expect(documentsCalled()).toEqual([
@@ -810,12 +804,12 @@ describe('routes/plans.$planId._index action (runPlan iterations + persisted mod
         .input.runConfigJson,
     );
     expect(saved).toMatchObject({
-      otLoop: {
+      run: {
         maxRetries: 3,
         validationCommands: ['pnpm nx run a:test', 'pnpm nx run a:lint'],
       },
-      runner: 'ot-loop',
     });
+    expect(saved).not.toHaveProperty('otLoop');
     expect(mockExecuteGraphqlWithAuth).toHaveBeenLastCalledWith(
       request,
       PlanDetailEnqueuePlanRunDocument,
@@ -824,56 +818,19 @@ describe('routes/plans.$planId._index action (runPlan iterations + persisted mod
           branch: 'feature/x',
           planId,
           priority: 1,
-          runner: 'ot-loop',
         },
       },
     );
   });
 
-  test('choosing Ralph again drops a stored runner key and still sends runner', async () => {
-    const defaults = getDefaultPlanRunConfigStorage({ planId });
-    mockExecuteGraphqlWithAuth
-      .mockResolvedValueOnce({
-        plan: {
-          id: planId,
-          runConfigJson: serializePlanRunConfigForGraphql(
-            { ...defaults, runner: 'ot-loop' },
-            { planId },
-          ),
-        },
-      })
-      .mockResolvedValueOnce({ updatePlan: { id: planId } })
-      .mockResolvedValueOnce({ enqueuePlanRun: { jobId: 'job-5', planId } });
-
-    await post({ branch: 'feature/x', intent: 'runPlan', runner: 'ralph' });
-
-    const [, , update] = mockExecuteGraphqlWithAuth.mock.calls[1] ?? [];
-    const saved: unknown = JSON.parse(
-      z.object({ input: z.object({ runConfigJson: z.string() }) }).parse(update)
-        .input.runConfigJson,
-    );
-    expect(saved).not.toHaveProperty('runner');
-    expect(mockExecuteGraphqlWithAuth).toHaveBeenLastCalledWith(
-      expect.anything(),
-      PlanDetailEnqueuePlanRunDocument,
-      { input: expect.objectContaining({ runner: 'ralph' }) },
-    );
-  });
-
-  test('rejects an unknown runner or an out-of-range retry count without calling the server', async () => {
-    const unknown = await post({
-      branch: 'feature/x',
-      intent: 'runPlan',
-      runner: 'turbo',
-    });
+  test('rejects an out-of-range retry count without calling the server', async () => {
     const retries = await post({
       branch: 'feature/x',
       intent: 'runPlan',
       otLoopMaxRetries: '9',
-      runner: 'ot-loop',
+      otLoopSettings: 'true',
     });
 
-    expect(unknown.result).toEqual({ runPlanError: 'Unknown runner "turbo".' });
     expect(retries.result).toEqual({
       runPlanError: 'Retries must be a whole number from 0 to 5.',
     });
@@ -886,8 +843,8 @@ describe('routes/plans.$planId._index action (runPlan iterations + persisted mod
         plan: {
           id: planId,
           runConfigJson: savedConfig({
+            driver: 'claude',
             effort: 'high',
-            executionBackend: 'claude',
             model: 'opus',
           }),
         },
@@ -895,8 +852,8 @@ describe('routes/plans.$planId._index action (runPlan iterations + persisted mod
       .mockResolvedValueOnce({ enqueuePlanRun: { jobId: 'job-3', planId } });
 
     await post({
-      backend: 'claude',
       branch: 'feature/x',
+      driver: 'claude',
       effort: 'high',
       intent: 'runPlan',
       model: 'opus',
@@ -916,8 +873,8 @@ describe('routes/plans.$planId._index action (runPlan iterations + persisted mod
       .mockRejectedValueOnce(new Error('config rejected'));
 
     const { result } = await post({
-      backend: 'claude',
       branch: 'feature/x',
+      driver: 'claude',
       intent: 'runPlan',
       model: 'opus',
     });
@@ -929,13 +886,11 @@ describe('routes/plans.$planId._index action (runPlan iterations + persisted mod
   });
 
   test.each([
-    [{ iterations: '0' }, 'Iterations must be at least 1.'],
-    [{ iterations: '2.5' }, 'Iterations must be a whole number.'],
     [
-      { backend: 'claude', effort: 'turbo', model: 'opus' },
+      { driver: 'claude', effort: 'turbo', model: 'opus' },
       'Unknown reasoning effort "turbo".',
     ],
-    [{ model: 'opus' }, 'A model and its backend must be submitted together.'],
+    [{ model: 'opus' }, 'A model and its driver must be submitted together.'],
   ])('rejects %j without calling the server', async (extra, message) => {
     const { result } = await post({
       branch: 'feature/x',
@@ -977,7 +932,7 @@ describe('routes/plans.$planId._index action (schedulePlanRun)', () => {
 
   test('schedules with the normalized instant, the tuning overlay and no persistence when none is posted', async () => {
     const scheduled = {
-      executionBackend: 'cursor',
+      driver: 'cursor',
       jobId: 'scheduled-plan-run-1',
       planId,
       planRunId: 'run-1',
@@ -990,7 +945,7 @@ describe('routes/plans.$planId._index action (schedulePlanRun)', () => {
     const { request, result } = await post({
       branch: 'feature/x',
       intent: 'schedulePlanRun',
-      iterations: '4',
+      runTuning: JSON.stringify({ iterationTimeoutSeconds: 4 }),
       scheduledFor: '2026-11-05T01:30:00-08:00',
     });
 
@@ -1003,8 +958,8 @@ describe('routes/plans.$planId._index action (schedulePlanRun)', () => {
           branch: 'feature/x',
           planId,
           priority: 1,
-          ralph: { iterations: 4 },
           scheduledFor,
+          tuning: { iterationTimeoutSeconds: 4 },
         },
       },
     );
@@ -1028,8 +983,8 @@ describe('routes/plans.$planId._index action (schedulePlanRun)', () => {
       });
 
     await post({
-      backend: 'claude',
       branch: 'feature/x',
+      driver: 'claude',
       effort: 'max',
       intent: 'schedulePlanRun',
       model: 'opus',

@@ -8,21 +8,21 @@ import { PlanRunProvenanceCell } from '~/routing/plans/components/PlanRunProvena
 import { PlanRunTime } from '~/routing/plans/components/PlanRunTime';
 import { PLAN_RUN_TRANSPARENCY_COPY } from '~/routing/plans/data/data.copy';
 import { PLAN_RUN_HISTORY_META_FIELDS } from '~/routing/plans/data/data.plan-run-history';
-import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
-import { planRunJobDetailPath } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import type { PlanRunJobMetrics } from '~/routing/plans/utils/joinPlanRunJobMetrics';
 import {
   buildPlanRunSnapshotDiffLabels,
   readPlanRunSnapshotEffort,
   readPlanRunSnapshotWorkspacePath,
 } from '~/routing/plans/utils/plan-run-config-snapshot-ui';
+import type { PlanRunOptions } from '~/routing/plans/utils/plan-run-options';
+import { planRunJobDetailPath } from '~/routing/plans/utils/plan-run-options';
 import { buildPlanRunMetaItems } from '~/routing/plans/utils/plan-run-sections';
 
 export interface PlanWorkflowRunHistoryDetailProps {
   /** The run's completed-job metrics; null for runs with no job or no metrics yet. */
   readonly metrics: PlanRunJobMetrics | null;
   readonly row: PlanRunHistoryEntryFragment;
-  readonly workflowInput: WorkflowRalphRunOptionsInput;
+  readonly workflowInput: PlanRunOptions;
   readonly workingDirectory: string;
 }
 
@@ -37,7 +37,7 @@ interface DetailEntry {
 /**
  * @description The expanded body of a Run history row: a definition list of job id, kind,
  * finished time and end RSS (from the completed job's metrics), workspace, effort and the snapshot diff against the current Configuration tab values. Below
- * `sm` it also repeats Model / backend and Branch / PR, whose columns are hidden there. Add a
+ * `sm` it also repeats Model / driver and Branch / PR, whose columns are hidden there. Add a
  * field by appending a {@link DetailEntry}.
  */
 export const PlanWorkflowRunHistoryDetail = (
@@ -97,8 +97,8 @@ export const PlanWorkflowRunHistoryDetail = (
   const diffValue = renderDiffValue();
   const entries: readonly DetailEntry[] = [
     {
-      key: 'modelBackend',
-      label: copy.modelBackend,
+      key: 'modelDriver',
+      label: copy.modelDriver,
       narrowOnly: true,
       value: (
         <PlanRunMetaList

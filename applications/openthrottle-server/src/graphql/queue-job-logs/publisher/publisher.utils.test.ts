@@ -19,7 +19,7 @@ describe('createQueueJobLogTailPublisher', () => {
       'job-1',
       {
         data: 'hello',
-        source: 'workflow-ralph',
+        source: 'plan-run',
         timestamp: TS,
         type: 'stdout',
       },
@@ -37,7 +37,7 @@ describe('createQueueJobLogTailPublisher', () => {
           level: 'info',
           message: 'hello',
           queueName: 'plans-queue',
-          source: 'workflow-ralph',
+          source: 'plan-run',
           timestamp: new Date(TS),
         },
       },

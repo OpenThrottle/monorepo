@@ -35,7 +35,7 @@ const planWith = (worktreeCleanup: 'keep' | 'on-pr'): Plan => {
   const defaults = getDefaultPlanRunConfigStorage({ planId: PLAN_ID });
   return plansFactory.build({
     id: PLAN_ID,
-    runConfig: { ...defaults, ralph: { ...defaults.ralph, worktreeCleanup } },
+    runConfig: { ...defaults, run: { ...defaults.run, worktreeCleanup } },
   });
 };
 

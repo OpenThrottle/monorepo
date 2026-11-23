@@ -1,4 +1,4 @@
-import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
+import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-utils';
 
 export interface PlanRunWorkspacePreflightParams {
   readonly backend: WorkflowConfigRunner;

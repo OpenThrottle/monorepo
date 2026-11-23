@@ -25,7 +25,7 @@ export interface PlanWorkflowRunUpcomingProps {
 
 /**
  * @description The Runs card's Upcoming section: each SCHEDULED run, soonest first, as an
- * accent-tinted block with its fire time, status badge, model · effort · backend · workspace and a
+ * accent-tinted block with its fire time, status badge, model · effort · driver · workspace and a
  * Cancel button (the unchanged {@link PlanRunCancelScheduledButton}). `plan.scheduledRunId` adds a
  * minimal block when that run is not in the fetched history. Renders nothing when nothing is
  * scheduled; the card owns the no-runs `Empty`.

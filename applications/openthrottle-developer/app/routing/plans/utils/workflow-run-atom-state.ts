@@ -1,24 +1,21 @@
-import type {
-  PlanRunConfigOtLoop,
-  PlanRunConfigRunner,
-} from '@openthrottle/openthrottle-plan-config';
+import type { PlanRunConfigOtLoop } from '@openthrottle/openthrottle-plan-config';
 
-import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
-import { getDefaultWorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import type { JobRunHookDraftRow } from '~/routing/plans/utils/job-run-hooks-ui';
 import {
   jobRunHookEntriesToDraftRows,
   parseJobRunHooksJsonFromPlan,
 } from '~/routing/plans/utils/job-run-hooks-ui';
 import { hydratePlanRunConfigUiState } from '~/routing/plans/utils/plan-run-config-ui';
+import type { PlanRunOptions } from '~/routing/plans/utils/plan-run-options';
+import { getDefaultPlanRunOptions } from '~/routing/plans/utils/plan-run-options';
 
 /**
- * @description Default workflow run form state: {@link WorkflowRalphRunOptionsInput}
- * plus the raw `--iteration-timeout` text field (parsed for argv / GraphQL).
+ * @description Default workflow run form state: {@link PlanRunOptions}
+ * plus the raw agent-timeout text field (parsed for the GraphQL tuning input).
  */
 export interface WorkflowRunAtomDefaultState {
   readonly iterationTimeoutText: string;
-  readonly runOptions: WorkflowRalphRunOptionsInput;
+  readonly runOptions: PlanRunOptions;
 }
 
 /**
@@ -31,7 +28,7 @@ export const getWorkflowRunAtomDefaultState = (options?: {
 }): WorkflowRunAtomDefaultState => {
   return {
     iterationTimeoutText: '',
-    runOptions: getDefaultWorkflowRalphRunOptionsInput(options),
+    runOptions: getDefaultPlanRunOptions(options),
   };
 };
 
@@ -45,7 +42,7 @@ export interface WorkflowRunSeedPlan {
 }
 
 /**
- * @description Initial values for the four run-config primitives, derived from a
+ * @description Initial values for the run-config primitives, derived from a
  * plan's persisted `runConfigJson` / `jobRunHooksJson`. Consumed by the route-scoped
  * Provider's `useHydrateAtoms` seed (once per plan mount), replacing the shell's
  * former re-seed effect. Single source of truth for seeding.
@@ -56,8 +53,7 @@ export interface WorkflowRunSeedValues {
   readonly jobRunHookRows: JobRunHookDraftRow[];
   readonly otLoop: PlanRunConfigOtLoop | undefined;
   readonly repositoryId: string;
-  readonly runOptions: WorkflowRalphRunOptionsInput;
-  readonly runner: PlanRunConfigRunner | undefined;
+  readonly runOptions: PlanRunOptions;
   readonly workingDirectory: string;
 }
 
@@ -86,7 +82,6 @@ export const getWorkflowRunSeedValues = (
     otLoop: hydrated.otLoop,
     repositoryId: hydrated.repositoryId,
     runOptions: hydrated.workflowInput,
-    runner: hydrated.runner,
     workingDirectory: hydrated.workingDirectory,
   };
 };

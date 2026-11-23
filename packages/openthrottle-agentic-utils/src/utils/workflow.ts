@@ -6,10 +6,9 @@ import type { DriverId } from '@openthrottle/openthrottle-drivers';
 import { isDriverId, parseDriverId } from '@openthrottle/openthrottle-drivers';
 
 import {
-  WORKFLOW_RALPH_DEBUG_ENV,
-  WORKFLOW_RALPH_DEBUG_LEGACY_ENV,
-  WORKFLOW_RALPH_OT_ROOT_ENV,
-  WORKFLOW_RALPH_VERBOSE_ENV,
+  PLAN_RUN_DEBUG_ENV,
+  PLAN_RUN_OT_ROOT_ENV,
+  PLAN_RUN_VERBOSE_ENV,
 } from '../config/index.ts';
 import { toContainerPath } from './workspace-paths.ts';
 
@@ -106,7 +105,7 @@ const getModuleDir = (): string | undefined => {
 /**
  * Resolves the OpenThrottle monorepo root, in priority order:
  *
- * 1. {@link WORKFLOW_RALPH_OT_ROOT_ENV} (explicit; trusted when the directory exists),
+ * 1. {@link PLAN_RUN_OT_ROOT_ENV} (explicit; trusted when the directory exists),
  * 2. `WORKSPACE_ROOT` (when it contains {@link OPENTHROTTLE_WORKSPACE_MARKER}),
  * 3. walk up from this module's location (always inside OpenThrottle),
  * 4. walk up from `process.cwd()` (last resort).
@@ -116,7 +115,7 @@ const getModuleDir = (): string | undefined => {
 export function getOpenThrottleRoot(
   env: NodeJS.ProcessEnv = process.env,
 ): string | undefined {
-  const explicit = env[WORKFLOW_RALPH_OT_ROOT_ENV]?.trim();
+  const explicit = env[PLAN_RUN_OT_ROOT_ENV]?.trim();
   if (explicit && isDirectory(explicit)) {
     return explicit;
   }
@@ -138,7 +137,7 @@ export function getOpenThrottleRoot(
 }
 
 /**
- * Resolves the directory used to load `.workflow-ralph.json` and workflow tuning defaults.
+ * Resolves the directory used to load `.openthrottle/ot-loop.json` and the plan-run defaults.
  * Priority: job worktree (`workingDirectory`), then `WORKSPACE_ROOT`, then `process.cwd()`.
  */
 export function getWorkflowConfigCwd(
@@ -161,12 +160,12 @@ export function getWorkflowConfigCwd(
 }
 
 /**
- * Opt-in workflow/Ralph debug shim level parsed from env (no logger instance).
+ * Opt-in plan-run debug shim level parsed from env (no logger instance).
  */
 export type WorkflowDebugLevel = `off` | `debug` | `verbose`;
 
 /**
- * Returns true when `WORKFLOW_RALPH_VERBOSE` (or equivalent) requests verbose lines.
+ * Returns true when `OPENTHROTTLE_PLAN_RUN_VERBOSE` (or equivalent) requests verbose lines.
  */
 export const isWorkflowVerboseEnvTruthy = (
   value: string | undefined,
@@ -182,18 +181,17 @@ export const isWorkflowVerboseEnvTruthy = (
 };
 
 /**
- * Reads workflow debug level from env (`WORKFLOW_RALPH_DEBUG`, `RALPH_DEBUG`, `WORKFLOW_RALPH_VERBOSE`). Pure; no I/O.
+ * Reads workflow debug level from env (`OPENTHROTTLE_PLAN_RUN_DEBUG`, `OPENTHROTTLE_PLAN_RUN_VERBOSE`). Pure; no I/O.
  */
 export const readWorkflowDebugLevelFromEnv = (
   env: NodeJS.ProcessEnv = process.env,
 ): WorkflowDebugLevel => {
-  const verboseRaw = env[WORKFLOW_RALPH_VERBOSE_ENV];
+  const verboseRaw = env[PLAN_RUN_VERBOSE_ENV];
   if (isWorkflowVerboseEnvTruthy(verboseRaw)) {
     return `verbose`;
   }
 
-  const raw =
-    env[WORKFLOW_RALPH_DEBUG_ENV] ?? env[WORKFLOW_RALPH_DEBUG_LEGACY_ENV];
+  const raw = env[PLAN_RUN_DEBUG_ENV];
   if (raw === undefined || raw === ``) {
     return `off`;
   }

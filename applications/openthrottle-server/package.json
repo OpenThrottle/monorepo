@@ -22,7 +22,6 @@
     "@openthrottle/agentic-evals": "workspace:^",
     "@openthrottle/agentic-hooks": "workspace:^",
     "@openthrottle/agentic-token-usage": "workspace:^",
-    "@openthrottle/nestjs-agentic-workflow": "workspace:^",
     "@openthrottle/nestjs-auth": "workspace:^",
     "@openthrottle/nestjs-bullmq": "workspace:^",
     "@openthrottle/nestjs-bullmq-board": "workspace:^",
@@ -49,15 +48,12 @@
     "@openthrottle/nodejs-graphql": "workspace:^",
     "@openthrottle/nodejs-utils": "workspace:^",
     "@openthrottle/openthrottle-agentic-loop": "workspace:^",
-    "@openthrottle/openthrottle-agentic-ralph": "workspace:^",
     "@openthrottle/openthrottle-agentic-utils": "workspace:^",
-    "@openthrottle/openthrottle-agentic-workflow": "workspace:^",
     "@openthrottle/openthrottle-drivers": "workspace:^",
     "@openthrottle/openthrottle-notifications": "workspace:^",
     "@openthrottle/openthrottle-plan-config": "workspace:^",
     "@openthrottle/openthrottle-skills": "workspace:^",
     "@tools/generators": "workspace:^",
-    "@tools/workflows": "workspace:^",
     "bullmq": "catalog:",
     "dataloader": "catalog:",
     "dotenv": "catalog:",
@@ -108,6 +104,7 @@
           "cwd": "{projectRoot}"
         }
       },
+      "codegen-graphql": {},
       "dev": {
         "continuous": true,
         "dependsOn": [
@@ -343,6 +340,7 @@
     "@golevelup/ts-vitest": "catalog:",
     "@nestjs/testing": "catalog:",
     "@openthrottle/agentic-replay-testing": "workspace:^",
+    "@openthrottle/graphql-codegen": "workspace:^",
     "@openthrottle/nestjs-testing": "workspace:^",
     "@testing-library/jest-dom": "catalog:",
     "nestjs-cls": "catalog:",

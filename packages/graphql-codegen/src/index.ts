@@ -170,7 +170,7 @@ export const defineCodegen = (options: DefineCodegenOptions): CodegenConfig => {
         strictScalars: true,
         // Kept on the `zod/v3` compat subpath (catalog ships zod v4). Migrating
         // the generated schemas to the native v4 API is a separate,
-        // cross-consumer (developer/admin/email/mcp/ralph) compatibility effort
+        // cross-consumer (developer/admin/email/mcp) compatibility effort
         // — not a silent flip. See https://www.npmjs.com/package/graphql-codegen-typescript-validation-schema
         zodImportPath: 'zod/v3',
       },

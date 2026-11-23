@@ -84,8 +84,8 @@ describe('PlanToolbarRunSplitButton Component', () => {
       onOpenCancelScheduled: vi.fn(),
       onOpenDialog: vi.fn(),
       planStatus: 'PENDING',
-      ralphTuningJson: '{"iterations":3}',
       repositoryId: 'repo-1',
+      runTuningJson: '{"effort":"low"}',
       scheduledRunAt: null,
       workflowRunBlocked: false,
       workingDirectory: '/work',
@@ -114,8 +114,8 @@ describe('PlanToolbarRunSplitButton Component', () => {
       branch: 'main',
       checkoutId: 'checkout-1',
       intent: 'runPlan',
-      ralphTuning: '{"iterations":3}',
       repositoryId: 'repo-1',
+      runTuning: '{"effort":"low"}',
       workingDirectory: '/work',
     });
     expect(props.onOpenDialog).not.toHaveBeenCalled();
@@ -264,8 +264,8 @@ describe('PlanToolbarRunSplitButton Component', () => {
       cancelScheduled: 'true',
       checkoutId: 'checkout-1',
       intent: 'runPlan',
-      ralphTuning: '{"iterations":3}',
       repositoryId: 'repo-1',
+      runTuning: '{"effort":"low"}',
       workingDirectory: '/work',
     });
   });

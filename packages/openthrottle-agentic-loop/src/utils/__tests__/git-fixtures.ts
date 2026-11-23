@@ -5,14 +5,12 @@ import { join } from 'node:path';
 import { promisify } from 'node:util';
 
 import type {
-  WorkflowExecuteGraphqlV2,
-  WorkflowRalphCommandResult,
-  WorkflowRalphCommandRunner,
-} from '@openthrottle/openthrottle-agentic-ralph';
-import {
-  AppendPlanOutputDocument,
-  createDefaultWorkflowRalphCommandRunner,
-} from '@openthrottle/openthrottle-agentic-ralph';
+  PlanRunCommandResult,
+  PlanRunCommandRunner,
+} from '@openthrottle/openthrottle-agentic-utils';
+import { createPlanRunCommandRunner } from '@openthrottle/openthrottle-agentic-utils';
+
+import type { PlanRunFinalizePort } from '../../contract/index.ts';
 
 const execFileAsync = promisify(execFile);
 
@@ -114,15 +112,15 @@ export const commitFile = async (
   await git(cwd, ['commit', '-q', '-m', message]);
 };
 
-const ok = (stdout = ''): WorkflowRalphCommandResult => {
+const ok = (stdout = ''): PlanRunCommandResult => {
   return { exitCode: 0, stderr: '', stdout };
 };
 
-export type CommandCall = Parameters<WorkflowRalphCommandRunner>[0];
+export type CommandCall = Parameters<PlanRunCommandRunner>[0];
 
 export interface RecordingRunner {
   readonly calls: CommandCall[];
-  readonly runCommand: WorkflowRalphCommandRunner;
+  readonly runCommand: PlanRunCommandRunner;
 }
 
 /**
@@ -132,12 +130,12 @@ export interface RecordingRunner {
 export const createRecordingRunner = (
   intercept?: (
     call: CommandCall,
-    real: WorkflowRalphCommandRunner,
-  ) => Promise<WorkflowRalphCommandResult | undefined>,
+    real: PlanRunCommandRunner,
+  ) => Promise<PlanRunCommandResult | undefined>,
 ): RecordingRunner => {
-  const real = createDefaultWorkflowRalphCommandRunner();
+  const real = createPlanRunCommandRunner();
   const calls: CommandCall[] = [];
-  const runCommand: WorkflowRalphCommandRunner = async (call) => {
+  const runCommand: PlanRunCommandRunner = async (call) => {
     calls.push(call);
 
     const answered = await intercept?.(call, real);
@@ -170,40 +168,29 @@ export const createRecordingRunner = (
   return { calls, runCommand };
 };
 
-export interface RecordingGraphql {
-  readonly executeGraphqlV2: WorkflowExecuteGraphqlV2;
+export interface RecordingPort {
   readonly outputs: string[];
-}
-
-function asExecute(
-  impl: (document: unknown, variables?: unknown) => Promise<unknown>,
-): WorkflowExecuteGraphqlV2;
-function asExecute(impl: unknown): unknown {
-  return impl;
+  readonly port: PlanRunFinalizePort;
 }
 
 /** plan_output appends are recorded; every other OT read fails (finalize treats those as best effort). */
-export const createRecordingGraphql = (): RecordingGraphql => {
+export const createRecordingPort = (): RecordingPort => {
   const outputs: string[] = [];
-  const executeGraphqlV2 = asExecute((document, variables) => {
-    if (document === AppendPlanOutputDocument) {
-      const hasInput =
-        variables !== null &&
-        typeof variables === 'object' &&
-        'input' in variables;
-      const input = hasInput ? variables.input : undefined;
+  const port: PlanRunFinalizePort = {
+    appendOutput: ({ content }) => {
+      outputs.push(content);
 
-      if (input !== null && typeof input === 'object' && 'content' in input) {
-        outputs.push(String(input.content));
-      }
+      return Promise.resolve();
+    },
+    readPlan: () => {
+      return Promise.reject(new Error('offline'));
+    },
+    readTasks: () => {
+      return Promise.reject(new Error('offline'));
+    },
+  };
 
-      return Promise.resolve({});
-    }
-
-    return Promise.reject(new Error('offline'));
-  });
-
-  return { executeGraphqlV2, outputs };
+  return { outputs, port };
 };
 
 export const gitCalls = (calls: readonly CommandCall[]): string[] => {

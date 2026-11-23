@@ -1,6 +1,6 @@
 /**
  * @description Service for system-level metrics: load average, CPU pressure (PSI on Linux),
- * and count of active Ralph child processes via the worktree tracker.
+ * and count of active plan-run child processes via the worktree tracker.
  */
 
 import { Inject, Injectable, Optional } from '@nestjs/common';

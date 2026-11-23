@@ -1,13 +1,10 @@
 import { describe, expect, test } from 'vitest';
 
 import {
-  DEFAULT_RALPH_ITERATIONS,
-  getDefaultWorkflowRalphRunOptionsInput,
-} from '~/routing/plans/utils/build-workflow-ralph-argv';
-import {
   hydratePlanRunConfigUiState,
   serializePlanRunConfigUiState,
 } from '~/routing/plans/utils/plan-run-config-ui';
+import { getDefaultPlanRunOptions } from '~/routing/plans/utils/plan-run-options';
 
 const planId = '7a293e25-e50d-4d4e-86a0-768b779ab0d9';
 
@@ -18,26 +15,18 @@ describe('hydratePlanRunConfigUiState', () => {
     const hydrated = hydratePlanRunConfigUiState(planId, runConfigJson);
 
     expect(hydrated.workflowInput.planId).toBe(planId);
-    expect(hydrated.workflowInput.iterations).toBe(DEFAULT_RALPH_ITERATIONS);
+    expect(hydrated.workflowInput.driver).toBe('cursor');
     expect(hydrated.workingDirectory).toBe('');
     expect(hydrated.iterationTimeoutText).toBe('');
   });
 
   test('hydrates stored workspace and tuning fields', () => {
     const runConfigJson = JSON.stringify({
-      ralph: {
+      run: {
         debugCli: 'omit',
-        executionBackend: 'claude',
-        iterationTimeoutText: '120',
-        iterations: 5,
+        driver: 'claude',
+        iterationTimeoutSeconds: 120,
         model: 'auto',
-        project: 'packages/foo',
-        prompt: '/agents/ralph',
-        promptFile: '',
-        promptLayer: 'named',
-        skipWorktreeSetup: false,
-        worktreeBase: '',
-        worktreeCli: 'omit',
         worktreeName: '',
       },
       target: { mode: 'plan', taskId: '' },
@@ -47,9 +36,7 @@ describe('hydratePlanRunConfigUiState', () => {
 
     const hydrated = hydratePlanRunConfigUiState(planId, runConfigJson);
 
-    expect(hydrated.workflowInput.executionBackend).toBe('claude');
-    expect(hydrated.workflowInput.iterations).toBe(5);
-    expect(hydrated.workflowInput.project).toBe('packages/foo');
+    expect(hydrated.workflowInput.driver).toBe('claude');
     expect(hydrated.workingDirectory).toBe('/tmp/openthrottle');
     expect(hydrated.iterationTimeoutText).toBe('120');
   });
@@ -72,60 +59,52 @@ describe('effort', () => {
       ...hydrated,
       workflowInput: {
         ...hydrated.workflowInput,
+        driver: 'claude',
         effort: 'extraHigh',
-        executionBackend: 'claude',
       },
     });
 
-    expect(JSON.parse(json).ralph.effort).toBe('extraHigh');
+    expect(JSON.parse(json).run.effort).toBe('extraHigh');
     expect(hydratePlanRunConfigUiState(planId, json).workflowInput.effort).toBe(
       'extraHigh',
     );
   });
 });
 
-describe('worktree + verbose defaults', () => {
-  test('a plan with no stored config hydrates worktree-on and verbose', () => {
+describe('worktree defaults', () => {
+  test('a plan with no stored config hydrates with the derived worktree name', () => {
     const hydrated = hydratePlanRunConfigUiState(planId, null);
 
-    expect(hydrated.workflowInput.debugCli).toBe('verbose');
-    expect(hydrated.workflowInput.worktreeCli).toBe('named');
     expect(hydrated.workflowInput.worktreeName).toBe('');
   });
 
-  test('an explicit opt-out survives a serialize/hydrate round-trip', () => {
-    const workflowInput = getDefaultWorkflowRalphRunOptionsInput({ planId });
+  test('a worktree name override survives a serialize/hydrate round-trip', () => {
+    const workflowInput = getDefaultPlanRunOptions({ planId });
     const json = serializePlanRunConfigUiState({
       checkoutId: '',
       iterationTimeoutText: '',
       repositoryId: '',
-      workflowInput: {
-        ...workflowInput,
-        debugCli: 'omit',
-        worktreeCli: 'omit',
-      },
+      workflowInput: { ...workflowInput, worktreeName: 'my-tree' },
       workingDirectory: '',
     });
 
-    const hydrated = hydratePlanRunConfigUiState(planId, json);
-
-    expect(hydrated.workflowInput.debugCli).toBe('omit');
-    expect(hydrated.workflowInput.worktreeCli).toBe('omit');
+    expect(JSON.parse(json).run.worktreeName).toBe('my-tree');
+    expect(
+      hydratePlanRunConfigUiState(planId, json).workflowInput.worktreeName,
+    ).toBe('my-tree');
   });
 });
 
 describe('serializePlanRunConfigUiState', () => {
   test('round-trips with hydrate', () => {
-    const workflowInput = getDefaultWorkflowRalphRunOptionsInput({ planId });
+    const workflowInput = getDefaultPlanRunOptions({ planId });
     const state = {
       checkoutId: '11111111-1111-4111-8111-111111111111',
       iterationTimeoutText: '90',
       repositoryId: '22222222-2222-4222-8222-222222222222',
       workflowInput: {
         ...workflowInput,
-        executionBackend: 'claude' as const,
-        iterations: 3,
-        project: 'applications/openthrottle-server',
+        driver: 'claude' as const,
       },
       workingDirectory: '/Users/matt/Development/openthrottle',
     };
@@ -133,16 +112,46 @@ describe('serializePlanRunConfigUiState', () => {
     const json = serializePlanRunConfigUiState(state);
     const hydrated = hydratePlanRunConfigUiState(planId, json);
 
-    expect(hydrated.workflowInput.executionBackend).toBe('claude');
-    expect(hydrated.workflowInput.iterations).toBe(3);
-    expect(hydrated.workflowInput.project).toBe(
-      'applications/openthrottle-server',
-    );
+    expect(hydrated.workflowInput.driver).toBe('claude');
     expect(hydrated.workingDirectory).toBe(
       '/Users/matt/Development/openthrottle',
     );
     expect(hydrated.iterationTimeoutText).toBe('90');
     expect(hydrated.checkoutId).toBe('11111111-1111-4111-8111-111111111111');
     expect(hydrated.repositoryId).toBe('22222222-2222-4222-8222-222222222222');
+  });
+});
+
+describe('stored shape', () => {
+  test('a save writes the run block with the default debug level and no retired keys', () => {
+    const hydrated = hydratePlanRunConfigUiState(planId, null);
+    const parsed = JSON.parse(serializePlanRunConfigUiState(hydrated));
+
+    expect(parsed.run).toMatchObject({ debugCli: 'verbose', driver: 'cursor' });
+    expect(Object.keys(parsed)).not.toContain('runner');
+  });
+
+  test('a save keeps the stored OT Loop fields in the run block', () => {
+    const stored = JSON.stringify({
+      run: {
+        driver: 'cursor',
+        maxRetries: 2,
+        model: 'auto',
+        validationCommands: ['pnpm test'],
+        worktreeName: '',
+      },
+      target: { mode: 'plan', taskId: '' },
+      version: 1,
+      workspace: { workingDirectory: '' },
+    });
+    const hydrated = hydratePlanRunConfigUiState(planId, stored);
+
+    expect(hydrated.otLoop).toEqual({
+      maxRetries: 2,
+      validationCommands: ['pnpm test'],
+    });
+    expect(
+      JSON.parse(serializePlanRunConfigUiState(hydrated)).run,
+    ).toMatchObject({ maxRetries: 2, validationCommands: ['pnpm test'] });
   });
 });

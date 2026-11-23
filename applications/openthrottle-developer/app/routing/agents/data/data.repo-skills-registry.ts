@@ -38,7 +38,6 @@ export const REQUIRED_AGENTS_SKILL_SLUGS = [
   'ot-generators',
   'ot-plans',
   'ot-stack',
-  'workflow-ralph',
 ] as const;
 
 export interface RepoSkillEntry {

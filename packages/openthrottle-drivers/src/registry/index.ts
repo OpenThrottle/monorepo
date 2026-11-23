@@ -87,14 +87,14 @@ export const parseDriverId = (
 
   if (normalized === '') {
     throw new UnknownDriverError(
-      `Execution backend (${source}) must be a non-empty string (e.g. ${DEFAULT_DRIVER_ID})`,
+      `Driver (${source}) must be a non-empty string (e.g. ${DEFAULT_DRIVER_ID})`,
       raw,
     );
   }
 
   if (!isDriverId(normalized)) {
     throw new UnknownDriverError(
-      `Unknown execution backend "${raw.trim()}". Supported: ${DRIVER_IDS.join(', ')}`,
+      `Unknown driver "${raw.trim()}". Supported: ${DRIVER_IDS.join(', ')}`,
       raw,
     );
   }

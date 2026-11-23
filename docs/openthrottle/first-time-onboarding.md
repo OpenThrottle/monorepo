@@ -36,7 +36,7 @@ For database layout, imports, and PRD-style fields on plans/tasks, see [`databas
 
 - **OpenThrottle (OT)** stores plans, tasks, ingested **repository documentation** (`docs/`), embeddings for semantic search over all of it, and plan output streams. Agents reach it only via **GraphQL** through **openthrottle-mcp** — not by writing ad hoc Markdown plans in the repo. Use it for both “what plans/tasks exist?” and “what does this repo’s docs say about X?” via `semantic_search`, `list_sources`, `get_document`, `create_plan`, …. (The former standalone `docs-mcp` server is retired — see [mcp-registration.md § Current state](./mcp-registration.md#current-state).)
 - **Workspace rules** — [`AGENTS.md`](../../AGENTS.md) § Plans in OT only and the [`ot-plans`](../../skills/ot-plans/SKILL.md) skill — define when to use which OT tool and that **plans/tasks belong in OT**, not in new Markdown plan files under `docs/`.
-- **Optional automation:** [workflow-ralph](../../tools/workflows/README.md) and worktrees are advanced paths; you can ignore them until after your first successful manual flow.
+- **Optional automation:** Queued plan runs ([OT Loop](../workflows/ot-loop-job.md)) and worktrees are advanced paths; you can ignore them until after your first successful manual flow.
 
 ### When to use which tool
 
@@ -127,5 +127,5 @@ Summarize how many sources and pending plans you see.
 | MCP config template                             | [`.cursor/mcp.json`](../../.cursor/mcp.json)                                                    |
 | DB schema, migrations, imports, commit links    | [databases/openthrottle/README.md](../../databases/openthrottle/README.md)                      |
 | OT MCP tool choice and skills                   | [`ot-plans`](../../skills/ot-plans/SKILL.md), `skills/ot-*`                                     |
-| Workflow CLI / Ralph (optional)                 | [tools/workflows/README.md](../../tools/workflows/README.md)                                    |
+| Plan runs / OT Loop (optional)                  | [docs/workflows/ot-loop-job.md](../workflows/ot-loop-job.md)                                    |
 | Embeddings (Ollama or OpenAI)                   | [monorepo/Ollama.md](../monorepo/Ollama.md)                                                     |

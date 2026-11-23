@@ -9,13 +9,11 @@ They are invoked two ways:
 claude -p --permission-mode acceptEdits "$(cat .agents/prompts/Job_DeadCode.md)" --model sonnet
 ```
 
-Note that `workflow-ralph --prompt-file` is **not** the ad-hoc path for these prompts: that CLI requires `--plan` or `--task` (a plan or task UUID) and exits non-zero without one. These jobs exist to _create_ the plan, so there is no UUID to hand it. `--prompt-file` is for overriding the layer-1 prompt of a run that is already scoped to an existing plan.
-
 …or on a cron schedule, as an OpenThrottle **scheduled agent job** (`createScheduledAgentJob`; UI at `/settings` → scheduled jobs).
 
 A scheduled run goes `ScheduledAgentJobsProcessor` → `ScheduledAgentRunnerService` → the drivers package's `runAgentPrompt`, and the `claude` driver builds exactly the command above with `cwd` = `WORKSPACE_ROOT`. Running it by hand from the repo root is therefore a faithful dry run of a scheduled fire — swap `--model` for whatever the registry below assigns that job.
 
-> **Not `workflow-ralph`.** That CLI _executes_ an existing plan and requires `--plan <uuid>` or `--task <uuid>`. These prompts _author_ a plan, so there is no id to pass, and `--prompt-file` overrides a plan run's layer-1 prompt rather than standing in for the plan. `pnpm exec workflow-ralph --prompt-file .agents/prompts/Job_DeadCode.md` exits with `--plan is required`.
+> **Not a plan run.** These prompts _author_ a plan, so there is no plan id to hand a plan runner; they run through `claude -p` or a scheduled agent job as above.
 
 ## The thirteen jobs
 
@@ -95,6 +93,6 @@ mutation {
 
 Register against a checkout where the job's commands actually resolve — `cwd` defaults to `WORKSPACE_ROOT`. Enable one job first (`Job_WorkInFlight` is the cheapest and the most immediately useful), confirm it files exactly one plan and edits nothing, then enable the rest. Use `runScheduledAgentJobNow` for that first confirmation rather than waiting for the cron to fire, and `setScheduledAgentJobEnabled` to roll the remaining nine out.
 
-**This mutation needs `settings:write`, which no service account has.** Schedule reads require `settings:read` and every schedule mutation requires `settings:write` (`GqlPermissionsGuard`, plus an owner check). Per `packages/nestjs-rbac/src/roles/roles.utils.ts`, those permissions belong to the `admin` and `user` roles only — the `mcp` and `workflow-ralph` service-account roles are deliberately scoped to `plans:read` / `plans:write`. So an agent holding `OPENTHROTTLE_MCP_AUTH_TOKEN` or `OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN` gets `Missing permission: settings:read` and **cannot register or enable these schedules**. Register them as a signed-in user — the `/settings` → scheduled jobs UI is the path of least resistance.
+**This mutation needs `settings:write`, which no service account has.** Schedule reads require `settings:read` and every schedule mutation requires `settings:write` (`GqlPermissionsGuard`, plus an owner check). Per `packages/nestjs-rbac/src/roles/roles.utils.ts`, those permissions belong to the `admin` and `user` roles only — the `mcp` and `plan-runner` service-account roles are deliberately scoped to `plans:read` / `plans:write`. So an agent holding `OPENTHROTTLE_MCP_AUTH_TOKEN` or `OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN` gets `Missing permission: settings:read` and **cannot register or enable these schedules**. Register them as a signed-in user — the `/settings` → scheduled jobs UI is the path of least resistance.
 
 Registering as a signed-in user also sets `ownerUserId` on the row. A schedule created by a null-owner principal skips the `assertAgentEnabled` check (so a disabled driver or model is not caught at creation time) and is left open for any user to mutate.

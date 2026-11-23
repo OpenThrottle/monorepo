@@ -8,8 +8,8 @@ import { otLoopExecuteGraphqlProvider } from './ot-loop-execute-graphql.provider
 
 /**
  * @description Nest wiring for the OT Loop runner (docs/workflows/ot-loop-job.md). It runs on the
- * `Plans` queue under Ralph's job name; `PlansProcessor` dispatches to
- * {@link OtLoopOrchestratorService} on `jobData.runner === 'ot-loop'`. Imported by `PlansQueueModule`.
+ * `Plans` queue under the `'Plan Run'` job name; `PlansProcessor` hands every job to
+ * {@link OtLoopOrchestratorService}. Imported by `PlansQueueModule`.
  */
 @Module({
   exports: [OtLoopOrchestratorService],

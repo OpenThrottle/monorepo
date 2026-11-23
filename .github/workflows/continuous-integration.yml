@@ -554,13 +554,15 @@ jobs:
       # runner time.
       #
       # ⚠️ Scope: this assertion only sees TRACKED output — the __generated__ of
-      # openthrottle-developer, openthrottle-website, openthrottle-agentic-ralph and
-      # openthrottle-mcp, each of which negates the root .gitignore. Projects that
+      # openthrottle-developer, openthrottle-website, openthrottle-server
+      # and openthrottle-mcp, each of which negates the root
+      # .gitignore. Projects that
       # leave __generated__ ignored (e.g. openthrottle-developer-codegen,
       # openthrottle-admin) contribute nothing here, because git diff over an ignored
       # untracked path always exits 0. scripts/verify-graphql-codegen.ts compares the
-      # filesystem instead; the drift-guard step below runs it for agentic-ralph and
-      # openthrottle-mcp.
+      # filesystem instead; the drift-guard step below runs it for openthrottle-mcp, which
+      # owns the shared plan/task/note/project documents the server's
+      # codegen also reads.
       - name: '🧩 Codegen Tasks'
         run: |
           # pnpm exec nx run @tools/dotfiles:build --parallel ${{ env.OUTPUT_DEBUG }}
@@ -857,13 +859,13 @@ jobs:
       # so `nx affected --target=test` above covers them and the drift check runs
       # via check:local:bundle-hooks. See OT plans d3759118 / f5e40886 / 21f150c6.
 
-      # # Phased Vitest gate (P2): openthrottle-server, @openthrottle/openthrottle-mcp, @tools/workflows only.
+      # # Phased Vitest gate (P2): openthrottle-server, @openthrottle/openthrottle-mcp only.
       # # Full monorepo test remains disabled until openthrottle-developer and other suites are green.
       # - name: '🧪 NX affected Vitest (phased gate)'
       #   run: |
       #     pnpm exec nx affected \
       #       --target=test \
-      #       --exclude='*,!openthrottle-server,!@openthrottle/openthrottle-mcp,!@tools/workflows' \
+      #       --exclude='*,!openthrottle-server,!@openthrottle/openthrottle-mcp' \
       #       --parallel \
       #       --outputStyle=static \
       #       --verbose \
@@ -968,9 +970,9 @@ jobs:
         run: |
           pnpm exec tsx ./scripts/nx-circular-dependencies.ts
 
-      - name: '🔒 GraphQL codegen drift guard (agentic-ralph, openthrottle-mcp)'
+      - name: '🔒 GraphQL codegen drift guard (openthrottle-mcp)'
         run: |
-          pnpm exec nx run-many --target=verify-graphql-codegen --projects=@openthrottle/openthrottle-agentic-ralph,@openthrottle/openthrottle-mcp
+          pnpm exec nx run-many --target=verify-graphql-codegen --projects=@openthrottle/openthrottle-mcp
 
       # 💰 A `gates` step, not a job: `gates` already has the node setup and a
       # full-history checkout, so `origin/<base>` is local. PR-only (a push has no

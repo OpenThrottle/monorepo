@@ -1,5 +1,4 @@
-import { AppendPlanOutputDocument } from '@openthrottle/openthrottle-agentic-ralph';
-
+import { AppendPlanOutputDocument } from '../../__generated__/graphql.ts';
 import type {
   OtLoopExecuteGraphql,
   PlanOutputWriter,

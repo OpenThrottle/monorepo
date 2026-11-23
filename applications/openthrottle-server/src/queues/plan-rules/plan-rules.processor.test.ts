@@ -184,12 +184,12 @@ describe('PlanRulesProcessor.process', () => {
     beforeEach(() => {
       registry.register(executor);
       tagActionRulesRepository.listEnabledForUser.mockResolvedValue([
-        buildRule({ environment: 'ralph' }),
+        buildRule({ environment: 'headless' }),
       ]);
     });
 
     it('matches when the job carries that environment', async () => {
-      const result = await processor.process(buildJob('ralph'));
+      const result = await processor.process(buildJob('headless'));
 
       expect(result.matched).toBe(1);
       expect(executor.execute).toHaveBeenCalledTimes(1);
@@ -213,7 +213,7 @@ describe('PlanRulesProcessor.process', () => {
       await processor.process(buildJob('ci'));
 
       // Never evaluated in those passes, so never orphaned by them: a null or ci pass
-      // overlapping a ralph pass must not soft-close what the ralph pass injected.
+      // overlapping a plan-run pass must not soft-close what the plan-run pass injected.
       for (const call of vi.mocked(
         ruleApplicationsRepository.orphanUnmatchedApplications,
       ).mock.calls) {
@@ -223,10 +223,10 @@ describe('PlanRulesProcessor.process', () => {
 
     it("orphans an unmatched rule of the pass's own environment", async () => {
       tagActionRulesRepository.listEnabledForUser.mockResolvedValue([
-        buildRule({ environment: 'ralph', tagAll: ['not-on-the-plan'] }),
+        buildRule({ environment: 'headless', tagAll: ['not-on-the-plan'] }),
       ]);
 
-      await processor.process(buildJob('ralph'));
+      await processor.process(buildJob('headless'));
 
       expect(
         ruleApplicationsRepository.orphanUnmatchedApplications,

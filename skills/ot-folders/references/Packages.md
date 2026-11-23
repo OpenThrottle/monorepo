@@ -134,7 +134,7 @@ The one package under the `primitive` component-shape profile rather than the
 
 ## `tools/*` — workspace tooling
 
-`tools/dotfiles`, `tools/generators`, `tools/workflows`, `tools/nx-plugins`, …
+`tools/dotfiles`, `tools/generators`, `tools/nx-plugins`, …
 
 ```bash
 tools/dotfiles

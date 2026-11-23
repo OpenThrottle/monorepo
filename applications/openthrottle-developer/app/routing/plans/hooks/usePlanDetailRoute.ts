@@ -20,8 +20,8 @@ import {
   runConfigSaveBlockedReasonAtom,
   workflowBranchAtom,
   workflowCheckoutIdAtom,
-  workflowRalphTuningJsonAtom,
   workflowRepositoryIdAtom,
+  workflowRunTuningJsonAtom,
   workflowWorkingDirectoryAtom,
   workspaceRepositoriesReadyAtom,
 } from '~/routing/plans/data/data.atom-plan';
@@ -72,11 +72,11 @@ export interface UsePlanDetailRouteResult {
   readonly onSaveRunConfig: () => void;
   readonly onToggleExpanded: (expanded: boolean) => void;
   readonly planOutputChunks: ReturnType<typeof usePlanOutputStream>;
-  readonly ralphTuningJson: string;
   readonly repositoryId: string;
   readonly resolvedTaskCount: number;
   readonly runConfigSaveBlocked: boolean;
   readonly runConfigSaveBlockedReason: string | undefined;
+  readonly runTuningJson: string;
   readonly saveJobRunHooksDisabled: boolean;
   readonly saveJobRunHooksPending: boolean;
   readonly saveRunConfigPending: boolean;
@@ -141,7 +141,7 @@ export const usePlanDetailRoute = (
   // Route-scoped run-config atoms (seeded by PlanRunConfigStoreProvider).
   const jobRunHooksJson = useAtomValue(jobRunHooksJsonAtom);
   const jobRunHooksValidation = useAtomValue(jobRunHooksValidationAtom);
-  const ralphTuningJson = useAtomValue(workflowRalphTuningJsonAtom);
+  const runTuningJson = useAtomValue(workflowRunTuningJsonAtom);
   const runConfigSaveBlocked = useAtomValue(runConfigSaveBlockedAtom);
   const runConfigSaveBlockedReason = useAtomValue(
     runConfigSaveBlockedReasonAtom,
@@ -260,11 +260,11 @@ export const usePlanDetailRoute = (
     onSaveRunConfig,
     onToggleExpanded,
     planOutputChunks,
-    ralphTuningJson,
     repositoryId,
     resolvedTaskCount,
     runConfigSaveBlocked,
     runConfigSaveBlockedReason,
+    runTuningJson,
     saveJobRunHooksDisabled: !jobRunHooksValidation.ok,
     saveJobRunHooksPending,
     saveRunConfigPending,

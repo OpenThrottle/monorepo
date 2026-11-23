@@ -42,7 +42,7 @@ plan. No match means ask before creating one (`create_project`, admin toolset) �
 
 ## Task sortOrder (execution order)
 
-Canonical execution and list order within a plan, `UNIQUE (plan_id, sort_order)`. Ralph, prompt
+Canonical execution and list order within a plan, `UNIQUE (plan_id, sort_order)`. Plan runs, prompt
 injection and every list tool sort by `sortOrder ASC, createdAt ASC`.
 
 - **Append:** omit it — `create_tasks` assigns `MAX+1000`, `MAX+2000`, … in array order, so a batch
@@ -109,11 +109,11 @@ This section owns the work-ledger text; `ot-loop` points here.
 - **On COMPLETED:** pass `headSha` and `prNumber` to `settle_plan_run` when the PR opens. The server resolves `owner/repo` from the run's checkout and writes the `git_commit` and `pull_request` artifacts itself.
 - **The artifact lands `unverified`.** After merge a verifier maps the branch sha to the landed squash commit and promotes it to `landed`/`verified`; the activity tools align with **landed** commits. A fresh artifact not yet landed is the expected intermediate state, not a reason to re-record it.
 - **Backstop:** an hourly harvest adopts work from `Plan-Id:` footers on each default branch, covering a run that died before opening a PR.
-- **Manual fallback only:** `attach_session_subject` (planId, optional taskId), then `record_artifact` (`git_commit`, `{repo, sha}`) under an open session — one artifact per merged commit. Do not reach for `workflow-link-merge`; it lives in the deprecated `@tools/workflows` package.
+- **Manual fallback only:** `attach_session_subject` (planId, optional taskId), then `record_artifact` (`git_commit`, `{repo, sha}`) under an open session — one artifact per merged commit.
 - **Merge queue:** `gh pr merge --auto` only enqueues. Do not call a PR merged until `gh pr view <n> --json mergedAt,mergeCommit` shows `mergedAt`. With the manual fallback, record the landed squash sha, never the pushed branch head.
 
 ## Cross-links
 
-- **Commits:** `github-commit` · **Execution:** `ot-loop`, `agents-ralph`
+- **Commits:** `github-commit` · **Execution:** `ot-loop`
 - **Skill-usage telemetry:** [`docs/monorepo/skill-usage-telemetry-scope.md`](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/skill-usage-telemetry-scope.md)
 - **Code style:** [`docs/monorepo/code-style.md`](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/code-style.md) · **DB / ingest:** [`databases/openthrottle/README.md`](https://github.com/openthrottle/monorepo/blob/main/databases/openthrottle/README.md)

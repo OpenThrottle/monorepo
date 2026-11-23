@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * @description Provisions service account bearer tokens for local bootstrap (openthrottle-mcp, workflow-ralph).
+ * @description Provisions service account bearer tokens for local bootstrap (openthrottle-mcp, plan-runner).
  * Requires migration 045 and a running OpenThrottle Postgres.
  *
  * Two modes, chosen per account by whether its env var is set:
@@ -42,8 +42,8 @@ export const BOOTSTRAP_ACCOUNTS = [
   },
   {
     envVar: 'OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN',
-    label: 'bootstrap-workflow-ralph',
-    name: 'workflow-ralph',
+    label: 'bootstrap-plan-runner',
+    name: 'plan-runner',
   },
 ] as const;
 

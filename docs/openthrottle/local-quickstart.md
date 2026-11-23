@@ -68,7 +68,7 @@ On a **fresh database** the script mints one bearer token per service account an
 === openthrottle-mcp ===
 OPENTHROTTLE_MCP_AUTH_TOKEN=ot_sa_<generated>      # ← copy this line
 
-=== workflow-ralph ===
+=== plan-runner ===
 OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN=ot_sa_<generated>
 
 Add the lines above to:
@@ -87,7 +87,7 @@ Tokens are shown once; store them securely and rotate via admin GraphQL when nee
 - `applications/openthrottle-server/.env` — replace the existing `OPENTHROTTLE_MCP_AUTH_TOKEN=` value.
 - Cursor MCP `env` for `openthrottle-mcp` (see step 5).
 
-2. Optionally copy the `OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN=` line for BullMQ / Ralph workers.
+2. Optionally copy the `OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN=` line for the BullMQ plan-run worker.
 
 **Re-running** when tokens already exist prints a skip notice instead of new tokens (it does **not** reprint the existing token):
 

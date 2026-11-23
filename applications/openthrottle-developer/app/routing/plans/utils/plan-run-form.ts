@@ -1,21 +1,17 @@
 /**
  * @description Pure parsing behind the `runPlan` and `schedulePlanRun` action
  * intents. Both submit the same kickoff form, so one parser reads it: the
- * enqueue fields, the per-run `iterations` override, and the model/effort
- * selection the dialog persists to the plan's saved run config.
+ * enqueue fields, the model/effort selection and the OT Loop settings the
+ * dialog persists to the plan's saved run config.
  *
- * The two never mix. `iterations` is overlaid onto the run's tuning only; the
- * saved config never sees it. Model, backend and effort are persisted AND
- * overlaid, so the run that starts and the config on the plan agree.
+ * Model, driver and effort are persisted AND overlaid onto the run's tuning,
+ * so the run that starts and the config on the plan agree.
  */
 
-import type {
-  PlanRunConfigOtLoop,
-  PlanRunConfigRunner,
-} from '@openthrottle/openthrottle-plan-config';
 import {
   getDefaultPlanRunConfigStorage,
   MAX_PLAN_RUN_OT_LOOP_RETRIES,
+  pickPlanRunConfigOtLoop,
   planRunConfigFromPlanStorage,
   serializePlanRunConfigForGraphql,
 } from '@openthrottle/openthrottle-plan-config';
@@ -27,50 +23,44 @@ import { z } from 'zod/v3';
 
 import type {
   EnqueuePlanRunInput,
-  RalphPlanRunTuningInput,
+  PlanRunTuningInput,
 } from '~/__generated__/graphql';
 import {
   EnqueuePlanRunInputSchema,
-  RalphPlanRunTuningInputSchema,
+  PlanRunTuningInputSchema,
 } from '~/__generated__/schemas';
 import { parseJobRunHooksJsonFromPlan } from '~/routing/plans/utils/job-run-hooks-ui';
 import type { PlanRunModelSelection } from '~/routing/plans/utils/plan-run-model-effort';
 import { parsePlanRunEffort } from '~/routing/plans/utils/plan-run-model-effort';
 import {
-  isPlanRunRunner,
+  DEFAULT_RUN_DRIVER,
+  DEFAULT_RUN_MODEL,
+} from '~/routing/plans/utils/plan-run-options';
+import {
   mergeOtLoopFields,
   parseOtLoopCommandsText,
   parseOtLoopMaxRetriesText,
 } from '~/routing/plans/utils/plan-run-ot-loop';
-import { isExecutionBackend } from '~/routing/plans/utils/plan-workflow-config-execution';
-import {
-  DEFAULT_RALPH_MODEL,
-  DEFAULT_RALPH_RUNNER,
-} from '~/routing/plans/utils/workflow-ralph-config';
+import { isSelectablePlanRunDriver } from '~/routing/plans/utils/plan-workflow-config-execution';
 
 /**
- * @description The model/effort the dialog saves to `runConfigJson.ralph`:
- * backend and model travel together (a plan can never hold a `claude` model on
+ * @description The model/effort the dialog saves to the plan's run config:
+ * driver and model travel together (a plan can never hold a `claude` model on
  * the `cursor` runner); `effort` is `''` when the run should keep the
- * backend's own reasoning default.
+ * driver's own reasoning default.
  */
 export interface PlanRunPersistedSelection extends PlanRunModelSelection {
   readonly effort: string;
 }
 
 /**
- * @description The runner choice the dialog saves to `runConfigJson.runner` (and sends at
- * enqueue). `otLoop` is present only for OT Loop: the edited validation commands and retry
- * count, merged onto the stored block so its setup and final-validation commands survive.
+ * @description The OT Loop settings the dialog saves to `runConfigJson.run`: the edited
+ * validation commands and retry count, merged onto the stored block so its setup and
+ * final-validation commands survive.
  */
-export interface PlanRunRunnerSelection {
-  readonly otLoop:
-    | {
-        readonly maxRetries: number | undefined;
-        readonly validationCommands: readonly string[];
-      }
-    | undefined;
-  readonly runner: PlanRunConfigRunner;
+export interface PlanRunOtLoopSelection {
+  readonly maxRetries: number | undefined;
+  readonly validationCommands: readonly string[];
 }
 
 /** @description The enqueue input minus the route's `planId`. */
@@ -80,42 +70,37 @@ export type PlanRunFormResult =
   | { readonly error: string; readonly success: false }
   | {
       readonly fields: PlanRunEnqueueFields;
+      readonly otLoopSelection: PlanRunOtLoopSelection | undefined;
       readonly persisted: PlanRunPersistedSelection | undefined;
-      readonly runnerSelection: PlanRunRunnerSelection | undefined;
       readonly success: true;
     };
 
 /**
- * @description Overlays the per-run overrides onto the submitted tuning.
- * `iterations` always wins when given. A persisted selection is applied with
- * the same omit-the-default rules as the tuning builder (default runner,
+ * @description Overlays the persisted selection onto the submitted tuning, with
+ * the same omit-the-default rules as the tuning builder (default driver,
  * `auto` model and an empty effort send nothing), so a selection that returns
  * to a default also clears the stale key from the submitted tuning.
  * `undefined` when nothing is left to send.
  */
 export const overlayPlanRunTuning = (
-  tuning: RalphPlanRunTuningInput | undefined,
-  overrides: {
-    readonly iterations: number | undefined;
-    readonly persisted: PlanRunPersistedSelection | undefined;
-  },
-): RalphPlanRunTuningInput | undefined => {
-  const { iterations, persisted } = overrides;
-  const next: RalphPlanRunTuningInput = { ...tuning };
+  tuning: PlanRunTuningInput | undefined,
+  persisted: PlanRunPersistedSelection | undefined,
+): PlanRunTuningInput | undefined => {
+  const next: PlanRunTuningInput = { ...tuning };
 
   if (persisted !== undefined) {
     const model = persisted.model.trim();
     const effort = persisted.effort.trim();
 
-    delete next.backend;
+    delete next.driver;
     delete next.effort;
     delete next.model;
 
-    if (persisted.backend !== DEFAULT_RALPH_RUNNER) {
-      next.backend = persisted.backend;
+    if (persisted.driver !== DEFAULT_RUN_DRIVER) {
+      next.driver = persisted.driver;
     }
 
-    if (model !== '' && model !== DEFAULT_RALPH_MODEL) {
+    if (model !== '' && model !== DEFAULT_RUN_MODEL) {
       next.model = model;
     }
 
@@ -124,20 +109,9 @@ export const overlayPlanRunTuning = (
     }
   }
 
-  if (iterations !== undefined) {
-    next.iterations = iterations;
-  }
-
   return Object.keys(next).length === 0 ? undefined : next;
 };
 
-/**
- * @description Merges the dialog's model/backend/effort into a plan's saved
- * run config. Everything else in `runConfigJson` is preserved, and
- * `iterations` is never touched. `changed` is `false` when the saved config
- * already holds the selection, so the caller can skip the write.
- * @throws Error when `runConfigJson` is present but not valid JSON.
- */
 const loadStoredRunConfig = (
   runConfigJson: string | null | undefined,
   options: { readonly planId: string },
@@ -149,6 +123,13 @@ const loadStoredRunConfig = (
   return planRunConfigFromPlanStorage(JSON.parse(runConfigJson), options);
 };
 
+/**
+ * @description Merges the dialog's model/driver/effort into a plan's saved
+ * run config. Everything else in `runConfigJson` is preserved. `changed` is
+ * `false` when the saved config already holds the selection, so the caller can
+ * skip the write.
+ * @throws Error when `runConfigJson` is present but not valid JSON.
+ */
 export const mergePersistedSelectionIntoRunConfig = (input: {
   readonly persisted: PlanRunPersistedSelection;
   readonly planId: string;
@@ -161,19 +142,19 @@ export const mergePersistedSelectionIntoRunConfig = (input: {
   const model = persisted.model.trim();
   const effort = persisted.effort.trim();
   const changed =
-    stored.ralph.executionBackend !== persisted.backend ||
-    stored.ralph.model !== model ||
-    stored.ralph.effort !== effort;
+    stored.run.driver !== persisted.driver ||
+    stored.run.model !== model ||
+    stored.run.effort !== effort;
 
   return {
     changed,
     runConfigJson: serializePlanRunConfigForGraphql(
       {
         ...stored,
-        ralph: {
-          ...stored.ralph,
+        run: {
+          ...stored.run,
+          driver: persisted.driver,
           effort,
-          executionBackend: persisted.backend,
           model,
         },
       },
@@ -183,38 +164,33 @@ export const mergePersistedSelectionIntoRunConfig = (input: {
 };
 
 /**
- * @description Merges the dialog's runner choice into a plan's saved run config. Ralph is the
- * default, so choosing it removes a stored `runner` key rather than writing `'ralph'`; the
- * stored `otLoop` block is left alone unless OT Loop is selected. `changed` is `false` when
- * the saved config already holds the choice, so the caller can skip the write.
+ * @description Merges the dialog's OT Loop settings into a plan's saved run config and keeps its setup and final-validation commands. `changed` is `false` when
+ * the saved config already holds the settings, so the caller can skip the write.
  * @throws Error when `runConfigJson` is present but not valid JSON.
  */
-export const mergeRunnerSelectionIntoRunConfig = (input: {
+export const mergeOtLoopSelectionIntoRunConfig = (input: {
   readonly planId: string;
   readonly runConfigJson: string | null | undefined;
-  readonly selection: PlanRunRunnerSelection;
+  readonly selection: PlanRunOtLoopSelection;
 }): { readonly changed: boolean; readonly runConfigJson: string } => {
   const { planId, runConfigJson, selection } = input;
   const options = { planId };
   const stored = loadStoredRunConfig(runConfigJson, options);
-  const { otLoop: storedOtLoop, runner: storedRunner, ...rest } = stored;
-  const { otLoop: edited } = selection;
-  const nextOtLoop: PlanRunConfigOtLoop | undefined = edited
-    ? mergeOtLoopFields(storedOtLoop, edited)
-    : storedOtLoop;
-  const nextRunner = selection.runner === 'ot-loop' ? 'ot-loop' : undefined;
-  const changed =
-    (storedRunner ?? 'ralph') !== selection.runner ||
-    JSON.stringify(storedOtLoop) !== JSON.stringify(nextOtLoop);
+  const storedOtLoop = pickPlanRunConfigOtLoop(stored.run);
+  const nextOtLoop = mergeOtLoopFields(storedOtLoop, selection);
+  const changed = JSON.stringify(storedOtLoop) !== JSON.stringify(nextOtLoop);
+  const {
+    finalValidationCommands: _finalValidationCommands,
+    maxRetries: _maxRetries,
+    setupCommands: _setupCommands,
+    validationCommands: _validationCommands,
+    ...runWithoutOtLoop
+  } = stored.run;
 
   return {
     changed,
     runConfigJson: serializePlanRunConfigForGraphql(
-      {
-        ...rest,
-        ...(nextOtLoop !== undefined ? { otLoop: nextOtLoop } : {}),
-        ...(nextRunner !== undefined ? { runner: nextRunner } : {}),
-      },
+      { ...stored, run: { ...runWithoutOtLoop, ...nextOtLoop } },
       options,
     ),
   };
@@ -228,13 +204,13 @@ type PersistedSelectionResult =
     };
 
 const parsePersistedSelection = (fields: {
-  readonly backend?: string | null;
+  readonly driver?: string | null;
   readonly effort?: string | null;
   readonly model?: string | null;
 }): PersistedSelectionResult => {
-  const { backend, effort, model } = fields;
+  const { driver: driver, effort, model } = fields;
 
-  if (backend == null && model == null) {
+  if (driver == null && model == null) {
     if (effort == null) {
       return { persisted: undefined, success: true };
     }
@@ -245,15 +221,15 @@ const parsePersistedSelection = (fields: {
     };
   }
 
-  if (backend == null || model == null) {
+  if (driver == null || model == null) {
     return {
-      error: 'A model and its backend must be submitted together.',
+      error: 'A model and its driver must be submitted together.',
       success: false,
     };
   }
 
-  if (!isExecutionBackend(backend)) {
-    return { error: `Unknown execution backend "${backend}".`, success: false };
+  if (!isSelectablePlanRunDriver(driver)) {
+    return { error: `Unknown driver "${driver}".`, success: false };
   }
 
   const trimmedEffort = effort?.trim() ?? '';
@@ -265,35 +241,31 @@ const parsePersistedSelection = (fields: {
   }
 
   return {
-    persisted: { backend, effort: trimmedEffort, model: model.trim() },
+    persisted: { driver, effort: trimmedEffort, model: model.trim() },
     success: true,
   };
 };
 
-type RunnerSelectionResult =
+type OtLoopSelectionResult =
   | { readonly error: string; readonly success: false }
   | {
-      readonly selection: PlanRunRunnerSelection | undefined;
+      readonly selection: PlanRunOtLoopSelection | undefined;
       readonly success: true;
     };
 
-const parseRunnerSelection = (fields: {
+/**
+ * @description The OT Loop settings, present only when the form names the runner (the Run dialog
+ * does; the toolbar's one-click Run edits nothing).
+ */
+const parseOtLoopSelection = (fields: {
   readonly otLoopMaxRetries?: string | null;
+  readonly otLoopSettings?: string | null;
   readonly otLoopValidationCommands?: string | null;
-  readonly runner?: string | null;
-}): RunnerSelectionResult => {
-  const { otLoopMaxRetries, otLoopValidationCommands, runner } = fields;
+}): OtLoopSelectionResult => {
+  const { otLoopMaxRetries, otLoopSettings, otLoopValidationCommands } = fields;
 
-  if (runner == null) {
+  if (otLoopSettings == null) {
     return { selection: undefined, success: true };
-  }
-
-  if (!isPlanRunRunner(runner)) {
-    return { error: `Unknown runner "${runner}".`, success: false };
-  }
-
-  if (runner === 'ralph') {
-    return { selection: { otLoop: undefined, runner }, success: true };
   }
 
   const maxRetries = parseOtLoopMaxRetriesText(otLoopMaxRetries ?? '');
@@ -306,13 +278,10 @@ const parseRunnerSelection = (fields: {
 
   return {
     selection: {
-      otLoop: {
-        maxRetries,
-        validationCommands: parseOtLoopCommandsText(
-          otLoopValidationCommands ?? '',
-        ),
-      },
-      runner,
+      maxRetries,
+      validationCommands: parseOtLoopCommandsText(
+        otLoopValidationCommands ?? '',
+      ),
     },
     success: true,
   };
@@ -321,9 +290,8 @@ const parseRunnerSelection = (fields: {
 /**
  * @description Reads the kickoff form shared by `runPlan` and
  * `schedulePlanRun`. Every field goes through `parseFormData` (blank fields
- * arrive absent). `ralphTuning` is the raw JSON the toolbar built from the
- * Configuration tab; `iterations` (a positive whole number) overrides it for
- * this run only; `backend` + `model` (+ `effort`, blank = unset) are the
+ * arrive absent). `runTuning` is the raw JSON the toolbar built from the
+ * Configuration tab; `driver` + `model` (+ `effort`, blank = unset) are the
  * selection to persist and overlay. `branch` is required and blank is
  * rejected as hard as missing.
  */
@@ -334,24 +302,21 @@ export const parsePlanRunForm = (formData: FormData): PlanRunFormResult => {
       .omit({
         cancelScheduled: true,
         idempotencyKey: true,
+        mode: true,
         planId: true,
-        ralph: true,
+        taskId: true,
+        tuning: true,
       })
       .extend({
-        backend: z.string().nullish(),
         branch: z.string().nullish(),
+        driver: z.string().nullish(),
         effort: z.string().nullish(),
-        iterations: coerceNumber(
-          z
-            .number()
-            .int('Iterations must be a whole number.')
-            .min(1, 'Iterations must be at least 1.'),
-        ).nullish(),
         model: z.string().nullish(),
         otLoopMaxRetries: z.string().nullish(),
+        otLoopSettings: z.string().nullish(),
         otLoopValidationCommands: z.string().nullish(),
         priority: coerceNumber(z.number()).nullish(),
-        ralphTuning: z.string().nullish(),
+        runTuning: z.string().nullish(),
       }),
     { strict: false },
   );
@@ -360,11 +325,11 @@ export const parsePlanRunForm = (formData: FormData): PlanRunFormResult => {
   }
   const fields = parsed.data;
 
-  let tuning: RalphPlanRunTuningInput | undefined;
-  if (fields.ralphTuning != null && fields.ralphTuning !== '') {
+  let tuning: PlanRunTuningInput | undefined;
+  if (fields.runTuning != null && fields.runTuning !== '') {
     try {
-      const raw: unknown = JSON.parse(fields.ralphTuning);
-      const tuningResult = RalphPlanRunTuningInputSchema().safeParse(raw);
+      const raw: unknown = JSON.parse(fields.runTuning);
+      const tuningResult = PlanRunTuningInputSchema().safeParse(raw);
       if (!tuningResult.success) {
         const issues = tuningResult.error.issues.map((i) => i.message);
         return {
@@ -384,9 +349,9 @@ export const parsePlanRunForm = (formData: FormData): PlanRunFormResult => {
     return selection;
   }
 
-  const runnerSelection = parseRunnerSelection(fields);
-  if (!runnerSelection.success) {
-    return runnerSelection;
+  const otLoopSelection = parseOtLoopSelection(fields);
+  if (!otLoopSelection.success) {
+    return otLoopSelection;
   }
 
   // Branch is a REQUIRED kickoff input (never inferred server-side). The run
@@ -416,14 +381,10 @@ export const parsePlanRunForm = (formData: FormData): PlanRunFormResult => {
     }
   }
 
-  const ralph = overlayPlanRunTuning(tuning, {
-    iterations: fields.iterations ?? undefined,
-    persisted: selection.persisted,
-  });
+  const runTuning = overlayPlanRunTuning(tuning, selection.persisted);
   const checkoutId = fields.checkoutId ?? undefined;
   const repositoryId = fields.repositoryId ?? undefined;
   const workingDirectory = fields.workingDirectory ?? undefined;
-  const runner = runnerSelection.selection?.runner;
 
   return {
     fields: {
@@ -432,13 +393,12 @@ export const parsePlanRunForm = (formData: FormData): PlanRunFormResult => {
       priority: fields.priority ?? 1,
       ...(checkoutId !== undefined ? { checkoutId } : {}),
       ...(jobRunHooksJson !== undefined ? { jobRunHooksJson } : {}),
-      ...(ralph !== undefined ? { ralph } : {}),
+      ...(runTuning !== undefined ? { tuning: runTuning } : {}),
       ...(repositoryId !== undefined ? { repositoryId } : {}),
-      ...(runner !== undefined ? { runner } : {}),
       ...(workingDirectory !== undefined ? { workingDirectory } : {}),
     },
+    otLoopSelection: otLoopSelection.selection,
     persisted: selection.persisted,
-    runnerSelection: runnerSelection.selection,
     success: true,
   };
 };

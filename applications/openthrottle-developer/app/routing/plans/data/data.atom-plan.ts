@@ -1,18 +1,7 @@
-import type {
-  PlanRunConfigOtLoop,
-  PlanRunConfigRunner,
-} from '@openthrottle/openthrottle-plan-config';
+import type { PlanRunConfigOtLoop } from '@openthrottle/openthrottle-plan-config';
 import { atom } from 'jotai';
 
-import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
-import {
-  buildRalphPlanRunTuningInputFromWorkflowRunOptions,
-  buildWorkflowRalphOptionArgs,
-  formatWorkflowRalphCommandLine,
-  getDefaultWorkflowRalphRunOptionsInput,
-  parseWorkflowRunIterationTimeoutSeconds,
-  validateWorkflowRalphRunOptionsState,
-} from '~/routing/plans/utils/build-workflow-ralph-argv';
+import { buildPlanRunTuningInput } from '~/routing/plans/utils/buildPlanRunTuningInput';
 import type { JobRunHookDraftRow } from '~/routing/plans/utils/job-run-hooks-ui';
 import {
   normalizeJobRunHookDraftRows,
@@ -20,35 +9,33 @@ import {
   validateJobRunHooksDraftRows,
 } from '~/routing/plans/utils/job-run-hooks-ui';
 import { serializePlanRunConfigUiState } from '~/routing/plans/utils/plan-run-config-ui';
+import type { PlanRunOptions } from '~/routing/plans/utils/plan-run-options';
+import {
+  getDefaultPlanRunOptions,
+  parsePlanRunTimeoutSeconds,
+} from '~/routing/plans/utils/plan-run-options';
+import { validatePlanRunOptionsState } from '~/routing/plans/utils/validatePlanRunOptionsState';
 import { getWorkflowRunAtomDefaultState } from '~/routing/plans/utils/workflow-run-atom-state';
 import { validateWorkspacePathClient } from '~/routing/plans/utils/workspace-path';
 
 /**
- * @description Primary workflow CLI / enqueue form state (route-scoped Jotai
- * Provider seeds/hydrates this per plan; see {@link seedWorkflowRunFromPlanAtom}).
+ * @description Primary run-options / enqueue form state (route-scoped Jotai
+ * Provider seeds/hydrates this per plan).
  */
-export const workflowRalphRunOptionsAtom = atom<WorkflowRalphRunOptionsInput>(
-  getDefaultWorkflowRalphRunOptionsInput(),
+export const workflowRunOptionsAtom = atom<PlanRunOptions>(
+  getDefaultPlanRunOptions(),
 );
 
 /**
- * @description Which runner executes this plan's runs; `undefined` is an absent
- * `runConfigJson.runner`, which means Ralph. Serialized into `runConfigJson`.
- */
-export const workflowRunnerAtom = atom<PlanRunConfigRunner | undefined>(
-  undefined,
-);
-
-/**
- * @description The plan's `runConfigJson.otLoop` block (validation commands, retries and
- * the repo-file-only overrides). Only meaningful when {@link workflowRunnerAtom} is `'ot-loop'`.
+ * @description The plan's `runConfigJson.run` OT Loop fields (validation commands, retries and
+ * the repo-file-only overrides).
  */
 export const workflowOtLoopAtom = atom<PlanRunConfigOtLoop | undefined>(
   undefined,
 );
 
 /**
- * @description Raw per-iteration timeout text; {@link parseWorkflowRunIterationTimeoutSeconds} merges into argv.
+ * @description Raw agent-timeout text; {@link parsePlanRunTimeoutSeconds} parses it into the tuning input.
  */
 export const workflowRunIterationTimeoutTextAtom = atom<string>('');
 
@@ -119,43 +106,25 @@ export const workspaceRepositoriesReadyAtom = atom<boolean>(false);
 export const jobRunHookDraftRowsAtom = atom<JobRunHookDraftRow[]>([]);
 
 /**
- * @description Merges stored run options with parsed iteration timeout for argv and tuning payloads.
+ * @description Merges stored run options with the parsed agent timeout for the tuning payload.
  */
-export const workflowRalphMergedRunOptionsForArgvAtom = atom(
-  (get): WorkflowRalphRunOptionsInput => {
-    const runOptions = get(workflowRalphRunOptionsAtom);
-    const iterationTimeoutText = get(workflowRunIterationTimeoutTextAtom);
+export const workflowMergedRunOptionsAtom = atom((get): PlanRunOptions => {
+  const runOptions = get(workflowRunOptionsAtom);
+  const iterationTimeoutText = get(workflowRunIterationTimeoutTextAtom);
 
-    return {
-      ...runOptions,
-      iterationTimeoutSeconds:
-        parseWorkflowRunIterationTimeoutSeconds(iterationTimeoutText),
-    };
-  },
-);
+  return {
+    ...runOptions,
+    iterationTimeoutSeconds: parsePlanRunTimeoutSeconds(iterationTimeoutText),
+  };
+});
 
 /**
- * @description `workflow-ralph` argv segments after the binary (same as {@link buildWorkflowRalphOptionArgs} on merged state).
+ * @description Serialized tuning input for the toolbar queue; empty string when the merged
+ * options equal the defaults.
  */
-export const workflowRalphOptionArgsAtom = atom((get) =>
-  buildWorkflowRalphOptionArgs(get(workflowRalphMergedRunOptionsForArgvAtom)),
-);
-
-/**
- * @description Single-line preview / clipboard string for the canonical CLI invocation.
- */
-export const workflowRalphCanonicalCommandLineAtom = atom((get) =>
-  formatWorkflowRalphCommandLine(get(workflowRalphOptionArgsAtom)),
-);
-
-/**
- * @description Serialized `RalphPlanRunTuningInput` (tuning-only) for the toolbar
- * queue; empty string when the merged options equal defaults. Mirrors the shell's
- * former `ralphTuningJson` memo.
- */
-export const workflowRalphTuningJsonAtom = atom((get): string => {
-  const merged = get(workflowRalphMergedRunOptionsForArgvAtom);
-  const tuning = buildRalphPlanRunTuningInputFromWorkflowRunOptions(merged);
+export const workflowRunTuningJsonAtom = atom((get): string => {
+  const merged = get(workflowMergedRunOptionsAtom);
+  const tuning = buildPlanRunTuningInput(merged);
 
   return tuning === undefined ? '' : JSON.stringify(tuning);
 });
@@ -186,23 +155,21 @@ export const jobRunHooksJsonAtom = atom((get): string => {
 });
 
 /**
- * @description Workflow run options validity. `requireCliTargetIds` is derived from
- * the presence of a seeded `--plan` / `--task` id (always true on the plan route),
+ * @description Workflow run options validity. `requireTargetIds` is derived from
+ * the presence of a seeded plan / task id (always true on the plan route),
  * matching the shell's route-scoped validation.
  */
-export const workflowRalphRunOptionsValidationAtom = atom(
-  (get): ReturnType<typeof validateWorkflowRalphRunOptionsState> => {
-    const runOptions = get(workflowRalphRunOptionsAtom);
+export const workflowRunOptionsValidationAtom = atom(
+  (get): ReturnType<typeof validatePlanRunOptionsState> => {
+    const runOptions = get(workflowRunOptionsAtom);
     const iterationTimeoutText = get(workflowRunIterationTimeoutTextAtom);
-    const requireCliTargetIds =
+    const requireTargetIds =
       (runOptions.planId?.trim() ?? '') !== '' ||
       (runOptions.taskId?.trim() ?? '') !== '';
 
-    return validateWorkflowRalphRunOptionsState(
-      runOptions,
-      iterationTimeoutText,
-      { requireCliTargetIds },
-    );
+    return validatePlanRunOptionsState(runOptions, iterationTimeoutText, {
+      requireTargetIds,
+    });
   },
 );
 
@@ -218,7 +185,7 @@ export const workflowWorkspacePathErrorAtom = atom((get): string | undefined =>
  * options or workspace path). Mirrors the shell's former `runConfigSaveBlocked`.
  */
 export const runConfigSaveBlockedAtom = atom((get): boolean => {
-  const validation = get(workflowRalphRunOptionsValidationAtom);
+  const validation = get(workflowRunOptionsValidationAtom);
   const workspacePathError = get(workflowWorkspacePathErrorAtom);
 
   return !validation.ok || workspacePathError != null;
@@ -229,7 +196,7 @@ export const runConfigSaveBlockedAtom = atom((get): boolean => {
  */
 export const runConfigSaveBlockedReasonAtom = atom(
   (get): string | undefined => {
-    const validation = get(workflowRalphRunOptionsValidationAtom);
+    const validation = get(workflowRunOptionsValidationAtom);
     if (!validation.ok) {
       return validation.issues[0]?.message;
     }
@@ -244,7 +211,7 @@ export const runConfigSaveBlockedReasonAtom = atom(
  * `runConfigJson` memo (which guarded on `plan.id`; here planId lives in runOptions).
  */
 export const runConfigJsonAtom = atom((get): string => {
-  const runOptions = get(workflowRalphRunOptionsAtom);
+  const runOptions = get(workflowRunOptionsAtom);
 
   if (
     get(runConfigSaveBlockedAtom) ||
@@ -254,7 +221,6 @@ export const runConfigJsonAtom = atom((get): string => {
   }
 
   const otLoop = get(workflowOtLoopAtom);
-  const runner = get(workflowRunnerAtom);
 
   try {
     return serializePlanRunConfigUiState({
@@ -262,7 +228,6 @@ export const runConfigJsonAtom = atom((get): string => {
       iterationTimeoutText: get(workflowRunIterationTimeoutTextAtom),
       ...(otLoop !== undefined ? { otLoop } : {}),
       repositoryId: get(workflowRepositoryIdAtom),
-      ...(runner !== undefined ? { runner } : {}),
       workflowInput: runOptions,
       workingDirectory: get(workflowWorkingDirectoryAtom),
     });
@@ -285,12 +250,11 @@ export const resetWorkflowRunToDefaultsAtom = atom(
   ) => {
     const defaults = getWorkflowRunAtomDefaultState(seed);
 
-    set(workflowRalphRunOptionsAtom, defaults.runOptions);
+    set(workflowRunOptionsAtom, defaults.runOptions);
     set(workflowRunIterationTimeoutTextAtom, defaults.iterationTimeoutText);
     set(workflowWorkingDirectoryAtom, '');
     set(workflowCheckoutIdAtom, '');
     set(workflowRepositoryIdAtom, '');
-    set(workflowRunnerAtom, undefined);
     set(workflowOtLoopAtom, undefined);
     set(workflowBranchAtom, '');
     // Reset makes the branch pristine again, so a later hydration may fill it.

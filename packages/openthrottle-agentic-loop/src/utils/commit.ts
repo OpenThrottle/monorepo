@@ -2,7 +2,7 @@ import { access, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import type { WorkflowRalphCommandRunner } from '@openthrottle/openthrottle-agentic-ralph';
+import type { PlanRunCommandRunner } from '@openthrottle/openthrottle-agentic-utils';
 
 import type { LoopTask } from '../contract/index.ts';
 import { FALLBACK_RUNNER, LOCKFILE_RUNNERS } from '../data/data.constants.ts';
@@ -138,7 +138,7 @@ const headerLint = (message: string): CommitMessageLint => {
  */
 export const createCommitlintLinter = (options: {
   readonly cwd: string;
-  readonly runCommand: WorkflowRalphCommandRunner;
+  readonly runCommand: PlanRunCommandRunner;
 }): CommitMessageLinter => {
   const { cwd, runCommand } = options;
 

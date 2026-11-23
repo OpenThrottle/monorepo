@@ -27,9 +27,9 @@ describe('ProjectSkillsResolver', () => {
 
   const views: ProjectSkillView[] = [
     {
-      description: 'Ralph loop.',
+      description: 'OT Loop.',
       orphanedAt: undefined,
-      slug: 'agents-ralph',
+      slug: 'ot-loop',
       source: 'openthrottle',
       sourceUrl: undefined,
       staticDisableModelInvocation: false,
@@ -117,9 +117,9 @@ describe('ProjectSkillsResolver', () => {
       orphanSlugs: [],
       skills: [
         {
-          description: 'Ralph loop.',
+          description: 'OT Loop.',
           orphanedAt: null,
-          slug: 'agents-ralph',
+          slug: 'ot-loop',
           source: 'openthrottle',
           sourceUrl: null,
           staticDisableModelInvocation: false,

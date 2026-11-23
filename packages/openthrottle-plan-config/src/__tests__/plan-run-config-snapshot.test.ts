@@ -5,14 +5,14 @@ import { PLAN_RUN_CONFIG_SNAPSHOT_VERSION } from '../plan-run-config-snapshot.co
 import { parsePlanRunConfigSnapshot } from '../plan-run-config-snapshot.validation.ts';
 
 describe('buildPlanRunConfigSnapshot', () => {
-  test('defaults spawn plan run to plan target and empty workspace', () => {
+  test('defaults a plan run to plan target and empty workspace', () => {
     const snapshot = buildPlanRunConfigSnapshot({
-      executionBackend: 'cursor',
+      driver: 'cursor',
       mode: 'plan',
     });
 
     expect(snapshot).toEqual({
-      ralph: { executionBackend: 'cursor' },
+      run: { driver: 'cursor' },
       target: { mode: 'plan', taskId: '' },
       version: PLAN_RUN_CONFIG_SNAPSHOT_VERSION,
       workspace: { workingDirectory: '' },
@@ -21,18 +21,17 @@ describe('buildPlanRunConfigSnapshot', () => {
 
   test('captures resolved tuning, workspace, hooks, and task target', () => {
     const snapshot = buildPlanRunConfigSnapshot({
-      executionBackend: 'claude',
+      driver: 'claude',
       jobRunHooks: {
         hooks: [{ command: 'echo hi', event: 'beforeRun' }],
       },
       mode: 'task',
-      ralph: {
+      taskId: '45a30762-92a9-42f4-90e0-2437c7ef26a8',
+      tuning: {
         debug: 'verbose',
         iterationTimeoutSeconds: 90,
-        iterations: 3,
-        project: 'applications/openthrottle-server',
+        worktreeName: 'plan-abc12345',
       },
-      taskId: '45a30762-92a9-42f4-90e0-2437c7ef26a8',
       workingDirectory: '/tmp/openthrottle',
     });
 
@@ -40,12 +39,11 @@ describe('buildPlanRunConfigSnapshot', () => {
       jobRunHooks: {
         hooks: [{ command: 'echo hi', event: 'beforeRun' }],
       },
-      ralph: {
+      run: {
         debug: 'verbose',
-        executionBackend: 'claude',
+        driver: 'claude',
         iterationTimeoutSeconds: 90,
-        iterations: 3,
-        project: 'applications/openthrottle-server',
+        worktreeName: 'plan-abc12345',
       },
       target: {
         mode: 'task',
@@ -58,55 +56,58 @@ describe('buildPlanRunConfigSnapshot', () => {
 
   test('captures effort and round-trips it through parsePlanRunConfigSnapshot', () => {
     const built = buildPlanRunConfigSnapshot({
-      executionBackend: 'claude',
-      ralph: { effort: 'ultra' },
+      driver: 'claude',
+      tuning: { effort: 'ultra' },
     });
 
-    expect(built.ralph.effort).toBe('ultra');
+    expect(built.run.effort).toBe('ultra');
     expect(parsePlanRunConfigSnapshot(built)).toEqual(built);
   });
 
   test('omits effort when unset or blank', () => {
     const built = buildPlanRunConfigSnapshot({
-      executionBackend: 'cursor',
-      ralph: { effort: '  ' },
+      driver: 'cursor',
+      tuning: { effort: '  ' },
     });
 
-    expect(built.ralph).not.toHaveProperty('effort');
+    expect(built.run).not.toHaveProperty('effort');
   });
 
   test('round-trips through parsePlanRunConfigSnapshot', () => {
     const built = buildPlanRunConfigSnapshot({
-      executionBackend: 'cursor',
-      ralph: { iterations: 5 },
+      driver: 'cursor',
+      tuning: { model: 'auto' },
       workingDirectory: '/workspace/repo',
     });
 
     expect(parsePlanRunConfigSnapshot(built)).toEqual(built);
   });
 
-  test('carries runner and otLoop and round-trips them through the schema', () => {
+  test('folds the OT Loop validation fields into the run block', () => {
     const built = buildPlanRunConfigSnapshot({
-      executionBackend: 'claude',
+      driver: 'claude',
       otLoop: { maxRetries: 2, validationCommands: ['pnpm nx run x:test'] },
-      runner: 'ot-loop',
     });
 
-    expect(built.runner).toBe('ot-loop');
-    expect(built.otLoop).toEqual({
+    expect(built.run).toEqual({
+      driver: 'claude',
       maxRetries: 2,
       validationCommands: ['pnpm nx run x:test'],
     });
     expect(parsePlanRunConfigSnapshot(built)).toEqual(built);
   });
 
-  test('omits runner and otLoop when unset and rejects a bad runner', () => {
-    const built = buildPlanRunConfigSnapshot({ executionBackend: 'cursor' });
+  test('rejects unknown top-level keys', () => {
+    const built = buildPlanRunConfigSnapshot({ driver: 'cursor' });
 
-    expect(built).not.toHaveProperty('runner');
-    expect(built).not.toHaveProperty('otLoop');
     expect(() =>
-      parsePlanRunConfigSnapshot({ ...built, runner: 'other' }),
+      parsePlanRunConfigSnapshot({ ...built, retiredRun: built.run }),
+    ).toThrow();
+    expect(() =>
+      parsePlanRunConfigSnapshot({ ...built, otLoop: {} }),
+    ).toThrow();
+    expect(() =>
+      parsePlanRunConfigSnapshot({ ...built, runner: 'ot-loop' }),
     ).toThrow();
   });
 });

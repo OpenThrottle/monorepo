@@ -18,7 +18,6 @@ import { WorkLedgerGraphqlModule } from '../../graphql/work-ledger/work-ledger.m
 import { MetricsModule } from '../../metrics/metrics.module.ts';
 import { NotificationsModule } from '../../notifications/notifications.module.ts';
 import { PlanRunWorktreeCleanupModule } from '../../services/plan-run-worktree-cleanup/plan-run-worktree-cleanup.module.ts';
-import { AgenticRalphModule } from '../agentic-ralph/agentic-ralph.module.ts';
 import { OtLoopModule } from '../ot-loop/ot-loop.module.ts';
 import { PlanLifecycleHooksQueueProducerModule } from '../plan-lifecycle-hooks/producer/producer.module.ts';
 import { PlansProcessor } from './plans.processor.ts';
@@ -31,10 +30,8 @@ import { WorkLedgerRunService } from './work-ledger-run/work-ledger-run.service.
  * @description Processor half of the plans queue: the plans worker
  * ({@link PlansProcessor}). Loaded only under PROCESS_ROLE worker/all;
  * enqueue-only consumers (GraphQL mutations, health checks) import
- * {@link PlansQueueProducerModule} instead. In-process Ralph orchestrator jobs
- * share this queue with spawn jobs (see `plans.types.ts`); there is no separate
- * Ralph queue. Agentic Ralph Nest wiring (`NestjsAgenticWorkflowModule`,
- * orchestrator service) lives in {@link AgenticRalphModule}. The lifecycle-hook
+ * {@link PlansQueueProducerModule} instead. Every plan run is an OT Loop orchestrator job (see
+ * `plans.types.ts`); its Nest wiring lives in {@link OtLoopModule}. The lifecycle-hook
  * dispatcher comes from {@link PlanLifecycleHooksQueueProducerModule}; its
  * processor is registered separately at the app level under worker/all.
  * Optional per-job run JSONL is wired in {@link PlansProcessor} when
@@ -49,7 +46,6 @@ import { WorkLedgerRunService } from './work-ledger-run/work-ledger-run.service.
 @Module({
   exports: [PlansQueueProducerModule],
   imports: [
-    AgenticRalphModule,
     LoggerModule,
     MetricsModule,
     NestjsWorktreesModule,

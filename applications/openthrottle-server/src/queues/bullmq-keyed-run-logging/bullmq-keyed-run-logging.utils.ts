@@ -1,12 +1,12 @@
 import type { KeyedJsonlWriter } from '@openthrottle/nestjs-logging';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
-import type { ChildJobStreamChunk } from '@tools/workflows';
+import type { ChildJobStreamChunk } from '@openthrottle/nestjs-worktrees';
 
 import { RUN_OUTPUT_SOURCE } from './bullmq-keyed-run-logging.constants.ts';
 import type { RunOutputSource } from './bullmq-keyed-run-logging.types.ts';
 /**
  * @description Process/package-manager failures emitted by the spawn wrapper (not by
- * workflow-ralph or the agent). Matching any of these attributes the chunk to {@link RUN_OUTPUT_SOURCE.spawn}.
+ * the plan run or the agent). Matching any of these attributes the chunk to {@link RUN_OUTPUT_SOURCE.spawn}.
  */
 const SPAWN_MARKERS: readonly string[] = [
   '/bin/sh:',
@@ -17,13 +17,12 @@ const SPAWN_MARKERS: readonly string[] = [
 ];
 
 /**
- * @description Stable workflow-ralph CLI / debug markers. The CLI prints orchestration
- * lines with these prefixes/emoji (see tools/workflows ralph.ts, runIteration.ts,
- * ralphDebugLogger.ts). Everything not matched here (and not a spawn marker) is treated
+ * @description Stable plan-run orchestrator / debug markers. The orchestrator prints
+ * lines with these prefixes/emoji. Everything not matched here (and not a spawn marker) is treated
  * as the agent dump ({@link RUN_OUTPUT_SOURCE.cursorAgent}), which is the bulk default.
  */
-const WORKFLOW_RALPH_MARKERS: readonly string[] = [
-  '[workflow-ralph',
+const PLAN_RUN_MARKERS: readonly string[] = [
+  '[plan-run',
   '🐛',
   '💬',
   '💰 💰',
@@ -47,7 +46,7 @@ const includesAny = (text: string, markers: readonly string[]): boolean => {
 
 /**
  * @description Best-effort attribution of a run-output chunk to its originating layer.
- * Precedence: spawn (process/pm failures) → workflow-ralph (known CLI/debug markers) →
+ * Precedence: spawn (process/pm failures) → plan-run (known orchestrator/debug markers) →
  * cursor-agent (default; the echoed agent result dump).
  */
 export const classifyRunOutputSource = (chunk: {
@@ -58,8 +57,8 @@ export const classifyRunOutputSource = (chunk: {
     return RUN_OUTPUT_SOURCE.spawn;
   }
 
-  if (includesAny(chunk.data, WORKFLOW_RALPH_MARKERS)) {
-    return RUN_OUTPUT_SOURCE.workflowRalph;
+  if (includesAny(chunk.data, PLAN_RUN_MARKERS)) {
+    return RUN_OUTPUT_SOURCE.planRun;
   }
 
   return RUN_OUTPUT_SOURCE.cursorAgent;
@@ -115,7 +114,7 @@ export const appendChildJobChunkToRunOutput = (
 };
 
 /**
- * @description Handlers for legacy `spawnAndWait` Ralph runs: mirror lines to the keyed writer and
+ * @description Handlers for legacy `spawnAndWait` plan runs: mirror lines to the keyed writer and
  * LoggerService, each tagged with the originating layer (`source`) for attribution (finding #6).
  */
 export const createSpawnRunOutputHandlers = (params: {

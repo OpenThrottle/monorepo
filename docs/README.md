@@ -61,7 +61,6 @@ Along the way:
 - **Test coverage:** [monorepo/test-coverage-audit.md](./monorepo/test-coverage-audit.md) — which source files must ship a co-located spec, and what "tested" means.
 - **Forms:** [monorepo/Forms.md](./monorepo/Forms.md) — the Formik + Yup + loader/action pattern every React Router form follows.
 - **Vitest pool (developer app):** [reliability/developer-vitest-pool.md](./reliability/developer-vitest-pool.md) — why the heaviest jsdom suite in CI is bounded the way it is.
-- **GraphQL-only transport:** [workflows/graphql-only-transport-boundary.md](./workflows/graphql-only-transport-boundary.md) — every workflow request goes through GraphQL, with one documented health-check exception.
 - **URL-first UI state:** [monorepo/url-first-ui-state.md](./monorepo/url-first-ui-state.md)
 - **Testing:** [testing/snapshot-replacement-patterns.md](./testing/snapshot-replacement-patterns.md)
 - **PWA:** [monorepo/PWA.md](./monorepo/PWA.md) — the manifest + service-worker wiring every React Router app ships.

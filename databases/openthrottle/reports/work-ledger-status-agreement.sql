@@ -31,7 +31,7 @@
 --     the column is session_id, not work_session_id.
 --   * work_session_subjects rows are per (session_id, plan_id, task_id): plan-level rows have
 --     task_id IS NULL; task-level rows have it set. A single session commonly attaches to one
---     plan AND many of its tasks (e.g. a whole Ralph run), so joining on session_id alone
+--     plan AND many of its tasks (e.g. a whole plan run), so joining on session_id alone
 --     would pull artifacts for *other* subjects of the same session into a given plan/task's
 --     history. payload->>'id' carries the actual plan/task id the artifact is about, so the
 --     join additionally requires payload->>'id' = the subject's plan_id/task_id to attribute

@@ -18,8 +18,8 @@ import type { PlanRulesEnvironment } from './plan-rules.types.ts';
  * burst of triggers for one plan in one environment collapses into at most one
  * active + one waiting pass (last write wins within an environment). The
  * environment is part of the key because rules are apply-once per (rule, plan):
- * a null-environment pass replacing a pending `ralph` one would silently drop
- * the ralph-only matches. Distinct plans and distinct environments stay
+ * a null-environment pass replacing a pending `headless` one would silently drop
+ * the headless-only matches. Distinct plans and distinct environments stay
  * independent. (Deduplication ids are not BullMQ custom job ids, so the `:`
  * separator is fine.)
  */
@@ -32,7 +32,7 @@ export const planRulesEvaluationDedupId = (
 
 /**
  * @description Parses a caller-supplied environment claim (the raw `x-ot-environment` request
- * header) into a {@link PlanRulesEnvironment}. Anything outside `ci | interactive | ralph` —
+ * header) into a {@link PlanRulesEnvironment}. Anything outside `ci | headless | interactive` —
  * absent, blank, misspelled — is null, which is the safe answer: a null pass skips every
  * environment-qualified rule rather than matching the wrong environment's.
  */
@@ -49,8 +49,8 @@ export const parsePlanRulesEnvironment = (
 /**
  * @description Rule ids whose ledger rows an evaluation pass must leave alone because the pass
  * never evaluated them: rules qualified on an environment other than the pass's own. Without this
- * a null pass (a trigger that does not know its environment) would see a `ralph`-only rule as
- * un-matched and orphan the task a `ralph` pass injected, and the next `ralph` pass would
+ * a null pass (a trigger that does not know its environment) would see a `headless`-only rule as
+ * un-matched and orphan the task a `headless` pass injected, and the next `headless` pass would
  * re-inject it — a soft-close / re-inject thrash between overlapping passes. Pure.
  */
 export const outOfEnvironmentRuleIds = (

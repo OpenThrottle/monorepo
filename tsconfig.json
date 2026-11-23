@@ -14,9 +14,6 @@
       "path": "./tools/dotfiles"
     },
     {
-      "path": "./tools/workflows"
-    },
-    {
       "path": "./applications/openthrottle-developer"
     },
     {
@@ -132,15 +129,6 @@
     },
     {
       "path": "./packages/openthrottle-skills"
-    },
-    {
-      "path": "./packages/openthrottle-agentic-ralph"
-    },
-    {
-      "path": "./packages/openthrottle-agentic-workflow"
-    },
-    {
-      "path": "./packages/nestjs-agentic-workflow"
     },
     {
       "path": "./packages/openthrottle-developer-codegen"

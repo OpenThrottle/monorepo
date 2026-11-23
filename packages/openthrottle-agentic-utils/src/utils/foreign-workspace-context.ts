@@ -1,5 +1,5 @@
 /**
- * @description Scopes the agent prompt to the target repository when Ralph runs with a
+ * @description Scopes the agent prompt to the target repository when a plan run has a
  * `workingDirectory` outside the OpenThrottle monorepo (a "foreign" checkout).
  */
 
@@ -132,8 +132,8 @@ export const buildForeignWorkspacePromptLayer = (
 
   // With curated skills injected, `/skills` is legitimately available here, so it is dropped from
   // the denylist; the OT-monorepo-specific paths/generators/tooling remain forbidden.
-  const forbiddenWithSkills = `Do NOT reference, list, or run OpenThrottle-monorepo-specific paths, commands, rules, generators, or tooling (e.g. applications/openthrottle-developer, tools/workflows, @tools/generators, /settings/debug, ralphTuning). Use only the conventions, scripts, and structure of the target repository — plus the OpenThrottle skills noted below.`;
-  const forbiddenBase = `Do NOT reference, list, or run OpenThrottle-specific paths, commands, rules, generators, or tooling (e.g. applications/openthrottle-developer, tools/workflows, @tools/generators, /skills, /settings/debug, ralphTuning). Use only the conventions, scripts, and structure of the target repository.`;
+  const forbiddenWithSkills = `Do NOT reference, list, or run OpenThrottle-monorepo-specific paths, commands, rules, generators, or tooling (e.g. applications/openthrottle-developer, @tools/generators, /settings/debug). Use only the conventions, scripts, and structure of the target repository — plus the OpenThrottle skills noted below.`;
+  const forbiddenBase = `Do NOT reference, list, or run OpenThrottle-specific paths, commands, rules, generators, or tooling (e.g. applications/openthrottle-developer, @tools/generators, /skills, /settings/debug). Use only the conventions, scripts, and structure of the target repository.`;
   const forbidden = hasInjectedSkills ? forbiddenWithSkills : forbiddenBase;
 
   const lines = [

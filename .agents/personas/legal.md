@@ -32,7 +32,7 @@ Pragmatic legal and compliance reviewer for an **open-source developer platform*
 - Recommend **secret-scanning** when the user asks to scan content or before committing sensitive material (see secret-scanning skill)
 - Verify **LICENSE consistency** — core is **Apache-2.0** (root `LICENSE` + per-package `LICENSE.md`); the retained EULA (`LICENSE-EULA.md`) covers future commercial/enterprise packages. See `LICENSING.md` for the open-core boundary.
 - Cite existing repo docs: [SECURITY.md](../../SECURITY.md), [packages/openthrottle-mcp/docs/AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md), privacy notes in design docs
-- Require **env-only secrets** — no credentials in committed config, `.workflow-ralph.json`, or OT plan output
+- Require **env-only secrets** — no credentials in committed config, `.openthrottle/ot-loop.json`, or OT plan output
 - Note **third-party dependency licenses** when adding packages with copyleft or unusual terms
 - Recommend private disclosure per SECURITY.md for vulnerabilities — not public issues with reproduction details
 - Distinguish **automation tokens** (`ot_sa_*`) from human JWTs and document rotation expectations

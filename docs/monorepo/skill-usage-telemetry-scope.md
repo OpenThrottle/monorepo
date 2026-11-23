@@ -284,7 +284,7 @@ At that snapshot, 15 of 44 skills had ever fired.
 | `grilling`                | 1           | 1        | skill_tool         | 2026-08-19             |
 | `graphify`                | 1           | 1        | skill_tool         | 2026-08-17             |
 | `claude-api`              | 1           | 1        | slash              | 2026-08-13             |
-| `agents-ralph`            | 1           | 1        | skill_tool         | 2026-08-11             |
+| `(retired runner skill)`  | 1           | 1        | skill_tool         | 2026-08-11             |
 | `monitor-ci`              | 1           | 1        | skill_tool         | 2026-08-16             |
 | `ot-onboarding`           | 1           | 1        | slash              | 2026-08-14             |
 
@@ -309,7 +309,7 @@ source), 1 cursor, 1 unclassified legacy.
 | `ot-plans`                | 3       | 0         | 0     | 223s           |
 | `skill-sync` (pre-rename) | 1       | **1**     | 0     | 34s            |
 | `grilling`                | 1       | 0         | 0     | 312s           |
-| `agents-ralph`            | 1       | 0         | 0     | 617s           |
+| `(retired runner skill)`  | 1       | 0         | 0     | 617s           |
 | `graphify`                | 1       | 0         | 0     | 92s            |
 | `claude-api`              | 1       | 0         | 0     | 26s            |
 | `monitor-ci`              | 1       | 0         | 0     | 1233s          |

@@ -60,14 +60,14 @@ export interface PlanToolbarProps {
   planStatus?: string;
   /** @description Display title for Kill run confirmation (defaults when omitted). */
   planTitle?: string;
-  /** @description JSON-serialized GraphQL Ralph tuning input for enqueuePlanRun, or empty when defaults only. */
-  ralphTuningJson?: string;
   /** @description Deferred repositories; the Run dialog names the checkout from them. */
   repositories?: Promise<readonly PlanRunConfigRepositoryFieldsFragment[]>;
   /** @description Optional registered repository id, submitted to the enqueuePlanRun mutation. */
   repositoryId?: string;
   /** @description The plan's saved run config the Run dialog seeds from. */
   runConfigJson: string | null | undefined;
+  /** @description JSON-serialized GraphQL run tuning input for enqueuePlanRun, or empty when defaults only. */
+  runTuningJson?: string;
   runnableTaskCount?: number;
   /** @description The soonest scheduled run's fire time; non-null disables run-now. */
   scheduledRunAt?: Date | string | null;
@@ -78,7 +78,7 @@ export interface PlanToolbarProps {
   tags?: PlanTagChipData[];
   /** @description Whether a tag add/remove is in flight (disables tag controls). */
   tagsPending?: boolean;
-  /** @description When true, queue/run is disabled (e.g. workflow-ralph option validation failed on the plan). */
+  /** @description When true, queue/run is disabled (e.g. run option validation failed on the plan). */
   workflowRunBlocked?: boolean;
   /** @description First validation message for tooltip when {@link workflowRunBlocked} is true. */
   workflowRunBlockedReason?: string;
@@ -111,7 +111,7 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
     planStatus,
     jobRunHooksJson = '',
     models,
-    ralphTuningJson = '',
+    runTuningJson = '',
     repositories,
     runConfigJson,
     runnableTaskCount,
@@ -173,10 +173,10 @@ export const PlanToolbar = (props: PlanToolbarProps): React.ReactElement => {
           planId={planId}
           planStatus={planStatus}
           planTitle={planTitle}
-          ralphTuningJson={ralphTuningJson}
           repositories={repositories}
           repositoryId={repositoryId}
           runConfigJson={runConfigJson}
+          runTuningJson={runTuningJson}
           runnableTaskCount={runnableTaskCount}
           scheduledRunAt={scheduledRunAt}
           scheduledRunId={scheduledRunId}

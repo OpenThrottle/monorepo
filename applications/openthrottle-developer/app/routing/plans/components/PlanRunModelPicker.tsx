@@ -10,14 +10,14 @@ import {
   parsePlanRunModelOptionId,
   toPlanRunModelOptionId,
 } from '~/routing/plans/utils/plan-run-model-effort';
-import type { WorkflowRalphExecutionBackendUi } from '~/routing/plans/utils/workflow-ralph-config';
+import type { PlanRunDriverUi } from '~/routing/plans/utils/plan-run-options';
 
 export interface PlanRunModelPickerProps {
-  /** @description Stored `runConfigJson.ralph.executionBackend`. */
-  backend: WorkflowRalphExecutionBackendUi;
   className?: string;
+  /** @description The plan's stored agent driver. */
+  driver: PlanRunDriverUi;
 
-  /** @description Stored `runConfigJson.ralph.model`. */
+  /** @description The plan's stored model. */
   model: string;
 
   /** @description Discovered agent+model options (the same list `useRunSkillDialog` consumes). */
@@ -29,15 +29,15 @@ export interface PlanRunModelPickerProps {
 
 /**
  * @description State-free model picker for plan runs, shared by the Configuration
- * tab and the Run dialog so both edit the same `ralph.model` / `ralph.executionBackend`.
+ * tab and the Run dialog so both edit the same model and driver.
  * Wraps `ChatModelPicker` over the options a plan can actually run; because a
  * discovered option id already names its runner (`cursor|gpt-5.2`), one pick
- * keeps model and backend consistent.
+ * keeps model and driver consistent.
  */
 export const PlanRunModelPicker = (
   props: PlanRunModelPickerProps,
 ): React.ReactElement => {
-  const { backend, className, model, models, onChange } = props;
+  const { driver, className, model, models, onChange } = props;
 
   // Hooks
 
@@ -45,11 +45,7 @@ export const PlanRunModelPicker = (
   const copy = PLAN_RUN_MODEL_EFFORT_COPY;
   const runnableModels = filterPlanRunnableModels(models);
   const groups = buildModelGroups(runnableModels);
-  const selectedModelId = toPlanRunModelOptionId(
-    backend,
-    model,
-    runnableModels,
-  );
+  const selectedModelId = toPlanRunModelOptionId(driver, model, runnableModels);
 
   // Handlers
   const handleModelChange = (optionId: string): void => {

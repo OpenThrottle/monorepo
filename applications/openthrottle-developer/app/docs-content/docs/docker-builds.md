@@ -39,7 +39,7 @@ This document records the chosen **image build strategy** and **registry** for *
 
 - **Context:** Build context is the **monorepo root** so that:
   - `pnpm install --frozen-lockfile` sees the full workspace.
-  - `pnpm dlx nx@<version> run <APP_NAME>:build` can resolve and build dependencies (e.g. `@tools/workflows`, openthrottle packages).
+  - `pnpm dlx nx@<version> run <APP_NAME>:build` can resolve and build dependencies (e.g. openthrottle packages).
 - **Stages:**
   1. **base** — `node:26-trixie-slim` (glibc, so native addons match the distroless runtime), pnpm activated by corepack from the root `package.json` `packageManager` pin, non-root identity, build args (`APP_NAME`, `APP_VERSION`, `GITHUB_TOKEN`).
   2. **builder** — `python3 make g++`, copy app `package.json` + `packages/` + `tools/`, `pnpm install --frozen-lockfile`.
@@ -110,7 +110,7 @@ Both apps define a `start:docker` script used outside the distroless images (the
 ## 7. CI: build and push
 
 - **Workflow:** `.github/workflows/openthrottle-docker.yml`.
-- **Triggers:** Push to `main` and pull requests when paths under `applications/openthrottle-server/`, `applications/openthrottle-developer/`, `packages/openthrottle/`, `databases/`, `tools/workflows/`, or root `package.json` / `pnpm-lock.yaml` / `nx.json` change.
+- **Triggers:** Push to `main` and pull requests when paths under `applications/openthrottle-server/`, `applications/openthrottle-developer/`, `packages/openthrottle/`, `databases/`, or root `package.json` / `pnpm-lock.yaml` / `nx.json` change.
 - **Logic:** Uses Nx affected (`nx show projects --affected`) to build only **openthrottle-server** and/or **openthrottle-developer** when those projects or their dependencies are affected. On **push to main**, images are pushed to Artifact Registry with tag `sha-<GITHUB_SHA>`. On **pull requests**, images are built only (no push) to validate Dockerfiles.
 - **Reusable action:** To configure which Nx apps are considered and to read per-app flags without duplicating shell, use the composite action `.github/actions/nx-affected-docker-apps` — see its **README.md** for inputs, outputs, and how to add more `openthrottle-*` (or other) app names.
 - **Registry:** Same as §2; GCP credentials and project come from repo vars/secrets (production on `main`, staging otherwise). The workflow runs `gcloud auth configure-docker us-west2-docker.pkg.dev` so `docker push` succeeds.

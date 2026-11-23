@@ -2,7 +2,7 @@
 
 Local Nx plugin holding the five workspace generators (`folders`, `nestjs`, `package`, `react`, `react-router`) behind the repo's "generators first" rule. Usage (NX_ISOLATE_PLUGINS=false, `--describe`, `--list`, comma-separated `--name` batching) is documented in the [README](./README.md) and [docs/tools/templates/AGENT_USAGE.md](../../docs/tools/templates/AGENT_USAGE.md) — this file only covers changing the plugin itself.
 
-**Consumed by:** the root `package.json` devDependency (`workspace:^`) which registers the plugin, and `@tools/workflows` (imports `getNxProjectNames` from the index).
+**Consumed by:** the root `package.json` devDependency (`workspace:^`) which registers the plugin (nothing else imports it).
 
 ## Commands
 
@@ -41,7 +41,7 @@ Local Nx plugin holding the five workspace generators (`folders`, `nestjs`, `pac
 
 - Non-interactive is the contract: missing options must throw (`Missing required option: ...`), never silently prompt. `--interactive` opts in to `prompts`.
 - Keep `schema.json`, the `--describe` JSON, and the generator's TS schema interface in sync when adding an option; `--generator` is reserved by Nx, so sub-generator selection stays `--subGenerator`.
-- `src/index.ts` exports only `getNxProjectNames` (used by `@tools/workflows`); generators are reached through `generators.json`, not the package index.
+- `src/index.ts` exports only `getNxProjectNames`; generators are reached through `generators.json`, not the package index.
 
 ## Pointers
 

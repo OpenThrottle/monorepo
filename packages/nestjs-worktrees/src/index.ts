@@ -10,6 +10,7 @@ export type {
   ChildJobFailure,
   ChildJobInput,
   ChildJobResult,
+  ChildJobStreamChunk,
   ChildJobSuccess,
   IWorktreeTargetsTracker,
   ParentJobAcquireOptions,

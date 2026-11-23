@@ -4,29 +4,22 @@ import { describe, expect, test } from 'vitest';
 import {
   resetWorkflowRunToDefaultsAtom,
   runConfigJsonAtom,
+  workflowMergedRunOptionsAtom,
   workflowOtLoopAtom,
-  workflowRalphCanonicalCommandLineAtom,
-  workflowRalphMergedRunOptionsForArgvAtom,
-  workflowRalphOptionArgsAtom,
-  workflowRalphRunOptionsAtom,
   workflowRunIterationTimeoutTextAtom,
-  workflowRunnerAtom,
+  workflowRunOptionsAtom,
+  workflowRunTuningJsonAtom,
 } from '~/routing/plans/data/data.atom-plan';
-import {
-  DEFAULT_RALPH_ITERATIONS,
-  DEFAULT_RALPH_MODEL,
-  DEFAULT_RALPH_PROMPT,
-} from '~/routing/plans/utils/build-workflow-ralph-argv';
 import { hydratePlanRunConfigUiState } from '~/routing/plans/utils/plan-run-config-ui';
+import { DEFAULT_RUN_MODEL } from '~/routing/plans/utils/plan-run-options';
 import { getWorkflowRunAtomDefaultState } from '~/routing/plans/utils/workflow-run-atom-state';
 
 describe('workflow run atoms', () => {
-  test('getWorkflowRunAtomDefaultState matches getDefaultWorkflowRalphRunOptionsInput + empty timeout text', () => {
+  test('getWorkflowRunAtomDefaultState matches getDefaultPlanRunOptions + empty timeout text', () => {
     const a = getWorkflowRunAtomDefaultState();
     expect(a.iterationTimeoutText).toBe('');
-    expect(a.runOptions.prompt).toBe(DEFAULT_RALPH_PROMPT);
-    expect(a.runOptions.iterations).toBe(DEFAULT_RALPH_ITERATIONS);
-    expect(a.runOptions.model).toBe(DEFAULT_RALPH_MODEL);
+    expect(a.runOptions.model).toBe(DEFAULT_RUN_MODEL);
+    expect(a.runOptions.worktreeName).toBe('');
   });
 
   test('getWorkflowRunAtomDefaultState seeds plan mode when only planId is set', () => {
@@ -45,23 +38,23 @@ describe('workflow run atoms', () => {
     expect(a.runOptions.planId).toBe('');
   });
 
-  test('merged argv atom parses iteration timeout from text atom', () => {
+  test('merged options atom parses the agent timeout from the text atom', () => {
     const store = getDefaultStore();
-    store.set(workflowRalphRunOptionsAtom, {
+    store.set(workflowRunOptionsAtom, {
       ...getWorkflowRunAtomDefaultState().runOptions,
       planId: 'a203384b-9fa6-4e3b-aef1-9f95f4b9612d',
       targetMode: 'plan',
     });
     store.set(workflowRunIterationTimeoutTextAtom, '  1800  ');
-    const merged = store.get(workflowRalphMergedRunOptionsForArgvAtom);
+    const merged = store.get(workflowMergedRunOptionsAtom);
     expect(merged.iterationTimeoutSeconds).toBe(1800);
   });
 
   test('resetWorkflowRunToDefaultsAtom restores defaults and clears timeout text', () => {
     const store = getDefaultStore();
-    store.set(workflowRalphRunOptionsAtom, {
+    store.set(workflowRunOptionsAtom, {
       ...getWorkflowRunAtomDefaultState().runOptions,
-      iterations: 99,
+      effort: 'high',
       planId: 'x',
       targetMode: 'plan',
     });
@@ -70,84 +63,78 @@ describe('workflow run atoms', () => {
       planId: 'a203384b-9fa6-4e3b-aef1-9f95f4b9612d',
     });
     expect(store.get(workflowRunIterationTimeoutTextAtom)).toBe('');
-    expect(store.get(workflowRalphRunOptionsAtom).iterations).toBe(
-      DEFAULT_RALPH_ITERATIONS,
-    );
-    expect(store.get(workflowRalphRunOptionsAtom).planId).toBe(
+    expect(store.get(workflowRunOptionsAtom).effort).toBe('');
+    expect(store.get(workflowRunOptionsAtom).planId).toBe(
       'a203384b-9fa6-4e3b-aef1-9f95f4b9612d',
     );
   });
 
-  test('canonical command line atom reflects merged argv', () => {
-    const store = getDefaultStore();
-    store.set(resetWorkflowRunToDefaultsAtom, {
-      planId: 'a203384b-9fa6-4e3b-aef1-9f95f4b9612d',
-    });
-    const line = store.get(workflowRalphCanonicalCommandLineAtom);
-    expect(line).toContain('pnpm exec workflow-ralph');
-    expect(line).toContain('--plan');
-    expect(line).toContain('a203384b-9fa6-4e3b-aef1-9f95f4b9612d');
-  });
+  test('tuning json atom carries the timeout, and is empty for the worktree-less defaults', () => {
+    const store = createStore();
+    store.set(resetWorkflowRunToDefaultsAtom, undefined);
+    expect(store.get(workflowRunTuningJsonAtom)).toBe('');
 
-  test('option args atom includes iteration-timeout segments when timeout text parses', () => {
-    const store = getDefaultStore();
-    store.set(resetWorkflowRunToDefaultsAtom, {
-      planId: 'a203384b-9fa6-4e3b-aef1-9f95f4b9612d',
-    });
     store.set(workflowRunIterationTimeoutTextAtom, '120');
-    const args = store.get(workflowRalphOptionArgsAtom);
-    expect(args).toContain('--iteration-timeout');
-    expect(args).toContain('120');
+    expect(JSON.parse(store.get(workflowRunTuningJsonAtom))).toMatchObject({
+      iterationTimeoutSeconds: 120,
+    });
   });
 
-  describe('runner round-trip through runConfigJson', () => {
+  describe('round-trip through runConfigJson', () => {
     const planId = 'a203384b-9fa6-4e3b-aef1-9f95f4b9612d';
 
-    test('the runner and otLoop atoms serialize into runConfigJson and hydrate back', () => {
-      const store = createStore();
-      store.set(workflowRalphRunOptionsAtom, {
+    const seed = (store: ReturnType<typeof createStore>): void => {
+      store.set(workflowRunOptionsAtom, {
         ...getWorkflowRunAtomDefaultState({ planId }).runOptions,
+        driver: 'claude',
+        effort: 'high',
+        model: 'opus',
         planId,
         targetMode: 'plan',
+        worktreeCleanup: 'keep',
+        worktreeName: 'my-tree',
       });
-      store.set(workflowRunnerAtom, 'ot-loop');
+      store.set(workflowRunIterationTimeoutTextAtom, '900');
+    };
+
+    test('the run options and the otLoop atom serialize into runConfigJson and hydrate back', () => {
+      const store = createStore();
+      seed(store);
       store.set(workflowOtLoopAtom, {
         maxRetries: 3,
         validationCommands: ['pnpm nx run a:test'],
       });
 
       const json = store.get(runConfigJsonAtom);
+      const hydrated = hydratePlanRunConfigUiState(planId, json);
 
-      expect(JSON.parse(json)).toMatchObject({
+      expect(hydrated).toMatchObject({
+        iterationTimeoutText: '900',
         otLoop: { maxRetries: 3, validationCommands: ['pnpm nx run a:test'] },
-        runner: 'ot-loop',
-      });
-      expect(hydratePlanRunConfigUiState(planId, json)).toMatchObject({
-        otLoop: { maxRetries: 3, validationCommands: ['pnpm nx run a:test'] },
-        runner: 'ot-loop',
+        workflowInput: {
+          driver: 'claude',
+          effort: 'high',
+          model: 'opus',
+          worktreeCleanup: 'keep',
+          worktreeName: 'my-tree',
+        },
       });
     });
 
-    test('an unset runner leaves the key out, so the plan stays on Ralph', () => {
+    test('never writes a runner key', () => {
       const store = createStore();
-      store.set(workflowRalphRunOptionsAtom, {
-        ...getWorkflowRunAtomDefaultState({ planId }).runOptions,
-        planId,
-        targetMode: 'plan',
-      });
+      seed(store);
 
       expect(JSON.parse(store.get(runConfigJsonAtom))).not.toHaveProperty(
         'runner',
       );
     });
 
-    test('reset clears the runner and otLoop', () => {
+    test('reset clears the otLoop block', () => {
       const store = createStore();
-      store.set(workflowRunnerAtom, 'ot-loop');
       store.set(workflowOtLoopAtom, { maxRetries: 1 });
       store.set(resetWorkflowRunToDefaultsAtom, undefined);
 
-      expect(store.get(workflowRunnerAtom)).toBeUndefined();
       expect(store.get(workflowOtLoopAtom)).toBeUndefined();
     });
   });

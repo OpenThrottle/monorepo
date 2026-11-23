@@ -1,31 +1,16 @@
 import { buildPlanRunWorktreeName } from '@openthrottle/openthrottle-plan-config';
-import {
-  Input,
-  Label,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@openthrottle/react-router-shadcn';
+import { Input, Label } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 import * as React from 'react';
 
 import { PlanWorkflowConfigWorktreeCleanup } from '~/routing/plans/components/PlanWorkflowConfigWorktreeCleanup';
-import { PlanWorkflowConfigWorktreeCursorFields } from '~/routing/plans/components/PlanWorkflowConfigWorktreeCursorFields';
 import { PLAN_CONFIG_WORKTREE_COPY } from '~/routing/plans/data/data.copy';
-import type {
-  WorkflowRalphRunOptionsInput,
-  WorkflowRalphWorktreeCli,
-} from '~/routing/plans/utils/build-workflow-ralph-argv';
-import { WORKFLOW_RALPH_ENV_VARS } from '~/routing/plans/utils/build-workflow-ralph-argv';
+import type { PlanRunOptions } from '~/routing/plans/utils/plan-run-options';
 
 export interface PlanWorkflowConfigWorktreeProps {
   heading: string;
-  input: WorkflowRalphRunOptionsInput;
-  setInput: (
-    updater: React.SetStateAction<WorkflowRalphRunOptionsInput>,
-  ) => void;
+  input: PlanRunOptions;
+  setInput: (updater: React.SetStateAction<PlanRunOptions>) => void;
 }
 
 export const PlanWorkflowConfigWorktree = (
@@ -44,34 +29,7 @@ export const PlanWorkflowConfigWorktree = (
   const fallbackLabel = 'a name derived from the plan id';
   const autoNameLabel = hasDerivedName ? derivedWorktreeName : fallbackLabel;
 
-  const modeLabels: Record<WorkflowRalphWorktreeCli, string> = {
-    'flag-only': 'Flag only (--worktree, CLI preview only)',
-    named: 'On (named worktree)',
-    omit: PLAN_CONFIG_WORKTREE_COPY.modeOmitLabel,
-  };
-
   // Handlers
-  const handleWorktreeCliChange = (value: WorkflowRalphWorktreeCli): void => {
-    setInput((prev) => {
-      if (value === 'named') {
-        return { ...prev, worktreeCli: value };
-      }
-
-      if (value === 'flag-only') {
-        return {
-          ...prev,
-          worktreeCli: value,
-          worktreeName: '',
-        };
-      }
-
-      return {
-        ...prev,
-        worktreeCli: value,
-        worktreeName: '',
-      };
-    });
-  };
 
   // Markup
 
@@ -89,79 +47,32 @@ export const PlanWorkflowConfigWorktree = (
         {PLAN_CONFIG_WORKTREE_COPY.explainer}
       </p>
       <div className="space-y-2">
-        <Label htmlFor="workflow-run-worktree-cli">
-          {PLAN_CONFIG_WORKTREE_COPY.modeLabel}
+        <Label htmlFor="workflow-run-worktree-name">
+          {PLAN_CONFIG_WORKTREE_COPY.nameLabel}
         </Label>
-        <Select
-          onValueChange={(v) => {
-            if (v === 'omit' || v === 'flag-only' || v === 'named') {
-              handleWorktreeCliChange(v);
-            }
-          }}
-          value={input.worktreeCli}
-        >
-          <SelectTrigger
-            aria-describedby="workflow-run-worktree-cli-hint"
-            className="max-w-md"
-            id="workflow-run-worktree-cli"
-          >
-            <SelectValue placeholder="Agent worktree mode">
-              {modeLabels[input.worktreeCli]}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="omit">
-              {PLAN_CONFIG_WORKTREE_COPY.modeOmitLabel}
-            </SelectItem>
-            <SelectItem value="named">On (named worktree)</SelectItem>
-            <SelectItem value="flag-only">
-              Flag only (--worktree, CLI preview only)
-            </SelectItem>
-          </SelectContent>
-        </Select>
+        <Input
+          aria-describedby="workflow-run-worktree-name-hint"
+          aria-label={PLAN_CONFIG_WORKTREE_COPY.nameAriaLabel}
+          autoComplete="off"
+          id="workflow-run-worktree-name"
+          onChange={(e) =>
+            setInput((prev) => ({
+              ...prev,
+              worktreeName: e.target.value,
+            }))
+          }
+          placeholder={namePlaceholder}
+          spellCheck={false}
+          value={input.worktreeName}
+        />
         <p
           className="text-muted-foreground text-xs"
-          id="workflow-run-worktree-cli-hint"
+          id="workflow-run-worktree-name-hint"
         >
-          {input.worktreeCli === 'omit' && PLAN_CONFIG_WORKTREE_COPY.offWarning}{' '}
-          Env:{' '}
-          <code className="text-xs">{WORKFLOW_RALPH_ENV_VARS.worktree}</code>.
-          Flag-only is a local CLI preview mode; it is not sent on enqueue.
+          {PLAN_CONFIG_WORKTREE_COPY.autoNameHint(autoNameLabel)}
         </p>
       </div>
-      {input.worktreeCli === 'named' && (
-        <div className="space-y-2">
-          <Label htmlFor="workflow-run-worktree-name">
-            {PLAN_CONFIG_WORKTREE_COPY.nameLabel}
-          </Label>
-          <Input
-            aria-describedby="workflow-run-worktree-name-hint"
-            aria-label="Agent CLI worktree name for --worktree"
-            autoComplete="off"
-            id="workflow-run-worktree-name"
-            onChange={(e) =>
-              setInput((prev) => ({
-                ...prev,
-                worktreeName: e.target.value,
-              }))
-            }
-            placeholder={namePlaceholder}
-            spellCheck={false}
-            value={input.worktreeName}
-          />
-          <p
-            className="text-muted-foreground text-xs"
-            id="workflow-run-worktree-name-hint"
-          >
-            {PLAN_CONFIG_WORKTREE_COPY.autoNameHint(autoNameLabel)}
-          </p>
-        </div>
-      )}
       <PlanWorkflowConfigWorktreeCleanup input={input} setInput={setInput} />
-      <PlanWorkflowConfigWorktreeCursorFields
-        input={input}
-        setInput={setInput}
-      />
     </OpenThrottleFieldset>
   );
 };

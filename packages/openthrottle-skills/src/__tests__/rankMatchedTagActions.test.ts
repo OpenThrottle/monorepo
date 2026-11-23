@@ -78,7 +78,10 @@ describe('rankMatchedTagActions', () => {
 
   test('an environment-qualified rule beats an unqualified one', () => {
     expect(
-      rankedIds([match('plain', {}), match('env', { environment: 'ralph' })]),
+      rankedIds([
+        match('plain', {}),
+        match('env', { environment: 'headless' }),
+      ]),
     ).toEqual(['env', 'plain']);
   });
 

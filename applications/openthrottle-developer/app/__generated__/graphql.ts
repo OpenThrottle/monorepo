@@ -754,7 +754,7 @@ export type CalibrateJudgeForRunResult = {
 };
 
 export type CancelPlanRunInput = {
-  /** Plan id whose in-queue run-plan (Ralph) job should be cancelled */
+  /** Plan id whose in-queue plan-run job should be cancelled */
   planId: Scalars['ID']['input'];
   /** Optional plan_runs id of a SCHEDULED run of this plan. When set, cancels only that run: its delayed job is removed and its row settles CANCELLED, with no effect on any other active run or the tasks; a SCHEDULED plan returns to PENDING. Already-settled runs are a no-op; a run that is QUEUED or IN_PROGRESS is rejected (omit planRunId to stop a live run). When omitted, the whole plan is cancelled as before. */
   planRunId?: InputMaybe<Scalars['ID']['input']>;
@@ -762,7 +762,7 @@ export type CancelPlanRunInput = {
 
 export type CancelPlanRunResultObject = {
   __typename?: 'CancelPlanRunResultObject';
-  /** BullMQ job ids that were active (locked by a worker) and could not be removed from the queue. When "signaledActiveRunToStop" is true, the worker was asked to terminate the Ralph child for this plan. */
+  /** BullMQ job ids that were active (locked by a worker) and could not be removed from the queue. When "signaledActiveRunToStop" is true, the worker was asked to stop the run for this plan. */
   activeJobIdsCouldNotCancel: Array<Scalars['String']['output']>;
   /** True when a durable cancel marker was stamped on a live run (the cross-process/host/CLI guarantee). The run stops at its next iteration boundary even if the low-latency pub/sub signal was missed. */
   cancelRequested: Scalars['Boolean']['output'];
@@ -776,7 +776,7 @@ export type CancelPlanRunResultObject = {
   planStatusAfter?: Maybe<Scalars['String']['output']>;
   /** BullMQ job ids removed from the queue (waiting, delayed, paused, prioritized). */
   removedJobIds: Array<Scalars['String']['output']>;
-  /** True when an in-flight plan run was signaled to stop (Ralph child receives SIGTERM, then SIGKILL if needed). The BullMQ job may still be active until the worker finishes. */
+  /** True when an in-flight plan run was signaled to stop (the run is asked to stop, then killed if needed). The BullMQ job may still be active until the worker finishes. */
   signaledActiveRunToStop: Scalars['Boolean']['output'];
 };
 
@@ -1354,7 +1354,7 @@ export type CreatePlanInput = {
   project?: InputMaybe<Scalars['String']['input']>;
   /** Optional. Project UUID (FK to projects table). Omit or pass null when plan is not linked to a project. */
   projectId?: InputMaybe<Scalars['ID']['input']>;
-  /** JSON string of workflow-ralph run configuration (PlanRunConfigStorage v1). Omit to use defaults. */
+  /** JSON string of the plan run configuration (PlanRunConfigStorage v1). Omit to use defaults. */
   runConfigJson?: InputMaybe<Scalars['String']['input']>;
   status?: InputMaybe<Scalars['String']['input']>;
   summary?: InputMaybe<Scalars['String']['input']>;
@@ -1991,35 +1991,6 @@ export type EnqueueDocIngestionResultObject = {
   success: Scalars['Boolean']['output'];
 };
 
-export type EnqueuePlanRalphOrchestratorInput = {
-  /** REQUIRED git branch this run operates on. Captured on plan_runs.branch as run provenance (powers branch->PR mapping). Passed explicitly by callers (skills/UI may pre-fill a default from the worktree name / HEAD) and never inferred server-side; enqueue fails fast when missing or blank. */
-  branch: Scalars['String']['input'];
-  /** Set true to run a SCHEDULED plan now: its scheduled run is cancelled and this run is enqueued in its place, in one transaction. Without it, a plan with a scheduled run fails with extensions.code PLAN_ALREADY_SCHEDULED. */
-  cancelScheduled?: InputMaybe<Scalars['Boolean']['input']>;
-  /** Optional registered checkout id (highest precedence). Resolved server-side to its filesystem path for this run; when set it overrides repositoryId and workingDirectory. */
-  checkoutId?: InputMaybe<Scalars['ID']['input']>;
-  /** Optional dedupe key passed to BullMQ as jobId. Re-enqueue with the same key returns the existing job id. */
-  idempotencyKey?: InputMaybe<Scalars['String']['input']>;
-  /** Optional JSON override for job-run lifecycle hooks for this enqueue only ({ hooks: [...] }). When omitted, hooks are copied from the plan. */
-  jobRunHooksJson?: InputMaybe<Scalars['String']['input']>;
-  /** Omit or "plan" for plan-scoped run; "task" requires taskId (task-centric). */
-  mode?: InputMaybe<PlanRalphWorkflowMode>;
-  /** Plan id to run the orchestrator for */
-  planId: Scalars['ID']['input'];
-  /** Job priority (lower = higher priority). Same as enqueuePlanRun. */
-  priority?: InputMaybe<Scalars['Int']['input']>;
-  /** Optional Ralph tuning for the in-process orchestrator (iterations, model, backend, etc.). */
-  ralph?: InputMaybe<RalphPlanRunTuningInput>;
-  /** Optional registered repository id. Resolved to the enqueuing user's single checkout of that repository (errors when there is no checkout, or when it is ambiguous). Used when checkoutId is omitted. */
-  repositoryId?: InputMaybe<Scalars['ID']['input']>;
-  /** Which runner executes the run: "ralph" (the default) or "ot-loop" (the per-task discipline of /ot-loop run as deterministic job code, with a fresh worker per task). Nullable + additive: omit to use the plan's stored runConfig runner, else Ralph. An unrecognized value is rejected. "ot-loop" is also rejected when the run has no worktree (disableWorktree) or when no validation command resolves (set otLoop.validationCommands on the plan, or commit .openthrottle/ot-loop.json). */
-  runner?: InputMaybe<Scalars['String']['input']>;
-  /** Required when mode is task; must belong to the plan. */
-  taskId?: InputMaybe<Scalars['ID']['input']>;
-  /** Optional absolute path to a local project directory used as the working directory for this run. Escape hatch used only when checkoutId and repositoryId are omitted. When all three are omitted, defaults to the monorepo root (WORKSPACE_ROOT or process.cwd()). Must be an existing directory; validated server-side. */
-  workingDirectory?: InputMaybe<Scalars['String']['input']>;
-};
-
 export type EnqueuePlanRunInput = {
   /** REQUIRED git branch this run operates on. Captured on plan_runs.branch as run provenance (powers branch->PR mapping). Passed explicitly by callers (skills/UI may pre-fill a default from the worktree name / HEAD) and never inferred server-side; enqueue fails fast when missing or blank. */
   branch: Scalars['String']['input'];
@@ -2031,24 +2002,26 @@ export type EnqueuePlanRunInput = {
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** Optional JSON override for job-run lifecycle hooks for this enqueue only ({ hooks: [...] }). When omitted, hooks are copied from the plan. Validated against repo paths when workingDirectory is set. */
   jobRunHooksJson?: InputMaybe<Scalars['String']['input']>;
+  /** Omit or "plan" for a plan-scoped run; "task" requires taskId (task-centric run). */
+  mode?: InputMaybe<PlanRunMode>;
   /** Plan id to enqueue a run for */
   planId: Scalars['ID']['input'];
   /** Job priority (lower = higher priority). 1=interactive/UI, 10=normal (default), 100=batch/scheduled. Omit to use normal priority. */
   priority?: InputMaybe<Scalars['Int']['input']>;
-  /** Optional Ralph / workflow-ralph runtime tuning (iterations, model, backend, etc.). When set, queued workers pass these to nested workflow-ralph; when omitted, defaults come from env and .workflow-ralph.json in the worktree cwd. */
-  ralph?: InputMaybe<RalphPlanRunTuningInput>;
   /** Optional registered repository id. Resolved to the enqueuing user's single checkout of that repository (errors when there is no checkout, or when it is ambiguous). Used when checkoutId is omitted. */
   repositoryId?: InputMaybe<Scalars['ID']['input']>;
-  /** Which runner executes the run: "ralph" (the default) or "ot-loop" (the per-task discipline of /ot-loop run as deterministic job code, with a fresh worker per task). Nullable + additive: omit to use the plan's stored runConfig runner, else Ralph. An unrecognized value is rejected. "ot-loop" is also rejected when the run has no worktree (disableWorktree) or when no validation command resolves (set otLoop.validationCommands on the plan, or commit .openthrottle/ot-loop.json). */
-  runner?: InputMaybe<Scalars['String']['input']>;
+  /** Required when mode is task; must belong to the plan. */
+  taskId?: InputMaybe<Scalars['ID']['input']>;
+  /** Optional runtime tuning for the run: driver, model, reasoning effort, agent CLI logging and a worktree name override. Omitted fields keep their defaults. */
+  tuning?: InputMaybe<PlanRunTuningInput>;
   /** Optional absolute path to a local project directory used as the working directory for this run. Escape hatch used only when checkoutId and repositoryId are omitted. When all three are omitted, defaults to the monorepo root (WORKSPACE_ROOT or process.cwd()). Must be an existing directory; validated server-side. */
   workingDirectory?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type EnqueuePlanRunResultObject = {
   __typename?: 'EnqueuePlanRunResultObject';
-  /** Execution backend selected once for the whole run: cursor or claude. */
-  executionBackend: Scalars['String']['output'];
+  /** Agent driver selected once for the whole run (antigravity, claude, codex, cursor, grok or opencode). */
+  driver: Scalars['String']['output'];
   /** BullMQ job id */
   jobId: Scalars['String']['output'];
   /** Plan id that was enqueued */
@@ -2596,8 +2569,8 @@ export type JobObject = {
   __typename?: 'JobObject';
   /** JSON string of job data (e.g. { planId } for run-plan). */
   data?: Maybe<Scalars['String']['output']>;
-  /** Execution backend selected once for this plan run. Present for plans queue jobs. */
-  executionBackend?: Maybe<Scalars['String']['output']>;
+  /** Agent driver selected once for this plan run. Present for plans queue jobs. */
+  driver?: Maybe<Scalars['String']['output']>;
   /** Error message if the job failed. */
   failedReason?: Maybe<Scalars['String']['output']>;
   /** Unix timestamp when the job finished. */
@@ -3046,7 +3019,7 @@ export type Mutation = {
   calibrateJudgeForRun: CalibrateJudgeForRunResult;
   /** Abort an in-flight streamed turn for an owned conversation. Returns true when a stream was aborted. */
   cancelConversationStream: Scalars['Boolean']['output'];
-  /** Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token). Also cancels the plan's SCHEDULED runs (delayed job removed, run settled CANCELLED). With planRunId naming a SCHEDULED run of the plan, cancels ONLY that run (its delayed job and row), leaving any other active run, the plan status and the tasks alone; a planRunId that is already settled is a no-op, and one that is QUEUED or IN_PROGRESS is rejected (omit planRunId to stop a live run). Idempotent: once a scheduled run has fired or settled there is nothing left to cancel. */
+  /** Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the run when a job is active (cannot be removed from Redis without the lock token). Also cancels the plan's SCHEDULED runs (delayed job removed, run settled CANCELLED). With planRunId naming a SCHEDULED run of the plan, cancels ONLY that run (its delayed job and row), leaving any other active run, the plan status and the tasks alone; a planRunId that is already settled is a no-op, and one that is QUEUED or IN_PROGRESS is rejected (omit planRunId to stop a live run). Idempotent: once a scheduled run has fired or settled there is nothing left to cancel. */
   cancelPlanRun: CancelPlanRunResultObject;
   /** Request cancellation of an in-flight run (durable marker + best-effort in-process abort). */
   cancelScheduledAgentJobRun: ScheduledAgentJobRunObject;
@@ -3176,9 +3149,7 @@ export type Mutation = {
    * @deprecated Doc ingestion has been removed; this mutation always returns success: false.
    */
   enqueueDocIngestion: EnqueueDocIngestionResultObject;
-  /** Enqueue an in-process Ralph orchestrator job (GraphQL-backed pipeline, no nested workflow-ralph process). Same queue position and plan/task status updates as enqueuePlanRun. */
-  enqueuePlanRalphOrchestrator: EnqueuePlanRunResultObject;
-  /** Canonical mutation to enqueue a spawn plan-run job (nested workflow-ralph in the worker). Used by the Developer app "Run plan" action and external clients. Returns job id, plan id, and queue position. For in-process orchestrator runs use enqueuePlanRalphOrchestrator instead. */
+  /** The single mutation to enqueue a plan run on the OT Loop runner, optionally scoped to one task (mode task). Used by the Developer app "Run plan" action and external clients. Returns job id, plan id, and queue position. */
   enqueuePlanRun: EnqueuePlanRunResultObject;
   /** Manually enqueue a full tag→action rules evaluation pass for a plan. Fire-and-forget: the pass runs async on the plan-rules:evaluate queue and results land in the rule_applications ledger (read via planRuleApplications). The ack only confirms the pass was enqueued. */
   evaluatePlanRules: EvaluatePlanRulesResultObject;
@@ -3224,7 +3195,7 @@ export type Mutation = {
   recordEvalTrial: EvalTrial;
   /** Record a judge calibration whose statistics were computed elsewhere. History is append-only. The creator is read from your identity, never from input. */
   recordJudgeCalibration: EvalJudgeCalibration;
-  /** Bump the liveness heartbeat on a detached-CLI run row (from registerCliPlanRun). The CLI calls this on a ~15s timer so a hard crash (SIGKILL/power-loss) leaves a stale heartbeat the reader/sweeper can detect. Keyed on the run id. Returns null when the row no longer exists. */
+  /** Bump the liveness heartbeat on a run row whose owner is outside the queue (from registerPlanRun). The owner calls this on a timer so a hard crash (SIGKILL/power-loss) leaves a stale heartbeat the reader/sweeper can detect. Keyed on the run id. Returns null when the row no longer exists. */
   recordPlanRunHeartbeat?: Maybe<PlanRunObject>;
   /** Record one harness-captured skill invocation. Args must already be privacy-processed by the client; the server stores them as-sent. The event is attributed to the human user the authenticated principal acts as, resolved server-side — a userId is never accepted from the client, and stays null when the principal resolves to no one. */
   recordSkillUsage: SkillUsageEventObject;
@@ -3239,8 +3210,8 @@ export type Mutation = {
   refreshCheckout: RefreshCheckoutPayloadObject;
   /** Register a new user. Returns id, email, and JWT access token. */
   register: RegisterResultObject;
-  /** Register a detached workflow-ralph CLI run as a first-class plan_runs row (bullmqJobId NULL, runKind 'orchestrator', status IN_PROGRESS) so cancelPlanRun has a row to stamp the durable cancel marker on. Creates NO BullMQ job. The CLI calls this on start, polls the marker each iteration boundary, and settles the row via settleCliPlanRun on exit. */
-  registerCliPlanRun: PlanRunObject;
+  /** Register a run whose owner is outside the queue, such as an interactive /ot-loop, as a first-class plan_runs row (bullmqJobId NULL, runKind 'orchestrator', status IN_PROGRESS) so cancelPlanRun has a row to stamp the durable cancel marker on. Creates NO BullMQ job. The owner calls this on start, polls the marker between tasks, and settles the row via settlePlanRun on exit. */
+  registerPlanRun: PlanRunObject;
   /** Best-effort register of a linked git worktree as a repository_checkout for the run actor, then point plan_runs.checkout_id and branch at that worktree (overwrites a scheduling-time primary checkout). Soft-fails (returns the run unchanged) when the path is not a linked worktree, repository resolution fails, or upsert errors. The actor resolves through its acting user, so a service-account token (the MCP) works when the account is linked to one; an unlinked account resolves to null and soft-fails like any other unresolvable actor. Returns null when the plan-run row does not exist. */
   registerPlanRunWorktreeCheckout?: Maybe<PlanRunObject>;
   /** Remove your own label on an agent trajectory. Returns false when you had none; other raters' labels are never touched. */
@@ -3330,8 +3301,8 @@ export type Mutation = {
    * @deprecated Project links now live on the repository row; use the repository-level surface.
    */
   setWorkspaceLocalRepositoryProject: WorkspaceLocalRepositoryObject;
-  /** Settle a detached-CLI run row (from registerCliPlanRun) on exit: set the terminal status (COMPLETED, CANCELLED, FAILED, or USAGE_LIMITED) and clear the run-location columns. USAGE_LIMITED also records usageLimitResetsAt / usageLimitType. Settling USAGE_LIMITED schedules no resume: a detached CLI run has no queued job to continue, so it is re-run by hand after the reset. Keyed on the run id. Returns null when the row no longer exists. */
-  settleCliPlanRun?: Maybe<PlanRunObject>;
+  /** Settle a run row whose owner is outside the queue, such as an interactive /ot-loop (from registerPlanRun), on exit: set the terminal status (COMPLETED, CANCELLED, FAILED, or USAGE_LIMITED) and clear the run-location columns. USAGE_LIMITED also records usageLimitResetsAt / usageLimitType. Settling USAGE_LIMITED schedules no resume: such a run has no queued job to continue, so it is re-run by hand after the reset. Keyed on the run id. Returns null when the row no longer exists. */
+  settlePlanRun?: Maybe<PlanRunObject>;
   /** Sign out. Returns success; client is responsible for clearing the auth cookie. */
   signout: SignoutResultObject;
   /** Start a streamed assistant turn against a discovered local model. Persists the user message, returns the assistant message id to correlate the in-flight stream, and emits token deltas over conversationStreamChunkAdded. Uses errorMessage for expected validation failures. */
@@ -3412,11 +3383,6 @@ export type Mutation = {
   upsertTagActionRule: TagActionRuleObject;
   /** Withdraw a PENDING plan message so no run receives it. */
   withdrawPlanMessage: PlanMessageObject;
-  /**
-   * Deprecated alias for enqueuePlanRun. Enqueues a spawn plan-run job with the same input and result shape.
-   * @deprecated Use enqueuePlanRun. Identical spawn enqueue behavior; retained for backward-compatible clients only.
-   */
-  workflowPlanRun: EnqueuePlanRunResultObject;
   /** Write a custom prompt to the file system at its configured filePath */
   writeCustomPromptToFileSystem: Scalars['Boolean']['output'];
 };
@@ -3748,10 +3714,6 @@ export type MutationEnqueueDocIngestionArgs = {
   input: EnqueueDocIngestionInput;
 };
 
-export type MutationEnqueuePlanRalphOrchestratorArgs = {
-  input: EnqueuePlanRalphOrchestratorInput;
-};
-
 export type MutationEnqueuePlanRunArgs = {
   input: EnqueuePlanRunInput;
 };
@@ -3868,8 +3830,8 @@ export type MutationRegisterArgs = {
   input: RegisterInput;
 };
 
-export type MutationRegisterCliPlanRunArgs = {
-  input: RegisterCliPlanRunInput;
+export type MutationRegisterPlanRunArgs = {
+  input: RegisterPlanRunInput;
 };
 
 export type MutationRegisterPlanRunWorktreeCheckoutArgs = {
@@ -4059,8 +4021,8 @@ export type MutationSetWorkspaceLocalRepositoryProjectArgs = {
   input: SetWorkspaceLocalRepositoryProjectInput;
 };
 
-export type MutationSettleCliPlanRunArgs = {
-  input: SettleCliPlanRunInput;
+export type MutationSettlePlanRunArgs = {
+  input: SettlePlanRunInput;
 };
 
 export type MutationStartConversationStreamArgs = {
@@ -4203,10 +4165,6 @@ export type MutationUpsertTagActionRuleArgs = {
 
 export type MutationWithdrawPlanMessageArgs = {
   input: WithdrawPlanMessageInput;
-};
-
-export type MutationWorkflowPlanRunArgs = {
-  input: EnqueuePlanRunInput;
 };
 
 export type MutationWriteCustomPromptToFileSystemArgs = {
@@ -4438,7 +4396,7 @@ export type PlanObject = {
   projectSortOrder?: Maybe<Scalars['Int']['output']>;
   /** The repository this plan runs in (repositories.id), derived server-side from runConfigJson's workspace.repositoryId; null when it names none or a repository that does not exist. Read-only: set it by updating runConfigJson. */
   repositoryId?: Maybe<Scalars['String']['output']>;
-  /** Workflow-ralph run configuration stored on the plan (PlanRunConfigStorage v1). */
+  /** Run configuration stored on the plan (PlanRunConfigStorage v1). */
   runConfigJson: Scalars['String']['output'];
   /** Number of tasks a whole-plan run would pick up (PENDING, IN_PROGRESS, BLOCKED, BACKLOG, SKIPPED, CANCELED or QUEUED). Zero means enqueuePlanRun and schedulePlanRun refuse the plan. Resolved through a batched loader. */
   runnableTaskCount: Scalars['Int']['output'];
@@ -4474,14 +4432,6 @@ export type PlanOutputStreamChunkObject = {
   taskId?: Maybe<Scalars['String']['output']>;
 };
 
-/** Plan-scoped run (default) or task-centric run ("task" requires taskId). */
-export const PlanRalphWorkflowMode = {
-  Plan: 'plan',
-  Task: 'task',
-} as const;
-
-export type PlanRalphWorkflowMode =
-  (typeof PlanRalphWorkflowMode)[keyof typeof PlanRalphWorkflowMode];
 export type PlanRefObject = {
   __typename?: 'PlanRefObject';
   /** Full plan UUID the prefix resolved to. */
@@ -4500,11 +4450,20 @@ export type PlanRunCheckoutObject = {
   kind: Scalars['String']['output'];
 };
 
+/** Agent CLI logging for a plan run: omit (default), --debug, or --verbose. */
+export const PlanRunDebugCli = {
+  Debug: 'debug',
+  Omit: 'omit',
+  Verbose: 'verbose',
+} as const;
+
+export type PlanRunDebugCli =
+  (typeof PlanRunDebugCli)[keyof typeof PlanRunDebugCli];
 /** A single plan run with metrics: job id, finished timestamp, and task-run metrics (memory/CPU at start and end). */
 export type PlanRunMetricsEntry = {
   __typename?: 'PlanRunMetricsEntry';
-  /** Execution backend selected once for the whole run: cursor or claude. */
-  executionBackend?: Maybe<Scalars['String']['output']>;
+  /** Agent driver selected once for the whole run. */
+  driver?: Maybe<Scalars['String']['output']>;
   /** Unix timestamp when the job finished. */
   finishedOn?: Maybe<Scalars['Float']['output']>;
   /** BullMQ job id for this run. */
@@ -4513,19 +4472,26 @@ export type PlanRunMetricsEntry = {
   taskRunMetrics?: Maybe<TaskRunMetrics>;
 };
 
+/** Plan-scoped run (default) or task-centric run ("task" requires taskId). */
+export const PlanRunMode = {
+  Plan: 'plan',
+  Task: 'task',
+} as const;
+
+export type PlanRunMode = (typeof PlanRunMode)[keyof typeof PlanRunMode];
 export type PlanRunObject = {
   __typename?: 'PlanRunObject';
   /** Git branch this run operates on, captured at kickoff (run provenance). Powers branch↔PR mapping. Null for legacy/backfilled rows that predate branch capture. */
   branch?: Maybe<Scalars['String']['output']>;
-  /** BullMQ job id for this run. Null for detached-CLI runs that carry no queue job. */
+  /** BullMQ job id for this run. Null for runs owned outside the queue (such as an interactive /ot-loop). */
   bullmqJobId?: Maybe<Scalars['String']['output']>;
   /** Durable cancel-request marker: when a stop was requested for this run. Null when no cancel was requested. The run loop polls this and stops at the next iteration boundary. */
   cancelRequestedAt?: Maybe<Scalars['DateTime']['output']>;
   /** The run's on-disk checkout (worktree/primary) joined from checkout_id; its filesystemPath powers editor deep-links. Null when the run has no resolved checkout. */
   checkout?: Maybe<PlanRunCheckoutObject>;
   createdAt: Scalars['DateTime']['output'];
-  /** Execution backend selected once for the whole run: cursor or claude. */
-  executionBackend: Scalars['String']['output'];
+  /** Agent driver selected once for the whole run (antigravity, claude, codex, cursor, grok or opencode). */
+  driver: Scalars['String']['output'];
   /** Whether this run’s owner bumps its heartbeat on a timer. True for every queued and detached-CLI run — heartbeat-based liveness applies as before. False marks an owner with no timer (an interactive /ot-loop agent turn), so heartbeat says nothing about it: such runs are exempt from the stale sweep and always report isStale false. Read it alongside isStale — isStale false on such a run means "unknown", not "verified live". */
   heartbeatExpected: Scalars['Boolean']['output'];
   /** Host the worker executing this run is on. Null when the run is not actively executing. Diagnostic only — cross-host OS kill is out of scope. */
@@ -4545,9 +4511,9 @@ export type PlanRunObject = {
   queueName: Scalars['String']['output'];
   /** The usage-limited run this run continues: set on the continuation run enqueued automatically after a Claude usage limit. Null for every ordinary run. */
   resumeOfRunId?: Maybe<Scalars['String']['output']>;
-  /** Resolved workflow-ralph configuration at enqueue (PlanRunConfigSnapshot v1 JSON). Null for legacy runs. */
+  /** Resolved run configuration at enqueue (PlanRunConfigSnapshot v1 JSON). Null for legacy runs. */
   runConfigSnapshotJson?: Maybe<Scalars['String']['output']>;
-  /** Ralph run implementation: spawn or orchestrator. */
+  /** Run implementation: spawn or orchestrator. */
   runKind: Scalars['String']['output'];
   /** The absolute UTC instant a scheduled run fires at. Set only on runs created by schedulePlanRun (status SCHEDULED while waiting) and kept once the run settles, so history still shows when it was meant to fire. Null for every run that was enqueued to run now. */
   scheduledFor?: Maybe<Scalars['DateTime']['output']>;
@@ -4573,6 +4539,21 @@ export type PlanRunPullRequestObject = {
   state?: Maybe<Scalars['String']['output']>;
   /** Canonical GitHub URL for the PR. */
   url: Scalars['String']['output'];
+};
+
+export type PlanRunTuningInput = {
+  /** Agent CLI logging for the run: omit, debug or verbose. Omit this field for the verbose default. */
+  debugCli?: InputMaybe<PlanRunDebugCli>;
+  /** Agent driver to run with (e.g. claude, codex, cursor). Omit to use the default. */
+  driver?: InputMaybe<Scalars['String']['input']>;
+  /** Reasoning-effort level for the run: "low", "medium", "high", "extraHigh", "max", or "ultra" (the same vocabulary as the chat composer's reasoning). Nullable + additive: omit to leave the run's effort unchanged. An unrecognized level is rejected. Recorded on the run's runConfigSnapshot and forwarded to the agent CLI, where each driver maps it to its own flag (claude --effort, codex -c model_reasoning_effort=, grok --reasoning-effort, opencode --variant), clamping to its accepted set; a driver with no reasoning knob (antigravity, cursor) ignores it. */
+  effort?: InputMaybe<Scalars['String']['input']>;
+  /** Per-attempt agent timeout in seconds (positive integer). Omit for no timeout. */
+  iterationTimeoutSeconds?: InputMaybe<Scalars['Int']['input']>;
+  /** Model id passed to the agent CLI. */
+  model?: InputMaybe<Scalars['String']['input']>;
+  /** Worktree name override for this run. When omitted, OpenThrottle derives plan-<short plan id> and creates that worktree itself. Every run gets a worktree. */
+  worktreeName?: InputMaybe<Scalars['String']['input']>;
 };
 
 /** What a guarded plan-run worktree teardown did. */
@@ -5163,7 +5144,7 @@ export type Query = {
   planOutputStreamChunk?: Maybe<PlanOutputStreamChunkObject>;
   /** List plan output stream chunks by plan ID, ordered by createdAt ascending */
   planOutputStreamChunks: Array<PlanOutputStreamChunkObject>;
-  /** Recent persisted Ralph plan runs for a plan, newest first. Each row stores exactly one execution backend. */
+  /** Recent persisted plan runs for a plan, newest first. Each row stores exactly one driver. */
   planRunsByPlanId: Array<PlanRunObject>;
   /** The canonical set of valid plan statuses (introspectable status vocabulary). Includes QUEUED (plans-only). */
   planStatuses: Array<PlanTaskStatus>;
@@ -5173,7 +5154,7 @@ export type Query = {
   prCountByLabel: Array<PrCountByLabelObject>;
   /** PR time-in-state summary (count and avg days per state: open, closed, merged). Paginates PRs up to 1000 (10 pages); repos with more PRs are truncated to the most recent window. */
   prTimeInStateSummary: Array<PrTimeInStateSummaryObject>;
-  /** Dry run: which of the caller's plans a rule would match, and why the rest do not, by the same evaluator the worker uses. Read-only: writes no ledger row and dispatches nothing. Only the match fields (projectId, repositoryId, status, environment, tagAll, actionType) are read, so a half-written actionPayloadJson never blocks it; the rule is evaluated as enabled. `environment` is the environment to evaluate plans in (ci | interactive | ralph); omit it for none — a pass triggered by a developer-app edit or a background job — so an environment-qualified rule then matches nothing. At most the newest 500 plans are evaluated; truncated says so. */
+  /** Dry run: which of the caller's plans a rule would match, and why the rest do not, by the same evaluator the worker uses. Read-only: writes no ledger row and dispatches nothing. Only the match fields (projectId, repositoryId, status, environment, tagAll, actionType) are read, so a half-written actionPayloadJson never blocks it; the rule is evaluated as enabled. `environment` is the environment to evaluate plans in (such as ci or interactive); omit it for none — a pass triggered by a developer-app edit or a background job — so an environment-qualified rule then matches nothing. At most the newest 500 plans are evaluated; truncated says so. */
   previewTagActionRule: TagActionRulePreviewObject;
   /** Get a project by ID */
   project?: Maybe<ProjectObject>;
@@ -5262,7 +5243,7 @@ export type Query = {
   serviceAccountCredentials: Array<ServiceAccountCredentialObject>;
   /** List all service accounts (admin, human only). */
   serviceAccounts: Array<ServiceAccountObject>;
-  /** Resolve every skill's effective disable-model-invocation for a project and environment. Omit projectId to resolve the dogfood monorepo project (nx_project_name = 'monorepo'); returns an empty result when the project or its ingested rows are absent. environment (ci | interactive | ralph, default interactive) is rejected when unknown. Concerns model auto-invocation only — human /skill invocation is never gated. */
+  /** Resolve every skill's effective disable-model-invocation for a project and environment. Omit projectId to resolve the dogfood monorepo project (nx_project_name = 'monorepo'); returns an empty result when the project or its ingested rows are absent. environment (default interactive) is rejected when it is not a known environment. Concerns model auto-invocation only — human /skill invocation is never gated. */
   skillAvailability: SkillAvailabilityResolutionResult;
   /** A project's skill-availability rule set (posture + rules), or null when the project has no rules (passthrough). Feeds resolveSkillAvailability. */
   skillAvailabilityRuleSet?: Maybe<SkillAvailabilityRuleSetObject>;
@@ -5928,7 +5909,7 @@ export type QueueJobLogEventObject = {
   level: QueueJobLogLevel;
   message: Scalars['String']['output'];
   queueName: Scalars['String']['output'];
-  /** Origin layer, e.g. plans-queue | workflow-queue | ralph-shim. */
+  /** Origin layer, e.g. plans-queue | workflow-queue. */
   source: Scalars['String']['output'];
   timestamp: Scalars['DateTime']['output'];
 };
@@ -5978,44 +5959,6 @@ export type QueueStatsObject = {
   name: Scalars['String']['output'];
   /** Number of jobs waiting to be processed. */
   waitingCount: Scalars['Int']['output'];
-};
-
-/** Nested workflow-ralph logging: omit (default CLI/env), --debug, or --verbose. */
-export const RalphNestedDebugCli = {
-  Debug: 'debug',
-  Omit: 'omit',
-  Verbose: 'verbose',
-} as const;
-
-export type RalphNestedDebugCli =
-  (typeof RalphNestedDebugCli)[keyof typeof RalphNestedDebugCli];
-export type RalphPlanRunTuningInput = {
-  /** Execution backend (e.g. cursor). Omit to use worktree defaults. */
-  backend?: InputMaybe<Scalars['String']['input']>;
-  /** Opt out of the worktree default and run in the base checkout. Omit to get the worktree OpenThrottle derives for the plan; only an explicit true disables it. */
-  disableWorktree?: InputMaybe<Scalars['Boolean']['input']>;
-  /** Reasoning-effort level for the run: "low", "medium", "high", "extraHigh", "max", or "ultra" (the same vocabulary as the chat composer's reasoning). Nullable + additive: omit to leave the run's effort unchanged. An unrecognized level is rejected. Recorded on the run's runConfigSnapshot and forwarded to the agent CLI, where each backend maps it to its own flag (claude --effort, codex -c model_reasoning_effort=, grok --reasoning-effort, opencode --variant), clamping to its accepted set; a backend with no reasoning knob (antigravity, cursor) ignores it. */
-  effort?: InputMaybe<Scalars['String']['input']>;
-  /** Per-iteration timeout in seconds (positive integer). */
-  iterationTimeoutSeconds?: InputMaybe<Scalars['Int']['input']>;
-  /** Max Ralph iterations for this run (positive integer). */
-  iterations?: InputMaybe<Scalars['Int']['input']>;
-  /** Model id passed to workflow-ralph --model. */
-  model?: InputMaybe<Scalars['String']['input']>;
-  /** Nx project name for workflow-ralph --project. */
-  project?: InputMaybe<Scalars['String']['input']>;
-  /** Prompt profile path (e.g. /agents-ralph) for --prompt. */
-  prompt?: InputMaybe<Scalars['String']['input']>;
-  /** Repo-relative or absolute path for --prompt-file (layer-1 prompt file). */
-  promptFile?: InputMaybe<Scalars['String']['input']>;
-  /** Whether to pass --debug / --verbose to nested workflow-ralph. */
-  ralphDebugCli?: InputMaybe<RalphNestedDebugCli>;
-  /** Cursor-only: pass --skip-worktree-setup to cursor-agent. */
-  skipWorktreeSetup?: InputMaybe<Scalars['Boolean']['input']>;
-  /** Worktree name for this run. When omitted, OpenThrottle derives plan-<short plan id> and creates that worktree itself; pass disableWorktree to run without one. */
-  worktree?: InputMaybe<Scalars['String']['input']>;
-  /** Cursor-only: branch/ref for --worktree-base. */
-  worktreeBase?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type RecordAgentTrajectoryInput = {
@@ -6150,7 +6093,7 @@ export type RecordJudgeCalibrationInput = {
 };
 
 export type RecordPlanRunHeartbeatInput = {
-  /** Plan-run row id to bump the liveness heartbeat on (returned by registerCliPlanRun). */
+  /** Plan-run row id to bump the liveness heartbeat on (returned by registerPlanRun). */
   planRunId: Scalars['ID']['input'];
 };
 
@@ -6350,25 +6293,6 @@ export type RefreshCheckoutPayloadObject = {
   supersededProjectId?: Maybe<Scalars['String']['output']>;
 };
 
-export type RegisterCliPlanRunInput = {
-  /** OPTIONAL git branch this detached-CLI run operates on. Captured on plan_runs.branch as run provenance. Omit or null → store null; non-empty strings are stored verbatim (no server-side trim/reject — enqueue remains the REQUIRED branch boundary). */
-  branch?: InputMaybe<Scalars['String']['input']>;
-  /** Execution backend for this run: antigravity, claude, codex, cursor, grok, or opencode. */
-  executionBackend: Scalars['String']['input'];
-  /** Whether this run's owner bumps its heartbeat on a ~15s timer. Omit or null → true, so the detached workflow-ralph CLI (which does) is unaffected. Pass false for an owner with no timer — an interactive /ot-loop agent turn, where a single test run outlives the staleness cutoff. A false run is exempt from the stale sweep, always reports isStale false, and can never yield RUN_STOPPING on cancel; nothing server-side will ever settle it, so its owner must. */
-  heartbeatExpected?: InputMaybe<Scalars['Boolean']['input']>;
-  /** Host the CLI is running on (diagnostic; cleared on settle). Null when unknown. */
-  hostname?: InputMaybe<Scalars['String']['input']>;
-  /** OPTIONAL resolved agent model id for this run (e.g. claude-opus-5). Captured on plan_runs.model as run provenance. Omit or null → store null; non-empty strings are stored verbatim. Prefer null over a guess: a wrong value here is worse than a missing one, because nothing downstream can tell it is wrong. */
-  model?: InputMaybe<Scalars['String']['input']>;
-  /** OS process id of the CLI process (cleared on settle). Null when unknown. */
-  pid?: InputMaybe<Scalars['Int']['input']>;
-  /** Plan id this detached-CLI run executes. */
-  planId: Scalars['ID']['input'];
-  /** Worker/run identifier for the CLI (cleared on settle). Null when unknown. */
-  workerId?: InputMaybe<Scalars['String']['input']>;
-};
-
 export type RegisterInput = {
   /** User email (must be unique) */
   email: Scalars['String']['input'];
@@ -6376,6 +6300,25 @@ export type RegisterInput = {
   githubUsername?: InputMaybe<Scalars['String']['input']>;
   /** User password (stored hashed with bcrypt) */
   password: Scalars['String']['input'];
+};
+
+export type RegisterPlanRunInput = {
+  /** OPTIONAL git branch this run operates on. Captured on plan_runs.branch as run provenance. Omit or null → store null; non-empty strings are stored verbatim (no server-side trim/reject — enqueue remains the REQUIRED branch boundary). */
+  branch?: InputMaybe<Scalars['String']['input']>;
+  /** Agent driver for this run: antigravity, claude, codex, cursor, grok, or opencode. */
+  driver: Scalars['String']['input'];
+  /** Whether this run's owner bumps its heartbeat on a ~15s timer. Omit or null → true. Pass false for an owner with no timer — an interactive /ot-loop agent turn, where a single test run outlives the staleness cutoff. A false run is exempt from the stale sweep, always reports isStale false, and can never yield RUN_STOPPING on cancel; nothing server-side will ever settle it, so its owner must. */
+  heartbeatExpected?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Host the run owner is on (diagnostic; cleared on settle). Null when unknown. */
+  hostname?: InputMaybe<Scalars['String']['input']>;
+  /** OPTIONAL resolved agent model id for this run (e.g. claude-opus-5). Captured on plan_runs.model as run provenance. Omit or null → store null; non-empty strings are stored verbatim. Prefer null over a guess: a wrong value here is worse than a missing one, because nothing downstream can tell it is wrong. */
+  model?: InputMaybe<Scalars['String']['input']>;
+  /** OS process id of the run owner (cleared on settle). Null when unknown. */
+  pid?: InputMaybe<Scalars['Int']['input']>;
+  /** Plan id this run executes. */
+  planId: Scalars['ID']['input'];
+  /** Worker/run identifier of the run owner (cleared on settle). Null when unknown. */
+  workerId?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type RegisterPlanRunWorktreeCheckoutInput = {
@@ -6872,24 +6815,22 @@ export type SchedulePlanRunInput = {
   planId: Scalars['ID']['input'];
   /** Job priority (lower = higher priority). 1=interactive/UI, 10=normal (default), 100=batch/scheduled. Omit to use normal priority. */
   priority?: InputMaybe<Scalars['Int']['input']>;
-  /** Optional Ralph / workflow-ralph runtime tuning (iterations, model, backend, etc.). When set, queued workers pass these to nested workflow-ralph; when omitted, defaults come from env and .workflow-ralph.json in the worktree cwd. */
-  ralph?: InputMaybe<RalphPlanRunTuningInput>;
   /** Set true to reschedule a SCHEDULED plan: its scheduled run is cancelled and this one recorded in its place, in one transaction; the plan stays SCHEDULED. Without it, scheduling a plan that already has a scheduled run fails with extensions.code PLAN_ALREADY_SCHEDULED. Only PENDING and BACKLOG plans can be scheduled otherwise (PLAN_ACTIVE for QUEUED / IN_PROGRESS, PLAN_NOT_SCHEDULABLE for BLOCKED and terminal plans). */
   replaceScheduled?: InputMaybe<Scalars['Boolean']['input']>;
   /** Optional registered repository id. Resolved to the enqueuing user's single checkout of that repository (errors when there is no checkout, or when it is ambiguous). Used when checkoutId is omitted. */
   repositoryId?: InputMaybe<Scalars['ID']['input']>;
-  /** Which runner executes the run: "ralph" (the default) or "ot-loop" (the per-task discipline of /ot-loop run as deterministic job code, with a fresh worker per task). Nullable + additive: omit to use the plan's stored runConfig runner, else Ralph. An unrecognized value is rejected. "ot-loop" is also rejected when the run has no worktree (disableWorktree) or when no validation command resolves (set otLoop.validationCommands on the plan, or commit .openthrottle/ot-loop.json). */
-  runner?: InputMaybe<Scalars['String']['input']>;
   /** REQUIRED absolute instant the run fires at (an ISO-8601 DateTime; send UTC or an explicit offset). Must be strictly in the future and no more than 30 days from now (SCHEDULED_PLAN_RUN_MAX_HORIZON_DAYS); the server rejects anything else. */
   scheduledFor: Scalars['DateTime']['input'];
+  /** Optional runtime tuning for the run: driver, model, reasoning effort, agent CLI logging and a worktree name override. Omitted fields keep their defaults. */
+  tuning?: InputMaybe<PlanRunTuningInput>;
   /** Optional absolute path to a local project directory used as the working directory for this run. Escape hatch used only when checkoutId and repositoryId are omitted. When all three are omitted, defaults to the monorepo root (WORKSPACE_ROOT or process.cwd()). Must be an existing directory; validated server-side. */
   workingDirectory?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type SchedulePlanRunResultObject = {
   __typename?: 'SchedulePlanRunResultObject';
-  /** Execution backend selected once for the whole run: cursor or claude. */
-  executionBackend: Scalars['String']['output'];
+  /** Agent driver selected once for the whole run (antigravity, claude, codex, cursor, grok or opencode). */
+  driver: Scalars['String']['output'];
   /** BullMQ job id of the delayed job that starts the run (deterministic: scheduled-plan-run-<idempotencyKey | planId-epochMs>). */
   jobId: Scalars['String']['output'];
   /** Plan id the run was scheduled for. */
@@ -7282,7 +7223,7 @@ export type ServiceAccountObject = {
   /** When set, the service account cannot authenticate. */
   disabledAt?: Maybe<Scalars['DateTime']['output']>;
   id: Scalars['String']['output'];
-  /** Stable identifier (e.g. openthrottle-mcp, workflow-ralph). */
+  /** Stable identifier (e.g. openthrottle-mcp). */
   name: Scalars['String']['output'];
 };
 
@@ -7363,10 +7304,10 @@ export type SetWorkspaceLocalRepositoryProjectInput = {
   projectId?: InputMaybe<Scalars['ID']['input']>;
 };
 
-export type SettleCliPlanRunInput = {
+export type SettlePlanRunInput = {
   /** Branch head sha at PR-open. Recorded as a git_commit artifact on COMPLETED; the verifier maps it to its squash commit once the PR merges. Optional — a run that exits without opening a PR has none. */
   headSha?: InputMaybe<Scalars['String']['input']>;
-  /** Plan-run row id to settle (returned by registerCliPlanRun). */
+  /** Plan-run row id to settle (returned by registerPlanRun). */
   planRunId: Scalars['ID']['input'];
   /** Number of the PR the run opened. Recorded as a pull_request artifact on COMPLETED — it survives a rebase or amend, which the head sha does not. Optional. */
   prNumber?: InputMaybe<Scalars['Int']['input']>;
@@ -7415,7 +7356,7 @@ export type SkillAvailabilityResolvedSkillObject = {
 };
 
 export type SkillAvailabilityRuleInput = {
-  /** Environment qualifier: omit/null for all environments, or "ci" | "interactive" | "ralph" to scope the rule. */
+  /** Environment qualifier: omit/null for all environments, or a known environment name (such as "ci" or "interactive") to scope the rule. */
   environment?: InputMaybe<Scalars['String']['input']>;
   /** Skill slugs to allow (rung 1 exceptions). */
   slugAllow?: Array<Scalars['String']['input']>;
@@ -7430,7 +7371,7 @@ export type SkillAvailabilityRuleInput = {
 /** A single per-project skill-availability rule: tag/slug allow-deny lists, optionally scoped to an environment. */
 export type SkillAvailabilityRuleObject = {
   __typename?: 'SkillAvailabilityRuleObject';
-  /** Environment qualifier: null applies to all environments; a value (ci | interactive | ralph) scopes the rule to that environment. */
+  /** Environment qualifier: null applies to all environments; a known environment name (such as ci or interactive) scopes the rule to that environment. */
   environment?: Maybe<Scalars['String']['output']>;
   /** Stable rule identifier (used in resolver provenance and as the target of updateSkillAvailabilityRule / removeSkillAvailabilityRule). */
   id: Scalars['ID']['output'];
@@ -7715,9 +7656,9 @@ export type StartWorkSessionInput = {
   model?: InputMaybe<Scalars['String']['input']>;
   /** Unverified hint: the human this machine work is on behalf of (users.id) */
   onBehalfOfUserId?: InputMaybe<Scalars['ID']['input']>;
-  /** plan_runs.id when this session is a Ralph run */
+  /** plan_runs.id when this session is a plan run */
   planRunId?: InputMaybe<Scalars['ID']['input']>;
-  /** Tool that produced the work: developer-app | openthrottle-mcp | workflow-ralph | MCP clientInfo.name */
+  /** Tool that produced the work: developer-app | openthrottle-mcp | MCP clientInfo.name */
   toolName: Scalars['String']['input'];
   /** Tool/client version */
   toolVersion?: InputMaybe<Scalars['String']['input']>;
@@ -7868,7 +7809,7 @@ export type TagActionRuleObject = {
   actionType: Scalars['String']['output'];
   createdAt: Scalars['DateTime']['output'];
   enabled: Scalars['Boolean']['output'];
-  /** Optional environment qualifier (ci | interactive | ralph); null applies everywhere. */
+  /** Optional environment qualifier (such as ci or interactive); null applies everywhere. */
   environment?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   /** Optional project scope; null matches plans in every project. Matched against the plan's project, independently of repositoryId (the two scopes do not nest). */
@@ -8175,10 +8116,10 @@ export type TimelineKindTruncationObject = {
 
 /** How timeline rows are grouped into lanes. */
 export const TimelineLaneGrouping = {
-  /** One lane per execution backend / tool / driver. */
-  ByBackend: 'BY_BACKEND',
   /** One lane per repository checkout (falling back to branch). */
   ByCheckout: 'BY_CHECKOUT',
+  /** One lane per agent driver or tool. */
+  ByDriver: 'BY_DRIVER',
   /** One lane per plan. The default. */
   ByPlan: 'BY_PLAN',
 } as const;
@@ -8230,7 +8171,7 @@ export type TimelineMarkerObject = {
 
 /** Kinds of timeline span (work with a duration). */
 export const TimelineSpanKind = {
-  /** A queued Ralph plan run (plan_runs). Its end is always derived — the table records no finish timestamp. */
+  /** A queued plan run (plan_runs). Its end is always derived — the table records no finish timestamp. */
   PlanRun: 'PLAN_RUN',
   /** A scheduled agent job run (scheduled_agent_job_runs). Carries measured started_at/finished_at. */
   ScheduledRun: 'SCHEDULED_RUN',
@@ -8242,8 +8183,6 @@ export type TimelineSpanKind =
   (typeof TimelineSpanKind)[keyof typeof TimelineSpanKind];
 export type TimelineSpanObject = {
   __typename?: 'TimelineSpanObject';
-  /** Execution backend / tool name / driver id, when the source carries one. */
-  backend?: Maybe<Scalars['String']['output']>;
   /** Git branch the work ran on, when known. */
   branch?: Maybe<Scalars['String']['output']>;
   /** Repository checkout (UUID) the work ran in, when known. */
@@ -8252,6 +8191,8 @@ export type TimelineSpanObject = {
   conversationId?: Maybe<Scalars['String']['output']>;
   /** TRUE when `endsAt` was inferred rather than recorded — always for PLAN_RUN (plan_runs has no finish column), and for any still-open session or run. Render it distinctly; a derived end must never read as a measured one. */
   derivedEnd: Scalars['Boolean']['output'];
+  /** Agent driver or tool name, when the source carries one. */
+  driver?: Maybe<Scalars['String']['output']>;
   /** End of the span. See `derivedEnd` before treating it as a measured finish. */
   endsAt: Scalars['DateTime']['output'];
   /** Stable row id. */
@@ -8505,7 +8446,7 @@ export type UpdatePlanInput = {
   project?: InputMaybe<Scalars['String']['input']>;
   /** Optional. Project UUID (FK to projects table). Pass null to clear; omit to leave unchanged. */
   projectId?: InputMaybe<Scalars['ID']['input']>;
-  /** JSON string of workflow-ralph run configuration (PlanRunConfigStorage v1). Pass null to reset to default v1 shell; omit to leave unchanged. */
+  /** JSON string of the plan run configuration (PlanRunConfigStorage v1). Pass null to reset to default v1 shell; omit to leave unchanged. */
   runConfigJson?: InputMaybe<Scalars['String']['input']>;
   status?: InputMaybe<Scalars['String']['input']>;
   summary?: InputMaybe<Scalars['String']['input']>;
@@ -8740,7 +8681,7 @@ export type UpsertTagActionRuleInput = {
   /** Action type: "inject-task", "availability-exception", "promote-task-to-plan" or "attach-prompt". */
   actionType: Scalars['String']['input'];
   enabled?: InputMaybe<Scalars['Boolean']['input']>;
-  /** Optional environment qualifier: ci | interactive | ralph. */
+  /** Optional environment qualifier, such as ci or interactive. */
   environment?: InputMaybe<Scalars['String']['input']>;
   /** When present, updates the existing rule (must belong to the caller). */
   id?: InputMaybe<Scalars['ID']['input']>;
@@ -9044,10 +8985,10 @@ export type WorkspaceSettingsObject = {
 };
 
 export type WorkstreamTimelineInput = {
-  /** Filter spans to a single execution backend / tool / driver. */
-  backend?: InputMaybe<Scalars['String']['input']>;
   /** Filter to a single repository checkout (UUID). */
   checkoutId?: InputMaybe<Scalars['String']['input']>;
+  /** Filter spans to a single agent driver or tool. */
+  driver?: InputMaybe<Scalars['String']['input']>;
   /** Start of the window (inclusive). */
   from: Scalars['DateTime']['input'];
   /** Filter to a single git branch. Also scopes the grilling lane, which is how unattributed grilling events (no `userId`) are narrowed. */
@@ -11643,7 +11584,7 @@ export type GetTasksByPlanIdQuery = {
 
 export type EnqueuePlanRunResultFragment = {
   __typename?: 'EnqueuePlanRunResultObject';
-  executionBackend: string;
+  driver: string;
   jobId: string;
   planId: string;
   queuePosition: number;
@@ -11652,7 +11593,7 @@ export type EnqueuePlanRunResultFragment = {
 
 export type SchedulePlanRunResultFragment = {
   __typename?: 'SchedulePlanRunResultObject';
-  executionBackend: string;
+  driver: string;
   jobId: string;
   planId: string;
   planRunId: string;
@@ -11692,7 +11633,7 @@ export type PlanOutputChunkFragment = {
 
 export type PlanRunJobMetricsEntryFragment = {
   __typename?: 'PlanRunMetricsEntry';
-  executionBackend?: string | null;
+  driver?: string | null;
   finishedOn?: number | null;
   jobId: string;
   taskRunMetrics?: {
@@ -11706,7 +11647,7 @@ export type PlanRunHistoryEntryFragment = {
   branch?: string | null;
   bullmqJobId?: string | null;
   createdAt: any;
-  executionBackend: string;
+  driver: string;
   heartbeatExpected: boolean;
   id: string;
   isStale: boolean;
@@ -11742,7 +11683,7 @@ export type PlanDetailEnqueuePlanRunMutation = {
   __typename?: 'Mutation';
   enqueuePlanRun: {
     __typename?: 'EnqueuePlanRunResultObject';
-    executionBackend: string;
+    driver: string;
     jobId: string;
     planId: string;
     queuePosition: number;
@@ -11758,7 +11699,7 @@ export type PlanDetailSchedulePlanRunMutation = {
   __typename?: 'Mutation';
   schedulePlanRun: {
     __typename?: 'SchedulePlanRunResultObject';
-    executionBackend: string;
+    driver: string;
     jobId: string;
     planId: string;
     planRunId: string;
@@ -12115,7 +12056,7 @@ export type PlanDetailRunHistoryQuery = {
     __typename?: 'MetricsObject';
     recentPlanRunsMetrics: Array<{
       __typename?: 'PlanRunMetricsEntry';
-      executionBackend?: string | null;
+      driver?: string | null;
       finishedOn?: number | null;
       jobId: string;
       taskRunMetrics?: {
@@ -12129,7 +12070,7 @@ export type PlanDetailRunHistoryQuery = {
     branch?: string | null;
     bullmqJobId?: string | null;
     createdAt: any;
-    executionBackend: string;
+    driver: string;
     heartbeatExpected: boolean;
     id: string;
     isStale: boolean;
@@ -12925,7 +12866,7 @@ export type TestWorkflowMutation = {
   __typename?: 'Mutation';
   enqueuePlanRun: {
     __typename?: 'EnqueuePlanRunResultObject';
-    executionBackend: string;
+    driver: string;
     jobId: string;
     planId: string;
   };
@@ -13419,7 +13360,7 @@ export type GetPullRequestsQuery = {
 export type JobDetailsCardFragment = {
   __typename?: 'JobObject';
   data?: string | null;
-  executionBackend?: string | null;
+  driver?: string | null;
   failedReason?: string | null;
   finishedOn?: number | null;
   id: string;
@@ -13454,7 +13395,7 @@ export type GetQueueJobDetailsQuery = {
   job?: {
     __typename?: 'JobObject';
     data?: string | null;
-    executionBackend?: string | null;
+    driver?: string | null;
     failedReason?: string | null;
     finishedOn?: number | null;
     id: string;
@@ -17403,11 +17344,11 @@ export type RemoveSkillTagMutation = {
 
 export type TimelineSpanRowFragment = {
   __typename?: 'TimelineSpanObject';
-  backend?: string | null;
   branch?: string | null;
   checkoutId?: string | null;
   conversationId?: string | null;
   derivedEnd: boolean;
+  driver?: string | null;
   endsAt: any;
   id: string;
   kind: TimelineSpanKind;
@@ -17461,11 +17402,11 @@ export type GetWorkstreamTimelineQuery = {
     }>;
     spans: Array<{
       __typename?: 'TimelineSpanObject';
-      backend?: string | null;
       branch?: string | null;
       checkoutId?: string | null;
       conversationId?: string | null;
       derivedEnd: boolean;
+      driver?: string | null;
       endsAt: any;
       id: string;
       kind: TimelineSpanKind;
@@ -20064,7 +20005,7 @@ export const EnqueuePlanRunResultFragmentDoc = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'executionBackend' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'driver' } },
           { kind: 'Field', name: { kind: 'Name', value: 'jobId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'queuePosition' } },
@@ -20087,7 +20028,7 @@ export const SchedulePlanRunResultFragmentDoc = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'executionBackend' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'driver' } },
           { kind: 'Field', name: { kind: 'Name', value: 'jobId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'planRunId' } },
@@ -20189,7 +20130,7 @@ export const PlanRunJobMetricsEntryFragmentDoc = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'executionBackend' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'driver' } },
           { kind: 'Field', name: { kind: 'Name', value: 'finishedOn' } },
           { kind: 'Field', name: { kind: 'Name', value: 'jobId' } },
           {
@@ -20247,7 +20188,7 @@ export const PlanRunHistoryEntryFragmentDoc = {
             },
           },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'executionBackend' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'driver' } },
           { kind: 'Field', name: { kind: 'Name', value: 'heartbeatExpected' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'isStale' } },
@@ -21137,7 +21078,7 @@ export const JobDetailsCardFragmentDoc = {
         kind: 'SelectionSet',
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'data' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'executionBackend' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'driver' } },
           { kind: 'Field', name: { kind: 'Name', value: 'failedReason' } },
           { kind: 'Field', name: { kind: 'Name', value: 'finishedOn' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
@@ -23897,11 +23838,11 @@ export const TimelineSpanRowFragmentDoc = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'backend' } },
           { kind: 'Field', name: { kind: 'Name', value: 'branch' } },
           { kind: 'Field', name: { kind: 'Name', value: 'checkoutId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'conversationId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'derivedEnd' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'driver' } },
           { kind: 'Field', name: { kind: 'Name', value: 'endsAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
@@ -30098,7 +30039,7 @@ export const PlanDetailEnqueuePlanRunDocument = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'executionBackend' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'driver' } },
           { kind: 'Field', name: { kind: 'Name', value: 'jobId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'queuePosition' } },
@@ -30173,7 +30114,7 @@ export const PlanDetailSchedulePlanRunDocument = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'executionBackend' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'driver' } },
           { kind: 'Field', name: { kind: 'Name', value: 'jobId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'planRunId' } },
@@ -31393,7 +31334,7 @@ export const PlanDetailRunHistoryDocument = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'executionBackend' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'driver' } },
           { kind: 'Field', name: { kind: 'Name', value: 'finishedOn' } },
           { kind: 'Field', name: { kind: 'Name', value: 'jobId' } },
           {
@@ -31446,7 +31387,7 @@ export const PlanDetailRunHistoryDocument = {
             },
           },
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'executionBackend' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'driver' } },
           { kind: 'Field', name: { kind: 'Name', value: 'heartbeatExpected' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'isStale' } },
@@ -33764,10 +33705,7 @@ export const TestWorkflowDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'executionBackend' },
-                },
+                { kind: 'Field', name: { kind: 'Name', value: 'driver' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'jobId' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
               ],
@@ -35325,7 +35263,7 @@ export const GetQueueJobDetailsDocument = {
         kind: 'SelectionSet',
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'data' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'executionBackend' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'driver' } },
           { kind: 'Field', name: { kind: 'Name', value: 'failedReason' } },
           { kind: 'Field', name: { kind: 'Name', value: 'finishedOn' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
@@ -45630,11 +45568,11 @@ export const GetWorkstreamTimelineDocument = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'backend' } },
           { kind: 'Field', name: { kind: 'Name', value: 'branch' } },
           { kind: 'Field', name: { kind: 'Name', value: 'checkoutId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'conversationId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'derivedEnd' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'driver' } },
           { kind: 'Field', name: { kind: 'Name', value: 'endsAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'kind' } },

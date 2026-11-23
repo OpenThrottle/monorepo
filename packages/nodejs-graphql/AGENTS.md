@@ -5,8 +5,7 @@ Fetch-based GraphQL client for React Router loaders/actions and Node scripts aga
 (`executeGraphql*`, throws, resolves URL from `API_URL_INTERNAL`) and **V2**
 (`executeGraphql_v2`, non-throwing `GraphqlV2Result`, caller-supplied URL/token/`signal`).
 
-**Consumed by:** `openthrottle-server`, `openthrottle-workflows`,
-`openthrottle-agentic-ralph`, `openthrottle-mcp`, `nestjs-agentic-workflow`.
+**Consumed by:** `openthrottle-server`, `openthrottle-mcp`, `react-router-graphql`.
 
 ## Layout
 
@@ -24,8 +23,8 @@ Fetch-based GraphQL client for React Router loaders/actions and Node scripts aga
   [../AGENTS.md](../AGENTS.md)).
 - V1 (`getGraphQLUrl`) requires `API_URL_INTERNAL` (base URL, no `/graphql` — the helper
   appends it) and throws if unset; V2 reads no env inside the client.
-- For Ralph/workflow calls prefer `@openthrottle/openthrottle-workflows`'
-  `executeWorkflowGraphqlV2`, which wires the workflow token + URL env for you.
+- The OT Loop job builds its worker-scoped executor from `executeGraphqlV2` in
+  `applications/openthrottle-server/src/queues/ot-loop/`.
 
 ## Pointers
 

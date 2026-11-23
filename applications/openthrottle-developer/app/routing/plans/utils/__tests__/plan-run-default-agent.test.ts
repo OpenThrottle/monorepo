@@ -6,7 +6,7 @@ import {
   resolvePlanRunDefaultAgent,
   seedPlanRunAgent,
 } from '~/routing/plans/utils/plan-run-default-agent';
-import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/workflow-ralph-config';
+import type { PlanRunOptions } from '~/routing/plans/utils/plan-run-options';
 import type { DefaultAgentDraft } from '~/routing/settings/utils/user-preferences';
 
 const models: ChatModelOption[] = [
@@ -14,13 +14,14 @@ const models: ChatModelOption[] = [
   { id: 'claude|opus', label: 'Opus' },
 ];
 
-const systemAgent: Pick<
-  WorkflowRalphRunOptionsInput,
-  'effort' | 'executionBackend' | 'model'
-> = { effort: '', executionBackend: 'cursor', model: 'auto' };
+const systemAgent: Pick<PlanRunOptions, 'effort' | 'driver' | 'model'> = {
+  driver: 'cursor',
+  effort: '',
+  model: 'auto',
+};
 
 const defaultAgent: DefaultAgentDraft = {
-  backend: 'claude',
+  driver: 'claude',
   effort: 'high',
   model: 'opus',
 };
@@ -68,9 +69,9 @@ describe('isPlanRunAgentUnset', () => {
   });
 
   it('is false once any agent field differs from the system default', () => {
-    expect(
-      isPlanRunAgentUnset({ ...systemAgent, executionBackend: 'claude' }),
-    ).toBe(false);
+    expect(isPlanRunAgentUnset({ ...systemAgent, driver: 'claude' })).toBe(
+      false,
+    );
     expect(isPlanRunAgentUnset({ ...systemAgent, model: 'gpt-5.2' })).toBe(
       false,
     );
@@ -81,8 +82,8 @@ describe('isPlanRunAgentUnset', () => {
 describe('seedPlanRunAgent', () => {
   it('stamps the default agent over an unset plan agent', () => {
     expect(seedPlanRunAgent(systemAgent, defaultAgent)).toEqual({
+      driver: 'claude',
       effort: 'high',
-      executionBackend: 'claude',
       model: 'opus',
     });
   });

@@ -5,7 +5,7 @@ import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
 import { PLAN_WORKFLOW_CONFIG_TARGET_COPY } from '~/routing/plans/data/data.copy';
-import { getDefaultWorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
+import { getDefaultPlanRunOptions } from '~/routing/plans/utils/plan-run-options';
 
 import { PlanWorkflowConfigTarget } from '../PlanWorkflowConfigTarget';
 
@@ -13,7 +13,7 @@ const PLAN_ID_FIXTURE = '0c2720a9-920f-4b16-865a-f803eb444e18';
 
 describe('PlanWorkflowConfigTarget Component', () => {
   test('renders run target fieldset with legend and stable ids', () => {
-    const input = getDefaultWorkflowRalphRunOptionsInput();
+    const input = getDefaultPlanRunOptions();
     const Component = () => {
       return (
         <PlanWorkflowConfigTarget
@@ -34,8 +34,8 @@ describe('PlanWorkflowConfigTarget Component', () => {
     ).toHaveTextContent('01. Target');
   });
 
-  test('shows --plan input with value when input.planId is set in plan mode', () => {
-    const input = getDefaultWorkflowRalphRunOptionsInput({
+  test('shows the plan input with value when input.planId is set in plan mode', () => {
+    const input = getDefaultPlanRunOptions({
       planId: PLAN_ID_FIXTURE,
     });
     // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
@@ -60,9 +60,7 @@ describe('PlanWorkflowConfigTarget Component', () => {
     const user = userEvent.setup();
     // eslint-disable-next-line react/no-multi-comp -- test-local harness component
     const Harness = () => {
-      const [state, setState] = React.useState(
-        getDefaultWorkflowRalphRunOptionsInput(),
-      );
+      const [state, setState] = React.useState(getDefaultPlanRunOptions());
       return (
         <PlanWorkflowConfigTarget
           heading="01. Target"
@@ -74,7 +72,7 @@ describe('PlanWorkflowConfigTarget Component', () => {
     const RoutesStub = createRoutesStub([{ Component: Harness, path: '/' }]);
     const { getByLabelText, getByRole } = render(<RoutesStub />);
 
-    const planInput = getByLabelText('Plan UUID for --plan');
+    const planInput = getByLabelText('Plan UUID');
     await user.clear(planInput);
     await user.type(planInput, 'not-a-valid-uuid');
 
@@ -83,13 +81,11 @@ describe('PlanWorkflowConfigTarget Component', () => {
     );
   });
 
-  test('switches to task mode and shows --task input', async () => {
+  test('switches to task mode and shows the task input', async () => {
     const user = userEvent.setup();
     // eslint-disable-next-line react/no-multi-comp -- test-local harness component
     const Harness = () => {
-      const [state, setState] = React.useState(
-        getDefaultWorkflowRalphRunOptionsInput(),
-      );
+      const [state, setState] = React.useState(getDefaultPlanRunOptions());
       return (
         <PlanWorkflowConfigTarget
           heading="01. Target"
@@ -110,16 +106,14 @@ describe('PlanWorkflowConfigTarget Component', () => {
     await user.click(taskOption);
 
     expect(getByTestId('workflow-run-task-id-input')).toBeInTheDocument();
-    expect(getByLabelText('Task UUID for --task')).toBeInTheDocument();
+    expect(getByLabelText('Task UUID')).toBeInTheDocument();
   });
 
   test('shows UUID alert for invalid task id in task mode', async () => {
     const user = userEvent.setup();
     // eslint-disable-next-line react/no-multi-comp -- test-local harness component
     const Harness = () => {
-      const [state, setState] = React.useState(
-        getDefaultWorkflowRalphRunOptionsInput(),
-      );
+      const [state, setState] = React.useState(getDefaultPlanRunOptions());
       return (
         <PlanWorkflowConfigTarget
           heading="01. Target"
@@ -137,7 +131,7 @@ describe('PlanWorkflowConfigTarget Component', () => {
     const taskOption = await findByRole('option', { name: /Task/ });
     await user.click(taskOption);
 
-    const taskInput = getByLabelText('Task UUID for --task');
+    const taskInput = getByLabelText('Task UUID');
     await user.type(taskInput, 'bad');
 
     expect(getByRole('alert')).toHaveTextContent(

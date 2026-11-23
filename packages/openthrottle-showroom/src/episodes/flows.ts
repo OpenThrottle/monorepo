@@ -21,7 +21,7 @@ import { flow as flow03FirstPlan } from './03-first-plan/flow.ts';
 import { flow as flow04MentalModel } from './04-mental-model/flow.ts';
 import { flow as flow05ConnectOtMcp } from './05-connect-ot-mcp/flow.ts';
 import { flow as flow07SemanticSearch } from './07-semantic-search/flow.ts';
-import { flow as flow11RalphOneTask } from './11-ralph-one-task/flow.ts';
+import { flow as flow11PlanRunOneTask } from './11-plan-run-one-task/flow.ts';
 import { flow as flow12WatchRunLive } from './12-watch-run-live/flow.ts';
 import { flow as flow13PlanIdTraceability } from './13-plan-id-traceability/flow.ts';
 import { flow as flow21DashboardTour } from './21-dashboard-tour/flow.ts';
@@ -38,7 +38,7 @@ export const FLOWS: Readonly<Record<string, DemoFlow>> = {
   [flow04MentalModel.id]: flow04MentalModel,
   [flow05ConnectOtMcp.id]: flow05ConnectOtMcp,
   [flow07SemanticSearch.id]: flow07SemanticSearch,
-  [flow11RalphOneTask.id]: flow11RalphOneTask,
+  [flow11PlanRunOneTask.id]: flow11PlanRunOneTask,
   [flow12WatchRunLive.id]: flow12WatchRunLive,
   [flow13PlanIdTraceability.id]: flow13PlanIdTraceability,
   [flow21DashboardTour.id]: flow21DashboardTour,

@@ -8,7 +8,7 @@ import type {
 } from '../../types/index.ts';
 
 /**
- * @description Agent-run metric families — `metrics.plan_runs` (Ralph queue
+ * @description Agent-run metric families — `metrics.plan_runs` (plan-run queue
  * runs), `metrics.work_sessions` (the work-ledger spine), `metrics.
  * agent_conversations` (chat threads), and `metrics.scheduled_agent_jobs`
  * (cron-scheduled agent jobs) — registered as four separate {@link
@@ -18,17 +18,17 @@ import type {
  * `external_ref` column, per the task's privacy requirement.
  */
 
-/** Invocation count for one `(execution_backend, run_kind, status)` triple. */
+/** Invocation count for one `(driver, run_kind, status)` triple. */
 export interface PlanRunGroupRow {
   readonly count: number;
-  readonly executionBackend: string;
+  readonly driver: string;
   readonly runKind: string;
   readonly status: string;
 }
 
-/** COMPLETED share of runs for one `execution_backend`, over the window. */
+/** COMPLETED share of runs for one `driver`, over the window. */
 export interface PlanRunSuccessRateRow {
-  readonly executionBackend: string;
+  readonly driver: string;
   readonly successRate: number | null;
   readonly totalCount: number;
 }
@@ -43,9 +43,9 @@ export interface RunsPerPlanStats {
 }
 
 export interface PlanRunsMetrics {
-  readonly byBackendKindStatus: readonly PlanRunGroupRow[];
+  readonly byDriverKindStatus: readonly PlanRunGroupRow[];
   readonly runsPerPlan: RunsPerPlanStats;
-  readonly successRateByBackend: readonly PlanRunSuccessRateRow[];
+  readonly successRateByDriver: readonly PlanRunSuccessRateRow[];
   readonly totalInWindow: number;
 }
 
@@ -54,38 +54,38 @@ async function queryPlanRunGroups(
   window: ReportWindow,
 ): Promise<readonly PlanRunGroupRow[]> {
   const { rows } = await client.query<PlanRunGroupRow>(
-    `SELECT execution_backend AS "executionBackend", run_kind AS "runKind",
+    `SELECT driver AS "driver", run_kind AS "runKind",
             status, count(*)::int AS count
      FROM plan_runs
      WHERE created_at >= $1 AND created_at < $2
-     GROUP BY execution_backend, run_kind, status
-     ORDER BY execution_backend ASC, run_kind ASC, status ASC`,
+     GROUP BY driver, run_kind, status
+     ORDER BY driver ASC, run_kind ASC, status ASC`,
     [window.since, window.until],
   );
   return rows;
 }
 
 /** COMPLETED is the only success status `register_plan_run`/`settle_plan_run` write; see plan-runs.ts. */
-async function querySuccessRateByBackend(
+async function querySuccessRateByDriver(
   client: pg.Pool,
   window: ReportWindow,
 ): Promise<readonly PlanRunSuccessRateRow[]> {
   const { rows } = await client.query<{
     completedCount: number;
-    executionBackend: string;
+    driver: string;
     totalCount: number;
   }>(
-    `SELECT execution_backend AS "executionBackend",
+    `SELECT driver AS "driver",
             count(*)::int AS "totalCount",
             count(*) FILTER (WHERE status = 'COMPLETED')::int AS "completedCount"
      FROM plan_runs
      WHERE created_at >= $1 AND created_at < $2
-     GROUP BY execution_backend
-     ORDER BY execution_backend ASC`,
+     GROUP BY driver
+     ORDER BY driver ASC`,
     [window.since, window.until],
   );
   return rows.map((row) => ({
-    executionBackend: row.executionBackend,
+    driver: row.driver,
     successRate:
       row.totalCount > 0 ? row.completedCount / row.totalCount : null,
     totalCount: row.totalCount,
@@ -127,8 +127,8 @@ async function queryRunsPerPlan(client: pg.Pool): Promise<RunsPerPlanStats> {
 }
 
 /**
- * `metrics.plan_runs` — the Ralph-usage number: runs grouped by execution
- * backend/run kind/status, a per-backend success rate (share of runs whose
+ * `metrics.plan_runs` — the plan-run usage number: runs grouped by
+ * driver/run kind/status, a per-driver success rate (share of runs whose
  * status is `COMPLETED`), and the runs-per-plan distribution.
  */
 export const planRunsMetricQuery: MetricQuery<PlanRunsMetrics> = {
@@ -138,7 +138,7 @@ export const planRunsMetricQuery: MetricQuery<PlanRunsMetrics> = {
       plan_runs: [
         'id',
         'plan_id',
-        'execution_backend',
+        'driver',
         'run_kind',
         'status',
         'created_at',
@@ -148,18 +148,18 @@ export const planRunsMetricQuery: MetricQuery<PlanRunsMetrics> = {
     tables: ['plan_runs', 'plans'],
   },
   async run({ client, window }: MetricContext): Promise<PlanRunsMetrics> {
-    const [byBackendKindStatus, successRateByBackend, runsPerPlan] =
+    const [byDriverKindStatus, successRateByDriver, runsPerPlan] =
       await Promise.all([
         queryPlanRunGroups(client, window),
-        querySuccessRateByBackend(client, window),
+        querySuccessRateByDriver(client, window),
         queryRunsPerPlan(client),
       ]);
 
     return {
-      byBackendKindStatus,
+      byDriverKindStatus,
       runsPerPlan,
-      successRateByBackend,
-      totalInWindow: byBackendKindStatus.reduce(
+      successRateByDriver,
+      totalInWindow: byDriverKindStatus.reduce(
         (sum, row) => sum + row.count,
         0,
       ),

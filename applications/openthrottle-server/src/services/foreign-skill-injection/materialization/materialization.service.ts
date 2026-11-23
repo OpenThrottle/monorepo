@@ -15,8 +15,7 @@ import {
  * Turning injection on/off for a repository projects (enabled) or removes (disabled) OpenThrottle's
  * curated skills into every one of that user's checkouts immediately, without waiting for a run — so
  * the switch takes effect the moment it is saved. Complements the run-time gate in
- * {@link AgenticRalphOrchestratorService}, which stays the backstop (re-materializes on the next run
- * after a server restart clears the layer, and covers worktrees created later).
+ * `PlanRunWorkspaceService` (skipped by OT Loop, which injects no skills).
  *
  * Per-checkout soft-fail: only foreign checkouts are touched (the OT monorepo already has its skills),
  * and a filesystem problem is logged, never thrown, so the settings mutation still succeeds. Both

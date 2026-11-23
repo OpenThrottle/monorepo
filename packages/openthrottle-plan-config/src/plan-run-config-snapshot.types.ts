@@ -3,44 +3,35 @@
  * Captures the resolved configuration actually enqueued, not the plan defaults column.
  */
 
-import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
+import type { DriverId } from '@openthrottle/openthrottle-drivers';
 
 import type { PLAN_RUN_CONFIG_SNAPSHOT_VERSION } from './plan-run-config-snapshot.constants.ts';
 import type {
   PlanJobRunHooksStorage,
   PlanRunConfigOtLoop,
-  PlanRunConfigRunner,
   PlanRunConfigTargetMode,
 } from './plan-run-config-storage.types.ts';
 
 export type PlanRunConfigSnapshotDebugCli = 'debug' | 'omit' | 'verbose';
 
 /**
- * @description Resolved Ralph tuning at enqueue (argv-equivalent nested flags).
+ * @description Resolved run tuning at enqueue: the driver plus what the run was enqueued with, and
+ * the OT Loop validation fields.
  */
-export interface PlanRunConfigSnapshotRalphV1 {
+export interface PlanRunConfigSnapshotRunV1 extends PlanRunConfigOtLoop {
   readonly debug?: PlanRunConfigSnapshotDebugCli;
+  readonly driver: DriverId;
   /** @description Reasoning-effort level (chat vocabulary: low|medium|high|extraHigh|max|ultra), validated at enqueue. */
   readonly effort?: string;
-  readonly executionBackend: WorkflowConfigRunner;
   readonly iterationTimeoutSeconds?: number;
-  readonly iterations?: number;
   readonly model?: string;
-  readonly project?: string;
-  readonly prompt?: string;
-  readonly promptFile?: string;
-  readonly skipWorktreeSetup?: boolean;
-  readonly worktree?: string;
-  readonly worktreeBase?: string;
+  /** @description The worktree the run executes in (the enqueue derives `plan-<short plan id>` unless overridden). */
+  readonly worktreeName?: string;
 }
 
 export interface PlanRunConfigSnapshotV1 {
   readonly jobRunHooks?: PlanJobRunHooksStorage;
-  /** @description OT Loop tuning the run was enqueued with. */
-  readonly otLoop?: PlanRunConfigOtLoop;
-  readonly ralph: PlanRunConfigSnapshotRalphV1;
-  /** @description Absent means `'ralph'`. */
-  readonly runner?: PlanRunConfigRunner;
+  readonly run: PlanRunConfigSnapshotRunV1;
   readonly target: {
     readonly mode: PlanRunConfigTargetMode;
     readonly taskId: string;
@@ -63,25 +54,18 @@ export type PlanRunConfigSnapshot = PlanRunConfigSnapshotV1;
  */
 export interface BuildPlanRunConfigSnapshotInput {
   readonly checkoutId?: string | null;
-  readonly executionBackend: WorkflowConfigRunner;
+  readonly driver: DriverId;
   readonly jobRunHooks?: PlanJobRunHooksStorage | null;
   readonly mode?: PlanRunConfigTargetMode | null;
   readonly otLoop?: PlanRunConfigOtLoop | null;
-  readonly ralph?: {
+  readonly repositoryId?: string | null;
+  readonly taskId?: string | null;
+  readonly tuning?: {
     readonly debug?: PlanRunConfigSnapshotDebugCli | null;
     readonly effort?: string | null;
     readonly iterationTimeoutSeconds?: number | null;
-    readonly iterations?: number | null;
     readonly model?: string | null;
-    readonly project?: string | null;
-    readonly prompt?: string | null;
-    readonly promptFile?: string | null;
-    readonly skipWorktreeSetup?: boolean | null;
-    readonly worktree?: string | null;
-    readonly worktreeBase?: string | null;
+    readonly worktreeName?: string | null;
   } | null;
-  readonly repositoryId?: string | null;
-  readonly runner?: PlanRunConfigRunner | null;
-  readonly taskId?: string | null;
   readonly workingDirectory?: string | null;
 }

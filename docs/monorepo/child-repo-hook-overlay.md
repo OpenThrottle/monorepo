@@ -197,8 +197,8 @@ fields, delivery-leg detection and privacy rules live in the
 
 Nothing in the real spawn path emits it — `packages/openthrottle-drivers/src/drivers/claude.ts`
 builds `claude -p --permission-mode acceptEdits "<prompt>"`, and a test pins that `--bare` never
-appears. Some older `claude --bare -p` strings survived in `tools/workflows` help text and docs after
-that package moved to the driver registry; those have been corrected, since they now describe a
+appears. Some older `claude --bare -p` strings survived in help text and docs after
+the move to the driver registry; those have been corrected, since they now describe a
 command that would silently disable this entire feature.
 
 ## 5. The no-clobber guarantee — verified, not asserted

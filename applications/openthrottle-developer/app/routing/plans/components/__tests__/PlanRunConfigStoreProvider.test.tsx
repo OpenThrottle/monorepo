@@ -9,8 +9,8 @@ import {
   workflowBranchAtom,
   workflowCheckoutIdAtom,
 } from '~/routing/plans/data/data.atom-plan';
-import { getDefaultWorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import { serializePlanRunConfigUiState } from '~/routing/plans/utils/plan-run-config-ui';
+import { getDefaultPlanRunOptions } from '~/routing/plans/utils/plan-run-options';
 
 import type { PlanRunConfigStoreProviderProps } from '../PlanRunConfigStoreProvider';
 import { PlanRunConfigStoreProvider } from '../PlanRunConfigStoreProvider';
@@ -70,7 +70,7 @@ describe('PlanRunConfigStoreProvider Component', () => {
             checkoutId: '11111111-1111-4111-8111-111111111111',
             iterationTimeoutText: '',
             repositoryId: '',
-            workflowInput: getDefaultWorkflowRalphRunOptionsInput({
+            workflowInput: getDefaultPlanRunOptions({
               planId: 'plan-1',
             }),
             workingDirectory: '',

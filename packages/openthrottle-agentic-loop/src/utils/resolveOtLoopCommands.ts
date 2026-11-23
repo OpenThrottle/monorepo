@@ -12,6 +12,7 @@ import {
   OT_LOOP_CONFIG_PATH,
   OT_LOOP_NEEDS_VALIDATION_MESSAGE,
 } from '../data/data.constants.ts';
+import { isRecord } from './isRecord.ts';
 
 export interface ResolveOtLoopCommandsInput {
   readonly fs: ResolverFs;
@@ -32,10 +33,6 @@ type ConfigRead =
 type CommandsRead =
   | { readonly commands: readonly string[] | undefined; readonly kind: 'ok' }
   | { readonly kind: 'invalid'; readonly message: string };
-
-const isRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-};
 
 const isCommand = (value: unknown): value is string => {
   return typeof value === 'string' && value.trim() !== '';
@@ -171,7 +168,7 @@ const nxDefaultCommands = async (
 
 /**
  * @description Resolves what to run for setup, per-task validation and final validation (§ 6).
- * Validation: plan `otLoop.validationCommands`, then the committed `.openthrottle/ot-loop.json`,
+ * Validation: plan `run.validationCommands`, then the committed `.openthrottle/ot-loop.json`,
  * then the Nx default when `nx.json` exists, else `none`. Setup and final validation come only
  * from the file. A malformed file yields `invalid`, never a throw.
  * @public

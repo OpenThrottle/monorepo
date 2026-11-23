@@ -144,7 +144,7 @@ type SkillAvailabilityResolution = {
 
 export const getSkillAvailabilityToolParameters = z
   .object({
-    environment: z.enum(['ci', 'interactive', 'ralph']).optional(),
+    environment: z.enum(['ci', 'headless', 'interactive']).optional(),
     planId: z.string().optional(),
     projectId: z.string().optional(),
     relevantOnly: z.boolean().optional(),
@@ -152,7 +152,7 @@ export const getSkillAvailabilityToolParameters = z
   })
   .strict();
 
-export const getSkillAvailabilityToolDescription = `Resolve every skill's effective disable-model-invocation for a project and environment via the skillAvailability GraphQL query. Omit projectId to resolve the dogfood monorepo project; environment defaults to "interactive" (ci | interactive | ralph). Optional plan context: planId (and taskId within it) annotates each skill with matchedPlanTags (skill tags ∩ the plan's effective domain tag set) and planRelevant, applies matched availability-exception rules ephemerally, and relevantOnly=true filters to plan-relevant skills. With planId it also returns attachedPrompts (rule-attached prompts, with content): put "start" ones before the plan context, "end" ones after. Returns each skill's static (tri-state) and effective flags plus the decisive rung's provenance, and deduped resolve-time warnings. Concerns model auto-invocation only — human /skill invocation is never gated.`;
+export const getSkillAvailabilityToolDescription = `Resolve every skill's effective disable-model-invocation for a project and environment via the skillAvailability GraphQL query. Omit projectId to resolve the dogfood monorepo project; environment defaults to "interactive" (ci | headless | interactive). Optional plan context: planId (and taskId within it) annotates each skill with matchedPlanTags (skill tags ∩ the plan's effective domain tag set) and planRelevant, applies matched availability-exception rules ephemerally, and relevantOnly=true filters to plan-relevant skills. With planId it also returns attachedPrompts (rule-attached prompts, with content): put "start" ones before the plan context, "end" ones after. Returns each skill's static (tri-state) and effective flags plus the decisive rung's provenance, and deduped resolve-time warnings. Concerns model auto-invocation only — human /skill invocation is never gated.`;
 
 export async function getSkillAvailabilityToolHandler(
   args: z.infer<typeof getSkillAvailabilityToolParameters>,

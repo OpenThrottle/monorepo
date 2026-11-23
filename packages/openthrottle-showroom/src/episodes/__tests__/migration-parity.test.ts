@@ -30,7 +30,7 @@ const MARKDOWN_WORD_COUNTS: Readonly<Record<string, number>> = {
   '08-promote-task': 61,
   '09-tags-and-rules': 74,
   '10-notes': 68,
-  '11-ralph-one-task': 67,
+  '11-plan-run-one-task': 68,
   '12-watch-run-live': 73,
   '13-plan-id-traceability': 67,
   '14-scheduled-runs': 74,

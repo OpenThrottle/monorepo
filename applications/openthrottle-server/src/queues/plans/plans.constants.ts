@@ -1,15 +1,15 @@
-import type { WorkflowFinishedReason } from '@openthrottle/openthrottle-agentic-ralph';
+import type { WorkflowFinishedReason } from '@openthrottle/openthrottle-agentic-loop';
 export const PLANS_QUEUE_NAME = 'Plans';
 
 /**
- * @description Historical BullMQ **job name** for the removed nested-`workflow-ralph` spawn path
- * (OT plan 2ab62876). No longer enqueued, but retained so cancellation/observability filters still
- * match any legacy `run-plan` jobs persisted in Redis, and so queue display can label them.
+ * @description BullMQ **job name** every plan run is enqueued under on the `plans` queue (an OT Loop
+ * run; `PlansProcessor` is its only consumer). Jobs queued or scheduled under any other name are not matched.
  */
-export const RUN_PLAN_SPAWN_JOB_NAME = 'run-plan';
+export const RUN_PLAN_ORCHESTRATOR_JOB_NAME = 'Plan Run';
+
 /**
  * Worker options for stalled-job recovery after server restart.
- * Ralph runs can be long; lock is renewed every lockDuration/2. After restart, the lock expires
+ * Plan runs can be long; lock is renewed every lockDuration/2. After restart, the lock expires
  * and the job becomes stalled, then is moved back to waiting within ~lockDuration + stalledInterval.
  */
 export const PLANS_WORKER_LOCK_DURATION_MS = 300_000; // 5 min; renewal every 2.5 min

@@ -5,7 +5,7 @@ import { finalizeOtLoopRun } from '../finalizeOtLoopRun.ts';
 import type { RemoteFixture } from './git-fixtures.ts';
 import {
   commitFile,
-  createRecordingGraphql,
+  createRecordingPort,
   createRecordingRunner,
   createRemoteFixture,
   git,
@@ -41,21 +41,21 @@ const runFinalize = (
     readonly runCommand: FinalizeOtLoopRunParams['runCommand'];
   },
 ) => {
-  const graphql = createRecordingGraphql();
+  const recorded = createRecordingPort();
   const promise = finalizeOtLoopRun({
     baseBranch: 'main',
     cwd: fixture.work,
     draftDir: undefined,
-    executeGraphqlV2: graphql.executeGraphqlV2,
     onChunk: undefined,
     outcome: 'complete',
     planId: PLAN_ID,
+    port: recorded.port,
     squashSubject: undefined,
     taskIds: [TASK_1, TASK_2, TASK_COMMITLESS],
     ...overrides,
   });
 
-  return { graphql, promise };
+  return { promise, recorded };
 };
 
 const pushes = (calls: readonly { args: readonly string[] }[]): string[][] => {
@@ -169,14 +169,14 @@ describe('finalizeOtLoopRun', () => {
             : undefined,
         );
       });
-      const { graphql, promise } = runFinalize(fixture, { runCommand });
+      const { promise, recorded } = runFinalize(fixture, { runCommand });
       const result = await promise;
 
       expect(result).toMatchObject({
         reason: 'workflow_complete_handoff_owed',
       });
-      expect(graphql.outputs.join('')).toContain('step=squash-guard');
-      expect(graphql.outputs.join('')).toContain('x.txt');
+      expect(recorded.outputs.join('')).toContain('step=squash-guard');
+      expect(recorded.outputs.join('')).toContain('x.txt');
       expect(await git(fixture.work, ['rev-parse', 'HEAD'])).toBe(before);
       expect(await git(fixture.work, ['status', '--porcelain'])).toBe('');
       expect(pushes(calls)).toHaveLength(0);
@@ -236,13 +236,13 @@ describe('finalizeOtLoopRun', () => {
 
         return Promise.resolve(undefined);
       });
-      const { graphql, promise } = runFinalize(fixture, { runCommand });
+      const { promise, recorded } = runFinalize(fixture, { runCommand });
 
       expect(await promise).toMatchObject({
         reason: 'workflow_complete_handoff_owed',
         status: 'finished',
       });
-      expect(graphql.outputs.join('')).toContain(
+      expect(recorded.outputs.join('')).toContain(
         'finalize handoff owed: step=git-push',
       );
       expect(await git(fixture.work, ['status', '--porcelain'])).toBe('');
@@ -272,12 +272,12 @@ describe('finalizeOtLoopRun', () => {
 
         return Promise.resolve(undefined);
       });
-      const { graphql, promise } = runFinalize(fixture, { runCommand });
+      const { promise, recorded } = runFinalize(fixture, { runCommand });
 
       expect(await promise).toMatchObject({
         reason: 'workflow_complete_handoff_owed',
       });
-      expect(graphql.outputs.join('')).toContain('step=pr-create');
+      expect(recorded.outputs.join('')).toContain('step=pr-create');
       expect(await git(fixture.work, ['status', '--porcelain'])).toBe('');
     });
 
@@ -298,12 +298,12 @@ describe('finalizeOtLoopRun', () => {
 
         return Promise.resolve(undefined);
       });
-      const { graphql, promise } = runFinalize(fixture, { runCommand });
+      const { promise, recorded } = runFinalize(fixture, { runCommand });
 
       expect(await promise).toMatchObject({
         reason: 'workflow_complete_handoff_owed',
       });
-      expect(graphql.outputs.join('')).toContain('step=git-fetch');
+      expect(recorded.outputs.join('')).toContain('step=git-fetch');
       expect(await git(fixture.work, ['rev-parse', 'HEAD'])).toBe(before);
       expect(gitCalls(calls).some((line) => line.startsWith('reset'))).toBe(
         false,
@@ -374,12 +374,12 @@ describe('finalizeOtLoopRun', () => {
       ]);
 
       const { calls, runCommand } = createRecordingRunner();
-      const { graphql, promise } = runFinalize(fixture, { runCommand });
+      const { promise, recorded } = runFinalize(fixture, { runCommand });
 
       expect(await promise).toMatchObject({
         reason: 'workflow_complete_handoff_owed',
       });
-      expect(graphql.outputs.join('')).toContain('step=branch-diverged');
+      expect(recorded.outputs.join('')).toContain('step=branch-diverged');
       expect(pushes(calls)).toHaveLength(0);
     });
   });

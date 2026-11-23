@@ -43,7 +43,7 @@ const TIMELINE_MAX_WINDOW_DAYS = 90;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 type SpanRow = {
-  backend: string | null;
+  driver: string | null;
   branch: string | null;
   checkout_id: string | null;
   conversation_id: string | null;
@@ -295,14 +295,14 @@ export class TimelineResolver {
                 pr.created_at AS starts_at,
                 GREATEST(pr.updated_at, COALESCE(pr.last_heartbeat_at, pr.updated_at)) AS ends_at,
                 pr.plan_id, p.title AS plan_title, p.title AS title,
-                pr.execution_backend AS backend, pr.model, pr.branch,
+                pr.driver AS driver, pr.model, pr.branch,
                 pr.checkout_id, pr.status, NULL::uuid AS conversation_id
            FROM plan_runs pr
            JOIN plans p ON p.id = pr.plan_id AND p.deleted_at IS NULL
           WHERE pr.created_at < $2::timestamptz
             AND GREATEST(pr.updated_at, COALESCE(pr.last_heartbeat_at, pr.updated_at)) >= $1::timestamptz
             AND ($3::uuid IS NULL OR pr.plan_id = $3::uuid)
-            AND ($4::text IS NULL OR pr.execution_backend = $4::text)
+            AND ($4::text IS NULL OR pr.driver = $4::text)
             AND ($5::uuid IS NULL OR pr.checkout_id = $5::uuid)
             AND ($6::text IS NULL OR pr.branch = $6::text)
           ORDER BY pr.created_at DESC
@@ -311,7 +311,7 @@ export class TimelineResolver {
           fromIso,
           toIso,
           input.planId ?? null,
-          input.backend ?? null,
+          input.driver ?? null,
           input.checkoutId ?? null,
           input.gitBranch ?? null,
           TIMELINE_ROWS_PER_KIND,
@@ -327,7 +327,7 @@ export class TimelineResolver {
         `SELECT DISTINCT ON (ws.id)
                 ws.id, ws.started_at AS starts_at, ws.ended_at AS ends_at,
                 wss.plan_id, p.title AS plan_title,
-                ws.tool_name AS backend, ws.model,
+                ws.tool_name AS driver, ws.model,
                 COALESCE(ws.summary, ws.tool_name) AS title,
                 NULL::text AS branch, NULL::uuid AS checkout_id,
                 ws.closed_by AS status, ws.conversation_id
@@ -344,7 +344,7 @@ export class TimelineResolver {
           fromIso,
           toIso,
           input.planId ?? null,
-          input.backend ?? null,
+          input.driver ?? null,
           TIMELINE_ROWS_PER_KIND,
         ],
       );
@@ -360,7 +360,7 @@ export class TimelineResolver {
               COALESCE(sr.started_at, sr.created_at) AS starts_at,
               sr.finished_at AS ends_at,
               NULL::uuid AS plan_id, NULL::text AS plan_title,
-              j.name AS title, sr.driver_id AS backend, sr.model,
+              j.name AS title, sr.driver_id AS driver, sr.model,
               NULL::text AS branch, j.repository_checkout_id AS checkout_id,
               sr.status, NULL::uuid AS conversation_id
          FROM scheduled_agent_job_runs sr
@@ -375,7 +375,7 @@ export class TimelineResolver {
       [
         fromIso,
         toIso,
-        input.backend ?? null,
+        input.driver ?? null,
         input.checkoutId ?? null,
         TIMELINE_ROWS_PER_KIND,
       ],
@@ -422,9 +422,9 @@ export class TimelineResolver {
     const lane = resolveTimelineLane(
       grouping,
       {
-        backend: row.backend,
         branch: row.branch,
         checkoutId: row.checkout_id,
+        driver: row.driver,
         planId: row.plan_id,
         planTitle: row.plan_title,
       },
@@ -439,7 +439,7 @@ export class TimelineResolver {
     const endsAt = isOpen ? now : new Date(row.ends_at ?? row.starts_at);
 
     const span = new TimelineSpanObject();
-    span.backend = row.backend;
+    span.driver = row.driver;
     span.branch = row.branch;
     span.checkoutId = row.checkout_id;
     span.conversationId = row.conversation_id;

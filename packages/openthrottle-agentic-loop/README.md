@@ -22,7 +22,7 @@ npm install @openthrottle/openthrottle-agentic-loop
 
 `resolveOtLoopCommands` picks the commands the loop runs (docs/workflows/ot-loop-job.md § 6). Validation resolves in this order, first hit wins:
 
-1. The plan's `otLoop.validationCommands`.
+1. The plan's `run.validationCommands`.
 2. `validation.commands` in the repository's committed `.openthrottle/ot-loop.json`.
 3. The Nx default when the worktree has an `nx.json`: `<pm> nx affected -t lint|typecheck|test --base={taskStartSha} --parallel=1`, where `<pm>` is `pnpm`, `npx` or `yarn` from the lockfile (`npx` with none).
 4. Otherwise a `none` result ("needs a validation command"); validation is never skipped.

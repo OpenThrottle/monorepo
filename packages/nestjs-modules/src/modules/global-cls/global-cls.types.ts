@@ -15,7 +15,7 @@ export interface GlobalClsStore extends ClsStore {
   /**
    * @description Raw, trimmed `x-ot-environment` request header, if present: the agent
    * environment the caller claims to run in. UNVALIDATED — the consumer owns the vocabulary
-   * (`ci | interactive | ralph` for plan rules) and must treat an unknown value as absent.
+   * (`ci | headless | interactive` for plan rules) and must treat an unknown value as absent.
    */
   environment?: string;
 

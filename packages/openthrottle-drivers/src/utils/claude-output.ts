@@ -2,7 +2,7 @@
  * @description Parses Claude Code `--output-format stream-json --verbose` stdout (NDJSON) back into
  * what a plain-text `claude -p` run would have printed, plus the usage-limit signal that text mode
  * hides. Verified against Claude Code 2.1.270: the terminal `result` event's `result` string is
- * byte-identical to text-mode stdout, so Ralph's `<promise>…</promise>` markers keep parsing.
+ * byte-identical to text-mode stdout, so the plan run's `<promise>…</promise>` markers keep parsing.
  * See docs/openthrottle/claude-stream-json-schema.md.
  *
  * Also holds the shared usage-limit signal: a subscription run that exhausts its 5-hour or weekly window

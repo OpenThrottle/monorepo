@@ -369,7 +369,7 @@ const seed = async (dataSource: DataSource, reset: boolean): Promise<void> => {
   // "live" comes from the flow scrolling the stream, not from an active process.
   const runId = 'd0d0d0d0-0000-4000-8000-00000000ff01';
   await dataSource.query(
-    `INSERT INTO plan_runs (id, plan_id, status, run_kind, execution_backend, branch, model, actor_user_id, created_at, updated_at, last_heartbeat_at)
+    `INSERT INTO plan_runs (id, plan_id, status, run_kind, driver, branch, model, actor_user_id, created_at, updated_at, last_heartbeat_at)
      VALUES ($1, $2, 'COMPLETED', 'spawn', 'claude', $3, $4, $5, $6, $7, $7)
      ON CONFLICT (id) DO UPDATE SET
        branch = EXCLUDED.branch, last_heartbeat_at = EXCLUDED.last_heartbeat_at,

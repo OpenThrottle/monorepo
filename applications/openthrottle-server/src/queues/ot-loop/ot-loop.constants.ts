@@ -1,6 +1,6 @@
 /**
  * Constants for the OT Loop runner (docs/workflows/ot-loop-job.md). It runs on the `Plans` queue under
- * the existing `'Agentic Ralph'` job name; nothing here names a queue or a job.
+ * the `'Plan Run'` job name; nothing here names a queue or a job.
  */
 
 /** @description DI token for the worker-scoped GraphQL executor the OT Loop service calls. */

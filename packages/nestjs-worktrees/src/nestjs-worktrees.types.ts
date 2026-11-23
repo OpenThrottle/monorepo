@@ -1,10 +1,10 @@
 /**
  * Types for worktree target tracking (BullMQ workflow fan-out/fan-in).
- * Used to model and expose availability of worktree targets for Ralph loops.
+ * Used to model and expose availability of worktree targets for plan-run loops.
  */
 
 import type { WorkflowRunnerId } from '@openthrottle/openthrottle-agentic-utils';
-import type { WorkflowConfigDebug } from '@openthrottle/openthrottle-agentic-workflow';
+import type { WorkflowConfigDebug } from '@openthrottle/openthrottle-agentic-utils';
 
 /**
  * Status of a worktree target: available for work or locked by a job.
@@ -85,7 +85,7 @@ export interface IWorktreeTargetsTracker {
 }
 
 /**
- * Payload passed from parent job to child (Ralph loop) after acquiring target and creating branch.
+ * Payload passed from parent job to child (plan-run loop) after acquiring target and creating branch.
  */
 export interface ParentJobHandoff {
   readonly branchName: string;
@@ -105,7 +105,7 @@ export interface ParentJobAcquireOptions {
   readonly lockedBy: string;
   /**
    * Optional plan title used to generate a human-readable branch name.
-   * When provided (and branchName is not), the branch name is derived as `ralph/<slugified-title>-<suffix>`.
+   * When provided (and branchName is not), the branch name is derived as `plan-run/<slugified-title>-<suffix>`.
    * The title is slugified (lowercase, special chars to hyphens, max 50 chars) for git compatibility.
    */
   readonly planTitle?: string;
@@ -128,29 +128,36 @@ export type ParentJobAcquireResult =
     };
 
 /**
- * Input for the child job: run Ralph loop in the worktree and return branch + SHA.
+ * Chunk of stdout or stderr from a child job process (for streaming).
+ */
+export type ChildJobStreamChunk =
+  | { readonly data: string; readonly stream: 'stdout' }
+  | { readonly data: string; readonly stream: 'stderr' };
+
+/**
+ * Input for the child job: run the plan-run loop in the worktree and return branch + SHA.
  */
 export interface ChildJobInput {
-  /**
-   * Execution backend id (layer 2); omitted uses workflow-ralph default (`cursor`).
-   * Forwarded as `--backend` when set and not the default.
-   */
-  readonly backend?: WorkflowRunnerId;
   /** Shim debug for nested runs; forwarded as `--debug` or `--verbose`. */
   readonly debug?: WorkflowConfigDebug;
+  /**
+   * Driver id (layer 2); omitted uses the default driver (`cursor`).
+   * Forwarded as `--driver` when set and not the default.
+   */
+  readonly driver?: WorkflowRunnerId;
   /** Handoff from parent (branch name, target id, worktree path). */
   readonly handoff: ParentJobHandoff;
-  /** Per-iteration timeout in seconds for nested workflow-ralph. */
+  /** Per-iteration timeout in seconds for the nested plan run. */
   readonly iterationTimeoutSeconds?: number;
-  /** Max Ralph iterations when not task-centric. Omitted uses Ralph default. */
+  /** Max iterations when not task-centric. Omitted uses the default. */
   readonly iterations?: number;
   /** Cursor model; forwarded when not default (`auto`). */
   readonly model?: string;
-  /** OpenThrottle plan UUID to run Ralph for. */
+  /** OpenThrottle plan UUID to run. */
   readonly planId: string;
   /** NX project name. */
   readonly project?: string;
-  /** Prompt profile; omitted uses workflow-ralph default (`/agents-ralph`). */
+  /** Prompt profile; omitted uses the default prompt profile. */
   readonly prompt?: string;
   /** Prompt file path; forwarded as `--prompt-file` when set (takes precedence over `prompt`). */
   readonly promptFile?: string;
@@ -177,7 +184,7 @@ export interface ChildJobFailure {
 }
 
 /**
- * Result of running the child job (Ralph loop); returned to BullMQ parent for commit checks and release.
+ * Result of running the child job (plan-run loop); returned to BullMQ parent for commit checks and release.
  */
 export type ChildJobResult = ChildJobSuccess | ChildJobFailure;
 
@@ -246,7 +253,7 @@ export type PushBranchResult =
   { readonly ok: true } | { readonly ok: false; readonly stderr: string };
 
 /**
- * Minimal result from a workflow loop (e.g. Ralph child job or custom runner).
+ * Minimal result from a workflow loop (e.g. a plan-run child job or custom runner).
  * Used by the reusable worktree workflow to run any loop with allocation and commit guarantees.
  */
 export type WorkflowLoopResult =
@@ -264,7 +271,7 @@ export interface WorktreeWorkflowOptions {
   /** Options for ensure-commit-before-release. Now commit/clean-only (checks moved to Stage (d) hooks). */
   readonly ensureCommit?: ParentJobEnsureCommitOptions;
   /**
-   * Run the loop in the worktree (e.g. Ralph child job). Receives handoff from acquire step.
+   * Run the loop in the worktree (e.g. a plan-run child job). Receives handoff from acquire step.
    * Return a result with ok true/false; on failure the workflow still releases the target.
    */
   readonly runLoop: (handoff: ParentJobHandoff) => Promise<WorkflowLoopResult>;

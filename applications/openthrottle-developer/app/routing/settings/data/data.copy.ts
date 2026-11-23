@@ -378,7 +378,7 @@ export const APPEARANCE_COPY = {
 export const SETTINGS_KEYS_COPY = {
   introAuthorizationCode: `Authorization`,
   introMiddle: ` format in the `,
-  introPrefix: `Long-lived bearer tokens for automation (MCP, Ralph workers, CI). Each credential uses the `,
+  introPrefix: `Long-lived bearer tokens for automation (MCP, queue workers, CI). Each credential uses the `,
   introSuffix: ` header.`,
   introTokenCode: `ot_sa_<prefix>_<secret>`,
   title: `Keys`,
@@ -393,7 +393,7 @@ export const SETTINGS_KEYS_COPY = {
 export const SETTINGS_KEYS_ONBOARDING = {
   cta: { label: `Create a credential`, to: `/settings/keys` },
   icon: KeyRoundIcon,
-  internalUsage: `Every automation we run authenticates this way: the OT MCP server, the Ralph workers, and CI each hold their own credential, so we can revoke one without taking the rest down.`,
+  internalUsage: `Every automation we run authenticates this way: the OT MCP server, the queue workers, and CI each hold their own credential, so we can revoke one without taking the rest down.`,
   secondary: {
     label: `MCP and worker authentication (AUTH.md)`,
     to: MCP_DEVELOPER_AUTH_DOC_HREF,
@@ -404,11 +404,11 @@ export const SETTINGS_KEYS_ONBOARDING = {
     `Paste it into OPENTHROTTLE_MCP_AUTH_TOKEN or your worker env.`,
     `To rotate, create a replacement, update the env, then revoke the old credential from the table.`,
   ],
-  tagline: `Long-lived bearer tokens that let MCP servers, Ralph workers, and CI act as a service account — without borrowing a human session.`,
+  tagline: `Long-lived bearer tokens that let MCP servers, queue workers, and CI act as a service account — without borrowing a human session.`,
   title: `Keys`,
   useCases: [
     `Authenticate the OT MCP server so agents can read and write plans.`,
-    `Give each Ralph worker or CI job its own revocable credential.`,
+    `Give each queue worker or CI job its own revocable credential.`,
     `Rotate a leaked or expiring token without downtime.`,
   ],
   whatItIs: `A credential is a service-account bearer token in the form ot_sa_<prefix>_<secret>, sent in the Authorization header. The secret is shown once at creation; revoked or expired credentials stop working at the next request. Human JWT sessions manage these keys in the developer portal — service-account tokens must not call those admin mutations.`,

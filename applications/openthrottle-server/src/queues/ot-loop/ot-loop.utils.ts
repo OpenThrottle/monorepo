@@ -1,18 +1,21 @@
+import type { ExecuteGraphqlOptionsV2 } from '@openthrottle/nodejs-graphql';
+import { getGraphQLUrl } from '@openthrottle/nodejs-graphql';
 import type {
   LoopTask,
   LoopTaskStatus,
 } from '@openthrottle/openthrottle-agentic-loop';
 import {
+  isRunnerExecutedHookTask,
   LOOP_TASK_STATUS,
   parseRequirements,
 } from '@openthrottle/openthrottle-agentic-loop';
-import type { TaskFragment } from '@openthrottle/openthrottle-agentic-ralph';
-import { isRunnerExecutedHookTask } from '@openthrottle/openthrottle-agentic-ralph';
 
+import type { TaskFragment } from '../../__generated__/graphql.ts';
 import {
   OT_LOOP_SESSION_HEADER,
   OT_LOOP_WORKER_BLANKED_ENV_KEYS,
 } from './ot-loop.constants.ts';
+import type { PlanRunWorkerGraphqlConfig } from './ot-loop.types.ts';
 
 const LOOP_TASK_STATUS_VALUES: readonly string[] =
   Object.values(LOOP_TASK_STATUS);
@@ -33,7 +36,7 @@ const statusOf = (row: TaskFragment): LoopTaskStatus => {
  * @description Maps an OT task row to the loop's task. A status the loop has no case for
  * (CANCELED, PROMOTED, ...) and a runner-executed hook task both map to `SKIPPED`: resolved, never
  * selected, never blocking the close. Hook tasks fire through the lifecycle dispatcher, so the
- * loop must not also run them (the same rule Ralph applies with `isRunnerExecutedHookTask`).
+ * loop must not also run them (see `isRunnerExecutedHookTask`).
  */
 export const toLoopTask = (row: TaskFragment): LoopTask => {
   return {
@@ -50,7 +53,7 @@ export const toLoopTask = (row: TaskFragment): LoopTask => {
 
 /**
  * @description Per-call GraphQL options carrying the processor's run session in `X-OT-Session-Id`
- * (as Ralph's status writes do), or `undefined` when the run has no session.
+ * or `undefined` when the run has no session.
  */
 export const buildSessionOptions = (
   workSessionId: string | null | undefined,
@@ -100,4 +103,54 @@ export const buildFinalValidationDescription = (input: {
     `Output tail:`,
     input.tail,
   ].join('\n');
+};
+
+/**
+ * @description Returns trimmed `process.env[key]` or `undefined` when missing/blank.
+ */
+const readTrimmedEnv = (key: string): string | undefined => {
+  const raw = process.env[key];
+  const trimmed = typeof raw === 'string' ? raw.trim() : '';
+
+  return trimmed === '' ? undefined : trimmed;
+};
+
+/**
+ * @description Worker-scoped GraphQL auth + URL overrides for BullMQ plan runs.
+ *
+ * **Token order:** `OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN` (production worker identity), then
+ * `OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN`, then `OPENTHROTTLE_MCP_AUTH_TOKEN` (local parity with
+ * openthrottle-mcp). **URL order:** `OPENTHROTTLE_WORKER_GRAPHQL_URL`, then
+ * `OPENTHROTTLE_WORKFLOWS_GRAPHQL_URL`; with neither, `API_URL_INTERNAL` + `/graphql` applies.
+ */
+export const resolvePlanRunWorkerGraphqlConfigFromEnv =
+  (): PlanRunWorkerGraphqlConfig => {
+    return {
+      graphqlUrl:
+        readTrimmedEnv('OPENTHROTTLE_WORKER_GRAPHQL_URL') ??
+        readTrimmedEnv('OPENTHROTTLE_WORKFLOWS_GRAPHQL_URL'),
+      token:
+        readTrimmedEnv('OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN') ??
+        readTrimmedEnv('OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN') ??
+        readTrimmedEnv('OPENTHROTTLE_MCP_AUTH_TOKEN'),
+    };
+  };
+
+/**
+ * @description Builds the {@link ExecuteGraphqlOptionsV2} every worker GraphQL call starts from. Uses
+ * the config's `graphqlUrl` when set, else {@link getGraphQLUrl}, which throws when the URL cannot be
+ * resolved (for example `API_URL_INTERNAL` is missing).
+ */
+export const buildPlanRunWorkerGraphqlOptions = (
+  config: PlanRunWorkerGraphqlConfig,
+): ExecuteGraphqlOptionsV2 => {
+  const override = config.graphqlUrl?.trim();
+  const url = override != null && override !== '' ? override : getGraphQLUrl();
+  const token = config.token?.trim();
+
+  if (token != null && token !== '') {
+    return { token, url };
+  }
+
+  return { url };
 };

@@ -1,24 +1,21 @@
 /**
  * @description The user's default agent as the Run dialog seeds it (D3). A plan's
- * own `runConfigJson.ralph` agent wins; only a plan still on the system default
+ * own run-config agent wins; only a plan still on the system default
  * runner (`cursor` / `auto` / no effort) opens on the preference instead.
  */
 
 import type { ChatModelOption } from '@openthrottle/react-router-chat';
 
 import type { ComposerDefaultAgent } from '~/routing/home/utils/seedComposerDefaultAgent';
-import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/workflow-ralph-config';
+import type { PlanRunOptions } from '~/routing/plans/utils/plan-run-options';
 import {
-  DEFAULT_RALPH_MODEL,
-  DEFAULT_RALPH_RUNNER,
-} from '~/routing/plans/utils/workflow-ralph-config';
+  DEFAULT_RUN_DRIVER,
+  DEFAULT_RUN_MODEL,
+} from '~/routing/plans/utils/plan-run-options';
 import type { DefaultAgentDraft } from '~/routing/settings/utils/user-preferences';
 import { resolveDefaultAgent } from '~/routing/settings/utils/user-preferences';
 
-type PlanRunAgentFields = Pick<
-  WorkflowRalphRunOptionsInput,
-  'effort' | 'executionBackend' | 'model'
->;
+type PlanRunAgentFields = Pick<PlanRunOptions, 'effort' | 'driver' | 'model'>;
 
 /**
  * @description The stored default agent narrowed to one a plan can run right now
@@ -35,39 +32,39 @@ export const resolvePlanRunDefaultAgent = (
 };
 
 /**
- * @description Whether the plan's Ralph agent is still the system default, i.e.
+ * @description Whether the plan's agent is still the system default, i.e.
  * nobody chose one for it. A plan has no "explicitly set" flag, so an agent that
  * matches the system default is read as unset; one deliberately set to exactly
  * `cursor` / `auto` / no effort is indistinguishable and also takes the preference.
  */
-export const isPlanRunAgentUnset = (ralph: PlanRunAgentFields): boolean => {
-  const model = ralph.model.trim();
-  const isDefaultModel = model === '' || model === DEFAULT_RALPH_MODEL;
+export const isPlanRunAgentUnset = (agent: PlanRunAgentFields): boolean => {
+  const model = agent.model.trim();
+  const isDefaultModel = model === '' || model === DEFAULT_RUN_MODEL;
 
   return (
-    ralph.executionBackend === DEFAULT_RALPH_RUNNER &&
+    agent.driver === DEFAULT_RUN_DRIVER &&
     isDefaultModel &&
-    ralph.effort.trim() === ''
+    agent.effort.trim() === ''
   );
 };
 
 /**
- * @description The plan's run options with the default agent's backend, model and
+ * @description The plan's run options with the default agent's driver, model and
  * effort stamped in — only when the plan's own agent is unset
  * ({@link isPlanRunAgentUnset}); an explicit per-plan choice is returned as-is.
  */
-export const seedPlanRunAgent = <TRalph extends PlanRunAgentFields>(
-  ralph: TRalph,
+export const seedPlanRunAgent = <TOptions extends PlanRunAgentFields>(
+  options: TOptions,
   defaultAgent: DefaultAgentDraft | null,
-): TRalph => {
-  if (defaultAgent === null || !isPlanRunAgentUnset(ralph)) {
-    return ralph;
+): TOptions => {
+  if (defaultAgent === null || !isPlanRunAgentUnset(options)) {
+    return options;
   }
 
   return {
-    ...ralph,
+    ...options,
+    driver: defaultAgent.driver,
     effort: defaultAgent.effort,
-    executionBackend: defaultAgent.backend,
     model: defaultAgent.model,
   };
 };

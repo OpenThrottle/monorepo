@@ -40,7 +40,7 @@ export const appendMcpShellFlags = (
 
 /*
  * @description Capability-driven worktree flag formatting shared by driver command builders.
- * Generalizes tools/workflows' `appendRalphWorktreeShellFlags`: the base `-w` / `--worktree` flag is
+ * The base `-w` / `--worktree` flag is
  * emitted whenever a driver advertises `capabilities.worktree`, and the Cursor-only extras
  * (`--worktree-base`, `--skip-worktree-setup`) are gated on `capabilities.worktreeBase` /
  * `capabilities.skipWorktreeSetup` instead of a hardcoded backend check.

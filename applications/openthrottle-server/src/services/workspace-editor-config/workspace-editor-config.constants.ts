@@ -51,8 +51,4 @@ export const OPENTHROTTLE_REPO_SKILL_PATHS: readonly RepoSkillPathEntry[] = [
     repoRelativePath: '.agents/skills/ot-stack/SKILL.md',
     slug: 'ot-stack',
   },
-  {
-    repoRelativePath: '.agents/skills/workflow-ralph/SKILL.md',
-    slug: 'workflow-ralph',
-  },
 ];

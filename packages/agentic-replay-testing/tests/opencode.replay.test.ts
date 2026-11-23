@@ -6,8 +6,6 @@
  * permission-denied was recorded with `opencode/big-pickle`: on the recording
  * host the account default model was unavailable. Supervised writes
  * `edit`/`bash: ask` into the temp config, which a headless run auto-rejects.
- * The opencode plan-run transcripts (same model, same reason) are replayed in
- * ralph.replay.test.ts.
  */
 
 import { CONVERSATION_STREAM_CHUNK_KINDS as KINDS } from '@openthrottle/openthrottle-agentic-utils';

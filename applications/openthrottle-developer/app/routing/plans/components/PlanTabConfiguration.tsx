@@ -7,13 +7,12 @@ import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/grap
 import { PlanConfigurationTabSkeleton } from '~/routing/plans/components/PlanConfigurationTabSkeleton';
 import { PlanDeferredSection } from '~/routing/plans/components/PlanDeferredSection';
 import { PlanTabConfigurationValidation } from '~/routing/plans/components/PlanTabConfigurationValidation';
-import { PlanWorkflowCommand } from '~/routing/plans/components/PlanWorkflowCommand';
+import { PlanWorkflowConfigActions } from '~/routing/plans/components/PlanWorkflowConfigActions';
 import { PlanWorkflowConfigExecution } from '~/routing/plans/components/PlanWorkflowConfigExecution';
 import { PlanWorkflowConfigHooks } from '~/routing/plans/components/PlanWorkflowConfigHooks';
-import { PlanWorkflowConfigPrompt } from '~/routing/plans/components/PlanWorkflowConfigPrompt';
-import { PlanWorkflowConfigRunner } from '~/routing/plans/components/PlanWorkflowConfigRunner';
 import { PlanWorkflowConfigTarget } from '~/routing/plans/components/PlanWorkflowConfigTarget';
 import { PlanWorkflowConfigTuning } from '~/routing/plans/components/PlanWorkflowConfigTuning';
+import { PlanWorkflowConfigValidation } from '~/routing/plans/components/PlanWorkflowConfigValidation';
 import { PlanWorkflowConfigWorkspaceSelector } from '~/routing/plans/components/PlanWorkflowConfigWorkspaceSelector';
 import { PlanWorkflowConfigWorktree } from '~/routing/plans/components/PlanWorkflowConfigWorktree';
 import {
@@ -21,17 +20,16 @@ import {
   setWorkflowBranchByUserAtom,
   workflowBranchAtom,
   workflowCheckoutIdAtom,
-  workflowRalphRunOptionsAtom,
   workflowRepositoryIdAtom,
   workflowRunIterationTimeoutTextAtom,
+  workflowRunOptionsAtom,
   workflowWorkingDirectoryAtom,
 } from '~/routing/plans/data/data.atom-plan';
 import { PLAN_DEFERRED_SECTION_COPY } from '~/routing/plans/data/data.copy';
-import { applyPromptLayerChange } from '~/routing/plans/utils/applyPromptLayerChange';
 
 /**
- * @description Workflow-ralph CLI options (`--plan` / `--task` and tuning flags)
- * with canonical preview/copy. Reads and writes the route-scoped run-config atoms
+ * @description The plan run options (target, validation, workspace, lifecycle hooks, agent,
+ * worktree and run tuning). Reads and writes the route-scoped run-config atoms
  * directly (seeded by {@link PlanRunConfigStoreProvider}); the same values are
  * serialized for `enqueuePlanRun` (tuning only; queue is always plan-scoped) and for
  * saving to the plan.
@@ -94,7 +92,7 @@ export const PlanTabConfiguration = (
   } = props;
 
   // Hooks
-  const [input, setInput] = useAtom(workflowRalphRunOptionsAtom);
+  const [input, setInput] = useAtom(workflowRunOptionsAtom);
   const [iterationTimeoutText, setIterationTimeoutText] = useAtom(
     workflowRunIterationTimeoutTextAtom,
   );
@@ -127,7 +125,7 @@ export const PlanTabConfiguration = (
         {(resolvedRepositories) => (
           <div className="flex flex-col gap-4 md:gap-8">
             <Card className="p-4">
-              <PlanWorkflowCommand
+              <PlanWorkflowConfigActions
                 onReset={onResetToDefaults}
                 onSave={onSaveRunConfig}
                 saveDisabled={saveRunConfigDisabled}
@@ -142,7 +140,7 @@ export const PlanTabConfiguration = (
               input={input}
               setInput={setInput}
             />
-            <PlanWorkflowConfigRunner heading="Runner" />
+            <PlanWorkflowConfigValidation heading="Validation" />
 
             <PlanWorkflowConfigWorkspaceSelector
               branch={branch}
@@ -168,34 +166,18 @@ export const PlanTabConfiguration = (
               savePending={saveJobRunHooksPending}
             />
 
-            <PlanWorkflowConfigPrompt
-              heading="04. Prompt"
-              onPromptChange={(next) =>
-                setInput((prev) => ({ ...prev, prompt: next }))
-              }
-              onPromptFileChange={(next) =>
-                setInput((prev) => ({ ...prev, promptFile: next }))
-              }
-              onPromptLayerChange={(next) =>
-                setInput((prev) => applyPromptLayerChange(prev, next))
-              }
-              prompt={input.prompt}
-              promptFile={input.promptFile}
-              promptLayer={input.promptLayer}
-            />
-
             <PlanWorkflowConfigExecution
-              heading="05. Agent"
+              heading="04. Agent"
               input={input}
               setInput={setInput}
             />
             <PlanWorkflowConfigWorktree
-              heading="06. Worktree"
+              heading="05. Worktree"
               input={input}
               setInput={setInput}
             />
             <PlanWorkflowConfigTuning
-              heading="07. Run Tuning"
+              heading="06. Run Tuning"
               input={input}
               iterationTimeoutText={iterationTimeoutText}
               models={models}

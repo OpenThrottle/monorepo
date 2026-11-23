@@ -115,5 +115,5 @@ The admin / CMS / email / website apps are not part of this consumer install.
 
 - **Run entirely locally:** Prefer Ollama for embeddings when you don’t want to use OpenAI; see `docs/monorepo/Ollama.md` § Embeddings for OpenThrottle and `databases/openthrottle/README.md` (embedding dimension strategy).
 - **Docker Compose:** For a single-command stack (Postgres, Redis, server, developer app), run Compose from the monorepo root as in [Run from monorepo root](#run-from-monorepo-root); ensure `.env` is populated per [Required `.env`](#required-env).
-- **Ralph / workflows:** Use `pnpm exec workflow-ralph --plan <plan-id>` for agentic execution against plans; see `tools/workflows/README.md` and `AGENTS.md`.
+- **Plan runs:** The server's OT Loop job executes plans queued from the developer app or `enqueuePlanRun`; see `docs/workflows/ot-loop-job.md` and `AGENTS.md`.
 - **Docs:** More copy and architecture: `docs/openthrottle/` (e.g. `work-as-history.md`, `docker-image-build-strategy.md`).

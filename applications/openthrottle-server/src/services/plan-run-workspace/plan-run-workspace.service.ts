@@ -1,7 +1,5 @@
 /**
- * @description Run-start workspace setup shared by the in-process plan runners. Extracted from
- * {@link AgenticRalphOrchestratorService} unchanged so OT Loop reuses it rather than duplicating it
- * (docs/workflows/ot-loop-job.md § 1, "Branch point").
+ * @description Run-start workspace setup for the OT Loop plan runner (docs/workflows/ot-loop-job.md § 1).
  */
 
 import { join } from 'node:path';
@@ -13,6 +11,14 @@ import { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories
 import { PlanRunsRepository } from '@openthrottle/nestjs-repositories-server';
 import { PlanOutputStreamRepository } from '@openthrottle/nestjs-repositories-server';
 import {
+  applyPlanRunOtRootFromConfig,
+  loadPlanRunConfig,
+} from '@openthrottle/openthrottle-agentic-loop';
+import type {
+  WorkflowConfigRunner,
+  WorkflowCorrelation,
+} from '@openthrottle/openthrottle-agentic-utils';
+import {
   ensureMaterialized,
   getOpenThrottleRoot,
   getWorkflowConfigCwd,
@@ -20,17 +26,9 @@ import {
   resolveForeignWorkspaceContext,
   resolvePersonalSkillsDir,
 } from '@openthrottle/openthrottle-agentic-utils';
-import type {
-  WorkflowConfigRunner,
-  WorkflowCorrelation,
-} from '@openthrottle/openthrottle-agentic-workflow';
-import {
-  applyWorkflowRalphOtRootFromConfig,
-  loadWorkflowRalphConfig,
-} from '@tools/workflows';
 import { UnrecoverableError } from 'bullmq';
 
-import type { RunPlanOrchestratorJobData } from '../../queues/agentic-ralph/agentic-ralph.types.ts';
+import type { RunPlanOrchestratorJobData } from '../../queues/plans/plans.types.ts';
 import { WorktreeSkillOverlayService } from '../foreign-skill-injection/worktree-skill-overlay/worktree-skill-overlay.service.ts';
 import { PlanRunWorkspacePreflightService } from '../plan-run-workspace-preflight/plan-run-workspace-preflight.service.ts';
 import { PlanRunWorktreeCheckoutService } from '../plan-run-worktree-checkout/plan-run-worktree-checkout.service.ts';
@@ -109,7 +107,7 @@ export class PlanRunWorkspaceService {
     // nothing. Say so in the output stream, loudly, against the directory the agent actually uses.
     if (!skipMcpPreflight) {
       await this.warnOnWorkspacePreflight({
-        backend: jobData.executionBackend ?? 'cursor',
+        backend: jobData.driver ?? 'cursor',
         planId: jobData.planId,
         workingDirectory: configCwd,
       });
@@ -123,8 +121,8 @@ export class PlanRunWorkspaceService {
       ? []
       : await this.maybeInjectForeignSkills({ configCwd, run });
 
-    const config = loadWorkflowRalphConfig(configCwd, process.env);
-    applyWorkflowRalphOtRootFromConfig(configCwd, process.env);
+    const config = loadPlanRunConfig(configCwd, process.env);
+    applyPlanRunOtRootFromConfig(configCwd, process.env);
 
     return {
       config,
@@ -226,7 +224,7 @@ export class PlanRunWorkspaceService {
   }> {
     const { baseCheckoutCwd, jobData, run } = params;
 
-    const worktreeName = jobData.ralph?.worktree?.trim();
+    const worktreeName = jobData.tuning?.worktreeName?.trim();
     if (worktreeName === undefined || worktreeName === '') {
       this.logger.log(
         `Plan run ${jobData.planId} opted out of a worktree; working in ${baseCheckoutCwd}`,
@@ -292,10 +290,10 @@ export class PlanRunWorkspaceService {
       throw new UnrecoverableError(
         `Cannot provision worktree "${worktreeName}" for plan run ${planId}: no checkoutId, ` +
           `repositoryId, or workingDirectory was provided on enqueue, and no OpenThrottle ` +
-          `repository root could be resolved from this process (checked WORKFLOW_RALPH_OT_ROOT, ` +
+          `repository root could be resolved from this process (checked OPENTHROTTLE_PLAN_RUN_OT_ROOT, ` +
           `WORKSPACE_ROOT, and a walk up from this process's cwd for the ` +
           `${OPENTHROTTLE_WORKSPACE_MARKER} marker). Pass a checkoutId, repositoryId, or ` +
-          `workingDirectory when enqueuing this plan run, or set WORKSPACE_ROOT/WORKFLOW_RALPH_OT_ROOT ` +
+          `workingDirectory when enqueuing this plan run, or set WORKSPACE_ROOT/OPENTHROTTLE_PLAN_RUN_OT_ROOT ` +
           `on the server process.`,
       );
     }

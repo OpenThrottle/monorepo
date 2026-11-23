@@ -31,7 +31,7 @@ describe('mapRecordToQueueJobLogEvent', () => {
       queueName: 'plans-queue',
       record: {
         data: { level: 'error', message: 'boom' },
-        source: 'workflow-ralph',
+        source: 'plan-run',
         timestamp: TS,
         type: 'stdout',
       },
@@ -39,7 +39,7 @@ describe('mapRecordToQueueJobLogEvent', () => {
 
     expect(event.level).toBe('error');
     expect(event.message).toBe('boom');
-    expect(event.source).toBe('workflow-ralph');
+    expect(event.source).toBe('plan-run');
   });
 
   it('redacts credentials from the message (shared redactor)', () => {

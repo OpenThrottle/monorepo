@@ -49,7 +49,7 @@ Everything first-party in the repository:
   and the `applications/openthrottle` local-stack
   Docker/compose assets.
 - **Packages** — all of `packages/*` (`@openthrottle/*`).
-- **Tools** — `tools/*` (`@tools/generators`, `@tools/workflows`,
+- **Tools** — `tools/*` (`@tools/generators`,
   `@tools/dotfiles`, `@tools/ollama-proxy`, `tools/caddy`).
 - **Infra / root** — `infra/`, root scripts, and the monorepo root itself.
 

@@ -10,13 +10,13 @@ Roles and permissions are defined in the package and used by guards (see task â€
 
 ### Roles
 
-| Role             | Description                                               |
-| ---------------- | --------------------------------------------------------- |
-| `admin`          | Full settings + users access.                             |
-| `user`           | Read/write settings, read users.                          |
-| `viewer`         | Read-only (settings and users).                           |
-| `mcp`            | Read/write plans, draft blog posts (MCP service account). |
-| `workflow-ralph` | Read/write plans (Ralph workflow account).                |
+| Role          | Description                                               |
+| ------------- | --------------------------------------------------------- |
+| `admin`       | Full settings + users access.                             |
+| `user`        | Read/write settings, read users.                          |
+| `viewer`      | Read-only (settings and users).                           |
+| `mcp`         | Read/write plans, draft blog posts (MCP service account). |
+| `plan-runner` | Read/write plans (plan-run worker account).               |
 
 ### Permissions
 
@@ -40,7 +40,7 @@ Roles and permissions are defined in the package and used by guards (see task â€
 - **user:** `flags:read`, `settings:read`, `settings:write`, `users:read`
 - **viewer:** `flags:read`, `settings:read`, `users:read`
 - **mcp:** `blog:draft`, `plans:read`, `plans:write`
-- **workflow-ralph:** `plans:read`, `plans:write`
+- **plan-runner:** `plans:read`, `plans:write`
 
 Usage (for guards and app code):
 

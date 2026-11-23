@@ -69,7 +69,6 @@ import {
   EditorPresenceState,
   EndWorkSessionInput,
   EnqueueDocIngestionInput,
-  EnqueuePlanRalphOrchestratorInput,
   EnqueuePlanRunInput,
   EvalCaseFromTrajectoryInput,
   ForceSettlePlanRunInput,
@@ -100,7 +99,9 @@ import {
   PlanEmbeddingsByPlanInput,
   PlanMessageKind,
   PlanMessageStatus,
-  PlanRalphWorkflowMode,
+  PlanRunDebugCli,
+  PlanRunMode,
+  PlanRunTuningInput,
   PlanRunWorktreeTeardownOutcome,
   PlanRunsByPlanIdInput,
   PlanTaskStatus,
@@ -118,8 +119,6 @@ import {
   QueueDetailsInput,
   QueueJobLogLevel,
   QueueJobLogsInput,
-  RalphNestedDebugCli,
-  RalphPlanRunTuningInput,
   RecordAgentTrajectoryInput,
   RecordEvalGradeInput,
   RecordEvalRunInput,
@@ -134,8 +133,8 @@ import {
   RecordTokenUsageRowInput,
   RecordWorkArtifactInput,
   RefreshCheckoutInput,
-  RegisterCliPlanRunInput,
   RegisterInput,
+  RegisterPlanRunInput,
   RegisterPlanRunWorktreeCheckoutInput,
   RemainingTasksByPlanIdInput,
   RemovePermissionFromRoleInput,
@@ -171,7 +170,7 @@ import {
   SetPlanStatusInput,
   SetScheduledAgentJobEnabledInputType,
   SetWorkspaceLocalRepositoryProjectInput,
-  SettleCliPlanRunInput,
+  SettlePlanRunInput,
   SkillAvailabilityRuleInput,
   StartConversationStreamInput,
   StartWorkSessionInput,
@@ -268,8 +267,11 @@ export const PlanMessageKindSchema: z.ZodType<PlanMessageKind> =
 export const PlanMessageStatusSchema: z.ZodType<PlanMessageStatus> =
   z.nativeEnum(PlanMessageStatus);
 
-export const PlanRalphWorkflowModeSchema: z.ZodType<PlanRalphWorkflowMode> =
-  z.nativeEnum(PlanRalphWorkflowMode);
+export const PlanRunDebugCliSchema: z.ZodType<PlanRunDebugCli> =
+  z.nativeEnum(PlanRunDebugCli);
+
+export const PlanRunModeSchema: z.ZodType<PlanRunMode> =
+  z.nativeEnum(PlanRunMode);
 
 export const PlanRunWorktreeTeardownOutcomeSchema: z.ZodType<PlanRunWorktreeTeardownOutcome> =
   z.nativeEnum(PlanRunWorktreeTeardownOutcome);
@@ -288,9 +290,6 @@ export const PruneWorktreeCheckoutOutcomeSchema: z.ZodType<PruneWorktreeCheckout
 
 export const QueueJobLogLevelSchema: z.ZodType<QueueJobLogLevel> =
   z.nativeEnum(QueueJobLogLevel);
-
-export const RalphNestedDebugCliSchema: z.ZodType<RalphNestedDebugCli> =
-  z.nativeEnum(RalphNestedDebugCli);
 
 export const RolloutEvaluationReasonSchema: z.ZodType<RolloutEvaluationReason> =
   z.nativeEnum(RolloutEvaluationReason);
@@ -1029,26 +1028,6 @@ export function EnqueueDocIngestionInputSchema(): z.ZodObject<
   });
 }
 
-export function EnqueuePlanRalphOrchestratorInputSchema(): z.ZodObject<
-  Properties<EnqueuePlanRalphOrchestratorInput>
-> {
-  return z.object({
-    branch: z.string().min(1),
-    cancelScheduled: z.boolean().nullish(),
-    checkoutId: z.string().nullish(),
-    idempotencyKey: z.string().nullish(),
-    jobRunHooksJson: z.string().nullish(),
-    mode: PlanRalphWorkflowModeSchema.nullish(),
-    planId: z.string().min(1),
-    priority: z.number().nullish(),
-    ralph: z.lazy(() => RalphPlanRunTuningInputSchema().nullish()),
-    repositoryId: z.string().nullish(),
-    runner: z.string().nullish(),
-    taskId: z.string().nullish(),
-    workingDirectory: z.string().nullish(),
-  });
-}
-
 export function EnqueuePlanRunInputSchema(): z.ZodObject<
   Properties<EnqueuePlanRunInput>
 > {
@@ -1058,11 +1037,12 @@ export function EnqueuePlanRunInputSchema(): z.ZodObject<
     checkoutId: z.string().nullish(),
     idempotencyKey: z.string().nullish(),
     jobRunHooksJson: z.string().nullish(),
+    mode: PlanRunModeSchema.nullish(),
     planId: z.string().min(1),
     priority: z.number().nullish(),
-    ralph: z.lazy(() => RalphPlanRunTuningInputSchema().nullish()),
     repositoryId: z.string().nullish(),
-    runner: z.string().nullish(),
+    taskId: z.string().nullish(),
+    tuning: z.lazy(() => PlanRunTuningInputSchema().nullish()),
     workingDirectory: z.string().nullish(),
   });
 }
@@ -1307,6 +1287,19 @@ export function PlanEmbeddingsByPlanInputSchema(): z.ZodObject<
   });
 }
 
+export function PlanRunTuningInputSchema(): z.ZodObject<
+  Properties<PlanRunTuningInput>
+> {
+  return z.object({
+    debugCli: PlanRunDebugCliSchema.nullish(),
+    driver: z.string().nullish(),
+    effort: z.string().nullish(),
+    iterationTimeoutSeconds: z.number().nullish(),
+    model: z.string().nullish(),
+    worktreeName: z.string().nullish(),
+  });
+}
+
 export function PlanRunsByPlanIdInputSchema(): z.ZodObject<
   Properties<PlanRunsByPlanIdInput>
 > {
@@ -1415,26 +1408,6 @@ export function QueueJobLogsInputSchema(): z.ZodObject<
     limit: z.number().nullish(),
     queueName: z.string().min(1),
     since: definedNonNullAnySchema.nullish(),
-  });
-}
-
-export function RalphPlanRunTuningInputSchema(): z.ZodObject<
-  Properties<RalphPlanRunTuningInput>
-> {
-  return z.object({
-    backend: z.string().nullish(),
-    disableWorktree: z.boolean().nullish(),
-    effort: z.string().nullish(),
-    iterationTimeoutSeconds: z.number().nullish(),
-    iterations: z.number().nullish(),
-    model: z.string().nullish(),
-    project: z.string().nullish(),
-    prompt: z.string().nullish(),
-    promptFile: z.string().nullish(),
-    ralphDebugCli: RalphNestedDebugCliSchema.nullish(),
-    skipWorktreeSetup: z.boolean().nullish(),
-    worktree: z.string().nullish(),
-    worktreeBase: z.string().nullish(),
   });
 }
 
@@ -1667,26 +1640,26 @@ export function RefreshCheckoutInputSchema(): z.ZodObject<
   });
 }
 
-export function RegisterCliPlanRunInputSchema(): z.ZodObject<
-  Properties<RegisterCliPlanRunInput>
+export function RegisterInputSchema(): z.ZodObject<Properties<RegisterInput>> {
+  return z.object({
+    email: z.string().min(1),
+    githubUsername: z.string().nullish(),
+    password: z.string().min(1),
+  });
+}
+
+export function RegisterPlanRunInputSchema(): z.ZodObject<
+  Properties<RegisterPlanRunInput>
 > {
   return z.object({
     branch: z.string().nullish(),
-    executionBackend: z.string().min(1),
+    driver: z.string().min(1),
     heartbeatExpected: z.boolean().nullish(),
     hostname: z.string().nullish(),
     model: z.string().nullish(),
     pid: z.number().nullish(),
     planId: z.string().min(1),
     workerId: z.string().nullish(),
-  });
-}
-
-export function RegisterInputSchema(): z.ZodObject<Properties<RegisterInput>> {
-  return z.object({
-    email: z.string().min(1),
-    githubUsername: z.string().nullish(),
-    password: z.string().min(1),
   });
 }
 
@@ -1921,11 +1894,10 @@ export function SchedulePlanRunInputSchema(): z.ZodObject<
     jobRunHooksJson: z.string().nullish(),
     planId: z.string().min(1),
     priority: z.number().nullish(),
-    ralph: z.lazy(() => RalphPlanRunTuningInputSchema().nullish()),
     replaceScheduled: z.boolean().nullish(),
     repositoryId: z.string().nullish(),
-    runner: z.string().nullish(),
     scheduledFor: definedNonNullAnySchema,
+    tuning: z.lazy(() => PlanRunTuningInputSchema().nullish()),
     workingDirectory: z.string().nullish(),
   });
 }
@@ -2005,8 +1977,8 @@ export function SetWorkspaceLocalRepositoryProjectInputSchema(): z.ZodObject<
   });
 }
 
-export function SettleCliPlanRunInputSchema(): z.ZodObject<
-  Properties<SettleCliPlanRunInput>
+export function SettlePlanRunInputSchema(): z.ZodObject<
+  Properties<SettlePlanRunInput>
 > {
   return z.object({
     headSha: z.string().nullish(),
@@ -2528,8 +2500,8 @@ export function WorkstreamTimelineInputSchema(): z.ZodObject<
   Properties<WorkstreamTimelineInput>
 > {
   return z.object({
-    backend: z.string().nullish(),
     checkoutId: z.string().nullish(),
+    driver: z.string().nullish(),
     from: definedNonNullAnySchema,
     gitBranch: z.string().nullish(),
     grouping: TimelineLaneGroupingSchema.nullish(),

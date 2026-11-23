@@ -97,7 +97,7 @@ export const AGENTS_MCP_ROUTER_GOLDEN_PROMPTS: readonly AgentsMcpRouterGoldenPro
       expectedTool: 'get_plan_output',
       id: 'plan_output_stream',
       intent: 'plans_read',
-      message: `Ralph output for ${PLAN}`,
+      message: `Plan run output for ${PLAN}`,
     },
     {
       expectedArgs: { planId: PLAN },

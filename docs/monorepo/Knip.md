@@ -56,7 +56,7 @@ Repo-wide search for `knip --fix`, `knip --fix-type`, `knip:fix`, and `fix-type 
 | **lint-staged** (`.lintstagedrc.js`)                           | No         | No            | Prettier + ESLint `--fix` on staged files; no Knip.                                                    |
 | **VS Code / Cursor** (`.vscode/settings.json`)                 | No         | No            | `formatOnSave` + `source.fixAll.eslint` on save; no Knip task or Knip extension.                       |
 | **Cursor / agent rules** (`.cursor/`, `AGENTS.md`, `.agents/`) | No         | No            | No Knip `--fix` guidance or commands.                                                                  |
-| **tools/workflows, scripts/**                                  | No         | No            | No Knip references.                                                                                    |
+| **scripts/**                                                   | No         | No            | No Knip references.                                                                                    |
 
 ### Related save-time tooling (not Knip)
 
@@ -115,7 +115,7 @@ export function getAuthToken(): string {
 **When to use `@public`**
 
 - Symbols listed in a package **`package.json` → `exports`** map (including barrel re-exports).
-- Shared utilities consumed across workspaces but not always visible to static import graphs (e.g. `@tools/workflows` parser helpers, `@tools/workflows/ralph-debug`).
+- Shared utilities consumed across workspaces but not always visible to static import graphs (e.g. `@openthrottle/openthrottle-agentic-utils` helpers).
 - Documented extension points in `CONTRIBUTING.md` or package READMEs.
 
 **When not to use `@public`**

@@ -45,13 +45,13 @@ describe('detectAgentEnvironmentFromEnv', () => {
     expect(detectAgentEnvironmentFromEnv({ CI: '0' })).toBeNull();
   });
 
-  it('reports ralph when an orchestrator set the run identity', () => {
+  it('reports headless when an orchestrator set the run identity', () => {
     expect(
       detectAgentEnvironmentFromEnv({
         CLAUDECODE: '1',
         OPENTHROTTLE_PLAN_ID: 'plan-1',
       }),
-    ).toBe('ralph');
+    ).toBe('headless');
   });
 
   it('ignores a blank run identity', () => {
@@ -82,10 +82,10 @@ describe('agentEnvironmentHeaders', () => {
   });
 
   it('sends the captured environment', () => {
-    captureStdioAgentEnvironment('ralph');
+    captureStdioAgentEnvironment('headless');
 
     expect(agentEnvironmentHeaders()).toEqual({
-      [AGENT_ENVIRONMENT_HEADER]: 'ralph',
+      [AGENT_ENVIRONMENT_HEADER]: 'headless',
     });
   });
 });

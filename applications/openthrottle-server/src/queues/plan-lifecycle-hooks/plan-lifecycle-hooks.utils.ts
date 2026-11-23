@@ -1,24 +1,24 @@
 import { PLAN_TASK_LIST_ORDER } from '@openthrottle/nestjs-repositories-server';
-import { formatPlanAndTasksForPrompt } from '@openthrottle/openthrottle-agentic-ralph';
-import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 import type {
   JobRunHookPhase,
   JobRunHookRunKind,
-  RalphNestedRunTuningInput,
-} from '@tools/workflows';
+  PlanRunTuningSettings,
+  WorkflowConfigRunner,
+} from '@openthrottle/openthrottle-agentic-utils';
 import {
   buildJobRunHookAgentPrompt,
-  createCursorWorkflowRalphIterationRunner,
   formatJobRunHookEntryLabel,
-  mergeRalphNestedRunTuningWithExecutionBackend,
+  formatPlanAndTasksForPrompt,
+  mergePlanRunTuningWithDriver,
   resolveJobRunHookLayer1Prompt,
   resolveJobRunHookOnFailure,
   resolveJobRunHookTimeoutSeconds,
+  runJobRunHookAgent,
   shouldRunJobRunHook,
-} from '@tools/workflows';
+} from '@openthrottle/openthrottle-agentic-utils';
 
-import { isRunPlanOrchestratorJobData } from '../agentic-ralph/agentic-ralph.utils.ts';
 import type { RunPlanJobData } from '../plans/plans.types.ts';
+import { isRunPlanOrchestratorJobData } from '../plans/plans.utils.ts';
 import type { ExecuteSinglePlanLifecycleHookParams } from './plan-lifecycle-hooks.types.ts';
 import type { PlanLifecycleHookJobResult } from './plan-lifecycle-hooks.types.ts';
 
@@ -64,15 +64,10 @@ const runKindFromJobData = (jobData: RunPlanJobData): JobRunHookRunKind => {
   return isRunPlanOrchestratorJobData(jobData) ? 'orchestrator' : 'spawn';
 };
 
-const executionBackendFromJobData = (
-  jobData: RunPlanJobData,
-): WorkflowConfigRunner => {
-  const merged = mergeRalphNestedRunTuningWithExecutionBackend(
-    jobData.ralph,
-    jobData.executionBackend,
-  );
+const driverFromJobData = (jobData: RunPlanJobData): WorkflowConfigRunner => {
+  const merged = mergePlanRunTuningWithDriver(jobData.tuning, jobData.driver);
 
-  return merged.backend ?? jobData.executionBackend ?? 'cursor';
+  return merged.driver ?? jobData.driver ?? 'cursor';
 };
 /**
  * @description Executes one hook entry and appends plan output lines (parity with in-process phase runner).
@@ -115,9 +110,9 @@ export const executeSinglePlanLifecycleHook = async (
 
   const planContextBlock = formatPlanAndTasksForPrompt(plan, tasks);
   const cwd = getWorkspaceRoot(jobData);
-  const backend = executionBackendFromJobData(jobData);
-  const ralph: RalphNestedRunTuningInput | undefined = jobData.ralph;
-  const model = ralph?.model ?? undefined;
+  const backend = driverFromJobData(jobData);
+  const tuning: PlanRunTuningSettings | undefined = jobData.tuning;
+  const model = tuning?.model ?? undefined;
   const onFailure = resolveJobRunHookOnFailure(entry);
   const label = formatJobRunHookEntryLabel(entry);
 
@@ -148,47 +143,26 @@ export const executeSinglePlanLifecycleHook = async (
   });
 
   const timeoutMs = resolveJobRunHookTimeoutSeconds(entry) * 1000;
-  const iterationRunner = createCursorWorkflowRalphIterationRunner();
+  const agentResult = await runJobRunHookAgent({
+    agentPrompt,
+    backend,
+    hookIndex: params.hookIndex,
+    model,
+    signal: params.signal,
+    timeoutMs,
+  });
 
-  let iterationResult: {
-    readonly cancelled?: boolean;
-    readonly errorMessage?: string;
-    readonly ok: boolean;
-    readonly output?: string;
-  };
-
-  try {
-    const output = await iterationRunner.run({
-      agentPrompt,
-      iteration: params.hookIndex,
-      model,
-      runner: backend,
-      signal: params.signal,
-      timeoutMs,
-    });
-    iterationResult = { ok: true, output };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    if (params.signal?.aborted === true) {
-      iterationResult = { cancelled: true, errorMessage: message, ok: false };
-    } else {
-      iterationResult = { errorMessage: message, ok: false };
-    }
-  }
-
-  const failed = hookFailed(iterationResult);
+  const failed = hookFailed(agentResult);
   const policy = applyHookFailurePolicy(phase, onFailure, failed);
 
-  if (iterationResult.output?.trim()) {
-    await appendPlanOutput(`${iterationResult.output.trim()}\n`);
+  if (agentResult.output?.trim()) {
+    await appendPlanOutput(`${agentResult.output.trim()}\n`);
   }
 
   if (failed) {
     const errLine =
-      iterationResult.errorMessage ??
-      (iterationResult.cancelled
-        ? 'Hook iteration cancelled'
-        : 'Hook iteration failed');
+      agentResult.errorMessage ??
+      (agentResult.cancelled ? 'Hook agent cancelled' : 'Hook agent failed');
     await appendPlanOutput(
       `[job-run-hook] ${label} failed: ${errLine} (on_failure=${onFailure})\n`,
     );

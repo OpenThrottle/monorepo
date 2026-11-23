@@ -789,14 +789,11 @@ options over a tree that still included
 `applications/openthrottle-workbench/storybook-static/`; 2,800 of those were single-letter
 identifiers inside minified Storybook bundles.
 
-**Three names are deliberately exempt**, each with an inline disable and a reason rather
+**Two names are deliberately exempt**, each with an inline disable and a reason rather
 than a rename:
 
 - `executeGraphql_v2` (`packages/nodejs-graphql`) — `_v2` is public API versioning; renaming
   an exported symbol is a breaking change, not a lint fix.
-- `buildWorkflowExecuteGraphql_v2Options` (`packages/openthrottle-agentic-ralph`) — sits next
-  to a throw-based sibling named `buildWorkflowExecuteGraphqlV2Options`; the suffix is what
-  distinguishes the Result-API variant. Renaming collides the two.
 - `type_` (`packages/openthrottle-showroom`) — `type` is a reserved word.
 
 `_v2` in this codebase consistently marks the Result-returning variant of a throw-based

@@ -177,7 +177,7 @@ describe('readKeyedJsonlRun', () => {
     const writer = new KeyedJsonlWriter({ runOutputBaseDirectory: baseDir });
     writer.appendRunChunk(QUEUE, JOB, {
       data: { detail: 42, msg: 'structured' },
-      source: 'workflow-ralph',
+      source: 'plan-run',
       timestamp: ts(0),
       type: 'meta',
     });
@@ -195,7 +195,7 @@ describe('readKeyedJsonlRun', () => {
       detail: 42,
       msg: 'structured',
     });
-    expect(result.lines[0]?.record.source).toBe('workflow-ralph');
+    expect(result.lines[0]?.record.source).toBe('plan-run');
     expect(result.lines[0]?.record.type).toBe('meta');
   });
 

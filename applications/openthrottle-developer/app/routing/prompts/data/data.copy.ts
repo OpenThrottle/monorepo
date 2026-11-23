@@ -16,7 +16,7 @@ import { BrainIcon } from 'lucide-react';
 export const PROMPTS_ONBOARDING = {
   cta: { label: `Create your first prompt`, to: `/prompts/create` },
   icon: BrainIcon,
-  internalUsage: `We hand-author Job_*, Before_*, and After_* prompts in .agents/prompts/, ingest them with database:import-agent-assets, and schedule the Job_* ones as recurring Ralph runs — nightly work-in-flight, weekly audits — so the document the agent executes is the same one we inspect here.`,
+  internalUsage: `We hand-author Job_*, Before_*, and After_* prompts in .agents/prompts/, ingest them with database:import-agent-assets, and schedule the Job_* ones as recurring scheduled runs — nightly work-in-flight, weekly audits — so the document the agent executes is the same one we inspect here.`,
   steps: [
     `Give it a title and pick a type (agents, skills, commands, prompts, …).`,
     `Write the markdown body — the instructions the agent will follow.`,

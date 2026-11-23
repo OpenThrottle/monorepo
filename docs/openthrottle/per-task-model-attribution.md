@@ -144,7 +144,7 @@ It is **not retired.** Precedence, highest first:
 3. `null`.
 
 Retiring it would regress the paths that have no orchestrator to declare anything: a headless
-driver, a queued Ralph run whose model is fixed at enqueue, or any MCP client that simply knows
+driver, a queued plan run whose model is fixed at enqueue, or any MCP client that simply knows
 what model it is running and sets the variable at launch. Those are exactly the cases the variable
 was added for, and they remain correct. Keeping it costs one `??`.
 

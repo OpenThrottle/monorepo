@@ -15,7 +15,7 @@
   ],
   "references": [
     {
-      "path": "../openthrottle-agentic-workflow/tsconfig.lib.json"
+      "path": "../openthrottle-drivers/tsconfig.lib.json"
     },
     {
       "path": "../nestjs-testing/tsconfig.lib.json"

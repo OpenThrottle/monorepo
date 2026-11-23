@@ -28,7 +28,7 @@ IS NULL`) that merges into a canonical row if a remote later appears (§4).
 - **`repository_checkouts`** — per-user path instances, migrated 1:1 from today's
   `workspace_local_repositories` rows. Keeps the existing unique `(user_id, filesystem_path)`
   constraint. Adds `managed` (bool, OT-cloned vs. user-registered) and `kind`
-  (`'primary' | 'worktree'`, default `'primary'`) so workflow-ralph's worktree pool can unify
+  (`'primary' | 'worktree'`, default `'primary'`) so a future worktree pool can unify
   onto this table later without another migration (out of scope here — `kind` is forward-looking
   plumbing only, no worktree-pool behavior changes in this plan).
 
@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS repository_checkouts (
 
 COMMENT ON TABLE repository_checkouts IS 'Per-user on-disk instances of an OpenThrottle repository; the DB row is a cache over the manifest + git state actually on disk.';
 COMMENT ON COLUMN repository_checkouts.managed IS 'True when OT cloned this checkout (into OPENTHROTTLE_CHECKOUT_ROOT); false for user-registered existing folders.';
-COMMENT ON COLUMN repository_checkouts.kind IS 'primary = the user''s main checkout; worktree = reserved for future workflow-ralph worktree-pool unification, not used by this plan.';
+COMMENT ON COLUMN repository_checkouts.kind IS 'primary = the user''s main checkout; worktree = reserved for future worktree-pool unification, not used by this plan.';
 COMMENT ON COLUMN repository_checkouts.inspection IS 'Cached RepositoryInspectionService snapshot (git/stack/agent-config detection); disk is the source of truth, this is a refreshable cache keyed by scanned_at.';
 
 CREATE INDEX IF NOT EXISTS idx_repository_checkouts_repository_id ON repository_checkouts (repository_id);
@@ -200,8 +200,8 @@ turned out to be the same repo as X — linked to the existing project."
   absolute paths, e.g. `~/Development`) is the allowlist for `discoveredFolders` (shallow scan)
   and `browseDirectory` (subdirectory listing). This is **separate** from
   `OPENTHROTTLE_ALLOWED_WORKING_DIRS` (used by `validateWorkingDirectory` in
-  `enqueue-plan-ralph-tuning.ts`) because the two serve different trust boundaries: working-
-  directory validation gates _executing Ralph_ in a path a user already explicitly typed, while
+  `enqueue-plan-run-tuning.utils.ts`) because the two serve different trust boundaries: working-
+  directory validation gates _executing a plan run_ in a path a user already explicitly typed, while
   workspace-roots gates the _server proactively walking the filesystem and listing what it
   finds_ — a broader capability that needs a narrower, purpose-configured allowlist. When
   `OPENTHROTTLE_WORKSPACE_ROOTS` is unset, `discoveredFolders`/`browseDirectory` return empty

@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { PLAN_RUN_RUNNER_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_RUN_OT_LOOP_COPY } from '~/routing/plans/data/data.copy';
 
 import type { PlanRunOtLoopFieldsProps } from '../PlanRunOtLoopFields';
 import { PlanRunOtLoopFields } from '../PlanRunOtLoopFields';
@@ -31,14 +31,14 @@ describe('PlanRunOtLoopFields Component', () => {
     renderFields();
 
     const field = component.getByRole('textbox', {
-      name: PLAN_RUN_RUNNER_COPY.validationLabel,
+      name: PLAN_RUN_OT_LOOP_COPY.validationLabel,
     });
 
     expect(field).toHaveAccessibleDescription(
-      PLAN_RUN_RUNNER_COPY.validationHint,
+      PLAN_RUN_OT_LOOP_COPY.validationHint,
     );
     expect(
-      component.getByText(PLAN_RUN_RUNNER_COPY.otLoopHelp),
+      component.getByText(PLAN_RUN_OT_LOOP_COPY.otLoopHelp),
     ).toBeInTheDocument();
   });
 
@@ -48,7 +48,7 @@ describe('PlanRunOtLoopFields Component', () => {
 
     await user.type(
       component.getByRole('textbox', {
-        name: PLAN_RUN_RUNNER_COPY.validationLabel,
+        name: PLAN_RUN_OT_LOOP_COPY.validationLabel,
       }),
       'a',
     );
@@ -62,7 +62,7 @@ describe('PlanRunOtLoopFields Component', () => {
 
     await user.type(
       component.getByRole('spinbutton', {
-        name: PLAN_RUN_RUNNER_COPY.maxRetriesLabel,
+        name: PLAN_RUN_OT_LOOP_COPY.maxRetriesLabel,
       }),
       '3',
     );
@@ -73,18 +73,18 @@ describe('PlanRunOtLoopFields Component', () => {
   test('flags an invalid retry count', () => {
     props = {
       ...props,
-      maxRetriesError: PLAN_RUN_RUNNER_COPY.maxRetriesInvalid(5),
+      maxRetriesError: PLAN_RUN_OT_LOOP_COPY.maxRetriesInvalid(5),
       maxRetriesText: '9',
     };
     renderFields();
 
     const field = component.getByRole('spinbutton', {
-      name: PLAN_RUN_RUNNER_COPY.maxRetriesLabel,
+      name: PLAN_RUN_OT_LOOP_COPY.maxRetriesLabel,
     });
 
     expect(field).toBeInvalid();
     expect(field).toHaveAccessibleDescription(
-      PLAN_RUN_RUNNER_COPY.maxRetriesInvalid(5),
+      PLAN_RUN_OT_LOOP_COPY.maxRetriesInvalid(5),
     );
   });
 });

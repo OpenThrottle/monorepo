@@ -25,7 +25,7 @@
  * a plan whose author has no user row has no rules and is skipped.
  *
  * The evaluation environment comes from the job data (`environment`:
- * `ci | interactive | ralph`, or null). GraphQL-triggered passes carry the
+ * `ci | headless | interactive`, or null). GraphQL-triggered passes carry the
  * environment the request claims through the `x-ot-environment` header, which
  * the openthrottle-mcp stdio server sets from its launch environment; the
  * developer UI and background triggers (the tagging worker) carry null. An

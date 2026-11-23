@@ -1,6 +1,6 @@
 /**
  * @description Adds `embeddings` to `serverHealth` as a field resolver, so the coverage queries
- * run only when a client selects it (MCP `health` does; Ralph's preflight and REST /health
+ * run only when a client selects it (MCP `health` does; the plan-run preflight and REST /health
  * do not).
  */
 

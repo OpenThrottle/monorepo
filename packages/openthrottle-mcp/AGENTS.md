@@ -15,8 +15,9 @@ Nx project name is the full `@openthrottle/openthrottle-mcp` (not the bare direc
 - `pnpm nx run @openthrottle/openthrottle-mcp:verify-graphql-codegen` — regenerates GraphQL types
   and fails if `src/__generated__` drifts from the `.graphql` documents. Run after any `.graphql`
   document change. This output is **committed** (this package's `.gitignore` negates the root
-  `**/__generated__/**` rule, as `openthrottle-agentic-ralph` does), so the guard has a git
-  baseline in CI too.
+  `**/__generated__/**` rule), so the guard has a git baseline in CI too. This is the workspace's
+  live CI gate on the shared documents (the server's committed output is
+  covered by the post-codegen `git diff --exit-code`).
 
 - **`build` neither runs codegen nor type-checks.** It compiles `tsconfig.build.json`
   (`tsconfig.lib.json` + `noCheck`) from the committed `src/__generated__`. This package sits in
@@ -35,18 +36,23 @@ Nx project name is the full `@openthrottle/openthrottle-mcp` (not the bare direc
 
 ## Fragment coverage (why a tool result can be missing a field)
 
-Plan/task/note/project operations are consumed cross-package from
-`packages/openthrottle-agentic-ralph/src/graphql/ralph/*.graphql`, and a tool result **is** the
+This package **owns** the shared plan/task/note/project/commit/plan-run documents in
+`src/graphql/operations/*.graphql` (plus `plan-messages.graphql` and `work-sessions.graphql`),
+because a package cannot read documents from an application. `openthrottle-server`'s codegen
+(`applications/openthrottle-server/codegen.ts`, committed `src/__generated__/`, used by the OT Loop
+job in `src/queues/ot-loop/`) reads those
+same files by path; it is not a dependency of this package and must never be imported by it. A
+tool result **is** the
 fragment's selection set passed through verbatim (`runTool<{ plan: GetPlanQuery['plan'] }>` →
 `src/utils/runTool.ts`). A scalar the shared fragment does not select is therefore invisible to
 every MCP caller, while codegen, typecheck and the drift guard all stay green — the field is simply
 absent. `get_plan` hid `runConfigJson` this way for months.
 
 So: **adding a scalar field to `PlanObject`/`TaskObject` server-side is not done until the shared
-fragment selects it.** `packages/openthrottle-agentic-ralph/src/graphql/__tests__/fragment-coverage.test.ts`
+fragment selects it.** `src/graphql/__tests__/fragment-coverage.test.ts`
 enforces this — every scalar/enum field on a covered type must be selected by the fragment or named
 in that file's `EXCLUSIONS` with a reason. Object and list-of-object fields are exempt (a selection
-set is a real choice). After changing a shared fragment, regenerate **both** consumers.
+set is a real choice). After changing a shared document, regenerate **both** consumers: `pnpm nx affected --target=codegen-graphql --parallel` (this package and `openthrottle-server`) and commit every `__generated__`. Renaming an operation renames its generated `*Document`/`*Query`/`*Mutation` names for both; update importers, never alias.
 
 ## Layout
 
@@ -54,7 +60,7 @@ set is a real choice). After changing a shared fragment, regenerate **both** con
   activity, output, search, commit, agent-conversations, …); start here to add or change a tool.
 - `src/nest/McpDeveloperMcpSurface.ts` — the MCP surface wired into NestJS.
 - `src/auth/getAuthToken.ts` — bearer-token resolution, exported via the `./auth` subpath.
-- `src/graphql/**/*.graphql` → `src/__generated__/` — codegen output; edit documents, never `__generated__`.
+- `src/graphql/**/*.graphql` → `src/__generated__/` — codegen output; edit documents, never `__generated__`. `src/graphql/operations/` holds the shared documents (operation names must stay unique across everything the three codegens read, case-insensitively: `ClaimPlanMessages` and `claimPlanMessages` would both emit `ClaimPlanMessagesDocument`).
 - `docs/verification-environment.md` — the canonical local services/env/smoke checklist.
 
 ## Invariants & gotchas
@@ -73,7 +79,7 @@ set is a real choice). After changing a shared fragment, regenerate **both** con
   chosen live URL and reads `OPENTHROTTLE_MCP_AUTH_TOKEN` from `.env` (worktree then root). Don't
   reintroduce `source ./.env` — the targeted-read rewrite exists to avoid worktree env side effects.
 - `agent_conversation_*` (web chat threads) and `plan_output_stream` (`get_plan_output` /
-  `append_plan_output` / `delete_plan_output`, Ralph/plan iteration logs) are distinct data
+  `append_plan_output` / `delete_plan_output`, plan iteration logs) are distinct data
   sources — don't cross them. `delete_plan_output` removes a single chunk (`chunkId`) or clears a
   plan's output (optionally scoped to `taskId`); it delegates to the `deletePlanOutput` mutation.
 

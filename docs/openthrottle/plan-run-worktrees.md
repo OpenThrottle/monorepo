@@ -1,7 +1,7 @@
 # Plan-run worktrees (BullMQ / programmatic runs)
 
-Every programmatic plan run on the plans queue — the GraphQL `enqueuePlanRalph` mutation,
-tag-action rules, the Ralph CLI handoff — executes inside a git worktree that **OpenThrottle
+Every programmatic plan run on the plans queue — the GraphQL `enqueuePlanRun` mutation,
+tag-action rules — executes inside a git worktree that **OpenThrottle
 creates itself**, with verbose agent logging, and with the run's workspace bound to that
 worktree.
 
@@ -9,31 +9,26 @@ Out of scope: interactive chat runs (`react-router-chat`), which keep their exis
 working-directory behavior, and **scheduled agent jobs**, which have their own processor and
 cwd ladder (`resolveScheduledAgentJobRunCwd`) rather than a plan-run job payload.
 
-## Defaults, and how to opt out
+## Defaults and per-plan settings
 
 A plan run enqueued with no explicit configuration runs **cursor + worktree + verbose**. The values
 live in `@openthrottle/openthrottle-plan-config` and are injected server-side at enqueue
 (`applyPlanRunProgrammaticDefaults`), so every programmatic path inherits them — the GraphQL
-mutation, tag-action rules, and the Ralph CLI handoff alike. The developer UI only reflects the same
+mutation and tag-action rules alike. The developer UI only reflects the same
 constants; it is not a second source of truth.
 
-Opting out is per plan, on the Configuration tab:
+Every run gets a worktree; there is no opt-out. Two settings are per plan, on the Configuration tab:
 
-- **Worktree → Off** persists `ralph.worktreeCli: 'omit'` and enqueues `disableWorktree: true`, so
-  the run works directly in the base checkout.
-- **Logging → omit** persists `ralph.debugCli: 'omit'`, which travels explicitly in the enqueue
+- **Logging → omit** persists `run.debugCli: 'omit'`, which travels explicitly in the enqueue
   payload precisely so the server default cannot override it.
-- **Worktree → After the run → Keep the worktree** persists `ralph.worktreeCleanup: 'keep'`, so a
+- **Worktree → After the run → Keep the worktree** persists `run.worktreeCleanup: 'keep'`, so a
   clean run that opens a PR leaves its worktree in place (see [Teardown](#teardown)). The default,
-  `'on-pr'`, removes it. Unlike the two above it does not travel in the enqueue payload: the worker
+  `'on-pr'`, removes it. Unlike logging it does not travel in the enqueue payload: the worker
   reads it from the plan when the run ends, so it holds for every enqueue path and a switch to
   `'keep'` made mid-run is honoured.
 
-**Existing plans.** An absent key resolves to the _current_ default; a persisted value — including
-`'omit'` — is a choice and is kept. Because the old defaults wrote `'omit'` into every new plan,
-migration `098` re-points only those plans whose entire `ralph` block still equals the old default
-block (demonstrably never configured) and leaves every customized plan alone. It is idempotent: a
-re-run matches zero rows.
+**Existing plans.** An absent key resolves to the _current_ default; a persisted value —
+including `'omit'` — is a choice and is kept.
 
 **Disk.** Worktree-by-default means one worktree per plan with a run in flight or work still owed,
 each with its own `node_modules` — on the order of 1–2 GB apiece. A run that finishes cleanly with a
@@ -77,7 +72,7 @@ allocation and `.env`), and only self-heals on the first `:dev`.
 | Decision           | Choice                                                                                                       | Rationale                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | ------------------ | ------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Naming**         | `plan-<first 8 chars of the plan UUID>` — e.g. `plan-5e172b67`, branch `openthrottle/plan-5e172b67`          | Deterministic (survives a plan retitle), collision-free within a repo, already inside the `[A-Za-z0-9._-]` set the `ot-worktree` skill sanitizes to, and short enough to read in `git branch` and a PR title.                                                                                                                                                                                                                                                                                                                      |
-| **Lifecycle**      | One worktree per **plan**, reused across runs                                                                | Ralph runs are iterations of the same work landing as one branch and one PR; reuse preserves that branch history and keeps disk flat. Per-run worktrees would multiply ~2 GB `node_modules` trees per iteration.                                                                                                                                                                                                                                                                                                                   |
+| **Lifecycle**      | One worktree per **plan**, reused across runs                                                                | Runs of one plan are iterations of the same work landing as one branch and one PR; reuse preserves that branch history and keeps disk flat. Per-run worktrees would multiply ~2 GB `node_modules` trees per iteration.                                                                                                                                                                                                                                                                                                             |
 | **Cleanup**        | Teardown-on-PR by default, a guarded reaper as backstop, a per-row action for discovery (OT plan `0414a40b`) | Parity with `/ot-loop`, which already tears its worktree down once the PR is open. Removing at PR time frees the branch for `git checkout` in the primary right away (git refuses a branch checked out in another worktree), and re-provisioning is cheap and safe: `worktree:new` checks out the existing `openthrottle/plan-<8>` branch. Everything teardown-on-PR skips — handoff owed, failed, cancelled, opted out — falls to the reaper once it is safe. Every path goes through the same guards; see [Teardown](#teardown). |
 | **Failure policy** | Fail the run fast                                                                                            | A fallback to the process cwd silently drops the agent into the primary checkout — the exact bug this design fixes. The provisioner's stderr goes to the plan output stream so the failure is legible.                                                                                                                                                                                                                                                                                                                             |
 | **Timing**         | At job start, in the orchestrator — not at enqueue                                                           | A run queued for hours should not hold a worktree. It also keeps `validateWorkingDirectory`'s existence check honest: the enqueue payload carries a worktree _name_, and only an explicit caller-supplied `workingDirectory` is existence-checked.                                                                                                                                                                                                                                                                                 |
@@ -85,7 +80,7 @@ allocation and `.env`), and only self-heals on the first `:dev`.
 
 ## Worktree root
 
-Every agent — Claude, Cursor, Ralph, the BullMQ plans worker — creates worktrees under one
+Every agent — Claude, Cursor, the BullMQ plans worker — creates worktrees under one
 root. There is **one** implementation of that ladder,
 `applications/openthrottle-server/src/services/worktree-root/worktree-root.utils.ts`,
 mirroring `resolve_worktree_root` in `skills/ot-worktree/scripts/root.sh`. Both the provisioning
@@ -168,7 +163,7 @@ Two paths remove a plan's worktree, and they must stay in step:
 
 The host path attempts a teardown only when the run was provisioned into its own worktree, finished
 `workflow_complete` or `workflow_tasks_exhausted`, the finalize step opened a PR, and the plan's
-`ralph.worktreeCleanup` is not `'keep'`. A handoff-owed, failed, cancelled or max-iterations run
+`run.worktreeCleanup` is not `'keep'`. A handoff-owed, failed or cancelled run
 keeps its worktree; a usage-limited run is left alone entirely, because its continuation reuses it.
 Either way the run's plan output gets **one** `[plan-run-worktree-teardown]` line: the removed path
 and the branch that survived, or why the worktree was kept. A teardown never changes the run's

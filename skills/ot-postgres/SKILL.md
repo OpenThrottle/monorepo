@@ -27,7 +27,7 @@ next number from **that database's** folder on `main`.
 ## Table comment rules (required)
 
 1. **Every new table** must have **`COMMENT ON TABLE`** in the **same migration file** as **`CREATE TABLE`**. Follow the tone of the `create_plan_runs_table` migration: short, purpose-focused prose; use **"OpenThrottle"** in new comments (**"OpenThrottle CMS"** in the `cms` database).
-2. **`COMMENT ON COLUMN`** is **optional** — add it for non-obvious fields (enums, JSONB shapes, snapshot columns, check-constraint semantics). See `execution_backend` in the same migration.
+2. **`COMMENT ON COLUMN`** is **optional** — add it for non-obvious fields (enums, JSONB shapes, snapshot columns, check-constraint semantics). See the column comments in the `create_plan_runs_table` migration.
 3. **Batch comment-only migrations** (the `comment_on_openthrottle_tables_batch_*` files) are for **backfill or rename debt only** — **≤10 tables per file**. Do not split new table DDL from its table comment across files.
 4. **Do not edit applied migrations in place** to add comments; add a new numbered batch file instead (audit: `databases/openthrottle/TABLE_COMMENTS_AUDIT.md`).
 

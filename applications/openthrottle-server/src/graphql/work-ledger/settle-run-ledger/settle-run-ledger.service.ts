@@ -8,7 +8,7 @@
  * instruction that was not followed with a differently-worded instruction is not a fix. So the
  * server does it, on a call the agent already has to make.
  *
- * settleCliPlanRun is the loop's mandatory last call — nothing server-side settles a detached-CLI
+ * settlePlanRun is the loop's mandatory last call — nothing server-side settles a detached-CLI
  * run, so every exit path goes through here, and the COMPLETED path runs immediately after the PR
  * opens while the run row is still addressable. Everything else needed is already on plan_runs:
  * plan_id, checkout_id and actor_user_id.
@@ -63,9 +63,9 @@ import { RepositoryInspectionService } from '../../repository-inspection/reposit
 import { resolveArtifactForWrite } from '../artifact-type-registry/artifact-type-registry.utils.ts';
 import type { RecordSettledRunArtifactsInput } from './settle-run-ledger.types.ts';
 
-/** Seeded service account that owns Ralph runs (databases/openthrottle/migrations/045). */
-const WORKFLOW_RALPH_SERVICE_ACCOUNT_NAME = 'workflow-ralph';
-const TOOL_NAME = 'workflow-ralph';
+/** Seeded service account that owns plan-run worker writes (migration 197 names it `plan-runner`). */
+const PLAN_RUNNER_SERVICE_ACCOUNT_NAME = 'plan-runner';
+const TOOL_NAME = 'plan-runner';
 
 /** Runs that may have opened a PR without reporting it: everything that started and then ended. */
 const ENDED_RUN_STATUSES = [
@@ -440,10 +440,10 @@ export class SettleRunLedgerService {
     return repository == null ? null : this.toRepoRef(repository);
   }
 
-  /** The seeded Ralph service account; null when it cannot be resolved. */
+  /** The seeded plan-runner service account; null when it cannot be resolved. */
   private async resolveActorServiceAccountId(): Promise<string | null> {
     const account = await this.serviceAccountsRepository.findByName(
-      WORKFLOW_RALPH_SERVICE_ACCOUNT_NAME,
+      PLAN_RUNNER_SERVICE_ACCOUNT_NAME,
     );
 
     return account?.id ?? null;

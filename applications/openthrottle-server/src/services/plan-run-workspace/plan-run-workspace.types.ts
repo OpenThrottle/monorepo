@@ -1,16 +1,16 @@
 import type { PlanRun } from '@openthrottle/nestjs-repositories-server';
-import type { WorkflowCorrelation } from '@openthrottle/openthrottle-agentic-workflow';
-import type { loadWorkflowRalphConfig } from '@tools/workflows';
+import type { loadPlanRunConfig } from '@openthrottle/openthrottle-agentic-loop';
+import type { WorkflowCorrelation } from '@openthrottle/openthrottle-agentic-utils';
 
-import type { RunPlanOrchestratorJobData } from '../../queues/agentic-ralph/agentic-ralph.types.ts';
+import type { RunPlanOrchestratorJobData } from '../../queues/plans/plans.types.ts';
 import type { ProvisionedPlanRunWorktree } from '../plan-run-worktree-provision/plan-run-worktree-provision.types.ts';
 
-/** @description The repo's `.workflow-ralph.json` (merged with env) as `loadWorkflowRalphConfig` returns it. */
-export type PlanRunWorkspaceConfig = ReturnType<typeof loadWorkflowRalphConfig>;
+/** @description The repo's the `defaults` block of `.openthrottle/ot-loop.json` (merged with env) as `loadPlanRunConfig` returns it. */
+export type PlanRunWorkspaceConfig = ReturnType<typeof loadPlanRunConfig>;
 
 /**
- * @description Inputs to {@link PlanRunWorkspaceService.prepare}. Both runners (Ralph and OT Loop)
- * pass the same job payload and correlation; they differ only in the two `skip*` flags.
+ * @description Inputs to {@link PlanRunWorkspaceService.prepare}. The OT Loop runner passes the
+ * job payload and correlation plus the two `skip*` flags.
  */
 export interface PreparePlanRunWorkspaceParams {
   readonly correlation: WorkflowCorrelation | undefined;

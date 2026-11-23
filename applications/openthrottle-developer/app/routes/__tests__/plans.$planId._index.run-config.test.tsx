@@ -68,19 +68,10 @@ const buildPlanDetailMatches = (
 const planId = '7a293e25-e50d-4d4e-86a0-768b779ab0d9';
 
 const storedRunConfigJson = JSON.stringify({
-  ralph: {
+  run: {
     debugCli: 'omit',
-    executionBackend: 'claude',
-    iterationTimeoutText: '',
-    iterations: 7,
+    driver: 'claude',
     model: 'auto',
-    project: 'packages/foo',
-    prompt: '/agents/ralph',
-    promptFile: '',
-    promptLayer: 'named',
-    skipWorktreeSetup: false,
-    worktreeBase: '',
-    worktreeCli: 'omit',
     worktreeName: '',
   },
   target: { mode: 'plan', taskId: '' },
@@ -137,16 +128,17 @@ describe('routes/plans.$planId._index run config hydration', () => {
 
     await waitFor(() => {
       expect(
-        component.getByLabelText('Execution backend for this plan run'),
+        component.getByLabelText('Driver for this plan run'),
       ).toHaveTextContent('Claude Code CLI');
     });
 
+    // Fields only the retired runner read are no longer shown.
     expect(
-      component.getByLabelText('Iteration count for --iterations'),
-    ).toHaveValue(7);
+      component.queryByLabelText('Iteration count for --iterations'),
+    ).not.toBeInTheDocument();
     expect(
-      component.getByLabelText('NX project name for --project'),
-    ).toHaveValue('packages/foo');
+      component.queryByLabelText('NX project name for --project'),
+    ).not.toBeInTheDocument();
     expect(
       component.getByLabelText('Absolute path to workspace directory'),
     ).toHaveValue('/tmp/openthrottle-workspace');

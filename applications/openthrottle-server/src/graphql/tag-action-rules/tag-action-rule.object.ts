@@ -46,7 +46,7 @@ export class TagActionRuleObject {
   status!: string | null;
 
   @Field(() => String, {
-    description: `Optional environment qualifier (ci | interactive | ralph); null applies everywhere.`,
+    description: `Optional environment qualifier (such as ci or interactive); null applies everywhere.`,
     nullable: true,
   })
   environment!: string | null;

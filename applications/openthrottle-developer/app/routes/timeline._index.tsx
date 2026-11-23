@@ -72,8 +72,8 @@ export const loader = async (args: Route.LoaderArgs) => {
     GetWorkstreamTimelineDocument,
     {
       input: {
-        backend: null,
         checkoutId: null,
+        driver: null,
         from: window.fromIso,
         gitBranch,
         grouping,

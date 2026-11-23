@@ -17,7 +17,7 @@ import type {
 import {
   PLAN_RUN_BULLMQ_QUEUE_NAME,
   planRunJobDetailPath,
-} from '~/routing/plans/utils/build-workflow-ralph-argv';
+} from '~/routing/plans/utils/plan-run-options';
 import { formatScheduledInstant } from '~/routing/plans/utils/plan-run-schedule';
 import { addRecentWorkspacePath } from '~/routing/plans/utils/workspace-path';
 

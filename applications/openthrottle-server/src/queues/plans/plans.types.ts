@@ -1,14 +1,57 @@
 import type { WorktreeWorkflowResult } from '@openthrottle/nestjs-worktrees';
-import type { WorkflowFinishedReason } from '@openthrottle/openthrottle-agentic-ralph';
+import type { WorkflowFinishedReason } from '@openthrottle/openthrottle-agentic-loop';
 import type {
   ChildProcessMetrics,
+  JobRunHooksConfig,
+  PlanRunTuningSettings,
   WallClockMetrics,
+  WorkflowConfigRunner,
 } from '@openthrottle/openthrottle-agentic-utils';
+import type { PlanRunConfigOtLoop } from '@openthrottle/openthrottle-plan-config';
 import type { Job } from 'bullmq';
 
 import type { TaskRunMetrics } from '../../metrics/process-metrics/process-metrics.types.ts';
-import type { RunPlanOrchestratorJobData } from '../agentic-ralph/agentic-ralph.types.ts';
-export type { RunPlanOrchestratorJobData };
+
+/**
+ * @description Plan vs task-centric scope for a plan-run job. Matches the `mode` GraphQL enum.
+ */
+export type RunPlanJobWorkflowMode = 'plan' | 'task';
+
+/**
+ * @description The BullMQ payload of a plan run on the `plans` queue. `runKind` must be
+ * `orchestrator`: the run executes in-process through OT Loop, never as a spawned child.
+ */
+export interface RunPlanOrchestratorJobData {
+  /**
+   * Driver selected once for this run. Optional only for previously persisted BullMQ jobs.
+   */
+  readonly driver?: WorkflowConfigRunner;
+  /**
+   * Lifecycle hooks copied from the plan (or enqueue override) at queue time.
+   */
+  readonly jobRunHooks?: JobRunHooksConfig;
+  /**
+   * @description Defaults to `plan` when omitted. When `task`, set `taskId` for task-centric runs.
+   */
+  readonly mode?: RunPlanJobWorkflowMode;
+  /**
+   * OT Loop run tuning (docs/workflows/ot-loop-job.md § 1).
+   */
+  readonly otLoop?: PlanRunConfigOtLoop;
+  readonly planId: string;
+  readonly runKind: 'orchestrator';
+  readonly taskId?: string;
+  /**
+   * Run tuning: OT Loop reads the driver, model, effort, worktree name and timeout from it.
+   */
+  readonly tuning?: PlanRunTuningSettings;
+  /**
+   * Optional absolute path to a local project directory. When set, the run uses this as the
+   * working directory instead of the monorepo root.
+   */
+  readonly workingDirectory?: string;
+}
+
 /**
  * ## Plans queue job shape (design)
  *
@@ -16,14 +59,12 @@ export type { RunPlanOrchestratorJobData };
  * cancellation by `planId`, health, and Bull Board all key off it.
  *
  * **Run kind:** Every queued run is now an in-process orchestrator run (`runKind: 'orchestrator'`).
- * `PlansProcessor` uses `AgenticRalphOrchestratorService` (`createWorkflowRalphOrchestrator` from
- * `@openthrottle/openthrottle-agentic-ralph`) with worker-scoped `executeGraphqlV2` and an in-process
- * `iterationRunner` — no child `workflow-ralph` process. The legacy nested-`workflow-ralph` spawn
- * worker path was removed (OT plan 2ab62876); `enqueuePlanRun` routes through the orchestrator.
+ * `PlansProcessor` runs every job through `OtLoopOrchestratorService` (OT Loop) with
+ * worker-scoped `executeGraphqlV2` — no child process. `enqueuePlanRun` routes through the
+ * orchestrator enqueue.
  *
- * **Tuning:** `ralph` is always {@link RalphNestedRunTuningInput} (argv-equivalent nested flags),
- * mapped to workflow context via `buildRalphFlowContextFromPlanRunTuning`. `mode` / `taskId` give
- * task-centric parity with CLI `--task`. Local `pnpm exec workflow-ralph` remains for out-of-band runs.
+ * **Tuning:** `tuning` is {@link PlanRunTuningSettings}; OT Loop reads the driver, model, effort,
+ * worktree name and timeout from it. `mode` / `taskId` give task-centric runs.
  */
 export type RunPlanJobData = RunPlanOrchestratorJobData;
 

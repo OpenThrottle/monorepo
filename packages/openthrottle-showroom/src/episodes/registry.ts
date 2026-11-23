@@ -20,7 +20,7 @@ import { episode as ep07SemanticSearch } from './07-semantic-search/episode.ts';
 import { episode as ep08PromoteTask } from './08-promote-task/episode.ts';
 import { episode as ep09TagsAndRules } from './09-tags-and-rules/episode.ts';
 import { episode as ep10Notes } from './10-notes/episode.ts';
-import { episode as ep11RalphOneTask } from './11-ralph-one-task/episode.ts';
+import { episode as ep11PlanRunOneTask } from './11-plan-run-one-task/episode.ts';
 import { episode as ep12WatchRunLive } from './12-watch-run-live/episode.ts';
 import { episode as ep13PlanIdTraceability } from './13-plan-id-traceability/episode.ts';
 import { episode as ep14ScheduledRuns } from './14-scheduled-runs/episode.ts';
@@ -50,7 +50,7 @@ export const EPISODES: Readonly<Record<string, VideoEpisode>> = {
   [ep08PromoteTask.id]: ep08PromoteTask,
   [ep09TagsAndRules.id]: ep09TagsAndRules,
   [ep10Notes.id]: ep10Notes,
-  [ep11RalphOneTask.id]: ep11RalphOneTask,
+  [ep11PlanRunOneTask.id]: ep11PlanRunOneTask,
   [ep12WatchRunLive.id]: ep12WatchRunLive,
   [ep13PlanIdTraceability.id]: ep13PlanIdTraceability,
   [ep14ScheduledRuns.id]: ep14ScheduledRuns,

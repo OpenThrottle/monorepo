@@ -61,8 +61,8 @@ describe('SKILL_AVAILABILITY_ENVIRONMENTS', () => {
   test('is the agreed as-const triple', () => {
     expect([...SKILL_AVAILABILITY_ENVIRONMENTS]).toEqual([
       'ci',
+      'headless',
       'interactive',
-      'ralph',
     ]);
   });
 });
@@ -265,9 +265,9 @@ describe('resolveSkillAvailability — tag rung (rung 2)', () => {
 });
 
 describe('resolveSkillAvailability — environment (rung 0 + specificity)', () => {
-  test('worked example: env-specific allow beats env-agnostic deny under ralph', () => {
+  test('worked example: env-specific allow beats env-agnostic deny under headless', () => {
     const ruleA = rule({
-      environment: 'ralph',
+      environment: 'headless',
       id: 'ruleA',
       tagAllow: ['github'],
     });
@@ -276,7 +276,7 @@ describe('resolveSkillAvailability — environment (rung 0 + specificity)', () =
     const { skill: resolved } = resolveOne(
       skill({ slug: 'gh-skill', tags: ['github'] }),
       ruleSet('allow', [ruleA, ruleB]),
-      { environment: 'ralph' },
+      { environment: 'headless' },
     );
 
     expect(resolved.effectiveDisableModelInvocation).toBe(false);
@@ -284,14 +284,14 @@ describe('resolveSkillAvailability — environment (rung 0 + specificity)', () =
   });
 
   test('env-specific rules for a different environment are pre-filtered out', () => {
-    // The ci-scoped deny does not apply under ralph; only the agnostic allow
+    // The ci-scoped deny does not apply under headless; only the agnostic allow
     // remains, which does not decide, so posture allow ⇒ frontmatter.
     const { skill: resolved } = resolveOne(
       skill({ slug: 'a', tags: ['github'] }),
       ruleSet('allow', [
         rule({ environment: 'ci', id: 'ciOnly', tagDeny: ['github'] }),
       ]),
-      { environment: 'ralph' },
+      { environment: 'headless' },
     );
 
     expect(resolved.effectiveDisableModelInvocation).toBe(false);
@@ -321,11 +321,11 @@ describe('resolveSkillAvailability — environment (rung 0 + specificity)', () =
     );
     expect(denied.skill.provenance).toBe('tag-deny:github@ix');
 
-    // A ralph-scoped rule does not apply under the default interactive env.
+    // A headless-scoped rule does not apply under the default interactive env.
     const untouched = resolveOne(
       skill({ slug: 'a', tags: ['github'] }),
       ruleSet('allow', [
-        rule({ environment: 'ralph', id: 'rx', tagDeny: ['github'] }),
+        rule({ environment: 'headless', id: 'rx', tagDeny: ['github'] }),
       ]),
       {},
     );
@@ -411,12 +411,12 @@ describe('resolveSkillAvailability — reserved-inert axes + shape', () => {
     const withAxes = resolveOne(
       skill({ disableModelInvocation: true, slug: 'a' }),
       ruleSet('allow', [rule({ id: 'r1', tagAllow: ['github'] })]),
-      { editor: 'vscode', environment: 'ralph', role: 'architect' },
+      { editor: 'vscode', environment: 'headless', role: 'architect' },
     );
     const withoutAxes = resolveOne(
       skill({ disableModelInvocation: true, slug: 'a' }),
       ruleSet('allow', [rule({ id: 'r1', tagAllow: ['github'] })]),
-      { environment: 'ralph' },
+      { environment: 'headless' },
     );
 
     expect(withAxes.skill).toEqual(withoutAxes.skill);

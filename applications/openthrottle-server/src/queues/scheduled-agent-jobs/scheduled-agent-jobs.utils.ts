@@ -74,7 +74,7 @@ export const resolveScheduledAgentJobTimeoutMs = (
  *
  * `getOpenThrottleRoot` is preferred over `process.cwd()` because it is deterministic: it walks up for
  * the `.openthrottle.mjs` workspace marker (from this module's own location first, so it is correct
- * regardless of how the process was launched) and is already the shared resolver used by the Ralph
+ * regardless of how the process was launched) and is already the shared resolver used by the plan-run
  * workflow path.
  */
 export const resolveScheduledAgentJobCwd = (

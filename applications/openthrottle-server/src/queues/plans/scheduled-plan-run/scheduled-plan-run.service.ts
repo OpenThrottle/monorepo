@@ -10,7 +10,7 @@ import {
 import { PlanOutputStreamRepository } from '@openthrottle/nestjs-repositories-server';
 import type { Queue } from 'bullmq';
 
-import { validateWorkingDirectory } from '../../../graphql/plans/enqueue-plan-ralph-tuning/enqueue-plan-ralph-tuning.utils.ts';
+import { validateWorkingDirectory } from '../../../graphql/plans/enqueue-plan-run-tuning/enqueue-plan-run-tuning.utils.ts';
 import { PlanEnqueueService } from '../../../graphql/plans/plan-enqueue/plan-enqueue.service.ts';
 import type { ScheduledRunFireOutcome } from '../../../graphql/plans/plan-enqueue/plan-enqueue.types.ts';
 import { StatusChangeSystemAccountService } from '../../../graphql/work-ledger/status-change-system-account/status-change-system-account.service.ts';

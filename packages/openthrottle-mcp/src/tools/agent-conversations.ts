@@ -29,7 +29,7 @@ const LIST_MAX_LIMIT = 100;
 const MESSAGES_DEFAULT_LIMIT = 100;
 const MESSAGES_MAX_LIMIT = 500;
 
-const AGENT_CONVERSATION_BOUNDARY_WARNING = `Web chat threads only — use \`get_plan_output\` for Ralph/plan iteration logs.`;
+const AGENT_CONVERSATION_BOUNDARY_WARNING = `Web chat threads only — use \`get_plan_output\` for plan iteration logs.`;
 
 type ListAgentConversationsResult = GenericResult<{
   conversations: AgentConversationFragment[];

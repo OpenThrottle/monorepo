@@ -8,29 +8,27 @@ Everything the skill keeps in the parent turn becomes deterministic job code. Th
 standalone prompt built from the task row and reports back through a result file.
 
 > **Lockstep.** [`skills/ot-loop/SKILL.md` § The loop](../../skills/ot-loop/SKILL.md#the-loop-one-task-at-a-time)
-> is the canonical statement of the per-task discipline. It is restated deliberately in two other
-> places: [`skills/agents-ralph/SKILL.md`](../../skills/agents-ralph/SKILL.md), read by the Ralph
-> runner, and this job, which is the **third restatement, in code**. A change to § The loop must
-> land here in the same PR. The package entry point carries a comment saying the same.
+> is the canonical statement of the per-task discipline. It is restated deliberately in one other
+> place: this job, which is the **restatement in code**. A change to § The loop must land here in
+> the same PR. The package entry point carries a comment saying the same.
 
-It runs side by side with Ralph on the same `Plans` queue and is selected per plan. Ralph stays the
-default until the end-to-end verification (plan task 10) passes.
+It is the only plan runner: every job on the `Plans` queue runs it.
 
 ---
 
 ## 1. Run kind and job identity
 
-| Concern                      | Decision                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Queue                        | `Plans` (`PLANS_QUEUE_NAME`), unchanged.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| BullMQ job name              | **Unchanged in v1:** both runners enqueue under `RUN_PLAN_ORCHESTRATOR_JOB_NAME` (`'Agentic Ralph'`). Cancel (`cancelPlanRunJobsForPlan` → `isPlanRalphBullJobName`, an allowlist in `queues/plans/plans.utils.ts`), usage-limit resume and the scheduled-run reproject all match or enqueue that one name (`plan-enqueue.service.ts` `enqueuePlanRalphOrchestrator`). A second name would have to be threaded through every one of them, and a missed one means a cancelled OT Loop job that still runs. Queue display labels the runner from the payload instead. Renaming the job (e.g. to a runner-neutral `Plan Run`) is left to the Ralph-retirement follow-up.                                                                 |
-| Job payload discriminator    | `RunPlanOrchestratorJobData` gains `runner?: 'ralph' \| 'ot-loop'` plus an `otLoop?: OtLoopRunTuning` block. Absent `runner` means Ralph, so every BullMQ job already persisted in Redis keeps working. Every path that rebuilds job data from a snapshot (`orchestratorJobInputFromSnapshot`, used by scheduled reproject and resume) must carry both keys, or an OT Loop run silently becomes a Ralph run; each gets a round-trip test.                                                                                                                                                                                                                                                                                             |
-| `runKind` on the payload     | Stays `'orchestrator'`. `runKind` has only ever meant _in-process vs spawned child_, and the OT Loop job is in-process. Reusing it for "which runner" would conflate two axes. `PlansProcessor.processOrchestrator()` branches on `runner`, not on `runKind`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| Branch point                 | `processOrchestrator()` replaces its direct `agenticRalphOrchestrator.runPlanOrchestratorJob(...)` call with a dispatch on `data.runner`, and logs `workflowKind: 'ralph' \| 'ot-loop'` accordingly. The settle branches after it are shared verbatim. The workspace setup now private to `AgenticRalphOrchestratorService` — worktree provisioning + `onWorktreeProvisioned`, checkout registration, the snapshot workspace rewrite, the MCP preflight, foreign-skill injection and config load — is extracted into a shared `PlanRunWorkspaceService` (`services/plan-run-workspace/`) that both runners call, so neither duplicates it. The OT Loop runner skips the MCP preflight and skill injection (its worker uses neither).  |
-| `plan_runs.run_kind`         | Stays `'orchestrator'` (the CHECK in migration 038 allows `spawn`/`orchestrator`). **No migration.**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| Where the runner is recorded | `plan_runs.run_config_snapshot` gains an additive top-level `runner` key (`'ralph' \| 'ot-loop'`, absent = Ralph) and the `otLoop` tuning block, written at enqueue by the existing snapshot builder (`enqueue-plan-run-config-snapshot.utils.ts`). That is enough: the runner is only read to label and filter runs, and JSONB answers `run_config_snapshot->>'runner' = 'ot-loop'`. A dedicated column would be justified only if a hot query filters on it, and none does.                                                                                                                                                                                                                                                         |
-| Plan config                  | `runConfigJson` gains a top-level `runner` and an `otLoop` sibling of `ralph`. **Not free:** the storage and snapshot Zod schemas in `packages/openthrottle-plan-config` are `.strict()`, so `plans.resolver.ts` and `plan-creation.service.ts` would reject the new keys today. The schemas, their types, the developer UI mirror (`plan-run-config-ui.ts`) and the snapshot round-trip all change, each with a test — a dedicated plan task. Ralph-only fields under `ralph` (`prompt`, `promptLayer`, `iterations`) are ignored by the OT Loop runner. The shared fields (`executionBackend`, `model`, `effort`, worktree settings, `debugCli`) are read from `ralph` for both runners in v1 so no plan config has to be migrated. |
-| Outcome type                 | The job returns the existing `WorkflowRunResult` from `@openthrottle/openthrottle-agentic-ralph` (`finished` with optional `headSha`/`prNumber`, `workflow_usage_limited`, or `failed`). That reuses **every** settle branch in `processOrchestrator` (FAILED, CANCELLED, USAGE_LIMITED + resume, COMPLETED with ledger artifacts, afterAll hooks, worktree cleanup) without duplicating one.                                                                                                                                                                                                                                                                                                                                         |
+| Concern                   | Decision                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Queue                     | `Plans` (`PLANS_QUEUE_NAME`), unchanged.                                                                                                                                                                                                                                                                                                                                                                                                              |
+| BullMQ job name           | Every job enqueues under `RUN_PLAN_ORCHESTRATOR_JOB_NAME` (`'Plan Run'`). Cancel (`cancelPlanRunJobsForPlan` → `isPlanRunBullJobName`, an allowlist in `queues/plans/plans.utils.ts`), usage-limit resume and the scheduled-run reproject all match or enqueue that one name (`plan-enqueue.service.ts` `enqueuePlanRun`). A second name would have to be threaded through every one of them, and a missed one means a cancelled job that still runs. |
+| Job payload               | `RunPlanOrchestratorJobData` carries the run tuning, including an `otLoop?: OtLoopRunTuning` block. Every path that rebuilds job data from a snapshot (`orchestratorJobInputFromSnapshot`, used by scheduled reproject and resume) must carry that block, or a re-enqueued run silently loses its validation commands; each gets a round-trip test.                                                                                                   |
+| `runKind` on the payload  | Stays `'orchestrator'`. `runKind` has only ever meant _in-process vs spawned child_, and the OT Loop job is in-process. `PlansProcessor.processOrchestrator()` runs the job directly.                                                                                                                                                                                                                                                                 |
+| Workspace setup           | `PlanRunWorkspaceService` (`services/plan-run-workspace/`) owns the setup before the loop — worktree provisioning + `onWorktreeProvisioned`, checkout registration and the snapshot workspace rewrite — so the job code stays pure. The OT Loop worker uses neither the MCP preflight nor foreign-skill injection. `processOrchestrator()` logs `workflowKind: 'ot-loop'` and hands the result to the settle branches.                                |
+| `plan_runs.run_kind`      | Stays `'orchestrator'` (the CHECK in migration 038 allows `spawn`/`orchestrator`). **No migration.**                                                                                                                                                                                                                                                                                                                                                  |
+| Where the run is recorded | `plan_runs.run_config_snapshot` holds the resolved `run` block (`driver`, `model`, `effort`, `debug`, `iterationTimeoutSeconds`, `worktreeName` plus the validation fields), written at enqueue by the snapshot builder (`enqueue-plan-run-config-snapshot.utils.ts`); the driver also has its own `plan_runs.driver` column.                                                                                                                         |
+| Plan config               | `runConfigJson` holds one `run` block (`driver`, `model`, `effort`, `debugCli`, `iterationTimeoutSeconds`, `worktreeName`, `worktreeCleanup`, and optionally `setupCommands`, `validationCommands`, `finalValidationCommands`, `maxRetries`). The storage and snapshot Zod schemas in `packages/openthrottle-plan-config` are `.strict()`, so a stored key outside that shape is rejected.                                                            |
+| Outcome type              | The job returns the existing `WorkflowRunResult` from `@openthrottle/openthrottle-agentic-loop` (`finished` with optional `headSha`/`prNumber`, `workflow_usage_limited`, or `failed`). That reuses **every** settle branch in `processOrchestrator` (FAILED, CANCELLED, USAGE_LIMITED + resume, COMPLETED with ledger artifacts, afterAll hooks, worktree cleanup) without duplicating one.                                                          |
 
 `OtLoopRunTuning` (v1):
 
@@ -51,10 +49,9 @@ interface OtLoopRunTuning {
 task, the loop ends after it, and finalize runs as for a plan.
 
 **Package.** The pure loop lives in a new package, `@openthrottle/openthrottle-agentic-loop`
-(`packages/openthrottle-agentic-loop`), scaffolded by `@tools/generators` and shaped like
-`openthrottle-agentic-ralph` (server-consumed, so it follows that package's `exports` shape). The
-NestJS wiring lives in `applications/openthrottle-server/src/queues/ot-loop/`
-(`OtLoopOrchestratorService`), next to `queues/agentic-ralph/`.
+(`packages/openthrottle-agentic-loop`), scaffolded by `@tools/generators` and source-first
+(`exports` → `src`). The NestJS wiring lives in `applications/openthrottle-server/src/queues/ot-loop/`
+(`OtLoopOrchestratorService`).
 
 ---
 
@@ -63,17 +60,17 @@ NestJS wiring lives in `applications/openthrottle-server/src/queues/ot-loop/`
 Every row of the skill's [What delegates, and what never does](../../skills/ot-loop/SKILL.md#what-delegates-and-what-never-does)
 table, mapped:
 
-| Skill row (stays in the parent)     | Owner here          | Where                                                                                                                                                                                                                                                                                                                                                                                                     |
-| ----------------------------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Task selection and ordering         | **Job**             | Loop package: lowest-`sortOrder` `IN_PROGRESS`, else lowest `PENDING`/`QUEUED`; ties by `createdAt`. Re-read from OT at every boundary, never cached.                                                                                                                                                                                                                                                     |
-| The status flips (steps 1 and 4)    | **Job**             | `updateTask` via GraphQL. Step 1 asserts no other task is `IN_PROGRESS` first; if one is, it is resumed instead. That task may have been left by a crashed predecessor, a human, a Ralph run or an interactive loop, so the job logs what it found (latest work session's model and age) before resuming it.                                                                                              |
-| Session open / `begin_task_session` | **Job**             | Each task gets its **own** work-session row: `startWorkSession({ model })` → `attachWorkSessionSubject({ planId, taskId })`, and at the next boundary `endWorkSession` on **that task session only**. The processor's run session (`openRalphSession`, closed in its `finally`, carried as `X-OT-Session-Id`) is never ended by the job. `model` is the routed model actually passed to the driver (§ 8). |
-| Validation (step 3)                 | **Job**             | § 6. Sequential, never skipped. The worker _may_ run checks for its own feedback (§ 3); only the job's run decides the task.                                                                                                                                                                                                                                                                              |
-| The commit (step 5)                 | **Job**             | Commit with the result file's `commitMessage` (commitlint-checked) plus `Plan-Id:`/`Task-Id:` footers; no commit when nothing tracked changed. Husky hooks run.                                                                                                                                                                                                                                           |
-| `append_plan_output` narration      | **Job**             | Per-task start/finish lines, validation summaries and the streamed worker + validation output, all tagged with `taskId`.                                                                                                                                                                                                                                                                                  |
-| The cancel poll and inbox claim     | **Job**             | § 9.                                                                                                                                                                                                                                                                                                                                                                                                      |
-| Settling the run row                | **Job (processor)** | The job returns a `WorkflowRunResult`; `PlansProcessor` settles exactly as it does for Ralph.                                                                                                                                                                                                                                                                                                             |
-| **The work of step 2**              | **Worker**          | One `runDriverAsync` invocation per attempt, in the run's worktree, with the § 3 prompt.                                                                                                                                                                                                                                                                                                                  |
+| Skill row (stays in the parent)     | Owner here          | Where                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ----------------------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Task selection and ordering         | **Job**             | Loop package: lowest-`sortOrder` `IN_PROGRESS`, else lowest `PENDING`/`QUEUED`; ties by `createdAt`. Re-read from OT at every boundary, never cached.                                                                                                                                                                                                                                                       |
+| The status flips (steps 1 and 4)    | **Job**             | `updateTask` via GraphQL. Step 1 asserts no other task is `IN_PROGRESS` first; if one is, it is resumed instead. That task may have been left by a crashed predecessor, a human, an earlier run or an interactive loop, so the job logs what it found (latest work session's model and age) before resuming it.                                                                                             |
+| Session open / `begin_task_session` | **Job**             | Each task gets its **own** work-session row: `startWorkSession({ model })` → `attachWorkSessionSubject({ planId, taskId })`, and at the next boundary `endWorkSession` on **that task session only**. The processor's run session (`openPlanRunSession`, closed in its `finally`, carried as `X-OT-Session-Id`) is never ended by the job. `model` is the routed model actually passed to the driver (§ 8). |
+| Validation (step 3)                 | **Job**             | § 6. Sequential, never skipped. The worker _may_ run checks for its own feedback (§ 3); only the job's run decides the task.                                                                                                                                                                                                                                                                                |
+| The commit (step 5)                 | **Job**             | Commit with the result file's `commitMessage` (commitlint-checked) plus `Plan-Id:`/`Task-Id:` footers; no commit when nothing tracked changed. Husky hooks run.                                                                                                                                                                                                                                             |
+| `append_plan_output` narration      | **Job**             | Per-task start/finish lines, validation summaries and the streamed worker + validation output, all tagged with `taskId`.                                                                                                                                                                                                                                                                                    |
+| The cancel poll and inbox claim     | **Job**             | § 9.                                                                                                                                                                                                                                                                                                                                                                                                        |
+| Settling the run row                | **Job (processor)** | The job returns a `WorkflowRunResult`; `PlansProcessor` settles every outcome the same way.                                                                                                                                                                                                                                                                                                                 |
+| **The work of step 2**              | **Worker**          | One `runDriverAsync` invocation per attempt, in the run's worktree, with the § 3 prompt.                                                                                                                                                                                                                                                                                                                    |
 
 Steps the skill does outside the table, also job-owned: plan `IN_PROGRESS` (already done by the
 processor's `promoteParentPlanToInProgress`), follow-up tasks (step 6, from the result file), the
@@ -230,7 +227,7 @@ the patch's `--stat` summary to plan output. The file lives only inside the work
 or the reaper eventually deletes, so the plan-output summary is the durable record; a worktree that
 ends with a BLOCKED task is kept by the existing cleanup policy. It then restores the worktree to `taskStartSha` (`git reset --hard` + `git clean -fd`,
 which never touches ignored paths, so `.ot-loop/` survives). This only ever runs inside the run's
-own provisioned worktree. A run that opted out of a worktree (`ralph.worktree` absent, the
+own provisioned worktree. A run that opted out of a worktree (no `tuning.worktreeName` on the job payload, the
 `disableWorktree` discriminator — not `skipWorktreeSetup`, which is stripped) is **rejected at
 enqueue** for the OT Loop runner rather than resetting a human's checkout (see § 6 on why rejection
 happens at enqueue).
@@ -241,7 +238,7 @@ happens at enqueue).
 
 **Resolution order** (first hit wins):
 
-1. `runConfigJson.otLoop.validationCommands` on the plan (per plan override).
+1. `runConfigJson.run.validationCommands` on the plan (per plan override).
 2. `.openthrottle/ot-loop.json` committed in the target repository — `{ "validation": { "commands": [...] } }` (per repository; works for foreign, non-Nx repos with no server schema).
 3. **Nx default** when the worktree has an `nx.json`: three commands, in order —
    `pnpm nx affected -t lint --base={taskStartSha} --parallel=1`, then `typecheck`, then `test`.
@@ -249,7 +246,7 @@ happens at enqueue).
    started, which is exactly this task's scope. The package manager prefix comes from the repo's
    lockfile (`pnpm-lock.yaml` → `pnpm`, `package-lock.json` → `npx`, `yarn.lock` → `yarn`).
 4. **None** → the enqueue is rejected with
-   `OT Loop needs a validation command: set otLoop.validationCommands on the plan or add .openthrottle/ot-loop.json`.
+   `OT Loop needs a validation command: set run.validationCommands on the plan or add .openthrottle/ot-loop.json`.
    The runner never marks a task done without validation, so it refuses to run rather than skip it.
 
 **Where it is checked.** Resolution runs at **enqueue** in `plan-enqueue.service` (against the base
@@ -318,7 +315,7 @@ attempt the task goes `BLOCKED` with summary `validation failed after <n> attemp
 - `finalizePlanRun` is reused for push/PR/`.ot-pr-draft`, with a **new explicit parameter**:
   today `markReady` is derived as `!DRAFT_ONLY_REASONS.has(priorReason)`, so `workflow_complete`
   (and the `handoff_owed` retry) runs `gh pr ready`. Plan task 5 adds `markReady: boolean` to
-  `FinalizePlanRunParams` (Ralph passes today's derived value, unchanged); this runner always passes
+  `FinalizePlanRunParams`; this runner always passes
   `false`. The prior reason stays truthful: every task resolved → `workflow_complete`; any task
   `BLOCKED` → `workflow_tasks_blocked`. Its `workflow_complete_handoff_owed` behaviour on a failed
   push/PR step is kept.
@@ -327,7 +324,7 @@ attempt the task goes `BLOCKED` with summary `validation failed after <n> attemp
 
 ## 8. Model routing (summary — implemented in plan task 6)
 
-One driver per run (`ralph.executionBackend`). Model per task from
+One driver per run (`run.driver`). Model per task from
 `skills/ot-loop/references/model-routing.json`: `lower(category)` → tier → model, miss or blank →
 `default`; no category reaches `review`. If the tier's model is not valid for the run's driver
 (`discoverModels`), the run's configured model is used instead. Whatever is passed to the driver is
@@ -363,7 +360,7 @@ diverges, explicitly:
   honours only for an attempt whose prompt carried guidance.
 - **Mid-attempt delivery goes through a hook in the worker.** The job only regains control between
   attempts, so it cannot deliver a message posted while the worker CLI runs. The spawned CLI can:
-  the worker runner loads OT's hook payloads (`--plugin-dir`, the same set Ralph loads) and exports the run identity (`OPENTHROTTLE_PLAN_ID`, `OPENTHROTTLE_PLAN_RUN_ID`,
+  the worker runner loads OT's hook payloads (`--plugin-dir`) and exports the run identity (`OPENTHROTTLE_PLAN_ID`, `OPENTHROTTLE_PLAN_RUN_ID`,
   `OPENTHROTTLE_TASK_ID`) into every attempt's env, and the `plan-inbox-claim` PreToolUse hook falls
   back to it when the transcript shows no `register_plan_run` (a headless worker never calls it).
   The hook claims before a destructive `Bash` call or a delegation and denies the call on a `STEER`.
@@ -385,15 +382,15 @@ normal close. On other drivers a usage limit looks like a failed attempt: it bur
 end the task `BLOCKED` with the driver's message as the reason. A human re-enqueues. Detecting limits
 for more drivers belongs in each driver's `parseOutput`, not in this job.
 
-**Lifecycle hooks.** `beforeAll`/`afterAll` stay with the processor, unchanged. Ralph's
-per-iteration lifecycle events are not emitted by this runner in v1; that is a known gap, not a
-silent difference, and is listed in the run's plan output on start.
+**Lifecycle hooks.** `beforeAll`/`afterAll` stay with the processor, unchanged. Per-iteration
+lifecycle events are not emitted by this runner in v1; that is a known gap, and is listed in the
+run's plan output on start.
 
 ---
 
 ## 10. Output streaming
 
-Unlike the Ralph orchestrator path, which has no `onChunk`, the job passes `onChunk` to
+The job passes `onChunk` to
 `runDriverAsync` and to every validation command, and forwards it to `PlanOutputStreamService`
 tagged with `taskId`. Chunks are batched (flush at 4 KB or 2 s) so a chatty CLI does not write a row
 per line.
@@ -405,7 +402,7 @@ The run view needs both to group a task into attempts
 (`Attempt 1 · worker 1m 17s · validation: lint ✗`).
 
 **Attempt travels in `plan_output_stream.iteration`.** The column has existed since migration 007
-and nothing in the OT Loop path writes it. Ralph's orchestrator never sets it either, but an agent
+and nothing in the OT Loop path writes it. An agent
 _may_ pass one through `append_plan_output`, which is why the UI keeps showing `#N` for chunks that
 have no kind. Inside a task the loop writes the 1-based attempt number; retries and the commit-fix
 attempt each count. Plan-scoped loop lines (setup, finalize) leave it null.
@@ -427,14 +424,14 @@ and an optional `kind` on `AppendPlanOutputInput`.
 - The marker would reach every other reader of `content` — `get_plan_output`, semantic search,
   retention exports — and each would have to strip it. A column is invisible to readers that do not
   ask for it.
-- `content` is free text that agents write through `append_plan_output`. A Ralph agent echoing a
+- `content` is free text that agents write through `append_plan_output`. An agent echoing a
   log line could forge a kind by accident; a column it never sets cannot be forged.
 - A typed, `CHECK`ed column lets the UI switch on a union instead of parsing text, and lets a later
   `get_plan_output(kind: …)` filter in SQL.
 
 The cost is one additive migration, a GraphQL field and codegen — a plan task of its own.
 
-**Ralph is unaffected.** Every existing row and every Ralph chunk has `kind = null`. The run view
+**Existing rows are unaffected.** Every row written before the column has `kind = null`. The run view
 groups by attempt only the task chunks that carry a kind; a null-kind chunk renders exactly as it
 does today, `#iteration` header included. No backfill: historical OT Loop rows stay flat.
 
@@ -451,16 +448,15 @@ failure, the first line of the commit output for a commit failure.
 
 ## 11. Schema and migration needs
 
-**No database migration for the runner itself** (the chunk `kind` column of § 10.1 came later, in
-its own migration). The runner is carried in the BullMQ payload and in
-`run_config_snapshot`; `run_kind` keeps its in-process meaning; no new driver widens migration 079's
-`execution_backend` CHECK.
+**No database migration for the job itself** (the chunk `kind` column of § 10.1 came later, in
+its own migration). The run tuning is carried in the BullMQ payload and in `run_config_snapshot`;
+`run_kind` keeps its in-process meaning; the `plan_runs.driver` CHECK names the drivers a run can
+use.
 
-**Schema work that is needed** (added to the plan as its own task, before the queue wiring):
-the strict Zod schemas in `packages/openthrottle-plan-config` (storage and snapshot), their types,
-`plan-run-config-ui.ts`, and the snapshot → job-input round-trip (`orchestratorJobInputFromSnapshot`)
-must accept and carry `runner` and `otLoop`. The GraphQL enqueue input gains an additive optional
-runner field (plan task 7).
+**Schema work that was needed:** the strict Zod schemas in `packages/openthrottle-plan-config`
+(storage and snapshot), their types, `plan-run-config-ui.ts`, and the snapshot → job-input
+round-trip (`orchestratorJobInputFromSnapshot`) accept and carry the `run` block with its
+validation fields. The GraphQL enqueue input carries the same tuning.
 
 ---
 
@@ -469,24 +465,24 @@ runner field (plan task 7).
 Reviewed with opus-4.8 (2026-11-09) before implementation, against the code. All 16 findings were
 resolved in this doc:
 
-| #   | Severity   | Finding                                                                                                                                    | Resolution                                                                    |
-| --- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------- |
-| 1   | blocker    | A new `OT Loop` job name is invisible to cancel (`isPlanRalphBullJobName` allowlist), and resume/reproject re-enqueue under the Ralph name | § 1: one job name for both runners, dispatch on `payload.runner`              |
-| 2   | blocker    | Plan-config and snapshot Zod schemas are `.strict()`; reproject drops unknown keys                                                         | § 1, § 11: schema task added to the plan; round-trip tests required           |
-| 3   | blocker    | `finalizePlanRun` has no "never ready" mode                                                                                                | § 7: new explicit `markReady` param; truthful reason mapping                  |
-| 4   | should-fix | Re-squashing an already-pushed branch makes every re-run non-fast-forward                                                                  | § 7: squash only commits after `origin/<branch>`                              |
-| 5   | should-fix | Workspace setup is private to the Ralph service                                                                                            | § 1: extract `PlanRunWorkspaceService`; branch point named                    |
-| 6   | should-fix | Wrong opt-out discriminator                                                                                                                | § 5: `ralph.worktree` absent                                                  |
-| 7   | should-fix | A start-time failure strands the plan `IN_PROGRESS`                                                                                        | § 6: reject at enqueue; failed branch restores plan status                    |
-| 8   | should-fix | A worker with OT MCP can auto-close the plan                                                                                               | § 2: strip OT credentials from worker env; restore plan status; check branch  |
-| 9   | should-fix | Ending "the" session could end the processor's run session                                                                                 | § 2: separate per-task session rows                                           |
-| 10  | should-fix | Usage limits only detected for Claude; an abort looks like an error                                                                        | § 5, § 9: abort check first; limitation documented                            |
-| 11  | should-fix | Inbox handling departs from the skill and loses later-task guidance                                                                        | § 9: run-scoped guidance list carried forward; marked as a Lockstep exception |
-| 12  | should-fix | Fallback commit fails `subject-case`; hook failures unhandled; follow-up duplication                                                       | § 7: lower-case, separate commit-fix budget, commit → follow-ups → COMPLETED  |
-| 13  | should-fix | No setup (codegen) or whole-plan validation                                                                                                | § 6: `setup` and `finalValidation` commands; red final → BLOCKED task         |
-| 14  | nit        | Patches non-binary and ephemeral                                                                                                           | § 5: `--binary`, stat summary to plan output                                  |
-| 15  | nit        | Resume claim about who holds `IN_PROGRESS` was false                                                                                       | § 2: log the prior holder                                                     |
-| 16  | nit        | `mode: 'task'`, title in thin rule, follow-ups on BLOCKED                                                                                  | § 1, § 4, § 5                                                                 |
+| #   | Severity   | Finding                                                                                                                                | Resolution                                                                    |
+| --- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| 1   | blocker    | A new `OT Loop` job name is invisible to cancel (`isPlanRunBullJobName` allowlist), and resume/reproject re-enqueue under the old name | § 1: one job name for every run                                               |
+| 2   | blocker    | Plan-config and snapshot Zod schemas are `.strict()`; reproject drops unknown keys                                                     | § 1, § 11: schema task added to the plan; round-trip tests required           |
+| 3   | blocker    | `finalizePlanRun` has no "never ready" mode                                                                                            | § 7: new explicit `markReady` param; truthful reason mapping                  |
+| 4   | should-fix | Re-squashing an already-pushed branch makes every re-run non-fast-forward                                                              | § 7: squash only commits after `origin/<branch>`                              |
+| 5   | should-fix | Workspace setup is private to the previous runner service                                                                              | § 1: extract `PlanRunWorkspaceService`; branch point named                    |
+| 6   | should-fix | Wrong opt-out discriminator                                                                                                            | § 5: no `tuning.worktreeName`                                                 |
+| 7   | should-fix | A start-time failure strands the plan `IN_PROGRESS`                                                                                    | § 6: reject at enqueue; failed branch restores plan status                    |
+| 8   | should-fix | A worker with OT MCP can auto-close the plan                                                                                           | § 2: strip OT credentials from worker env; restore plan status; check branch  |
+| 9   | should-fix | Ending "the" session could end the processor's run session                                                                             | § 2: separate per-task session rows                                           |
+| 10  | should-fix | Usage limits only detected for Claude; an abort looks like an error                                                                    | § 5, § 9: abort check first; limitation documented                            |
+| 11  | should-fix | Inbox handling departs from the skill and loses later-task guidance                                                                    | § 9: run-scoped guidance list carried forward; marked as a Lockstep exception |
+| 12  | should-fix | Fallback commit fails `subject-case`; hook failures unhandled; follow-up duplication                                                   | § 7: lower-case, separate commit-fix budget, commit → follow-ups → COMPLETED  |
+| 13  | should-fix | No setup (codegen) or whole-plan validation                                                                                            | § 6: `setup` and `finalValidation` commands; red final → BLOCKED task         |
+| 14  | nit        | Patches non-binary and ephemeral                                                                                                       | § 5: `--binary`, stat summary to plan output                                  |
+| 15  | nit        | Resume claim about who holds `IN_PROGRESS` was false                                                                                   | § 2: log the prior holder                                                     |
+| 16  | nit        | `mode: 'task'`, title in thin rule, follow-ups on BLOCKED                                                                              | § 1, § 4, § 5                                                                 |
 
 The reviewer confirmed `nx affected --base=<sha>` unions the committed diff since that sha with
 uncommitted and untracked files.

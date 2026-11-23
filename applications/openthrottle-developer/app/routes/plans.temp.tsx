@@ -11,10 +11,7 @@ import * as React from 'react';
 import { Form } from 'react-router';
 
 import type { Route } from '@/app/routes/+types/plans.temp';
-import {
-  RalphNestedDebugCli,
-  TestWorkflowDocument,
-} from '~/__generated__/graphql';
+import { TestWorkflowDocument } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import { PlanTempFormSchema } from '~/routing/plans/utils/PlanTempFormSchema';
 
@@ -99,9 +96,6 @@ export const action = async (args: Route.ActionArgs) => {
     input: {
       branch,
       planId,
-      ralph: {
-        ralphDebugCli: RalphNestedDebugCli.Verbose,
-      },
     },
   });
 

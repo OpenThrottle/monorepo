@@ -1,13 +1,13 @@
 # @openthrottle/openthrottle-agentic-utils — agent notes
 
-Leaf runtime utilities for the agentic stack, extracted incrementally from `@tools/workflows` and
-`@openthrottle/node-client`: Postgres URL resolution, OT root discovery, workflow transport/config cwd,
+Leaf runtime utilities for the agentic stack, extracted incrementally from `@openthrottle/node-client` and the earlier
+workflow tooling: Postgres URL resolution, OT root discovery, workflow transport/config cwd,
 subprocess PATH, debug-env parsing, wall-clock/child-process metrics, and local model-server
 discovery.
 
 **Consumed by:** `openthrottle-server`, `openthrottle-developer`,
-`@openthrottle/openthrottle-workflows`, `@openthrottle/openthrottle-agentic-ralph`,
-`@openthrottle/nestjs-model-discovery`, `@openthrottle/nestjs-worktrees`, `@tools/workflows`.
+`@openthrottle/openthrottle-agentic-loop`, `@openthrottle/nestjs-model-discovery`,
+`@openthrottle/nestjs-worktrees`.
 
 ## Layout
 
@@ -102,11 +102,12 @@ Every streaming path is bounded so a wedged backend can't hang a chat turn:
 - Utilities stay **pure**: `model-discovery` never reads `process.env` — callers pass an env-like
   object to `resolveHosts`/`resolvePorts`. Keep new utilities free of framework/transport deps.
 - Public API names may be generalized, but **env var names are frozen** for compatibility
-  (`POSTGRES_URL`, `WORKFLOW_RALPH_OT_ROOT`, `OPENTHROTTLE_POSTGRES_URL`, …).
+  (`POSTGRES_URL`, `OPENTHROTTLE_PLAN_RUN_OT_ROOT`, `OPENTHROTTLE_POSTGRES_URL`, …).
 
 ## Don't
 
-- Not a home for CLI bins, OpenThrottle GraphQL/Postgres CRUD, or job-run-hook runners — those stay in `@tools/workflows` until their own migration phase.
+- Not a home for OpenThrottle GraphQL/Postgres CRUD. The one bin here is `workflow-memory-reconcile` (`src/bin/memory-reconcile.ts`; it talks to OT over plain `fetch`, no GraphQL client) and, being a top-level-executing file, it is listed in `sideEffects`.
+- The job-run lifecycle hooks (`types/job-run-lifecycle-hooks.ts`, `utils/job-run-*.ts`, `utils/hook-task-to-job-run-hook.ts`) and the run settings they share (`PlanRunTuningSettings`, `PlanRunRuntimeSeed`, `DEFAULT_PLAN_RUN_*`) live here; nothing here imports `agentic-loop`.
 - The cached NestJS wrapper over model discovery is `@openthrottle/nestjs-model-discovery`; don't
   add ConfigService/caching here.
 

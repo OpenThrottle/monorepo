@@ -7,7 +7,7 @@ Design for persisted web chat threads in OpenThrottle. Implements plan `4fa6d16c
 - **Web chat only** — developer UI chat via `agentsRunChatTurn` and `@openthrottle/react-router-chat`.
 - **Human JWT users only** for persistence and conversation CRUD. Service accounts receive an error when `persist: true`; they may still use stateless `agentsRunChatTurn`.
 - **Backwards compatible:** `persist` omitted or `false` keeps prior stateless behavior (`conversationId` echoed for correlation only; no DB writes).
-- **Separate from Ralph:** `plan_output_stream` remains the store for Ralph iteration logs. Do not write Ralph output to agent conversations.
+- **Separate from plan runs:** `plan_output_stream` remains the store for plan-run output. Do not write plan-run output to agent conversations.
 
 ## Persistence
 

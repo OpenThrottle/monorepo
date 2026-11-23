@@ -1,12 +1,12 @@
 /**
- * @description Injectable logger contract for the driver execution engine, replacing tools/workflows'
- * `ralphDebugLogger` so this package carries no dependency on Ralph. The engine defaults to
- * {@link noopDriverLogger}; tools/workflows wires `ralphDebugLogger.debug` / `.verbose` in.
+ * @description Injectable logger contract for the driver execution engine, so this package carries no logging
+ * dependency. The engine defaults to {@link noopDriverLogger}; callers wire their own
+ * `debug` / `verbose` in.
  */
 
 /**
  * @description Two-level structured logger. Both methods accept arbitrary args (message + context
- * object), matching the legacy `ralphDebugLogger` call sites.
+ * object).
  * @public
  */
 export interface DriverLogger {

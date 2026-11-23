@@ -44,7 +44,6 @@ import { SystemMetricsService } from '../../metrics/system-metrics/system-metric
 import type { SystemMetricsSnapshot } from '../../metrics/system-metrics/system-metrics.types.ts';
 import { NotificationsService } from '../../notifications/notifications.service.ts';
 import { PlanRunWorktreeCleanupService } from '../../services/plan-run-worktree-cleanup/plan-run-worktree-cleanup.service.ts';
-import { AgenticRalphOrchestratorService } from '../agentic-ralph/orchestrator/orchestrator.service.ts';
 import { BullMqRunOutputRetentionService } from '../bullmq-run-output/retention/retention.service.ts';
 import { OtLoopOrchestratorService } from '../ot-loop/orchestrator/orchestrator.service.ts';
 import { WorkflowLifecycleDispatcherFactory } from '../plan-lifecycle-hooks/workflow-lifecycle-dispatcher/workflow-lifecycle-dispatcher.service.ts';
@@ -153,15 +152,9 @@ vi.mock('../job-run-hooks/job-run-hooks.utils', () => ({
     mockRunBeforeRunHooksAndHandleBlock(...args),
 }));
 
-const mockRunPlanOrchestratorJob = vi.fn().mockResolvedValue({
-  exitCode: 0,
-  reason: 'workflow_tasks_exhausted',
-  status: 'finished',
-});
-
 const mockRunOtLoopJob = vi.fn().mockResolvedValue({
   exitCode: 0,
-  reason: 'workflow_complete',
+  reason: 'workflow_tasks_exhausted',
   status: 'finished',
 });
 
@@ -357,12 +350,6 @@ describe('PlansProcessor', () => {
         PlanRunCancellationService,
         PlansProcessor,
         {
-          provide: AgenticRalphOrchestratorService,
-          useValue: {
-            runPlanOrchestratorJob: mockRunPlanOrchestratorJob,
-          },
-        },
-        {
           provide: OtLoopOrchestratorService,
           useValue: { runPlanOrchestratorJob: mockRunOtLoopJob },
         },
@@ -453,8 +440,8 @@ describe('PlansProcessor', () => {
         {
           provide: WorkLedgerRunService,
           useValue: createMock<WorkLedgerRunService>({
-            closeRalphSession: vi.fn().mockResolvedValue(undefined),
-            openRalphSession: vi.fn().mockResolvedValue(null),
+            closePlanRunSession: vi.fn().mockResolvedValue(undefined),
+            openPlanRunSession: vi.fn().mockResolvedValue(null),
           }),
         },
         {
@@ -537,7 +524,7 @@ describe('PlansProcessor', () => {
               kind: 'prompt_profile',
               onFailure: 'block',
               phase: 'beforeAll',
-              prompt: '/agents/ralph',
+              prompt: '/agents/plan-run',
               promptDelivery: 'named',
             },
           ],
@@ -551,7 +538,7 @@ describe('PlansProcessor', () => {
     await processor.process(mockJob);
 
     expect(mockRunBeforeRunHooksAndHandleBlock).toHaveBeenCalled();
-    expect(mockRunPlanOrchestratorJob).not.toHaveBeenCalled();
+    expect(mockRunOtLoopJob).not.toHaveBeenCalled();
     expect(mockSpawn).not.toHaveBeenCalled();
   });
 
@@ -566,8 +553,8 @@ describe('PlansProcessor', () => {
 
     const result = await processor.process(mockJob);
 
-    expect(mockRunPlanOrchestratorJob).toHaveBeenCalledTimes(1);
-    const orchestratorCall = mockRunPlanOrchestratorJob.mock.calls[0]?.[0];
+    expect(mockRunOtLoopJob).toHaveBeenCalledTimes(1);
+    const orchestratorCall = mockRunOtLoopJob.mock.calls[0]?.[0];
     expect(orchestratorCall).toMatchObject({
       correlation: {
         correlationId: 'job-1',
@@ -624,7 +611,7 @@ describe('PlansProcessor', () => {
         reason: string;
         status: string;
       }) => void;
-      mockRunPlanOrchestratorJob.mockReturnValueOnce(
+      mockRunOtLoopJob.mockReturnValueOnce(
         new Promise((resolve) => {
           resolveOrchestrator = resolve;
         }),
@@ -669,7 +656,7 @@ describe('PlansProcessor', () => {
         reason: string;
         status: string;
       }) => void;
-      mockRunPlanOrchestratorJob.mockReturnValueOnce(
+      mockRunOtLoopJob.mockReturnValueOnce(
         new Promise((resolve) => {
           resolveOrchestrator = resolve;
         }),
@@ -699,7 +686,7 @@ describe('PlansProcessor', () => {
         id: 'job-1',
       });
 
-      mockRunPlanOrchestratorJob.mockResolvedValueOnce({
+      mockRunOtLoopJob.mockResolvedValueOnce({
         exitCode: 0,
         reason: 'workflow_cancelled',
         status: 'finished',
@@ -722,7 +709,7 @@ describe('PlansProcessor', () => {
 
   describe('plan_runs status settle on the three processOrchestrator exits', () => {
     it('settles the row to COMPLETED on orchestrator success', async () => {
-      mockRunPlanOrchestratorJob.mockResolvedValueOnce({
+      mockRunOtLoopJob.mockResolvedValueOnce({
         exitCode: 0,
         reason: 'workflow_tasks_exhausted',
         status: 'finished',
@@ -738,7 +725,7 @@ describe('PlansProcessor', () => {
     });
 
     it('settles COMPLETED (not FAILED) when the outcome is workflow_complete_handoff_owed and keeps the reason visible', async () => {
-      mockRunPlanOrchestratorJob.mockResolvedValueOnce({
+      mockRunOtLoopJob.mockResolvedValueOnce({
         exitCode: 0,
         reason: 'workflow_complete_handoff_owed',
         status: 'finished',
@@ -767,7 +754,7 @@ describe('PlansProcessor', () => {
         status: PLAN_RUN_STATUS.COMPLETED,
       });
       planRunsRepository.settleRunByJob.mockResolvedValueOnce(settledRun);
-      mockRunPlanOrchestratorJob.mockResolvedValueOnce({
+      mockRunOtLoopJob.mockResolvedValueOnce({
         exitCode: 0,
         headSha: 'deadbeef',
         prNumber: 42,
@@ -790,7 +777,7 @@ describe('PlansProcessor', () => {
     });
 
     it('settles the row to FAILED when the orchestrator outcome is failed', async () => {
-      mockRunPlanOrchestratorJob.mockResolvedValueOnce({
+      mockRunOtLoopJob.mockResolvedValueOnce({
         exitCode: 1,
         reason: 'workflow_error',
         status: 'failed',
@@ -807,7 +794,7 @@ describe('PlansProcessor', () => {
 
     it('persists the account-error description as the settled reason of a FAILED row', async () => {
       const description = `Agent account error (billing_error): Credit balance is too low. Fix: top up.`;
-      mockRunPlanOrchestratorJob.mockResolvedValueOnce({
+      mockRunOtLoopJob.mockResolvedValueOnce({
         accountError: {
           apiKeySource: 'ANTHROPIC_API_KEY',
           kind: 'billing_error',
@@ -830,7 +817,7 @@ describe('PlansProcessor', () => {
     });
 
     it('settles the row to CANCELLED when the orchestrator outcome is cancelled', async () => {
-      mockRunPlanOrchestratorJob.mockResolvedValueOnce({
+      mockRunOtLoopJob.mockResolvedValueOnce({
         exitCode: 0,
         reason: 'workflow_cancelled',
         status: 'finished',
@@ -890,11 +877,11 @@ describe('PlansProcessor', () => {
     });
   });
 
-  describe('OT Loop runner dispatch (orchestrator path)', () => {
+  describe('OT Loop dispatch (orchestrator path)', () => {
     const planId = '2794d106-95f9-427e-904d-e0f9b5cbe734';
     const otLoopJob = (): RunPlanJob => {
       return createMock<RunPlanJob>({
-        data: { planId, runKind: 'orchestrator', runner: 'ot-loop' },
+        data: { planId, runKind: 'orchestrator' },
         id: 'job-1',
       });
     };
@@ -904,32 +891,18 @@ describe('PlansProcessor', () => {
       mockWriteGuardedStatus.mockClear();
     });
 
-    it('runs Ralph, never OT Loop, when the payload names no runner', async () => {
+    it('runs OT Loop for a minimal payload', async () => {
       await processor.process(mockJob);
 
-      expect(mockRunPlanOrchestratorJob).toHaveBeenCalledTimes(1);
-      expect(mockRunOtLoopJob).not.toHaveBeenCalled();
+      expect(mockRunOtLoopJob).toHaveBeenCalledTimes(1);
     });
 
-    it('runs Ralph when the payload names runner ralph', async () => {
-      mockJob = createMock<RunPlanJob>({
-        data: { planId, runKind: 'orchestrator', runner: 'ralph' },
-        id: 'job-1',
-      });
-
-      await processor.process(mockJob);
-
-      expect(mockRunPlanOrchestratorJob).toHaveBeenCalledTimes(1);
-      expect(mockRunOtLoopJob).not.toHaveBeenCalled();
-    });
-
-    it('runs OT Loop, never Ralph, only when runner is ot-loop, with the same parameters', async () => {
+    it('hands the job payload to OT Loop with its correlation and abort signal', async () => {
       const job = otLoopJob();
 
       await processor.process(job);
 
       expect(mockRunOtLoopJob).toHaveBeenCalledTimes(1);
-      expect(mockRunPlanOrchestratorJob).not.toHaveBeenCalled();
       expect(mockRunOtLoopJob.mock.calls[0]?.[0]).toMatchObject({
         correlation: {
           correlationId: 'job-1',
@@ -1045,22 +1018,6 @@ describe('PlansProcessor', () => {
       );
     });
 
-    it('leaves a failed Ralph run alone: only OT Loop restores the prior status', async () => {
-      mockRepoFindOne.mockResolvedValueOnce({
-        status: 'QUEUED',
-        title: 'Test Plan',
-      });
-      mockRunPlanOrchestratorJob.mockResolvedValueOnce({
-        exitCode: 1,
-        reason: 'workflow_unhandled',
-        status: 'failed',
-      });
-
-      await processor.process(mockJob);
-
-      expect(mockWriteGuardedStatus).not.toHaveBeenCalled();
-    });
-
     it('hands a usage limit to the resume service with the OT Loop payload, settling nothing itself', async () => {
       const usageLimit = {
         rateLimitType: 'five_hour',
@@ -1093,7 +1050,7 @@ describe('PlansProcessor', () => {
     };
 
     beforeEach(() => {
-      mockRunPlanOrchestratorJob.mockResolvedValueOnce({
+      mockRunOtLoopJob.mockResolvedValueOnce({
         exitCode: 0,
         reason: 'workflow_usage_limited',
         status: 'finished',
@@ -1150,7 +1107,7 @@ describe('PlansProcessor', () => {
     };
 
     it('workflow_tasks_blocked: warns how many tasks need attention, links the draft PR, settles the run COMPLETED', async () => {
-      mockRunPlanOrchestratorJob.mockResolvedValueOnce({
+      mockRunOtLoopJob.mockResolvedValueOnce({
         exitCode: 0,
         headSha: 'abc123',
         prNumber: 42,
@@ -1194,7 +1151,7 @@ describe('PlansProcessor', () => {
     ])(
       '$reason with work left and the plan still IN_PROGRESS: backstop writes BLOCKED and the warning names the $label',
       async ({ label, reason }) => {
-        mockRunPlanOrchestratorJob.mockResolvedValueOnce({
+        mockRunOtLoopJob.mockResolvedValueOnce({
           exitCode: 0,
           reason,
           status: 'finished',
@@ -1238,7 +1195,7 @@ describe('PlansProcessor', () => {
     );
 
     it('workflow_max_iterations where the last iteration finished the plan: success, no backstop write', async () => {
-      mockRunPlanOrchestratorJob.mockResolvedValueOnce({
+      mockRunOtLoopJob.mockResolvedValueOnce({
         exitCode: 0,
         reason: 'workflow_max_iterations',
         status: 'finished',
@@ -1313,7 +1270,7 @@ describe('PlansProcessor', () => {
     ])(
       '$reason never runs the BLOCKED backstop',
       async ({ reason, status }) => {
-        mockRunPlanOrchestratorJob.mockResolvedValueOnce({
+        mockRunOtLoopJob.mockResolvedValueOnce({
           exitCode: 1,
           reason,
           status,
@@ -1336,7 +1293,7 @@ describe('PlansProcessor', () => {
 
     /** The orchestrator reports the worktree it provisioned, then returns `result`. */
     const orchestratorProvisions = (result: Record<string, unknown>): void => {
-      mockRunPlanOrchestratorJob.mockImplementationOnce(
+      mockRunOtLoopJob.mockImplementationOnce(
         async (params: {
           readonly onWorktreeProvisioned?: (value: typeof worktree) => void;
         }) => {
@@ -1378,7 +1335,7 @@ describe('PlansProcessor', () => {
     });
 
     it('passes a null worktree when the run worked in the base checkout', async () => {
-      mockRunPlanOrchestratorJob.mockResolvedValueOnce({
+      mockRunOtLoopJob.mockResolvedValueOnce({
         exitCode: 0,
         prNumber: 42,
         reason: 'workflow_complete',
@@ -1470,7 +1427,7 @@ describe('PlansProcessor', () => {
       expect(planRunsRepository.recordHeartbeatByJob).not.toHaveBeenCalled();
       expect(mockPromoteParentPlanToInProgress).not.toHaveBeenCalled();
       expect(mockRunBeforeRunHooksAndHandleBlock).not.toHaveBeenCalled();
-      expect(mockRunPlanOrchestratorJob).not.toHaveBeenCalled();
+      expect(mockRunOtLoopJob).not.toHaveBeenCalled();
       expect(planRunsRepository.settleRunByJob).not.toHaveBeenCalled();
     };
 
@@ -1496,7 +1453,7 @@ describe('PlansProcessor', () => {
           workspaceError: `workingDirectory does not exist: ${gone}`,
         }),
       );
-      expect(mockRunPlanOrchestratorJob).not.toHaveBeenCalled();
+      expect(mockRunOtLoopJob).not.toHaveBeenCalled();
     });
 
     it('fires a due scheduled run: the policy claims it (plan/tasks QUEUED) before the worker claims it IN_PROGRESS, then the run proceeds', async () => {
@@ -1525,7 +1482,7 @@ describe('PlansProcessor', () => {
         planRunsRepository.markRunStarted.mock.invocationCallOrder;
       expect(fireOrder).toBeLessThan(claimOrder ?? 0);
       expect(mockPromoteParentPlanToInProgress).toHaveBeenCalledTimes(1);
-      expect(mockRunPlanOrchestratorJob).toHaveBeenCalledTimes(1);
+      expect(mockRunOtLoopJob).toHaveBeenCalledTimes(1);
       expect(mockEmitQueueJobCompleted).not.toHaveBeenCalledWith(
         expect.objectContaining({
           message: expect.stringContaining('Scheduled plan run'),
@@ -1639,7 +1596,7 @@ describe('PlansProcessor', () => {
       expect(planRunsRepository.markRunStarted).toHaveBeenCalledTimes(1);
       expect(attach).not.toHaveBeenCalled();
       expect(mockPromoteParentPlanToInProgress).not.toHaveBeenCalled();
-      expect(mockRunPlanOrchestratorJob).not.toHaveBeenCalled();
+      expect(mockRunOtLoopJob).not.toHaveBeenCalled();
     });
 
     it.each(['QUEUED', 'IN_PROGRESS'])(
@@ -1653,7 +1610,7 @@ describe('PlansProcessor', () => {
         await processor.process(mockJob);
 
         expect(mockFireScheduledRun).not.toHaveBeenCalled();
-        expect(mockRunPlanOrchestratorJob).toHaveBeenCalledTimes(1);
+        expect(mockRunOtLoopJob).toHaveBeenCalledTimes(1);
       },
     );
 
@@ -1667,14 +1624,14 @@ describe('PlansProcessor', () => {
 
       await processor.process(mockJob);
 
-      expect(mockRunPlanOrchestratorJob).toHaveBeenCalledTimes(1);
+      expect(mockRunOtLoopJob).toHaveBeenCalledTimes(1);
     });
 
     it('runs a legacy job with no plan_runs row, as it always did', async () => {
       await processor.process(mockJob);
 
       expect(planRunsRepository.markRunStarted).toHaveBeenCalledTimes(1);
-      expect(mockRunPlanOrchestratorJob).toHaveBeenCalledTimes(1);
+      expect(mockRunOtLoopJob).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -2466,7 +2423,7 @@ describe('PlansProcessor', () => {
   describe('BullMQ stalled job recovery', () => {
     /**
      * PlansProcessor passes explicit lockDuration, stalledInterval, and maxStalledCount so
-     * long-running Ralph jobs are renewed and, after server restart, interrupted jobs become
+     * long-running plan-run jobs are renewed and, after server restart, interrupted jobs become
      * stalled and re-enter the waiting queue. See plans.constants and plans.processor.ts.
      */
     it('passes explicit Worker options for stalled job recovery', () => {
@@ -2724,7 +2681,7 @@ describe('PlansProcessor', () => {
           ok: true,
         },
         childProcessMetrics: validChildProcessMetrics,
-        loop: { ok: false, reason: 'Ralph failed' },
+        loop: { ok: false, reason: 'plan run failed' },
         released: true,
         taskRunMetrics: { atEnd: snapshotStub, atStart: snapshotStub },
         wallClockMetrics: validWallClockMetrics,

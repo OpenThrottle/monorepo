@@ -43,7 +43,6 @@ on:
       - 'package.json'
       - 'packages/**'
       - 'pnpm-lock.yaml'
-      - 'tools/workflows/**'
   pull_request:
     paths:
       - '.github/actions/docker-build-push/**'
@@ -59,7 +58,6 @@ on:
       - 'package.json'
       - 'packages/**'
       - 'pnpm-lock.yaml'
-      - 'tools/workflows/**'
   # Rebuild on demand — e.g. after a base-image fix, or when a merge that should
   # have produced images did not. Builds every image regardless of Nx affected.
   workflow_dispatch:

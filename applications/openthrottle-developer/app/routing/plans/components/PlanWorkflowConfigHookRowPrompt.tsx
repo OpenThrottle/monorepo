@@ -1,7 +1,6 @@
 import { Button, Input, Label } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { DEFAULT_RALPH_PROMPT } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import type { JobRunHookDraftRow } from '~/routing/plans/utils/job-run-hooks-ui';
 
 export interface PlanWorkflowConfigHookRowPromptProps {
@@ -50,7 +49,7 @@ export const PlanWorkflowConfigHookRowPrompt = (
         <Input
           id={`hook-skill-${row.draftId}`}
           onChange={onSkillPathChange}
-          placeholder=".agents/skills/workflow-ralph/SKILL.md"
+          placeholder=".agents/skills/<name>/SKILL.md"
           spellCheck={false}
           value={row.skillPath}
         />
@@ -88,13 +87,11 @@ export const PlanWorkflowConfigHookRowPrompt = (
     <div className="space-y-2">
       <div className="flex flex-wrap items-end gap-2">
         <div className="min-w-0 flex-1 space-y-2">
-          <Label htmlFor={`hook-prompt-${row.draftId}`}>
-            Named prompt (--prompt)
-          </Label>
+          <Label htmlFor={`hook-prompt-${row.draftId}`}>Named prompt</Label>
           <Input
             id={`hook-prompt-${row.draftId}`}
             onChange={onPromptChange}
-            placeholder={DEFAULT_RALPH_PROMPT}
+            placeholder="/<prompt-name>"
             spellCheck={false}
             value={row.prompt}
           />

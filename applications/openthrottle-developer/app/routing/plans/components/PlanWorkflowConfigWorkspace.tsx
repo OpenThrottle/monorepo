@@ -83,9 +83,10 @@ export const PlanWorkflowConfigWorkspace = (
       <p className="text-muted-foreground text-xs">
         Absolute path to a local repository for cross-repo runs. Use the{' '}
         <strong>repository root</strong> — not a parent folder or an inner
-        subdirectory — so <code className="text-xs">.workflow-ralph.json</code>,
-        repo-local skills, and git paths resolve correctly. When empty, the
-        worker uses the OpenThrottle monorepo root (
+        subdirectory — so{' '}
+        <code className="text-xs">.openthrottle/ot-loop.json</code>, repo-local
+        skills, and git paths resolve correctly. When empty, the worker uses the
+        OpenThrottle monorepo root (
         <code className="text-xs">WORKSPACE_ROOT</code> or{' '}
         <code className="text-xs">process.cwd()</code>). The server validates on
         enqueue that the path is absolute, exists, and is a directory.

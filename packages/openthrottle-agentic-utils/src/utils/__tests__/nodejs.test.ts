@@ -43,14 +43,14 @@ afterEach(() => {
 
 describe('resolveOpenThrottleBinDir', () => {
   it('returns the OT node_modules/.bin when it exists', () => {
-    expect(resolveOpenThrottleBinDir({ WORKFLOW_RALPH_OT_ROOT: otRoot })).toBe(
-      otBinDir,
-    );
+    expect(
+      resolveOpenThrottleBinDir({ OPENTHROTTLE_PLAN_RUN_OT_ROOT: otRoot }),
+    ).toBe(otBinDir);
   });
 
   it('returns undefined when the resolved root has no node_modules/.bin', () => {
     expect(
-      resolveOpenThrottleBinDir({ WORKFLOW_RALPH_OT_ROOT: emptyRoot }),
+      resolveOpenThrottleBinDir({ OPENTHROTTLE_PLAN_RUN_OT_ROOT: emptyRoot }),
     ).toBeUndefined();
   });
 });
@@ -58,8 +58,8 @@ describe('resolveOpenThrottleBinDir', () => {
 describe('prependOpenThrottleBinToPath', () => {
   it('prepends the OT bin dir to PATH', () => {
     const out = prependOpenThrottleBinToPath({
+      OPENTHROTTLE_PLAN_RUN_OT_ROOT: otRoot,
       PATH: '/usr/bin',
-      WORKFLOW_RALPH_OT_ROOT: otRoot,
     });
 
     expect(out.PATH).toBe(`${otBinDir}${path.delimiter}/usr/bin`);
@@ -67,8 +67,8 @@ describe('prependOpenThrottleBinToPath', () => {
 
   it('is idempotent when the OT bin dir is already on PATH', () => {
     const env: NodeJS.ProcessEnv = {
+      OPENTHROTTLE_PLAN_RUN_OT_ROOT: otRoot,
       PATH: `${otBinDir}${path.delimiter}/usr/bin`,
-      WORKFLOW_RALPH_OT_ROOT: otRoot,
     };
 
     expect(prependOpenThrottleBinToPath(env)).toBe(env);
@@ -76,8 +76,8 @@ describe('prependOpenThrottleBinToPath', () => {
 
   it('leaves env untouched when the bin dir cannot be resolved', () => {
     const env: NodeJS.ProcessEnv = {
+      OPENTHROTTLE_PLAN_RUN_OT_ROOT: emptyRoot,
       PATH: '/usr/bin',
-      WORKFLOW_RALPH_OT_ROOT: emptyRoot,
     };
 
     expect(prependOpenThrottleBinToPath(env)).toBe(env);
@@ -87,7 +87,7 @@ describe('prependOpenThrottleBinToPath', () => {
 describe('pinNxWorkspaceRootToOpenThrottle', () => {
   it('pins NX_WORKSPACE_ROOT_PATH, disables the daemon, and updates the cached workspace root', () => {
     const env: NodeJS.ProcessEnv = {
-      WORKFLOW_RALPH_OT_ROOT: otRoot,
+      OPENTHROTTLE_PLAN_RUN_OT_ROOT: otRoot,
     };
 
     const { restore, workspaceRoot: resolved } =
@@ -105,7 +105,7 @@ describe('pinNxWorkspaceRootToOpenThrottle', () => {
     const env: NodeJS.ProcessEnv = {
       NX_DAEMON: 'true',
       [NX_WORKSPACE_ROOT_PATH_ENV]: '/previous/root',
-      WORKFLOW_RALPH_OT_ROOT: otRoot,
+      OPENTHROTTLE_PLAN_RUN_OT_ROOT: otRoot,
     };
 
     const { restore } = pinNxWorkspaceRootToOpenThrottle(env);
@@ -118,7 +118,7 @@ describe('pinNxWorkspaceRootToOpenThrottle', () => {
 
   it('restore() deletes env vars that were unset before pinning', () => {
     const env: NodeJS.ProcessEnv = {
-      WORKFLOW_RALPH_OT_ROOT: otRoot,
+      OPENTHROTTLE_PLAN_RUN_OT_ROOT: otRoot,
     };
 
     const { restore } = pinNxWorkspaceRootToOpenThrottle(env);

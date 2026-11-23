@@ -11,7 +11,7 @@ const entry = (
   overrides: Partial<PlanRunJobMetricsEntryFragment> = {},
 ): PlanRunJobMetricsEntryFragment => {
   return {
-    executionBackend: 'local',
+    driver: 'local',
     finishedOn: FINISHED_ON,
     jobId,
     taskRunMetrics: { atEnd: { rssMb: 412.5 } },
