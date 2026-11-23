@@ -96,6 +96,8 @@ OpenThrottle is a AI Harness built in a NX monorepo using NodeJS, TypeScript, Po
  pnpm run stop
 ```
 
+Once it is up, create a plan and run it from the developer app. Every plan run executes on [OT Loop](./docs/workflows/ot-loop-job.md), headless from the queue or interactive with `/ot-loop`.
+
 ## 🏠 Architecture
 
 ```bash
