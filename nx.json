@@ -26,7 +26,6 @@
         ]
       }
     ],
-    "noMarkdown": ["!{projectRoot}/**/*.md"],
     "production": [
       "default",
       "!{projectRoot}/**/*.test.{js,jsx,ts,tsx}",
@@ -708,7 +707,7 @@
       "metadata": {
         "description": "Lint the project with ESLint using the workspace eslint.config.ts."
       },
-      "inputs": ["noMarkdown", "^noMarkdown"],
+      "inputs": ["default", "!{projectRoot}/**/*.md", "^production"],
       "options": {
         "command": "pnpm exec eslint -c ./eslint.config.ts .",
         "cwd": "{projectRoot}"

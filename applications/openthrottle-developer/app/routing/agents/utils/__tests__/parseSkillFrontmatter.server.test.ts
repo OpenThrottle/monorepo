@@ -128,7 +128,7 @@ description: |-
 
     expect(result.name).toBe('ot-generators');
     expect(result.description).toContain('@tools/generators');
-    expect(result.description).toContain('NX_ISOLATE_PLUGINS=false');
+    expect(result.description).not.toContain('\n');
   });
 
   test('parses real grilling SKILL.md folded description', () => {

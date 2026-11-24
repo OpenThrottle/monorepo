@@ -169,10 +169,10 @@
         "inputs": [
           "{workspaceRoot}/eslint.config.ts",
           "{workspaceRoot}/scripts/**/*",
-          "^noMarkdown"
+          "^production"
         ],
         "metadata": {
-          "description": "Lint scripts/ with the workspace eslint.config.ts. Scoped to scripts/ because the root project's root is `.`, and the default `eslint .` from {projectRoot} would lint the whole repo. `inputs` MUST be explicit {workspaceRoot} globs — the root `monorepo` project owns 0 files, so the default {projectRoot} input would hash nothing and cache-hit forever. `^noMarkdown` carries @tools/dotfiles, which holds the ESLint config and the custom rules."
+          "description": "Lint scripts/ with the workspace eslint.config.ts. Scoped to scripts/ because the root project's root is `.`, and the default `eslint .` from {projectRoot} would lint the whole repo. `inputs` MUST be explicit {workspaceRoot} globs — the root `monorepo` project owns 0 files, so the default {projectRoot} input would hash nothing and cache-hit forever. `^production` carries @tools/dotfiles, which holds the ESLint config and the custom rules."
         },
         "options": {
           "command": "pnpm exec eslint -c ./eslint.config.ts scripts",
