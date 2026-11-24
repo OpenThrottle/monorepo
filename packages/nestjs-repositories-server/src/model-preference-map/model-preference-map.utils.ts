@@ -4,7 +4,7 @@ import type {
 } from './model-preference-map.types.ts';
 
 /**
- * @description Builds a backend → set-of-models map from preference rows, skipping rows whose
+ * @description Builds a driver → set-of-models map from preference rows, skipping rows whose
  * `model` is null (an agent-level row, not a model-level one).
  * @public
  */
@@ -16,11 +16,11 @@ export function toModelPreferenceMap(
     if (row.model === null) {
       continue;
     }
-    const existing = map.get(row.backend);
+    const existing = map.get(row.driver);
     if (existing) {
       existing.add(row.model);
     } else {
-      map.set(row.backend, new Set([row.model]));
+      map.set(row.driver, new Set([row.model]));
     }
   }
   return map;

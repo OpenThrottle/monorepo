@@ -76,7 +76,7 @@ describe('PlanRunWorkspacePreflightService', () => {
       launcher: true,
     });
 
-    expect(service.check({ backend: 'cursor', workingDirectory })).toEqual([]);
+    expect(service.check({ driver: 'cursor', workingDirectory })).toEqual([]);
   });
 
   it('flags a missing .env, the credential-prompt trap', () => {
@@ -86,15 +86,15 @@ describe('PlanRunWorkspacePreflightService', () => {
       launcher: true,
     });
 
-    expect(service.check({ backend: 'cursor', workingDirectory })).toEqual([
+    expect(service.check({ driver: 'cursor', workingDirectory })).toEqual([
       expect.stringContaining('No .env in'),
     ]);
   });
 
-  it('flags a missing workspace MCP config for the backend', () => {
+  it('flags a missing workspace MCP config for the driver', () => {
     const workingDirectory = makeWorkspace({ launcher: true });
 
-    expect(service.check({ backend: 'cursor', workingDirectory })).toEqual([
+    expect(service.check({ driver: 'cursor', workingDirectory })).toEqual([
       expect.stringContaining('No .cursor/mcp.json in'),
     ]);
   });
@@ -102,7 +102,7 @@ describe('PlanRunWorkspacePreflightService', () => {
   it('flags a relative launcher that does not resolve from the run directory', () => {
     const workingDirectory = makeWorkspace({ config: CURSOR_CONFIG });
 
-    expect(service.check({ backend: 'cursor', workingDirectory })).toEqual([
+    expect(service.check({ driver: 'cursor', workingDirectory })).toEqual([
       expect.stringContaining('run-openthrottle-mcp.sh'),
     ]);
   });
@@ -114,7 +114,7 @@ describe('PlanRunWorkspacePreflightService', () => {
       },
     });
 
-    expect(service.check({ backend: 'cursor', workingDirectory })).toEqual([
+    expect(service.check({ driver: 'cursor', workingDirectory })).toEqual([
       expect.stringContaining('does not define openthrottle-mcp'),
     ]);
   });
@@ -122,18 +122,18 @@ describe('PlanRunWorkspacePreflightService', () => {
   it('flags unreadable config JSON', () => {
     const workingDirectory = makeWorkspace({ config: '{ not json' });
 
-    expect(service.check({ backend: 'cursor', workingDirectory })).toEqual([
+    expect(service.check({ driver: 'cursor', workingDirectory })).toEqual([
       expect.stringContaining('not readable JSON'),
     ]);
   });
 
-  it('checks .mcp.json for the claude backend', () => {
+  it('checks .mcp.json for the claude driver', () => {
     const workingDirectory = makeWorkspace({
       config: CURSOR_CONFIG,
       launcher: true,
     });
 
-    expect(service.check({ backend: 'claude', workingDirectory })).toEqual([
+    expect(service.check({ driver: 'claude', workingDirectory })).toEqual([
       expect.stringContaining('No .mcp.json in'),
     ]);
   });
@@ -147,7 +147,7 @@ describe('PlanRunWorkspacePreflightService', () => {
         provisioner: false,
       });
 
-      const warnings = service.check({ backend: 'cursor', workingDirectory });
+      const warnings = service.check({ driver: 'cursor', workingDirectory });
 
       expect(warnings).toEqual([
         expect.stringContaining('.worktree/provision.sh'),
@@ -167,14 +167,14 @@ describe('PlanRunWorkspacePreflightService', () => {
     });
 
     expect(
-      service.check({ backend: 'cursor', workingDirectory }).join('\n'),
+      service.check({ driver: 'cursor', workingDirectory }).join('\n'),
     ).not.toContain('pnpm');
   });
 
   it('reports a run directory that does not exist at all', () => {
     expect(
       service.check({
-        backend: 'cursor',
+        driver: 'cursor',
         workingDirectory: '/nope/does/not/exist',
       }),
     ).toEqual([expect.stringContaining('does not exist')]);

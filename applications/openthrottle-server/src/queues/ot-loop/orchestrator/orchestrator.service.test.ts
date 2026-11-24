@@ -203,7 +203,7 @@ describe('OtLoopOrchestratorService', () => {
       }),
     );
     mocks.merge.mockReturnValue({
-      backend: 'claude',
+      driver: 'claude',
       model: 'sonnet-run',
       worktreeBase: 'develop',
     });
@@ -417,7 +417,7 @@ describe('OtLoopOrchestratorService', () => {
     it('routes each task by category to a model the run driver lists', async () => {
       mocks.readPolicy.mockResolvedValue({ kind: 'ok', policy });
       mocks.discoverAgentClis.mockResolvedValue({
-        agents: [{ backend: 'claude', models: ['haiku', 'sonnet'] }],
+        agents: [{ driver: 'claude', models: ['haiku', 'sonnet'] }],
       });
 
       await runJob();
@@ -431,7 +431,7 @@ describe('OtLoopOrchestratorService', () => {
     it('falls back to the run model when the driver lists no valid model for the tier', async () => {
       mocks.readPolicy.mockResolvedValue({ kind: 'ok', policy });
       mocks.discoverAgentClis.mockResolvedValue({
-        agents: [{ backend: 'claude', models: ['something-else'] }],
+        agents: [{ driver: 'claude', models: ['something-else'] }],
       });
 
       await runJob();
@@ -526,7 +526,7 @@ describe('OtLoopOrchestratorService', () => {
     });
 
     it('falls back to the default base branch when the run names none', async () => {
-      mocks.merge.mockReturnValue({ backend: 'claude', model: 'm' });
+      mocks.merge.mockReturnValue({ driver: 'claude', model: 'm' });
 
       await runJob();
 

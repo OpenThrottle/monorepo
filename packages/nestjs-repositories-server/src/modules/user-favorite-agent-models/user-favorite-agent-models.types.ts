@@ -11,7 +11,7 @@ import type { UserFavoriteAgentModelsRepository } from './user-favorite-agent-mo
  */
 export type UserFavoriteAgentModelData = Pick<
   UserFavoriteAgentModel,
-  'backend' | 'createdAt' | 'id' | 'model' | 'userId'
+  'driver' | 'createdAt' | 'id' | 'model' | 'userId'
 >;
 
 /**

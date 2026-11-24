@@ -23,7 +23,7 @@ import type { PreferencesActionResult } from '~/routing/settings/data/data.prefe
 
 /**
  * @description A saved default agent the user can still run: the picker option it
- * maps to, and its effort reconciled against the backend's reasoning levels.
+ * maps to, and its effort reconciled against the driver's reasoning levels.
  */
 export interface DefaultAgentDraft extends PlanRunModelSelection {
   /** Reasoning effort; `''` means unset (the agent's own default). */
@@ -49,7 +49,7 @@ export type ResolvedDefaultAgent =
     };
 
 /**
- * @description Classifies the stored default agent. Valid only when its backend
+ * @description Classifies the stored default agent. Valid only when its driver
  * is one a plan can run (so the same default works in the composer and in new
  * plans) and it maps onto a currently offered option; the model list already
  * excludes disabled agents and models.
@@ -62,13 +62,13 @@ export const resolveDefaultAgent = (
     return { kind: 'none' };
   }
 
-  const { backend, effort, model } = stored;
+  const { driver, effort, model } = stored;
 
-  if (!isSelectablePlanRunDriver(backend)) {
+  if (!isSelectablePlanRunDriver(driver)) {
     return { kind: 'stale', stored };
   }
 
-  const optionId = toPlanRunModelOptionId(backend, model, models);
+  const optionId = toPlanRunModelOptionId(driver, model, models);
 
   if (optionId === undefined) {
     return { kind: 'stale', stored };
@@ -76,8 +76,8 @@ export const resolveDefaultAgent = (
 
   return {
     draft: {
-      driver: backend,
-      effort: reconcilePlanRunEffort(backend, effort ?? ''),
+      driver,
+      effort: reconcilePlanRunEffort(driver, effort ?? ''),
       model,
     },
     kind: 'valid',
@@ -87,7 +87,7 @@ export const resolveDefaultAgent = (
 
 /** @description What the picker and effort control show for the unsaved pick. */
 export interface AgentDraftView {
-  /** Whether the picked backend has a separate reasoning-effort knob. */
+  /** Whether the picked driver has a separate reasoning-effort knob. */
   readonly effortSupported: boolean;
   /** The picker option to highlight, or `undefined` for its placeholder. */
   readonly selectedOptionId: string | undefined;
@@ -95,7 +95,7 @@ export interface AgentDraftView {
 
 /**
  * @description Maps the unsaved pick onto the picker option it highlights and
- * whether its backend takes an effort (cursor folds effort into the model id).
+ * whether its driver takes an effort (cursor folds effort into the model id).
  */
 export const describeAgentDraft = (
   draft: DefaultAgentDraft | null,

@@ -232,7 +232,7 @@ function isCancelPlanRunResult(
 }
 
 /**
- * @description Every backend `plan_runs.driver` accepts, kept in lockstep with
+ * @description Every driver `plan_runs.driver` accepts, kept in lockstep with
  * the {@link PlanRunDriver} union and the `plan_runs_driver_check`
  * constraint. Written as an exhaustive Record rather than a chain of `===` comparisons so
  * a new member of the union is a COMPILE error here, not a runtime rejection discovered in
@@ -1439,11 +1439,11 @@ export class PlansResolver {
     const actorUserId = resolveActorUserId(actorSub, actorKind);
     // Guard only an explicitly-chosen driver; when omitted the driver is
     // resolved later from worktree defaults, so there is nothing to gate here.
-    const requestedBackend = input.tuning?.driver ?? null;
-    if (requestedBackend != null && isPlanRunDriver(requestedBackend)) {
+    const requestedDriver = input.tuning?.driver ?? null;
+    if (requestedDriver != null && isPlanRunDriver(requestedDriver)) {
       await this.assertDriverEnabled(
         actorUserId,
-        requestedBackend,
+        requestedDriver,
         input.tuning?.model,
       );
     }
@@ -1495,11 +1495,11 @@ export class PlansResolver {
     @CurrentUser('kind') actorKind?: string,
   ): Promise<SchedulePlanRunResultObject> {
     const actorUserId = resolveActorUserId(actorSub, actorKind);
-    const requestedBackend = input.tuning?.driver ?? null;
-    if (requestedBackend != null && isPlanRunDriver(requestedBackend)) {
+    const requestedDriver = input.tuning?.driver ?? null;
+    if (requestedDriver != null && isPlanRunDriver(requestedDriver)) {
       await this.assertDriverEnabled(
         actorUserId,
-        requestedBackend,
+        requestedDriver,
         input.tuning?.model,
       );
     }

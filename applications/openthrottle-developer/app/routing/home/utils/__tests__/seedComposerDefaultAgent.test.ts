@@ -13,7 +13,7 @@ const models: ChatModelOption[] = [
 ];
 
 const agent: ComposerDefaultAgent = {
-  backend: 'claude',
+  driver: 'claude',
   effort: 'high',
   model: 'opus',
 };

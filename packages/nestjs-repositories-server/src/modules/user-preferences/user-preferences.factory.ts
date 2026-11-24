@@ -15,7 +15,7 @@ import type { UserPreferencesRow } from './user-preferences.types.ts';
 export const userPreferencesFactory = Factory.define<UserPreferencesRow>(() => {
   return {
     createdAt: faker.date.past(),
-    defaultAgentBackend: null,
+    defaultAgentDriver: null,
     defaultAgentEffort: null,
     defaultAgentModel: null,
     defaultEditor: null,

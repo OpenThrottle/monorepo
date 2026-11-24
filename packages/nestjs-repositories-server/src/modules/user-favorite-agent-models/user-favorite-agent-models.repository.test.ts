@@ -43,10 +43,10 @@ describe('UserFavoriteAgentModelsRepository', () => {
   });
 
   describe('getFavoriteModels', () => {
-    it('projects favorite rows into a backend → set map', async () => {
+    it('projects favorite rows into a driver → set map', async () => {
       find.mockResolvedValue([
-        { backend: 'claude', model: 'opus', userId },
-        { backend: 'cursor', model: 'gpt-5', userId },
+        { driver: 'claude', model: 'opus', userId },
+        { driver: 'cursor', model: 'gpt-5', userId },
       ]);
 
       const map = await repository.getFavoriteModels(userId);
@@ -87,7 +87,7 @@ describe('UserFavoriteAgentModelsRepository', () => {
         await repository.setModelFavorite(userId, 'claude', 'opus', true);
 
         expect(create).toHaveBeenCalledWith({
-          backend: 'claude',
+          driver: 'claude',
           model: 'opus',
           userId,
         });
@@ -108,7 +108,7 @@ describe('UserFavoriteAgentModelsRepository', () => {
         await repository.setModelFavorite(userId, 'claude', 'opus', false);
 
         expect(remove).toHaveBeenCalledWith({
-          backend: 'claude',
+          driver: 'claude',
           model: 'opus',
           userId,
         });

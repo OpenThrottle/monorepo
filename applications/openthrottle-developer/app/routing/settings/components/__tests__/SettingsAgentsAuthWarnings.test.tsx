@@ -11,7 +11,7 @@ describe('SettingsAgentsAuthWarnings', () => {
         <SettingsAgentsAuthWarnings
           warnings={[
             {
-              backend: 'claude',
+              driver: 'claude',
               label: 'Claude Code',
               warning: `ANTHROPIC_API_KEY is set, so Claude runs bill the API key.`,
             },

@@ -25,7 +25,6 @@ fragment AgentCliOption on AgentCliOptionObject {
     detail
     status
   }
-  backend
   capabilities {
     approvals
     editApprovals
@@ -36,6 +35,7 @@ fragment AgentCliOption on AgentCliOptionObject {
     steering
   }
   chatCapable
+  driver
   label
   models
   version

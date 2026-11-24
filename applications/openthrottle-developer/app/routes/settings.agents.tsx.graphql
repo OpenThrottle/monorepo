@@ -4,7 +4,7 @@ query SettingsAgentsAgentClis {
       auth {
         warning
       }
-      backend
+      driver
       enabled
       label
       modelOptions {
@@ -26,43 +26,43 @@ query AgentCliSetupConfig {
   }
 }
 
-mutation SetAgentEnabled($backend: String!, $enabled: Boolean!) {
-  setAgentEnabled(backend: $backend, enabled: $enabled) {
-    backend
+mutation SetAgentEnabled($driver: String!, $enabled: Boolean!) {
+  setAgentEnabled(driver: $driver, enabled: $enabled) {
+    driver
     enabled
   }
 }
 
 mutation SetAgentModelEnabled(
-  $backend: String!
+  $driver: String!
   $model: String!
   $enabled: Boolean!
 ) {
-  setAgentModelEnabled(backend: $backend, model: $model, enabled: $enabled) {
-    backend
+  setAgentModelEnabled(driver: $driver, model: $model, enabled: $enabled) {
+    driver
     enabled
     model
   }
 }
 
 mutation SetAgentModelsEnabled(
-  $backend: String!
+  $driver: String!
   $models: [String!]!
   $enabled: Boolean!
 ) {
-  setAgentModelsEnabled(backend: $backend, models: $models, enabled: $enabled) {
-    backend
+  setAgentModelsEnabled(driver: $driver, models: $models, enabled: $enabled) {
+    driver
     enabled
   }
 }
 
 mutation SetAgentModelFavorite(
-  $backend: String!
+  $driver: String!
   $model: String!
   $favorite: Boolean!
 ) {
-  setAgentModelFavorite(backend: $backend, model: $model, favorite: $favorite) {
-    backend
+  setAgentModelFavorite(driver: $driver, model: $model, favorite: $favorite) {
+    driver
     favorite
     model
   }

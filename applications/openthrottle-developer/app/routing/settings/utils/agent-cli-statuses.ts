@@ -6,8 +6,8 @@ import type {
   AvailableAgentCli,
 } from '~/routing/settings/data/data.agent-clis';
 import {
-  AGENT_CLI_BACKENDS,
   AGENT_CLI_CATALOG,
+  AGENT_CLI_DRIVERS,
 } from '~/routing/settings/data/data.agent-clis';
 
 /**
@@ -19,15 +19,15 @@ import {
 export const mergeAgentCliStatuses = (
   available: readonly AvailableAgentCli[],
 ): readonly AgentCliStatus[] => {
-  const byBackend = new Map(available.map((agent) => [agent.backend, agent]));
+  const byDriver = new Map(available.map((agent) => [agent.driver, agent]));
 
-  return Object.values(AGENT_CLI_BACKENDS).map((backend) => {
-    const entry = AGENT_CLI_CATALOG[backend];
-    const agent = byBackend.get(backend);
+  return Object.values(AGENT_CLI_DRIVERS).map((driver) => {
+    const entry = AGENT_CLI_CATALOG[driver];
+    const agent = byDriver.get(driver);
     const modelOptions = agent?.modelOptions ?? [];
 
     return {
-      backend,
+      driver,
       enabled: agent?.enabled ?? true,
       installUrl: entry.installUrl,
       installed: agent !== undefined,
@@ -72,7 +72,7 @@ export const collectAgentCliAuthWarnings = (
     const hasWarning = typeof warning === 'string' && warning !== '';
 
     if (hasWarning) {
-      warnings.push({ backend: agent.backend, label: agent.label, warning });
+      warnings.push({ driver: agent.driver, label: agent.label, warning });
     }
   }
 

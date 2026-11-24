@@ -23,7 +23,7 @@ import {
 describe('resolvePlanRunPromptFromSeed', () => {
   it('returns named profile when promptFile is absent', () => {
     const r = resolvePlanRunPromptFromSeed('/repo', {
-      backend: DEFAULT_WORKFLOW_RUNNER,
+      driver: DEFAULT_WORKFLOW_RUNNER,
       iterationTimeoutMs: undefined,
       iterations: DEFAULT_WORKFLOW_ITERATIONS,
       model: DEFAULT_PLAN_RUN_MODEL,
@@ -46,7 +46,7 @@ describe('resolvePlanRunPromptFromSeed', () => {
       const filePath = join(dir, 'custom.md');
       writeFileSync(filePath, 'Hello from file\n', 'utf8');
       const r = resolvePlanRunPromptFromSeed(dir, {
-        backend: DEFAULT_WORKFLOW_RUNNER,
+        driver: DEFAULT_WORKFLOW_RUNNER,
         iterationTimeoutMs: undefined,
         iterations: DEFAULT_WORKFLOW_ITERATIONS,
         model: DEFAULT_PLAN_RUN_MODEL,

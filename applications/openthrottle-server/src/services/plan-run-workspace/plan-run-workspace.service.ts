@@ -107,7 +107,7 @@ export class PlanRunWorkspaceService {
     // nothing. Say so in the output stream, loudly, against the directory the agent actually uses.
     if (!skipMcpPreflight) {
       await this.warnOnWorkspacePreflight({
-        backend: jobData.driver ?? 'cursor',
+        driver: jobData.driver ?? 'cursor',
         planId: jobData.planId,
         workingDirectory: configCwd,
       });
@@ -138,15 +138,15 @@ export class PlanRunWorkspaceService {
    * continues, but a false success is no longer silent. Soft-fails.
    */
   private async warnOnWorkspacePreflight(params: {
-    readonly backend: WorkflowConfigRunner;
+    readonly driver: WorkflowConfigRunner;
     readonly planId: string;
     readonly workingDirectory: string;
   }): Promise<void> {
-    const { backend, planId, workingDirectory } = params;
+    const { driver, planId, workingDirectory } = params;
 
     try {
       const warnings = this.planRunWorkspacePreflightService.check({
-        backend,
+        driver,
         workingDirectory,
       });
       if (warnings.length === 0) {
@@ -154,7 +154,7 @@ export class PlanRunWorkspaceService {
       }
 
       const content = [
-        `⚠️  Workspace preflight found ${warnings.length} problem(s) in ${workingDirectory} (backend: ${backend}). MCP-dependent work may silently do nothing.`,
+        `⚠️  Workspace preflight found ${warnings.length} problem(s) in ${workingDirectory} (driver: ${driver}). MCP-dependent work may silently do nothing.`,
         ...warnings.map((warning) => `- ${warning}`),
       ].join('\n');
 

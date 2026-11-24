@@ -1,5 +1,5 @@
 fragment UserPreferencesDefaultAgent on UserPreferencesAgentObject {
-  backend
+  driver
   effort
   model
 }

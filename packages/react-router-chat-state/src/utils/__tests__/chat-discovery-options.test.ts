@@ -75,8 +75,8 @@ describe('toAgentChatOptions', () => {
     const options = toAgentChatOptions({
       agents: [
         {
-          backend: 'cursor',
           chatCapable: true,
+          driver: 'cursor',
           enabled: true,
           label: 'cursor-agent',
           models: ['auto', 'gpt-5.2'],
@@ -109,8 +109,8 @@ describe('toAgentChatOptions', () => {
     const options = toAgentChatOptions({
       agents: [
         {
-          backend: 'cursor',
           chatCapable: true,
+          driver: 'cursor',
           enabled: true,
           label: 'cursor-agent',
           modelOptions: [
@@ -149,8 +149,8 @@ describe('toAgentChatOptions', () => {
     const options = toAgentChatOptions({
       agents: [
         {
-          backend: 'cursor',
           chatCapable: true,
+          driver: 'cursor',
           enabled: true,
           label: 'cursor-agent',
           modelOptions: [{ enabled: false, favorite: false, model: 'auto' }],
@@ -167,8 +167,8 @@ describe('toAgentChatOptions', () => {
     const options = toAgentChatOptions({
       agents: [
         {
-          backend: 'claude',
           chatCapable: true,
+          driver: 'claude',
           enabled: true,
           label: 'claude-code',
           models: [],
@@ -192,16 +192,16 @@ describe('toAgentChatOptions', () => {
     const options = toAgentChatOptions({
       agents: [
         {
-          backend: 'future-plan-run-driver',
           chatCapable: false,
+          driver: 'future-plan-run-driver',
           enabled: true,
           label: 'future-plan-run-driver',
           models: [],
           supportsCustomBaseUrl: false,
         },
         {
-          backend: 'another-plan-run-driver',
           chatCapable: false,
+          driver: 'another-plan-run-driver',
           enabled: true,
           label: 'another-plan-run-driver',
           models: ['some-model'],
@@ -217,16 +217,16 @@ describe('toAgentChatOptions', () => {
     const options = toAgentChatOptions({
       agents: [
         {
-          backend: 'cursor',
           chatCapable: true,
+          driver: 'cursor',
           enabled: false,
           label: 'cursor-agent',
           models: ['auto', 'gpt-5.2'],
           supportsCustomBaseUrl: false,
         },
         {
-          backend: 'opencode',
           chatCapable: true,
+          driver: 'opencode',
           enabled: true,
           label: 'opencode',
           models: ['big-pickle'],
@@ -243,16 +243,16 @@ describe('toDriverEndpointChatOptions', () => {
   const agents = {
     agents: [
       {
-        backend: 'opencode',
         chatCapable: true,
+        driver: 'opencode',
         enabled: true,
         label: 'opencode',
         models: ['opencode/big-pickle'],
         supportsCustomBaseUrl: true,
       },
       {
-        backend: 'claude',
         chatCapable: true,
+        driver: 'claude',
         enabled: true,
         label: 'claude-code',
         models: [],
@@ -326,8 +326,8 @@ describe('toDriverEndpointChatOptions', () => {
       {
         agents: [
           {
-            backend: 'claude',
             chatCapable: true,
+            driver: 'claude',
             enabled: true,
             label: 'claude-code',
             models: [],
@@ -355,8 +355,8 @@ describe('toDriverEndpointChatOptions', () => {
       {
         agents: [
           {
-            backend: 'opencode',
             chatCapable: true,
+            driver: 'opencode',
             enabled: false,
             label: 'opencode',
             models: ['big-pickle'],
@@ -382,8 +382,8 @@ describe('toDriverEndpointChatOptions', () => {
 
 describe('toAgentChatOptions auth state', () => {
   const base = {
-    backend: 'cursor',
     chatCapable: true,
+    driver: 'cursor',
     label: 'cursor-agent',
   };
 
@@ -417,7 +417,7 @@ describe('toAgentChatOptions auth state', () => {
     const options = toAgentChatOptions({
       agents: [
         { ...base, authState: { status: 'authenticated' }, models: ['a'] },
-        { ...base, backend: 'claude', models: ['b'] },
+        { ...base, driver: 'claude', models: ['b'] },
       ],
     });
 
@@ -434,9 +434,9 @@ describe('toAgentRuntimes', () => {
       agents: [
         {
           authState: { status: 'authenticated' },
-          backend: 'cursor',
           capabilities: { approvals: true, editApprovals: false },
           chatCapable: true,
+          driver: 'cursor',
           label: 'cursor-agent',
         },
       ],
@@ -453,7 +453,7 @@ describe('toAgentRuntimes', () => {
 
   it('defaults missing fields to no approvals and an unknown auth status', () => {
     const runtimes = toAgentRuntimes({
-      agents: [{ backend: 'claude', chatCapable: true, label: 'Claude' }],
+      agents: [{ chatCapable: true, driver: 'claude', label: 'Claude' }],
     });
 
     expect(runtimes).toEqual({

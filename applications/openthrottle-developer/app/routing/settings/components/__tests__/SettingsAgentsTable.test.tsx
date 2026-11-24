@@ -16,7 +16,7 @@ vi.mock('~/services/getGraphqlWsClient', () => ({
 }));
 
 const installed: AgentCliStatus = {
-  backend: 'cursor',
+  driver: 'cursor',
   enabled: true,
   installUrl: 'https://cursor.com/install',
   installed: true,
@@ -31,7 +31,7 @@ const installed: AgentCliStatus = {
 };
 
 const disabledAgent: AgentCliStatus = {
-  backend: 'claude',
+  driver: 'claude',
   enabled: false,
   installUrl: 'https://claude.ai/install.sh',
   installed: true,

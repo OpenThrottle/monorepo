@@ -24,7 +24,7 @@ const renderFavorite = (
       action: async ({ request }) => {
         action(await request.formData());
         return {
-          backend: props.backend,
+          driver: props.driver,
           errorMessage: null,
           favorite: true,
           model: props.model,
@@ -41,7 +41,7 @@ describe('SettingsAgentsModelFavorite', () => {
     const user = userEvent.setup();
     const submitted: FormData[] = [];
     const component = renderFavorite(
-      { backend: 'cursor', canManage: true, favorite: false, model: 'gpt-5.2' },
+      { canManage: true, driver: 'cursor', favorite: false, model: 'gpt-5.2' },
       (formData) => submitted.push(formData),
     );
 
@@ -50,7 +50,7 @@ describe('SettingsAgentsModelFavorite', () => {
     );
 
     expect(submitted).toHaveLength(1);
-    expect(submitted[0]?.get('backend')).toBe('cursor');
+    expect(submitted[0]?.get('driver')).toBe('cursor');
     expect(submitted[0]?.get('model')).toBe('gpt-5.2');
     // A not-favorited model toggles ON.
     expect(submitted[0]?.get('favorite')).toBe('true');
@@ -58,8 +58,8 @@ describe('SettingsAgentsModelFavorite', () => {
 
   test('reflects the favorited state via aria-pressed', () => {
     const component = renderFavorite({
-      backend: 'claude',
       canManage: true,
+      driver: 'claude',
       favorite: true,
       model: 'opus',
     });
@@ -72,7 +72,7 @@ describe('SettingsAgentsModelFavorite', () => {
     const user = userEvent.setup();
     const submitted: FormData[] = [];
     const component = renderFavorite(
-      { backend: 'grok', canManage: false, favorite: false, model: 'grok-4' },
+      { canManage: false, driver: 'grok', favorite: false, model: 'grok-4' },
       (formData) => submitted.push(formData),
     );
 

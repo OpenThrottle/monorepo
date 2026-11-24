@@ -7,10 +7,10 @@ import type { AgentCliModelStatus } from '~/routing/settings/data/data.agent-cli
 export interface SettingsAgentsModelRowProps {
   /** True when the parent agent is disabled (agent-OFF hard-overrides its models). */
   agentDisabled: boolean;
-  /** Driver id this model belongs to. */
-  backend: string;
   /** Server-computed: current user holds SETTINGS_WRITE. */
   canManage: boolean;
+  /** Driver id this model belongs to. */
+  driver: string;
   /** Per-model enabled + favorite state. */
   model: AgentCliModelStatus;
 }
@@ -18,7 +18,7 @@ export interface SettingsAgentsModelRowProps {
 export const SettingsAgentsModelRow = (
   props: SettingsAgentsModelRowProps,
 ): React.ReactElement => {
-  const { agentDisabled, backend, canManage, model } = props;
+  const { agentDisabled, driver, canManage, model } = props;
 
   // Hooks
 
@@ -35,7 +35,7 @@ export const SettingsAgentsModelRow = (
   return (
     <div
       className="hover:bg-muted -mx-2 flex items-center justify-between gap-3 rounded-md px-2 py-1 transition-colors"
-      data-testid={`SettingsAgentsModelRow-${backend}-${model.model}`}
+      data-testid={`SettingsAgentsModelRow-${driver}-${model.model}`}
     >
       <code
         className={
@@ -48,15 +48,15 @@ export const SettingsAgentsModelRow = (
       </code>
       <div className="flex items-center gap-2">
         <SettingsAgentsModelFavorite
-          backend={backend}
           canManage={canManage}
+          driver={driver}
           favorite={model.favorite}
           model={model.model}
         />
         <SettingsAgentsModelToggle
           agentDisabled={agentDisabled}
-          backend={backend}
           canManage={canManage}
+          driver={driver}
           enabled={model.enabled}
           model={model.model}
         />

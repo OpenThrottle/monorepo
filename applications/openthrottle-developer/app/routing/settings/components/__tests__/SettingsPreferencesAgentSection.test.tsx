@@ -45,16 +45,16 @@ describe('SettingsPreferencesAgentSection Component', () => {
 
   const pickModel = async (
     component: RenderResult,
-    backend: string,
+    driver: string,
     optionId: string,
   ): Promise<void> => {
     const user = userEvent.setup();
     await user.click(component.getByTestId('ChatModelPicker-trigger'));
     await user.click(
-      component.getByTestId(`ChatModelPicker-rail-item-${backend}`),
+      component.getByTestId(`ChatModelPicker-rail-item-${driver}`),
     );
     await user.click(
-      component.getByTestId(`ChatModelPicker-option-${backend}-${optionId}`),
+      component.getByTestId(`ChatModelPicker-option-${driver}-${optionId}`),
     );
   };
 
@@ -96,7 +96,7 @@ describe('SettingsPreferencesAgentSection Component', () => {
   });
 
   describe('when saving a picked agent', () => {
-    test('posts backend, model and effort, then resets the composer pick', async () => {
+    test('posts driver, model and effort, then resets the composer pick', async () => {
       const user = userEvent.setup();
       const component = renderSection();
 
@@ -114,7 +114,7 @@ describe('SettingsPreferencesAgentSection Component', () => {
       });
       expect(submissions).toEqual([
         {
-          backend: 'claude',
+          driver: 'claude',
           effort: '',
           intent: 'saveDefaultAgent',
           model: 'opus',
@@ -130,7 +130,7 @@ describe('SettingsPreferencesAgentSection Component', () => {
   });
 
   describe('effort', () => {
-    test('is offered for a backend with a reasoning knob', async () => {
+    test('is offered for a driver with a reasoning knob', async () => {
       const component = renderSection();
 
       await pickModel(component, 'claude', 'claude|opus');
@@ -140,7 +140,7 @@ describe('SettingsPreferencesAgentSection Component', () => {
       ).toBeInTheDocument();
     });
 
-    test('is hidden for a backend without one', async () => {
+    test('is hidden for a driver without one', async () => {
       const component = renderSection();
 
       await pickModel(component, 'cursor', 'cursor|gpt-5.2');
@@ -155,7 +155,7 @@ describe('SettingsPreferencesAgentSection Component', () => {
     beforeEach(() => {
       props = {
         ...props,
-        defaultAgent: { backend: 'claude', effort: 'high', model: 'opus' },
+        defaultAgent: { driver: 'claude', effort: 'high', model: 'opus' },
       };
     });
 
@@ -196,7 +196,7 @@ describe('SettingsPreferencesAgentSection Component', () => {
     beforeEach(() => {
       props = {
         ...props,
-        defaultAgent: { backend: 'claude', effort: null, model: 'retired' },
+        defaultAgent: { driver: 'claude', effort: null, model: 'retired' },
       };
     });
 

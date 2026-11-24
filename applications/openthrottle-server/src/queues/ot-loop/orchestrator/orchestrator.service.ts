@@ -226,7 +226,7 @@ export class OtLoopOrchestratorService {
       jobData.otLoop?.finalValidationCommands,
       commands.finalValidation,
     );
-    const backend = parseDriverId(tuning.driver ?? jobData.driver ?? 'cursor');
+    const driver = parseDriverId(tuning.driver ?? jobData.driver ?? 'cursor');
     const runModel = toModel(tuning.model);
     const client = createOtLoopClient({
       executeGraphqlV2: this.executeGraphqlV2,
@@ -238,7 +238,7 @@ export class OtLoopOrchestratorService {
     });
 
     say(
-      `starting: driver=${backend}, validation from ${commands.source}; per-iteration lifecycle events are not emitted by this runner (known gap)`,
+      `starting: driver=${driver}, validation from ${commands.source}; per-iteration lifecycle events are not emitted by this runner (known gap)`,
     );
     await prepareResultDir(cwd);
 
@@ -264,10 +264,10 @@ export class OtLoopOrchestratorService {
 
     const usage: { current: UsageLimit | undefined } = { current: undefined };
     const deps = await this.buildDeps({
-      backend,
       client,
       commands: commands.validation,
       cwd,
+      driver,
       effort: toEffort(tuning.effort),
       output,
       planId,
@@ -343,7 +343,7 @@ export class OtLoopOrchestratorService {
   }
 
   private async buildDeps(input: {
-    readonly backend: DriverId;
+    readonly driver: DriverId;
     readonly client: LoopClient;
     readonly commands: readonly string[];
     readonly cwd: string;
@@ -360,7 +360,7 @@ export class OtLoopOrchestratorService {
   }): Promise<LoopDeps> {
     const { cwd, output, planId, runCommand, signal } = input;
     const modelFor = await this.buildModelRouter(input);
-    const driver = getDriver(input.backend);
+    const driver = getDriver(input.driver);
 
     return {
       cancel: {
@@ -434,11 +434,11 @@ export class OtLoopOrchestratorService {
    * root falls back to the run's own model, said in plan output.
    */
   private async buildModelRouter(input: {
-    readonly backend: string;
+    readonly driver: string;
     readonly runModel: string | undefined;
     readonly say: (message: string) => void;
   }): Promise<LoopDeps['modelFor']> {
-    const { backend, runModel, say } = input;
+    const { driver, runModel, say } = input;
     const root = getOpenThrottleRoot(process.env);
     const policy: ModelRoutingPolicy | undefined =
       root === undefined ? undefined : await this.readPolicy(root, say);
@@ -452,7 +452,7 @@ export class OtLoopOrchestratorService {
         const discovery = await discoverAgentClis();
 
         return (
-          discovery.agents.find((agent) => agent.backend === backend)?.models ??
+          discovery.agents.find((agent) => agent.driver === driver)?.models ??
           []
         );
       },

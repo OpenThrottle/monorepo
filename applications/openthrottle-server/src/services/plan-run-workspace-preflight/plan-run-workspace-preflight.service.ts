@@ -24,13 +24,13 @@ import type { PlanRunWorkspacePreflightParams } from './plan-run-workspace-prefl
 import { findWorktreeProvisioner } from './plan-run-workspace-preflight.utils.ts';
 
 /**
- * Workspace MCP config each backend reads, relative to the run directory. Only the two backends a
+ * Workspace MCP config each driver reads, relative to the run directory. Only the two drivers a
  * queued run can use are listed: cursor parses `.cursor/mcp.json` (and needs `--approve-mcps`, which
  * the driver emits via its `mcpAutoApprove` capability), claude attaches `.mcp.json` on its own. The
  * remaining CLIs read user-scope config the checkout cannot influence, so there is nothing here to
  * check for them.
  */
-const MCP_CONFIG_BY_BACKEND: Partial<Record<WorkflowConfigRunner, string>> = {
+const MCP_CONFIG_BY_DRIVER: Partial<Record<WorkflowConfigRunner, string>> = {
   claude: '.mcp.json',
   cursor: '.cursor/mcp.json',
 };
@@ -51,7 +51,7 @@ export class PlanRunWorkspacePreflightService {
    * looks usable. Never throws: a preflight that cannot read the workspace must not fail the run.
    */
   check(params: PlanRunWorkspacePreflightParams): readonly string[] {
-    const { backend, workingDirectory } = params;
+    const { driver, workingDirectory } = params;
 
     if (!isAbsolute(workingDirectory) || !existsSync(workingDirectory)) {
       return [
@@ -61,7 +61,7 @@ export class PlanRunWorkspacePreflightService {
 
     return [
       ...this.checkProvisioning(workingDirectory),
-      ...this.checkMcpConfig(backend, workingDirectory),
+      ...this.checkMcpConfig(driver, workingDirectory),
     ];
   }
 
@@ -108,14 +108,14 @@ export class PlanRunWorkspacePreflightService {
   }
 
   /**
-   * @description Checks the backend's workspace MCP config exists, names `openthrottle-mcp`, and
+   * @description Checks the driver's workspace MCP config exists, names `openthrottle-mcp`, and
    * that every relatively-launched server's launcher actually resolves from THIS directory.
    */
   private checkMcpConfig(
-    backend: WorkflowConfigRunner,
+    driver: WorkflowConfigRunner,
     workingDirectory: string,
   ): readonly string[] {
-    const relativeConfigPath = MCP_CONFIG_BY_BACKEND[backend];
+    const relativeConfigPath = MCP_CONFIG_BY_DRIVER[driver];
     if (relativeConfigPath === undefined) {
       // Nothing in the checkout affects this CLI's MCP catalog; silence beats a warning it cannot act on.
       return [];
@@ -125,7 +125,7 @@ export class PlanRunWorkspacePreflightService {
 
     if (!existsSync(configPath)) {
       return [
-        `No ${relativeConfigPath} in ${workingDirectory}; the ${backend} agent will run with no workspace MCP servers, so ${REQUIRED_MCP_SERVER} tools will be missing.`,
+        `No ${relativeConfigPath} in ${workingDirectory}; the ${driver} agent will run with no workspace MCP servers, so ${REQUIRED_MCP_SERVER} tools will be missing.`,
       ];
     }
 

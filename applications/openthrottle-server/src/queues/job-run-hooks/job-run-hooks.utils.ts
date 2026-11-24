@@ -143,7 +143,7 @@ export const executePlanJobRunHooks = async (
 
   const planContextBlock = formatPlanAndTasksForPrompt(plan, tasks);
   const cwd = getWorkspaceRoot(jobData);
-  const backend = driverFromJobData(jobData);
+  const driver = driverFromJobData(jobData);
   const tuning: PlanRunTuningSettings | undefined = jobData.tuning;
   const model = tuning?.model ?? undefined;
 
@@ -167,7 +167,7 @@ export const executePlanJobRunHooks = async (
       runHookAgent: ({ agentPrompt, hookIndex, signal, timeoutMs }) => {
         return runJobRunHookAgent({
           agentPrompt,
-          backend,
+          driver,
           hookIndex,
           model,
           signal,

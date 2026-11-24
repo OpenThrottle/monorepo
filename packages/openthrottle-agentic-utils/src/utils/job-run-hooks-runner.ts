@@ -130,7 +130,7 @@ export const resolveJobRunHookLayer1Prompt = (
   // `PlanRunRuntimeSeed` is irrelevant here, so we fill it with neutral
   // defaults rather than reading the main run's repo config/env.
   const seed: PlanRunRuntimeSeed = {
-    backend: DEFAULT_WORKFLOW_RUNNER,
+    driver: DEFAULT_WORKFLOW_RUNNER,
     iterationTimeoutMs: undefined,
     iterations: DEFAULT_WORKFLOW_ITERATIONS,
     model: DEFAULT_PLAN_RUN_MODEL,

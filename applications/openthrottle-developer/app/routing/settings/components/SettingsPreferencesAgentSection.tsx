@@ -29,7 +29,7 @@ export interface SettingsPreferencesAgentSectionProps {
 
 /**
  * @description The Default agent section of Settings → Preferences: pick an agent
- * and model with the shared chat model picker, set effort where the backend has
+ * and model with the shared chat model picker, set effort where the driver has
  * a separate knob, save, or fall back to the system default. A stored default
  * that can no longer run is named as unavailable rather than hidden.
  */
@@ -68,7 +68,7 @@ export const SettingsPreferencesAgentSection = (
       <AlertTitle>{copy.agentStaleTitle}</AlertTitle>
       <AlertDescription>
         <span className="font-mono">
-          {resolved.stored.backend} · {resolved.stored.model}
+          {resolved.stored.driver} · {resolved.stored.model}
         </span>{' '}
         {copy.agentStaleNotice}
       </AlertDescription>
@@ -96,7 +96,7 @@ export const SettingsPreferencesAgentSection = (
     </p>
   );
 
-  // Effort only for a backend with a separate knob; cursor folds it into the model id.
+  // Effort only for a driver with a separate knob; cursor folds it into the model id.
   const effortField = draft !== null && effortSupported && (
     <div
       className="space-y-2"
@@ -116,7 +116,7 @@ export const SettingsPreferencesAgentSection = (
 
   const draftFields = draft !== null && (
     <>
-      <input name="backend" type="hidden" value={draft.driver} />
+      <input name="driver" type="hidden" value={draft.driver} />
       <input name="model" type="hidden" value={draft.model} />
       <input name="effort" type="hidden" value={draft.effort} />
     </>

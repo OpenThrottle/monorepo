@@ -19,18 +19,18 @@
 import { ALL_DRIVERS } from '@openthrottle/openthrottle-drivers';
 import { describe, expect, it } from 'vitest';
 
-import { AGENT_CLI_BACKENDS } from '~/routing/settings/data/data.agent-clis';
+import { AGENT_CLI_DRIVERS } from '~/routing/settings/data/data.agent-clis';
 import { mergeAgentCliStatuses } from '~/routing/settings/utils/agent-cli-statuses';
 
 /**
- * Backends whose catalog link is NOT their driver's `install.url` (a CLI with no curl-shell
+ * Drivers whose catalog link is NOT their driver's `install.url` (a CLI with no curl-shell
  * installer, linked to its docs page instead). Empty today: every driver ships an install script.
  */
-const DOCS_LINK_ONLY_BACKENDS = new Set<string>([]);
+const DOCS_LINK_ONLY_DRIVERS = new Set<string>([]);
 
 describe('agent CLI catalog / drivers registry parity', () => {
   it('lists exactly the registered driver ids', () => {
-    expect(Object.values(AGENT_CLI_BACKENDS).sort()).toEqual(
+    expect(Object.values(AGENT_CLI_DRIVERS).sort()).toEqual(
       ALL_DRIVERS.map((driver) => driver.id).sort(),
     );
   });
@@ -38,7 +38,7 @@ describe('agent CLI catalog / drivers registry parity', () => {
   it('produces one status row per registered driver', () => {
     const rows = mergeAgentCliStatuses([]);
 
-    expect(rows.map((row) => row.backend).sort()).toEqual(
+    expect(rows.map((row) => row.driver).sort()).toEqual(
       ALL_DRIVERS.map((driver) => driver.id).sort(),
     );
   });
@@ -49,31 +49,31 @@ describe('agent CLI catalog / drivers registry parity', () => {
     for (const driver of ALL_DRIVERS) {
       const rows = mergeAgentCliStatuses([
         {
-          backend: driver.id,
+          driver: driver.id,
           enabled: true,
           label: driver.label,
           modelOptions: [],
           version: '1.0.0',
         },
       ]);
-      const row = rows.find((candidate) => candidate.backend === driver.id);
+      const row = rows.find((candidate) => candidate.driver === driver.id);
 
       expect(row?.installed).toBe(true);
       expect(row?.version).toBe('1.0.0');
     }
   });
 
-  it('reuses each driver install url, except the documented docs-only backends', () => {
+  it('reuses each driver install url, except the documented docs-only drivers', () => {
     const rows = mergeAgentCliStatuses([]);
 
     for (const driver of ALL_DRIVERS) {
-      const row = rows.find((candidate) => candidate.backend === driver.id);
+      const row = rows.find((candidate) => candidate.driver === driver.id);
       const install = driver.install;
 
       // `install` is optional, and only the curl-shell method carries a url — npm-installed
       // CLIs have none, so the catalog would have to link around them.
       if (install === undefined || install.method !== 'curl-shell') {
-        expect(DOCS_LINK_ONLY_BACKENDS.has(driver.id)).toBe(true);
+        expect(DOCS_LINK_ONLY_DRIVERS.has(driver.id)).toBe(true);
         continue;
       }
 
@@ -84,7 +84,7 @@ describe('agent CLI catalog / drivers registry parity', () => {
   it('keeps the display label distinct from the driver binary label', () => {
     // Not a duplication to delete: the driver's label is the binary-ish name.
     const rows = mergeAgentCliStatuses([]);
-    const claude = rows.find((row) => row.backend === 'claude');
+    const claude = rows.find((row) => row.driver === 'claude');
 
     expect(claude?.label).toBe('Claude Code');
     expect(ALL_DRIVERS.find((driver) => driver.id === 'claude')?.label).toBe(

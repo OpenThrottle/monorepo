@@ -30,8 +30,6 @@ export interface AgentCliDescriptor {
    * `DriverCapabilities.attachesWorkspaceMcp`.
    */
   readonly attachesWorkspaceMcp: boolean;
-  /** Backend discriminator — the driver id (also a `DriverId`). */
-  readonly backend: string;
   /** Env var holding an absolute path override for the binary, when set. */
   readonly binEnv?: string;
   /** Binary name resolved off PATH (unless the env override is set). */
@@ -40,6 +38,8 @@ export interface AgentCliDescriptor {
   readonly chatCapable: boolean;
   /** How to enumerate this CLI's models; undefined ⇒ availability-only. */
   readonly discoverModels?: DriverModelListing;
+  /** The driver id (also a `DriverId`). */
+  readonly driver: string;
   /** Human-readable label for the selector. */
   readonly label: string;
   /**
@@ -97,12 +97,12 @@ export interface AgentCliAvailability {
   readonly authState: AgentCliAuthState;
   /** True when the binary is present and its version probe exited cleanly. */
   readonly available: boolean;
-  /** Backend discriminator (driver id). */
-  readonly backend: string;
   /** Behavioral capabilities of this backend's chat path (read these, not backend names). */
   readonly capabilities: ChatBackendCapabilities;
   /** True when the driver can be offered as a streaming chat backend. */
   readonly chatCapable: boolean;
+  /** The driver id. */
+  readonly driver: string;
   /** Human-readable label. */
   readonly label: string;
   /** Models this CLI can run (empty when unavailable, undiscoverable, or on listing failure). */
@@ -145,7 +145,7 @@ export interface DiscoverAgentClisOptions {
 
 /**
  * Allowlist of supported agent CLIs, projected from the drivers registry. Only
- * these binaries are ever probed or spawned. Each `backend` is the driver id;
+ * these binaries are ever probed or spawned. Each `driver` is the driver id;
  * probing is uniform (`<binary> <versionArgs>`). Derived from `ALL_DRIVERS`, so
  * adding a driver automatically adds it to discovery.
  *
@@ -154,11 +154,11 @@ export interface DiscoverAgentClisOptions {
 export const AGENT_CLI_ALLOWLIST: readonly AgentCliDescriptor[] =
   ALL_DRIVERS.map((driver) => ({
     attachesWorkspaceMcp: driver.capabilities.attachesWorkspaceMcp,
-    backend: driver.id,
     binEnv: driver.binEnv,
     binary: driver.binary,
     chatCapable: driver.capabilities.chatStreaming,
     discoverModels: driver.discoverModels,
+    driver: driver.id,
     label: driver.label,
     supportsCustomBaseUrl: driver.capabilities.supportsCustomBaseUrl,
     versionArgs: driver.versionArgs,
@@ -251,7 +251,7 @@ function probe(
   return new Promise((resolve) => {
     const {
       attachesWorkspaceMcp,
-      backend,
+      driver,
       chatCapable,
       label,
       supportsCustomBaseUrl,
@@ -263,9 +263,9 @@ function probe(
       auth: null,
       authState: UNKNOWN_AUTH_STATE,
       available: false,
-      backend,
-      capabilities: resolveChatBackendCapabilities(backend, env),
+      capabilities: resolveChatBackendCapabilities(driver, env),
       chatCapable,
+      driver,
       label,
       models: [],
       supportsCustomBaseUrl,
@@ -313,9 +313,9 @@ function probe(
           auth: null,
           authState: UNKNOWN_AUTH_STATE,
           available: true,
-          backend,
-          capabilities: resolveChatBackendCapabilities(backend, env),
+          capabilities: resolveChatBackendCapabilities(driver, env),
           chatCapable,
+          driver,
           label,
           models: listing.models,
           supportsCustomBaseUrl,
@@ -327,8 +327,8 @@ function probe(
   });
 }
 
-const CLAUDE_BACKEND = 'claude';
-const CURSOR_BACKEND = 'cursor';
+const CLAUDE_DRIVER = 'claude';
+const CURSOR_DRIVER = 'cursor';
 const AUTH_DETAIL_MAX_CHARS = 200;
 
 function claudeAuthState(auth: ClaudeAuthStatus | null): AgentCliAuthState {
@@ -436,7 +436,7 @@ async function probeWithAuth(
     modelListTimeoutMs,
   );
 
-  if (descriptor.backend === CURSOR_BACKEND) {
+  if (descriptor.driver === CURSOR_DRIVER) {
     const [availability, authState] = await Promise.all([
       availabilityPromise,
       probeCursorAuthState(descriptor, env, probeTimeoutMs),
@@ -447,7 +447,7 @@ async function probeWithAuth(
       : availability;
   }
 
-  if (descriptor.backend !== CLAUDE_BACKEND) {
+  if (descriptor.driver !== CLAUDE_DRIVER) {
     return availabilityPromise;
   }
 

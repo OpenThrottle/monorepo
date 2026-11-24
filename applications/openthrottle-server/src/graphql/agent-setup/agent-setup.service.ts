@@ -83,7 +83,7 @@ export class AgentSetupService {
     let sortOrder = 0;
 
     const result: AgentSetupResult = await runAgentSetup({
-      backend: run.backend,
+      driver: run.driver,
       mode: run.mode,
       onChunk: (chunk) => {
         this.publish(runId, {
@@ -103,11 +103,11 @@ export class AgentSetupService {
       // Reflect the new/updated binary on the next discovery scan.
       this.agentDiscovery.invalidate();
       this.logger.debug(
-        `🛠️ agent-setup: ${run.mode} ${run.backend} succeeded (run ${runId})`,
+        `🛠️ agent-setup: ${run.mode} ${run.driver} succeeded (run ${runId})`,
       );
     } else {
       this.logger.warn(
-        `🛠️ agent-setup: ${run.mode} ${run.backend} failed (${result.reason}) (run ${runId})`,
+        `🛠️ agent-setup: ${run.mode} ${run.driver} failed (${result.reason}) (run ${runId})`,
       );
     }
 

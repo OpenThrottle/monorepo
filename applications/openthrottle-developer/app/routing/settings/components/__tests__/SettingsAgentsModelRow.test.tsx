@@ -28,8 +28,8 @@ describe('SettingsAgentsModelRow', () => {
   test('renders the model id with an enable toggle and a favorite star', () => {
     const component = renderRow({
       agentDisabled: false,
-      backend: 'cursor',
       canManage: true,
+      driver: 'cursor',
       model: { enabled: true, favorite: true, model: 'gpt-5.2' },
     });
 
@@ -45,8 +45,8 @@ describe('SettingsAgentsModelRow', () => {
   test('disables the enable toggle when the parent agent is disabled', () => {
     const component = renderRow({
       agentDisabled: true,
-      backend: 'claude',
       canManage: true,
+      driver: 'claude',
       model: { enabled: true, favorite: false, model: 'opus' },
     });
 

@@ -29,7 +29,7 @@ export class UserFavoriteAgentModelsRepository extends BaseRepository<
   }
 
   /**
-   * @description The user's favorited MODELS, keyed backend → model ids; empty when the user
+   * @description The user's favorited MODELS, keyed driver → model ids; empty when the user
    * has starred nothing.
    */
   async getFavoriteModels(userId: string): Promise<ModelPreferenceMap> {
@@ -40,10 +40,10 @@ export class UserFavoriteAgentModelsRepository extends BaseRepository<
   /** @description Whether the user has favorited a single model. */
   async isFavoriteModel(
     userId: string,
-    backend: string,
+    driver: string,
     model: string,
   ): Promise<boolean> {
-    const existing = await this.findOne({ where: { backend, model, userId } });
+    const existing = await this.findOne({ where: { driver, model, userId } });
     return existing !== null;
   }
 
@@ -53,18 +53,18 @@ export class UserFavoriteAgentModelsRepository extends BaseRepository<
    */
   async setModelFavorite(
     userId: string,
-    backend: string,
+    driver: string,
     model: string,
     favorite: boolean,
   ): Promise<void> {
     if (!favorite) {
-      await this.removeMany({ backend, model, userId });
+      await this.removeMany({ driver, model, userId });
       return;
     }
 
-    if (await this.isFavoriteModel(userId, backend, model)) {
+    if (await this.isFavoriteModel(userId, driver, model)) {
       return;
     }
-    await this.create({ backend, model, userId });
+    await this.create({ driver, model, userId });
   }
 }

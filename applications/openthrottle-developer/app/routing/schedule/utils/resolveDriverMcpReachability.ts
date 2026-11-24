@@ -12,7 +12,7 @@ export const resolveDriverMcpReachability = (
   driverId: string,
   agents: readonly DriverMcpOption[] | undefined,
 ): DriverMcpReachability => {
-  const match = agents?.find((agent) => agent.backend === driverId);
+  const match = agents?.find((agent) => agent.driver === driverId);
   if (match === undefined) {
     return DRIVER_MCP_REACHABILITY.unknown;
   }

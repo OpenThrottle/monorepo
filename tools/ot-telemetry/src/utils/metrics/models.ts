@@ -203,57 +203,57 @@ export const modelTokenUsageMetricQuery: MetricQuery<ModelTokenUsageMetrics> = {
   },
 };
 
-/** Invocation count for one favorited `(backend, model)` pair. */
+/** Invocation count for one favorited `(driver, model)` pair. */
 export interface FavoriteModelRow {
-  readonly backend: string;
   readonly count: number;
+  readonly driver: string;
   readonly model: string;
 }
 
 export interface FavoriteModelsMetrics {
-  readonly byBackendModel: readonly FavoriteModelRow[];
+  readonly byDriverModel: readonly FavoriteModelRow[];
   readonly totalFavorites: number;
 }
 
 /**
- * `metrics.favorite_models` — how many users favorited each `(backend,
+ * `metrics.favorite_models` — how many users favorited each `(driver,
  * model)` pair, from `user_favorite_agent_models`. Unwindowed: this is a
  * presence table (a snapshot of current preference), not an event log.
  */
 export const favoriteModelsMetricQuery: MetricQuery<FavoriteModelsMetrics> = {
   name: 'favorite_models',
   requires: {
-    columns: { user_favorite_agent_models: ['id', 'backend', 'model'] },
+    columns: { user_favorite_agent_models: ['id', 'driver', 'model'] },
     tables: ['user_favorite_agent_models'],
   },
   async run({ client }: MetricContext): Promise<FavoriteModelsMetrics> {
     const { rows } = await client.query<FavoriteModelRow>(
-      `SELECT backend, model, count(*)::int AS count
+      `SELECT driver, model, count(*)::int AS count
        FROM user_favorite_agent_models
-       GROUP BY backend, model
-       ORDER BY count DESC, backend ASC, model ASC`,
+       GROUP BY driver, model
+       ORDER BY count DESC, driver ASC, model ASC`,
     );
     return {
-      byBackendModel: rows,
+      byDriverModel: rows,
       totalFavorites: rows.reduce((sum, row) => sum + row.count, 0),
     };
   },
 };
 
-/** Count of disable rows for one `(backend, model)` pair; `model` is `null` for a whole-agent disable. */
+/** Count of disable rows for one `(driver, model)` pair; `model` is `null` for a whole-agent disable. */
 export interface DisabledAgentCliRow {
-  readonly backend: string;
   readonly count: number;
+  readonly driver: string;
   readonly model: string | null;
 }
 
 export interface DisabledAgentClisMetrics {
-  readonly byBackendModel: readonly DisabledAgentCliRow[];
+  readonly byDriverModel: readonly DisabledAgentCliRow[];
   readonly totalDisables: number;
 }
 
 /**
- * `metrics.disabled_agent_clis` — how many users disabled each `(backend,
+ * `metrics.disabled_agent_clis` — how many users disabled each `(driver,
  * model)` pair, from `user_disabled_agent_clis`. `model IS NULL` means the
  * whole agent is disabled (migration 091's original semantics); a non-null
  * `model` is a single disabled model within an otherwise-enabled agent
@@ -263,18 +263,18 @@ export const disabledAgentClisMetricQuery: MetricQuery<DisabledAgentClisMetrics>
   {
     name: 'disabled_agent_clis',
     requires: {
-      columns: { user_disabled_agent_clis: ['id', 'backend', 'model'] },
+      columns: { user_disabled_agent_clis: ['id', 'driver', 'model'] },
       tables: ['user_disabled_agent_clis'],
     },
     async run({ client }: MetricContext): Promise<DisabledAgentClisMetrics> {
       const { rows } = await client.query<DisabledAgentCliRow>(
-        `SELECT backend, model, count(*)::int AS count
+        `SELECT driver, model, count(*)::int AS count
          FROM user_disabled_agent_clis
-         GROUP BY backend, model
-         ORDER BY count DESC, backend ASC, model ASC NULLS FIRST`,
+         GROUP BY driver, model
+         ORDER BY count DESC, driver ASC, model ASC NULLS FIRST`,
       );
       return {
-        byBackendModel: rows,
+        byDriverModel: rows,
         totalDisables: rows.reduce((sum, row) => sum + row.count, 0),
       };
     },

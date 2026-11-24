@@ -43,7 +43,7 @@ export const SettingsAgentsTable = (
     <SettingsAgentsTableRow
       canManage={canManage}
       installEnabled={installEnabled}
-      key={status.backend}
+      key={status.driver}
       status={status}
     />
   ));

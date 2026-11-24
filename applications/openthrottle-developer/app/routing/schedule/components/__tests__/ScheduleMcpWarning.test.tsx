@@ -6,12 +6,12 @@ import { ScheduleMcpWarning } from '../ScheduleMcpWarning';
 
 /** Discovery rows as the ScheduleFormAgentClis query returns them. */
 const AGENTS = [
-  { attachesWorkspaceMcp: true, backend: 'claude' },
-  { attachesWorkspaceMcp: true, backend: 'cursor' },
-  { attachesWorkspaceMcp: true, backend: 'grok' },
-  { attachesWorkspaceMcp: true, backend: 'opencode' },
+  { attachesWorkspaceMcp: true, driver: 'claude' },
+  { attachesWorkspaceMcp: true, driver: 'cursor' },
+  { attachesWorkspaceMcp: true, driver: 'grok' },
+  { attachesWorkspaceMcp: true, driver: 'opencode' },
   // codex is the only driver that cannot reach a workspace's MCP servers.
-  { attachesWorkspaceMcp: false, backend: 'codex' },
+  { attachesWorkspaceMcp: false, driver: 'codex' },
 ];
 
 describe('ScheduleMcpWarning', () => {

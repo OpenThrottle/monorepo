@@ -128,9 +128,9 @@ export class AgentCliAuthStateObject {
 @ObjectType()
 export class AgentCliOptionObject {
   @Field(() => String, {
-    description: `Backend discriminator (e.g. "cursor") used in StartConversationStreamInput.`,
+    description: `Driver id (e.g. "cursor"); also the value StartConversationStreamInput.backend takes to chat with this agent.`,
   })
-  backend!: string;
+  driver!: string;
 
   @Field(() => AgentCliAuthStatusObject, {
     description: `Logged-in account, subscription plan and active credential, reported by \`claude auth status --json\` (no OAuth tokens or credential files are read, and no Anthropic endpoint is called). Null for CLIs other than claude, or when the probe failed or timed out.`,

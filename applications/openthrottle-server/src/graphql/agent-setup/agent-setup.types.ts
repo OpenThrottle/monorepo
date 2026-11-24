@@ -30,8 +30,8 @@ export interface AgentSetupStreamChunkEnvelope {
 }
 /** Inputs for one install/update run. */
 export interface StartAgentSetupRun {
-  /** Backend (driver id) — already validated by the resolver against the registry. */
-  readonly backend: string;
+  /** Driver id — already validated by the resolver against the registry. */
+  readonly driver: string;
   /** Install a missing CLI or update an existing one. */
   readonly mode: AgentSetupMode;
 }

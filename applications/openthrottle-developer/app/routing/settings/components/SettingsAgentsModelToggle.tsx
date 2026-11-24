@@ -19,10 +19,10 @@ export interface SettingsAgentsModelToggleProps {
    * model, so the control is inert (and a tooltip explains why).
    */
   agentDisabled: boolean;
-  /** Driver id this model belongs to. */
-  backend: string;
   /** Server-computed: current user holds SETTINGS_WRITE. */
   canManage: boolean;
+  /** Driver id this model belongs to. */
+  driver: string;
   /** Effective per-model enablement from the loader (server truth). */
   enabled: boolean;
   /** The model id this toggle controls. */
@@ -32,7 +32,7 @@ export interface SettingsAgentsModelToggleProps {
 export const SettingsAgentsModelToggle = (
   props: SettingsAgentsModelToggleProps,
 ): React.ReactElement => {
-  const { agentDisabled, backend, canManage, enabled, model } = props;
+  const { agentDisabled, driver, canManage, enabled, model } = props;
 
   // Hooks
   const fetcher = useFetcher<typeof agentModelEnabledAction>();
@@ -54,7 +54,7 @@ export const SettingsAgentsModelToggle = (
   // Handlers
   const handleCheckedChange = (next: boolean): void => {
     fetcher.submit(
-      { backend, enabled: String(next), model },
+      { driver, enabled: String(next), model },
       { action: AGENT_MODEL_ENABLED_ACTION, method: 'post' },
     );
   };
@@ -64,7 +64,7 @@ export const SettingsAgentsModelToggle = (
     <Switch
       aria-label={SETTINGS_AGENTS_COPY.modelToggleLabel}
       checked={optimisticEnabled}
-      data-testid={`SettingsAgentsModelToggle-${backend}-${model}`}
+      data-testid={`SettingsAgentsModelToggle-${driver}-${model}`}
       disabled={disabled}
       onCheckedChange={handleCheckedChange}
       size="sm"

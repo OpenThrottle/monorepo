@@ -23,7 +23,7 @@ const renderToggle = (
     {
       action: async ({ request }) => {
         action(await request.formData());
-        return { backend: props.backend, enabled: false, errorMessage: null };
+        return { driver: props.driver, enabled: false, errorMessage: null };
       },
       path: '/resources/agent-enabled',
     },
@@ -36,22 +36,22 @@ describe('SettingsAgentsAgentToggle', () => {
     const user = userEvent.setup();
     const submitted: FormData[] = [];
     const component = renderToggle(
-      { backend: 'cursor', canManage: true, enabled: true },
+      { canManage: true, driver: 'cursor', enabled: true },
       (formData) => submitted.push(formData),
     );
 
     await user.click(component.getByTestId('SettingsAgentsAgentToggle-cursor'));
 
     expect(submitted).toHaveLength(1);
-    expect(submitted[0]?.get('backend')).toBe('cursor');
+    expect(submitted[0]?.get('driver')).toBe('cursor');
     // An enabled agent toggles OFF.
     expect(submitted[0]?.get('enabled')).toBe('false');
   });
 
   test('reflects the enabled state as the switch checked state', () => {
     const component = renderToggle({
-      backend: 'claude',
       canManage: true,
+      driver: 'claude',
       enabled: false,
     });
     expect(
@@ -63,7 +63,7 @@ describe('SettingsAgentsAgentToggle', () => {
     const user = userEvent.setup();
     const submitted: FormData[] = [];
     const component = renderToggle(
-      { backend: 'grok', canManage: false, enabled: true },
+      { canManage: false, driver: 'grok', enabled: true },
       (formData) => submitted.push(formData),
     );
 

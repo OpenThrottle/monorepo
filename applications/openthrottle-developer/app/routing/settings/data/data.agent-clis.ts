@@ -4,13 +4,13 @@
  * AVAILABLE CLIs) into a per-CLI installed/not-installed status list.
  *
  * `@openthrottle/openthrottle-drivers` cannot be imported into the browser bundle (node-only
- * modules), so {@link AGENT_CLI_BACKENDS} is a browser-safe mirror of the driver ids. The catalog
- * is `Record<AgentCliBackend, …>` so a backend cannot exist without a label and an install link.
+ * modules), so {@link AGENT_CLI_DRIVERS} is a browser-safe mirror of the driver ids. The catalog
+ * is `Record<AgentCliDriver, …>` so a driver cannot exist without a label and an install link.
  * `__tests__/agent-cli-registry-parity.test.ts` holds that mirror to `ALL_DRIVERS` at test time
  * (tests run in node).
  */
 
-export const AGENT_CLI_BACKENDS = {
+export const AGENT_CLI_DRIVERS = {
   antigravity: 'antigravity',
   claude: 'claude',
   codex: 'codex',
@@ -19,11 +19,11 @@ export const AGENT_CLI_BACKENDS = {
   opencode: 'opencode',
 } as const;
 
-/** A backend id the setup page can display. */
-export type AgentCliBackend =
-  (typeof AGENT_CLI_BACKENDS)[keyof typeof AGENT_CLI_BACKENDS];
+/** A driver id the setup page can display. */
+export type AgentCliDriver =
+  (typeof AGENT_CLI_DRIVERS)[keyof typeof AGENT_CLI_DRIVERS];
 
-/** One agent CLI the setup page can display, keyed by the driver-id backend discriminator. */
+/** One agent CLI the setup page can display, keyed by the driver-id driver discriminator. */
 export interface AgentCliCatalogEntry {
   /**
    * Installer URL (shown as a reference link; the actual install runs server-side). Matches the
@@ -38,36 +38,35 @@ export interface AgentCliCatalogEntry {
 }
 
 /**
- * Display metadata per backend. Exhaustive over {@link AgentCliBackend}: a backend cannot be
+ * Display metadata per driver. Exhaustive over {@link AgentCliDriver}: a driver cannot be
  * listed without a label and an install link.
  */
-export const AGENT_CLI_CATALOG: Record<AgentCliBackend, AgentCliCatalogEntry> =
-  {
-    antigravity: {
-      installUrl: 'https://antigravity.google/cli/install.sh',
-      label: 'Antigravity',
-    },
-    claude: {
-      installUrl: 'https://claude.ai/install.sh',
-      label: 'Claude Code',
-    },
-    codex: {
-      installUrl: 'https://chatgpt.com/codex/install.sh',
-      label: 'Codex',
-    },
-    cursor: {
-      installUrl: 'https://cursor.com/install',
-      label: 'Cursor Agent',
-    },
-    grok: {
-      installUrl: 'https://x.ai/cli/install.sh',
-      label: 'Grok',
-    },
-    opencode: {
-      installUrl: 'https://opencode.ai/install',
-      label: 'OpenCode',
-    },
-  };
+export const AGENT_CLI_CATALOG: Record<AgentCliDriver, AgentCliCatalogEntry> = {
+  antigravity: {
+    installUrl: 'https://antigravity.google/cli/install.sh',
+    label: 'Antigravity',
+  },
+  claude: {
+    installUrl: 'https://claude.ai/install.sh',
+    label: 'Claude Code',
+  },
+  codex: {
+    installUrl: 'https://chatgpt.com/codex/install.sh',
+    label: 'Codex',
+  },
+  cursor: {
+    installUrl: 'https://cursor.com/install',
+    label: 'Cursor Agent',
+  },
+  grok: {
+    installUrl: 'https://x.ai/cli/install.sh',
+    label: 'Grok',
+  },
+  opencode: {
+    installUrl: 'https://opencode.ai/install',
+    label: 'OpenCode',
+  },
+};
 
 /** One model of an agent CLI with the current user's per-model preferences. */
 export interface AgentCliModelStatus {
@@ -80,7 +79,7 @@ export interface AgentCliModelStatus {
 
 /** One available (installed) CLI as returned by the discoverAgentClis query. */
 export interface AvailableAgentCli {
-  readonly backend: string;
+  readonly driver: string;
   /** Per-user enablement (false = the user disabled this agent). */
   readonly enabled: boolean;
   readonly label: string;
@@ -91,7 +90,7 @@ export interface AvailableAgentCli {
 
 /** Per-CLI merged status for the setup table. */
 export interface AgentCliStatus {
-  readonly backend: string;
+  readonly driver: string;
   /**
    * Per-user enablement. Only an installed (available) CLI carries the server's value; a
    * not-installed catalog entry defaults to enabled (there is nothing to disable yet).
@@ -115,7 +114,7 @@ export type AgentCliFilter = (typeof AGENT_CLI_FILTERS)[number];
 
 /** One agent CLI whose credential setup needs attention (from `claude auth status`). */
 export interface AgentCliAuthWarning {
-  readonly backend: string;
+  readonly driver: string;
   readonly label: string;
   readonly warning: string;
 }
@@ -147,6 +146,6 @@ export type AgentSetupRunStatus =
 /** The slice of a discovered agent needed to surface its auth warning. */
 export interface AgentCliAuthSource {
   readonly auth?: { readonly warning?: string | null } | null;
-  readonly backend: string;
+  readonly driver: string;
   readonly label: string;
 }

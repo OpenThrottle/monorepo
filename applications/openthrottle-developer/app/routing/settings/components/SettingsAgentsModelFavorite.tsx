@@ -16,10 +16,10 @@ import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/data.copy';
 const AGENT_MODEL_FAVORITE_ACTION = '/resources/agent-model-favorite';
 
 export interface SettingsAgentsModelFavoriteProps {
-  /** Driver id this model belongs to. */
-  backend: string;
   /** Server-computed: current user holds SETTINGS_WRITE. */
   canManage: boolean;
+  /** Driver id this model belongs to. */
+  driver: string;
   /** Whether this model is currently favorited (server truth). */
   favorite: boolean;
   /** The model id this star controls. */
@@ -29,7 +29,7 @@ export interface SettingsAgentsModelFavoriteProps {
 export const SettingsAgentsModelFavorite = (
   props: SettingsAgentsModelFavoriteProps,
 ): React.ReactElement => {
-  const { backend, canManage, favorite, model } = props;
+  const { driver, canManage, favorite, model } = props;
 
   // Hooks
   const fetcher = useFetcher<typeof agentModelFavoriteAction>();
@@ -47,7 +47,7 @@ export const SettingsAgentsModelFavorite = (
   // Handlers
   const handleClick = (): void => {
     fetcher.submit(
-      { backend, favorite: String(!optimisticFavorite), model },
+      { driver, favorite: String(!optimisticFavorite), model },
       { action: AGENT_MODEL_FAVORITE_ACTION, method: 'post' },
     );
   };
@@ -58,7 +58,7 @@ export const SettingsAgentsModelFavorite = (
       aria-label={SETTINGS_AGENTS_COPY.modelFavoriteLabel}
       aria-pressed={optimisticFavorite}
       className="size-6"
-      data-testid={`SettingsAgentsModelFavorite-${backend}-${model}`}
+      data-testid={`SettingsAgentsModelFavorite-${driver}-${model}`}
       disabled={disabled}
       onClick={handleClick}
       size="icon"

@@ -11,10 +11,10 @@ const AGENT_MODELS_ENABLED_ACTION = '/resources/agent-models-enabled';
 export interface SettingsAgentsModelBulkToggleProps {
   /** True when the parent agent is disabled (agent-OFF hard-overrides every model). */
   agentDisabled: boolean;
-  /** Driver id these models belong to. */
-  backend: string;
   /** Server-computed: current user holds SETTINGS_WRITE. */
   canManage: boolean;
+  /** Driver id these models belong to. */
+  driver: string;
   /** Count of currently-enabled models (drives which control is actionable). */
   enabledCount: number;
   /** Every model id of this agent, in discovery order. */
@@ -24,7 +24,7 @@ export interface SettingsAgentsModelBulkToggleProps {
 export const SettingsAgentsModelBulkToggle = (
   props: SettingsAgentsModelBulkToggleProps,
 ): React.ReactElement => {
-  const { agentDisabled, backend, canManage, enabledCount, models } = props;
+  const { agentDisabled, driver, canManage, enabledCount, models } = props;
 
   // Hooks
   const fetcher = useFetcher<typeof agentModelsEnabledAction>();
@@ -41,7 +41,7 @@ export const SettingsAgentsModelBulkToggle = (
   // Handlers
   const submit = (enabled: boolean): void => {
     fetcher.submit(
-      { backend, enabled: String(enabled), models: JSON.stringify(models) },
+      { driver, enabled: String(enabled), models: JSON.stringify(models) },
       { action: AGENT_MODELS_ENABLED_ACTION, method: 'post' },
     );
   };
@@ -76,7 +76,7 @@ export const SettingsAgentsModelBulkToggle = (
       <div className="flex items-center gap-1">
         <Button
           className="h-6 px-2 text-xs"
-          data-testid={`SettingsAgentsModelBulkToggle-${backend}-enable`}
+          data-testid={`SettingsAgentsModelBulkToggle-${driver}-enable`}
           disabled={locked || allEnabled}
           onClick={handleEnableAll}
           size="sm"
@@ -87,7 +87,7 @@ export const SettingsAgentsModelBulkToggle = (
         </Button>
         <Button
           className="h-6 px-2 text-xs"
-          data-testid={`SettingsAgentsModelBulkToggle-${backend}-disable`}
+          data-testid={`SettingsAgentsModelBulkToggle-${driver}-disable`}
           disabled={locked || allDisabled}
           onClick={handleDisableAll}
           size="sm"

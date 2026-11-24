@@ -1279,9 +1279,9 @@ type AgentCliAuthStateObject {
 
 type AgentCliOptionObject {
   """
-  Backend discriminator (e.g. "cursor") used in StartConversationStreamInput.
+  Driver id (e.g. "cursor"); also the value StartConversationStreamInput.backend takes to chat with this agent.
   """
-  backend: String!
+  driver: String!
 
   """
   Logged-in account, subscription plan and active credential, reported by `claude auth status --json` (no OAuth tokens or credential files are read, and no Anthropic endpoint is called). Null for CLIs other than claude, or when the probe failed or timed out.
@@ -1359,8 +1359,8 @@ type AgentCliSetupConfigObject {
 }
 
 type SetAgentEnabledResult {
-  """The backend (driver id) whose enablement was toggled."""
-  backend: String!
+  """The driver whose enablement was toggled."""
+  driver: String!
 
   """
   The per-user enablement state after the toggle: true = enabled, false = disabled (hidden from pickers + blocked from new runs).
@@ -1369,8 +1369,8 @@ type SetAgentEnabledResult {
 }
 
 type SetAgentModelEnabledResult {
-  """The backend (driver id) the toggled model belongs to."""
-  backend: String!
+  """The driver the toggled model belongs to."""
+  driver: String!
 
   """The model id whose enablement was toggled."""
   model: String!
@@ -1382,18 +1382,18 @@ type SetAgentModelEnabledResult {
 }
 
 type SetAgentModelsEnabledResult {
-  """The backend (driver id) whose models were bulk-toggled."""
-  backend: String!
+  """The driver whose models were bulk-toggled."""
+  driver: String!
 
   """
-  The per-model enablement state applied to every model of the backend: true = all enabled, false = all disabled.
+  The per-model enablement state applied to every model of the driver: true = all enabled, false = all disabled.
   """
   enabled: Boolean!
 }
 
 type SetAgentModelFavoriteResult {
-  """The backend (driver id) the favorited model belongs to."""
-  backend: String!
+  """The driver the favorited model belongs to."""
+  driver: String!
 
   """The model id whose favorite state was toggled."""
   model: String!
@@ -1435,8 +1435,8 @@ type AgentSetupStreamChunkObject {
 }
 
 type StartAgentSetupResult {
-  """The backend (driver id) this run targeted."""
-  backend: String!
+  """The driver this run targeted."""
+  driver: String!
 
   """
   True when the request was rejected because server-side install/update is disabled by env flag (OT_AGENT_CLI_INSTALL_ENABLED).
@@ -5886,13 +5886,13 @@ type StartTranscriptionStreamResult {
 }
 
 """
-The user's default agent. Backend and model always travel together, so a half-set agent cannot be represented.
+The user's default agent. Driver and model always travel together, so a half-set agent cannot be represented.
 """
 type UserPreferencesAgentObject {
   """Agent CLI driver id (e.g. claude, cursor, codex)."""
-  backend: String!
+  driver: String!
 
-  """Reasoning effort level, or null for the backend's own default."""
+  """Reasoning effort level, or null for the driver's own default."""
   effort: String
 
   """Driver-specific model id, opaque to the server."""
@@ -5902,7 +5902,7 @@ type UserPreferencesAgentObject {
 """Per-user preferences. A null field means "use the system default"."""
 type UserPreferencesObject {
   """
-  Default agent (backend + model + effort), or null for the system default.
+  Default agent (driver + model + effort), or null for the system default.
   """
   defaultAgent: UserPreferencesAgentObject
 
@@ -8038,34 +8038,34 @@ type Mutation {
   updateAgentConversationTitle(input: UpdateAgentConversationTitleInput!): AgentConversationObject!
 
   """
-  Enable or disable an agent CLI backend for the current user. A disabled agent is hidden from chat/model pickers and rejected when starting new runs. Presence-as-disabled: enabled=false records the preference, enabled=true clears it (default is enabled). Gated by SETTINGS_WRITE, in parity with install/update; rejects unknown backends.
+  Enable or disable an agent CLI driver for the current user. A disabled agent is hidden from chat/model pickers and rejected when starting new runs. Presence-as-disabled: enabled=false records the preference, enabled=true clears it (default is enabled). Gated by SETTINGS_WRITE, in parity with install/update; rejects unknown drivers.
   """
-  setAgentEnabled(backend: String!, enabled: Boolean!): SetAgentEnabledResult!
+  setAgentEnabled(driver: String!, enabled: Boolean!): SetAgentEnabledResult!
 
   """
-  Enable or disable a single MODEL of an agent CLI backend for the current user. A disabled model is hidden from chat/model pickers and rejected when starting new runs, even while the agent itself stays enabled (an agent-level OFF hard-overrides all its models). Presence-as-disabled: enabled=false records the preference, enabled=true clears it (default is enabled). Gated by SETTINGS_WRITE; rejects unknown backends.
+  Enable or disable a single MODEL of an agent CLI driver for the current user. A disabled model is hidden from chat/model pickers and rejected when starting new runs, even while the agent itself stays enabled (an agent-level OFF hard-overrides all its models). Presence-as-disabled: enabled=false records the preference, enabled=true clears it (default is enabled). Gated by SETTINGS_WRITE; rejects unknown drivers.
   """
-  setAgentModelEnabled(backend: String!, model: String!, enabled: Boolean!): SetAgentModelEnabledResult!
+  setAgentModelEnabled(driver: String!, model: String!, enabled: Boolean!): SetAgentModelEnabledResult!
 
   """
-  Bulk enable or disable EVERY model of an agent CLI backend for the current user (the select-all / deselect-all affordance). enabled=true clears all per-model disables for the backend; enabled=false records each supplied model id as disabled. An agent-level OFF still hard-overrides all its models. Gated by SETTINGS_WRITE; rejects unknown backends.
+  Bulk enable or disable EVERY model of an agent CLI driver for the current user (the select-all / deselect-all affordance). enabled=true clears all per-model disables for the driver; enabled=false records each supplied model id as disabled. An agent-level OFF still hard-overrides all its models. Gated by SETTINGS_WRITE; rejects unknown drivers.
   """
-  setAgentModelsEnabled(backend: String!, models: [String!]!, enabled: Boolean!): SetAgentModelsEnabledResult!
+  setAgentModelsEnabled(driver: String!, models: [String!]!, enabled: Boolean!): SetAgentModelsEnabledResult!
 
   """
-  Star or unstar a single MODEL of an agent CLI backend for the current user. Favorited models float to the top of / are highlighted in chat/model pickers and run selection. Favoriting is orthogonal to enablement — it never enables a disabled model. Presence-as-favorite: favorite=true records the star, favorite=false clears it. Gated by SETTINGS_WRITE; rejects unknown backends.
+  Star or unstar a single MODEL of an agent CLI driver for the current user. Favorited models float to the top of / are highlighted in chat/model pickers and run selection. Favoriting is orthogonal to enablement — it never enables a disabled model. Presence-as-favorite: favorite=true records the star, favorite=false clears it. Gated by SETTINGS_WRITE; rejects unknown drivers.
   """
-  setAgentModelFavorite(backend: String!, model: String!, favorite: Boolean!): SetAgentModelFavoriteResult!
+  setAgentModelFavorite(driver: String!, model: String!, favorite: Boolean!): SetAgentModelFavoriteResult!
 
   """
   Install an allowlisted agent CLI on the server host by driver id. Gated by SETTINGS_WRITE and the default-off OT_AGENT_CLI_INSTALL_ENABLED flag; returns a runId to stream via agentSetupChunkAdded.
   """
-  installAgentCli(backend: String!): StartAgentSetupResult!
+  installAgentCli(driver: String!): StartAgentSetupResult!
 
   """
   Update an allowlisted agent CLI on the server host by driver id. Gated by SETTINGS_WRITE and the default-off OT_AGENT_CLI_INSTALL_ENABLED flag; returns a runId to stream via agentSetupChunkAdded.
   """
-  updateAgentCli(backend: String!): StartAgentSetupResult!
+  updateAgentCli(driver: String!): StartAgentSetupResult!
 
   """
   Record an ATIF trajectory for a plan run. With an idempotencyKey a duplicate is a successful no-op that returns the stored row. The document is validated, capped at 4 MiB server-side (elided observations set truncated) and summarized into token, cost and tool-call columns.
@@ -11334,13 +11334,13 @@ input UpdateUserPreferencesInput {
 }
 
 """
-A default agent. Backend and model are required together; effort may be null.
+A default agent. Driver and model are required together; effort may be null.
 """
 input UserPreferencesAgentInput {
   """Agent CLI driver id."""
-  backend: String!
+  driver: String!
 
-  """Reasoning effort level, or null for the backend's own default."""
+  """Reasoning effort level, or null for the driver's own default."""
   effort: String
 
   """Driver-specific model id."""

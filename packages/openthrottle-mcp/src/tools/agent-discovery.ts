@@ -45,7 +45,7 @@ type AgentCliCapabilities = {
 type AgentCli = {
   auth: AgentCliAuth | null;
   authState: AgentCliAuthState;
-  backend: string;
+  driver: string;
   capabilities: AgentCliCapabilities;
   chatCapable: boolean;
   label: string;
@@ -117,7 +117,6 @@ export async function discoverAgentClisToolHandler(
           detail: agent.authState.detail ?? null,
           status: agent.authState.status,
         },
-        backend: agent.backend,
         capabilities: {
           approvals: agent.capabilities.approvals,
           editApprovals: agent.capabilities.editApprovals,
@@ -128,6 +127,7 @@ export async function discoverAgentClisToolHandler(
           steering: agent.capabilities.steering,
         },
         chatCapable: agent.chatCapable,
+        driver: agent.driver,
         label: agent.label,
         models: [...agent.models],
         version: agent.version ?? null,
@@ -138,7 +138,7 @@ export async function discoverAgentClisToolHandler(
         `Discovered ${discovered.totalCount} agent CLI(s) at ${discovered.scannedAt}:`,
         ...agents.map(
           (agent) =>
-            `  ${agent.label} [${agent.backend}]${agent.chatCapable ? '' : ' (plan-run only)'} ${
+            `  ${agent.label} [${agent.driver}]${agent.chatCapable ? '' : ' (plan-run only)'} ${
               agent.version ?? '(version unknown)'
             } — ${agent.models.length} model(s): ${agent.models.join(', ') || '(none)'}`,
         ),

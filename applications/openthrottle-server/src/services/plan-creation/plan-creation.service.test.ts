@@ -770,7 +770,7 @@ describe('PlanCreationService', () => {
 
   describe('default agent', () => {
     const USER = 'user-1';
-    const AGENT = { backend: 'claude', effort: 'high', model: 'opus' };
+    const AGENT = { driver: 'claude', effort: 'high', model: 'opus' };
 
     const input = (
       overrides: Partial<CreatePlanInput> = {},
@@ -893,7 +893,7 @@ describe('PlanCreationService', () => {
 
     it('falls back to the system default when the backend is no longer a known driver', async () => {
       getForUser.mockResolvedValue({
-        defaultAgent: { ...AGENT, backend: 'retired-cli' },
+        defaultAgent: { ...AGENT, driver: 'retired-cli' },
         defaultEditor: null,
         userId: USER,
       });

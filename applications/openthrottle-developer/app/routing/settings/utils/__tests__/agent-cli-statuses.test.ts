@@ -27,7 +27,7 @@ describe('mergeAgentCliStatuses', () => {
 
     const rows = mergeAgentCliStatuses([
       {
-        backend: first.backend,
+        driver: first.driver,
         enabled: true,
         label: first.label,
         modelOptions: [
@@ -37,7 +37,7 @@ describe('mergeAgentCliStatuses', () => {
         version: '1.2.3',
       },
     ]);
-    const merged = rows.find((row) => row.backend === first.backend);
+    const merged = rows.find((row) => row.driver === first.driver);
 
     expect(merged?.installed).toBe(true);
     expect(merged?.enabled).toBe(true);
@@ -57,14 +57,14 @@ describe('mergeAgentCliStatuses', () => {
 
     const rows = mergeAgentCliStatuses([
       {
-        backend: first.backend,
+        driver: first.driver,
         enabled: false,
         label: first.label,
         modelOptions: [],
         version: '1.0.0',
       },
     ]);
-    const merged = rows.find((row) => row.backend === first.backend);
+    const merged = rows.find((row) => row.driver === first.driver);
 
     expect(merged?.installed).toBe(true);
     expect(merged?.enabled).toBe(false);
@@ -74,7 +74,7 @@ describe('mergeAgentCliStatuses', () => {
 describe('filterAgentCliStatuses', () => {
   const row = (over: Partial<AgentCliStatus>): AgentCliStatus => {
     return {
-      backend: 'x',
+      driver: 'x',
       enabled: true,
       installUrl: 'https://x',
       installed: true,
@@ -87,9 +87,9 @@ describe('filterAgentCliStatuses', () => {
   };
 
   const statuses: AgentCliStatus[] = [
-    row({ backend: 'a', enabled: true, installed: true }),
-    row({ backend: 'b', enabled: false, installed: true }),
-    row({ backend: 'c', enabled: true, installed: false }),
+    row({ driver: 'a', enabled: true, installed: true }),
+    row({ driver: 'b', enabled: false, installed: true }),
+    row({ driver: 'c', enabled: true, installed: false }),
   ];
 
   test('all passes everything', () => {
@@ -98,13 +98,13 @@ describe('filterAgentCliStatuses', () => {
 
   test('installed keeps only detected CLIs', () => {
     expect(
-      filterAgentCliStatuses(statuses, 'installed').map((s) => s.backend),
+      filterAgentCliStatuses(statuses, 'installed').map((s) => s.driver),
     ).toEqual(['a', 'b']);
   });
 
   test('enabled keeps only non-disabled CLIs', () => {
     expect(
-      filterAgentCliStatuses(statuses, 'enabled').map((s) => s.backend),
+      filterAgentCliStatuses(statuses, 'enabled').map((s) => s.driver),
     ).toEqual(['a', 'c']);
   });
 });
@@ -113,19 +113,19 @@ describe('collectAgentCliAuthWarnings', () => {
   test('keeps only agents that carry a non-empty auth warning, in order', () => {
     expect(
       collectAgentCliAuthWarnings([
-        { auth: null, backend: 'cursor', label: 'Cursor Agent' },
-        { backend: 'codex', label: 'Codex' },
-        { auth: { warning: null }, backend: 'grok', label: 'Grok' },
-        { auth: { warning: '' }, backend: 'antigravity', label: 'Antigravity' },
+        { auth: null, driver: 'cursor', label: 'Cursor Agent' },
+        { driver: 'codex', label: 'Codex' },
+        { auth: { warning: null }, driver: 'grok', label: 'Grok' },
+        { auth: { warning: '' }, driver: 'antigravity', label: 'Antigravity' },
         {
           auth: { warning: 'ANTHROPIC_API_KEY is set.' },
-          backend: 'claude',
+          driver: 'claude',
           label: 'Claude Code',
         },
       ]),
     ).toEqual([
       {
-        backend: 'claude',
+        driver: 'claude',
         label: 'Claude Code',
         warning: 'ANTHROPIC_API_KEY is set.',
       },

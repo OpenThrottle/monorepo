@@ -29,20 +29,20 @@ describe('routes/resources.agent-setup action', () => {
   test('runs installAgentCli when intent is not update', async () => {
     mockExecute.mockResolvedValue({
       installAgentCli: {
-        backend: 'claude',
         disabled: false,
+        driver: 'claude',
         errorMessage: null,
         mode: 'install',
         runId: 'run-1',
       },
     });
 
-    const result = await action(buildArgs({ backend: 'claude' }));
+    const result = await action(buildArgs({ driver: 'claude' }));
 
     expect(mockExecute).toHaveBeenCalledTimes(1);
     expect(result).toEqual({
-      backend: 'claude',
       disabled: false,
+      driver: 'claude',
       errorMessage: null,
       mode: 'install',
       runId: 'run-1',
@@ -52,8 +52,8 @@ describe('routes/resources.agent-setup action', () => {
   test('runs updateAgentCli when intent is update', async () => {
     mockExecute.mockResolvedValue({
       updateAgentCli: {
-        backend: 'codex',
         disabled: false,
+        driver: 'codex',
         errorMessage: null,
         mode: 'update',
         runId: 'run-2',
@@ -61,27 +61,27 @@ describe('routes/resources.agent-setup action', () => {
     });
 
     const result = await action(
-      buildArgs({ backend: 'codex', intent: 'update' }),
+      buildArgs({ driver: 'codex', intent: 'update' }),
     );
 
     expect(mockExecute).toHaveBeenCalledTimes(1);
     expect(result).toEqual({
-      backend: 'codex',
       disabled: false,
+      driver: 'codex',
       errorMessage: null,
       mode: 'update',
       runId: 'run-2',
     });
   });
 
-  test('returns a failure result with the backend + mode when the mutation throws', async () => {
+  test('returns a failure result with the driver + mode when the mutation throws', async () => {
     mockExecute.mockRejectedValue(new Error('flag disabled'));
 
-    const result = await action(buildArgs({ backend: 'antigravity' }));
+    const result = await action(buildArgs({ driver: 'antigravity' }));
 
     expect(result).toEqual({
-      backend: 'antigravity',
       disabled: false,
+      driver: 'antigravity',
       errorMessage: 'flag disabled',
       mode: 'install',
       runId: null,
@@ -92,12 +92,12 @@ describe('routes/resources.agent-setup action', () => {
     mockExecute.mockRejectedValue('nope');
 
     const result = await action(
-      buildArgs({ backend: 'antigravity', intent: 'update' }),
+      buildArgs({ driver: 'antigravity', intent: 'update' }),
     );
 
     expect(result).toEqual({
-      backend: 'antigravity',
       disabled: false,
+      driver: 'antigravity',
       errorMessage: 'Failed to start the run.',
       mode: 'update',
       runId: null,

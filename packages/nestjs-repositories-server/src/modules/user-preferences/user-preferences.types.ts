@@ -7,12 +7,12 @@ import type { UserPreferences } from './user-preferences.entity.ts';
 import type { UserPreferencesRepository } from './user-preferences.repository.ts';
 
 /**
- * @description A validated default agent. Backend and model always travel together, so a
- * half-set agent cannot be represented; `effort` NULL means the backend's own default.
+ * @description A validated default agent. Driver and model always travel together, so a
+ * half-set agent cannot be represented; `effort` NULL means the driver's own default.
  * @public
  */
 export interface UserPreferencesAgent {
-  readonly backend: string;
+  readonly driver: string;
   readonly effort: ConversationReasoningEffort | null;
   readonly model: string;
 }
@@ -33,7 +33,7 @@ export interface UserPreferencesData {
  * @public
  */
 export interface UserPreferencesAgentInput {
-  readonly backend: string;
+  readonly driver: string;
   readonly effort: string | null;
   readonly model: string;
 }
@@ -91,7 +91,7 @@ export type UpdateUserPreferencesResult =
 export type UserPreferencesRow = Pick<
   UserPreferences,
   | 'createdAt'
-  | 'defaultAgentBackend'
+  | 'defaultAgentDriver'
   | 'defaultAgentEffort'
   | 'defaultAgentModel'
   | 'defaultEditor'

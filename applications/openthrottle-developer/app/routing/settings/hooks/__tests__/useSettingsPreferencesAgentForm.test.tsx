@@ -50,7 +50,7 @@ describe('useSettingsPreferencesAgentForm', () => {
   test('seeds the draft from a valid stored default', () => {
     options = {
       ...options,
-      defaultAgent: { backend: 'claude', effort: 'high', model: 'opus' },
+      defaultAgent: { driver: 'claude', effort: 'high', model: 'opus' },
     };
     const { result } = renderAgentForm();
 
@@ -63,10 +63,10 @@ describe('useSettingsPreferencesAgentForm', () => {
     expect(result.current.effortSupported).toBe(true);
   });
 
-  test('drops the effort when switching to a backend without one', () => {
+  test('drops the effort when switching to a driver without one', () => {
     options = {
       ...options,
-      defaultAgent: { backend: 'claude', effort: 'high', model: 'opus' },
+      defaultAgent: { driver: 'claude', effort: 'high', model: 'opus' },
     };
     const { result } = renderAgentForm();
 

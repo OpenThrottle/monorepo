@@ -11,7 +11,7 @@ import type { UserDisabledAgentClisRepository } from './user-disabled-agent-clis
  */
 export type UserDisabledAgentCliData = Pick<
   UserDisabledAgentCli,
-  'backend' | 'createdAt' | 'id' | 'model' | 'userId'
+  'driver' | 'createdAt' | 'id' | 'model' | 'userId'
 >;
 
 /**
@@ -23,8 +23,8 @@ export interface UserDisabledAgentClisRepositoryMock extends BaseRepositoryMock<
   UserDisabledAgentCli,
   CreateModelInput<UserDisabledAgentCli>
 > {
-  readonly getDisabledBackends: Mock<
-    UserDisabledAgentClisRepository['getDisabledBackends']
+  readonly getDisabledDrivers: Mock<
+    UserDisabledAgentClisRepository['getDisabledDrivers']
   >;
   readonly getDisabledModels: Mock<
     UserDisabledAgentClisRepository['getDisabledModels']

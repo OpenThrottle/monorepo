@@ -46,9 +46,9 @@ const SNAPSHOT: AgentCliDiscoveryResult = {
       auth: null,
       authState: AUTH_STATE,
       available: true,
-      backend: 'cursor',
       capabilities: CAPABILITIES,
       chatCapable: true,
+      driver: 'cursor',
       label: 'Cursor Agent',
       models: ['auto', 'gpt-5.2'],
       supportsCustomBaseUrl: false,
@@ -60,9 +60,9 @@ const SNAPSHOT: AgentCliDiscoveryResult = {
       auth: null,
       authState: AUTH_STATE,
       available: false,
-      backend: 'claude',
       capabilities: CAPABILITIES,
       chatCapable: true,
+      driver: 'claude',
       label: 'Claude Code',
       models: [],
       supportsCustomBaseUrl: false,
@@ -74,9 +74,9 @@ const SNAPSHOT: AgentCliDiscoveryResult = {
       auth: null,
       authState: AUTH_STATE,
       available: true,
-      backend: 'opencode',
       capabilities: CAPABILITIES,
       chatCapable: true,
+      driver: 'opencode',
       label: 'OpenCode',
       models: ['opencode/big-pickle'],
       supportsCustomBaseUrl: true,
@@ -115,9 +115,9 @@ describe('AgentDiscoveryResolver', () => {
         attachesWorkspaceMcp: true,
         auth: null,
         authState: AUTH_STATE,
-        backend: 'cursor',
         capabilities: CAPABILITIES,
         chatCapable: true,
+        driver: 'cursor',
         enabled: true,
         label: 'Cursor Agent',
         modelOptions: [
@@ -132,9 +132,9 @@ describe('AgentDiscoveryResolver', () => {
         attachesWorkspaceMcp: true,
         auth: null,
         authState: AUTH_STATE,
-        backend: 'opencode',
         capabilities: CAPABILITIES,
         chatCapable: true,
+        driver: 'opencode',
         enabled: true,
         label: 'OpenCode',
         modelOptions: [
@@ -197,7 +197,7 @@ describe('AgentDiscoveryResolver', () => {
   });
 
   it('overlays per-model disabled + favorite state into modelOptions, and an agent-OFF forces every model disabled', async () => {
-    disabledAgentClis.getDisabledBackends.mockResolvedValue(
+    disabledAgentClis.getDisabledDrivers.mockResolvedValue(
       new Set(['opencode']),
     );
     disabledAgentClis.getDisabledModels.mockResolvedValue(
@@ -207,10 +207,8 @@ describe('AgentDiscoveryResolver', () => {
       new Map([['cursor', new Set(['auto'])]]),
     );
     const result = await resolver.discoverAgentClis(human);
-    const cursor = result.agents.find((agent) => agent.backend === 'cursor');
-    const opencode = result.agents.find(
-      (agent) => agent.backend === 'opencode',
-    );
+    const cursor = result.agents.find((agent) => agent.driver === 'cursor');
+    const opencode = result.agents.find((agent) => agent.driver === 'opencode');
     expect(cursor?.modelOptions).toEqual([
       { enabled: true, favorite: true, model: 'auto' },
       { enabled: false, favorite: false, model: 'gpt-5.2' },
@@ -224,24 +222,20 @@ describe('AgentDiscoveryResolver', () => {
   });
 
   it("overlays the current user's disabled set onto enabled", async () => {
-    disabledAgentClis.getDisabledBackends.mockResolvedValue(
-      new Set(['cursor']),
-    );
+    disabledAgentClis.getDisabledDrivers.mockResolvedValue(new Set(['cursor']));
     const result = await resolver.discoverAgentClis(human);
-    expect(disabledAgentClis.getDisabledBackends).toHaveBeenCalledWith(
-      'user-1',
+    expect(disabledAgentClis.getDisabledDrivers).toHaveBeenCalledWith('user-1');
+    expect(result.agents.map((agent) => [agent.driver, agent.enabled])).toEqual(
+      [
+        ['cursor', false],
+        ['opencode', true],
+      ],
     );
-    expect(
-      result.agents.map((agent) => [agent.backend, agent.enabled]),
-    ).toEqual([
-      ['cursor', false],
-      ['opencode', true],
-    ]);
   });
 
   it('defaults every agent to enabled for an unauthenticated request (no preference lookup)', async () => {
     const result = await resolver.discoverAgentClis(undefined);
-    expect(disabledAgentClis.getDisabledBackends).not.toHaveBeenCalled();
+    expect(disabledAgentClis.getDisabledDrivers).not.toHaveBeenCalled();
     expect(result.agents.every((agent) => agent.enabled)).toBe(true);
   });
 
@@ -253,9 +247,9 @@ describe('AgentDiscoveryResolver', () => {
           auth: null,
           authState: AUTH_STATE,
           available: false,
-          backend: 'cursor',
           capabilities: CAPABILITIES,
           chatCapable: true,
+          driver: 'cursor',
           label: 'Cursor Agent',
           models: [],
           supportsCustomBaseUrl: false,

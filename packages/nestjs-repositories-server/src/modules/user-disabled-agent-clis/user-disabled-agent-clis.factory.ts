@@ -14,7 +14,7 @@ import type { UserDisabledAgentCli } from './user-disabled-agent-cli.entity.ts';
  */
 export type UserDisabledAgentCliFactoryData = Pick<
   UserDisabledAgentCli,
-  'backend' | 'createdAt' | 'id' | 'model' | 'userId'
+  'driver' | 'createdAt' | 'id' | 'model' | 'userId'
 >;
 
 /**
@@ -24,8 +24,8 @@ export type UserDisabledAgentCliFactoryData = Pick<
  */
 export const userDisabledAgentClisFactory =
   Factory.define<UserDisabledAgentCliFactoryData>(() => ({
-    backend: faker.helpers.arrayElement(['claude', 'codex', 'cursor']),
     createdAt: faker.date.past(),
+    driver: faker.helpers.arrayElement(['claude', 'codex', 'cursor']),
     id: faker.string.uuid(),
     model: null,
     userId: faker.string.uuid(),
