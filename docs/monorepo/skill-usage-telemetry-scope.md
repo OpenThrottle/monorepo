@@ -81,7 +81,7 @@ Build them with `pnpm run build:hooks`. Do not edit them.
 | `skill-usage-capture.cjs`            | Claude `UserPromptExpansion`                  | one event, `invocation_path='slash'`                                                                                                                                   |
 | `skill-usage-complete.cjs`           | Claude `SessionEnd`                           | resolves open starts → `session_ended`; sweeps stale starts → `abandoned`                                                                                              |
 | `skill-usage-complete.cjs`           | Claude `Stop` (every turn)                    | sweeps stale starts → `abandoned`; token usage, trajectories, buffer drains — leaves this session's starts open                                                        |
-| `skill-usage-capture.cjs` (cursor)   | Cursor `beforeSubmitPrompt`                   | one event, `source='cursor'`                                                                                                                                           |
+| `skill-usage-capture.cjs` (cursor)   | Cursor `preToolUse` (`Read` of a `SKILL.md`)  | one event, `source='cursor'`, `invocation_path='skill_read'`                                                                                                           |
 | `skill-usage-heartbeat.cjs`          | Claude `SessionStart`                         | one coverage heartbeat per session, upserted into `telemetry_heartbeats` — no skill data ([contract §8](./child-repo-hook-telemetry-contract.md#8-coverage-heartbeat)) |
 | `skill-usage-heartbeat.cjs` (cursor) | Cursor `sessionStart`                         | the same heartbeat, `source='cursor'`                                                                                                                                  |
 | `skill-usage-heartbeat.cjs` (codex)  | Codex `SessionStart` (home config)            | the same heartbeat, `source='codex'`                                                                                                                                   |
@@ -95,6 +95,8 @@ Cursor `sessionEnd`, Codex `SessionEnd`) or by a skill's own reporter. Files sit
 there mean sessions are in flight, not that the drain is broken. (These lived under each
 checkout's `.cache/skill-usage/` until the buffer moved out of every working tree; see the
 [telemetry contract §4](./child-repo-hook-telemetry-contract.md#4-buffering--nothing-is-written-into-a-foreign-working-tree).)
+
+Which agents can report an outcome and a duration at all, and through what: [agent-editor-folders.md § Skill-usage telemetry per agent](./agent-editor-folders.md#skill-usage-telemetry-per-agent).
 
 **A missing row is not always a quiet week.** A session started by hand outside this repo
 records nothing unless the leg A plugin is installed, and a buffer behind an unreachable or

@@ -28,6 +28,25 @@ import type { NormalizedInvocation, SkillUsageOutcome } from '../../types.ts';
 export const CURSOR_SOURCE = 'cursor';
 
 /**
+ * The session id cursor-agent exports to its Shell tool, or null outside one.
+ * Measured on `cursor-agent 2026.11.13-eacade1`: shell commands see
+ * `CURSOR_AGENT=1` and `CURSOR_CONVERSATION_ID`, which equals the hook
+ * payload's `session_id` / `conversation_id` (the two are the same value on
+ * every event). Gated on `CURSOR_AGENT` so a stray conversation id from some
+ * other process does not count.
+ *
+ * @public
+ */
+export const readCursorShellSessionId = (
+  env: NodeJS.ProcessEnv,
+): string | null => {
+  if (!env.CURSOR_AGENT) {
+    return null;
+  }
+  return env.CURSOR_CONVERSATION_ID || null;
+};
+
+/**
  * Reading a `SKILL.md` is the only signal Cursor gives, and it is weaker than
  * Claude's `Skill` tool call — an agent editing skills reads them too. Recorded
  * under its own `invocation_path` rather than reusing `skill_tool` so the two

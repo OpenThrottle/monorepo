@@ -217,6 +217,31 @@ Legend: **P** = project level, committable. **U** = user-level only. **X** = uns
 - **Antigravity's deny is a hook, not a rule.** agy's own `command(...)` rules are token prefixes with no globs, so the workspace plugin enforces the SSOT deny globs with a PreToolUse hook instead (agy 1.5.8, OT plan `1e74c1eb`).
 - **Gaps, not fixable by a committed file:** antigravity (no `agy mcp list` visibility, no generated allows), VS Code (no deny), Cursor MCP approval. Recorded in [agent-config-parity.md § Gaps](./agent-config-parity.md#gaps-what-a-tool-cannot-express).
 
+### Skill-usage telemetry per agent
+
+State after OT plan `8f040d3a` (2026-11-24). **Capture** records a skill start from a hook;
+**deliberate report** is `skill-usage-outcome.cjs`, run by a skill at its finish line, which claims
+that start (the only source of `success` / `error` and of a duration); **session-end resolution**
+turns unclaimed starts into `session_ended`; the **heartbeat** says the agent is instrumented at
+all. Measurements, versions and payload shapes: [agent-cli-hook-capability-matrix.md](./agent-cli-hook-capability-matrix.md).
+
+| Agent           | Capture                                                  | Deliberate report (outcome + duration)                                                                                          | Session-end resolution | Heartbeat      |
+| --------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ---------------------- | -------------- |
+| **claude**      | `PreToolUse(Skill)` + `UserPromptExpansion`              | **yes**, via `CLAUDE_CODE_SESSION_ID`                                                                                           | `SessionEnd`           | `SessionStart` |
+| **codex**       | `UserPromptSubmit`, **slash commands only**              | **yes for slash-invoked skills**, via `CODEX_SESSION_ID`; a model-invoked skill has no start, so its report carries no duration | `SessionEnd`           | `SessionStart` |
+| **cursor**      | `preToolUse` `Read` of a `SKILL.md` (`skill_read`)       | **yes**, via `CURSOR_CONVERSATION_ID` (verified live on 2026.11.13)                                                             | `sessionEnd`           | `sessionStart` |
+| **antigravity** | none (unmeasured)                                        | none; no shell marker yet, so a report from its shell can still be stamped `claude-code`                                        | none                   | `SessionStart` |
+| **gemini-cli**  | none (`BeforeTool` `activate_skill` exists, not adapted) | **stands down**: no session id in its shell (`GEMINI_CLI=1` only)                                                               | none                   | none           |
+| **opencode**    | none (`skill` tool + plugin events exist, not adapted)   | **stands down**: no session id in its shell (`OPENCODE=1` only)                                                                 | none                   | none           |
+| **grok**        | none (no `Skill` tool)                                   | none                                                                                                                            | none                   | none           |
+
+**Which agents can show Outcomes and Avg duration on `/skills`:** Claude Code and Cursor, for every
+skill that reports; Codex, only for skills started with a slash command. Every other agent shows no
+measured outcome, which is the honest reading. Two caveats: the reporter is found through the
+repo-relative fallback in each skill's one-liner, so outside this repo it depends on the plugin's
+`bin/` being on the shell PATH, which is verified for Claude Code only; and a Cursor start is the
+weaker `SKILL.md`-read signal. The remaining agents are OT plan `4dff4f7e`.
+
 ### Per-checkout registrations ship with their removal
 
 Some provisioning writes agent state _outside_ the checkout, in a user-global file keyed by the checkout's path. Removing the directory does not take that state with it, so it leaks once per worktree ever created. Before this rule, 51 of 53 Claude entries per plugin (153 in total) pointed at deleted worktrees.

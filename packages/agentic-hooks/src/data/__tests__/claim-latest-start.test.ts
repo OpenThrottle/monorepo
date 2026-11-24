@@ -12,6 +12,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   claimLatestStart,
   listStartsForSession,
+  pickReporterSession,
   recordSkillStart,
 } from '../../index.ts';
 
@@ -106,6 +107,54 @@ describe('claimLatestStart', () => {
         skillName: 'github-commit',
         startsDir,
       }),
+    ).toBeNull();
+  });
+});
+
+describe('pickReporterSession', () => {
+  let startsDir: string;
+
+  beforeEach(() => {
+    startsDir = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-pick-'));
+  });
+
+  afterEach(() => {
+    fs.rmSync(startsDir, { force: true, recursive: true });
+  });
+
+  it('returns the first candidate whose session holds a start for the skill', () => {
+    recordSkillStart({ sessionId: 'b', skillName: 'ot-plans', startsDir });
+    expect(
+      pickReporterSession({
+        candidates: [
+          { sessionId: 'a', source: 'x' },
+          { sessionId: 'b', source: 'y' },
+        ],
+        skillName: 'ot-plans',
+        startsDir,
+      }),
+    ).toEqual({ candidate: { sessionId: 'b', source: 'y' }, holdsStart: true });
+  });
+
+  it('falls back to the first candidate when none holds a start', () => {
+    expect(
+      pickReporterSession({
+        candidates: [
+          { sessionId: 'a', source: 'x' },
+          { sessionId: 'b', source: 'y' },
+        ],
+        skillName: 'ot-plans',
+        startsDir,
+      }),
+    ).toEqual({
+      candidate: { sessionId: 'a', source: 'x' },
+      holdsStart: false,
+    });
+  });
+
+  it('returns null with no candidates', () => {
+    expect(
+      pickReporterSession({ candidates: [], skillName: 'ot-plans', startsDir }),
     ).toBeNull();
   });
 });
