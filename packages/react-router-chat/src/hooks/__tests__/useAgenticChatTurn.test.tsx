@@ -384,6 +384,14 @@ describe('useAgenticChatTurn recovery', () => {
 
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     await user.click(component.getByRole('button', { name: 'Submit' }));
+    // The watchdog arms only once the start action has returned the assistant
+    // id, which lands with the conversation id. Wait for it, or the 180s
+    // advance can begin before the timer exists and end just short of it.
+    await waitFor(() =>
+      expect(component.getByTestId('conversation-id')).toHaveTextContent(
+        'conv-1',
+      ),
+    );
     expect(startCalls).toBe(1);
 
     // No activity for the stall window → watchdog replays once (cancel + start).
