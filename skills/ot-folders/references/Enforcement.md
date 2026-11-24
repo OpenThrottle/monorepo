@@ -134,3 +134,26 @@ The matcher looks for `component-shape: opt-out` / `route-shape: opt-out`, so th
 em-dash reason is convention rather than syntax — write it anyway. An opt-out
 without a reason is an unexplained exemption, and the next person cannot tell
 whether it still applies.
+
+## Tags
+
+Tags live in the project's `project.json` / `package.json` `nx.tags` and are validated by
+`pnpm run nx:validate-tags` (source: `scripts/nx-validate-tags.ts`).
+
+| Tag           | Cardinality                                           | Values                                                                  |
+| ------------- | ----------------------------------------------------- | ----------------------------------------------------------------------- |
+| `type:`       | **exactly one**, required                             | `application`, `infrastructure`, `package`, `tool`                      |
+| `technology:` | one or more, required                                 | `VALID_TECHNOLOGY_TAGS` in `scripts/nx-validate-tags.ts` (a closed set) |
+| `production:` | exactly one, required                                 | `true`, `false`                                                         |
+| `publish:`    | exactly one — **`type:package` and `type:tool` only** | `true`, `false`                                                         |
+
+Projects also carry a `name:` tag by convention (`name:@openthrottle/nestjs-rbac`). It is used for
+filtering and release scoping but is **not** validated by `nx:validate-tags`, so forgetting it does
+not fail the build — match the siblings anyway.
+
+| A project tagged   | may depend only on              |
+| ------------------ | ------------------------------- |
+| `type:application` | `type:package`                  |
+| `type:package`     | `type:package`                  |
+| `type:tool`        | `type:package`, `type:tool`     |
+| `production:true`  | **never** on `production:false` |

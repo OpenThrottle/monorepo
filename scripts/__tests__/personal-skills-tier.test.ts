@@ -702,9 +702,12 @@ describe('personal skills tier', () => {
       const rest = skillsDoc.slice(start + heading.length);
       const end = rest.indexOf('\n## ');
       const body = end === -1 ? rest : rest.slice(0, end);
-      return [...body.matchAll(/\b([a-z][a-z0-9]*(?:-[a-z0-9]+)+)\b/g)].map(
-        (match) => match[1] ?? '',
-      );
+      // Each catalog entry is a list item that opens with the skill's name as
+      // a code link (`- [\`name\`](../skills/name/SKILL.md) — what it does`);
+      // the one-line description after it is free prose, so only the name is read.
+      return [
+        ...body.matchAll(/^- \[`([a-z][a-z0-9]*(?:-[a-z0-9]+)+)`\]/gm),
+      ].map((match) => match[1] ?? '');
     };
 
     it('names only skills that exist under skills/ or skills-lock.json', () => {

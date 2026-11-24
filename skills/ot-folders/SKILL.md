@@ -2,25 +2,18 @@
 name: ot-folders
 description: >-
   Where OpenThrottle code goes, what it is named, what shape it must have, and
-  how to prove it. USE WHEN adding, moving or renaming a file or folder (naming
-  a new directory included); deciding between
-  app/global/ and app/routing/<area>/; deciding whether something is an
-  application or a package; or when lint reports
-  openthrottle/component-primitive-shape, openthrottle/hook-primitive-shape,
-  openthrottle/route-primitive-shape, openthrottle/pre-hooks-unpack, max-lines,
-  audit:hook-shape, or
-  @nx/enforce-module-boundaries. NOT FOR scaffolding — generate the file with
-  ot-generators first, then use this skill to place and shape it.
+  how to prove it. USE WHEN adding, moving or renaming a file or folder;
+  deciding between app/global/ and app/routing/<area>/ or between an
+  application and a package; or when lint reports an openthrottle/*-shape rule,
+  pre-hooks-unpack, max-lines or @nx/enforce-module-boundaries. Not for
+  scaffolding: generate the file with ot-generators first.
 metadata:
-  author: OpenThrottle
-  last-reviewed: '2026-11-14'
-  version: '2.2'
+  author: openthrottle
+  last-reviewed: '2026-11-22'
+  version: '2.3.0'
 ---
 
 # OpenThrottle Folders
-
-Scaffold the file with **ot-generators** first, then use this skill to place and
-shape it.
 
 ## Neighbouring skills
 
@@ -32,11 +25,15 @@ shape it.
 
 ## Reference files
 
-- `references/React-Router_Application.md` — the React Router app tree, `routing/<area>/` expanded
-- `references/NestJS_Application.md` — the `openthrottle-server` tree
-- `references/Packages.md` — the package flavours and the `src/index.ts` barrel rule
-- `references/Enforcement.md` — every rule and audit, the six markers, allowed route exports, opt-out pragmas
-- `references/verification.md` — the four verification tiers and what blocks a merge
+- `references/React-Router_Application.md` — read when placing a file under an app's `app/`: the
+  tree, with `routing/<area>/` expanded
+- `references/NestJS_Application.md` — read when placing a file in `openthrottle-server`
+- `references/Packages.md` — read when creating a package or adding to one: the package flavours
+  and the `src/index.ts` barrel rule
+- `references/Enforcement.md` — read when a lint rule or audit fires: every rule, the six markers,
+  allowed route exports, opt-out pragmas, and the tag tables
+- `references/verification.md` — read before a PR: the four verification tiers and what blocks a
+  merge
 
 ## Technology buckets
 
@@ -105,8 +102,7 @@ is a package, and that is the whole test.
 
 1. **Do not invent new folders.** Use the vocabulary above. If nothing fits, the
    code probably belongs in a different bucket, not a new directory.
-2. **Do not create a file per util.** Bucket by theme — one `dates.ts` beats six
-   one-function files.
+2. **Bucket utils by theme**, per AGENTS.md § Code style ("prefer a bucket module").
 3. **Do not delete empty folders or their `.gitkeep`.** They are placeholders for
    functionality that is coming, and removing them makes the next generator run
    noisier than it needs to be.
@@ -143,10 +139,8 @@ is a package, and that is the whole test.
 
 ## Naming
 
-- Follow the existing verb-first conventions:
-  - good: `parseXxxx(param1)`, `formatYyyy(param1, param2)`, `validateZzzzz({ ... })`
-  - bad: `must_get_this_done(param1, param2, param3, param4)`
-- **Use a configuration object once the parameters exceed 3.**
+- Name functions verb-first (`parseX`, `formatY`), and pass a configuration object once there are
+  more than three parameters.
 - **A component file's export name matches its file name.** The
   `component-primitive-shape` rule computes the expected name as the basename
   without extension — except for `index.tsx`/`index.ts`, where it resolves to the
@@ -160,37 +154,16 @@ Hook contract: [hook-primitive-shape.md](https://github.com/openthrottle/monorep
 
 ## Tags decide what may import what
 
-Placement is no longer only a directory decision. A new project is unusable until
-it is tagged, and its tags decide who is allowed to import it. Tags live in the
-project's `project.json` / `package.json` `nx.tags` and are validated by
-`pnpm run nx:validate-tags` (source: `scripts/nx-validate-tags.ts`).
+Placement is no longer only a directory decision. A new project is unusable until it is tagged,
+and its tags decide who is allowed to import it. Every project carries exactly one `type:`
+(`application`, `infrastructure`, `package`, `tool`), one or more `technology:`, one
+`production:` and — packages and tools only — one `publish:`. Validate with
+`pnpm run nx:validate-tags`; the full cardinality table and the closed `technology:` set are in
+`references/Enforcement.md` § Tags.
 
-| Tag           | Cardinality                                           | Values                                             |
-| ------------- | ----------------------------------------------------- | -------------------------------------------------- |
-| `type:`       | **exactly one**, required                             | `application`, `infrastructure`, `package`, `tool` |
-| `technology:` | one or more, required                                 | see `VALID_TECHNOLOGY_TAGS` below                  |
-| `production:` | exactly one, required                                 | `true`, `false`                                    |
-| `publish:`    | exactly one — **`type:package` and `type:tool` only** | `true`, `false`                                    |
-
-The `technology:` set is closed; the values are `VALID_TECHNOLOGY_TAGS` in
-`scripts/nx-validate-tags.ts`.
-
-Projects also carry a `name:` tag by convention (`name:@openthrottle/nestjs-rbac`).
-It is used for filtering and release scoping but is **not** validated by
-`nx:validate-tags`, so it will not fail the build if you forget it — match the
-siblings anyway.
-
-### The four dependency constraints
-
-From `depConstraints` in `tools/dotfiles/src/index.ts`, enforced by
-`@nx/enforce-module-boundaries` at `error`:
-
-| A project tagged   | may depend only on              |
-| ------------------ | ------------------------------- |
-| `type:application` | `type:package`                  |
-| `type:package`     | `type:package`                  |
-| `type:tool`        | `type:package`, `type:tool`     |
-| `production:true`  | **never** on `production:false` |
+`@nx/enforce-module-boundaries` (`depConstraints` in `tools/dotfiles/src/index.ts`) allows
+`type:application` → `type:package` only, `type:package` → `type:package`, `type:tool` →
+`type:package` or `type:tool`, and never `production:true` → `production:false`.
 
 ### What that means when you are placing code
 

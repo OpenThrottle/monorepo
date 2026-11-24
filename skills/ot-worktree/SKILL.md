@@ -1,11 +1,11 @@
 ---
+name: ot-worktree
+description: Create, heal and destroy git worktrees in any repo — the portable machinery behind `worktree:new`, `worktree:heal` and `worktree:remove`. USE WHEN creating a worktree for a branch or task, provisioning or healing one, removing or tearing one down, or when OPENTHROTTLE_WORKTREE_ROOT, `.worktree/provision.sh` or `.worktree/teardown.sh` are involved. Not for pruning many merged branches (github-cleanup).
 compatibility: Requires git, a POSIX sh and bash; curl is optional (OpenThrottle deregistration); jq for hook payloads; Node 22.18+ only to run a repo's `.ts` provision hook. Hook contract in references/contract.md.
-description: Create, heal and destroy git worktrees in any repo — the portable worktree machinery behind `worktree:new`, `worktree:heal` and `worktree:remove`. Use when creating a worktree, spinning up a worktree for a branch or task, provisioning or self-healing a worktree, removing/deleting/tearing down/cleaning up a worktree, or when OPENTHROTTLE_WORKTREE_ROOT, `.worktree/provision.sh` or `.worktree/teardown.sh` are involved. Not for pruning many merged branches (see `github-cleanup`).
 metadata:
   author: openthrottle
-  last-reviewed: '2026-11-16'
-  version: '1.3.0'
-name: ot-worktree
+  last-reviewed: '2026-11-22'
+  version: '1.4.0'
 ---
 
 # ot-worktree
@@ -26,7 +26,9 @@ Each verb is usable standalone and callable from the others. All three accept `-
 | **destroy** | `scripts/destroy.sh` | Run teardown, remove the worktree, prune admin dirs   |
 
 Shared internals: `scripts/common.sh` (logging, linked-worktree detection, name sanitization, target
-validation), `scripts/root.sh` (the root ladder), `scripts/provision.sh` (repo-hook delegation).
+validation), `scripts/root.sh` (the root ladder), `scripts/provision.sh` (repo-hook delegation),
+`scripts/removal-log.sh` (the removal log below) and `scripts/deregister.sh` (OpenThrottle checkout
+deregistration).
 
 ## create — three invocation modes, auto-detected
 
@@ -131,6 +133,23 @@ Only relevant where the OpenThrottle server and its `package.json` scripts exist
   ```bash
   r="$(command -v skill-usage-outcome.cjs || echo "$(git rev-parse --show-toplevel 2>/dev/null)/plugins/openthrottle/bin/skill-usage-outcome.cjs")"; if [ -f "$r" ]; then node "$r" --skill ot-worktree --outcome success; fi
   ```
+
+### Gotchas in OpenThrottle
+
+- **`worktree:new` fails at `preinstall` with a Node engine error** → the agent's shell picked up an
+  older default Node, and the repo requires Node 26. Put the Node 26 `bin` first on `PATH` in the
+  same command (the `nvm` shell function does not work non-interactively), then run
+  `pnpm worktree:heal` inside the half-provisioned worktree.
+- **`pnpm run database:start` in a worktree fails with `Bind for 0.0.0.0:6010 failed`** → a shared-DB
+  worktree reuses the primary's Postgres and Redis ports. Use the primary's database, or give the
+  worktree its own with `pnpm worktree:db isolate`.
+- **Killing a worktree's server took down the primary's, and every OT MCP call now says
+  `fetch failed`** → a `pkill -f` pattern without the worktree's absolute path matches both. Always
+  scope it to the worktree path; restart the primary with `pnpm nx run openthrottle-server:dev`.
+- **The worktree vanished minutes after its PR merged** → cleanup runs on merge and does not check
+  for unpushed commits. Push fixes before the PR enters the merge queue; to recover, find the sha
+  from the primary checkout (`git cat-file -t <sha>`) and pin it with `git branch <name> <sha>`
+  before a gc.
 
 ## Adopting in another repo
 

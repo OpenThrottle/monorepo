@@ -2,30 +2,27 @@
 name: ot-generators
 description: >-
   Scaffolding OpenThrottle code with @tools/generators. USE WHEN adding an app,
-  package, React Router component or route, or NestJS service — always before
-  hand-writing one — or when hitting "Unable to resolve @tools/generators" or
-  "Cannot find generator". Every command needs NX_ISOLATE_PLUGINS=false. Defer
-  graph, targets and task running to nx-workspace.
+  package, React Router component, route or hook, or NestJS service — always
+  before hand-writing one — or when hitting "Unable to resolve
+  @tools/generators" or "Cannot find generator". Not for workspace queries or
+  running tasks (nx-workspace), or placing and shaping the result (ot-folders).
 metadata:
   author: openthrottle
-  last-reviewed: '2026-11-14'
-  version: '1.1.0'
+  last-reviewed: '2026-11-22'
+  version: '1.2.0'
 ---
 
 # OpenThrottle generators and Nx conventions
 
-## When to read this skill
+After generating a package, wire its dependencies by writing `"<pkg>": "workspace:^"` into
+`package.json`, then `pnpm install`. **This overrides the vendored `link-workspace-packages` skill**,
+which says to use the package manager's add command instead: here `pnpm add <pkg>@workspace:^`
+wrongly catalogs the dependency in `pnpm-workspace.yaml`.
 
-- You are about to **create or scaffold** code in this repo (components, routes, NestJS services, packages, folder trees).
-- Nx errors with **`Unable to resolve @tools/generators:...`** or **Cannot find generator** (often a wrong generator name — see [Docs vs reality](#docs-vs-reality-remix-vs-react-router)).
+## `NX_ISOLATE_PLUGINS=false` on every command
 
-For read-only workspace queries and running tasks use `nx-workspace`; after generating a package, wire its dependencies with `link-workspace-packages`. Add a workspace dep by writing `"<pkg>": "workspace:^"` into `package.json`, then `pnpm install`; `pnpm add <pkg>@workspace:^` wrongly catalogs it in `pnpm-workspace.yaml`.
-
-## Non-negotiable: `NX_ISOLATE_PLUGINS=false`
-
-Every Nx invocation that touches **`@tools/generators`** must run with plugin isolation **off**, or generators **will fail** in typical agent/CI environments.
-
-Prefix each command:
+Every Nx invocation that touches `@tools/generators` runs with plugin isolation off, or the local
+plugin does not resolve and the generator fails. Prefix each command:
 
 ```bash
 NX_ISOLATE_PLUGINS=false pnpm nx <subcommand> ...
@@ -49,14 +46,6 @@ everywhere else in this skill:
 is the wrong generator, not an unsupported target. `react` handles app-local components too,
 so when in doubt it is the safer of the two. Full matrix:
 [`docs/tools/templates/AGENT_USAGE.md`](https://github.com/openthrottle/monorepo/blob/main/docs/tools/templates/AGENT_USAGE.md).
-
-### Docs vs reality: `remix` vs `react-router`
-
-Some documentation (including sections of `docs/tools/templates/AGENT_USAGE.md`) still shows **`@tools/generators:remix`**. That name is **not** registered; Nx will error:
-
-`Unable to resolve @tools/generators:remix` / `Cannot find generator 'remix'`.
-
-Use **`@tools/generators:react-router`** and the same `--subGenerator` / flags described for Remix-style apps in those docs, unless `--describe` shows otherwise.
 
 ## Discovery workflow (mandatory order)
 
@@ -103,16 +92,29 @@ Most `@tools/generators` sub-generators accept **multiple names in one invocatio
 
 **Confirm support:** `--describe` JSON includes `"description": "Comma-separated names supported."` on the `name` option when batching works (e.g. `react`, `react-router` component/route/form/modal/table; `react` hook/util). Some generators (e.g. NestJS `application`) use a single slug—always read `--describe` for the generator you chose.
 
-**Example — four package components in one command** (note `react` + `--destination`, per [Which one scaffolds a component](#which-one-scaffolds-a-component)):
+**Example — four package components in one command** (note `react` + `--destination`, per [Which one scaffolds a component](#which-one-scaffolds-a-component); `react` always writes to the package's `src/components/` and takes no `--folder`):
 
 ```bash
 NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:react \
   --subGenerator=component \
   --destination=@openthrottle/react-router-profiling \
-  --folder=components \
   --name=ProfilingServerMetrics,ProfilingQueueMetrics,ProfilingTaskRunMetrics,ProfilingQueueRunMetrics
 ```
 
-Prefer batching when scaffolding related siblings; split only when names need different `--folder`, `--destination`, or sub-generators.
+Prefer batching when scaffolding related siblings; split only when names need a different `--folder` (react-router), `--destination` (react) or sub-generator.
 
 Per-generator deep-dives live under `docs/tools/templates/` (`react.md`, `nestjs.md`, `folders.md`), linked from AGENT_USAGE. Generator source: `tools/generators/src/generators/`. Isolate-plugins troubleshooting: `docs/tools/templates/NX_ISOLATE_PLUGINS.md`.
+
+## Gotchas
+
+- **`Cannot find generator 'remix'`.** Older docs called the app generator `remix`; it is
+  `react-router`, with the same `--subGenerator` flags.
+- **A headless or non-interactive session denies any env-var prefix** (`NX_ISOLATE_PLUGINS=false
+pnpm nx g …`, `env NX_ISOLATE_PLUGINS=false …`) as needing approval. There, run plain
+  `pnpm nx g @tools/generators:<gen> …` without it: that worked for route, component and hook
+  sub-generators (2026-11-08).
+- **`--folder` on `react-router` is the path under `app/`** — `routing/settings/components`, not
+  `settings`. `--list=componentFolders --application=<app>` prints the valid values.
+- **A freshly generated `react-router` component fails lint untouched:** the scaffold emits
+  `const {} = props;`, which trips `no-empty-pattern`. Destructure the real props, or for a
+  component with none use the `_props: XProps` parameter form.

@@ -7,8 +7,8 @@ Review the agent skills in this repository that have gone longest without a revi
 
 Weekly, **3 skills per run**. A skill is loaded into an agent's context every time it triggers, so
 a stale command or a padded body costs every session that uses it. A full sweep is too many
-findings to act on. Three a week covers every owned skill about once a quarter, and a review
-lands while its findings are still small.
+findings to act on. Three a week covers every owned skill in about six weeks (16 owned skills on
+2026-11-22), and a review lands while its findings are still small.
 
 Its slot (Mondays 15:00 UTC, `sonnet`) and how a scheduled fire runs this file are in
 `docs/monorepo/recurring-agent-jobs.md`. This file does not create a schedule.

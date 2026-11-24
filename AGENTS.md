@@ -23,6 +23,8 @@
 
 <!-- nx configuration end-->
 
+> The block above is maintained by Nx. In this repo the Nx MCP server (with `nx_docs`) is **opt-in per user** (`nx-mcp` in [`.agents/agent-config.json`](./.agents/agent-config.json)) and not loaded by default; without it, use `--help` and the `nx-workspace` skill instead of `nx_docs`.
+
 ## What this is
 
 OpenThrottle — an Nx + pnpm workspace monorepo (Node >= 26, pnpm only; `preinstall` blocks npm/yarn). It does both **task running** and **package publishing**. See [MONOREPO.md](./MONOREPO.md) and [CONTRIBUTING.md](./CONTRIBUTING.md) for deeper detail. Code style is normative in § Code style below, with rationale and examples in [docs/monorepo/code-style.md](docs/monorepo/code-style.md).
@@ -64,13 +66,9 @@ pnpm nx sync:check                                  # report tsconfig project-re
 
 ## GraphQL schema + codegen flow
 
-Schema is **code-first** in `openthrottle-server` (NestJS `autoSchemaFile`); consumers read the committed **`applications/openthrottle-server/schema.gql`** (via `@openthrottle/graphql-codegen`'s `defineCodegen`). CI fails on codegen drift. The shared plan/task/note/project/plan-run **documents** are owned by `packages/openthrottle-mcp` (`src/graphql/operations/` plus `plan-messages.graphql` and `work-sessions.graphql`); `openthrottle-server`'s own codegen reads those same files and emits its own committed `__generated__`. A package may read another package's documents, never an application's. Only `openthrottle-mcp` runs the filesystem `verify-graphql-codegen` guard (`check:local:verify`); the others' committed output is gated by the post-codegen `git diff --exit-code`. After changing GraphQL types/resolvers/documents:
+Schema is **code-first** in `openthrottle-server` (NestJS `autoSchemaFile`); consumers read the committed **`applications/openthrottle-server/schema.gql`**, written only by `pnpm nx run openthrottle-server:graphql-schema:write`, and CI fails on codegen drift. After changing GraphQL types, resolvers or documents, follow the steps in the [`ot-stack`](./skills/ot-stack/SKILL.md) skill § Schema change. Never remove or change the type of an existing field without a migration plan — use `@deprecated(reason: "...")`.
 
-1. Run `pnpm nx run openthrottle-server:graphql-schema:write` (no Postgres, Redis or running server needed). It is the only producer of the committed `applications/openthrottle-server/schema.gql`: booting the server keeps the schema in memory and never writes the file. `dev` on a codegen consumer runs the equivalent `graphql-schema-write` first, so a new field plus a document selecting it needs no manual step there. It works in one pass even when a server-side client (`openthrottle-mcp`) already selects or reads the new field: tsc builds never run codegen and the client builds in the server graph are emit-only, so the server builds against the stale generated output and writes the schema that step 2 regenerates from. Do not reach for `--excludeTaskDependencies`.
-2. `pnpm nx affected --target=codegen-graphql,codegen-react-router --parallel`
-3. Commit the app `schema.gql` and all `__generated__` output.
-
-Never remove/change types on existing fields without a migration plan — use `@deprecated(reason: "...")`.
+The shared plan/task/note/project/plan-run **documents** are owned by `packages/openthrottle-mcp` (`src/graphql/operations/` plus `plan-messages.graphql` and `work-sessions.graphql`); `openthrottle-server`'s own codegen reads those same files and emits its own committed `__generated__`. A package may read another package's documents, never an application's. Only `openthrottle-mcp` runs the filesystem `verify-graphql-codegen` guard (`check:local:verify`); the others' committed output is gated by the post-codegen `git diff --exit-code`. After changing GraphQL types/resolvers/documents:
 
 ## Per-project AGENTS.md
 
@@ -110,15 +108,7 @@ A worktree runs its own stack: `pnpm worktree:serve <server|developer>`; it shar
 
 ## OpenThrottle Agent Skills
 
-OT-owned skills are authored under [`skills/`](./skills/) and surfaced to every tool via the generated `.agents/skills/` view ([ot-skill-sync](./skills/ot-skill-sync/SKILL.md)). Each skill’s YAML `description` lists **USE WHEN** triggers; prefer these for OpenThrottle-specific workflows alongside the generic Nx skill (**nx-workspace**) above. Full policy + installed set: [docs/Skills.md](./docs/Skills.md).
-
-- **ot-generators** — `@tools/generators`, `NX_ISOLATE_PLUGINS=false`, `pnpm nx`, AGENT_USAGE alignment: [`skills/ot-generators/SKILL.md`](./skills/ot-generators/SKILL.md)
-- **ot-stack** — openthrottle-server GraphQL, databases/embeddings, openthrottle-developer UI, openthrottle-mcp package: [`skills/ot-stack/SKILL.md`](./skills/ot-stack/SKILL.md)
-- **ot-coding-standards** — standards lint and typecheck cannot see, starting with the client/Node boundary (`node:*` reaching a browser bundle, the `clientNodeBoundary` Vite plugin): [`skills/ot-coding-standards/SKILL.md`](./skills/ot-coding-standards/SKILL.md)
-- **ot-postgres** — SQL migrations, `COMMENT ON TABLE` / column comments, idempotent DDL in `databases/<db>/migrations/` (`openthrottle`, `cms`): [`skills/ot-postgres/SKILL.md`](./skills/ot-postgres/SKILL.md)
-- **ot-plans** — openthrottle-mcp, plans/tasks, `Plan-Id` / `Task-Id`, post-merge work-ledger commit recording: [`skills/ot-plans/SKILL.md`](./skills/ot-plans/SKILL.md)
-- **github-commit** — conventional commits, staging, `Plan-Id` / `Task-Id` footers: [`skills/github-commit/SKILL.md`](./skills/github-commit/SKILL.md)
-- **ot-skill-guide** — authoring and reviewing skills against the agentskills.io spec: [`skills/ot-skill-guide/SKILL.md`](./skills/ot-skill-guide/SKILL.md)
+OT-owned skills are authored under [`skills/`](./skills/) and surfaced to every tool via the generated `.agents/skills/` view ([ot-skill-sync](./skills/ot-skill-sync/SKILL.md)). Each skill's `description` says when to use it, so prefer them for OpenThrottle-specific workflows alongside the generic **nx-workspace** skill. The catalog, with a line on each skill, is [docs/Skills.md](./docs/Skills.md).
 
 ## Plan runs (OT Loop)
 

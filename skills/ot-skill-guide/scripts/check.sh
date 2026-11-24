@@ -5,7 +5,7 @@ set -euo pipefail
 
 usage() {
   cat <<'USAGE'
-Usage: check.sh [--quiet] <path>...
+Usage: check.sh [--quiet] [--resolve-paths] <path>...
 
 Each <path> is either a skill directory (holds SKILL.md) or a directory of skills
 (every immediate child holding SKILL.md is checked). Symlinked skills are followed.
@@ -15,12 +15,23 @@ Checks per skill:
            description 1-1024 chars (after YAML folding); compatibility <= 500;
            metadata values quoted strings; relative links resolve
   quality  SKILL.md < 500 lines (warn past 400) and ~5000 tokens; unknown top-level
-           frontmatter keys; allowed-tools given as a YAML list; links escaping the
-           skill directory (../)
-  info     metadata.last-reviewed (or "never")
+           frontmatter keys without a `#` reason comment on the line above; allowed-tools
+           given as a YAML list; links escaping the skill directory (../); a file in
+           scripts/ that SKILL.md never names
+  info     metadata.last-reviewed (or "never"); commented non-spec keys; top-level
+           entries other than SKILL.md, scripts, references, assets, evals; frontmatter
+           order and a non-semver metadata.version (OpenThrottle repos)
+
+OpenThrottle repos (the git root has skills/ and .agents/skills/), owned skills only:
+  quality  description lacks `USE WHEN`, or lacks a `Not for` clause
+  Vendored skills (a real directory in .agents/skills/ listed in skills-lock.json) are
+  exempt. There is no length warning below the spec's 1024: keep descriptions slim.
 
 Output: one block per skill on stdout, then a summary line.
-  --quiet  print only skills with findings, plus the summary.
+  --quiet          print only skills with findings, plus the summary.
+  --resolve-paths  also report backticked repo-relative paths in SKILL.md (containing a
+                   `/` and a known top-level directory) that do not exist at the git root.
+                   Off by default: a portable skill legitimately names host-repo paths.
 
 Exit codes:
   0  no spec violations (quality warnings may exist)
@@ -33,11 +44,13 @@ USAGE
 }
 
 QUIET=0
+RESOLVE_PATHS=0
 PATHS=()
 for arg in "$@"; do
   case "$arg" in
     -h | --help) usage; exit 0 ;;
     --quiet) QUIET=1 ;;
+    --resolve-paths) RESOLVE_PATHS=1 ;;
     -*) echo "check.sh: unknown flag '$arg'. Try --help." >&2; exit 2 ;;
     *) PATHS+=("$arg") ;;
   esac
@@ -67,6 +80,23 @@ if [ "${#SKILLS[@]}" -eq 0 ]; then
 fi
 
 KNOWN_KEYS=" name description license compatibility metadata allowed-tools "
+KNOWN_ENTRIES=" SKILL.md scripts references assets evals LICENSE LICENSE.txt LICENSE.md "
+HOUSE_ORDER="name description license compatibility metadata allowed-tools"
+
+# OpenThrottle mode: the git root of the current directory has skills/ and .agents/skills/.
+GIT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+OT_MODE=0
+if [ -n "$GIT_ROOT" ] && [ -d "$GIT_ROOT/skills" ] && [ -d "$GIT_ROOT/.agents/skills" ]; then
+  OT_MODE=1
+fi
+
+# is_vendored <name> — a real directory in .agents/skills/ that skills-lock.json lists.
+is_vendored() {
+  [ "$OT_MODE" -eq 1 ] || return 1
+  local d="$GIT_ROOT/.agents/skills/$1"
+  [ -d "$d" ] && [ ! -L "$d" ] && [ -f "$GIT_ROOT/skills-lock.json" ] &&
+    grep -q "\"$1\"[[:space:]]*:" "$GIT_ROOT/skills-lock.json"
+}
 TOTAL_SPEC=0
 TOTAL_QUALITY=0
 FAILED_SKILLS=0
@@ -144,13 +174,100 @@ for dir in "${SKILLS[@]}"; do
     inm && /^[^ \t]/ { exit }
     inm && /^[ \t]+last-reviewed:/ { v = $0; sub(/^[^:]*:[ \t]*/, "", v); gsub(/[\x27"]/, "", v); print v }')"
 
-  while IFS= read -r key; do
+  vendored=0
+  is_vendored "$dirname" && vendored=1
+
+  key_order=()
+  while IFS=$'\t' read -r key commented; do
     [ -z "$key" ] && continue
+    key_order+=("$key")
     case "$KNOWN_KEYS" in
       *" $key "*) ;;
-      *) findings+=("quality  top-level key '$key' is not in the spec; keep it only with a reason, else move it to metadata") ;;
+      *)
+        if [ "$commented" = "1" ]; then
+          findings+=("info     top-level key '$key' is not in the spec; kept, with the reason commented above it")
+        elif [ "$vendored" -eq 1 ]; then
+          findings+=("info     top-level key '$key' is not in the spec (vendored: raise upstream, do not edit)")
+        else
+          findings+=("quality  top-level key '$key' is not in the spec; give its reason in a # comment on the line above, else move it to metadata")
+        fi
+        ;;
     esac
-  done < <(printf '%s\n' "$fm" | awk '/^[A-Za-z0-9_-]+:/ { k = $0; sub(/:.*/, "", k); print k }')
+  done < <(printf '%s\n' "$fm" | awk '
+    /^[A-Za-z0-9_-]+:/ { k = $0; sub(/:.*/, "", k); print k "\t" (prev ~ /^#/ ? 1 : 0) }
+    { prev = $0 }')
+
+  if [ "$OT_MODE" -eq 1 ] && [ "$vendored" -eq 0 ] && [ -n "$desc" ]; then
+    case "$desc" in
+      *"USE WHEN"*) ;;
+      *) findings+=("quality  description has no 'USE WHEN' clause (house shape: capability, USE WHEN …, Not for …)") ;;
+    esac
+    if ! printf '%s' "$desc" | grep -qi 'not for'; then
+      findings+=("quality  description has no 'Not for' clause naming the neighbouring skill")
+    fi
+    expected=""
+    for k in $HOUSE_ORDER; do
+      for have in ${key_order[@]+"${key_order[@]}"}; do
+        [ "$have" = "$k" ] && expected="$expected $k"
+      done
+    done
+    actual=""
+    for have in ${key_order[@]+"${key_order[@]}"}; do
+      case "$KNOWN_KEYS" in *" $have "*) actual="$actual $have" ;; esac
+    done
+    if [ "$expected" != "$actual" ]; then
+      findings+=("info     frontmatter order is${actual}; house order is${expected}")
+    fi
+    version="$(printf '%s\n' "$fm" | awk '
+      /^metadata:/ { inm = 1; next }
+      inm && /^[^ \t]/ { exit }
+      inm && /^[ \t]+version:/ { v = $0; sub(/^[^:]*:[ \t]*/, "", v); gsub(/[\x27"]/, "", v); print v }')"
+    if [ -n "$version" ] && ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+      findings+=("info     metadata.version '$version' is not semver (MAJOR.MINOR.PATCH)")
+    fi
+  fi
+
+  # Top-level entries outside the spec's conventional layout.
+  extra=""
+  for entry in "$dir"/* "$dir"/.[!.]*; do
+    [ -e "$entry" ] || continue
+    base="$(basename "$entry")"
+    case "$KNOWN_ENTRIES" in *" $base "*) continue ;; esac
+    case "$base" in .DS_Store) continue ;; esac
+    extra="$extra $base"
+  done
+  [ -n "$extra" ] && findings+=("info     top-level entries beyond SKILL.md/scripts/references/assets/evals:$extra")
+
+  # Every bundled script is named in SKILL.md.
+  if [ -d "$dir/scripts" ]; then
+    for script in "$dir"/scripts/*; do
+      [ -f "$script" ] || continue
+      sname="$(basename "$script")"
+      grep -qF "$sname" "$file" || findings+=("quality  scripts/$sname is never named in SKILL.md; list it so the agent knows it exists")
+    done
+  fi
+
+  # Optional: backticked repo-relative paths that do not exist at the git root.
+  if [ "$RESOLVE_PATHS" -eq 1 ] && [ -n "$GIT_ROOT" ]; then
+    while IFS= read -r cited; do
+      [ -z "$cited" ] && continue
+      [ -e "$GIT_ROOT/$cited" ] || [ -e "$dir/$cited" ] ||
+        findings+=("quality  cites '$cited', which does not exist at $GIT_ROOT")
+    done < <(awk '
+      /^[ \t]*```/ { fence = !fence; next }
+      fence { next }
+      {
+        line = $0
+        while (match(line, /`[^` ]+`/)) {
+          t = substr(line, RSTART + 1, RLENGTH - 2)
+          line = substr(line, RSTART + RLENGTH)
+          if (t !~ /\//) continue
+          if (t ~ /[<>*$:{}]|…|^https?|^~|^\.\.?\//) continue
+          if (t !~ /^(applications|packages|tools|scripts|databases|docs|skills|plugins|\.agents|\.claude|\.github|\.worktree|\.husky)\//) continue
+          print t
+        }
+      }' "$file" | sort -u)
+  fi
 
   # allowed-tools is a space-separated string in the spec; a YAML list parses but is not it.
   if printf '%s\n' "$fm" | awk '
@@ -215,20 +332,24 @@ for dir in "${SKILLS[@]}"; do
 
   spec_n=0
   quality_n=0
+  info_only=1
   for f in ${findings[@]+"${findings[@]}"}; do
     case "$f" in
-      spec*) spec_n=$((spec_n + 1)) ;;
-      quality*) quality_n=$((quality_n + 1)) ;;
+      spec*) spec_n=$((spec_n + 1)); info_only=0 ;;
+      quality*) quality_n=$((quality_n + 1)); info_only=0 ;;
     esac
   done
   TOTAL_SPEC=$((TOTAL_SPEC + spec_n))
   TOTAL_QUALITY=$((TOTAL_QUALITY + quality_n))
   [ "$spec_n" -gt 0 ] && FAILED_SKILLS=$((FAILED_SKILLS + 1))
 
-  if [ "$QUIET" -eq 1 ] && [ "${#findings[@]}" -eq 0 ]; then
+  if [ "$QUIET" -eq 1 ] && [ "$info_only" -eq 1 ]; then
     continue
   fi
-  echo "== $dirname — $spec_n spec, $quality_n quality — lines $lines/500 · description ${#desc}/1024 · ~${tokens} tokens · last reviewed ${last_reviewed:-never}"
+  label="owned"
+  [ "$vendored" -eq 1 ] && label="vendored"
+  [ "$OT_MODE" -eq 1 ] || label="skill"
+  echo "== $dirname ($label) — $spec_n spec, $quality_n quality — lines $lines/500 · description ${#desc}/1024 · ~${tokens} tokens · last reviewed ${last_reviewed:-never}"
   for f in ${findings[@]+"${findings[@]}"}; do
     echo "   $f"
   done

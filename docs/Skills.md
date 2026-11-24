@@ -62,17 +62,74 @@ Source of truth: `skills-lock.json`. Grouped by upstream:
 | `steipete/agent-scripts`   | frontend-design                                   |
 | `mattpocock/skills`        | grilling                                          |
 | `nrwl/nx-ai-agents-config` | link-workspace-packages, monitor-ci, nx-workspace |
+| `unclebob/ub-mode`         | ub-mode                                           |
+
+`ub-mode` was vendored in PR #586 (2026-10-25) so `/ub-mode` is available on demand: a reduced
+set of engineering principles (make it work, make it right, practice). Repo rules win where it
+disagrees.
+
+### Known conflicts with house rules
+
+Vendored skills cannot be edited, so where one disagrees with this repo the owned side says which
+wins. Recorded 2026-11-22 (skills audit, plan 18a3e017); keep-or-remove is reassessed in plan
+0c3d8271.
+
+- **frontend-design** tells the agent to commit to a bold aesthetic, avoid common fonts and choose
+  unexpected layouts. Root AGENTS.md § Code style requires `@openthrottle/react-router-shadcn`
+  components and the existing Tailwind tokens. In the audit's routing test both product-UI requests
+  went to frontend-design. The house rules win in every `react-router-*` app and package (stated in
+  `ot-stack`); frontend-design fits greenfield pages such as the marketing website.
+- **link-workspace-packages** says to add workspace dependencies with the package manager, never by
+  editing `package.json`. Here `pnpm add <pkg>@workspace:^` wrongly catalogs the dependency in
+  `pnpm-workspace.yaml`, so `ot-generators` says to write `"<pkg>": "workspace:^"` and run
+  `pnpm install`, and that it overrides this skill.
+- **monitor-ci** is written for Nx Cloud self-healing CI. `nx.json` has no Nx Cloud id, and CI is
+  GitHub Actions, so it has nothing to monitor here; it still matches one-off "why did CI fail"
+  requests.
+
+### To raise upstream
+
+Not filed yet: opening an issue on another project is the maintainer's call.
+
+- `nrwl/nx-ai-agents-config` / monitor-ci: `allowed-tools` is a YAML list where the spec wants a
+  space-separated string; `user-invocable` and `argument-hint` are client-specific top-level keys
+  with no reason given.
+- `steipete/agent-scripts` / frontend-design: the description ("Frontend UI: pages, apps,
+  components, polished non-generic design.") gives no "when" and no "not for", so it matches any UI
+  request in any repo, including ones with a design system.
+
+Not checked on 2026-11-22: whether any `skills-lock.json` entry is behind its upstream.
 
 ## OT-owned skills (`skills/`)
 
-Ours to author and edit; fanned out by ot-skill-sync:
+Ours to author and edit; fanned out by ot-skill-sync. This is the one catalog: other files link here rather than keep their own list. The `github-*` skills are portable: each resolves the host repo first and falls back to defaults it ships with (a PR template, an attribution guard, plain Conventional Commits) where this repo's files are missing.
 
-- **Agents/workflow:** ot-loop
-- **GitHub:** github-cleanup, github-commit, github-pull-request, github-squash — portable: each
-  resolves the host repo first and falls back to defaults it ships with (a PR template, an
-  attribution guard, plain Conventional Commits) where this repo's files are missing.
-- **OpenThrottle:** ot-coding-standards, ot-folders, ot-generators, ot-onboarding, ot-plans, ot-postgres, ot-stack, ot-worktree
-- **Infra:** ot-skill-guide, ot-skill-sync
+**Git workflow**
+
+- [`github-cleanup`](../skills/github-cleanup/SKILL.md) — delete local branches whose work already landed (squash merges included)
+- [`github-commit`](../skills/github-commit/SKILL.md) — write a conventional-commits message from the diff
+- [`github-pull-request`](../skills/github-pull-request/SKILL.md) — create or update a great Pull Request
+- [`github-squash`](../skills/github-squash/SKILL.md) — squash the branch to a single commit
+
+**Plans and execution**
+
+- [`ot-plans`](../skills/ot-plans/SKILL.md) — plans and tasks via the `openthrottle-mcp` server, plus the `Plan-Id`/`Task-Id` and work-ledger traceability rules.
+- [`ot-loop`](../skills/ot-loop/SKILL.md) — drive one OT plan to a PR with the built-in `/loop`, a task at a time in an isolated worktree. Canonical source of the per-task discipline.
+- [`ot-onboarding`](../skills/ot-onboarding/SKILL.md) — the front-door orientation skill new users invoke first: verifies the OT MCP is healthy, then tours the mental model, monorepo, shortcuts/workflows, and the skill catalog.
+
+**Code conventions**
+
+- [`ot-generators`](../skills/ot-generators/SKILL.md) — scaffolding with `@tools/generators`: which generator makes an app, package, component, route or NestJS service, and how to run one.
+- [`ot-folders`](../skills/ot-folders/SKILL.md) — where code goes, what it is named, what shape it must have, and how to prove it — the placement rules behind the `openthrottle/*` lint rules and module boundaries.
+- [`ot-client-node-boundary`](../skills/ot-client-node-boundary/SKILL.md) — the client/Node boundary lint and typecheck cannot see (`node:*` in browser bundles).
+- [`ot-stack`](../skills/ot-stack/SKILL.md) — conventions for the platform itself: `openthrottle-server`, the developer app, the GraphQL schema, embeddings and semantic ingest.
+- [`ot-postgres`](../skills/ot-postgres/SKILL.md) — SQL authoring under `databases/`: migrations, table design and naming, `COMMENT ON` standards, idempotent DDL.
+
+**Infrastructure**
+
+- [`ot-worktree`](../skills/ot-worktree/SKILL.md) — the portable machinery behind `worktree:new`, `worktree:heal` and `worktree:remove`: creating, provisioning and tearing down a worktree.
+- [`ot-skill-guide`](../skills/ot-skill-guide/SKILL.md) — author and review skills against the [Agent Skills specification](https://agentskills.io/specification): author and review modes, a severity-graded checklist, and `scripts/check.sh`. The rolling review runs as `Job_SkillReview`.
+- [`ot-skill-sync`](../skills/ot-skill-sync/SKILL.md) — manages this whole architecture in any repo: consistent installs, deterministic fan-out, and the CI drift check.
 
 ## Personal skills (`~/.openthrottle/skills`)
 
@@ -98,18 +155,23 @@ Full design: [foreign-workspace-skill-injection.md](monorepo/foreign-workspace-s
 ## Always-on description budget
 
 Every skill's frontmatter `description` sits in the context window of every session whether or not
-the skill fires, so it is a standing cost. **Measured 2026-08-28: 19 skills, 5,916 chars,
-~1,479 tokens** — down from 44 skills / 16,918 chars / ~4,229 tokens.
+the skill fires, so it is a standing cost. **Measured 2026-11-23, after the skills remediation and the Ralph retirement: 21
+committed skills (15 owned, 6 vendored), 7,222 chars, ~1,806 tokens**; the owned 15 are 5,443 of
+that. On 2026-11-22, before both, the owned 16 were 6,253. Earlier: 19 skills /
+5,916 chars on 2026-08-28, and 44 skills / 16,918 chars before the August trim.
 
 A description answers exactly one question: _should the model open this file right now?_ That means
 trigger conditions plus the explicit not-this-skill disambiguators, and nothing else. Feature
 inventories, flag lists and tool enumerations belong in the body, where they cost nothing until the
-skill is actually opened. See [`skills/README.md`](../skills/README.md) § Writing a skill that earns
-its context.
+skill is actually opened. The authoring rule is in the
+[`ot-skill-guide`](../skills/ot-skill-guide/SKILL.md) skill.
 
-Keep OT-owned descriptions under ~400 chars. The three still above it
-(`link-workspace-packages`, `nx-workspace`, `monitor-ci`) are **vendored** — the adoption
-policy above forbids hand-editing them, so their length is the price of installing them 1:1.
+**The limit is the specification's 1024 characters, and it is a ceiling, not a target.** There is
+no house number below it: a description is done when every clause is a trigger or a "Not for"
+disambiguator, whatever its length, and one near 1024 needs a reason. What stops silent growth is
+the ratchet: `pnpm nx run monorepo:check-model-facing-text` fails when any description grows past
+`scripts/model-facing-text.snapshot.json`. Vendored descriptions cannot be edited (adoption policy
+above), so their length is the price of installing them 1:1.
 
 **Your personal skills do count — against your own budget, not the team's.** The CLI loads them
 like anything else, and the snippet below walks `.agents/skills/`, so it counts whatever you have

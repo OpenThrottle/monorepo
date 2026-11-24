@@ -2,20 +2,19 @@
 name: ot-postgres
 description: >-
   OpenThrottle Postgres SQL authoring: migrations in databases/<db>/migrations/
-  (openthrottle, cms),
-  table design, naming, COMMENT ON TABLE/COLUMN standards, and idempotent DDL
-  patterns. USE WHEN adding or editing SQL migrations, schema changes, table
-  comments, or Postgres work under databases/ — not for routine OT plan CRUD
-  (see ot-plans) or NestJS entity wiring alone (see ot-stack).
+  (openthrottle, cms), table design, naming, COMMENT ON TABLE/COLUMN standards,
+  and idempotent DDL patterns. USE WHEN adding or editing SQL migrations, schema
+  changes, table comments, or Postgres work under databases/. Not for routine
+  OT plan CRUD (ot-plans) or NestJS entity wiring alone (ot-stack).
 metadata:
   author: openthrottle
-  last-reviewed: '2026-11-14'
-  version: '1.1.0'
+  last-reviewed: '2026-11-22'
+  version: '1.2.0'
 ---
 
 # OpenThrottle Postgres (migrations and table comments)
 
-Use **ot-stack** for embeddings, ingest scripts, and server/entity sync. Use **ot-plans** for plans/tasks MCP.
+Embeddings, ingest scripts and server/entity sync are `ot-stack`; plans and tasks are `ot-plans`.
 
 ## Which database? (decide first)
 
@@ -26,23 +25,22 @@ next number from **that database's** folder on `main`.
 
 ## Table comment rules (required)
 
-1. **Every new table** must have **`COMMENT ON TABLE`** in the **same migration file** as **`CREATE TABLE`**. Follow the tone of the `create_plan_runs_table` migration: short, purpose-focused prose; use **"OpenThrottle"** in new comments (**"OpenThrottle CMS"** in the `cms` database).
-2. **`COMMENT ON COLUMN`** is **optional** — add it for non-obvious fields (enums, JSONB shapes, snapshot columns, check-constraint semantics). See the column comments in the `create_plan_runs_table` migration.
-3. **Batch comment-only migrations** (the `comment_on_openthrottle_tables_batch_*` files) are for **backfill or rename debt only** — **≤10 tables per file**. Do not split new table DDL from its table comment across files.
-4. **Do not edit applied migrations in place** to add comments; add a new numbered batch file instead (audit: `databases/openthrottle/TABLE_COMMENTS_AUDIT.md`).
+1. **Every new table** has a `COMMENT ON TABLE` in the same migration file as its `CREATE TABLE`. Follow the tone of the `create_plan_runs_table` migration: short, purpose-focused prose; use **"OpenThrottle"** in new comments (**"OpenThrottle CMS"** in the `cms` database).
+2. `COMMENT ON COLUMN` is optional — add it for non-obvious fields (enums, JSONB shapes, snapshot columns, check-constraint semantics). See the column comments in the `create_plan_runs_table` migration.
+3. Batch comment-only migrations (the `comment_on_openthrottle_tables_batch_*` files) are for backfill or rename debt only, at most 10 tables per file. Do not split new table DDL from its table comment across files.
+4. Do not edit applied migrations in place to add comments; add a new numbered batch file instead (audit: `databases/openthrottle/TABLE_COMMENTS_AUDIT.md`).
 
 ## Migration workflow (pointer)
 
 Canonical commands and schema overview: **`databases/openthrottle/README.md`**.
 
-| Step             | Command / path                                                                                       |
-| ---------------- | ---------------------------------------------------------------------------------------------------- |
-| Apply migrations | `pnpm run database:migrate` (every DB; `-- --database <name>` for one)                               |
-| New migration    | Next `NNN_snake_case.sql` in `databases/<db>/migrations/` — check the tip of `main`, not your branch |
-| Entity sync      | `openthrottle` only: update `@openthrottle/nestjs-repositories-server` entities to match SQL         |
-| Local CI gate    | `pnpm nx run monorepo:check-migration-table-comments` (diff-scoped; also in `pnpm run check:local`)  |
+| Step          | Command / path                                                                                       |
+| ------------- | ---------------------------------------------------------------------------------------------------- |
+| New migration | Next `NNN_snake_case.sql` in `databases/<db>/migrations/` — check the tip of `main`, not your branch |
+| Entity sync   | `openthrottle` only: update `@openthrottle/nestjs-repositories-server` entities to match SQL         |
+| Local CI gate | `pnpm nx run monorepo:check-migration-table-comments` (diff-scoped; also in `pnpm run check:local`)  |
 
-**Enforcement:** Changed migration files that introduce **`CREATE TABLE`** must include matching **`COMMENT ON TABLE`** for each created table in the **same file**. Base ref: `main` (override with `MIGRATION_COMMENT_LINT_BASE`).
+**Enforcement:** the local CI gate above fails a changed migration that creates a table without its `COMMENT ON TABLE` in the same file. Base ref: `main` (override with `MIGRATION_COMMENT_LINT_BASE`).
 
 **Naming:** `snake_case` tables and columns; migration prefix `NNN_` zero-padded.
 

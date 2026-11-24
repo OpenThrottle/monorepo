@@ -13,11 +13,6 @@ pnpm dlx skills add https://github.com/steipete/agent-scripts --skill frontend-d
 
 # https://github.com/mattpocock/skills?tab=readme-ov-file
 pnpm dlx skills add https://github.com/mattpocock/skills --skill grilling --agent universal
-
-
-- secret-scanning
-- visual-plan
-- visual-recap
 ```
 
 > [!TIP]
@@ -50,7 +45,7 @@ skill-name/
 └── ...
 ```
 
-Required frontmatter: `name` (kebab-case, matches the directory) and `description` (what the skill does **and** when to use it). Keep `SKILL.md` under 500 lines; push detail into `references/` so agents can [progressively disclose](https://agentskills.io/specification#progressive-disclosure) it.
+How to write and review one against these pages is the [`ot-skill-guide`](./ot-skill-guide/SKILL.md) skill; it owns the authoring rules, so they are not repeated here.
 
 Need a machine check? The spec’s validator is [`skills-ref`](https://github.com/agentskills/agentskills/tree/main/skills-ref) (`skills-ref validate ./skills/my-skill`) — a format check, not a production dependency.
 
@@ -70,37 +65,7 @@ The layout every tool reads is built by our own [`ot-skill-sync`](./ot-skill-syn
 
 ## 📦 What's here today
 
-**GitHub workflow skills** (formerly the `.cursor/commands/github/*` Cursor commands — now portable across every agent):
-
-- [`github-cleanup/`](./github-cleanup/) — delete local branches whose work already landed (squash merges included)
-- [`github-commit/`](./github-commit/) — write a conventional-commits message from the diff
-- [`github-pull-request/`](./github-pull-request/) — create or update a great Pull Request
-- [`github-squash/`](./github-squash/) — squash the branch to a single commit
-
-Branches come from `pnpm run worktree:new <name>`, the one entrypoint for a branch plus its
-worktree. The machinery behind that script is [`ot-worktree/`](./ot-worktree/) below.
-
-**Agents/workflow:**
-
-- [`ot-loop/`](./ot-loop/) — drive one OT plan to a PR with the built-in `/loop`, a task at a time in an isolated worktree. Canonical source of the per-task discipline.
-
-**Infrastructure:**
-
-- [`ot-skill-guide/`](./ot-skill-guide/) — author and review skills against the [Agent Skills specification](https://agentskills.io/specification): author and review modes, a severity-graded checklist, and `scripts/check.sh`. The rolling review runs as `Job_SkillReview`.
-- [`ot-skill-sync/`](./ot-skill-sync/) — manages this whole architecture in any repo: consistent installs, deterministic fan-out, and the CI drift check.
-
-**Repo-specific skills:**
-
-- [`ot-onboarding/`](./ot-onboarding/) — the front-door orientation skill new users invoke first: verifies the OT MCP is healthy, then tours the mental model, monorepo, shortcuts/workflows, and the skill catalog.
-- [`ot-folders/`](./ot-folders/) — where code goes, what it is named, what shape it must have, and how to prove it — the placement rules behind the `openthrottle/*` lint rules and module boundaries.
-- [`ot-generators/`](./ot-generators/) — scaffolding with `@tools/generators`: which generator makes an app, package, component, route or NestJS service, and how to run one.
-- [`ot-plans/`](./ot-plans/) — plans and tasks via the `openthrottle-mcp` server, plus the `Plan-Id`/`Task-Id` and work-ledger traceability rules.
-- [`ot-coding-standards/`](./ot-coding-standards/) — standards lint and typecheck cannot see: the client/Node boundary (`node:*` in browser bundles).
-- [`ot-postgres/`](./ot-postgres/) — SQL authoring under `databases/`: migrations, table design and naming, `COMMENT ON` standards, idempotent DDL.
-- [`ot-stack/`](./ot-stack/) — conventions for the platform itself: `openthrottle-server`, the developer app, the GraphQL schema, embeddings and semantic ingest.
-- [`ot-worktree/`](./ot-worktree/) — the portable machinery behind `worktree:new`, `worktree:heal` and `worktree:remove`: creating, provisioning and tearing down a worktree.
-
-Each skill is its own directory with a `SKILL.md` at its root, per the [specification](https://agentskills.io/specification).
+The catalog of every installed skill, owned and vendored, with a line on each, is [`docs/Skills.md`](../docs/Skills.md). Branches come from `pnpm run worktree:new <name>`, the one entrypoint for a branch plus its worktree; the machinery behind it is [`ot-worktree/`](./ot-worktree/).
 
 ## 🔁 Sharing across OpenThrottle repos
 
@@ -132,8 +97,8 @@ npx skills init my-new-skill
 
 Then:
 
-1. Flesh out the generated `SKILL.md` — required `name` + `description` frontmatter, then instructions. Keep it focused and self-contained. Prefer the spec's optional dirs (`scripts/`, `references/`, `assets/`) over ad-hoc layouts.
-2. Only link relatively **within** the skill's own directory — anything outside it (repo docs, other skills) must be an **absolute URL** (e.g. `https://github.com/openthrottle/monorepo/blob/main/docs/...`). Skills are copied into other repos on install, so relative links that escape the skill directory break there.
+1. Write it with the [`ot-skill-guide`](./ot-skill-guide/SKILL.md) skill's author mode, and run its `scripts/check.sh` before opening the PR.
+2. Add it to the catalog in [`docs/Skills.md`](../docs/Skills.md).
 3. If it overlaps with existing docs (as `ot-onboarding` does with [`docs/openthrottle/first-time-onboarding.md`](../docs/openthrottle/first-time-onboarding.md)), cross-link the two so folks can find either entry point.
 
 > [!TIP]
@@ -154,51 +119,7 @@ bash ot-skill-sync/scripts/personal.sh promote my-idea  # move it into skills/, 
 
 ## 🎯 Writing a skill that earns its context
 
-Harvested from the vendored `writing-great-skills` skill before it was retired (2026-08-20).
-A skill exists to wrangle determinism out of a stochastic system: **predictability** — the agent
-taking the same _process_ every run — is the root virtue, and every rule below serves it.
-
-**Pick the invocation mode deliberately.** A model-invocable skill keeps its `description` in every
-session's context window whether or not it fires. A skill with `disable-model-invocation: true`
-costs zero context — only a human typing its name reaches it — but spends _your_ memory instead,
-since you become the index. Choose model-invocation only when the agent, or another skill, must
-reach it unprompted.
-
-**The description is a routing decision, not a summary.** It answers one question: _should the model
-open this file right now?_ So:
-
-- Front-load the distinctive word — that is where the invocation work happens.
-- One trigger per branch. Synonyms that rename the same branch are duplication paid for twice.
-- Cut identity that the body already carries. Keep triggers plus any "when another skill needs…"
-  clause, and nothing else.
-- Keep the explicit not-this-skill disambiguators. A line pointing away from a neighbouring skill
-  earns its bytes.
-
-**Rank content by how immediately it is needed.** Steps in `SKILL.md` for what the agent does in
-order; reference in `SKILL.md` for what it consults on demand; a linked sibling file for reference
-only some runs reach. Push too little down and the top bloats; push too much and you hide what the
-agent needs. Branching is the cleanest test: inline what every run needs, disclose what only some
-runs reach.
-
-**End each step on a checkable completion criterion.** "Every modified model accounted for" beats
-"produce a change list" — a vague criterion invites the agent to stop early.
-
-**Split only when the cut earns it.** Split off a model-invocable skill when a distinct trigger word
-should fire it on its own. Split a run of steps when the steps still ahead tempt the agent to rush
-the one in front of it.
-
-**Prune on a schedule.** Keep each meaning in exactly one place. Then test each sentence in
-isolation: does it change behaviour versus what the model already does by default? If not, delete
-the whole sentence rather than trimming words from it. Most prose that fails this test should go.
-
-**Prompt the positive.** Steering by prohibition backfires — naming the banned behaviour makes it
-more available, not less. State the target behaviour instead, and keep a prohibition only as a hard
-guardrail you cannot phrase positively, paired with what to do instead.
-
-**Failure modes worth naming:** _sediment_ (stale layers that settle because adding feels safe and
-removing feels risky — the default fate of any skill without a pruning discipline), _sprawl_ (too
-long even when every line is live), _duplication_, and _no-ops_ (lines the model already obeys, so
-you pay context to say nothing).
+The rules that used to live here (harvested from the retired vendored `writing-great-skills` skill on 2026-08-20: invocation mode, descriptions as routing decisions, checkable step endings, prompting the positive, pruning) moved into [`ot-skill-guide`](./ot-skill-guide/SKILL.md) on 2026-11-22 so there is one copy.
 
 ## 📚 See also
 

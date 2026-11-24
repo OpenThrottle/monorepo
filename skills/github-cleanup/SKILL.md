@@ -1,11 +1,11 @@
 ---
 name: github-cleanup
+description: 'Find local branches whose work already reached the default branch (including squash merges), confirm with the user, then delete them and their worktrees. USE WHEN the user runs /github-cleanup, or asks to clean up or prune merged or stale local branches or their worktrees. Not for remote branches, rewriting history (github-squash) or removing one specific worktree (ot-worktree).'
 compatibility: 'git, gh (authenticated), jq; the github-pull-request resolver is optional'
-description: 'Find local branches whose work already reached the default branch (including squash merges), confirm with the user, then delete them and their worktrees. USE WHEN the user runs /github-cleanup, or asks to clean up, prune or delete merged, stale or leftover local branches or orphaned worktrees. Not for remote branches, rewriting history (github-squash) or removing one specific worktree (ot-worktree).'
 metadata:
   author: openthrottle
-  last-reviewed: '2026-11-14'
-  version: '1.1.0'
+  last-reviewed: '2026-11-22'
+  version: '1.2.0'
 ---
 
 # github-cleanup
@@ -102,3 +102,11 @@ and only after confirming no other session or worktree is mid-operation.
 Out of scope, and why: remote branches (deleting them is outward-facing — recommend the repo's
 "Automatically delete head branches" setting instead), `git clean` (deletes untracked files with no
 undo), and anything that pushes.
+
+## In OpenThrottle repos
+
+Report the outcome once, at the end — `error` if a deletion the user approved failed, `abandoned` if called off ([why](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/skill-usage-telemetry-scope.md#reporting-an-outcome-from-a-skill)):
+
+```bash
+r="$(command -v skill-usage-outcome.cjs || echo "$(git rev-parse --show-toplevel 2>/dev/null)/plugins/openthrottle/bin/skill-usage-outcome.cjs")"; if [ -f "$r" ]; then node "$r" --skill github-cleanup --outcome success; fi
+```
