@@ -966,7 +966,9 @@ All five have a lint rule at `error` (OT plan `a8cb40e5`); "JSX consts live unde
 does not have to be. These five conventions came out of the PR #622 review, and the
 reference fixes are in that PR's review commit: `ScheduleRunStatusCell.tsx`,
 `PlanRunStatusCell.tsx`, `routing/schedule/utils/run-usage-limit-rows.ts` and
-`global/utils/utils.usage-limit.ts` in `openthrottle-developer`.
+`global/utils/utils.usage-limit.ts` in `openthrottle-developer`. That last file's `utils.` prefix
+predates the naming rule and is not a pattern to copy: a file never repeats its folder in its
+name ([`ot-folders` § Naming](../../skills/ot-folders/SKILL.md#naming)).
 
 ### Data files hold data
 

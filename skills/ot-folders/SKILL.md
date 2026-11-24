@@ -141,6 +141,10 @@ is a package, and that is the whole test.
 
 - Name functions verb-first (`parseX`, `formatY`), and pass a configuration object once there are
   more than three parameters.
+- **Let the folder carry the kind.** A file never repeats its folder in its name: `utils/auth.ts`,
+  not `utils/utils.auth.ts` or `utils/auth-utils.ts`. The mandated forms are the exception:
+  `data.<name>.ts`, `mock.<name>.ts` and NestJS `<folder>.<kind>.ts`. Existing `utils.<x>.ts` files
+  are legacy; do not add new ones.
 - **A component file's export name matches its file name.** The
   `component-primitive-shape` rule computes the expected name as the basename
   without extension — except for `index.tsx`/`index.ts`, where it resolves to the

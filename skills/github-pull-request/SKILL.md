@@ -83,7 +83,9 @@ them. Never run `gh pr create`, `gh pr edit`, `gh pr ready` or `git push` in tha
   reviewer runs them.
 - Fill **Review focus** when the template has one: the one or two places a reviewer should look
   hardest — a judgment call, something you are unsure of, what breaks if it is wrong. Say "nothing
-  unusual" rather than padding it; a reviewer skimming many agent PRs reads this first.
+  unusual" rather than padding it; a reviewer skimming many agent PRs reads this first. Where the
+  repo has an `ot-code-review` skill and nothing in this session ran it on the branch, say so in
+  Review focus and suggest running it first. Do not run it from here.
 - Make **Follow-ups** true: link each out-of-scope item you filed (an OT plan here, an issue
   elsewhere), and name what you fed back — the skill, `AGENTS.md` line, lint rule or test you
   changed because something tripped you up. Tick a box only when it is done; leave it unticked and

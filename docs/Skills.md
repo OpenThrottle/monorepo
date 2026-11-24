@@ -125,6 +125,7 @@ Ours to author and edit; fanned out by ot-skill-sync. This is the one catalog: o
 - [`ot-folders`](../skills/ot-folders/SKILL.md) — where code goes, what it is named, what shape it must have, and how to prove it — the placement rules behind the `openthrottle/*` lint rules and module boundaries.
 - [`ot-client-node-boundary`](../skills/ot-client-node-boundary/SKILL.md) — the client/Node boundary lint and typecheck cannot see (`node:*` in browser bundles).
 - [`ot-stack`](../skills/ot-stack/SKILL.md) — conventions for the platform itself: `openthrottle-server`, the developer app, the GraphQL schema, embeddings and semantic ingest.
+- [`ot-code-review`](../skills/ot-code-review/SKILL.md) — reviews a diff, branch, PR or path against the house conventions that lint cannot see: placement, generator exemplar, readability, naming in context, duplication and boundaries. It covers conventions only; correctness stays with the agent's built-in review. Its catalog is the single list of honor-system rules.
 - [`ot-postgres`](../skills/ot-postgres/SKILL.md) — SQL authoring under `databases/`: migrations, table design and naming, `COMMENT ON` standards, idempotent DDL.
 
 **Infrastructure**
