@@ -1,6 +1,5 @@
 import type { RenderResult } from '@testing-library/react';
-// eslint-disable-next-line openthrottle/no-fire-event -- the debounce test runs under vi.useFakeTimers(); RTL's asyncWrapper (which every userEvent call goes through) drains on a setTimeout(0) it only auto-advances under jest fake timers, so an awaited userEvent call never resolves there
-import { act, fireEvent, render } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -74,36 +73,32 @@ describe('WorkspaceFilePalette Component', () => {
 
   describe('debounce timing', () => {
     beforeEach(() => {
-      vi.useFakeTimers();
+      vi.useFakeTimers({ shouldAdvanceTime: true });
     });
 
     afterEach(() => {
       vi.useRealTimers();
     });
 
-    // Driven with `fireEvent.change` rather than `userEvent`: under fake timers
-    // `userEvent`'s internal scheduling deadlocks against cmdk, and the cited
-    // precedent (`useDebouncedValue.test`) also exercises the timer directly.
-    test('does not filter until the debounce window elapses, then renders matches', () => {
+    test('does not filter until the debounce window elapses, then renders matches', async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
       component = render(<WorkspaceFilePalette listing={listing} />);
 
-      act(() => {
-        fireEvent.change(component.getByPlaceholderText(/Filter 3 files/), {
-          target: { value: 'src' },
-        });
-      });
+      await user.type(component.getByPlaceholderText(/Filter 3 files/), 'src');
 
       // Before the quiet window, the debounced term is still empty, so the
       // listing is not scanned and no matches are rendered.
       expect(component.queryByText('src/a.ts')).not.toBeInTheDocument();
 
+      // shouldAdvanceTime leaks real elapsed time into the fake clock, so
+      // stop well short of the window instead of one ms before it.
       act(() => {
-        vi.advanceTimersByTime(DEFAULT_DEBOUNCE_MS - 1);
+        vi.advanceTimersByTime(DEFAULT_DEBOUNCE_MS / 2);
       });
       expect(component.queryByText('src/a.ts')).not.toBeInTheDocument();
 
       act(() => {
-        vi.advanceTimersByTime(1);
+        vi.advanceTimersByTime(DEFAULT_DEBOUNCE_MS);
       });
       expect(component.getByText('src/a.ts')).toBeInTheDocument();
       expect(component.getByText('src/b.ts')).toBeInTheDocument();

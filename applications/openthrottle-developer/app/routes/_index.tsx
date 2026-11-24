@@ -3,7 +3,7 @@ import {
   GlobalErrorBoundary,
   GlobalScreen,
 } from '@openthrottle/react-router-ui-global';
-import { useEffect, useRef } from 'react';
+import * as React from 'react';
 import type { ShouldRevalidateFunction } from 'react-router';
 import { useSearchParams } from 'react-router';
 
@@ -116,8 +116,8 @@ export default function Component(
   // lives in a reusable hook shared with the global header chat. It is client
   // state — independent of the loader — so the shell renders without waiting.
   const turn = useAgenticChatTurn();
-  const restoredConversationIdRef = useRef<string | null>(null);
-  const turnRef = useRef(turn);
+  const restoredConversationIdRef = React.useRef<string | null>(null);
+  const turnRef = React.useRef(turn);
   turnRef.current = turn;
 
   // Persisted-conversation list backing the sidebar (list + rename + delete +
@@ -146,7 +146,7 @@ export default function Component(
   // Markup
 
   // Life Cycle
-  useEffect(() => {
+  React.useEffect(() => {
     const id = conversationIdParam?.trim() ?? '';
     if (id === '') {
       return;

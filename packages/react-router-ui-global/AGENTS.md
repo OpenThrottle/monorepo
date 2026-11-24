@@ -31,10 +31,9 @@ shared per-row table Actions menu (`GlobalPopover`).
 ## Invariants & gotchas
 
 - Source-first, no build target — see [packages/AGENTS.md](../AGENTS.md).
-- **Two test-setup files exist; only one runs.** [vitest.config.ts](vitest.config.ts) points at
-  [vitest.setup.ts](vitest.setup.ts) (hand-rolled `window.env` + jsdom shims);
-  [tests/setup.ts](tests/setup.ts) calls `setupReactRouterTest` but is not wired into the config.
-  Check the wiring before assuming the shared setup applies.
+- **Test setup is the shared one.** [vitest.config.ts](vitest.config.ts) wires
+  [tests/setup.ts](tests/setup.ts), a single `setupReactRouterTest` call (polyfills, `window.env`,
+  `afterEach(cleanup)`). Never re-add those shims; read env values from `window.env` in tests.
 - `GlobalProviders` imports `react-dnd` / `react-dnd-html5-backend`, which are **not** declared in
   this package's `package.json` — they resolve through the consuming app (source-first transpile).
 - `GlobalProviders` requires the host root action to handle the chat intents

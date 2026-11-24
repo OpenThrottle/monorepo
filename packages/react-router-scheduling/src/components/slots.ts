@@ -1,6 +1,6 @@
 import type { CalendarEventExternal } from '@schedule-x/calendar';
 import type { ComponentType, ReactElement } from 'react';
-import { createElement } from 'react';
+import * as React from 'react';
 
 import type { CalendarEvent } from '../types';
 import { fromEngineEvent } from '../utils/events';
@@ -122,7 +122,7 @@ export function buildCustomComponents(
     const Renderer = slots[name];
     if (Renderer !== undefined) {
       result[name] = (props: EngineEventSlotProps): ReactElement =>
-        createElement(Renderer, {
+        React.createElement(Renderer, {
           calendarEvent: fromEngineEvent(props.calendarEvent),
         });
     }
@@ -131,7 +131,7 @@ export function buildCustomComponents(
   for (const name of HEADER_SLOT_NAMES) {
     const Renderer = slots[name];
     if (Renderer !== undefined) {
-      result[name] = (): ReactElement => createElement(Renderer);
+      result[name] = (): ReactElement => React.createElement(Renderer);
     }
   }
 

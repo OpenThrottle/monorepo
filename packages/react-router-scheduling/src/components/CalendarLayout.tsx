@@ -6,7 +6,7 @@ import {
   ToggleGroupItem,
 } from '@openthrottle/react-router-shadcn';
 import type { ReactElement } from 'react';
-import { useEffect, useRef } from 'react';
+import * as React from 'react';
 
 import {
   CALENDAR_LAYOUT_DEFAULT_EVENTS,
@@ -70,7 +70,7 @@ export const CalendarLayout = (props: CalendarLayoutProps): ReactElement => {
   // (the instance is created once and cached). Track that seed reference so a
   // later prop change replaces the events without recreating the instance
   // (which would reset view/selection state).
-  const seededEvents = useRef(events);
+  const seededEvents = React.useRef(events);
 
   // Setup
   const dateLabel = calendar.date.toLocaleDateString(undefined, {
@@ -89,7 +89,7 @@ export const CalendarLayout = (props: CalendarLayoutProps): ReactElement => {
   // Markup
 
   // Life Cycle
-  useEffect(() => {
+  React.useEffect(() => {
     if (events === seededEvents.current) {
       return;
     }

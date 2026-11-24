@@ -1,5 +1,5 @@
-// eslint-disable-next-line openthrottle/no-fire-event -- every test runs under vi.useFakeTimers(); RTL's asyncWrapper (which every userEvent call goes through) drains on a setTimeout(0) it only auto-advances under jest fake timers, so an awaited userEvent call never resolves there
-import { act, fireEvent, render } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub, useSearchParams } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -35,7 +35,7 @@ function SearchHarness(props: {
 
 describe('useDebouncedSearchParam', () => {
   beforeEach(() => {
-    vi.useFakeTimers();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
   });
 
   afterEach(() => {
@@ -60,20 +60,21 @@ describe('useDebouncedSearchParam', () => {
 
     const component = render(<RoutesStub initialEntries={['/']} />);
 
-    fireEvent.change(component.getByTestId('search-input'), {
-      target: { value: 'abc' },
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    await user.type(component.getByTestId('search-input'), 'abc');
+
+    expect(component.getByTestId('committed-q')).toHaveTextContent('');
+
+    // shouldAdvanceTime lets real elapsed time leak into the fake clock, so
+    // leave slack on both sides of the 300ms window instead of an exact edge.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(150);
     });
 
     expect(component.getByTestId('committed-q')).toHaveTextContent('');
 
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(299);
-    });
-
-    expect(component.getByTestId('committed-q')).toHaveTextContent('');
-
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(1);
+      await vi.advanceTimersByTimeAsync(200);
     });
 
     expect(component.getByTestId('committed-q')).toHaveTextContent('abc');
@@ -86,15 +87,12 @@ describe('useDebouncedSearchParam', () => {
 
     const component = render(<RoutesStub initialEntries={['/']} />);
 
-    fireEvent.change(component.getByTestId('search-input'), {
-      target: { value: 'fast' },
-    });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    await user.type(component.getByTestId('search-input'), 'fast');
 
     expect(component.getByTestId('committed-q')).toHaveTextContent('');
 
-    await act(() => {
-      fireEvent.click(component.getByTestId('commit-now'));
-    });
+    await user.click(component.getByTestId('commit-now'));
 
     expect(component.getByTestId('committed-q')).toHaveTextContent('fast');
   });
@@ -130,9 +128,8 @@ describe('useDebouncedSearchParam', () => {
 
     const component = render(<RoutesStub initialEntries={['/']} />);
 
-    fireEvent.change(component.getByTestId('search-input'), {
-      target: { value: 'x' },
-    });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    await user.type(component.getByTestId('search-input'), 'x');
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(300);

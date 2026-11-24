@@ -1,3 +1,5 @@
+import { stat } from 'node:fs/promises';
+
 import type { NormalizedTokenUsage } from '@openthrottle/agentic-token-usage';
 import {
   hasUsageCounts,
@@ -233,3 +235,17 @@ export const foldRunUsage = (output: string): NormalizedTokenUsage | null => {
     return null;
   }
 };
+
+/**
+ * @description True when `path` exists and is a directory; any stat failure
+ * (missing path, permissions) reads as "not a directory".
+ */
+export async function isDirectory(path: string): Promise<boolean> {
+  try {
+    const entry = await stat(path);
+
+    return entry.isDirectory();
+  } catch {
+    return false;
+  }
+}

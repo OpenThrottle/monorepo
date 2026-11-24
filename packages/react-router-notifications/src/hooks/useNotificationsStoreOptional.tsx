@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import * as React from 'react';
 
 import type { NotificationsStoreContextValue } from '../data/data.notifications-store.context';
 import { NotificationsStoreContext } from '../data/data.notifications-store.context';
@@ -23,5 +23,5 @@ export const useNotificationsStoreOptional = (
 
   // 🔌 Short Circuit
 
-  return useContext(NotificationsStoreContext);
+  return React.useContext(NotificationsStoreContext);
 };

@@ -84,7 +84,8 @@ export type OpenThrottlePublicEnv = {
  * tier ({@link OpenThrottlePublicEnv}) and the server-only tier
  * ({@link OpenThrottleServerEnv}). Obtain via {@link getEnvironment}.
  */
-export type OpenThrottleEnv = OpenThrottlePublicEnv & OpenThrottleServerEnv;
+export interface OpenThrottleEnv
+  extends OpenThrottlePublicEnv, OpenThrottleServerEnv {}
 
 export type OpenThrottleWindow = typeof window &
   typeof globalThis & {

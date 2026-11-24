@@ -192,3 +192,18 @@ export const RULE_PREVIEW_COPY = {
   summaryPrefix: `Matches`,
   truncatedNote: `Only your most recently updated plans were evaluated.`,
 } as const;
+
+export const RULES_ATTACH_PROMPT_LABELS = {
+  owner: {
+    system: RULES_COPY.promptOwnerSystem,
+    yours: RULES_COPY.promptOwnerYours,
+  },
+  placement: {
+    end: RULES_COPY.attachPromptPlacementEnd,
+    start: RULES_COPY.attachPromptPlacementStart,
+  },
+  type: {
+    personas: RULES_COPY.promptTypePersonas,
+    prompts: RULES_COPY.promptTypePrompts,
+  },
+} as const;

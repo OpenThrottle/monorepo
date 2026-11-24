@@ -24,12 +24,9 @@ if ('serviceWorker' in navigator) {
 
   /**
    * Prevents the default mini-infobar or install dialog from appearing on
-   * mobile, storing the original event so we can use it later in the users
-   * journey.
+   * mobile.
    */
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
-
-    // global.deferredPrompt = e;
   });
 }

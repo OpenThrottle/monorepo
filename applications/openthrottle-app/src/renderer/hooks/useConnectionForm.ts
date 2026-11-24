@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import * as React from 'react';
 
 import type { ShellBridge } from '../../bridge/types/shell-bridge.ts';
 import type { ConnectionFeedback } from '../types/connection-feedback.ts';
@@ -27,9 +27,9 @@ export const useConnectionForm = (
   const { bridge } = options;
 
   // Hooks
-  const [serverUrl, setServerUrl] = useState('');
-  const [isBusy, setIsBusy] = useState(false);
-  const [feedback, setFeedback] = useState<ConnectionFeedback>({
+  const [serverUrl, setServerUrl] = React.useState('');
+  const [isBusy, setIsBusy] = React.useState(false);
+  const [feedback, setFeedback] = React.useState<ConnectionFeedback>({
     kind: 'idle',
   });
 
@@ -69,7 +69,7 @@ export const useConnectionForm = (
   // Markup
 
   // Life Cycle
-  useEffect(() => {
+  React.useEffect(() => {
     let isCurrent = true;
 
     void bridge.getSettings().then((settings) => {

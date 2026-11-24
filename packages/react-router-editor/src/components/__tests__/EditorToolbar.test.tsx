@@ -16,29 +16,6 @@ import { editorAtom, editorAtomDefaults } from '../../data/data.atom.editor';
 import type { EditorToolbarProps } from '../EditorToolbar';
 import { EditorToolbar } from '../EditorToolbar';
 
-// jsdom does not implement the Pointer Capture API; Radix Select calls it
-// when opening, so userEvent interactions throw without this guard. This
-// package has no shared vitest setup file (see `vitest.config.ts`), so the
-// shim is scoped to this file, mirroring the one other packages register
-// globally in their own `vitest.setup.ts`.
-if (typeof Element !== 'undefined') {
-  if (!Element.prototype.hasPointerCapture) {
-    Element.prototype.hasPointerCapture = (): boolean => false;
-  }
-
-  if (!Element.prototype.setPointerCapture) {
-    Element.prototype.setPointerCapture = (): void => {};
-  }
-
-  if (!Element.prototype.releasePointerCapture) {
-    Element.prototype.releasePointerCapture = (): void => {};
-  }
-
-  if (!Element.prototype.scrollIntoView) {
-    Element.prototype.scrollIntoView = (): void => {};
-  }
-}
-
 const renderToolbar = (
   props: EditorToolbarProps = {},
   initial: Partial<EditorAtom> = {},

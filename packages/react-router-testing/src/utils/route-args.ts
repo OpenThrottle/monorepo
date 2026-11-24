@@ -26,15 +26,15 @@ export type CreateRouteArgsOptions = {
  *
  * @public
  */
-export type CreateActionArgsOptions = CreateRouteArgsOptions & {
+export interface CreateActionArgsOptions extends CreateRouteArgsOptions {
   /**
    * Request body. A plain record is serialized into `FormData` (the common
    * case for form actions); a `FormData` instance is passed through as-is.
    */
-  body?: FormData | Record<string, string>;
+  readonly body?: FormData | Record<string, string>;
   /** HTTP method. Defaults to `POST`. */
-  method?: string;
-};
+  readonly method?: string;
+}
 
 const toFormData = (body: FormData | Record<string, string>): FormData => {
   if (body instanceof FormData) {

@@ -6,6 +6,7 @@ import type { ActivityRow } from '../recent-activity';
 import {
   activityDetailHref,
   commitLinkAriaLabel,
+  linkAriaLabelFor,
   outputLinkAriaLabel,
   planCellContent,
   taskLinkAriaLabel,
@@ -327,5 +328,33 @@ describe('outputLinkAriaLabel', () => {
     };
 
     expect(outputLinkAriaLabel(row)).toBe('View plan plan');
+  });
+});
+
+describe('linkAriaLabelFor', () => {
+  const row: ActivityRow = {
+    date: '2026-11-01T00:00:00Z',
+    description: 'desc',
+    id: 'r1',
+    planTitle: 'Plan A',
+    status: null,
+    taskTitle: null,
+    type: 'commit',
+  };
+
+  test('dispatches commit rows to commitLinkAriaLabel', () => {
+    expect(linkAriaLabelFor(row)).toBe(commitLinkAriaLabel(row));
+  });
+
+  test('dispatches output rows to outputLinkAriaLabel', () => {
+    const output: ActivityRow = { ...row, type: 'output' };
+
+    expect(linkAriaLabelFor(output)).toBe(outputLinkAriaLabel(output));
+  });
+
+  test('dispatches task rows to taskLinkAriaLabel', () => {
+    const task: ActivityRow = { ...row, type: 'task' };
+
+    expect(linkAriaLabelFor(task)).toBe(taskLinkAriaLabel(task));
   });
 });

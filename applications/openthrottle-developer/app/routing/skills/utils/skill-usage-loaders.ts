@@ -35,37 +35,53 @@ export const getSkillUsageWindow = (
  * failure resolves to the unavailable sentinel so the route still renders 200.
  * Callers stream the returned promise unawaited (RR8 Single Fetch).
  */
-export const loadSkillsIndexUsage = (
+export const loadSkillsIndexUsage = async (
   request: Request,
 ): Promise<SkillsIndexUsageData> => {
   const { end, start } = getSkillUsageWindow();
 
-  return executeGraphqlWithAuth(request, GetUsageSkillUsageDocument, {
-    cwd: null,
-    end,
-    gitBranch: null,
-    scope: null,
-    start,
-  })
-    .then(({ skillUsage }) => toSkillsIndexUsageData(skillUsage))
-    .catch(() => ({ available: false as const }));
+  try {
+    const { skillUsage } = await executeGraphqlWithAuth(
+      request,
+      GetUsageSkillUsageDocument,
+      {
+        cwd: null,
+        end,
+        gitBranch: null,
+        scope: null,
+        start,
+      },
+    );
+
+    return toSkillsIndexUsageData(skillUsage);
+  } catch {
+    return { available: false };
+  }
 };
 
 /**
  * @description Per-skill usage over the fixed window; same failure contract as
  * {@link loadSkillsIndexUsage}.
  */
-export const loadSkillDetailUsage = (
+export const loadSkillDetailUsage = async (
   request: Request,
   skillName: string,
 ): Promise<SkillDetailUsageData> => {
   const { end, start } = getSkillUsageWindow();
 
-  return executeGraphqlWithAuth(request, GetSkillDetailUsageDocument, {
-    end,
-    skillName,
-    start,
-  })
-    .then(({ skillUsage }) => toSkillDetailUsageData(skillUsage))
-    .catch(() => ({ available: false as const }));
+  try {
+    const { skillUsage } = await executeGraphqlWithAuth(
+      request,
+      GetSkillDetailUsageDocument,
+      {
+        end,
+        skillName,
+        start,
+      },
+    );
+
+    return toSkillDetailUsageData(skillUsage);
+  } catch {
+    return { available: false };
+  }
 };

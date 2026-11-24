@@ -15,6 +15,7 @@
     "yaml": "catalog:"
   },
   "devDependencies": {
+    "@openthrottle/react-router-testing": "workspace:^",
     "@testing-library/jest-dom": "catalog:",
     "@testing-library/react": "catalog:",
     "@testing-library/user-event": "catalog:",

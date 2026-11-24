@@ -13,6 +13,7 @@
   },
   "description": "Monaco-based editor for OpenThrottle custom prompts: tabbed files, searchable sidebar, and React Router integration.",
   "devDependencies": {
+    "@openthrottle/react-router-testing": "workspace:^",
     "@testing-library/react": "catalog:",
     "@testing-library/user-event": "catalog:",
     "react-dom": "catalog:",

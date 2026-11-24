@@ -115,6 +115,52 @@ describe('analyzeComponentSource — R6 line cap', () => {
   });
 });
 
+describe('analyzeComponentSource — R4 data declarations', () => {
+  const withDecl = (decl: string): string => {
+    return `${decl}\n\nexport const Foo = (): React.ReactElement => <div />;\n`;
+  };
+
+  it('counts a plain array literal', () => {
+    expect(analyzeComponentSource(withDecl('const A = [1];')).dataDecls).toBe(
+      1,
+    );
+  });
+
+  it('counts an array literal ending in as const', () => {
+    expect(
+      analyzeComponentSource(withDecl('const A = [1, 2] as const;')).dataDecls,
+    ).toBe(1);
+  });
+
+  it('counts an object literal ending in as const', () => {
+    expect(
+      analyzeComponentSource(withDecl('const A = { a: 1 } as const;'))
+        .dataDecls,
+    ).toBe(1);
+  });
+
+  it('counts an object literal with satisfies', () => {
+    expect(
+      analyzeComponentSource(
+        withDecl('const A = { a: 1 } satisfies Record<string, number>;'),
+      ).dataDecls,
+    ).toBe(1);
+  });
+
+  it('counts a parenthesized as const literal', () => {
+    expect(
+      analyzeComponentSource(withDecl('const A = ({ a: 1 } as const);'))
+        .dataDecls,
+    ).toBe(1);
+  });
+
+  it('ignores a scalar as const', () => {
+    expect(
+      analyzeComponentSource(withDecl("const A = 'x' as const;")).dataDecls,
+    ).toBe(0);
+  });
+});
+
 const forwardRefPart = (name: string): string => {
   return `export interface ${name}Props {}
 
