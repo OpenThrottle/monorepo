@@ -335,7 +335,7 @@
     "./src/register-workspace-type-stripping.ts"
   ],
   "type": "module",
-  "version": "1.4.0",
+  "version": "2.0.0",
   "devDependencies": {
     "@golevelup/ts-vitest": "catalog:",
     "@nestjs/testing": "catalog:",
