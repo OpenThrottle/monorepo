@@ -5,8 +5,8 @@ fixture, and a baked-in `afterEach(cleanup)`. Each app's `tests/setup.ts` is one
 `setupReactRouterTest({ env: { APP_NAME: '<app>' } })` call.
 
 **Consumed by:** all four RR apps (`openthrottle-developer`, `-admin`, `-email`, `-website`)
-plus `react-router-ide`, `react-router-scheduling`, `react-router-ui-global`,
-`react-router-floor-layout` (dev-time). **Any change here changes every app's suite at once** —
+plus `react-router-ide`, `react-router-scheduling`, `react-router-ui-global` (dev-time).
+**Any change here changes every app's suite at once** —
 run the consuming apps' tests, not just this package's.
 
 ## Layout

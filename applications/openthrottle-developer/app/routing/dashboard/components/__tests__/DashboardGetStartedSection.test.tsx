@@ -39,8 +39,14 @@ describe('DashboardGetStartedSection Component', () => {
   test('streams the Get Started card in when steps are incomplete', async () => {
     const component = renderSection({ onboarding: onboarding() });
 
+    // The routes stub, Suspense and Await each take a render pass before the
+    // card mounts; on a loaded CI box that has exceeded the 1s default.
     expect(
-      await component.findByTestId('DashboardGetStartedCard'),
+      await component.findByTestId(
+        'DashboardGetStartedCard',
+        {},
+        { timeout: 5_000 },
+      ),
     ).toBeInTheDocument();
   });
 
