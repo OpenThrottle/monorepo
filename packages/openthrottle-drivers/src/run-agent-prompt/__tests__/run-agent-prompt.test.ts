@@ -331,6 +331,57 @@ describe('runAgentPrompt — input validation', () => {
       }),
     ).rejects.toBeInstanceOf(DriverCapabilityError);
   });
+
+  it('throws DriverCapabilityError, before spawning, for an isolated posture on a driver that cannot isolate', async () => {
+    vi.mocked(spawn).mockReset();
+
+    await expect(
+      runAgentPrompt({
+        driverId: 'codex', // isolatesRepoAgentConfig: false
+        prompt: 'x',
+        repoAgentConfig: { kind: 'isolated', mcpServers: {} },
+      }),
+    ).rejects.toThrow(/cannot run an untrusted checkout/u);
+    expect(spawn).not.toHaveBeenCalled();
+  });
+});
+
+describe('runAgentPrompt — repo agent-config posture', () => {
+  beforeEach(() => {
+    vi.mocked(spawn).mockReset();
+  });
+
+  it('spawns claude with the isolation flags for an isolated posture', async () => {
+    const child = makeChild();
+    vi.mocked(spawn).mockReturnValue(child);
+
+    const promise = runAgentPrompt({
+      driverId: 'claude',
+      prompt: 'x',
+      repoAgentConfig: { kind: 'isolated', mcpServers: {} },
+    });
+    child.emit('close', 0);
+    await promise;
+
+    const command = String(vi.mocked(spawn).mock.calls[0]?.[0]);
+    expect(command).toContain('--setting-sources user --strict-mcp-config');
+  });
+
+  it('spawns claude without the isolation flags for a trusted posture', async () => {
+    const child = makeChild();
+    vi.mocked(spawn).mockReturnValue(child);
+
+    const promise = runAgentPrompt({
+      driverId: 'claude',
+      prompt: 'x',
+      repoAgentConfig: { kind: 'trusted' },
+    });
+    child.emit('close', 0);
+    await promise;
+
+    const command = String(vi.mocked(spawn).mock.calls[0]?.[0]);
+    expect(command).not.toContain('--strict-mcp-config');
+  });
 });
 
 describe('runAgentPrompt — child env (scheduled-job path)', () => {

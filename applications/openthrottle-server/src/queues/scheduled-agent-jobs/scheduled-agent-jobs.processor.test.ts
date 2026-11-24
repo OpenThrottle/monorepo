@@ -1,17 +1,25 @@
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import { createMock } from '@golevelup/ts-vitest';
 import type { KeyedJsonlWriter } from '@openthrottle/nestjs-logging';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
+  RepositoryCheckout,
+  RepositoryCheckoutsRepository,
   ScheduledAgentJob,
   ScheduledAgentJobRun,
   ScheduledAgentJobRunsRepository,
   ScheduledAgentJobsRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import type {
+  RepositoryCheckoutsRepositoryMock,
   ScheduledAgentJobRunsRepositoryMock,
   ScheduledAgentJobsRepositoryMock,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import {
+  createRepositoryCheckoutsRepositoryMock,
   createScheduledAgentJobRunsRepositoryMock,
   createScheduledAgentJobsRepositoryMock,
 } from '@openthrottle/nestjs-repositories-server/testing';
@@ -21,6 +29,7 @@ import { RUN_AGENT_STATUS } from '@openthrottle/openthrottle-drivers';
 import type { Mock } from 'vitest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { AgentConfigTrustService } from '../../services/agent-config-trust/agent-config-trust.service.ts';
 import type { CheckoutPathService } from '../../services/checkout-path/checkout-path.service.ts';
 import type { BullMqRunOutputRetentionService } from '../bullmq-run-output/retention/retention.service.ts';
 import type { ScheduledAgentJobCancellationService } from './cancellation/cancellation.service.ts';
@@ -123,6 +132,8 @@ describe('ScheduledAgentJobsProcessor', () => {
   let scheduler: ScheduledAgentJobSchedulerService;
   let writer: KeyedJsonlWriter;
   let failureNotifier: ScheduledAgentJobFailureNotifierService;
+  let checkouts: RepositoryCheckoutsRepositoryMock;
+  let agentConfigTrust: AgentConfigTrustService;
   let processor: ScheduledAgentJobsProcessor;
 
   beforeEach(() => {
@@ -169,6 +180,13 @@ describe('ScheduledAgentJobsProcessor', () => {
     failureNotifier = createMock<ScheduledAgentJobFailureNotifierService>({
       notify: vi.fn().mockResolvedValue(undefined),
     });
+    checkouts = createRepositoryCheckoutsRepositoryMock();
+    checkouts.findByIdForUser.mockResolvedValue(null);
+    checkouts.findByUserAndPath.mockResolvedValue(null);
+    agentConfigTrust = new AgentConfigTrustService(
+      createMock<LoggerService>(),
+      asMock<RepositoryCheckoutsRepository>(checkouts),
+    );
 
     processor = new ScheduledAgentJobsProcessor(
       createMock<LoggerService>(),
@@ -182,6 +200,7 @@ describe('ScheduledAgentJobsProcessor', () => {
       retention,
       scheduler,
       failureNotifier,
+      agentConfigTrust,
       writer,
     );
   });
@@ -316,6 +335,109 @@ describe('ScheduledAgentJobsProcessor', () => {
     );
   });
 
+  describe('checkout trust gate', () => {
+    // A real directory outside the OpenThrottle checkout, so it resolves as foreign.
+    let foreignDir: string;
+
+    const checkoutRow = (agentConfigTrusted: boolean): RepositoryCheckout => {
+      return createMock<RepositoryCheckout>({
+        agentConfigTrusted,
+        filesystemPath: foreignDir,
+        id: 'checkout-1',
+      });
+    };
+
+    beforeEach(() => {
+      foreignDir = mkdtempSync(join(tmpdir(), 'ot-sched-trust-'));
+      vi.mocked(checkoutPaths.resolve).mockResolvedValue({ path: foreignDir });
+    });
+
+    afterEach(() => {
+      rmSync(foreignDir, { force: true, recursive: true });
+    });
+
+    it('runs the OpenThrottle checkout trusted without reading any checkout row', async () => {
+      await processor.process(makeJob({ cwd: process.cwd() }));
+
+      expect(vi.mocked(runner.run).mock.calls[0]?.[0]?.repoAgentConfig).toEqual(
+        { kind: 'trusted' },
+      );
+      expect(checkouts.findByUserAndPath).not.toHaveBeenCalled();
+    });
+
+    it('runs a checkout its owner trusted as before', async () => {
+      checkouts.findByIdForUser.mockResolvedValue(checkoutRow(true));
+
+      await processor.process(makeJob({ repositoryCheckoutId: 'checkout-1' }));
+
+      expect(checkouts.findByIdForUser).toHaveBeenCalledWith(
+        'checkout-1',
+        'user-1',
+      );
+      const runConfig = vi.mocked(runner.run).mock.calls[0]?.[0];
+      expect(runConfig?.cwd).toBe(foreignDir);
+      expect(runConfig?.repoAgentConfig).toEqual({ kind: 'trusted' });
+    });
+
+    it('isolates an untrusted checkout on a driver that can suppress its config', async () => {
+      checkouts.findByIdForUser.mockResolvedValue(checkoutRow(false));
+
+      await processor.process(makeJob({ repositoryCheckoutId: 'checkout-1' }));
+
+      expect(vi.mocked(runner.run).mock.calls[0]?.[0]?.repoAgentConfig).toEqual(
+        { kind: 'isolated', mcpServers: {} },
+      );
+      expect(runsRepository.markRunFinished).toHaveBeenCalledWith(
+        'run-1',
+        expect.objectContaining({ status: 'succeeded' }),
+      );
+    });
+
+    it('isolates an unregistered explicit cwd', async () => {
+      await processor.process(makeJob({ cwd: foreignDir }));
+
+      expect(checkouts.findByUserAndPath).toHaveBeenCalledWith(
+        'user-1',
+        foreignDir,
+      );
+      expect(vi.mocked(runner.run).mock.calls[0]?.[0]?.repoAgentConfig).toEqual(
+        { kind: 'isolated', mcpServers: {} },
+      );
+    });
+
+    it('refuses an untrusted checkout on a driver that cannot isolate, and says why on the run', async () => {
+      checkouts.findByIdForUser.mockResolvedValue(checkoutRow(false));
+
+      await processor.process(
+        makeJob({ driverId: 'codex', repositoryCheckoutId: 'checkout-1' }),
+      );
+
+      expect(runner.run).not.toHaveBeenCalled();
+      expect(directoryLock.acquire).not.toHaveBeenCalled();
+      const finish = vi.mocked(runsRepository.markRunFinished).mock
+        .calls[0]?.[1];
+      expect(finish?.status).toBe('failed');
+      expect(finish?.errorMessage).toMatch(
+        /^Run refused: codex cannot run an untrusted checkout/u,
+      );
+      expect(failureNotifier.notify).toHaveBeenCalledWith(
+        expect.objectContaining({ runId: 'run-1' }),
+      );
+    });
+
+    it('runs a trusted checkout on a driver that cannot isolate', async () => {
+      checkouts.findByIdForUser.mockResolvedValue(checkoutRow(true));
+
+      await processor.process(
+        makeJob({ driverId: 'codex', repositoryCheckoutId: 'checkout-1' }),
+      );
+
+      expect(vi.mocked(runner.run).mock.calls[0]?.[0]?.repoAgentConfig).toEqual(
+        { kind: 'trusted' },
+      );
+    });
+  });
+
   it('records no_op when a clean exit carries an agent no_op verdict', async () => {
     runner = createMock<ScheduledAgentRunnerService>({
       run: vi.fn().mockResolvedValue(
@@ -336,6 +458,7 @@ describe('ScheduledAgentJobsProcessor', () => {
       retention,
       scheduler,
       failureNotifier,
+      agentConfigTrust,
       writer,
     );
 
@@ -365,6 +488,7 @@ describe('ScheduledAgentJobsProcessor', () => {
       retention,
       scheduler,
       failureNotifier,
+      agentConfigTrust,
       writer,
     );
 
@@ -398,6 +522,7 @@ describe('ScheduledAgentJobsProcessor', () => {
       retention,
       scheduler,
       failureNotifier,
+      agentConfigTrust,
       writer,
     );
 

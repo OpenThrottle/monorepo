@@ -11,7 +11,7 @@
 
 import { getDriver } from '../drivers/index.ts';
 import type { RunDriverOptions } from '../engine/index.ts';
-import { runDriverAsync } from '../engine/index.ts';
+import { checkRepoAgentConfig, runDriverAsync } from '../engine/index.ts';
 import { DriverCapabilityError } from '../errors/index.ts';
 import type { DriverId } from '../registry/index.ts';
 import { parseDriverId } from '../registry/index.ts';
@@ -19,6 +19,7 @@ import type {
   DriverChunk,
   DriverEndpointConfig,
   DriverInvocationConfig,
+  DriverRepoAgentConfig,
   DriverWorktreeOptions,
 } from '../types/index.ts';
 import type { AgentAccountError } from '../utils/account-error.ts';
@@ -54,6 +55,12 @@ export interface RunAgentPromptConfig {
   readonly onChunk?: (chunk: DriverChunk) => void;
   /** Full prompt passed to the CLI's print/headless mode. */
   readonly prompt: string;
+  /**
+   * Whether the CLI may load the cwd's own agent config (hooks, MCP servers). Omitted means
+   * trusted, as before the trust gate; an isolated posture on a driver without
+   * `isolatesRepoAgentConfig` throws {@link DriverCapabilityError} before anything spawns.
+   */
+  readonly repoAgentConfig?: DriverRepoAgentConfig;
   /** Typed tuning-knob subset (endpoint/worktree). */
   readonly settings?: AgentPromptSettings;
   /** AbortSignal to cancel the invocation. */
@@ -149,6 +156,15 @@ export const runAgentPrompt = async (
     );
   }
 
+  const trustCheck = checkRepoAgentConfig(driver, config);
+  if (!trustCheck.ok) {
+    throw new DriverCapabilityError(
+      driverId,
+      'repository agent-config isolation',
+      trustCheck.reason,
+    );
+  }
+
   const buffered: string[] = [];
   const invocationConfig: DriverInvocationConfig = {
     cwd: config.cwd,
@@ -160,6 +176,7 @@ export const runAgentPrompt = async (
       config.onChunk?.(chunk);
     },
     prompt: config.prompt,
+    repoAgentConfig: config.repoAgentConfig,
     signal: config.signal,
     timeoutMs: config.timeoutMs,
     worktree,
