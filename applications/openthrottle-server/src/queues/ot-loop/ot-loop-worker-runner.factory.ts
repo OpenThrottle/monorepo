@@ -33,7 +33,8 @@ const ERROR_SENTINEL = '<promise>ERROR</promise>';
 export const createOtLoopWorkerRunner = (
   options: OtLoopWorkerRunnerOptions,
 ): WorkerRunner => {
-  const { cwd, driver, effort, env, output, planId, planRunId } = options;
+  const { containment, cwd, driver, effort, env, output } = options;
+  const { planId, planRunId } = options;
   const { pluginDirs, repoAgentConfig, runDriver, timeoutMs } = options;
   let attempts = 0;
 
@@ -75,6 +76,7 @@ export const createOtLoopWorkerRunner = (
         text = await runDriver(
           driver,
           {
+            containment,
             cwd,
             effort,
             env: {

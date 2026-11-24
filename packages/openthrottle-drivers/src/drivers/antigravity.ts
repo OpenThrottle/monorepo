@@ -30,6 +30,7 @@
 
 import { defineDriver } from '../registry/index.ts';
 import type { DriverCapabilities, DriverModelListing } from '../types/index.ts';
+import { NO_CONTAINMENT_SUPPORT } from '../utils/containment.ts';
 import { structuredOutputShellFlag } from '../utils/output-format.ts';
 import {
   escapeForShellDoubleQuoted,
@@ -57,6 +58,8 @@ const capabilities: DriverCapabilities = {
    * `CONVERSATION_CLI_BACKENDS`.
    */
   chatStreaming: true,
+  /** No sandbox OT can drive yet: its `--sandbox` semantics are unverified (2026-11-22 research). */
+  containment: NO_CONTAINMENT_SUPPORT,
   /**
    * `false`, unverified: the CLI was not installed when the trust gate landed (2026-11-22), so its
    * repo-config surface has not been checked. Fails closed until someone verifies one.

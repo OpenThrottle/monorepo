@@ -4,6 +4,7 @@ import type { LoopOutputKind } from '@openthrottle/openthrottle-agentic-loop';
 import type { PlanRunCommandRunner } from '@openthrottle/openthrottle-agentic-utils';
 import type {
   AgentDriver,
+  DriverContainment,
   DriverInvocationConfig,
   DriverReasoningEffort,
   DriverRepoAgentConfig,
@@ -79,6 +80,8 @@ export type OtLoopRunDriver = (
 
 /** @description What the OT Loop `WorkerRunner` needs. */
 export interface OtLoopWorkerRunnerOptions {
+  /** OS-level containment for every attempt, mapped by the driver to its CLI's native sandbox. */
+  readonly containment: DriverContainment;
   readonly cwd: string;
   readonly driver: AgentDriver;
   readonly effort: DriverReasoningEffort | undefined;

@@ -89,6 +89,47 @@ export type DriverRepoAgentConfig =
   DriverRepoAgentConfigIsolated | DriverRepoAgentConfigTrusted;
 
 /**
+ * @description Network boundary for one invocation; `hosts` exists only on an allowlist. Hosts are
+ * bare names, optionally `*.`-prefixed.
+ * @public
+ */
+export type DriverContainmentNetwork =
+  | { readonly hosts: readonly string[]; readonly mode: 'allowlist' }
+  | { readonly mode: 'deny' }
+  | { readonly mode: 'unrestricted' };
+
+/**
+ * @description OS-level containment for one invocation, mapped by each driver to its CLI's native
+ * sandbox. Structurally identical to `PlanRunContainmentProfile` in
+ * `@openthrottle/openthrottle-plan-config` (which this leaf package cannot import) plus
+ * `extraWritableRoots`.
+ * @public
+ */
+export interface DriverContainment {
+  /**
+   * Absolute paths the agent may also write under `worktree-write` (a package-manager store, say).
+   * Resolved by the caller, because this package never touches the filesystem.
+   */
+  readonly extraWritableRoots: readonly string[];
+  readonly filesystem: 'unrestricted' | 'worktree-write';
+  readonly network: DriverContainmentNetwork;
+}
+
+/**
+ * @description Which containment axes a driver's CLI can enforce natively. An axis a driver cannot
+ * enforce is reported by `describeContainmentGaps`, never faked.
+ * @public
+ */
+export interface DriverContainmentSupport {
+  /** Can limit writes to the working directory (plus extra roots). */
+  readonly filesystem: boolean;
+  /** Can limit egress to a list of hosts. */
+  readonly networkAllowlist: boolean;
+  /** Can block all egress. */
+  readonly networkDeny: boolean;
+}
+
+/**
  * @description Per-invocation inputs shared by every driver. Carries no plan-run-specific coupling.
  * @public
  */
@@ -99,6 +140,11 @@ export interface DriverInvocationConfig {
    * command, so callers never set it themselves; builders shell-escape it.
    */
   readonly bin?: string;
+  /**
+   * OS-level containment for the run; honored per {@link DriverCapabilities.containment}. Omitted ⇒
+   * no containment flags at all, so the command is byte-identical to a pre-containment build.
+   */
+  readonly containment?: DriverContainment;
   /** Process cwd for the subprocess; inherits `process.cwd()` when omitted. */
   readonly cwd?: string;
   /**
@@ -187,6 +233,8 @@ export interface DriverCapabilities {
    * asserts the two agree.
    */
   readonly chatStreaming: boolean;
+  /** Which containment axes the CLI enforces natively; see {@link DriverContainmentSupport}. */
+  readonly containment: DriverContainmentSupport;
   /**
    * Can honour {@link DriverRepoAgentConfigIsolated}: spawn the CLI so the checkout's own agent
    * config (repo hooks, repo MCP servers, repo settings) does not load, while OT-supplied MCP

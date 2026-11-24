@@ -121,6 +121,11 @@ describe('claude driver parity', () => {
     expect(claudeDriver.capabilities).toEqual({
       attachesWorkspaceMcp: true,
       chatStreaming: true,
+      containment: {
+        filesystem: true,
+        networkAllowlist: true,
+        networkDeny: true,
+      },
       isolatesRepoAgentConfig: true,
       mcpAutoApprove: false,
       permissionMode: true,
@@ -211,6 +216,11 @@ describe('cursor driver parity', () => {
     expect(cursorDriver.capabilities).toEqual({
       attachesWorkspaceMcp: true,
       chatStreaming: true,
+      containment: {
+        filesystem: false,
+        networkAllowlist: false,
+        networkDeny: false,
+      },
       isolatesRepoAgentConfig: false,
       mcpAutoApprove: true,
       permissionMode: false,

@@ -15,6 +15,7 @@ import {
   ScheduledAgentJobsRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import type {
+  DriverContainment,
   RunAgentStatus,
   UsageLimit,
 } from '@openthrottle/openthrottle-drivers';
@@ -25,6 +26,10 @@ import {
 import { SCHEDULED_RUN_FAILURE_REASONS } from '@openthrottle/openthrottle-notifications';
 
 import { CheckoutPathService } from '../../services/checkout-path/checkout-path.service.ts';
+import {
+  buildRunContainment,
+  describeRunContainmentWarning,
+} from '../../services/run-containment/run-containment.utils.ts';
 import { closeRunOutputForJob } from '../bullmq-keyed-run-logging/bullmq-keyed-run-logging.utils.ts';
 import { BULLMQ_RUN_OUTPUT_WRITER } from '../bullmq-run-output/bullmq-run-output-writer.token.ts';
 import { BullMqRunOutputRetentionService } from '../bullmq-run-output/retention/retention.service.ts';
@@ -324,7 +329,20 @@ export class ScheduledAgentJobsProcessor
       }
 
       try {
+        // Scheduled and webhook-triggered jobs carry no run config, so they get the default profile.
+        const containment = await buildRunContainment({
+          cwd: target.cwd,
+          profile: undefined,
+        });
+        this.warnOnContainmentGaps({
+          bullmqJobId,
+          containment,
+          driverId,
+          queueName,
+          scheduleId,
+        });
         const result = await this.runner.run({
+          containment,
           cwd: target.cwd,
           driverId,
           model: model ?? undefined,
@@ -677,6 +695,39 @@ export class ScheduledAgentJobsProcessor
     );
 
     return true;
+  }
+
+  /**
+   * @description Says once, at run start, which containment axes the driver cannot enforce: in the
+   * server log and in the run's own output, where the person reading the run will see it. The run
+   * still goes ahead (warn, don't fail closed).
+   */
+  private warnOnContainmentGaps(input: {
+    readonly bullmqJobId: string;
+    readonly containment: DriverContainment;
+    readonly driverId: ScheduledAgentJobBullJob['data']['driverId'];
+    readonly queueName: string;
+    readonly scheduleId: string;
+  }): void {
+    const driver = DRIVER_REGISTRY[input.driverId];
+    if (driver === undefined) {
+      return;
+    }
+
+    const warning = describeRunContainmentWarning(driver, input.containment);
+    if (warning === undefined) {
+      return;
+    }
+
+    this.logger.warn(
+      `Scheduled agent job ${input.scheduleId}: ${warning}`,
+      ScheduledAgentJobsProcessor.name,
+    );
+    this.writer?.appendRunChunk(input.queueName, input.bullmqJobId, {
+      data: `${warning}\n`,
+      source: SCHEDULED_AGENT_JOB_OUTPUT_SOURCE,
+      type: 'stderr',
+    });
   }
 
   /**

@@ -15,6 +15,7 @@ import {
   parseClaudeStreamJsonOutput,
   renderClaudeStreamJsonLine,
 } from '../utils/claude-output.ts';
+import { claudeContainmentShellFlags } from '../utils/containment.ts';
 import { claudeEffortFlag } from '../utils/reasoning-effort.ts';
 import {
   escapeForShellDoubleQuoted,
@@ -31,6 +32,13 @@ const capabilities: DriverCapabilities = {
   /** Reads the workspace's `.mcp.json` automatically in headless `-p` mode (verified 2.1.232). */
   attachesWorkspaceMcp: true,
   chatStreaming: true,
+  /**
+   * Verified against Claude Code 2.1.325: `--settings '<json>'` enables the OS sandbox (Seatbelt on
+   * macOS, bubblewrap on Linux) with write roots and an `allowedDomains` egress list, merged
+   * additively — see `utils/containment.ts`. `--settings` still applies under the isolation
+   * posture's `--setting-sources user`.
+   */
+  containment: { filesystem: true, networkAllowlist: true, networkDeny: true },
   /**
    * Verified live against Claude Code 2.1.325 (2026-11-22) in a fixture repo: `--setting-sources
    * user` stops the repo's `.claude/settings.json` (and `settings.local.json`) hooks, permissions and
@@ -131,7 +139,11 @@ export const claudeDriver = defineDriver({
     // The isolation flags follow `--plugin-dir` and precede the worktree flags.
     const isolated = `${withPlugins}${buildClaudeIsolationFlags(config.repoAgentConfig)}`;
 
-    return appendWorktreeShellFlags(isolated, capabilities, config.worktree);
+    // Containment follows the isolation flags and precedes the worktree flags; absent, it adds
+    // nothing, so the command stays byte-identical to the parity fixtures.
+    const contained = `${isolated}${claudeContainmentShellFlags(config.containment)}`;
+
+    return appendWorktreeShellFlags(contained, capabilities, config.worktree);
   },
   capabilities,
   discoverModels,

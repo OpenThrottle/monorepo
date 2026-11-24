@@ -381,6 +381,76 @@ describe('OtLoopOrchestratorService', () => {
       });
       expect(JSON.stringify(config.env)).not.toContain('ot_sa_secret');
     });
+
+    const runOneAttempt = (): void => {
+      mocks.runDriver.mockResolvedValue('no result file written');
+      mocks.runOtLoop.mockImplementation(
+        async ({ deps }: { deps: LoopDeps }) => {
+          await deps.worker.run({
+            attempt: 1,
+            guidance: [],
+            model: 'sonnet',
+            previousFailure: undefined,
+            signal: new AbortController().signal,
+            task: task({ status: 'IN_PROGRESS' }),
+          });
+
+          return { completedTaskIds: [], kind: 'complete' };
+        },
+      );
+    };
+    const containmentWarnings = (): readonly string[] => {
+      return callsTo(AppendPlanOutputDocument)
+        .map((call) => {
+          return JSON.stringify(call.variables);
+        })
+        .filter((text) => {
+          return text.includes('containment warning');
+        });
+    };
+
+    it('hands the job containment profile to the agent CLI', async () => {
+      runOneAttempt();
+
+      await runJob({
+        jobData: {
+          containment: {
+            filesystem: 'worktree-write',
+            network: { mode: 'deny' },
+          },
+        },
+      });
+
+      expect(mocks.runDriver.mock.calls[0]?.[1].containment).toEqual({
+        extraWritableRoots: [],
+        filesystem: 'worktree-write',
+        network: { mode: 'deny' },
+      });
+    });
+
+    it('runs a job queued before containment under the default profile, with no warning on claude', async () => {
+      runOneAttempt();
+
+      await runJob();
+
+      expect(mocks.runDriver.mock.calls[0]?.[1].containment).toMatchObject({
+        filesystem: 'worktree-write',
+        network: { mode: 'allowlist' },
+      });
+      expect(containmentWarnings()).toHaveLength(0);
+    });
+
+    it('warns once at run start when the driver cannot enforce the profile, and still runs', async () => {
+      mocks.merge.mockReturnValue({ driver: 'opencode', model: 'sonnet-run' });
+
+      await runJob({ jobData: { driver: 'opencode' } });
+
+      expect(containmentWarnings()).toHaveLength(1);
+      expect(containmentWarnings()[0]).toContain(
+        'opencode cannot limit writes to the worktree',
+      );
+      expect(mocks.runOtLoop).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('model routing', () => {

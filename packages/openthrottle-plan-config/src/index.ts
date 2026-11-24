@@ -1,4 +1,9 @@
 export { buildPlanRunWorktreeName } from './buildPlanRunWorktreeName.ts';
+export {
+  DEFAULT_PLAN_RUN_CONTAINMENT_HOSTS,
+  PLAN_RUN_CONTAINMENT_FILESYSTEM_MODES,
+  PLAN_RUN_CONTAINMENT_NETWORK_MODES,
+} from './plan-run-config-containment.constants.ts';
 export { buildPlanRunConfigSnapshot } from './plan-run-config-snapshot.build.ts';
 export { PLAN_RUN_CONFIG_SNAPSHOT_VERSION } from './plan-run-config-snapshot.constants.ts';
 export type {
@@ -46,6 +51,9 @@ export type {
   PlanRunConfigStorageV1,
   PlanRunConfigTargetMode,
   PlanRunConfigWorktreeCleanup,
+  PlanRunContainmentFilesystem,
+  PlanRunContainmentNetwork,
+  PlanRunContainmentProfile,
   PlanWorkflowRunOptions,
   PlanWorkflowUiState,
 } from './plan-run-config-storage.types.ts';
@@ -55,3 +63,7 @@ export {
   planRunConfigFromPlanStorage,
   serializePlanRunConfigForGraphql,
 } from './plan-run-config-storage.validation.ts';
+export {
+  getDefaultPlanRunContainmentProfile,
+  resolvePlanRunContainmentProfile,
+} from './resolvePlanRunContainmentProfile.ts';

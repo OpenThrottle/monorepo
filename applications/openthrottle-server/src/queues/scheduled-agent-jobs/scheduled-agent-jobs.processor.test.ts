@@ -728,6 +728,36 @@ describe('ScheduledAgentJobsProcessor', () => {
     );
   });
 
+  it('runs under the default containment profile and warns nothing for a driver that enforces it', async () => {
+    await processor.process(makeJob());
+
+    expect(vi.mocked(runner.run).mock.calls[0]?.[0]?.containment).toMatchObject(
+      {
+        filesystem: 'worktree-write',
+        network: { mode: 'allowlist' },
+      },
+    );
+    expect(writer.appendRunChunk).not.toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      expect.objectContaining({
+        data: expect.stringContaining('containment warning'),
+      }),
+    );
+  });
+
+  it('writes one containment warning to the run output for a driver that cannot enforce it', async () => {
+    await processor.process(makeJob({ driverId: 'opencode' }));
+
+    const warnings = vi
+      .mocked(writer.appendRunChunk)
+      .mock.calls.filter((call) => {
+        return JSON.stringify(call[2]).includes('containment warning');
+      });
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]?.[2]).toMatchObject({ source: 'agent', type: 'stderr' });
+  });
+
   it('records a failure without rethrowing when the runner throws', async () => {
     vi.mocked(runner.run).mockRejectedValue(new Error('unknown driver'));
 

@@ -10,6 +10,7 @@ import type {
   PlanJobRunHooksStorage,
   PlanRunConfigOtLoop,
   PlanRunConfigTargetMode,
+  PlanRunContainmentProfile,
 } from './plan-run-config-storage.types.ts';
 
 export type PlanRunConfigSnapshotDebugCli = 'debug' | 'omit' | 'verbose';
@@ -30,6 +31,8 @@ export interface PlanRunConfigSnapshotRunV1 extends PlanRunConfigOtLoop {
 }
 
 export interface PlanRunConfigSnapshotV1 {
+  /** @description Containment profile the run was enqueued with. */
+  readonly containment?: PlanRunContainmentProfile;
   readonly jobRunHooks?: PlanJobRunHooksStorage;
   readonly run: PlanRunConfigSnapshotRunV1;
   readonly target: {
@@ -54,6 +57,7 @@ export type PlanRunConfigSnapshot = PlanRunConfigSnapshotV1;
  */
 export interface BuildPlanRunConfigSnapshotInput {
   readonly checkoutId?: string | null;
+  readonly containment?: PlanRunContainmentProfile | null;
   readonly driver: DriverId;
   readonly jobRunHooks?: PlanJobRunHooksStorage | null;
   readonly mode?: PlanRunConfigTargetMode | null;

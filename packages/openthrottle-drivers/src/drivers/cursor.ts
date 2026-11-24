@@ -7,6 +7,7 @@
 
 import { defineDriver } from '../registry/index.ts';
 import type { DriverCapabilities, DriverModelListing } from '../types/index.ts';
+import { NO_CONTAINMENT_SUPPORT } from '../utils/containment.ts';
 import { cursorAttributionOffEnv } from '../utils/cursor-config.ts';
 import { structuredOutputShellFlag } from '../utils/output-format.ts';
 import { escapeForShellDoubleQuoted, escapeShellArg } from '../utils/shell.ts';
@@ -43,6 +44,8 @@ const capabilities: DriverCapabilities = {
    */
   attachesWorkspaceMcp: true,
   chatStreaming: true,
+  /** No sandbox OT can drive yet: its `--sandbox` semantics are unverified (2026-11-22 research). */
+  containment: NO_CONTAINMENT_SUPPORT,
   /**
    * `false`: no flag suppresses the workspace layer. Checked against cursor-agent
    * 2026.11.13-eacade1 `--help` (2026-11-22): there is no settings-source or strict-MCP option, and

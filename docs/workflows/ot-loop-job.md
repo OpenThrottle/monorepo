@@ -80,12 +80,17 @@ model routing.
 **Guards against a worker that ignores its prompt.** The prompt says "do not change OT status, do
 not commit", but a CLI that loads the repo's MCP config could still reach OT — and a worker that
 completes the last open task auto-closes the plan `COMPLETED`, which the server never reconciles
-downward. So the guard is two layers:
+downward. So the guard is three layers:
 
 1. **Prevention.** The worker's env drops the OT credentials the MCP authenticates with (the
    `OPENTHROTTLE_*` token variables), so an OT MCP call from the worker fails auth instead of
    writing.
-2. **Detection**, after every attempt, deterministically:
+2. **Containment.** The worker runs inside the CLI's own sandbox, set from the plan's profile:
+   writes limited to the worktree and egress to an allowlist by default. The worktree's shared
+   object store is not writable, so a contained worker cannot commit at all. A driver that cannot
+   enforce part of the profile says so once at run start and runs anyway. See
+   [run-containment.md](./run-containment.md).
+3. **Detection**, after every attempt, deterministically:
    - **Branch changed, or HEAD moved** → the worker switched branches or committed. The job checks
      out the run's branch and `git reset --soft <taskStartSha>` (keeps the changes, drops the
      commits), and logs a warning.

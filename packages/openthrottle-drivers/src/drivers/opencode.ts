@@ -7,6 +7,7 @@
 
 import { defineDriver } from '../registry/index.ts';
 import type { DriverCapabilities, DriverModelListing } from '../types/index.ts';
+import { NO_CONTAINMENT_SUPPORT } from '../utils/containment.ts';
 import { structuredOutputShellFlag } from '../utils/output-format.ts';
 import { opencodeVariant } from '../utils/reasoning-effort.ts';
 import {
@@ -20,6 +21,8 @@ const capabilities: DriverCapabilities = {
   /** Reads the repo's committed `opencode.json` `mcp` block automatically in `run` mode (1.18.16). */
   attachesWorkspaceMcp: true,
   chatStreaming: true,
+  /** opencode 1.19.5 has no sandbox flag. */
+  containment: NO_CONTAINMENT_SUPPORT,
   /**
    * `false`: opencode 1.19.5 reads the repo's `opencode.json` `mcp` block, and `run --pure` only
    * skips external plugins, not the project config (`run --help` checked 2026-11-22). An untrusted

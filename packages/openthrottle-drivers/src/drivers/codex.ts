@@ -11,6 +11,7 @@
 
 import { defineDriver } from '../registry/index.ts';
 import type { DriverCapabilities } from '../types/index.ts';
+import { codexContainmentShellFlags } from '../utils/containment.ts';
 import { structuredOutputShellFlag } from '../utils/output-format.ts';
 import { codexReasoningEffort } from '../utils/reasoning-effort.ts';
 import {
@@ -32,6 +33,12 @@ const capabilities: DriverCapabilities = {
    */
   attachesWorkspaceMcp: false,
   chatStreaming: true,
+  /**
+   * Verified against codex-cli 0.167.0: `workspace-write` confines writes to the cwd (plus `/tmp`,
+   * `$TMPDIR` and `writable_roots`) and blocks egress unless `network_access` is set. Its domain proxy
+   * is experimental, so there is no host allowlist — see `utils/containment.ts`.
+   */
+  containment: { filesystem: true, networkAllowlist: false, networkDeny: true },
   /**
    * `false`: codex-cli 0.167.0 loads a project `.codex/config.toml` (MCP servers, approval and
    * sandbox policy) and `.codex/rules/` only for a project the HOST trusts in `~/.codex/config.toml`,
@@ -109,7 +116,7 @@ export const codexDriver = defineDriver({
 
     const outputFlag = structuredOutputShellFlag(config, '--json');
 
-    return `${escapeShellArg(config.bin ?? 'codex')} exec${outputFlag} --sandbox workspace-write --skip-git-repo-check${endpointFlags}${effortFlag}${modelFlag} "${safePrompt}"`;
+    return `${escapeShellArg(config.bin ?? 'codex')} exec${outputFlag}${codexContainmentShellFlags(config.containment)} --skip-git-repo-check${endpointFlags}${effortFlag}${modelFlag} "${safePrompt}"`;
   },
   capabilities,
   // Codex keeps its login under `CODEX_HOME` (default `~/.codex`).

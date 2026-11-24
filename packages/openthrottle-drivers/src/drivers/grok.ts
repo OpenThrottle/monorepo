@@ -10,6 +10,7 @@
 
 import { defineDriver } from '../registry/index.ts';
 import type { DriverCapabilities, DriverModelListing } from '../types/index.ts';
+import { NO_CONTAINMENT_SUPPORT } from '../utils/containment.ts';
 import { structuredOutputShellFlag } from '../utils/output-format.ts';
 import { grokReasoningEffort } from '../utils/reasoning-effort.ts';
 import {
@@ -39,6 +40,8 @@ const capabilities: DriverCapabilities = {
    */
   attachesWorkspaceMcp: true,
   chatStreaming: true,
+  /** No sandbox OT can drive yet: its `--sandbox` semantics are unverified (2026-11-22 research). */
+  containment: NO_CONTAINMENT_SUPPORT,
   /**
    * `false`: grok 1.0.77 reads the workspace `.mcp.json` and has no flag to skip it or the other
    * per-directory config `grok inspect` reports (`--help` checked 2026-11-22). An untrusted

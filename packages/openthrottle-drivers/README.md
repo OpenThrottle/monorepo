@@ -71,6 +71,25 @@ Command shapes (legacy-identical for cursor; claude adds stream-json output flag
 - `grok -p "<prompt>" --permission-mode acceptEdits [--model M] [-w [name]]`
 - `opencode run --auto "<prompt>" [--model M]`
 
+### Containment
+
+`DriverInvocationConfig.containment` maps OT's per-run filesystem and network profile onto each
+CLI's native sandbox (`utils/containment.ts`); `capabilities.containment` says which axes a driver
+enforces, and `describeContainmentGaps` lists the rest for a run-start warning. With no profile the
+command is unchanged.
+
+| Driver      | filesystem | network deny | network allowlist | how                                                          |
+| ----------- | ---------- | ------------ | ----------------- | ------------------------------------------------------------ |
+| claude      | yes        | yes          | yes               | `--settings '<sandbox json>'`                                |
+| codex       | yes        | yes          | no                | `--sandbox workspace-write` + `-c sandbox_workspace_write.*` |
+| cursor      | no         | no           | no                | —                                                            |
+| grok        | no         | no           | no                | —                                                            |
+| antigravity | no         | no           | no                | —                                                            |
+| opencode    | no         | no           | no                | —                                                            |
+
+What the sandboxes cover, the default hosts and what each grants:
+[docs/workflows/run-containment.md](../../docs/workflows/run-containment.md).
+
 ## Adding a new agent CLI
 
 1. Verify the CLI's headless flags against its own `--help` (never from memory).
