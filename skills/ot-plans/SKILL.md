@@ -2,15 +2,14 @@
 name: ot-plans
 description: >-
   OpenThrottle plans and tasks via the openthrottle-mcp server. USE WHEN
-  creating, reading or updating plans/tasks, searching the plans knowledge base,
-  putting Plan-Id/Task-Id in a commit, recording a merged squash on the work
-  ledger, or the user mentions OT, a plan or task UUID, or git–OT traceability.
-  Plans live in OT only — never fall back to Markdown. To execute a plan see
-  ot-loop.
+  creating, reading or updating plans/tasks, asking what was worked on or what
+  is pending, putting Plan-Id/Task-Id in a commit, recording a merged squash on
+  the work ledger, or the user mentions OT, a plan or task UUID, or git–OT
+  traceability. Not for executing a plan (ot-loop).
 metadata:
   author: openthrottle
-  last-reviewed: '2026-11-14'
-  version: '1.1.0'
+  last-reviewed: '2026-11-22'
+  version: '1.2.0'
 ---
 
 # OpenThrottle plans and MCP traceability
@@ -68,12 +67,14 @@ anything, and nothing executes tasks in parallel from it today — see
   always safe: it means "runs alone, in `sortOrder` position" — the same behavior every plan had
   before this field existed.
 - **Never `0`.** Waves number densely from `1`.
-- **Hook tasks are never waved.** Leave `wave` unset on any task you attach via `addHook` / `add_hook`.
+- **Hook tasks are never waved.** Leave `wave` unset on a lifecycle hook task (created from the UI or the `addHook` GraphQL mutation; there is no MCP tool for it).
 - **Update later with `update_task`** if you didn't decide at creation time — passing `null` clears it
   back to unassigned.
 
-## Retrieval gotchas
+## Gotchas
 
+- **Only known tags attach.** `create_plan` / `create_plans` `tags` accept system tags (`follow-up`) and tags already in the caller's skill-tag vocabulary. Anything else is dropped and reported in `tagFailures` (`Unknown tag "skills": not in the caller's skill-tag vocabulary`) while the plan is still created. Adding a vocabulary tag needs the MCP `admin` toolset. Read `tagFailures` after every create.
+- **Give `semantic_search` a small `limit` (3-5).** Each chunk carries its full content: `limit: 12` has returned about 80,000 characters and overflowed the tool result.
 - **"What did I work on yesterday / last 7 days"** → `get_activity_by_date`, taking either `date`
   (`YYYY-MM-DD`) for one day or `daysBack` (1–365) for a window.
 - **"The backlog" means `PENDING`** — default `list_plans_by_status` to it when no status is named.
@@ -115,5 +116,3 @@ This section owns the work-ledger text; `ot-loop` points here.
 ## Cross-links
 
 - **Commits:** `github-commit` · **Execution:** `ot-loop`
-- **Skill-usage telemetry:** [`docs/monorepo/skill-usage-telemetry-scope.md`](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/skill-usage-telemetry-scope.md)
-- **Code style:** [`docs/monorepo/code-style.md`](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/code-style.md) · **DB / ingest:** [`databases/openthrottle/README.md`](https://github.com/openthrottle/monorepo/blob/main/databases/openthrottle/README.md)

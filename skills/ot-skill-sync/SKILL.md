@@ -1,11 +1,11 @@
 ---
+name: ot-skill-sync
+description: Manage the agent-skills layout in a repo — install skills, fan them out to every AI tool, and validate the layout. USE WHEN installing or adding agent skills, syncing skills into agent folders, setting up skills in a new repo, checking skill layout drift, or when .agents/skills, .claude/skills or skills-lock.json are involved. Not for authoring or reviewing a skill (ot-skill-guide).
 compatibility: Requires bash, git, a symlink-capable filesystem, and npx (the skills CLI) for installing external skills.
-description: Manage the OpenThrottle agent-skills architecture in any repo — install skills consistently, fan them out to every AI tool, and validate the layout. Use when installing or adding agent skills, syncing skills into agent folders, setting up skills in a new repo, checking skill layout drift, or when .agents/skills, .claude/skills, or skills-lock.json are involved. Not for authoring or reviewing a skill (ot-skill-guide).
 metadata:
   author: openthrottle
-  last-reviewed: '2026-11-14'
-  version: '1.1.0'
-name: ot-skill-sync
+  last-reviewed: '2026-11-22'
+  version: '1.2.0'
 ---
 
 # ot-skill-sync
@@ -46,7 +46,7 @@ Opt-in is **presence**: create `~/.openthrottle/skills/<name>/SKILL.md` and the 
 
 ## Commands
 
-All scripts live in this skill's `scripts/` directory and operate on the **current repo** (found via `git rev-parse --show-toplevel`). Every script takes `-h`/`--help`.
+All scripts live in this skill's `scripts/` directory and operate on the **current repo** (found via `git rev-parse --show-toplevel`). Every entry script takes `-h`/`--help`; `scripts/common.sh` holds their shared helpers.
 
 ```bash
 bash <path-to-this-skill>/scripts/sync.sh                  # build/refresh the layout (idempotent)
@@ -110,6 +110,11 @@ OPENTHROTTLE_PERSONAL_SKILLS_DIR=/path/to/my/skills bash <path>/scripts/sync.sh
 
 ## Gotchas
 
-- Run a sync after every install, rename or removal; `--check` fails until you do.
-- A name collision between `skills/`, the lockfile and the personal root is an error, not a precedence rule.
-- Never edit `.agents/skills/` or `.claude/skills/` by hand; the next sync overwrites it.
+- **A sync under a temporary `OPENTHROTTLE_PERSONAL_SKILLS_DIR` deletes the links to your real
+  personal skills.** Stage 1 prunes every personal link that does not point into the currently
+  resolved root, so a test or script that points the variable at a fixture unlinks the real ones,
+  and the next `--check` reports them as drift. Restore the variable before the final re-sync;
+  repair with `env -u OPENTHROTTLE_PERSONAL_SKILLS_DIR bash <path>/scripts/sync.sh`.
+- **A `--check` run under a fixture root is meaningless as a pre-flight** for the same reason: it
+  reports your real personal skills as missing. Assert `--check` only after the operation under
+  test, under the same root.

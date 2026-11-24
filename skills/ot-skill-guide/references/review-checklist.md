@@ -27,7 +27,8 @@ them by eye.
 
 - [ ] ⚙ Top-level keys outside the spec's six (`name`, `description`, `license`, `compatibility`,
       `metadata`, `allowed-tools`) are reported. A key one client reads (for example a Claude Code
-      invocation flag) may stay, but only with a reason. Anything else goes in `metadata`. [S]
+      invocation flag) may stay when the line above it is a `#` comment giving the reason; `check.sh`
+      then reports it as info. Anything else goes in `metadata`. [S]
 - [ ] ⚙ `allowed-tools`, if present, is a space-separated string, not a YAML list. The field is
       experimental, so a list is `quality`, not `spec`. [S]
 
@@ -43,9 +44,16 @@ them by eye.
 - [ ] Specific trigger contexts. Never "Helps with X".
 - [ ] When a neighbouring skill shares keywords, it names what it is **not** for.
 - [ ] Not padded with keywords copied from failed queries (overfitting).
+- [ ] Every clause is a trigger or a disambiguator. Behaviour, rules, inventories (lists of rule or
+      flag names) and synonyms for one trigger belong in the body. Length alone is not a finding;
+      the spec's 1024 is a ceiling, not a target.
 
 **Content** [BP]
 
+- [ ] Everything the skill cites exists and works (`check.sh --resolve-paths` lists repo paths
+      that do not resolve; commands still need running): each command and script runs (`--help` or a dry
+      run), each path, MCP tool, generator, lint rule and build target resolves. A stale citation
+      is `quality` even when the prose around it is fine.
 - [ ] Every line passes _"would the agent get this wrong without it?"_ Nothing restates the spec,
       tool docs, general knowledge, or always-on context (`AGENTS.md`, `CLAUDE.md`) — the delta
       rule.
@@ -53,13 +61,22 @@ them by eye.
       that it triggers imprecisely. No large overlap with another installed skill.
 - [ ] Gives a default and the condition for each alternative, not a menu of equal options.
 - [ ] Steps are actionable. Fragile steps carry exact commands, variable ones carry judgement.
-- [ ] Has a **Gotchas** section, or equivalent, holding the corrections real runs needed.
+- [ ] Has a **Gotchas** section, or equivalent, holding the corrections real runs needed. A Gotchas
+      section that only restates rules from earlier in the skill is a finding; so is a recorded
+      incident (a review comment, a failed run, a session note) in the skill's area that it lacks.
+- [ ] One statement per rule. A rule repeated for emphasis is a finding: keep the best-placed one.
+- [ ] Caps directives and bold mark only guardrails (destructive or irreversible steps). A
+      non-obvious rule carries its reason. Shouting without a reason is a `nit`, or `quality` when a
+      real run shows the rule over-applied.
+- [ ] A line kept for a past failure says what failed. Cut candidates are judged against the
+      weakest model or driver that runs the skill, never the strongest.
+- [ ] The body does not open by restating the description (a "When to use this skill" section).
 - [ ] Multi-step or destructive workflows have a checklist or a validate-then-execute loop.
 - [ ] Examples, or an output template where output is structured.
 
 **Scripts** [SC] (skip when there is no `scripts/`)
 
-- [ ] Every script is listed in `SKILL.md` and called by its relative path.
+- [ ] ⚙ Every script is named in `SKILL.md` (checked) and called by its relative path.
 - [ ] No interactive prompts. Input comes from flags, env vars or stdin.
 - [ ] `--help` works. Errors say what went wrong and what to try. Exit codes are documented.
 - [ ] Data goes to stdout and diagnostics to stderr. Large output is summarized or limited.
@@ -72,6 +89,11 @@ them by eye.
       skill is installed elsewhere.
 - [ ] Repo-specific conventions are fenced under their own heading, skippable when absent.
 - [ ] Hard environment requirements are in `compatibility`.
+
+**Across skills** (run when reviewing more than one)
+
+- [ ] Each pair whose descriptions would match the same request names the other in "Not for".
+- [ ] A fact stated in two skills agrees in both. Disagreement is `quality` on both.
 
 ## `nit` — wording or tidiness
 
@@ -86,9 +108,16 @@ Skip when `skills/` and `.agents/skills/` are absent.
 
 - [ ] `quality` — An owned skill lives in `skills/<name>/`, never hand-written in `.agents/skills/`
       or `.claude/skills/`.
-- [ ] `quality` — The description follows the house shape: capability, `USE WHEN …`, then a
-      "Not for …" line naming the neighbour.
+- [ ] ⚙ `quality` — The description follows the house shape: capability, `USE WHEN …`, then a
+      "Not for …" line naming the neighbour. (`check.sh` checks both phrases are present, not
+      that the neighbour named is the right one.)
 - [ ] `quality` — `bash skills/ot-skill-sync/scripts/sync.sh --check` is clean after the change.
-- [ ] `nit` — Listed in `docs/Skills.md` and the root `AGENTS.md` skill list.
+- [ ] `quality` — `pnpm nx run monorepo:check-model-facing-text` passes; growth was accepted with
+      `-- --write` only on purpose.
+- [ ] `quality` — OpenThrottle-only content (the telemetry outcome line included) sits under an
+      "In OpenThrottle repos" heading in any skill that ships to other repos.
+- [ ] `nit` — Listed in the `docs/Skills.md` catalog.
+- [ ] ⚙ `nit` — Frontmatter in house order (`name`, `description`, `compatibility`, `metadata`),
+      lowercase `author`, semver `version`.
 - [ ] Vendored (a real directory in `.agents/skills/` tracked by `skills-lock.json`): **report
       only**. Never edit it, and never stamp `last-reviewed` on it.

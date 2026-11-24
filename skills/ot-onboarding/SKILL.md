@@ -4,22 +4,19 @@ description: >-
   Guided orientation tour of OpenThrottle for a new person or a fresh session,
   ending in a first real plan. USE WHEN running /ot-onboarding, or the user says
   "onboard me", "I'm new here" or "where do I start", or asks you to remember
-  that plans belong in OT rather than in Markdown. Gates on an openthrottle-mcp
-  health check first. Not for plan CRUD (ot-plans) or a specific subsystem
-  (ot-stack, ot-folders).
+  that plans belong in OT rather than in Markdown. Not for plan CRUD (ot-plans)
+  or a specific subsystem (ot-stack, ot-folders).
 metadata:
   author: openthrottle
-  last-reviewed: '2026-11-14'
-  version: '1.1.0'
+  last-reviewed: '2026-11-22'
+  version: '1.2.0'
 ---
 
 # 🚪 OpenThrottle onboarding — start here
 
-Your job when this skill fires is to **onboard the user onto OpenThrottle**: get their environment verified, then walk them through just enough of the system to be productive, pointing at the deeper skills and docs for detail. Orient and link — do **not** re-document CLAUDE.md, MONOREPO.md, or CONTRIBUTING.md.
+Your job when this skill fires is to **onboard the user onto OpenThrottle**: get their environment verified, then walk them through just enough of the system to be productive, pointing at the deeper skills and docs for detail. Orient and link — do **not** re-document AGENTS.md, MONOREPO.md, or CONTRIBUTING.md.
 
 Work the sections in order. Sections 1 and 2 are **gates**: if the OT MCP isn't healthy, stop and fix that before touring anything else — and once it is, make the OT-only plan rule durable before moving on.
-
----
 
 ## 1. First: verify the OpenThrottle MCP (health gate)
 
@@ -27,22 +24,30 @@ Everything in OpenThrottle flows through the **`openthrottle-mcp`** server — p
 
 **Step 1 — is the server even registered?** Confirm the current agent has an `openthrottle-mcp` entry. In this repo it's the `openthrottle-mcp` key in [`.mcp.json`](https://github.com/openthrottle/monorepo/blob/main/.mcp.json) (launches [`scripts/run-openthrottle-mcp.sh`](https://github.com/openthrottle/monorepo/blob/main/scripts/run-openthrottle-mcp.sh)); Cursor reads `.cursor/mcp.json`. If the agent lists **no** `openthrottle-mcp` tools at all, the launcher is usually missing its config flag or the token env — see the auth runbook below.
 
-**Step 2 — run `health` (and only `health`).** Call the tiny **`health`** tool. It returns `{ api, database, redis, websocket }`; all four should read `ok`:
+**Step 2 — run `health` (and only `health`).** Call the tiny **`health`** tool. `serverHealth` carries `api`, `database`, `redis` and `websocket`, which must all read `ok`, plus `embeddings` with its own `status`; `toolsets` lists which MCP toolsets are loaded:
 
 ```json
 {
   "serverHealth": {
     "api": "ok",
     "database": "ok",
+    "embeddings": {
+      "status": "ok",
+      "model": "nomic-embed-text-v1.5",
+      "...": "..."
+    },
     "redis": "ok",
     "websocket": "ok"
-  }
+  },
+  "toolsets": { "enabled": ["core"], "disabled": ["admin", "..."] }
 }
 ```
 
+`embeddings.status` other than `ok` (usually `unconfigured`, when the model weights are missing offline) is a **warning, not a gate failure**: semantic search falls back to lexical, and everything else works.
+
 > ⚠️ **Use `health`, never `list_sources` as your probe.** `health` is a few bytes; `list_sources` returns ~67k characters and will blow out the context window. Reach for `list_sources` / `semantic_search` only when you actually need knowledge-base content.
 
-**Step 3 — interpret and fail loudly.** If `health` errors or any facet is not `ok`, **report the exact failure and the fix — do not proceed to section 2.** Read [references/health-troubleshooting.md](references/health-troubleshooting.md) when it fails: symptom → cause → remediation table (no tools, 401, database/redis not ok, "fetch failed" in a worktree).
+**Step 3 — interpret and fail loudly.** If `health` errors or any of the four core facets is not `ok`, **report the exact failure and the fix — do not proceed to section 2.** Read [references/health-troubleshooting.md](references/health-troubleshooting.md) when it fails: symptom → cause → remediation table (no tools, 401, database/redis not ok, "fetch failed" in a worktree).
 
 **Setup from zero.** If this is a fresh checkout, `./scripts/setup.sh` provisions the environment and seeds the service accounts; it ends by running `pnpm check:bootstrap-secrets` which fails loudly if any required token is missing.
 
@@ -54,7 +59,7 @@ Everything in OpenThrottle flows through the **`openthrottle-mcp`** server — p
 - **Stdio fallback:** drive [`scripts/run-openthrottle-mcp.sh`](https://github.com/openthrottle/monorepo/blob/main/scripts/run-openthrottle-mcp.sh) directly over stdio (export `API_URL` / `API_URL_INTERNAL` from the server app URL) when the registered server is unreachable.
 - **Curl fallback:** hit the GraphQL endpoint directly with your `Authorization: Bearer <token>` when the pinned MCP port is dead — enough to unblock while you fix the registration.
 
-Only once `health` is green across all four facets do you continue.
+Only once the four core facets are `ok` do you continue.
 
 ### Then: check telemetry coverage (a warning, never a gate)
 
@@ -65,8 +70,6 @@ checkout, `pnpm run telemetry:doctor --json`), give each check one line, and rel
 its `fix` lines verbatim. The plugin install changes the user's global Claude setup: **ask first**, never unasked. Ongoing view: `/usage` → Telemetry coverage
 ([contract §8](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/child-repo-hook-telemetry-contract.md#8-coverage-heartbeat)).
 
----
-
 ## 2. Second: make the OT-only rule durable (agent gate)
 
 This section is **work for you, the agent running this skill** — not reading for the user. The
@@ -76,7 +79,7 @@ past this session.
 **The rule, in the exact form to persist:**
 
 > Plans and tasks are created and updated in OpenThrottle **only**, via the `openthrottle-mcp` tools
-> (`create_plan`, `create_task`, `update_task`, …). Never write a plan, task, spec, PRD or task list
+> (`create_plan`, `create_tasks`, `update_task`, …). Never write a plan, task, spec, PRD or task list
 > to a Markdown file. If the MCP is unavailable, fail loudly and report the error — never fall back
 > to a file.
 
@@ -122,7 +125,7 @@ Persisting the rule is only half the job — the host may already be carrying in
 
 **Edit.** Only on confirmation. Then re-state exactly what changed and where.
 
-**Anything found but declined stays on the record.** Surface it again in the section 7 wrap-up, named
+**Anything found but declined stays on the record.** Surface it again in the section 5 wrap-up, named
 by `file:line` — the user needs to know the rule is still being contradicted somewhere. See also the
 troubleshooting row in
 [`docs/openthrottle/first-time-onboarding.md`](https://github.com/openthrottle/monorepo/blob/main/docs/openthrottle/first-time-onboarding.md)
@@ -130,68 +133,32 @@ for what to do when an agent tries this mid-task.
 
 Deep dive on the lifecycle this rule protects: [`ot-plans`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-plans/SKILL.md).
 
----
+## 3. Where things live
 
-## 3. System basics — the mental model
+**The one rule that shapes everything** is the one section 2 made durable: plans and tasks live in OpenThrottle (OT), never on disk. What that buys is traceability: every row has an id, threaded back to git with `Plan-Id:` / `Task-Id:` commit footers. Everything runs **through Nx, prefixed with pnpm** (`pnpm nx …`).
 
-**The one rule that shapes everything** is the one section 2 just made durable: plans and tasks are the single source of truth and they live in OpenThrottle (OT), never on disk. What that buys you here is traceability — the same MCP tools that create the rows (`create_plan`, `create_task`, `update_task`, …) give every row an id, and you thread it back to git with `Plan-Id:` / `Task-Id:` commit footers. The [`ot-plans`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-plans/SKILL.md) skill is the deep dive here.
+Point at the source rather than restating it:
 
-Everything runs **through Nx, prefixed with pnpm** (`pnpm nx …`). Bring-up commands and the folder layout are in the operating manual below — do not restate them.
+| For…                                                                               | Read                                                                                                                                                                                    |
+| ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Commands, code style, generators-first, git and agent rules (the operating manual) | [`AGENTS.md`](https://github.com/openthrottle/monorepo/blob/main/AGENTS.md) — and per-project `AGENTS.md` files next to the code. `CLAUDE.md` only adds what is specific to Claude Code |
+| How the Nx + pnpm workspace is organized                                           | [`MONOREPO.md`](https://github.com/openthrottle/monorepo/blob/main/MONOREPO.md)                                                                                                         |
+| Contribution conventions                                                           | [`CONTRIBUTING.md`](https://github.com/openthrottle/monorepo/blob/main/CONTRIBUTING.md)                                                                                                 |
+| Schema, migrations, DB setup                                                       | [`databases/openthrottle/README.md`](https://github.com/openthrottle/monorepo/blob/main/databases/openthrottle/README.md)                                                               |
+| Every skill, with a line on each                                                   | [`docs/Skills.md`](https://github.com/openthrottle/monorepo/blob/main/docs/Skills.md). Type `/<skill-name>` to run one, or let the agent pick it from its description                   |
 
-**Don't duplicate — go read the source of truth:**
+**Skills to know first:**
 
-- [`CLAUDE.md`](https://github.com/openthrottle/monorepo/blob/main/CLAUDE.md) — commands, code style, generators-first, git/agent rules (the operating manual)
-- [`MONOREPO.md`](https://github.com/openthrottle/monorepo/blob/main/MONOREPO.md) — how the Nx + pnpm workspace is organized
-- [`AGENTS.md`](https://github.com/openthrottle/monorepo/blob/main/AGENTS.md) — the tiered agent-facing guidance (per-project `AGENTS.md` files sit next to the code they describe)
-- [`CONTRIBUTING.md`](https://github.com/openthrottle/monorepo/blob/main/CONTRIBUTING.md) — contribution conventions, incl. the source-first React Router packages
-- [`databases/openthrottle/README.md`](https://github.com/openthrottle/monorepo/blob/main/databases/openthrottle/README.md) — schema, migrations, DB setup
+| Skill                                                                                               | Reach for it when…                                                                 |
+| --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| [`ot-plans`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-plans/SKILL.md)           | creating or working plans and tasks                                                |
+| [`ot-loop`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-loop/SKILL.md)             | executing a plan, a task at a time (`/ot-loop <planId>`)                           |
+| [`ot-generators`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-generators/SKILL.md) | adding a component, route, service or package — generators before hand-writing     |
+| [`ot-folders`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-folders/SKILL.md)       | deciding where new code goes and what it is named                                  |
+| [`ot-stack`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-stack/SKILL.md)           | working in the NestJS/GraphQL server or the developer app                          |
+| `github-commit`, `github-pull-request`, `github-squash`                                             | shipping it: a branch from `pnpm run worktree:new <name>`, then commit, PR, squash |
 
----
-
-## 4. Everyday workflows
-
-One line each on when you'd reach for it, with the deeper skill to read:
-
-| Lever                               | Reach for it when…                                                                                                   | Deeper skill                                                                            |
-| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| **`/loop`**                         | you want a prompt or slash command to run on a repeating interval (poll a deploy, keep grinding a task list)         | built-in `loop` skill                                                                   |
-| **`ot-loop`** (`/ot-loop <planId>`) | you have an OT plan and want its tasks executed one at a time via `/loop`, with `Plan-Id:` / `Task-Id:` traceability | [`ot-loop`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-loop/SKILL.md) |
-
-**The `github-*` workflow skills** — the portable git/PR toolkit (one job each):
-
-- [`github-commit`](https://github.com/openthrottle/monorepo/blob/main/skills/github-commit/SKILL.md) — write a conventional-commit message from the diff
-- [`github-pull-request`](https://github.com/openthrottle/monorepo/blob/main/skills/github-pull-request/SKILL.md) — create or update a template-compliant PR
-- [`github-squash`](https://github.com/openthrottle/monorepo/blob/main/skills/github-squash/SKILL.md) — squash the branch to a single commit before merge
-
-The git guard rails (no push to `main`, no `--no-verify`, no attribution lines) are in `CLAUDE.md`.
-
----
-
-## 5. How skills work here + the catalog
-
-Skills are packaged, reusable know-how an agent pulls in to do a task "the OpenThrottle way." There are **two homes**, and the distinction matters:
-
-- **`skills/` — authored, repo-specific skills.** Hand-written, committed, PR-reviewed (this skill lives here). Any OpenThrottle repo can have its own `skills/`.
-- **`.agents/skills/` and `.claude/skills/` — generated.** Never hand-edit them; real dirs in `.agents/skills/` are external skills tracked in `skills-lock.json`.
-
-**Fan-out is automated — never hand-edit generated dirs.** Run the [`ot-skill-sync`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-skill-sync/SKILL.md) skill after editing or adding a skill.
-
-**Invoking a skill.** Type `/<skill-name>` (e.g. `/ot-onboarding`), or let the agent trigger it via the Skill tool when your request matches the skill's `USE WHEN` description. That description is what makes a skill discoverable — write it as triggers, not prose.
-
-**Know these first** (a newcomer's core four):
-
-| Skill                                                                                               | One-liner                                                                                 |
-| --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| [`ot-plans`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-plans/SKILL.md)           | Plans/tasks in OT via the MCP — the SSOT rules, lifecycle, and git↔OT traceability        |
-| [`ot-generators`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-generators/SKILL.md) | Scaffold new code with `@tools/generators` (generators-first, `NX_ISOLATE_PLUGINS=false`) |
-| [`ot-folders`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-folders/SKILL.md)       | Where new code goes, how to name it, and how to keep it tidy                              |
-| [`ot-skill-sync`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-skill-sync/SKILL.md) | Install/fan-out/validate the skills layout in any repo                                    |
-
-Full catalog and the install CLI: [`skills/README.md`](https://github.com/openthrottle/monorepo/blob/main/skills/README.md) · [`skills/AGENTS.md`](https://github.com/openthrottle/monorepo/blob/main/skills/AGENTS.md) · [`docs/Skills.md`](https://github.com/openthrottle/monorepo/blob/main/docs/Skills.md).
-
----
-
-## 6. Your first plan — do one lap
+## 4. Your first plan — do one lap
 
 Reading about plans is not the same as watching one appear. Do this once, now.
 
@@ -213,7 +180,7 @@ Reading about plans is not the same as watching one appear. Do this once, now.
    genuinely useful plan. Once you have seen it work, substitute your own real task — the shape of
    the request is what matters, not this particular chore.
 
-4. **What success looks like.** The agent calls `create_plan` and `create_task` — **tool calls, not
+4. **What success looks like.** The agent calls `create_plan` and `create_tasks` — **tool calls, not
    file writes**. A plan appears in OT with tasks under it, and you can open it in the Developer UI
    and see the same rows. Nothing new shows up in `git status`.
 
@@ -222,21 +189,10 @@ Reading about plans is not the same as watching one appear. Do this once, now.
    either the memory write did not land, or the sweep found a conflict that is still winning. Say no,
    and have it create the plan through the MCP.
 
----
+## 5. Next steps
 
-## 7. Next steps
-
-You're oriented, and you've made one plan. What to do from here:
-
-1. **Confirm both gates are green** — `health` returns `ok` for all four facets (section 1), and the OT-only rule is persisted somewhere durable (section 2). If not, fix those first.
+1. **Confirm both gates are green** — `health` returns `ok` for the four core facets (section 1), and the OT-only rule is persisted somewhere durable (section 2). If not, fix those first.
    - **Name any conflict you found and did not fix**, by `file:line`. A declined conflict is not a closed one — the rule is still being contradicted there.
-2. **Bring the system up** — `./scripts/setup.sh` (fresh checkout) → `pnpm run database:start` → `pnpm nx run openthrottle-server:dev` → `pnpm nx run openthrottle-developer:dev` (section 3).
-3. **Skim the operating manual** — [`CLAUDE.md`](https://github.com/openthrottle/monorepo/blob/main/CLAUDE.md) for commands, code style, and the generators-first rule.
-4. **Run the lap in section 6** if you skipped it — one real plan teaches more than the rest of this tour.
-5. **Pick the skill for your first task:**
-   - Creating/working plans & tasks → [`ot-plans`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-plans/SKILL.md), then execute with [`ot-loop`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-loop/SKILL.md).
-   - Adding a component/route/service/package → [`ot-generators`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-generators/SKILL.md) (generators before hand-writing).
-   - Working in the NestJS/GraphQL server or a React Router app → [`ot-stack`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-stack/SKILL.md).
-   - Shipping the change → `pnpm run worktree:new <name>` → [`github-commit`](https://github.com/openthrottle/monorepo/blob/main/skills/github-commit/SKILL.md) → [`github-pull-request`](https://github.com/openthrottle/monorepo/blob/main/skills/github-pull-request/SKILL.md).
-
-When in doubt, ask the agent to pull in the matching skill — that's the OpenThrottle way.
+2. **Bring the system up** — `./scripts/setup.sh` (fresh checkout) → `pnpm run database:start` → `pnpm nx run openthrottle-server:dev` → `pnpm nx run openthrottle-developer:dev`.
+3. **Run the lap in section 4** if you skipped it — one real plan teaches more than the rest of this tour.
+4. **Pick the skill for the first task** from the table in section 3.

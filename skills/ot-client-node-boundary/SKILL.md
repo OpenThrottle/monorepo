@@ -1,27 +1,22 @@
 ---
-name: ot-coding-standards
+name: ot-client-node-boundary
 description: >-
-  OpenThrottle coding standards that lint and typecheck cannot see. USE WHEN
-  importing a node:* builtin (node:os, node:fs, node:path, …) or a Node-only
-  package from code a browser bundle could reach; adding to a package barrel
-  (index.ts) that React Router apps import; an app build fails with "Node
-  builtins reached the client bundle"; or the browser console says a module
-  "has been externalized for browser compatibility". Not for folder placement
+  Keep Node builtins out of OpenThrottle browser bundles. USE WHEN importing a
+  node:* builtin or a Node-only package from code a browser bundle could reach;
+  adding to a package barrel (index.ts) that React Router apps import; or a
+  build or console says "Node builtins reached the client bundle" or "has been
+  externalized for browser compatibility". Not for folder placement
   (ot-folders) or server conventions (ot-stack).
 metadata:
   author: openthrottle
-  last-reviewed: '2026-11-21'
-  version: '1.0.0'
+  last-reviewed: '2026-11-22'
+  version: '2.0.0'
 ---
 
-# OpenThrottle coding standards
+# Client/Node boundary
 
-The root `AGENTS.md` § Code style states the always-on rules. This skill holds the standards that
-need more than one line, because breaking them passes lint and typecheck and only shows up later.
-
-## Client/Node boundary
-
-Never let a Node builtin become reachable from browser code.
+Never let a Node builtin become reachable from browser code. Breaking this passes lint and
+typecheck and only shows up later, which is why it is a skill and not a line in `AGENTS.md`.
 
 Vite does not error when a client module's import graph reaches a `node:*` import. It externalizes
 the builtin and ships a stub in its place: an empty object in a production build, so the page
@@ -32,7 +27,7 @@ Module "node:os" has been externalized for browser compatibility.
 Cannot access "node:os.homedir" in client code.
 ```
 
-### What catches it
+## What catches it
 
 **`typecheck` and `lint` pass when you break this.** The `clientNodeBoundary` Vite plugin
 (`@tools/dotfiles/client-node-boundary`, in every React Router app's `vite.config.ts`) is the
@@ -48,7 +43,7 @@ pnpm nx run openthrottle-developer:check-client-boundary
 The `react-router` application generator adds both the plugin and the empty
 `"check-client-boundary": {}` target, so a scaffolded app is covered from the start.
 
-### A package's name tells you nothing
+## A package's name tells you nothing
 
 `@openthrottle/nodejs-utils` sounds server-only, but browser code imports it, and that is how this
 broke. Adding `expandHome` (one `node:os` import) to that package's barrel reached all eight client
@@ -57,7 +52,7 @@ modules that import `isRecord` from it.
 **Barrels make it worse.** One `node:*` import anywhere behind a package's `index.ts` reaches every
 client module that imports anything from that package.
 
-### The three ways out
+## The three ways out
 
 ```ts
 // GOOD — the code belongs on the server. This is how the original break was fixed:

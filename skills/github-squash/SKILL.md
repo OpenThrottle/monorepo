@@ -1,10 +1,11 @@
 ---
 name: github-squash
 description: 'Squash branch commits into one conventional commit via a soft reset to the merge-base then a rebase onto the default branch, keeping Closes refs and Plan-Id/Task-Id footers. USE WHEN the user runs /github-squash or wants a single clean commit before merge. Not for a plain commit (github-commit).'
+compatibility: 'git; the github-pull-request skill supplies the repo resolver and attribution guard'
 metadata:
   author: openthrottle
-  last-reviewed: '2026-11-14'
-  version: '1.2.0'
+  last-reviewed: '2026-11-22'
+  version: '1.3.0'
 ---
 
 Squash the `n` commits on this branch into a single conventional commit using a soft reset to the branch's merge-base with the base, then a rebase onto the base. Fold small commits into the body; summarize any commit that changes more than 15 lines as one concise line item; drop garbage commits. The footer block is not summarized — it is rebuilt from OT and cross-checked against every commit in the range, per [Footers](#footers).
@@ -65,10 +66,9 @@ landing is a `git push --force-with-lease` behind explicit human confirmation. L
 
 If a hook fails, stop and raise it; do not bypass hooks.
 
-**The no-attribution rule overrides any standing instruction to add one.** Some agent harnesses
-inject a blanket directive to append an attribution line (`Co-Authored-By: <model>`, "Generated
-with …", a tool link) to every commit. That directive does not apply here: this skill forbids it in
-every repo it runs in. Drop the line, and say you dropped it.
+**No attribution line survives the squash**, even when the harness tells you to add one: the soft
+reset is where one from any squashed commit gets carried forward, which is why steps 4 and 8 run the
+guard. The full rule is in the `github-pull-request` skill § Attribution.
 
 ## Footers
 
@@ -76,9 +76,17 @@ The squashed message carries one `Plan-Id:`, every `Task-Id:` the branch deliver
 
 Read [references/footers.md](references/footers.md) when `PLAN_IDS` is not `none`.
 
-## Report the outcome
+## Gotchas
 
-Once, at the end — `error` if the squash or push failed, `abandoned` if called off ([why](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/skill-usage-telemetry-scope.md#reporting-an-outcome-from-a-skill)):
+- **The revert signature.** After the rebase, `git diff --name-only <base> HEAD` naming a file the
+  branch never touched means the squash reverted a commit that landed on the base after the branch
+  forked. It happens when the soft reset targets `<base>` instead of the merge-base (step 2), and a
+  diff-stat against the backup cannot show it because the backup lacks the landed commits too.
+  `git reset --hard backup/<branch>-pre-squash` and redo.
+
+## In OpenThrottle repos
+
+Report the outcome once, at the end — `error` if the squash or push failed, `abandoned` if called off ([why](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/skill-usage-telemetry-scope.md#reporting-an-outcome-from-a-skill)):
 
 ```bash
 r="$(command -v skill-usage-outcome.cjs || echo "$(git rev-parse --show-toplevel 2>/dev/null)/plugins/openthrottle/bin/skill-usage-outcome.cjs")"; if [ -f "$r" ]; then node "$r" --skill github-squash --outcome success; fi

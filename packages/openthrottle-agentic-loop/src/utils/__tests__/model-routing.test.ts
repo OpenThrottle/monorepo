@@ -76,7 +76,7 @@ describe('routeTaskModel', () => {
 
       expect(result.tier).not.toBe(MODEL_ROUTING_REVIEW_TIER);
       expect(result.model).not.toBe('fable');
-      expect(result.model).not.toBe('claude-fable-5');
+      expect(result.model).not.toBe('claude-fable-5-2');
     }
   });
 
@@ -107,11 +107,11 @@ describe('routeTaskModel', () => {
     expect(
       routeTaskModel({
         category: 'design',
-        driverModels: ['claude-opus-5', 'opus'],
+        driverModels: ['claude-opus-5-5', 'opus'],
         policy,
         runModel: undefined,
       }),
-    ).toEqual({ kind: 'routed', model: 'claude-opus-5', tier: 'escalate' });
+    ).toEqual({ kind: 'routed', model: 'claude-opus-5-5', tier: 'escalate' });
   });
 
   it('falls back to the run model when the driver lists no tier model', async () => {

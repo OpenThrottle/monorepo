@@ -8,79 +8,63 @@ description: >-
   (ot-postgres), or scaffolding (ot-generators).
 metadata:
   author: openthrottle
-  last-reviewed: '2026-11-14'
-  version: '1.1.0'
+  last-reviewed: '2026-11-22'
+  version: '1.2.0'
 ---
 
 # OpenThrottle stack (server, data, developer app, MCP)
 
-## When to read this skill
+Scaffolding is `ot-generators`, SQL migrations `ot-postgres`, plans and tasks `ot-plans`, graph and
+targets `nx-workspace`. The OT Loop job and its BullMQ wiring: [docs/workflows/ot-loop-job.md](https://github.com/openthrottle/monorepo/blob/main/docs/workflows/ot-loop-job.md).
 
-- You touch **`applications/openthrottle-server`** (NestJS GraphQL, queues, repositories).
-- You touch **`databases/`**, **`pnpm run database:*`**, embeddings, or **plan/docs ingest** scripts.
-- You touch **`applications/openthrottle-developer`** (routes, loaders, GraphQL client).
-- You extend or debug **`packages/openthrottle-mcp`** (tools, env, smoke checks).
+## NestJS GraphQL (`openthrottle-server`)
 
-Use `ot-generators` for scaffolding, `nx-workspace` for graph and targets, `ot-plans` for OpenThrottle plans/tasks and MCP traceability, `ot-postgres` for SQL migrations and table comments, `ot-loop` for executing a plan. The OT Loop job and its BullMQ wiring: [docs/workflows/ot-loop-job.md](https://github.com/openthrottle/monorepo/blob/main/docs/workflows/ot-loop-job.md).
-
----
-
-## 1. NestJS GraphQL (`openthrottle-server`)
-
-**Conventions**
-
-- **Schema and codegen:** follow [AGENTS.md § GraphQL schema + codegen flow](https://github.com/openthrottle/monorepo/blob/main/AGENTS.md); `schema.gql` is only written by `pnpm nx run openthrottle-server:graphql-schema:write`.
-- **Backwards-compatible schema:** when updating `.entity` files the GraphQL schema must stay backwards compatible. Avoid removing fields or changing types on existing ObjectTypes; if a field is no longer needed, mark it **`@deprecated(reason: "...")`** instead of deleting it.
-- **Resolver return types:** there are **no** `Result()` / `PaginatedResult()` / `ListResult()` factories (they lived in the never-ported `@openthrottle/nestjs-core`). Return a hand-written `@ObjectType()` from the feature's `*.object.ts`, never a raw entity: the class for one item, `[Thing]` for a plain list, or a `<Thing>ListResult` envelope when the list needs metadata. References: `projects/project-plans-page.object.ts`, `work-ledger/work-ledger.object.ts`. Scaffold new GraphQL modules with `@tools/generators:nestjs` (`graphql-service` / `simple-service`) — those templates match this shape.
+- **Backwards-compatible schema:** when changing `.entity` or `*.object.ts` files, never remove a field or change its type on an existing ObjectType; mark it `@deprecated(reason: "...")` instead.
+- **Resolver return types:** there are no `Result()` / `PaginatedResult()` / `ListResult()` factories (they lived in the never-ported `@openthrottle/nestjs-core`). Return a hand-written `@ObjectType()` from the feature's `*.object.ts`, never a raw entity: the class for one item, `[Thing]` for a plain list, or a `<Thing>ListResult` envelope when the list needs metadata. References: `projects/project-plans-page.object.ts`, `work-ledger/work-ledger.object.ts`. The `@tools/generators:nestjs` `graphql-service` / `simple-service` templates match this shape.
 - **Offset-paged lists:** envelope `extends OffsetPageObject` (`@openthrottle/nestjs-graphql`) and declares typed `items`; input `extends OffsetPaginationInput`; the resolver calls `assertPagination(input, { max })` (rejects a sent out-of-range value). The repository clamps with `resolvePagination` / `paginate` (`@openthrottle/nestjs-postgres`) and returns `OffsetPage<T>`. Default 25, max 100, per-call override allowed. Exceptions: cursor-paged lists, `activityByDate*`, `search`, plain `[Thing]` lists.
 - **Positions within a parent** (tasks in a plan, plans in a project): use the `nestjs-postgres` sort-order helpers with the table's `SortOrderScope`; never hand-write a renumber.
 - **Data access:** entities, repositories and the default DataSource (`getOpenThrottleTypeOrmOptions()`) live in `@openthrottle/nestjs-repositories-server`; a new table's entity also joins `OPENTHROTTLE_ENTITIES`.
-- **New server surface:** use **`NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:nestjs`** (see `ot-generators`); sub-generators include `graphql-service`, `simple-service`, `module`, `queue`, `ai-agent` and `application` — always **`--describe`** first for the required flags per sub-generator. `<SERVICE_NAME>` is kebab-case, often plural for services.
+- **Errors a client must read:** a plain `NotFoundException` / `ConflictException` reaches the client as `NOT_FOUND` / `CONFLICT` with its message. For any other code, or extra fields, throw `new GraphQLError(msg, { extensions: { code, ... } })` from the service (see `createPlanScheduleConflictError` in `plan-enqueue.utils.ts`).
+- **Testing (NestJS tier):** test every new resolver, service and repository method; the test sits next to its file (`<folder>.<kind>.test.ts`) with every NestJS provider mocked in `beforeEach`. Use the repository's model factories and the service's entity factories where they exist.
 
-**Testing** (general conventions: [code-style.md § Testing](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/code-style.md#testing); NestJS tier only)
+### Schema change
 
-- Test **all** new methods added to resolvers, services and repositories; the test sits next to its file (`<folder>.<kind>.test.ts`), with every NestJS provider mocked in the **`beforeEach`** block.
-- Use **model factories** from the repository and **entity factories** from the service where they exist.
+Consumers generate from the committed `applications/openthrottle-server/schema.gql` (via `@openthrottle/graphql-codegen`'s `defineCodegen`), and CI fails on drift. After changing GraphQL types, resolvers or documents:
 
----
+1. Run `pnpm nx run openthrottle-server:graphql-schema:write` (no Postgres, Redis or running server needed). It is the only producer of the committed `applications/openthrottle-server/schema.gql`: booting the server keeps the schema in memory and never writes the file. `dev` on a codegen consumer runs the equivalent `graphql-schema-write` first, so a new field plus a document selecting it needs no manual step there. It works in one pass even when a server-side client (`openthrottle-mcp`) already selects or reads the new field: tsc builds never run codegen and the client builds in the server graph are emit-only, so the server builds against the stale generated output and writes the schema that step 2 regenerates from. Do not reach for `--excludeTaskDependencies`.
+2. `pnpm nx affected --target=codegen-graphql,codegen-react-router --parallel`
+3. Commit the app `schema.gql` and all `__generated__` output.
 
-## 2. Data, embeddings, imports (`databases/`)
+### Gotchas
 
-**Schema, ingest, embeddings:** [databases/openthrottle/README.md](https://github.com/openthrottle/monorepo/blob/main/databases/openthrottle/README.md).
+- **DI fails at boot while lint, typecheck and tests stay green** → an injected class was imported
+  with `import type`. SWC compiles the server with `decoratorMetadata: true` (`.swcrc`), so
+  constructor injection needs the runtime import even though `tsconfig.base.json` says
+  `emitDecoratorMetadata: false`. Keep injected classes as value imports; the ESLint override in
+  `tools/dotfiles/src/index.ts` that declares `emitDecoratorMetadata: true` exists for this reason,
+  so do not "simplify" it to match the tsconfig.
+- **A multi-key TypeORM `find({ order: { a, b } })` sorts in the wrong order** → it sorts by key
+  insertion order, and the enforced alphabetize-keys autofix reorders the keys. Mock tests echo the
+  same object and pass. When precedence across keys matters, use
+  `createQueryBuilder().orderBy(...).addOrderBy(...)`, and check the order against a real database.
+- **CI `gates` fails on `monorepo:check-side-effects --strict` after adding an enum** → a new
+  `*.enum.ts`, or any file with module-scope `registerEnumType`, must be listed in the server
+  `package.json` `sideEffects` array. `pnpm exec tsx scripts/check-side-effects.ts --strict` prints
+  the value to set. Local `nx affected -t lint,typecheck,test` does not run it.
+- **A client enum comparison never matches** → codegen emits GraphQL enums as `as const` objects
+  with PascalCase keys (`TimelineMarkerKind.Grilling`, value `'GRILLING'`), while the NestJS enum
+  uses `GRILLING`. Copy the spelling from an existing client consumer, never from the server enum,
+  and test the negative case.
+- **`z.infer` of an MCP tool's parameter schema is `unknown`** → the generated zod schemas in
+  `packages/openthrottle-mcp` map through `z.ZodType<T[K], any, T[K]>`. Type helpers against the
+  generated GraphQL input type (`CreatePlanInput` from `../__generated__/graphql.js`) instead.
+- **Never set `extensions.http.status` on a GraphQLError** → Apollo uses it as the HTTP status, and
+  clients then treat the error as a transport failure.
 
-**Typical commands (repo root)**
+## Everything else
 
-| Script                                  | Role                                                           |
-| --------------------------------------- | -------------------------------------------------------------- |
-| `pnpm run database:start`               | Postgres + Redis (Compose)                                     |
-| `pnpm run database:migrate`             | Apply migrations                                               |
-| `pnpm run database:import-docs`         | Ingest `docs/` + NX READMEs into documentation tables          |
-| `pnpm run database:import-agent-assets` | Ingest `skills/` + `.agents/` assets into documentation tables |
-
-**Embeddings:** dimension strategy and **Ollama** / **`OPENAI_API_KEY`** are documented in the README above (embedding section). Local Ollama and Cursor proxy: [docs/monorepo/Ollama.md](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/Ollama.md).
-
----
-
-## 3. React Router UI (`openthrottle-developer`)
-
-Env defaults live in `applications/openthrottle-developer/.env.default`; full stack quick path: [run-openthrottle-server-developer.md](https://github.com/openthrottle/monorepo/blob/main/docs/openthrottle/run-openthrottle-server-developer.md).
-
-**Conventions**
-
-- **New UI:** **react-router** generator (`ot-generators`); application name **`openthrottle-developer`** from `--list=applications`.
-- After **GraphQL schema changes** (once `schema.gql` is regenerated, §1) or fresh clone: **`pnpm nx run openthrottle-developer:codegen-graphql`**.
-- Prefer existing route and **settings** patterns (e.g. `settings.*`, `plans.*`) over one-off structure.
-
-**Testing:** component tests go in a sibling `__tests__/` (see code-style.md § Testing above); generate mock data from the GraphQL types in the application's `mocks.ts`.
-
----
-
-## 4. `@openthrottle/openthrottle-mcp`
-
-**Boundary:** MCP tools call **openthrottle-server GraphQL only** — no direct DB driver in the MCP package, so DB scripts and migrations are not part of MCP configuration.
-
-**Paths:** package README `packages/openthrottle-mcp/README.md`; auth tokens `packages/openthrottle-mcp/docs/AUTH.md`; env, smoke checklist and secondary workspace `packages/openthrottle-mcp/docs/verification-environment.md`; Cursor registration `.cursor/mcp.json` (server id **`openthrottle-mcp`**); env probe `scripts/verify-openthrottle-mcp-env.sh`.
-
-**Local verification (minimal):** install, root + server `.env`, **`pnpm run database:start`** + **`pnpm run database:migrate`**, **`pnpm nx run openthrottle-server:dev`**, align **`API_URL` / `API_URL_INTERNAL`** with server port; **`OPENTHROTTLE_MCP_AUTH_TOKEN`** for authenticated tools. Details and failure modes: **`verification-environment.md`**.
-
-**Extending tools:** add or adjust GraphQL operations against **openthrottle-server** first; keep MCP as a thin GraphQL client and document env in README/AUTH/verification docs.
+| Area                                     | Where the conventions live                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Data, embeddings, ingest (`databases/`)  | [databases/openthrottle/README.md](https://github.com/openthrottle/monorepo/blob/main/databases/openthrottle/README.md). Embeddings are local and in-process by default (root AGENTS.md § Local embeddings). `pnpm run database:import-docs` / `database:import-agent-assets` write content rows; the server, not the script, embeds them.                                                                                                                                                                                                                                                                        |
+| Developer app (`openthrottle-developer`) | New UI through the `react-router` generator with `--application=openthrottle-developer`. Run `pnpm nx run openthrottle-developer:codegen-graphql` after `schema.gql` changes. Follow the existing `settings.*` / `plans.*` route patterns. In `react-router-*` apps the UI rules in root AGENTS.md § Code style (shadcn components, Tailwind tokens, `GlobalPopover`) override the vendored `frontend-design` skill. Env defaults: `.env.default`; full stack: [run-openthrottle-server-developer.md](https://github.com/openthrottle/monorepo/blob/main/docs/openthrottle/run-openthrottle-server-developer.md). |
+| `@openthrottle/openthrottle-mcp`         | MCP tools call openthrottle-server GraphQL only — no DB driver. Add the GraphQL operation on the server first; a new input field becomes a tool parameter through codegen, and only the tool description is hand-written. Env and smoke checks: `packages/openthrottle-mcp/docs/verification-environment.md`; tokens: `packages/openthrottle-mcp/docs/AUTH.md`; env probe: `scripts/verify-openthrottle-mcp-env.ts`.                                                                                                                                                                                              |
