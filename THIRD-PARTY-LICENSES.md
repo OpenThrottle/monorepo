@@ -13,14 +13,14 @@ Platform-specific prebuilt binaries (packages that declare `os`/`cpu`, e.g.
 `@rollup/rollup-linux-x64-gnu`, `fsevents`) are omitted: which ones install depends on
 the host OS, and each shares the license of the cross-platform toolchain already listed.
 
-**2053** third-party packages.
+**2047** third-party packages.
 
 ## License summary
 
 | License | Packages |
 | --- | --- |
-| MIT | 1786 |
-| ISC | 79 |
+| MIT | 1783 |
+| ISC | 76 |
 | Apache-2.0 | 75 |
 | BSD-3-Clause | 51 |
 | BSD-2-Clause | 26 |
@@ -1157,7 +1157,6 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `fast-xml-parser` | 5.10.1 | MIT | [Amit Gupta](https://github.com/NaturalIntelligence/fast-xml-parser#readme) |
 | `fastq` | 1.20.3 | ISC | [Matteo Collina](https://github.com/mcollina/fastq#readme) |
 | `fb-watchman` | 2.0.4 | MIT | [Wez Furlong](https://facebook.github.io/watchman/) |
-| `fd-package-json` | 2.0.0 | MIT | [James Garbutt](https://github.com/es-tooling/fd-package-json#readme) |
 | `fdir` | 6.5.0 | MIT | [thecodrr](https://github.com/thecodrr/fdir#readme) |
 | `fecha` | 4.2.3 | MIT | [Taylor Hakes](https://github.com/taylorhakes/fecha) |
 | `fetch-blob` | 3.2.0 | MIT | [Jimmy Wärting](https://github.com/node-fetch/fetch-blob#readme) |
@@ -1185,7 +1184,6 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `fork-ts-checker-webpack-plugin` | 9.1.0 | MIT | [Piotr Oleś](https://github.com/TypeStrong/fork-ts-checker-webpack-plugin#readme) |
 | `form-data` | 2.5.6, 4.0.6 | MIT | [Felix Geisendörfer](https://github.com/form-data/form-data#readme) |
 | `form-data-encoder` | 1.7.2, 4.1.0 | MIT | [Nick K.](https://github.com/octet-stream/form-data-encoder#readme) |
-| `formatly` | 0.11.4 | MIT | [Josh Goldberg ✨](https://github.com/JoshuaKGoldberg/formatly#readme) |
 | `formdata-node` | 4.4.1 | MIT | [Nick K.](https://github.com/octet-stream/form-data#readme) |
 | `formdata-polyfill` | 4.0.10 | MIT | [Jimmy Wärting](https://github.com/jimmywarting/FormData#readme) |
 | `formik` | 2.4.9 | Apache-2.0 | [Jared Palmer](https://formik.org) |
@@ -1413,7 +1411,6 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `keyv` | 4.5.4, 5.6.0 | MIT | [Jared Wray](https://github.com/jaredwray/keyv) |
 | `kind-of` | 6.0.3 | MIT | [Jon Schlinkert](https://github.com/jonschlinkert/kind-of) |
 | `kleur` | 3.0.3 | MIT | [Luke Edwards](https://github.com/lukeed/kleur#readme) |
-| `knip` | 6.45.1 | ISC | [Lars Kappert](https://knip.dev) |
 | `kolorist` | 1.8.0 | MIT | [Marvin Hagemeister](https://github.com/marvinhagemeister/kolorist#readme) |
 | `kuler` | 2.0.0 | MIT | [Arnout Kazemier](https://github.com/3rd-Eden/kuler) |
 | `langsmith` | 0.12.0 | MIT | [LangChain](https://github.com/langchain-ai/langsmith-javascript#readme) |
@@ -1612,7 +1609,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `optionator` | 0.9.4 | MIT | [George Zahariev](https://github.com/gkz/optionator) |
 | `ora` | 5.4.1, 9.4.1 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/ora#readme) |
 | `own-keys` | 1.0.2 | MIT | [Jordan Harband](https://github.com/ljharb/own-keys#readme) |
-| `oxc-parser` | 0.121.0, 0.127.0, 0.156.0 | MIT | [Boshen and oxc contributors](https://oxc.rs/docs/guide/usage/parser) |
+| `oxc-parser` | 0.121.0, 0.127.0 | MIT | [Boshen and oxc contributors](https://oxc.rs/docs/guide/usage/parser) |
 | `oxc-resolver` | 11.21.2, 11.24.2 | MIT | [source](https://oxc.rs) |
 | `p-cancelable` | 2.1.1, 4.0.1 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/p-cancelable#readme) |
 | `p-event` | 6.0.1 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/p-event#readme) |
@@ -1625,7 +1622,6 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `p-timeout` | 3.2.0, 6.1.4 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/p-timeout#readme) |
 | `p-try` | 2.2.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/p-try#readme) |
 | `package-json-from-dist` | 1.0.1 | BlueOak-1.0.0 | [Isaac Z. Schlueter](https://github.com/isaacs/package-json-from-dist#readme) |
-| `package-manager-detector` | 1.9.0 | MIT | [Anthony Fu](https://github.com/antfu-collective/package-manager-detector#readme) |
 | `param-case` | 3.0.4 | MIT | [Blake Embrey](https://github.com/blakeembrey/change-case/tree/master/packages/param-case#readme) |
 | `parent-module` | 1.0.1 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/parent-module#readme) |
 | `parse-entities` | 4.0.2 | MIT | [Titus Wormer](https://github.com/wooorm/parse-entities#readme) |
@@ -1850,7 +1846,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `skin-tone` | 2.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/skin-tone#readme) |
 | `slash` | 3.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/slash#readme) |
 | `slice-ansi` | 7.1.2, 8.0.0 | MIT | [source](https://github.com/chalk/slice-ansi#readme) |
-| `smol-toml` | 1.9.0, 1.9.1 | BSD-3-Clause | [Cynthia Rey](https://github.com/squirrelchat/smol-toml#readme) |
+| `smol-toml` | 1.9.0 | BSD-3-Clause | [Cynthia Rey](https://github.com/squirrelchat/smol-toml#readme) |
 | `snake-case` | 3.0.4 | MIT | [Blake Embrey](https://github.com/blakeembrey/change-case/tree/master/packages/snake-case#readme) |
 | `socket.io` | 4.8.4 | MIT | [source](https://github.com/socketio/socket.io/tree/main/packages/socket.io#readme) |
 | `socket.io-adapter` | 2.5.8 | MIT | [source](https://github.com/socketio/socket.io/tree/main/packages/socket.io-adapter#readme) |
@@ -1900,7 +1896,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `strip-dirs` | 3.0.0 | ISC | [Shinnosuke Watanabe](https://github.com/shinnn/node-strip-dirs#readme) |
 | `strip-final-newline` | 3.0.0, 4.0.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/strip-final-newline#readme) |
 | `strip-indent` | 3.0.0, 4.1.1 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/strip-indent#readme) |
-| `strip-json-comments` | 3.1.1, 5.0.3 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/strip-json-comments#readme) |
+| `strip-json-comments` | 3.1.1 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/strip-json-comments#readme) |
 | `stripe` | 23.1.0 | MIT | [Stripe](https://github.com/stripe/stripe-node) |
 | `strnum` | 2.4.1 | MIT | [Amit Gupta](https://github.com/NaturalIntelligence/strnum#readme) |
 | `strtok3` | 10.7.0 | MIT | [Borewit](https://github.com/Borewit/strtok3#readme) |
@@ -1984,7 +1980,6 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `uid` | 2.0.2 | MIT | [Luke Edwards](https://github.com/lukeed/uid#readme) |
 | `uid2` | 0.0.4 | MIT | [source](https://github.com/coreh/uid2#readme) |
 | `uint8array-extras` | 1.6.0 | MIT | [Sindre Sorhus](https://github.com/sindresorhus/uint8array-extras#readme) |
-| `unbash` | 6.0.4 | ISC | [Lars Kappert](https://github.com/webpro-nl/unbash#readme) |
 | `unbox-primitive` | 1.1.0 | MIT | [Jordan Harband](https://github.com/ljharb/unbox-primitive#readme) |
 | `unbzip2-stream` | 1.4.3 | MIT | [Jan Bölsche](https://github.com/regular/unbzip2-stream#readme) |
 | `unc-path-regex` | 0.1.2 | MIT | [Jon Schlinkert](https://github.com/regexhq/unc-path-regex) |
@@ -2046,7 +2041,6 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `vscode-languageserver-types` | 3.18.5 | MIT | [Microsoft Corporation](https://github.com/microsoft/vscode-languageserver-node/tree/main/types) |
 | `vscode-uri` | 3.2.0 | MIT | [Microsoft](https://github.com/microsoft/vscode-uri#readme) |
 | `w3c-xmlserializer` | 6.0.0 | MIT | [source](https://github.com/jsdom/w3c-xmlserializer#readme) |
-| `walk-up-path` | 4.0.0 | ISC | [Isaac Z. Schlueter](https://github.com/isaacs/walk-up-path#readme) |
 | `warning` | 3.0.0 | BSD-3-Clause | [Berkeley Martinez](https://github.com/BerkeleyTrue/warning) |
 | `watchpack` | 2.5.2 | MIT | [Tobias Koppers @sokra](https://github.com/webpack/watchpack) |
 | `wcwidth` | 1.0.1 | MIT | [Tim Oxley](https://github.com/timoxley/wcwidth#readme) |

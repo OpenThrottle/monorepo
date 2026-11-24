@@ -38,9 +38,6 @@ the consumer to an internal path that is free to move. If something is not
 exported from `index.ts`, it is not public — re-export it there rather than
 reaching past it.
 
-Exports that are genuinely public API need a JSDoc `@public` tag so Knip does not
-report them as dead code.
-
 ## `nestjs-*` — server modules
 
 `packages/nestjs-rbac`, `nestjs-auth`, `nestjs-bullmq`, `nestjs-typeorm`, …

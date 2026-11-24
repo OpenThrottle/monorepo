@@ -19,8 +19,7 @@ Do not reimplement evaluation / fallthrough here. Do not import app
 
 ## Layout
 
-- [src/index.ts](src/index.ts) — public entry. Tag new public API with `@public`
-  so Knip keeps it.
+- [src/index.ts](src/index.ts) — public entry.
 - [src/catalog/](src/catalog/) — pure typed flag catalog (no React); kinds mirror
   nestjs-rollout / GraphQL `RolloutFlagKind`.
 - [src/components/RolloutProvider.tsx](src/components/RolloutProvider.tsx) —

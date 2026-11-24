@@ -60,7 +60,7 @@ mechanics, see [MONOREPO.md](./MONOREPO.md) and [docs/monorepo/](./docs/monorepo
    ```
 
    Green locally ≈ green on the PR. It covers formatting, lint, typecheck, tests,
-   GraphQL codegen drift, and Knip. Fix what it reports rather than memorizing
+   and GraphQL codegen drift. Fix what it reports rather than memorizing
    each rule — the validators and every Nx target's `description`
    (`nx show project <p>`) are the source of truth. See
    [docs/monorepo/CI-quality-gates.md](./docs/monorepo/CI-quality-gates.md).
@@ -213,8 +213,6 @@ your first PR.
   what it costs to re-enable a disabled workflow, and the checklist to run
   through **before** adding a job, changing a `runs-on`, or adding a schedule.
   Read this first if you are touching `.github/workflows`.
-- [docs/monorepo/Knip.md](./docs/monorepo/Knip.md) — dead-code checks and the
-  `@public` export convention.
 - [docs/monorepo/releases.md](./docs/monorepo/releases.md) — how the
   applications and the monorepo get versions from PR titles, the release PR, and
   deploying or rolling back by version. Read it before you title a breaking PR.

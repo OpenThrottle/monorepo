@@ -30,4 +30,3 @@ wiring belong in `nestjs-repositories-server` / `openthrottle-server`, not here.
 - **`usage_limited` trials get no grades** and the run returns a `cursor`; keep that contract, the
   stats and the resume path rely on it.
 - **No throwing across the stats API.** Invalid input gives `null` or an `error` result.
-- Exports that are package public API carry `@public` so Knip keeps them.

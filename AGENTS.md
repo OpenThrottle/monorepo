@@ -48,9 +48,8 @@ pnpm nx run <project>:lint
 pnpm nx run <project>:typecheck                     # tsc over source AND test files — does NOT execute tests
 
 pnpm nx affected --target=lint --parallel           # affected projects only
-pnpm run check:local                                # full local CI parity (lint, typecheck, tests, codegen, knip)
+pnpm run check:local                                # full local CI parity (lint, typecheck, tests, codegen)
 pnpm nx:validate-tags                               # validate project tags
-pnpm nx run monorepo:knip                           # dead-code report ONLY — never `knip --fix` on app UI
 pnpm nx sync:check                                  # report tsconfig project-reference drift (`pnpm nx sync` fixes it)
 ```
 
@@ -129,7 +128,7 @@ The rules are grouped by **who catches you**. The honor-system ones lead, becaus
 - **`readonly` on object type properties by default**; omit it only when the property is genuinely mutable. [↳](docs/monorepo/code-style.md#readonly-properties)
 - **Optional properties extremely sparingly.** Prefer `userId: string | undefined` over `userId?: string`, so a caller cannot silently forget it. [↳](docs/monorepo/code-style.md#optional-properties)
 - **Return a result type instead of throwing** wherever the caller would need a manual `try`/`catch`. Throw only where the throw itself is the desired system behavior (e.g. inside a request handler). [↳](docs/monorepo/code-style.md#prefer-results-over-throwing)
-- **JSDoc only when the behavior is not self-evident**, behind an inline `@description` tag, with `@link` for same-file references. Exports that are package public API need a `@public` tag so Knip keeps them. [↳](docs/monorepo/code-style.md#jsdoc-comments)
+- **JSDoc only when the behavior is not self-evident**, behind an inline `@description` tag, with `@link` for same-file references. [↳](docs/monorepo/code-style.md#jsdoc-comments)
 - **Never pick a library version from memory** — run `pnpm add -D <pkg> -w` and let the resolver decide. [↳](docs/monorepo/code-style.md#installing-libraries)
 - **`const` over `let`; never `var`. `async`/`await` over `.then()`. `import * as React from 'react';`** [↳](docs/monorepo/code-style.md#general)
 - **We write code for humans.** The compiler and minifier make it concise, so the source does not have to. "Data files hold only data", "Named functions use block bodies", "A ternary takes at most three lines", "Long string values are template literals" and "JSX held in a `const` goes under `// Markup`" under Enforced are the readability conventions from the PR #622 review (OT plan `a8cb40e5`), all at `error`. [↳](docs/monorepo/code-style.md#readability)
@@ -179,7 +178,7 @@ The rules are grouped by **who catches you**. The honor-system ones lead, becaus
 - **Where files go and what they are named** — folder layout, application vs package, module-boundary tags, and the banned junk-drawer folder names (`lib`, `helpers`, `common`, `shared`, `misc`): the [`ot-folders`](./skills/ot-folders/SKILL.md) skill.
 - **Package READMEs:** for `packages/**/README.md`, list **pnpm** first in install sections and use **`pnpm nx run <project>:<target>`** in Nx examples. Templates live under `tools/generators/src/generators/package/files/`; conventions are summarized in [CONTRIBUTING.md](./CONTRIBUTING.md) and the [`ot-generators`](./skills/ot-generators/SKILL.md) skill.
 - **`nx sync` (TypeScript project references):** use `pnpm nx sync:check` to report drift (it also gates `check:local`) and `pnpm nx sync` to fix it, inspecting the diff before committing. The generator is deliberately **not** attached to the task pipeline, so `nx run`/`affected` never sync and never fail on drift. An `applications/*` → `applications/*` reference is always wrong. Full decision and measurements: [docs/monorepo/NX.md](docs/monorepo/NX.md#nx-sync--the-typescript-project-reference-sync).
-- **Knip (dead code):** Run **`pnpm nx run monorepo:knip`** for reports only. Do **not** run `knip --fix` or `knip --fix-type exports` on application UI—it strips intentional `export` on component prop types. Optional `knip --fix-type dependencies` only after human review. See [docs/monorepo/Knip.md](docs/monorepo/Knip.md). CI gate priorities and owners: [docs/monorepo/CI-quality-gates.md](docs/monorepo/CI-quality-gates.md). **CI cost model** — what CI costs, why the free tier depends on the repo being public, and the checklist before adding a job / changing a `runs-on` / adding a schedule: [docs/monorepo/ci-cost.md](docs/monorepo/ci-cost.md).
+- **CI gates and cost:** gate priorities and owners: [docs/monorepo/CI-quality-gates.md](docs/monorepo/CI-quality-gates.md). **CI cost model** — what CI costs, why the free tier depends on the repo being public, and the checklist before adding a job / changing a `runs-on` / adding a schedule: [docs/monorepo/ci-cost.md](docs/monorepo/ci-cost.md).
 
 ## Committed generator output
 

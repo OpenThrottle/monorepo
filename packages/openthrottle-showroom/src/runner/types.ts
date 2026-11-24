@@ -200,8 +200,7 @@ export const waitFor = (selector: string, beat?: string): DemoStep => {
  *
  * Every verb here is implemented in `actions.ts` and documented in the demo README, so
  * they are the API a flow author writes against — including the ones no current flow
- * happens to use yet. Tagged `@public` so knip keeps them rather than reporting a
- * vocabulary as dead code.
+ * happens to use yet, so keep them even when nothing references them.
  */
 export const waitForUrl = (pattern: string, beat?: string): DemoStep => {
   return {

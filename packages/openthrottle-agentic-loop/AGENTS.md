@@ -5,7 +5,7 @@ The pure OT Loop parent state machine (`runOtLoop`): selection, flips, per-task 
 ## Layout
 
 - [src/index.ts](src/index.ts) — public entry point. Export the package's public
-  API here and tag exported public API with `@public` so Knip keeps it.
+  API here.
 
 ## Invariants & gotchas
 

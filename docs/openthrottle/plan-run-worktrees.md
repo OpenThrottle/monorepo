@@ -98,7 +98,7 @@ returns the resolved root **and** which rung answered it, as a `source`:
 
 Worktrees land at `<root>/<org>/<repo>/<worktree>`. The default root is
 `~/.openthrottle/worktrees`, a hidden directory OpenThrottle owns; it sits outside every repo so
-worktrees stay clear of the Nx workspace (daemon watches, Vitest/knip/gitleaks globs, `.gitignore`).
+worktrees stay clear of the Nx workspace (daemon watches, Vitest/gitleaks globs, `.gitignore`).
 
 The `<org>/<repo>` beneath it comes from the checkout's **git remote**, not its directory name — two
 checkouts of different orgs' `monorepo` would otherwise share one path. A repo with no remote falls
@@ -143,7 +143,7 @@ two implementations cannot drift apart. A test pins the default against `root.sh
 
 The default deliberately sits **outside** the repository. An in-repo root would put every
 worktree's file tree inside the Nx workspace — watched by the Nx daemon, walked by
-Vitest/knip/gitleaks globs, and needing a `.gitignore` entry that is easy to get wrong —
+Vitest/gitleaks globs, and needing a `.gitignore` entry that is easy to get wrong —
 and each worktree carries its own `node_modules`.
 
 Changing the root affects **new** worktrees only: `git worktree` stores absolute paths in

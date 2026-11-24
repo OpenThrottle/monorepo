@@ -66,7 +66,6 @@ document. See [README.md](./README.md).
   `theme` global, so the palette and light/dark axes collide.
 - Stories are excluded from the package's `tsconfig.lib.json` (they must not reach its emitted
   declarations) and included in `tsconfig.test.json` so they are still type-checked.
-- Knip: stories are declared as `entry` in `knip.jsonc`, never ignored.
 
 ## Pointers
 

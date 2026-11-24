@@ -1,12 +1,12 @@
 # Recurring agent jobs (`Job_*` prompts)
 
-Thirteen standalone audit prompts live in [`.agents/prompts/`](../../.agents/prompts/). Each one sweeps a single dimension — most sweep repository health, `Job_Issue_Reporting` sweeps the inbound GitHub issue queue — is **read-only on source code**, and has exactly one side effect: it files an OpenThrottle plan with prioritized, self-contained tasks. Nothing merges without a human starting that plan.
+Twelve standalone audit prompts live in [`.agents/prompts/`](../../.agents/prompts/). Each one sweeps a single dimension — most sweep repository health, `Job_Issue_Reporting` sweeps the inbound GitHub issue queue — is **read-only on source code**, and has exactly one side effect: it files an OpenThrottle plan with prioritized, self-contained tasks. Nothing merges without a human starting that plan.
 
 They are invoked two ways:
 
 ```bash
 # Ad-hoc — the same command the scheduler runs, minus the queue
-claude -p --permission-mode acceptEdits "$(cat .agents/prompts/Job_DeadCode.md)" --model sonnet
+claude -p --permission-mode acceptEdits "$(cat .agents/prompts/Job_WorkInFlight.md)" --model sonnet
 ```
 
 …or on a cron schedule, as an OpenThrottle **scheduled agent job** (`createScheduledAgentJob`; UI at `/settings` → scheduled jobs).
@@ -15,14 +15,13 @@ A scheduled run goes `ScheduledAgentJobsProcessor` → `ScheduledAgentRunnerServ
 
 > **Not a plan run.** These prompts _author_ a plan, so there is no plan id to hand a plan runner; they run through `claude -p` or a scheduled agent job as above.
 
-## The thirteen jobs
+## The twelve jobs
 
 | Job                                                                       | Sweeps                                                                 | Cadence  | Cap             |
 | ------------------------------------------------------------------------- | ---------------------------------------------------------------------- | -------- | --------------- |
 | [`Job_WorkInFlight`](../../.agents/prompts/Job_WorkInFlight.md)           | Open PRs, unpushed branches, stale worktrees, stranded plans, ledger   | daily    | 20              |
 | [`Job_Issue_Reporting`](../../.agents/prompts/Job_Issue_Reporting.md)     | Open issues across the OpenThrottle org, triaged against OT            | daily    | 10/run, 25/week |
 | [`Job_TestHealth`](../../.agents/prompts/Job_TestHealth.md)               | Coverage weighted by churn, flaky and slow suites                      | weekly   | 12              |
-| [`Job_DeadCode`](../../.agents/prompts/Job_DeadCode.md)                   | Knip triage, unused/duplicate/misplaced dependencies                   | weekly   | 15              |
 | [`Job_Security`](../../.agents/prompts/Job_Security.md)                   | Secrets, CVEs by reachability, auth/RBAC, injection surfaces           | weekly   | 10              |
 | [`Job_DocDrift`](../../.agents/prompts/Job_DocDrift.md)                   | Documented commands and paths vs reality                               | weekly   | 15              |
 | [`Job_RulesConformance`](../../.agents/prompts/Job_RulesConformance.md)   | House coding rules ESLint cannot catch, shape audits                   | weekly   | 15              |
@@ -46,7 +45,6 @@ Cron patterns are staggered so the weekly jobs never fire on the same day — a 
 | `Job_Issue_Reporting`   | `0 12 * * *`    | daily 12:00             | claude | `sonnet` |
 | `Job_WorkInFlight`      | `0 13 * * *`    | daily 13:00             | claude | `sonnet` |
 | `Job_TestHealth`        | `0 14 * * 1`    | Mondays 14:00           | claude | `sonnet` |
-| `Job_DeadCode`          | `0 14 * * 2`    | Tuesdays 14:00          | claude | `sonnet` |
 | `Job_Security`          | `0 14 * * 3`    | Wednesdays 14:00        | claude | `fable`  |
 | `Job_DocDrift`          | `0 14 * * 4`    | Thursdays 14:00         | claude | `sonnet` |
 | `Job_RulesConformance`  | `0 14 * * 5`    | Fridays 14:00           | claude | `sonnet` |
@@ -65,7 +63,7 @@ Cron has no native biweekly expression; the two biweekly jobs approximate it wit
 
 Model choice follows the tiering in [CLAUDE.md](../../CLAUDE.md):
 
-- **Mechanical sweeps** — `WorkInFlight`, `TestHealth`, `DeadCode`, `DocDrift`, `RulesConformance`, `ReplayDrift`, `Issue_Reporting` — run on `sonnet`. Their findings come from tool output plus deterministic reading, so intelligence beyond that tier buys nothing and these are the most frequent runs.
+- **Mechanical sweeps** — `WorkInFlight`, `TestHealth`, `DocDrift`, `RulesConformance`, `ReplayDrift`, `Issue_Reporting` — run on `sonnet`. Their findings come from tool output plus deterministic reading, so intelligence beyond that tier buys nothing and these are the most frequent runs.
 - **Judgment-heavy sweeps** — `Security`, `Performance`, `DatabaseHealth`, `ArchitectureDrift`, `Roadmap` — run on `fable`. Each of these fails by being confidently wrong: a misjudged CVE reachability, an unmeasured perf claim, or a shallow roadmap proposal costs more than the model difference.
 
 ## Registering a schedule
@@ -76,11 +74,11 @@ Each job is one `createScheduledAgentJob` mutation. `prompt` carries the prompt 
 mutation {
   createScheduledAgentJob(
     input: {
-      name: "Job_DeadCode"
-      prompt: "<contents of .agents/prompts/Job_DeadCode.md>"
+      name: "Job_WorkInFlight"
+      prompt: "<contents of .agents/prompts/Job_WorkInFlight.md>"
       driverId: "claude"
       model: "sonnet"
-      cronPattern: "0 14 * * 2"
+      cronPattern: "0 13 * * *"
       timezone: "UTC"
       enabled: true
     }
@@ -91,7 +89,7 @@ mutation {
 }
 ```
 
-Register against a checkout where the job's commands actually resolve — `cwd` defaults to `WORKSPACE_ROOT`. Enable one job first (`Job_WorkInFlight` is the cheapest and the most immediately useful), confirm it files exactly one plan and edits nothing, then enable the rest. Use `runScheduledAgentJobNow` for that first confirmation rather than waiting for the cron to fire, and `setScheduledAgentJobEnabled` to roll the remaining nine out.
+Register against a checkout where the job's commands actually resolve — `cwd` defaults to `WORKSPACE_ROOT`. Enable one job first (`Job_WorkInFlight` is the cheapest and the most immediately useful), confirm it files exactly one plan and edits nothing, then enable the rest. Use `runScheduledAgentJobNow` for that first confirmation rather than waiting for the cron to fire, and `setScheduledAgentJobEnabled` to roll the rest out.
 
 **This mutation needs `settings:write`, which no service account has.** Schedule reads require `settings:read` and every schedule mutation requires `settings:write` (`GqlPermissionsGuard`, plus an owner check). Per `packages/nestjs-rbac/src/roles/roles.utils.ts`, those permissions belong to the `admin` and `user` roles only — the `mcp` and `plan-runner` service-account roles are deliberately scoped to `plans:read` / `plans:write`. So an agent holding `OPENTHROTTLE_MCP_AUTH_TOKEN` or `OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN` gets `Missing permission: settings:read` and **cannot register or enable these schedules**. Register them as a signed-in user — the `/settings` → scheduled jobs UI is the path of least resistance.
 

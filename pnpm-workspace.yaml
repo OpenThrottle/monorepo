@@ -244,8 +244,8 @@ catalog:
   # importing all three — components/__name__.tsx imports FocusError from
   # focus-formik-error, and config/form.__schema__.ts imports FormikConfig from
   # formik plus ObjectSchema/InferType/object/string from yup. Those are .ts
-  # template files, not compiled source, so knip and every other static
-  # analysis in this repo is blind to the reference and nothing in CI fails if
+  # template files, not compiled source, so every static analysis
+  # in this repo is blind to the reference and nothing in CI fails if
   # they go — the `form` generator would just start emitting unresolvable
   # imports on whoever scaffolds a form next. formik is additionally a real
   # dependency of @openthrottle/react-router-utils (src/hooks/useForm.ts).
@@ -280,7 +280,6 @@ catalog:
   'json-schema': '^0.4.0'
   'jsonwebtoken': '^9.0.2'
   'keyv': '^5.6.0'
-  'knip': '^6.45.1'
   'langchain': '^1.3.0'
   # Held at 13.5: 13.6 moves to @sentry/node 11, which pulls in the `sentry` CLI
   # package (FSL-1.1-Apache-2.0, not on the license allowlist). Lift once that

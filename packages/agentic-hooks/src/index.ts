@@ -6,8 +6,7 @@
  * hook folder) that parses ITS OWN native payload into a NormalizedInvocation
  * and delegates the rest here.
  *
- * Every public symbol below is re-exported from its module, which carries the
- * `@public` JSDoc tag so Knip retains it.
+ * Every public symbol below is re-exported from its module.
  */
 export * from './config/describe.ts';
 export * from './config/ensureUserEnvEntries.ts';
