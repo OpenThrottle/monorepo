@@ -105,6 +105,42 @@ slash-commands-only until it can be.
 This is the single biggest cross-tool difference and it is a **data-quality** difference, not a
 plumbing one. Anything comparing skill usage across producers has to account for it.
 
+**Cursor re-measured 2026-11-24 on `cursor-agent` 2026.11.13-eacade1** (OT plan `8f040d3a`): the
+`skill_read` path still holds and the whole chain works headless. A scratch repo whose
+`.cursor/hooks.json` wired only `preToolUse` → capture and `sessionEnd` → complete, with a skill
+whose body runs `skill-usage-outcome.cjs`, produced one usage row (`source: cursor`,
+`invocation_path: skill_read`), one deliberate outcome row (`source: cursor`, the session's own id,
+a real `duration_ms`) and **no** `session_ended` row, because the reporter claimed the start. The
+reporter finds the session through `CURSOR_CONVERSATION_ID` (exported to the Shell tool alongside
+`CURSOR_AGENT=1`; it equals the hook payload's `session_id`). Still missing: a signal narrower than
+the `SKILL.md` read: Cursor has no `Skill` tool and no skill-specific hook event. This run did not
+wire `beforeSubmitPrompt`, so its headless behaviour stands as measured on 2026.09.10.
+
+### Skill telemetry for the agents with no capture adapter (2026-11-24)
+
+A skill's outcome and duration need three things from an agent: a **skill-invocation signal** a hook
+can see (capture), a **session-end signal** (completion), and a **session id exported to the shell
+tool**, so the deliberate reporter `skill-usage-outcome.cjs` can claim the start capture recorded.
+Claude Code, Codex and Cursor have all three (Cursor re-measured above; Codex exports
+`CODEX_SESSION_ID` / `CODEX_THREAD_ID` on codex-cli 0.167.0). For the rest, measured or read from
+the installed build during OT plan `8f040d3a`:
+
+| CLI             | version | skill signal                                                                                                                    | session end                                                               | session id in the shell tool                                                        | how it was read                                                                                                                                                            |
+| --------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **gemini-cli**  | 0.25.2  | **yes**: `BeforeTool` with `tool_name: activate_skill`, the skill in `tool_input.name`; skills are behind `experimental.skills` | **yes**: `SessionEnd` (`reason`), `session_id` on every hook              | **no**: `shellExecutionService` adds only `GEMINI_CLI=1` to the shell's environment | the shipped `gemini-cli-core` docs (`docs/hooks/reference.md`, `docs/cli/skills.md`) and source; a live run needs `GOOGLE_CLOUD_PROJECT` on this account, so none was made |
+| **opencode**    | 1.19.5  | **likely**: a built-in `skill` tool, observable through a plugin's `tool.execute.before`                                        | **likely**: `session.idle` / `session.deleted` plugin events              | **no**: sets `AGENT=1`, `OPENCODE=1`, `OPENCODE_PID` process-wide; no session id    | strings in the compiled binary; plugins are JS modules (npm or a local plugin file), not hook commands, so an adapter is a different shape                                 |
+| **antigravity** | 1.5.16  | **unmeasured**: `PreToolUse` exists (matcher-based); which tool a skill load raises is not captured                             | **unmeasured**: `Stop` fires per turn; no session-end event is documented | **unmeasured**                                                                      | a probe needs `--dangerously-skip-permissions` and `--dangerously-bypass-hook-trust`, which an unattended agent run may not use without the user's say-so                  |
+| **grok**        | —       | no `Skill` tool (see below)                                                                                                     | session lifecycle hooks exist                                             | unmeasured                                                                          | record only, as planned                                                                                                                                                    |
+
+**What ships in the meantime.** No adapter: none of these has all three pieces measured, and an
+adapter written against unmeasured payloads cannot tell "not a skill" from "the shape changed" (the
+bug the first Cursor adapter had). The reporter instead **stands down** in a Gemini CLI or OpenCode
+shell (`GEMINI_CLI=1` / `OPENCODE=1`) unless a candidate session holds the skill's start, rather than
+writing a row stamped `claude-code` from an inherited parent session id. Antigravity has no shell
+marker yet, so a report there can still be mislabelled. Follow-up work is OT plan `4dff4f7e`;
+[agent-editor-folders.md § 7](./agent-editor-folders.md#7-cross-agent-parity) holds the per-agent
+parity row.
+
 ### grok reads Claude plugins — but that is not the win it looks like
 
 `grok inspect` reports "Harness Compatibility" with both cursor and claude, covering skills, rules,

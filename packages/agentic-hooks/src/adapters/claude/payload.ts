@@ -12,6 +12,20 @@ import type { NormalizedInvocation } from '../../types.ts';
 export const CLAUDE_SOURCE = 'claude-code';
 
 /**
+ * The session id Claude Code exports to its Bash tool, or null outside one.
+ * `CLAUDE_CODE_SESSION_ID` is what the Bash tool actually sees; the older
+ * `CLAUDE_SESSION_ID` is kept as a fallback. It equals the hook payload's
+ * `session_id`, so a reporter can claim the start the capture hook recorded.
+ *
+ * @public
+ */
+export const readClaudeShellSessionId = (
+  env: NodeJS.ProcessEnv,
+): string | null => {
+  return env.CLAUDE_CODE_SESSION_ID || env.CLAUDE_SESSION_ID || null;
+};
+
+/**
  * Parse a Claude Code hook payload into a NormalizedInvocation, or null when
  * the payload is not a skill invocation this adapter handles.
  *

@@ -32,10 +32,10 @@ producer hook payload → <tool adapter> → NormalizedInvocation
 Wired producers (plugin `hooks.json`; this repo loads them via its dev marketplace, see
 [hook-plugin-distribution.md](../../../docs/monorepo/hook-plugin-distribution.md) §5):
 
-| Producer    | Bundle(s)                                                                                              | Config                                                                                                                                                                                       |
-| ----------- | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Claude Code | `plugins/openthrottle/hooks/skill-usage-capture.cjs` (start); `…-complete.cjs` (SessionEnd → outcomes) | `plugins/openthrottle/hooks/hooks.json` → `PreToolUse`/`UserPromptExpansion` (start) + `Stop`/`SessionEnd` (complete)                                                                        |
-| Cursor      | `plugins/openthrottle-cursor/hooks/skill-usage-capture.cjs`                                            | `plugins/openthrottle-cursor/hooks/hooks.json` → `beforeSubmitPrompt` (provisional — the normalizer no-ops on non-skill payloads until Cursor's skill-invocation event/payload is finalized) |
+| Producer    | Bundle(s)                                                                                                     | Config                                                                                                                                                                                                      |
+| ----------- | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Claude Code | `plugins/openthrottle/hooks/skill-usage-capture.cjs` (start); `…-complete.cjs` (SessionEnd → outcomes)        | `plugins/openthrottle/hooks/hooks.json` → `PreToolUse`/`UserPromptExpansion` (start) + `Stop`/`SessionEnd` (complete)                                                                                       |
+| Cursor      | `plugins/openthrottle-cursor/hooks/skill-usage-capture.cjs` (start); `…-complete.cjs` (sessionEnd → outcomes) | `plugins/openthrottle-cursor/hooks/hooks.json` → `preToolUse` `Read` of a `SKILL.md` (start, `invocation_path: skill_read`) + interactive-only `beforeSubmitPrompt` slash commands; `sessionEnd` (complete) |
 
 ## The producer contract
 
@@ -96,9 +96,13 @@ either (`PostToolUse` on `Skill` fires at injection, not completion), so there i
 no honest duration to record.
 
 `success` and `error` are therefore reserved for a deliberate reporter — the
-opt-in helper `skill-usage-outcome.cjs` (the openthrottle plugin's `bin/`, on the Bash PATH)
-(`--skill … --outcome error [--duration-ms …] --session …`), which is also the
-only path that may report a duration. It rejects `session_ended`. A skill that
+opt-in helper `skill-usage-outcome.cjs` (the `bin/` of the Claude, Codex and Cursor
+telemetry payloads; on the Bash PATH under Claude Code)
+(`--skill … --outcome error [--duration-ms …] [--session …] [--source …]`), which is also the
+only path that may report a duration. It rejects `session_ended`. It finds the running agent's
+session from that agent's shell variables and stamps that agent's `source`, and it writes nothing
+in a shell it cannot attribute. Per-agent support:
+[agent-editor-folders.md § Skill-usage telemetry per agent](../../../docs/monorepo/agent-editor-folders.md#skill-usage-telemetry-per-agent). A skill that
 never reports shows `—` on `/usage`, which is the honest state, not missing data.
 
 Absent outcomes are expected for uninstrumented skills — most third-party ones,

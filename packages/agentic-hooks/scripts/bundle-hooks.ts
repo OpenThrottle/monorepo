@@ -199,6 +199,12 @@ const CURSOR_PLUGIN_ENTRIES: readonly PluginEntry[] = [
     entry: 'adapters/cursor/heartbeat.ts',
     file: 'skill-usage-heartbeat.cjs',
     kind: 'hook',
+  }, // The one tool-neutral outcome reporter: it resolves the running agent's
+  // session and source itself (adapters/claude/reporter-host.ts).
+  {
+    entry: 'adapters/claude/outcome.ts',
+    file: 'skill-usage-outcome.cjs',
+    kind: 'bin',
   },
 ];
 
@@ -270,6 +276,12 @@ const CODEX_PLUGIN_ENTRIES: readonly PluginEntry[] = [
     entry: 'adapters/codex/heartbeat.ts',
     file: 'skill-usage-heartbeat.cjs',
     kind: 'hook',
+  }, // The one tool-neutral outcome reporter: it resolves the running agent's
+  // session and source itself (adapters/claude/reporter-host.ts).
+  {
+    entry: 'adapters/claude/outcome.ts',
+    file: 'skill-usage-outcome.cjs',
+    kind: 'bin',
   },
 ];
 

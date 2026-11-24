@@ -28,6 +28,21 @@ import type { NormalizedInvocation } from '../../types.ts';
 /** Producer id stamped onto every event this adapter emits. @public */
 export const CODEX_SOURCE = 'codex';
 
+/**
+ * The session id Codex exports to its shell tool, or null outside one.
+ * Measured on `codex-cli 0.167.0`: every shell command sees `CODEX_SESSION_ID`
+ * and `CODEX_THREAD_ID`, both equal to the thread id, which is the hook
+ * payload's `session_id` (the rollout file is named for it). That equality is
+ * what lets the reporter claim the start `UserPromptSubmit` recorded.
+ *
+ * @public
+ */
+export const readCodexShellSessionId = (
+  env: NodeJS.ProcessEnv,
+): string | null => {
+  return env.CODEX_SESSION_ID || env.CODEX_THREAD_ID || null;
+};
+
 /** Matches a prompt that opens with `/<command-name>`, capturing the name. */
 const SLASH_COMMAND_PATTERN = /^\s*\/([A-Za-z0-9][\w.:-]*)\s*([\s\S]*)$/;
 

@@ -10,8 +10,13 @@
  * as not measured, which is the honest reading of "nobody measured".
  *
  * Without `--duration-ms` the duration is derived from the skill's own open
- * start (load → this call); see `claimLatestStart`. Session id defaults to
- * `$CLAUDE_CODE_SESSION_ID`.
+ * start (load → this call); see `claimLatestStart`.
+ *
+ * One bundle serves every agent whose payload ships it (Claude Code, Codex,
+ * Cursor): the session id and `source` come from whichever agent's shell runs
+ * it, resolved by `./reporter-host.ts`. `--session` / `--source` (or
+ * `OPENTHROTTLE_TELEMETRY_SESSION_ID` / `OPENTHROTTLE_TELEMETRY_SOURCE`)
+ * override that.
  *
  * Usage:
  *   skill-usage-outcome.cjs --skill ot-plans --outcome success
@@ -27,35 +32,38 @@ import {
   resolveHookRepoRoot,
   SKILL_USAGE_OUTCOMES,
 } from '../../index.ts';
+import { resolveBundleHostProjectDir } from './bundle-host.ts';
 import { parseOutcomeArgs } from './parseOutcomeArgs.ts';
-import { CLAUDE_SOURCE } from './payload.ts';
+import { resolveReporterSession } from './reporter-host.ts';
 
 const main = async (): Promise<void> => {
   try {
     const args = parseOutcomeArgs(process.argv.slice(2));
-    // The reporter runs from the agent's shell, so its cwd is where the work
-    // happened — the same checkout resolution the capture hook uses.
-    const repoRoot = resolveHookRepoRoot({
-      payloadCwd: process.cwd(),
-      projectDir:
-        process.env.CLAUDE_PROJECT_DIR ||
-        process.env.OPEN_THROTTLE_REPO_ROOT ||
-        process.cwd(),
-    });
-
     const skillName =
       args.skill || process.env.OPENTHROTTLE_TELEMETRY_SKILL_NAME || '';
     const outcome =
       args.outcome || process.env.OPENTHROTTLE_TELEMETRY_OUTCOME || '';
-    const sessionId =
-      args.session ||
-      process.env.OPENTHROTTLE_TELEMETRY_SESSION_ID ||
-      // What Claude Code actually exports to the Bash tool; the older
-      // CLAUDE_SESSION_ID is unset there, which left every reporter row
-      // uncorrelated.
-      process.env.CLAUDE_CODE_SESSION_ID ||
-      process.env.CLAUDE_SESSION_ID ||
-      null;
+    const session = resolveReporterSession({
+      env: process.env,
+      explicitSessionId:
+        args.session || process.env.OPENTHROTTLE_TELEMETRY_SESSION_ID || null,
+      explicitSource:
+        args.source || process.env.OPENTHROTTLE_TELEMETRY_SOURCE || null,
+      skillName,
+    });
+    if (session.kind === 'unattributable') {
+      logHookError(
+        `outcome not recorded: ${session.host} has no session id for its shell yet`,
+      );
+      return;
+    }
+    const { sessionId, source } = session;
+    // The reporter runs from the agent's shell, so its cwd is where the work
+    // happened — the same checkout resolution that agent's capture hook uses.
+    const repoRoot = resolveHookRepoRoot({
+      payloadCwd: process.cwd(),
+      projectDir: resolveBundleHostProjectDir(source),
+    });
     const toolUseId =
       args['tool-use-id'] ||
       process.env.OPENTHROTTLE_TELEMETRY_TOOL_USE_ID ||
@@ -98,7 +106,7 @@ const main = async (): Promise<void> => {
       repoRoot,
       sessionId,
       skillName,
-      source: CLAUDE_SOURCE,
+      source,
       toolUseId,
     });
     if (!event) {

@@ -247,3 +247,56 @@ export const claimLatestStart = ({
     return null;
   }
 };
+
+/**
+ * One session a deliberate reporter could be running in: the producer that
+ * owns it and the id that producer exported to the shell.
+ *
+ * @public
+ */
+export interface ReporterSessionCandidate {
+  readonly sessionId: string;
+  readonly source: string;
+}
+
+/**
+ * @description Choose which of several candidate sessions a deliberate
+ * reporter belongs to.
+ *
+ * An agent's shell inherits its parent's environment, so a tool launched from
+ * another tool's session sees both tools' session ids. Environment alone cannot
+ * say which is the innermost. The start ledger can: the session that recorded
+ * an open start for `skillName` is the one that loaded the skill. The first
+ * candidate (in caller order) with such a start wins (`holdsStart: true`); with
+ * none, the first candidate is the best guess (`holdsStart: false`); with no
+ * candidates, null.
+ *
+ * Read-only: claiming the start is still {@link claimLatestStart}'s job.
+ *
+ * @public
+ */
+export const pickReporterSession = <
+  TCandidate extends ReporterSessionCandidate,
+>({
+  candidates,
+  skillName,
+  startsDir,
+}: {
+  readonly candidates: readonly TCandidate[];
+  readonly skillName: string;
+  readonly startsDir?: string;
+}): { readonly candidate: TCandidate; readonly holdsStart: boolean } | null => {
+  const withStart = candidates.find((candidate) => {
+    return listStartsForSession({
+      sessionId: candidate.sessionId,
+      startsDir,
+    }).some((entry) => {
+      return entry.skill_name === skillName;
+    });
+  });
+  if (withStart) {
+    return { candidate: withStart, holdsStart: true };
+  }
+  const [first] = candidates;
+  return first ? { candidate: first, holdsStart: false } : null;
+};
