@@ -26,11 +26,15 @@
 
 import { spawn } from 'node:child_process';
 
-import { cursorAttributionOffEnv } from '@openthrottle/openthrottle-drivers';
+import {
+  cursorAttributionOffEnv,
+  cursorDriver,
+} from '@openthrottle/openthrottle-drivers';
 
 import { warnUnsupportedAdditionalDirectories } from '../capabilities.ts';
 import { describeExit } from '../describeExit.ts';
 import { withFileMentions } from '../file-mentions.ts';
+import { pickChatHostEnv } from '../host-env.ts';
 import { withKeepalive } from '../keepalive.ts';
 import type {
   ConversationBackend,
@@ -51,64 +55,6 @@ import {
   resolveSessionCreateTimeoutMs,
   terminateChild,
 } from './teardown.ts';
-
-/**
- * Env vars the child inherits. The posture is unchanged — the child gets the
- * host login and cursor's own configuration, never the server's secrets — but
- * the list is now driven by what `cursor-agent` provably reads (verified
- * against the 2026.08.11 bundle and its launcher script), not by guesswork.
- *
- * Dropping a var cursor needs is not a no-op: it silently diverges our child
- * from the user's own terminal, which is exactly the class of bug this plan
- * chased.
- */
-const ALLOWED_ENV_KEYS = [
-  'CURSOR_AUTH_TOKEN', // Alternate credential source, read alongside CURSOR_API_KEY.
-  'HOME', // Host login (unchanged).
-  'LANG', // Host locale (unchanged).
-  'LC_ALL',
-  'LOGNAME',
-  'PATH',
-  'SHELL', // cursor shells out for tool calls.
-  'TERM',
-  'TMPDIR',
-  'USER',
-
-  /**
-   * Selects keychain (`default`, macOS login keychain) vs `file` vs `memory`.
-   * Dropping it forces the keychain even when the user configured otherwise.
-   */
-  'AGENT_CLI_CREDENTIAL_STORE',
-
-  /**
-   * Standard proxy trio. Dropping these leaves cursor with no route to the
-   * network behind a corporate proxy; dropping NO_PROXY alone would force
-   * proxying of hosts the user deliberately excluded.
-   */
-  'HTTP_PROXY',
-  'HTTPS_PROXY',
-  'NO_PROXY',
-
-  /**
-   * cursor's config dir is `$XDG_CONFIG_HOME/cursor` when set, else `~/.cursor`
-   * — so dropping this points our child at a DIFFERENT chat store than the
-   * user's own shell, while HOME still resolves.
-   */
-  'XDG_CONFIG_HOME',
-
-  /**
-   * Used by the launcher script to site NODE_COMPILE_CACHE on non-darwin.
-   */
-  'XDG_CACHE_HOME',
-] as const;
-
-/**
- * Prefixes passed through wholesale. cursor adds `CURSOR_*` knobs between
- * releases (`CURSOR_API_KEY`, `CURSOR_DATA_DIR`, endpoint overrides, …), so
- * enumerating them guarantees we fall behind. Everything under this prefix is
- * cursor's own configuration by construction, never server state.
- */
-const ALLOWED_ENV_PREFIXES = ['CURSOR_'] as const;
 
 /**
  * Values forced on the child regardless of the host environment.
@@ -144,21 +90,7 @@ function resolveCursorAgentBin(env: NodeJS.ProcessEnv = process.env): string {
 export function buildCursorAgentEnv(
   env: NodeJS.ProcessEnv = process.env,
 ): NodeJS.ProcessEnv {
-  const scrubbed: NodeJS.ProcessEnv = {};
-
-  for (const [key, value] of Object.entries(env)) {
-    if (value === undefined) {
-      continue;
-    }
-
-    const allowed =
-      ALLOWED_ENV_KEYS.some((allowedKey) => allowedKey === key) ||
-      ALLOWED_ENV_PREFIXES.some((prefix) => key.startsWith(prefix));
-
-    if (allowed) {
-      scrubbed[key] = value;
-    }
-  }
+  const scrubbed = pickChatHostEnv(env, cursorDriver.hostEnv);
 
   // Forced last so the host can never override them. `CURSOR_CONFIG_DIR` points at an
   // attribution-off copy of the user's config, so cursor never writes a `Co-authored-by` trailer.

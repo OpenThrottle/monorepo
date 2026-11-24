@@ -6,6 +6,7 @@
  */
 
 import type { AgentAccountError } from '../utils/account-error.ts';
+import type { DriverHostEnv } from '../utils/child-env.ts';
 import type { UsageLimit } from '../utils/claude-output.ts';
 import type { DriverOutputFormat } from '../utils/output-format.ts';
 import type { DriverReasoningEffort } from '../utils/reasoning-effort.ts';
@@ -113,8 +114,9 @@ export interface DriverInvocationConfig {
    */
   readonly endpoint?: DriverEndpointConfig;
   /**
-   * Extra environment variables for the subprocess, merged over the inherited `process.env`.
-   * Omitted ⇒ the child inherits `process.env` unchanged.
+   * The run's explicit variables for the subprocess (run identity, MCP env, `OT_PR_DRAFT_DIR`, …),
+   * layered over the allowlisted host env. The child never inherits `process.env` wholesale:
+   * omitted ⇒ it gets the allowlist alone (see `buildAllowlistedChildEnv`).
    */
   readonly env?: Readonly<Record<string, string>>;
   /** Iteration number (used only for log attribution). */
@@ -315,8 +317,8 @@ export interface AgentDriver {
   readonly buildShellCommand: (config: DriverInvocationConfig) => string;
   readonly capabilities: DriverCapabilities;
   /**
-   * Variables this CLI's child always gets, computed from its effective env (inherited
-   * `process.env` + `config.env`) and merged over both. Cursor uses it to point `CURSOR_CONFIG_DIR`
+   * Variables this CLI's child always gets, computed from the parent env (`process.env` +
+   * `config.env`) and merged over the allowlisted child env. Cursor uses it to point `CURSOR_CONFIG_DIR`
    * at an attribution-off config. Omitted ⇒ nothing added.
    */
   readonly childEnv?: (
@@ -324,6 +326,12 @@ export interface AgentDriver {
   ) => Readonly<Record<string, string>>;
   /** How discovery enumerates this CLI's models; omitted ⇒ availability-only (`models: []`). */
   readonly discoverModels?: DriverModelListing;
+  /**
+   * The host-login variables this CLI needs from the host (its API key, config dir, …) on top of
+   * the base keys. The single source both the run engine and the chat adapters read, so a child
+   * gets exactly what its own login needs and none of the server's secrets.
+   */
+  readonly hostEnv: DriverHostEnv;
   /** Stable driver id (also a `DriverId`). */
   readonly id: string;
   /**

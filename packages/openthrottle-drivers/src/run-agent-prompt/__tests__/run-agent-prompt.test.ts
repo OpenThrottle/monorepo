@@ -332,3 +332,30 @@ describe('runAgentPrompt — input validation', () => {
     ).rejects.toBeInstanceOf(DriverCapabilityError);
   });
 });
+
+describe('runAgentPrompt — child env (scheduled-job path)', () => {
+  beforeEach(() => {
+    vi.mocked(spawn).mockReset();
+    vi.stubEnv('POSTGRES_PASSWORD', 'sentinel-secret-value');
+    vi.stubEnv('GH_TOKEN', 'sentinel-secret-value');
+    vi.stubEnv('OPENTHROTTLE_MCP_AUTH_TOKEN', 'sentinel-secret-value');
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  for (const driverId of DRIVER_IDS) {
+    it(`keeps server secrets out of the ${driverId} child`, async () => {
+      const child = makeChild();
+      vi.mocked(spawn).mockReturnValue(child);
+
+      const promise = runAgentPrompt({ driverId, prompt: 'hello' });
+      child.emit('close', 0);
+      await promise;
+
+      const env = vi.mocked(spawn).mock.calls[0]?.[2]?.env;
+      expect(Object.values(env ?? {})).not.toContain('sentinel-secret-value');
+    });
+  }
+});

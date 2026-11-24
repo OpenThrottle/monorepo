@@ -17,6 +17,8 @@
 
 import { spawn } from 'node:child_process';
 
+import { opencodeDriver } from '@openthrottle/openthrottle-drivers';
+
 import { warnUnsupportedAdditionalDirectories } from '../capabilities.ts';
 import { NdjsonBuffer } from '../cursor-agent/ndjson.ts';
 import {
@@ -25,6 +27,7 @@ import {
 } from '../cursor-agent/teardown.ts';
 import { describeExit } from '../describeExit.ts';
 import { withFileMentions } from '../file-mentions.ts';
+import { pickChatHostEnv } from '../host-env.ts';
 import { withKeepalive } from '../keepalive.ts';
 import type {
   ConversationBackend,
@@ -46,18 +49,6 @@ import {
   LOCAL_ENDPOINT_PROVIDER_ID,
   writeOpencodeMcpConfig,
 } from './mcp-config.ts';
-
-/** Env vars the child is allowed to inherit (host login + locale), nothing else. */
-const ALLOWED_ENV_KEYS = [
-  'HOME',
-  'LANG',
-  'LC_ALL',
-  'LOGNAME',
-  'PATH',
-  'TERM',
-  'TMPDIR',
-  'USER',
-] as const;
 
 /**
  * Resolve the binary: explicit env override, else `opencode` off PATH.
@@ -81,19 +72,7 @@ function buildScrubbedEnv(
   env: NodeJS.ProcessEnv = process.env,
   extra?: Readonly<Record<string, string>>,
 ): NodeJS.ProcessEnv {
-  const scrubbed: NodeJS.ProcessEnv = {};
-  for (const key of ALLOWED_ENV_KEYS) {
-    const value = env[key];
-    if (value !== undefined) {
-      scrubbed[key] = value;
-    }
-  }
-  if (extra !== undefined) {
-    for (const [key, value] of Object.entries(extra)) {
-      scrubbed[key] = value;
-    }
-  }
-  return scrubbed;
+  return pickChatHostEnv(env, opencodeDriver.hostEnv, extra);
 }
 
 /**

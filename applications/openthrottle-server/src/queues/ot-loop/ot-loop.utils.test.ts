@@ -1,4 +1,15 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import {
+  chmodSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
+import { getDriver, runDriverAsync } from '@openthrottle/openthrottle-drivers';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { TaskFragment } from '../../__generated__/graphql.ts';
 import {
@@ -11,6 +22,23 @@ import {
   toLoopTask,
   toTimeoutMs,
 } from './ot-loop.utils.ts';
+
+/** Secret-shaped names the server env holds that no agent child may receive. */
+const SENTINEL_NAMES = new Set<string>([
+  'AWS_ACCESS_KEY_ID',
+  'AWS_SECRET_ACCESS_KEY',
+  'ELEVENLABS_API_KEY',
+  'FISH_AUDIO_API_KEY',
+  'GEMINI_API_KEY',
+  'GH_TOKEN',
+  'GITHUB_TOKEN',
+  'HCLOUD_TOKEN',
+  'OPENAI_API_KEY',
+  'OPENTHROTTLE_DEVELOPER_JWT_SECRET',
+  'OT_CANARY_SECRET',
+  'POSTGRES_PASSWORD',
+  'ROLLBAR_TOKEN',
+]);
 
 const row = (overrides: Partial<TaskFragment> = {}): TaskFragment => {
   return {
@@ -95,6 +123,49 @@ describe('buildWorkerEnv', () => {
       OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN: '',
       OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN: '',
       OT_MCP_AUTH_TOKEN_ENV_FILE: '',
+    });
+  });
+
+  // Canary for the OT Loop spawn path: a real stub agent CLI, no child_process mock, records every
+  // variable it received. A sibling covers the scheduled path (openthrottle-drivers).
+  describe('when a real agent CLI is spawned with it', () => {
+    let dir: string;
+    let namesFile: string;
+
+    beforeEach(() => {
+      dir = mkdtempSync(join(tmpdir(), 'child-env-canary-'));
+      namesFile = join(dir, 'env.txt');
+      const stub = join(dir, 'claude-stub');
+      writeFileSync(stub, `#!/bin/sh\n/usr/bin/env | sort > '${namesFile}'\n`);
+      chmodSync(stub, 0o755);
+      vi.stubEnv('OPENTHROTTLE_CLAUDE_BIN', stub);
+      vi.stubEnv('OPENTHROTTLE_MCP_AUTH_TOKEN', 'real-token');
+      vi.stubEnv(
+        'OPENTHROTTLE_AGENT_ENV_PASSTHROUGH',
+        'OPENTHROTTLE_MCP_AUTH_TOKEN',
+      );
+      for (const name of SENTINEL_NAMES) {
+        vi.stubEnv(name, 'sentinel-secret-value');
+      }
+    });
+
+    afterEach(() => {
+      vi.unstubAllEnvs();
+      rmSync(dir, { force: true, recursive: true });
+    });
+
+    it('delivers no server secret, and only blank OT tokens', async () => {
+      await runDriverAsync(getDriver('claude'), {
+        env: buildWorkerEnv(),
+        iteration: 1,
+        prompt: 'canary',
+      });
+
+      const lines = readFileSync(namesFile, 'utf8').split('\n');
+      const received = lines.map((line) => line.split('=')[0] ?? '');
+      expect(received).toContain('PATH');
+      expect(received.filter((name) => SENTINEL_NAMES.has(name))).toEqual([]);
+      expect(lines).toContain('OPENTHROTTLE_MCP_AUTH_TOKEN=');
     });
   });
 });

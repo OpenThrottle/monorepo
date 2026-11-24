@@ -5,23 +5,9 @@
  * (the hook bundles among them).
  */
 
-/** Env vars the child is allowed to inherit (host Google auth + locale), nothing else. */
-const ALLOWED_ENV_KEYS = [
-  'AGY_ADC_AUTH',
-  'GEMINI_API_KEY',
-  'GOOGLE_API_KEY',
-  'GOOGLE_APPLICATION_CREDENTIALS',
-  'GOOGLE_CLOUD_LOCATION',
-  'GOOGLE_CLOUD_PROJECT',
-  'HOME',
-  'LANG',
-  'LC_ALL',
-  'LOGNAME',
-  'PATH',
-  'TERM',
-  'TMPDIR',
-  'USER',
-] as const;
+import { antigravityDriver } from '@openthrottle/openthrottle-drivers';
+
+import { pickChatHostEnv } from '../host-env.ts';
 
 /**
  * Build a minimal allowlisted environment for the spawned child. `extra` (the run's `mcpEnv`) is
@@ -32,17 +18,5 @@ export function buildAntigravityEnv(
   env: NodeJS.ProcessEnv = process.env,
   extra?: Readonly<Record<string, string>>,
 ): NodeJS.ProcessEnv {
-  const scrubbed: NodeJS.ProcessEnv = {};
-  for (const key of ALLOWED_ENV_KEYS) {
-    const value = env[key];
-    if (value !== undefined) {
-      scrubbed[key] = value;
-    }
-  }
-  if (extra !== undefined) {
-    for (const [key, value] of Object.entries(extra)) {
-      scrubbed[key] = value;
-    }
-  }
-  return scrubbed;
+  return pickChatHostEnv(env, antigravityDriver.hostEnv, extra);
 }

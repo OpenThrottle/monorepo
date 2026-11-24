@@ -82,7 +82,7 @@ export interface OtLoopWorkerRunnerOptions {
   readonly cwd: string;
   readonly driver: AgentDriver;
   readonly effort: DriverReasoningEffort | undefined;
-  /** Env merged over the inherited one; blanks the OT credentials (§ 2). */
+  /** Explicit worker env over the engine allowlist; blanks the OT credentials (§ 2). */
   readonly env: Readonly<Record<string, string>>;
   /** Receives the limit when an attempt closed on one, so the service can schedule the resume. */
   readonly onUsageLimit: (usageLimit: UsageLimit) => void;

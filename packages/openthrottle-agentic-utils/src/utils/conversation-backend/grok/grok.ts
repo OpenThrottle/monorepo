@@ -20,6 +20,8 @@
 
 import { spawn } from 'node:child_process';
 
+import { grokDriver } from '@openthrottle/openthrottle-drivers';
+
 import { NdjsonBuffer } from '../cursor-agent/ndjson.ts';
 import {
   resolveAgentTimeouts,
@@ -27,6 +29,7 @@ import {
 } from '../cursor-agent/teardown.ts';
 import { describeExit } from '../describeExit.ts';
 import { withFileMentions } from '../file-mentions.ts';
+import { pickChatHostEnv } from '../host-env.ts';
 import { withKeepalive } from '../keepalive.ts';
 import type {
   ConversationBackend,
@@ -36,19 +39,6 @@ import type {
 import { CONVERSATION_STREAM_CHUNK_KINDS } from '../types.ts';
 import { buildGrokArgv, GROK_BIN_ENV, GROK_DEFAULT_BIN } from './argv.ts';
 import { createGrokEventMapper } from './events.ts';
-
-/** Env vars the child is allowed to inherit (host login + locale), nothing else. */
-const ALLOWED_ENV_KEYS = [
-  'HOME',
-  'LANG',
-  'LC_ALL',
-  'LOGNAME',
-  'PATH',
-  'TERM',
-  'TMPDIR',
-  'USER',
-  'XAI_API_KEY',
-] as const;
 
 /** The stderr line grok prints for each tool a headless run could not approve. */
 const PERMISSION_REQUIRED_PREFIX = 'permission required:';
@@ -104,19 +94,7 @@ function buildScrubbedEnv(
   env: NodeJS.ProcessEnv = process.env,
   extra?: Readonly<Record<string, string>>,
 ): NodeJS.ProcessEnv {
-  const scrubbed: NodeJS.ProcessEnv = {};
-  for (const key of ALLOWED_ENV_KEYS) {
-    const value = env[key];
-    if (value !== undefined) {
-      scrubbed[key] = value;
-    }
-  }
-  if (extra !== undefined) {
-    for (const [key, value] of Object.entries(extra)) {
-      scrubbed[key] = value;
-    }
-  }
-  return scrubbed;
+  return pickChatHostEnv(env, grokDriver.hostEnv, extra);
 }
 
 /**
