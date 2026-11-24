@@ -1,6 +1,7 @@
 /**
  * @description Client flag catalog for openthrottle-developer. Keys, kinds, and
- * defaults are the type SSOT for `useRolloutFlag` / `useIsRolloutEnabled`; the
+ * defaults are the type SSOT for `useRolloutFlag` / `useIsRolloutEnabled`, which
+ * take this same object (identity-checked against the provider's `flags`); the
  * server remains SSOT for runtime evaluation via `evaluateFeatureFlags`.
  */
 
@@ -18,5 +19,5 @@ export const developerRolloutFlags = defineRolloutFlags({
   timeline: { defaultValue: false, kind: 'boolean' },
 });
 
-/** Catalog type for typed hooks under {@link developerRolloutFlags}. */
+/** Catalog type of {@link developerRolloutFlags}. */
 export type DeveloperRolloutFlags = typeof developerRolloutFlags;

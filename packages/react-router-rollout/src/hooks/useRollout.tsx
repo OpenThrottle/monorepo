@@ -9,7 +9,7 @@ import { useRequiredRolloutContext } from './useRequiredRolloutContext';
  *
  * @example
  * ```ts
- * const { applicationKey, hydration, values } = useRollout<typeof flags>();
+ * const { applicationKey, hydration, values } = useRollout(flags);
  * ```
  *
  * @public
@@ -23,12 +23,14 @@ export type UseRolloutResult<TCatalog extends RolloutFlagCatalog> = {
 /**
  * @public
  */
-export const useRollout = <
-  TCatalog extends RolloutFlagCatalog = RolloutFlagCatalog,
->(): UseRolloutResult<TCatalog> => {
+export const useRollout = <TCatalog extends RolloutFlagCatalog>(
+  flags: TCatalog,
+): UseRolloutResult<TCatalog> => {
   // Hooks
-  const { applicationKey, hydration, values } =
-    useRequiredRolloutContext<TCatalog>('useRollout');
+  const { applicationKey, hydration, values } = useRequiredRolloutContext(
+    'useRollout',
+    flags,
+  );
 
   // Setup
 

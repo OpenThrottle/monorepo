@@ -2,22 +2,17 @@ import type { RolloutContextValue } from '../data';
 import type { RolloutFlagCatalog } from '../types';
 import { useRequiredRolloutContext } from './useRequiredRolloutContext';
 
-export interface UseRolloutContextOptions {}
-
 /**
- * Returns the rollout context. Throws when used outside a {@link RolloutProvider}.
+ * Returns the rollout context for `flags`. Throws when used outside a
+ * {@link RolloutProvider}, or when `flags` is not the provider's catalog.
  *
  * @public
  */
-export const useRolloutContext = <
-  TCatalog extends RolloutFlagCatalog = RolloutFlagCatalog,
->(
-  _options?: UseRolloutContextOptions,
+export const useRolloutContext = <TCatalog extends RolloutFlagCatalog>(
+  flags: TCatalog,
 ): RolloutContextValue<TCatalog> => {
-  // const {} = _options;
-
   // Hooks
-  const ctx = useRequiredRolloutContext<TCatalog>('useRolloutContext');
+  const ctx = useRequiredRolloutContext('useRolloutContext', flags);
 
   // Setup
 

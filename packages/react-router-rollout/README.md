@@ -111,7 +111,8 @@ import { APP_NAME } from '@openthrottle/react-router-utils';
 
 ## Hooks
 
-Pass the catalog type so keys and return types stay in sync:
+Pass the **same catalog object** the provider was given as the first argument;
+keys and return types are inferred from it:
 
 ```tsx
 import {
@@ -119,19 +120,24 @@ import {
   useRollout,
   useRolloutFlag,
 } from '@openthrottle/react-router-rollout';
-import type { AppRolloutFlags } from '~/global/data/data.rollout-flags';
+import { appRolloutFlags } from '~/global/data/data.rollout-flags';
 
-const enabled = useRolloutFlag<AppRolloutFlags>('billing.invoices'); // boolean
-const theme = useRolloutFlag<AppRolloutFlags>('theme.mode'); // string
-const invoicesOn = useIsRolloutEnabled<AppRolloutFlags>('billing.invoices');
-// useIsRolloutEnabled<AppRolloutFlags>('theme.mode') // type error (non-boolean)
+const enabled = useRolloutFlag(appRolloutFlags, 'billing.invoices'); // boolean
+const theme = useRolloutFlag(appRolloutFlags, 'theme.mode'); // string
+const invoicesOn = useIsRolloutEnabled(appRolloutFlags, 'billing.invoices');
+// useIsRolloutEnabled(appRolloutFlags, 'theme.mode') // type error (non-boolean)
 
-const { applicationKey, hydration, values } = useRollout<AppRolloutFlags>();
+const { applicationKey, hydration, values } = useRollout(appRolloutFlags);
 ```
 
 - Prefer `useRolloutFlag` / `useIsRolloutEnabled` in UI.
 - Use `useRollout` for status / debugging.
-- All hooks throw if used outside `RolloutProvider`.
+- All hooks throw if used outside `RolloutProvider`, or if given a catalog
+  object other than the provider's `flags`. The hooks check identity
+  (`context.catalog === flags`), because that is what proves the context's
+  values were resolved against your catalog type. Declare the catalog once at
+  module scope with `defineRolloutFlags` and import it everywhere — an inline
+  or re-created catalog fails the check.
 
 ## Fetch adapter shape
 

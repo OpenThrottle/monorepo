@@ -21,7 +21,7 @@ describe('useRolloutContext', () => {
       },
     ]);
 
-    const { result } = renderHook(() => useRolloutContext<typeof flags>(), {
+    const { result } = renderHook(() => useRolloutContext(flags), {
       wrapper: ({ children }) => (
         <RolloutProvider
           applicationKey="hook-app"
@@ -43,7 +43,7 @@ describe('useRolloutContext', () => {
   });
 
   test('throws when used outside RolloutProvider', () => {
-    expect(() => renderHook(() => useRolloutContext())).toThrow(
+    expect(() => renderHook(() => useRolloutContext(flags))).toThrow(
       'useRolloutContext must be used within a RolloutProvider',
     );
   });

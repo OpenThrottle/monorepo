@@ -8,7 +8,8 @@ import { renderRoutesStub } from '~/testing/route-fixtures';
 
 import Component from '../settings.rollout._index';
 
-vi.mock('@openthrottle/react-router-rollout', () => ({
+vi.mock('@openthrottle/react-router-rollout', async (importOriginal) => ({
+  ...(await importOriginal<Record<string, unknown>>()),
   useIsRolloutEnabled: vi.fn(() => false),
   useRollout: vi.fn(() => ({
     applicationKey: 'openthrottle-developer',

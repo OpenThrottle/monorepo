@@ -26,7 +26,8 @@ Do not reimplement evaluation / fallthrough here. Do not import app
 - [src/components/RolloutProvider.tsx](src/components/RolloutProvider.tsx) —
   root provider; inject `fetchEvaluations`.
 - [src/hooks/](src/hooks/) — `useRolloutContext`, `useRolloutFlag`,
-  `useIsRolloutEnabled`, `useRollout` (pass catalog as `TCatalog` type arg).
+  `useIsRolloutEnabled`, `useRollout` (pass the catalog object as the first
+  argument).
 - [src/utils/](src/utils/) — merge, parse `valueJson`, cache read/write,
   defaults-from-catalog.
 - [src/config/](src/config/) — default TTL (`DEFAULT_ROLLOUT_CACHE_TTL_MS`),
@@ -45,9 +46,11 @@ Do not reimplement evaluation / fallthrough here. Do not import app
   changes only).
 - Evaluation must work **anon + auth**. Auth enriches targeting/bucketing; it is
   not a hard gate. Admin CRUD stays on `flags:read` / `flags:write`.
-- Pass catalog as a **type argument** on hooks
-  (`useRolloutFlag<typeof flags>('key')`) — inference alone does not thread the
-  catalog through context.
+- Pass the catalog **object** to every hook (`useRolloutFlag(flags, 'key')`).
+  The context is untyped; the hooks narrow it with
+  `isRolloutContextForCatalog`, an identity check (`ctx.catalog === flags`).
+  That identity is the only sound evidence of the catalog type, so never add a
+  type-argument-only hook — it can only be written with a cast.
 - `useIsRolloutEnabled` is boolean-kind keys only (`RolloutBooleanFlagKey`).
 
 ## Pointers
