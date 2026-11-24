@@ -7179,6 +7179,8 @@ export type ServerHealthObject = {
   embeddings?: Maybe<EmbeddingsHealthObject>;
   /** Redis (BullMQ) status: ok | unconfigured | unreachable. From Redis PING. */
   redis: Scalars['String']['output'];
+  /** Whether ~/.openthrottle/.env lets agents in other checkouts reach this server (statuses only). Null when it cannot be computed — that never fails the rest of serverHealth. */
+  userEnvFile?: Maybe<UserEnvFileHealthObject>;
   /** WebSocket (Socket.IO) status: ok when server process is running. */
   websocket: Scalars['String']['output'];
 };
@@ -8705,6 +8707,15 @@ export type UpsertTagActionRuleInput = {
   title: Scalars['String']['input'];
 };
 
+/** Whether ~/.openthrottle/.env lets agents in other checkouts on this machine reach this server. Statuses only; the token is never returned. */
+export type UserEnvFileHealthObject = {
+  __typename?: 'UserEnvFileHealthObject';
+  /** GraphQL endpoint line: ok | missing | stale (a managed line for another port) | user_set | unreadable | not_applicable (worktree, container or portless server). */
+  endpoint: Scalars['String']['output'];
+  /** Auth token line: ok | missing | stale (no longer authenticates) | user_set (set by the user and authenticates) | unreadable | not_applicable. */
+  token: Scalars['String']['output'];
+};
+
 export type UserObject = {
   __typename?: 'UserObject';
   createdAt: Scalars['DateTime']['output'];
@@ -9890,6 +9901,12 @@ export type EmbeddingsHealthFragment = {
   }>;
 };
 
+export type UserEnvFileHealthFragment = {
+  __typename?: 'UserEnvFileHealthObject';
+  endpoint: string;
+  token: string;
+};
+
 export type ServerHealthWithEmbeddingsFragment = {
   __typename?: 'ServerHealthObject';
   api: string;
@@ -9913,6 +9930,11 @@ export type ServerHealthWithEmbeddingsFragment = {
       table: string;
       total: number;
     }>;
+  } | null;
+  userEnvFile?: {
+    __typename?: 'UserEnvFileHealthObject';
+    endpoint: string;
+    token: string;
   } | null;
 };
 
@@ -9945,6 +9967,11 @@ export type GetServerHealthWithEmbeddingsQuery = {
         table: string;
         total: number;
       }>;
+    } | null;
+    userEnvFile?: {
+      __typename?: 'UserEnvFileHealthObject';
+      endpoint: string;
+      token: string;
     } | null;
   };
 };
@@ -13340,6 +13367,26 @@ export const EmbeddingsHealthFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<EmbeddingsHealthFragment, unknown>;
+export const UserEnvFileHealthFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UserEnvFileHealth' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'UserEnvFileHealthObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'endpoint' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'token' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UserEnvFileHealthFragment, unknown>;
 export const ServerHealthWithEmbeddingsFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -13369,6 +13416,19 @@ export const ServerHealthWithEmbeddingsFragmentDoc = {
             },
           },
           { kind: 'Field', name: { kind: 'Name', value: 'redis' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'userEnvFile' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'UserEnvFileHealth' },
+                },
+              ],
+            },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'websocket' } },
         ],
       },
@@ -13404,6 +13464,21 @@ export const ServerHealthWithEmbeddingsFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'queueDepth' } },
           { kind: 'Field', name: { kind: 'Name', value: 'staleCount' } },
           { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UserEnvFileHealth' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'UserEnvFileHealthObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'endpoint' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'token' } },
         ],
       },
     },
@@ -16192,6 +16267,21 @@ export const GetServerHealthWithEmbeddingsDocument = {
     },
     {
       kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'UserEnvFileHealth' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'UserEnvFileHealthObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'endpoint' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'token' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
       name: { kind: 'Name', value: 'ServerHealthWithEmbeddings' },
       typeCondition: {
         kind: 'NamedType',
@@ -16216,6 +16306,19 @@ export const GetServerHealthWithEmbeddingsDocument = {
             },
           },
           { kind: 'Field', name: { kind: 'Name', value: 'redis' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'userEnvFile' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'UserEnvFileHealth' },
+                },
+              ],
+            },
+          },
           { kind: 'Field', name: { kind: 'Name', value: 'websocket' } },
         ],
       },

@@ -20,8 +20,26 @@ import { configureBodyParsers } from './body-parsers/body-parsers.utils.ts';
 import { PROCESS_ROLES } from './config/config.constants.ts';
 import type { ProcessRole } from './config/config.types.ts';
 import { resolveProcessRole } from './config/config.utils.ts';
-import { ensureUserEnvFileOnBoot } from './services/user-env-file/user-env-file.utils.ts';
+import { UserEnvFileService } from './services/user-env-file/user-env-file.service.ts';
+import { ensureUserEnvFile } from './services/user-env-file/user-env-file.utils.ts';
 import { WorkerAppModule } from './worker-app/worker-app.module.ts';
+
+/**
+ * @description One boot warning when `~/.openthrottle/.env` is missing or stale, so a
+ * broken credential path for agents in other checkouts shows up without running the
+ * hooks doctor. Only roles that load `UserEnvFileService` check; never fails boot.
+ */
+const logUserEnvFileHealth = async (
+  app: NestExpressApplication,
+): Promise<void> => {
+  let service: UserEnvFileService;
+  try {
+    service = app.get(UserEnvFileService, { strict: false });
+  } catch {
+    return;
+  }
+  await service.logBootHealth();
+};
 
 /**
  * @description Role-gated composition root consumed by the single `main.ts`
@@ -111,13 +129,15 @@ async function bootstrap(role: 'all' | 'api'): Promise<void> {
    * Fill in `~/.openthrottle/.env` so hooks in every checkout on this machine can
    * reach this server. Primary, non-container servers only; fail-open.
    */
-  ensureUserEnvFileOnBoot({
+  ensureUserEnvFile({
     ensure: ensureUserEnvEntries,
     env: process.env,
     fileExists: existsSync,
     logger,
     port,
+    tokenOverride: undefined,
   });
+  void logUserEnvFileHealth(app);
 
   logger.info(
     `\n\n\n  🚀 Application is running on: ${url} (PROCESS_ROLE=${role}) \n\n`,

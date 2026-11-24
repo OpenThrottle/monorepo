@@ -9,10 +9,12 @@ import { NestjsRedisModule } from '@openthrottle/nestjs-redis';
 import { MetricsModule } from '../../metrics/metrics.module.ts';
 import { EmbeddingsQueueProducerModule } from '../../queues/embeddings/producer/producer.module.ts';
 import { EmbedderModule } from '../../services/embedder/embedder.module.ts';
+import { UserEnvFileModule } from '../../services/user-env-file/user-env-file.module.ts';
 import { EmbeddingsHealthResolver } from './embeddings-health/embeddings-health.resolver.ts';
 import { EmbeddingsHealthService } from './embeddings-health/embeddings-health.service.ts';
 import { HealthResolver } from './health.resolver.ts';
 import { HealthService } from './health.service.ts';
+import { UserEnvFileHealthResolver } from './user-env-file-health/user-env-file-health.resolver.ts';
 
 @Module({
   exports: [HealthService],
@@ -22,12 +24,14 @@ import { HealthService } from './health.service.ts';
     LoggerModule,
     MetricsModule,
     NestjsRedisModule,
+    UserEnvFileModule,
   ],
   providers: [
     EmbeddingsHealthResolver,
     EmbeddingsHealthService,
     HealthResolver,
     HealthService,
+    UserEnvFileHealthResolver,
   ],
 })
 export class HealthGraphqlModule {}

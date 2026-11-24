@@ -33,6 +33,9 @@ export function createServiceAccountCredentialsRepositoryMock(): ServiceAccountC
     findCredentials: vi.fn(async () => {
       return [];
     }),
+    isActiveToken: vi.fn(async () => {
+      return false;
+    }),
     revokeCredential: vi.fn(async () => {
       return false;
     }),

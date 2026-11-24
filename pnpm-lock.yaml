@@ -873,6 +873,9 @@ importers:
       '@openthrottle/agentic-evals':
         specifier: workspace:^
         version: link:packages/agentic-evals
+      '@openthrottle/agentic-hooks':
+        specifier: workspace:^
+        version: link:packages/agentic-hooks
       '@openthrottle/agentic-replay-testing':
         specifier: workspace:^
         version: link:packages/agentic-replay-testing

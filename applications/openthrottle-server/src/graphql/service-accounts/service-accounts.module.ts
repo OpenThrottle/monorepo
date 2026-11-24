@@ -10,6 +10,7 @@ import {
 } from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { UserEnvFileModule } from '../../services/user-env-file/user-env-file.module.ts';
 import { ServiceAccountsResolver } from './service-accounts.resolver.ts';
 
 @Module({
@@ -17,6 +18,7 @@ import { ServiceAccountsResolver } from './service-accounts.resolver.ts';
     RolesModule,
     ServiceAccountCredentialsModule,
     ServiceAccountsModule,
+    UserEnvFileModule,
   ],
   providers: [GqlPermissionsGuard, ServiceAccountsResolver],
 })

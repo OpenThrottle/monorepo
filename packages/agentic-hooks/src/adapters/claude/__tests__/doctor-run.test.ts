@@ -75,11 +75,11 @@ describe('doctor against a fixture HOME', () => {
     vi.stubEnv('HOME', home);
     vi.stubEnv('CLAUDE_CONFIG_DIR', '');
     vi.stubEnv('OPENTHROTTLE_TELEMETRY_DIR', '');
-    vi.stubEnv('OPENTHROTTLE_GRAPHQL_URL', '');
-    vi.stubEnv('OPENTHROTTLE_WORKER_GRAPHQL_URL', '');
-    vi.stubEnv('OPENTHROTTLE_SERVER_APP_URL', '');
-    vi.stubEnv('OPENTHROTTLE_MCP_AUTH_TOKEN', '');
-    vi.stubEnv('OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN', '');
+    vi.stubEnv('OPENTHROTTLE_GRAPHQL_URL', undefined);
+    vi.stubEnv('OPENTHROTTLE_WORKER_GRAPHQL_URL', undefined);
+    vi.stubEnv('OPENTHROTTLE_SERVER_APP_URL', undefined);
+    vi.stubEnv('OPENTHROTTLE_MCP_AUTH_TOKEN', undefined);
+    vi.stubEnv('OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN', undefined);
     vi.stubEnv('OPENTHROTTLE_TELEMETRY_OFFLINE', '');
     vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
   });

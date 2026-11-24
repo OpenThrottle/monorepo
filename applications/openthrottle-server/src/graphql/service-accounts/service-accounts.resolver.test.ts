@@ -23,9 +23,10 @@ import {
   serviceAccountCredentialsFactory,
   serviceAccountsFactory,
 } from '@openthrottle/nestjs-repositories-server/testing';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { UserEnvFileService } from '../../services/user-env-file/user-env-file.service.ts';
 import { ServiceAccountsResolver } from './service-accounts.resolver.ts';
 
 describe('ServiceAccountsResolver', () => {
@@ -33,6 +34,7 @@ describe('ServiceAccountsResolver', () => {
   let credentials: ServiceAccountCredentialsRepositoryMock;
   let roles: RolesRepositoryMock;
   let serviceAccounts: ServiceAccountsRepositoryMock;
+  let userEnvFile: { onCredentialMinted: ReturnType<typeof vi.fn> };
 
   const humanPrincipal: AuthPrincipal = {
     kind: AUTH_PRINCIPAL_KIND_USER,
@@ -73,6 +75,7 @@ describe('ServiceAccountsResolver', () => {
     credentials = createServiceAccountCredentialsRepositoryMock();
     roles = createRolesRepositoryMock();
     serviceAccounts = createServiceAccountsRepositoryMock();
+    userEnvFile = { onCredentialMinted: vi.fn() };
 
     const app = await Test.createTestingModule({
       providers: [
@@ -80,6 +83,7 @@ describe('ServiceAccountsResolver', () => {
         { provide: ServiceAccountCredentialsRepository, useValue: credentials },
         { provide: ServiceAccountsRepository, useValue: serviceAccounts },
         { provide: RolesRepository, useValue: roles },
+        { provide: UserEnvFileService, useValue: userEnvFile },
         GqlPermissionsGuard,
       ],
     }).compile();
@@ -124,6 +128,41 @@ describe('ServiceAccountsResolver', () => {
       expect(result?.token).toBe('***REMOVED-OT-TOKEN***');
       expect(result?.credential.id).toBe(mockCredential.id);
       expect(result?.credential).not.toHaveProperty('secretHash');
+    });
+
+    test('hands the new token to the user env file for its account', async () => {
+      credentials.createCredential.mockResolvedValue({
+        credential: mockCredential,
+        token: 'ot_sa_rotated_secret',
+      });
+      serviceAccounts.findOne.mockResolvedValue(mockServiceAccount);
+
+      await resolver.createServiceAccountCredential(humanPrincipal, {
+        expiresAt: null,
+        label: null,
+        serviceAccountId: mockServiceAccount.id,
+      });
+
+      expect(userEnvFile.onCredentialMinted).toHaveBeenCalledWith(
+        'openthrottle-mcp',
+        'ot_sa_rotated_secret',
+      );
+    });
+
+    test('skips the user env file when the account cannot be read back', async () => {
+      credentials.createCredential.mockResolvedValue({
+        credential: mockCredential,
+        token: 'ot_sa_rotated_secret',
+      });
+      serviceAccounts.findOne.mockResolvedValue(null);
+
+      await resolver.createServiceAccountCredential(humanPrincipal, {
+        expiresAt: null,
+        label: null,
+        serviceAccountId: mockServiceAccount.id,
+      });
+
+      expect(userEnvFile.onCredentialMinted).not.toHaveBeenCalled();
     });
 
     test('rejects service account principal', async () => {

@@ -28,8 +28,8 @@ describe('foreign-host heartbeat', () => {
 
     vi.stubEnv('HOME', home);
     vi.stubEnv('OPENTHROTTLE_TELEMETRY_DIR', telemetryDir);
-    vi.stubEnv('OPENTHROTTLE_GRAPHQL_URL', '');
-    vi.stubEnv('OPENTHROTTLE_SERVER_APP_URL', '');
+    vi.stubEnv('OPENTHROTTLE_GRAPHQL_URL', undefined);
+    vi.stubEnv('OPENTHROTTLE_SERVER_APP_URL', undefined);
     vi.stubEnv('OPENTHROTTLE_TELEMETRY_OFFLINE', '');
     vi.stubEnv('OPENTHROTTLE_MACHINE_LABEL', '');
     vi.spyOn(process.stderr, 'write').mockImplementation(() => true);

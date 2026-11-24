@@ -20,6 +20,7 @@ import {
 } from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { UserEnvFileService } from '../../services/user-env-file/user-env-file.service.ts';
 import { RoleObject } from '../roles/role.object.ts';
 import { nullIfNotFound } from '../users/users.utils.ts';
 import { CreateServiceAccountCredentialResultObject } from './create-service-account-credential-result.object.ts';
@@ -56,6 +57,7 @@ export class ServiceAccountsResolver {
     private readonly rolesRepository: RolesRepository,
     private readonly serviceAccountCredentialsRepository: ServiceAccountCredentialsRepository,
     private readonly serviceAccountsRepository: ServiceAccountsRepository,
+    private readonly userEnvFileService: UserEnvFileService,
   ) {}
 
   @Query(() => [ServiceAccountObject], {
@@ -216,6 +218,14 @@ export class ServiceAccountsResolver {
       });
     if (result == null) {
       return null;
+    }
+    // A new MCP credential is a rotation: point ~/.openthrottle/.env at it now
+    // rather than at the next boot. Fail-open; never blocks the mutation.
+    const account = await this.serviceAccountsRepository.findOne({
+      where: { id: input.serviceAccountId },
+    });
+    if (account != null) {
+      this.userEnvFileService.onCredentialMinted(account.name, result.token);
     }
     return {
       credential: toCredentialObject(result.credential),

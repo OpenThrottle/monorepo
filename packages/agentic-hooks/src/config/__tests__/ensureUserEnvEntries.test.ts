@@ -11,6 +11,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
   ensureUserEnvEntries,
+  inspectUserEnvEntries,
   readEnvFile,
   USER_ENV_CHANGES,
   USER_ENV_MANAGED_MARKER,
@@ -204,5 +205,51 @@ describe('ensureUserEnvEntries', () => {
       expect(result.ok).toBe(false);
       expect(fs.existsSync(envPath)).toBe(false);
     });
+  });
+});
+
+describe('inspectUserEnvEntries', () => {
+  let configDir: string;
+
+  beforeEach(() => {
+    configDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ot-user-env-inspect-'));
+  });
+
+  afterEach(() => {
+    fs.rmSync(configDir, { force: true, recursive: true });
+  });
+
+  it('reports both concerns missing when there is no file', () => {
+    expect(inspectUserEnvEntries(configDir)).toMatchObject({
+      endpoint: { kind: 'missing' },
+      ok: true,
+      token: { kind: 'missing' },
+    });
+  });
+
+  it('reads back exactly what the writer wrote as managed', () => {
+    ensureUserEnvEntries(ENTRIES, configDir);
+    expect(inspectUserEnvEntries(configDir)).toMatchObject({
+      endpoint: { kind: 'managed', value: URL },
+      token: { kind: 'managed', value: TOKEN },
+    });
+  });
+
+  it('calls any unmarked key of a concern the user’s, alias included', () => {
+    fs.writeFileSync(
+      path.join(configDir, '.env'),
+      'OPENTHROTTLE_SERVER_APP_URL=http://mine:1\nOPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN=mine\n',
+    );
+    expect(inspectUserEnvEntries(configDir)).toMatchObject({
+      endpoint: { kind: 'user_set', value: 'http://mine:1' },
+      token: { kind: 'user_set', value: 'mine' },
+    });
+  });
+
+  it('never changes the file', () => {
+    const envPath = path.join(configDir, '.env');
+    fs.writeFileSync(envPath, 'FOO=bar\n');
+    inspectUserEnvEntries(configDir);
+    expect(fs.readFileSync(envPath, 'utf8')).toBe('FOO=bar\n');
   });
 });

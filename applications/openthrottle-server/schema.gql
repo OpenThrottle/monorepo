@@ -2645,6 +2645,11 @@ type ServerHealthObject {
   Semantic-search embeddings: embedder state, per-table coverage, stale rows and queue backlog. Computed on demand (hashes every source row). Null when it cannot be computed (e.g. the database is unreachable) — that never fails the rest of serverHealth.
   """
   embeddings: EmbeddingsHealthObject
+
+  """
+  Whether ~/.openthrottle/.env lets agents in other checkouts reach this server (statuses only). Null when it cannot be computed — that never fails the rest of serverHealth.
+  """
+  userEnvFile: UserEnvFileHealthObject
 }
 
 """
@@ -2739,6 +2744,21 @@ type ServerMetricsObject {
 
   """System CPU time in milliseconds (cumulative)."""
   cpuSystemMs: Float!
+}
+
+"""
+Whether ~/.openthrottle/.env lets agents in other checkouts on this machine reach this server. Statuses only; the token is never returned.
+"""
+type UserEnvFileHealthObject {
+  """
+  GraphQL endpoint line: ok | missing | stale (a managed line for another port) | user_set | unreadable | not_applicable (worktree, container or portless server).
+  """
+  endpoint: String!
+
+  """
+  Auth token line: ok | missing | stale (no longer authenticates) | user_set (set by the user and authenticates) | unreadable | not_applicable.
+  """
+  token: String!
 }
 
 type IdRefObject {

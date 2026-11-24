@@ -1,4 +1,4 @@
-# MCP `health`: server health plus the embeddings section. Separate from the shared
+# MCP `health`: server health plus the embeddings and user-env-file sections. Separate from the shared
 # getServerHealth (the plan-run preflight), because `embeddings` hashes every source row.
 fragment EmbeddingsHealth on EmbeddingsHealthObject {
   coverage {
@@ -17,6 +17,11 @@ fragment EmbeddingsHealth on EmbeddingsHealthObject {
   status
 }
 
+fragment UserEnvFileHealth on UserEnvFileHealthObject {
+  endpoint
+  token
+}
+
 fragment ServerHealthWithEmbeddings on ServerHealthObject {
   api
   database
@@ -24,6 +29,9 @@ fragment ServerHealthWithEmbeddings on ServerHealthObject {
     ...EmbeddingsHealth
   }
   redis
+  userEnvFile {
+    ...UserEnvFileHealth
+  }
   websocket
 }
 
