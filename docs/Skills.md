@@ -51,7 +51,9 @@ bash skills/ot-skill-sync/scripts/sync.sh --check
 
 3. **Author our own capabilities as OT-owned skills in `skills/`** (see the list below). These are ours to edit freely.
 
-4. **Avoid duplicating existing OpenThrottle capabilities:** `/code-review`, `/review`, `/security-review`; OT plans/tasks traceability (`Plan-Id` / `Task-Id`); the conventional-commit + no-`Co-authored-by` rules.
+4. **Avoid duplicating existing capabilities.**
+   - **OpenThrottle's own:** OT plans/tasks traceability (`Plan-Id` / `Task-Id`) and the conventional-commit and no-attribution rules.
+   - **Claude Code built-ins:** `/code-review`, `/review` and `/security-review`. These ship with the Claude Code CLI, not with this repo, so Codex, Cursor, Gemini and OpenCode don't have them. An OT-owned skill can leave the generic bug review to them, but it can't assume every agent has one.
 
 ## Installed external skills (1:1)
 
@@ -208,7 +210,7 @@ Recorded so these aren't re-litigated.
 
 **Evaluated then dropped:**
 
-- **github-deep-review, github-project-triage** — agent-scripts-origin; carried Peter/RepoBar/OpenClaw content that isn't ours to maintain, and overlapped existing `/code-review`, `/review`, `/security-review` and OT plans/tasks for triage. Dropped 2026-07-19.
+- **github-deep-review, github-project-triage** — agent-scripts-origin; carried Peter/RepoBar/OpenClaw content that isn't ours to maintain, and overlapped Claude Code's built-in `/code-review`, `/review`, `/security-review` and OT plans/tasks for triage. Dropped 2026-07-19.
 - **markdown-converter** (uvx markitdown) — dropped; not worth the budget vs the current docs-ingest flow.
 - **npm** — dropped; OpenThrottle releases via Nx, not raw npm.
 - **github-branch, github-create-issue, github-my-pull-requests, github-summarize, github-untracked, github-worktree** — the dead tail of the `github-*` family, all zero uses. Several were also broken: `github-branch` told the model to use a slash command it is not allowed to invoke (`disable-model-invocation`), `github-my-pull-requests` called Copilot-only tools (`#githubRepo`, `#list_pull_requests`) that do not exist here, `github-untracked` ended on a literal "TODO: Wrap this up" in front of `git clean -f`, and `github-worktree` hardcoded personal absolute paths and told the agent to open Cursor, against CLAUDE.md's `pnpm run worktree:new` as the one entrypoint. Branch creation now belongs to `worktree:new`. Dropped 2026-08-20.
