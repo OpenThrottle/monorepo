@@ -94,13 +94,14 @@ const reconcileDogfoodProjectSkills = async (
   for (const input of inputs) {
     await client.query(
       `INSERT INTO project_skills (
-         project_id, slug, description, tags, disable_model_invocation, source, source_url, source_path, ingested_at, orphaned_at
+         project_id, slug, description, tags, disable_model_invocation, outcome_telemetry, source, source_url, source_path, ingested_at, orphaned_at
        )
-       VALUES ($1, $2, $3, '{}'::text[], $4, $5, $6, $7, NOW(), NULL)
+       VALUES ($1, $2, $3, '{}'::text[], $4, $5, $6, $7, $8, NOW(), NULL)
        ON CONFLICT (project_id, slug) WHERE deleted_at IS NULL
        DO UPDATE SET
          description = EXCLUDED.description,
          disable_model_invocation = EXCLUDED.disable_model_invocation,
+         outcome_telemetry = EXCLUDED.outcome_telemetry,
          source = EXCLUDED.source,
          source_url = EXCLUDED.source_url,
          source_path = EXCLUDED.source_path,
@@ -112,6 +113,7 @@ const reconcileDogfoodProjectSkills = async (
         input.slug,
         input.description ?? null,
         input.disableModelInvocation ?? null,
+        input.outcomeTelemetry ?? null,
         input.source,
         input.sourceUrl ?? null,
         input.sourcePath,

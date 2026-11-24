@@ -5,7 +5,7 @@ compatibility: 'git; the github-pull-request skill supplies the repo resolver an
 metadata:
   author: openthrottle
   last-reviewed: '2026-11-22'
-  version: '1.3.0'
+  version: '1.4.0'
 ---
 
 Squash the `n` commits on this branch into a single conventional commit using a soft reset to the branch's merge-base with the base, then a rebase onto the base. Fold small commits into the body; summarize any commit that changes more than 15 lines as one concise line item; drop garbage commits. The footer block is not summarized — it is rebuilt from OT and cross-checked against every commit in the range, per [Footers](#footers).
@@ -63,6 +63,7 @@ landing is a `git push --force-with-lease` behind explicit human confirmation. L
 
 8. Run the attribution guard again on `--commits HEAD` before landing.
 9. Land the branch the way the mode calls for. In post-push mode require human confirmation again before the force push. **Never** push directly to the default branch.
+10. **Report the outcome now** ([§ In OpenThrottle repos](#in-openthrottle-repos)): `success` once the squash has landed, `error` if step 7's diff or the push failed, `abandoned` if the user declined step 5.
 
 If a hook fails, stop and raise it; do not bypass hooks.
 
@@ -86,7 +87,7 @@ Read [references/footers.md](references/footers.md) when `PLAN_IDS` is not `none
 
 ## In OpenThrottle repos
 
-Report the outcome once, at the end — `error` if the squash or push failed, `abandoned` if called off ([why](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/skill-usage-telemetry-scope.md#reporting-an-outcome-from-a-skill)):
+Report the outcome once per invocation, on every exit path, from procedure step 10 — `error` if the squash or push failed, `abandoned` if called off ([why](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/skill-usage-telemetry-scope.md#reporting-an-outcome-from-a-skill)):
 
 ```bash
 r="$(command -v skill-usage-outcome.cjs || echo "$(git rev-parse --show-toplevel 2>/dev/null)/plugins/openthrottle/bin/skill-usage-outcome.cjs")"; if [ -f "$r" ]; then node "$r" --skill github-squash --outcome success; fi

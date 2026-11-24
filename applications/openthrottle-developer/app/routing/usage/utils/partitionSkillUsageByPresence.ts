@@ -19,6 +19,12 @@ import { classifySkillUsagePresence } from '~/routing/usage/utils/classifySkillU
 
 /** A leaderboard row with its presence already resolved by the caller. */
 export interface SkillUsageRowWithPresence extends UsageSkillUsageBySkillFragment {
+  /**
+   * The skill declares `metadata.outcome-telemetry: 'none'`: it reports no
+   * outcome or duration on purpose, so an empty metric is a decision rather
+   * than a measurement gap.
+   */
+  readonly isOutcomeTelemetryOptedOut: boolean;
   readonly presence: SkillPresence;
 }
 
@@ -33,12 +39,14 @@ export interface PartitionedSkillUsage {
 /**
  * Partition `bySkill` by presence, preserving the input order within each
  * bucket — the server's ranking is the ranking, so nothing is re-sorted here.
- * Every returned row carries its `presence`, so the table component renders
- * exactly what it is given and never re-derives the classification.
+ * Every returned row carries its `presence` and its outcome-telemetry opt-out,
+ * so the table component renders exactly what it is given and never re-derives
+ * either.
  */
 export const partitionSkillUsageByPresence = (
   bySkill: readonly UsageSkillUsageBySkillFragment[],
   presentSlugs: ReadonlySet<string>,
+  optedOutSlugs: ReadonlySet<string>,
 ): PartitionedSkillUsage => {
   const active: SkillUsageRowWithPresence[] = [];
   const missing: SkillUsageRowWithPresence[] = [];
@@ -47,7 +55,11 @@ export const partitionSkillUsageByPresence = (
     const presence = classifySkillUsagePresence(row, presentSlugs);
     const bucket = presence === SKILL_PRESENCE.MISSING ? missing : active;
 
-    bucket.push({ ...row, presence });
+    bucket.push({
+      ...row,
+      isOutcomeTelemetryOptedOut: optedOutSlugs.has(row.skillName),
+      presence,
+    });
   }
 
   return { active, missing };

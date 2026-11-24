@@ -193,9 +193,13 @@ const startedAtMs = (entry: Record<string, unknown>): number | null => {
  * the session-end hook from emitting a second, `session_ended` row for the same
  * invocation.
  *
- * Null (and nothing drained) when there is no matching start — the skill
- * finished in a later turn than it loaded, after the turn-end hook already
- * resolved its start — or when the clock reads backwards. Fail-open.
+ * Starts stay open until the session ends (every adapter resolves them at its
+ * session-end event, not at turn end), so a skill that reports several turns
+ * after it loaded still gets its duration.
+ *
+ * Null (and nothing drained) when there is no matching start — the skill was
+ * never loaded in this session, or its start was already resolved or swept —
+ * or when the clock reads backwards. Fail-open.
  *
  * @public
  */

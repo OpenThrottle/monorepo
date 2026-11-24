@@ -64,12 +64,19 @@ export const loader = async (args: Route.LoaderArgs) => {
   // uses to 404, so neither depends on DB ingest/auth state (mirrors /usage).
   const presentSlugs = diskEntries.map((entry) => entry.slug);
 
+  // Skills that declare `metadata.outcome-telemetry: 'none'`: their empty
+  // Outcomes / Avg duration cells read "Not reported by design".
+  // Read from the merged entries, so an ingested value wins over disk.
+  const optedOutSlugs = entries
+    .filter((entry) => entry.outcomeTelemetry === 'none')
+    .map((entry) => entry.slug);
+
   // Deferred aggregate usage over a fixed 30-day window, streamed as a naked
   // promise (RR8 Single Fetch) so the skills list + table paint immediately.
   // Failures resolve to the unavailable sentinel inside the loader helper.
   const usage = loadSkillsIndexUsage(args.request);
 
-  return { entries, presentSlugs, tagVocabulary, usage };
+  return { entries, optedOutSlugs, presentSlugs, tagVocabulary, usage };
 };
 
 export const links: Route.LinksFunction = () => {
@@ -83,7 +90,8 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
 export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
-  const { entries, presentSlugs, tagVocabulary, usage } = props.loaderData;
+  const { entries, optedOutSlugs, presentSlugs, tagVocabulary, usage } =
+    props.loaderData;
 
   // Hooks
 
@@ -116,6 +124,7 @@ export default function Component(
           <Await resolve={usage}>
             {(data) => (
               <SkillsIndexUsage
+                optedOutSlugs={optedOutSlugs}
                 presentSlugs={presentSlugs}
                 rangeDays={SKILL_USAGE_RANGE_DAYS}
                 usage={data}

@@ -3,7 +3,7 @@
  * registry of a project. Extends `BaseModel`, so an explicit remove is a soft delete that frees
  * the (project, slug) pair for a live row; `orphaned_at` is a separate, ingest-owned marker for a
  * slug that vanished from disk. Matches databases/openthrottle/migrations (061, 074, 090, 093,
- * 179).
+ * 179, 202).
  * @public
  */
 
@@ -36,6 +36,9 @@ export class ProjectSkill extends BaseModel {
     type: 'boolean',
   })
   disableModelInvocation!: boolean | null;
+
+  @Column({ name: 'outcome_telemetry', nullable: true, type: 'text' })
+  outcomeTelemetry!: string | null;
 
   @Column({ default: 'external', name: 'source', type: 'text' })
   source!: string;

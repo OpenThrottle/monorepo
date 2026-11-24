@@ -1,4 +1,7 @@
-import type { SkillSource } from '@openthrottle/openthrottle-skills';
+import type {
+  SkillOutcomeTelemetry,
+  SkillSource,
+} from '@openthrottle/openthrottle-skills';
 
 /**
  * A skill as exposed to the availability resolver: slug, static frontmatter
@@ -14,5 +17,10 @@ export interface ProjectSkillView {
   readonly source: SkillSource;
   readonly sourceUrl: string | undefined;
   readonly staticDisableModelInvocation: boolean | undefined;
+  /**
+   * Frontmatter `metadata.outcome-telemetry`: `'none'` when the skill reports
+   * no outcome or duration on purpose; `undefined` when it does not opt out.
+   */
+  readonly staticOutcomeTelemetry: SkillOutcomeTelemetry | undefined;
   readonly tags: readonly string[];
 }

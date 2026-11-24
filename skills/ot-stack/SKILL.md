@@ -9,7 +9,9 @@ description: >-
 metadata:
   author: openthrottle
   last-reviewed: '2026-11-22'
-  version: '1.2.0'
+  # A convention reference with no finish line of its own: it reports no outcome, on purpose.
+  outcome-telemetry: 'none'
+  version: '1.3.0'
 ---
 
 # OpenThrottle stack (server, data, developer app, MCP)

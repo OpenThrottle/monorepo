@@ -32,10 +32,10 @@ producer hook payload → <tool adapter> → NormalizedInvocation
 Wired producers (plugin `hooks.json`; this repo loads them via its dev marketplace, see
 [hook-plugin-distribution.md](../../../docs/monorepo/hook-plugin-distribution.md) §5):
 
-| Producer    | Bundle(s)                                                                                        | Config                                                                                                                                                                                       |
-| ----------- | ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Claude Code | `plugins/openthrottle/hooks/skill-usage-capture.cjs` (start); `…-complete.cjs` (Stop → outcomes) | `plugins/openthrottle/hooks/hooks.json` → `PreToolUse`/`UserPromptExpansion` (start) + `Stop` (complete)                                                                                     |
-| Cursor      | `plugins/openthrottle-cursor/hooks/skill-usage-capture.cjs`                                      | `plugins/openthrottle-cursor/hooks/hooks.json` → `beforeSubmitPrompt` (provisional — the normalizer no-ops on non-skill payloads until Cursor's skill-invocation event/payload is finalized) |
+| Producer    | Bundle(s)                                                                                              | Config                                                                                                                                                                                       |
+| ----------- | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Claude Code | `plugins/openthrottle/hooks/skill-usage-capture.cjs` (start); `…-complete.cjs` (SessionEnd → outcomes) | `plugins/openthrottle/hooks/hooks.json` → `PreToolUse`/`UserPromptExpansion` (start) + `Stop`/`SessionEnd` (complete)                                                                        |
+| Cursor      | `plugins/openthrottle-cursor/hooks/skill-usage-capture.cjs`                                            | `plugins/openthrottle-cursor/hooks/hooks.json` → `beforeSubmitPrompt` (provisional — the normalizer no-ops on non-skill payloads until Cursor's skill-invocation event/payload is finalized) |
 
 ## The producer contract
 
@@ -80,13 +80,15 @@ attributable per tool. Pick a short, stable kebab-case id and keep it constant.
 1. On each start, the capture hook also records an identifiers-only correlation
    entry (`session_id, skill_name, tool_use_id, started_at, scope` — **no args**)
    under `.cache/skill-usage/starts/<session_id>.jsonl`.
-2. At turn end, the Claude Code `Stop` hook (`skill-usage-complete.cjs`) resolves
-   the open starts, emits one **`session_ended`** outcome each with a **null**
-   `duration_ms`, and drains them (deduped). Starts stranded by a session that
-   ended without a `Stop` are later swept as `abandoned`, also with a null
-   duration.
+2. At session end, the Claude Code `SessionEnd` hook (`skill-usage-complete.cjs`)
+   resolves the starts no reporter claimed, emits one **`session_ended`** outcome
+   each with a **null** `duration_ms`, and drains them (deduped). The same bundle
+   also runs on every turn's `Stop`, where it leaves the starts open so a skill
+   that finishes in a later turn can still claim one. Starts stranded by a
+   session that ended without a `SessionEnd` are later swept as `abandoned`,
+   also with a null duration.
 
-**The automatic path makes no quality claim, by design.** A `Stop` payload
+**The automatic path makes no quality claim, by design.** A `Stop` or `SessionEnd` payload
 carries a session id and nothing else, so it cannot know whether the skill
 helped; it used to record `success` regardless, which made the Outcomes column
 measure liveness while reading as quality. No hook brackets a skill's own work

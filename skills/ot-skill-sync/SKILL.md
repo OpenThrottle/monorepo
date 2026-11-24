@@ -5,7 +5,7 @@ compatibility: Requires bash, git, a symlink-capable filesystem, and npx (the sk
 metadata:
   author: openthrottle
   last-reviewed: '2026-11-22'
-  version: '1.2.0'
+  version: '1.3.0'
 ---
 
 # ot-skill-sync
@@ -103,6 +103,13 @@ OPENTHROTTLE_PERSONAL_SKILLS_DIR=/path/to/my/skills bash <path>/scripts/sync.sh
 4. Add `sync.sh && sync.sh --check` to CI as the drift gate
 
 ## In OpenThrottle repos
+
+- **Report the outcome when `sync.sh --check` passes** ([why](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/skill-usage-telemetry-scope.md#reporting-an-outcome-from-a-skill)): `success`; `error` if it still
+  fails when you stop; `abandoned` if no layout change was needed. Fail-open in any repo.
+
+  ```bash
+  r="$(command -v skill-usage-outcome.cjs || echo "$(git rev-parse --show-toplevel 2>/dev/null)/plugins/openthrottle/bin/skill-usage-outcome.cjs")"; if [ -f "$r" ]; then node "$r" --skill ot-skill-sync --outcome success; fi
+  ```
 
 - OT's shared skills come from `openthrottle/monorepo`, lockfile-managed per repo: `npx skills add openthrottle/monorepo --skill <skill_name> --agent universal`.
 - `personal.sh promote` prints OT-only follow-ups (the OT-owned list and description budget in `docs/Skills.md`, and the `monorepo` commit scope) when `docs/Skills.md` exists in the repo root.

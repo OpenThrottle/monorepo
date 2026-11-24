@@ -9,7 +9,7 @@ description: >-
 metadata:
   author: openthrottle
   last-reviewed: '2026-11-22'
-  version: '1.2.0'
+  version: '1.3.0'
 ---
 
 # OpenThrottle generators and Nx conventions
@@ -69,7 +69,13 @@ Check for a generator before writing ANY new code by hand; picking the wrong gen
    NX_ISOLATE_PLUGINS=false pnpm nx g @tools/generators:<generator> --list=<key> [--application=<app>]
    ```
 
-4. **Generate** with `--subGenerator=...` and required options (see `--describe`).
+4. **Generate** with `--subGenerator=...` and required options (see `--describe`), then report
+   the outcome ([why](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/skill-usage-telemetry-scope.md#reporting-an-outcome-from-a-skill)): `success` when it exits 0, `error` when it does not, `abandoned` when no
+   generator fits and you say so instead (below). Once per request, not per `--dry-run`.
+
+   ```bash
+   r="$(command -v skill-usage-outcome.cjs || echo "$(git rev-parse --show-toplevel 2>/dev/null)/plugins/openthrottle/bin/skill-usage-outcome.cjs")"; if [ -f "$r" ]; then node "$r" --skill ot-generators --outcome success; fi
+   ```
 
 5. **Only then** hand-edit for business logic.
 

@@ -471,6 +471,15 @@
         "cwd": "{projectRoot}"
       }
     },
+    "check-skill-outcome-reporting": {
+      "cache": false,
+      "description": "Fail when an OpenThrottle-owned skill (skills/<name>/SKILL.md) neither calls the skill-usage-outcome.cjs reporter with --skill <its name> nor declares `outcome-telemetry: 'none'` under metadata, via scripts/check-skill-outcome-reporting.ts. Outcome and duration on /skills exist only when a skill reports them, so a silent skill reads 'Not measured' forever (OT plan e1928cf3). Vendored skills are out of scope. Never cached: a handful of file reads.",
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsx ./scripts/check-skill-outcome-reporting.ts",
+        "cwd": "{workspaceRoot}"
+      }
+    },
     "check-test-file-filter-docs": {
       "cache": false,
       "description": "Fail when a tracked file documents the retired `--testFile` flag on a test target, via scripts/check-test-file-filter-docs.ts. Test targets run the vitest CLI through nx:run-commands since Nx 24 removed @nx/vitest:test, so a single spec is `:test -- <path>` and `--testFile` fails with Vitest's `Unknown option` (OT plans 407bedcd, e3606c61). Never cached: the input is the whole tracked tree, like check-folder-vocabulary.",

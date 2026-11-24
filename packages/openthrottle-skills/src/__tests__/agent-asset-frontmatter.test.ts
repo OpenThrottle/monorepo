@@ -16,6 +16,57 @@ import {
 const monorepoRoot = join(import.meta.dirname, '../../../..');
 
 describe('parseSkillFrontmatter', () => {
+  describe('metadata.outcome-telemetry', () => {
+    test('reads none from the nested metadata block', () => {
+      const result = parseSkillFrontmatter(`---
+name: quiet-skill
+description: A reference with no finish line.
+metadata:
+  author: openthrottle
+  # A comment between keys does not hide the value.
+  outcome-telemetry: 'none'
+---
+`);
+
+      expect(result.outcomeTelemetry).toBe('none');
+    });
+
+    test('is undefined when metadata has no outcome-telemetry key', () => {
+      const result = parseSkillFrontmatter(`---
+name: loud-skill
+description: Reports its outcome.
+metadata:
+  author: openthrottle
+---
+`);
+
+      expect(result.outcomeTelemetry).toBeUndefined();
+    });
+
+    test('ignores an unrecognized value', () => {
+      const result = parseSkillFrontmatter(`---
+name: odd-skill
+description: Declares a value nobody knows.
+metadata:
+  outcome-telemetry: sometimes
+---
+`);
+
+      expect(result.outcomeTelemetry).toBeUndefined();
+    });
+
+    test('ignores a top-level outcome-telemetry key outside metadata', () => {
+      const result = parseSkillFrontmatter(`---
+name: misplaced-skill
+description: Puts the key at the wrong level.
+outcome-telemetry: none
+---
+`);
+
+      expect(result.outcomeTelemetry).toBeUndefined();
+    });
+  });
+
   test('returns undefined fields when file has no frontmatter block', () => {
     expect(
       parseSkillFrontmatter('# Skill title\n\nBody without frontmatter.\n'),
@@ -23,6 +74,7 @@ describe('parseSkillFrontmatter', () => {
       description: undefined,
       disableModelInvocation: undefined,
       name: undefined,
+      outcomeTelemetry: undefined,
       tags: undefined,
     });
   });
@@ -39,6 +91,7 @@ disable-model-invocation: true
       description: 'Short one-line summary.',
       disableModelInvocation: true,
       name: 'my-skill',
+      outcomeTelemetry: undefined,
       tags: undefined,
     });
   });
@@ -56,6 +109,7 @@ description: >-
       description: 'First line of the summary. Second line of the summary.',
       disableModelInvocation: undefined,
       name: 'folded-skill',
+      outcomeTelemetry: undefined,
       tags: undefined,
     });
   });
@@ -210,6 +264,44 @@ disable-model-invocation: yes
     expect(
       result.warnings.some((w) => w.field === 'disable-model-invocation'),
     ).toBe(true);
+  });
+
+  test('warns when metadata.outcome-telemetry is an unrecognized value', () => {
+    const result = validateAgentAssetFrontmatter({
+      content: `---
+name: odd-skill
+description: Valid description with enough content.
+metadata:
+  outcome-telemetry: sometimes
+---
+`,
+      expectedSlug: 'odd-skill',
+      kind: 'skill',
+      path: '.agents/skills/odd-skill/SKILL.md',
+    });
+
+    expect(result.errors).toHaveLength(0);
+    expect(
+      result.warnings.some((w) => w.field === 'metadata.outcome-telemetry'),
+    ).toBe(true);
+  });
+
+  test('accepts metadata.outcome-telemetry none without a warning', () => {
+    const result = validateAgentAssetFrontmatter({
+      content: `---
+name: quiet-skill
+description: Valid description with enough content.
+metadata:
+  outcome-telemetry: 'none'
+---
+`,
+      expectedSlug: 'quiet-skill',
+      kind: 'skill',
+      path: '.agents/skills/quiet-skill/SKILL.md',
+    });
+
+    expect(result.errors).toHaveLength(0);
+    expect(result.warnings).toHaveLength(0);
   });
 
   test('hard-fails skill when name does not match directory slug', () => {

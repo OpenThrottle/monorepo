@@ -15,7 +15,10 @@ import {
 } from './agent-assets-disk.ts';
 import type { SkillsLockMap } from './parse-skills-lock.ts';
 import { deriveSkillSourceUrl } from './parse-skills-lock.ts';
-import type { SkillSource } from './schemas/agent-asset-frontmatter.schemas.ts';
+import type {
+  SkillOutcomeTelemetry,
+  SkillSource,
+} from './schemas/agent-asset-frontmatter.schemas.ts';
 
 export type AgentAssetPromptType = 'personas' | 'prompts' | 'skills';
 
@@ -37,6 +40,12 @@ export interface AgentAssetIngestRecord {
   readonly disableModelInvocation: boolean | undefined;
   readonly filePath: string;
   readonly labels: readonly string[];
+  /**
+   * Skill-only: `metadata.outcome-telemetry` from frontmatter (`'none'` when
+   * the skill deliberately reports no outcome). `undefined` for non-skill
+   * assets and for skills that do not opt out.
+   */
+  readonly outcomeTelemetry: SkillOutcomeTelemetry | undefined;
   readonly promptType: AgentAssetPromptType;
   /**
    * Skill-only: the static `tags` frontmatter list. `undefined` for non-skill
@@ -64,6 +73,7 @@ export const mapAgentAssetFileToIngestRecord = (
       disableModelInvocation: frontmatter.disableModelInvocation,
       filePath: path,
       labels: slug ? [slug] : [],
+      outcomeTelemetry: frontmatter.outcomeTelemetry,
       promptType: 'skills',
       tags: frontmatter.tags,
       title: frontmatter.name ?? slug ?? basename(path, '/SKILL.md'),
@@ -79,6 +89,7 @@ export const mapAgentAssetFileToIngestRecord = (
       disableModelInvocation: undefined,
       filePath: path,
       labels: ['persona', ...(slug ? [slug] : [])],
+      outcomeTelemetry: undefined,
       promptType: 'personas',
       tags: undefined,
       title: frontmatter.name ?? slug ?? basename(path, '.md'),
@@ -96,6 +107,7 @@ export const mapAgentAssetFileToIngestRecord = (
     disableModelInvocation: undefined,
     filePath: path,
     labels: slug ? [slug] : [],
+    outcomeTelemetry: undefined,
     promptType: 'prompts',
     tags: undefined,
     title,
@@ -147,6 +159,11 @@ export interface ProjectSkillInput {
    * `undefined`); `undefined` when the skill omits the key.
    */
   readonly disableModelInvocation: boolean | undefined;
+  /**
+   * `metadata.outcome-telemetry`: `'none'` when the skill deliberately reports
+   * no outcome or duration; `undefined` when it does not opt out.
+   */
+  readonly outcomeTelemetry: SkillOutcomeTelemetry | undefined;
   /** Kebab-case skill slug (the `.agents/skills/<slug>` directory name). */
   readonly slug: string;
   /**
@@ -206,6 +223,7 @@ export const toProjectSkillInputs = (
     inputs.push({
       description: record.description,
       disableModelInvocation: record.disableModelInvocation,
+      outcomeTelemetry: record.outcomeTelemetry,
       slug,
       source: authored ? 'openthrottle' : 'external',
       sourcePath: record.filePath,

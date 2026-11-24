@@ -211,7 +211,7 @@ const readSkillEntry = (
     };
   }
 
-  const { description, disableModelInvocation, name, tags } =
+  const { description, disableModelInvocation, name, outcomeTelemetry, tags } =
     parseSkillFrontmatter(fileContent);
   const slug = name && name.trim().length > 0 ? name.trim() : folderName;
   const trimmedDescription = description?.trim() ?? '';
@@ -222,6 +222,7 @@ const readSkillEntry = (
     isCustom,
     isPersonal,
     layout,
+    outcomeTelemetry,
     repoRelativePath,
     slug,
     source,

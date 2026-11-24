@@ -88,6 +88,7 @@ const baseProps = (): UsageSkillUsageProps => {
     bySkill: [],
     end: '2026-07-31',
     filterOptions: buildFilterOptions(),
+    optedOutSlugs: [],
     presentSlugs: [],
     selectedCwd: null,
     selectedGitBranch: null,

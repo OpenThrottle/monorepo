@@ -10,7 +10,7 @@ description: >-
 metadata:
   author: openthrottle
   last-reviewed: '2026-11-22'
-  version: '1.2.0'
+  version: '1.3.0'
 ---
 
 # ot-skill-guide
@@ -54,36 +54,41 @@ Work these in order. Each step is a place a skill commonly goes wrong.
    work: too narrow and one task loads several skills, too broad and it triggers imprecisely.
 2. **Ground it in real material**: transcripts of the task done well, runbooks, review comments,
    past failures. Generic advice is what the agent already knows.
-3. **Write the description last, and test it.** It is the only text loaded before activation, so
+3. **Name the finish line.** Say which step confirms the skill's work is done: the check passes,
+   the write lands, the URL prints. End that step on it, and name what counts as failure and what
+   means the skill did not apply. A skill with no finish line of its own is a convention reference
+   read partway through other work. That is fine, but say so. If the work keeps sprawling past
+   every candidate, the skill is too broad.
+4. **Write the description last, and test it.** It is the only text loaded before activation, so
    it carries all of the triggering, and every session pays for it whether or not the skill fires.
    It holds the capability, the user intents that should trigger it in the words users type, and a
    "Not for" clause naming the neighbouring skill that shares its keywords. Nothing else: behaviour,
    inventories and synonyms for the same trigger belong in the body. The limit is 1024; a
    description near it needs a reason. Never "Helps with X". Do not add keywords copied from failed
    queries.
-4. **Keep only what the agent would get wrong.** Test each line: _would the agent fail without
+5. **Keep only what the agent would get wrong.** Test each line: _would the agent fail without
    it?_ Judge that against the weakest model and driver that will run the skill (see
    [§ Model fit](#model-fit)). Do not restate the spec, the tool's docs, or context the agent already
    has (the delta rule).
-5. **Give a default, not a menu.** Name the one way to do it, and add an alternative only with the
+6. **Give a default, not a menu.** Name the one way to do it, and add an alternative only with the
    condition that selects it. Match specificity to fragility: exact commands for fragile steps,
    judgement for variable ones. State the target behaviour rather than the banned one; keep a
    prohibition only as a guardrail, paired with what to do instead.
-6. **End each step on a checkable criterion.** "Every modified model accounted for" beats "produce a
+7. **End each step on a checkable criterion.** "Every modified model accounted for" beats "produce a
    change list": a vague end invites the agent to stop early.
-7. **Lay it out for progressive disclosure.** Keep the procedure, the checklist and a **Gotchas**
+8. **Lay it out for progressive disclosure.** Keep the procedure, the checklist and a **Gotchas**
    section in `SKILL.md`. Move long reference material to `references/<topic>.md` and say _when_ to
    read each file. Put templates and data in `assets/`. When agents keep rewriting the same logic,
    move it to `scripts/`, following _Using scripts_. Do not open the body with a "when to use this
    skill" section: the body loads only after the description matched.
-8. **Keep it portable.** A skill that may be installed in other repos must not assume this repo's
+9. **Keep it portable.** A skill that may be installed in other repos must not assume this repo's
    paths, build tool or services. Read the host's own files first, fall back to defaults shipped in
    the skill, and state hard requirements in `compatibility`. Fence repo-specific conventions under
    their own heading so a foreign repo can skip them.
-9. **Pick the invocation mode.** A model-invocable skill costs its description in every session. A
-   skill only a human starts by name can be slash-only where the client supports it and costs no
-   standing context.
-10. **Validate, then revise from a real run.** Run the checks in [§ Validate](#validate), run the
+10. **Pick the invocation mode.** A model-invocable skill costs its description in every session. A
+    skill only a human starts by name can be slash-only where the client supports it and costs no
+    standing context.
+11. **Validate, then revise from a real run.** Run the checks in [§ Validate](#validate), run the
     skill on a real task, read the trace for wasted steps, and do at least one revise pass. Trigger
     and with/without-skill evals: _Optimizing descriptions_ and _Evaluating skills_.
 
@@ -193,9 +198,30 @@ Skip this section when the files it names do not exist.
   clause naming the neighbouring skill. Keep them slim: the spec's 1024 is a ceiling, not a target.
 - `pnpm nx run monorepo:check-model-facing-text` (in `check:local` and CI) fails when a `SKILL.md`
   or its description grows past `scripts/model-facing-text.snapshot.json`. Accept deliberate growth
-  with `-- --write` and say why in the PR.
-- A workflow skill with a terminal outcome (it commits, opens a PR, finishes a run) reports it once,
-  under an "In OpenThrottle repos" heading, with the one-liner the `github-commit` skill shows.
+  with `-- --write` and say why in the PR. Adding the outcome reporter below costs about 600 bytes.
+- **Every owned skill reports its outcome or opts out.** Report once, from the finish-line step
+  (Author mode step 3), with the one-liner below (swap the `--skill`): `success`; `error` when the
+  work failed; `abandoned` when the skill turned out not to apply or was called off. This skill's
+  own finish line is the [§ Validate](#validate) run passing on what you wrote, or the review
+  delivered ([why](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/skill-usage-telemetry-scope.md#reporting-an-outcome-from-a-skill)):
+
+  ```bash
+  r="$(command -v skill-usage-outcome.cjs || echo "$(git rev-parse --show-toplevel 2>/dev/null)/plugins/openthrottle/bin/skill-usage-outcome.cjs")"; if [ -f "$r" ]; then node "$r" --skill ot-skill-guide --outcome success; fi
+  ```
+
+  In a skill that ships to other repos, keep the command here and have the finish-line step point
+  to it. Report once per invocation, never per task or tool call, and on every exit path. Pass no
+  `--duration-ms`: the default, skill load to report, is the honest number and spans turns.
+
+  A skill with no finish line opts out instead: `outcome-telemetry: 'none'` under `metadata`, with
+  a `#` comment above it giving the reason (`ot-stack` is the example). Never opt out a skill that
+  has a finish line just to skip the work. `pnpm nx run monorepo:check-skill-outcome-reporting` (in
+  `check:local` and CI) fails a skill that does neither, or that reports under another name.
+
+- **`abandoned` measures the description.** A skill whose `/skills` row shows many `abandoned`
+  outcomes is loading for requests it does not serve: tighten its triggers and "Not for" clause.
+  That is real-usage evidence for step 4 until the OT eval core (plan 8f3addd4) lands.
+
 - Vendored skills are the real directories in `.agents/skills/` tracked by `skills-lock.json`.
   Install them with `npx skills add <owner>/<repo> --skill <name> --agent universal`, then sync.
 - Review findings are filed as one follow-up plan in OpenThrottle, never as a Markdown file. The

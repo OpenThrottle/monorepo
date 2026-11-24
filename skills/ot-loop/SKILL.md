@@ -13,7 +13,7 @@ arguments:
 metadata:
   author: openthrottle
   last-reviewed: '2026-11-22'
-  version: '1.3.0'
+  version: '1.4.0'
 ---
 
 `$planId` is the only argument. If it is not an OpenThrottle plan or task id, stop and say so.
@@ -107,7 +107,8 @@ planRunId, taskId })`, once per boundary (claiming is delivery). Apply `STEER`s 
 > when the PR opens (or, on a no-files run, when the last task closes), `CANCELLED` on a deliberate
 > stop, `FAILED` when you give up. On a `COMPLETED` run that opened a PR, also pass `headSha` and
 > `prNumber` — that call is what puts the work on the ledger. A row never settled sits
-> `IN_PROGRESS` forever and holds its worktree marked busy. Settling twice is a safe no-op.
+> `IN_PROGRESS` forever and holds its worktree marked busy. Settling twice is a safe no-op. Each
+> settle is also where the run reports its outcome, once ([§ In OpenThrottle repos](#in-openthrottle-repos)).
 
 Three backstops settle an abandoned run to `STALE` after a crash, and Claude Code hooks warn on
 missed duties; neither replaces the invariant. Details: [references/backstops.md](./references/backstops.md),
@@ -126,7 +127,7 @@ missed duties; neither replaces the invariant. Details: [references/backstops.md
 3. **Squash with `/github-squash`.** Its `Task-Id:` footers come from OT, so commitless tasks are carried too. It squashes onto the branch's merge-base and then rebases onto `<remote>/<default>` (from the github-pull-request resolver) — never soft-reset straight onto a moved default branch, which silently reverts whatever landed after the branch forked.
 4. **Confirm one commit on top of the current default branch:** `git rev-list --count <remote>/<default>..HEAD` is `1` and `git rev-list --count HEAD..<remote>/<default>` is `0`. If it moved again, `git fetch <remote> <default> && git rebase <remote>/<default>`. Fetch the remote-tracking ref, not `<default>:<default>`: git refuses to update a branch the base checkout has checked out.
 5. **Open a Draft PR** with `/github-pull-request` — the single push for the whole plan. Leave it in **draft** until the work is genuinely up for review (`gh pr ready`). **Capture the PR URL and number, and the branch head sha.**
-6. **Settle your run row, with the sha and the PR number** — `settle_plan_run(planRunId, 'COMPLETED', headSha, prNumber)`. The server writes the ledger artifacts from them; there is nothing to do after the merge (the `ot-plans` skill § Work ledger owns the rest). `gh pr merge --auto` only enqueues on a merge queue, so do not read a landed sha until `gh pr view <n> --json mergedAt,mergeCommit` shows one.
+6. **Settle your run row, with the sha and the PR number** — `settle_plan_run(planRunId, 'COMPLETED', headSha, prNumber)` — and report the outcome in the same step ([§ In OpenThrottle repos](#in-openthrottle-repos)). The server writes the ledger artifacts from them; there is nothing to do after the merge (the `ot-plans` skill § Work ledger owns the rest). `gh pr merge --auto` only enqueues on a merge queue, so do not read a landed sha until `gh pr view <n> --json mergedAt,mergeCommit` shows one.
 7. **Stop the loop** once the PR is open. Do **not** merge.
 
 ## Teardown the worktree (only after a successful PR)
@@ -144,7 +145,7 @@ Skip this section when the commands it names do not exist.
 - **Validation (loop step 3):** `pnpm nx affected --target=lint,typecheck,test`, run sequentially. **Full gate (Finishing step 2):** `pnpm run check:local`.
 - **Live verification runs from the loop worktree**, on its own ports — never against the primary's `:6020`/`:6021`, which serve the base checkout's code. Start it with `pnpm worktree:serve <server|developer>` (`--stop` before teardown; `--api-only` skips the processors). The worktree shares the primary's database: a plan that **adds a migration** must isolate first (`pnpm worktree:db isolate`, or `worktree:new <name> --own-db`). Details: [worktree-port-allocation.md](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/worktree-port-allocation.md).
 - **Why push once:** [ci-cost.md](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/ci-cost.md).
-- **Report the outcome once per run**, never per task (`COMPLETED` → `success`, `FAILED` → `error`, `CANCELLED` → `abandoned`):
+- **Report the outcome once per run, right after `settle_plan_run`**, never per task (`COMPLETED` → `success`, `FAILED` → `error`, `CANCELLED` → `abandoned`):
 
   ```bash
   r="$(command -v skill-usage-outcome.cjs || echo "$(git rev-parse --show-toplevel 2>/dev/null)/plugins/openthrottle/bin/skill-usage-outcome.cjs")"; if [ -f "$r" ]; then node "$r" --skill ot-loop --outcome success; fi

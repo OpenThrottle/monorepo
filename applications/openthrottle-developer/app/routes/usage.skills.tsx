@@ -42,6 +42,11 @@ export const loader = async (args: Route.LoaderArgs) => {
   // and which ones are only history (mirrors /skills).
   const discoveredSkills = discoverRepoSkills(getMonorepoRoot());
   const presentSkillSlugs = discoveredSkills.map((entry) => entry.slug);
+  // Skills that declare `metadata.outcome-telemetry: 'none'`: their empty
+  // Outcomes / Avg duration cells read "Not reported by design".
+  const optedOutSkillSlugs = discoveredSkills
+    .filter((entry) => entry.outcomeTelemetry === 'none')
+    .map((entry) => entry.slug);
 
   const searchParams = new URL(args.request.url).searchParams;
   const selectedSkillScope = parseSkillScope(searchParams.get('skillScope'));
@@ -79,6 +84,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   return {
     branchOptions: branchResult.skillUsageGitBranches.items,
     branchesHaveMore: branchResult.skillUsageGitBranches.hasMore,
+    optedOutSkillSlugs,
     presentSkillSlugs,
     rangeDays,
     rangeEndDate: endDate,
@@ -106,6 +112,7 @@ export default function Component(
   const {
     branchOptions,
     branchesHaveMore,
+    optedOutSkillSlugs,
     presentSkillSlugs,
     rangeDays,
     rangeEndDate,
@@ -145,6 +152,7 @@ export default function Component(
         bySkill={skillUsage.bySkill}
         end={rangeEndDate}
         filterOptions={skillUsage.filterOptions}
+        optedOutSlugs={optedOutSkillSlugs}
         presentSlugs={presentSkillSlugs}
         selectedCwd={selectedSkillCwd}
         selectedGitBranch={selectedSkillGitBranch}

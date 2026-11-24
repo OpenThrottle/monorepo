@@ -996,6 +996,9 @@ jobs:
       - name: '📋 Agent assets frontmatter validation (D5)'
         run: pnpm exec nx run monorepo:validate-agent-assets-frontmatter
 
+      - name: '📈 Every owned skill reports an outcome or opts out'
+        run: pnpm exec nx run monorepo:check-skill-outcome-reporting
+
       # Static and build-free. Fails when a generated agent config file (MCP
       # servers + permission policy for every agent CLI) no longer matches
       # .agents/agent-config.json, and prints the diff. Fix with

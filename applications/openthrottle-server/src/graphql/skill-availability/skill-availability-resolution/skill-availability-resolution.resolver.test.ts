@@ -36,6 +36,7 @@ describe('SkillAvailabilityResolutionResolver', () => {
       source: 'openthrottle',
       sourceUrl: undefined,
       staticDisableModelInvocation: false,
+      staticOutcomeTelemetry: undefined,
       tags: [],
     },
     {
@@ -45,6 +46,7 @@ describe('SkillAvailabilityResolutionResolver', () => {
       source: 'external',
       sourceUrl: undefined,
       staticDisableModelInvocation: undefined,
+      staticOutcomeTelemetry: undefined,
       tags: [],
     },
     {
@@ -54,6 +56,7 @@ describe('SkillAvailabilityResolutionResolver', () => {
       source: 'external',
       sourceUrl: undefined,
       staticDisableModelInvocation: true,
+      staticOutcomeTelemetry: undefined,
       tags: ['github'],
     },
   ];
@@ -266,6 +269,7 @@ describe('SkillAvailabilityResolutionResolver', () => {
         source: 'external',
         sourceUrl: undefined,
         staticDisableModelInvocation: false,
+        staticOutcomeTelemetry: undefined,
         tags: ['not-a-real-tag'],
       },
     ]);
@@ -289,6 +293,7 @@ describe('SkillAvailabilityResolutionResolver', () => {
         source: 'external',
         sourceUrl: undefined,
         staticDisableModelInvocation: undefined,
+        staticOutcomeTelemetry: undefined,
         tags: [],
       },
     ]);

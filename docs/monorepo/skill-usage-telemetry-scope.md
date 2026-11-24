@@ -79,7 +79,8 @@ Build them with `pnpm run build:hooks`. Do not edit them.
 | ------------------------------------ | --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `skill-usage-capture.cjs`            | Claude `PreToolUse` (matcher `Skill`)         | one event, `invocation_path='skill_tool'`                                                                                                                              |
 | `skill-usage-capture.cjs`            | Claude `UserPromptExpansion`                  | one event, `invocation_path='slash'`                                                                                                                                   |
-| `skill-usage-complete.cjs`           | Claude `Stop`                                 | resolves open starts → `session_ended`; sweeps stale starts → `abandoned`                                                                                              |
+| `skill-usage-complete.cjs`           | Claude `SessionEnd`                           | resolves open starts → `session_ended`; sweeps stale starts → `abandoned`                                                                                              |
+| `skill-usage-complete.cjs`           | Claude `Stop` (every turn)                    | sweeps stale starts → `abandoned`; token usage, trajectories, buffer drains — leaves this session's starts open                                                        |
 | `skill-usage-capture.cjs` (cursor)   | Cursor `beforeSubmitPrompt`                   | one event, `source='cursor'`                                                                                                                                           |
 | `skill-usage-heartbeat.cjs`          | Claude `SessionStart`                         | one coverage heartbeat per session, upserted into `telemetry_heartbeats` — no skill data ([contract §8](./child-repo-hook-telemetry-contract.md#8-coverage-heartbeat)) |
 | `skill-usage-heartbeat.cjs` (cursor) | Cursor `sessionStart`                         | the same heartbeat, `source='cursor'`                                                                                                                                  |
@@ -89,7 +90,8 @@ Build them with `pnpm run build:hooks`. Do not edit them.
 Every write is fail-open: POST to OT GraphQL first, append to
 `~/.openthrottle/skill-usage/{events,outcomes}.jsonl` on any failure, drained
 opportunistically later. `~/.openthrottle/skill-usage/starts/` is **not** a buffer — it is
-the per-session open-start correlation ledger, drained on `Stop`. Files sitting
+the per-session open-start correlation ledger, drained at session end (Claude `SessionEnd`,
+Cursor `sessionEnd`, Codex `SessionEnd`) or by a skill's own reporter. Files sitting
 there mean sessions are in flight, not that the drain is broken. (These lived under each
 checkout's `.cache/skill-usage/` until the buffer moved out of every working tree; see the
 [telemetry contract §4](./child-repo-hook-telemetry-contract.md#4-buffering--nothing-is-written-into-a-foreign-working-tree).)
@@ -141,7 +143,7 @@ liveness there too.
 
 ### `duration_ms` is null on every automatic path
 
-It used to be `Stop − started_at`: skill load to the end of the whole session, counting everything
+It used to be `Stop − started_at`: skill load to the end of the turn (or session), counting everything
 the session did afterwards. Since nothing brackets a skill's own work, the automatic paths now write
 `null` rather than a number that means something else. Only a deliberate reporter, which knows when
 it finished, supplies a duration.
@@ -163,14 +165,26 @@ reason to emit it. Fail-open throughout — outcome capture never blocks or slow
   wired that way would post rows no start or event could ever be joined to.
 - **Duration.** Without `--duration-ms`, the reporter claims the skill's own open start and reports
   load → now. That is a genuinely skill-scoped number — the start marks the load, the reporter marks
-  the skill's own finish line — and claiming the start also stops the turn-end hook writing a second
-  `session_ended` row for the same invocation. It only exists when the skill finishes in the turn
-  that loaded it: `Stop` fires at the end of **every turn**, not of the session, and resolves the
-  turn's open starts. A multi-turn skill (`ot-loop`) therefore reports an outcome with no duration.
+  the skill's own finish line — and claiming the start also stops the session-end hook writing a
+  second `session_ended` row for the same invocation. Starts stay open across turns: Claude's `Stop`
+  fires at the end of **every turn**, so the Claude adapter resolves starts at `SessionEnd`
+  instead, as Cursor and Codex already did. A multi-turn skill (`ot-loop`) therefore gets its
+  duration too. Until 2026-11 Claude resolved them at `Stop`, which is why older multi-turn rows
+  have an outcome and no duration. A session killed without `SessionEnd` leaves its unclaimed
+  starts to the 6-hour sweep, which records `abandoned`.
 - **Declaration.** The reporter sends `deliberate: true`; the server stores a `success`/`error`
   without it as `legacy_assumed_success`, so a stale hook bundle can never mint a measured outcome.
-- **Wired today:** `github-commit`, `github-squash`, `github-pull-request`, `ot-worktree` (each at its
-  end) and `ot-loop` (once per run, at settle — never per task).
+- **Where the call goes.** In the step that confirms the skill's work — the commit lands, the check
+  passes, the PR URL prints, the run settles — not in a trailing section. A trailing one is skipped:
+  before this rule `github-cleanup` reported 1 run in 19 and `github-commit` 8 in 32. Report once per
+  invocation, on every exit path: `error` when the work failed, `abandoned` when the skill turned out
+  not to apply or the user called it off.
+- **Every owned skill reports or opts out.** A skill with no finish line of its own (a convention
+  reference read partway through other work; today only `ot-stack`) declares
+  `outcome-telemetry: 'none'` under `metadata` in its frontmatter instead.
+  `pnpm nx run monorepo:check-skill-outcome-reporting` (in `check:local` and CI) fails on a
+  `skills/<name>/SKILL.md` that does neither, or that calls the reporter with another skill's name.
+  The authoring rule lives in the `ot-skill-guide` skill.
 
 ### Legacy rows are quarantined, not rewritten
 

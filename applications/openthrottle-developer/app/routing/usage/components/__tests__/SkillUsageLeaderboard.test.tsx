@@ -25,6 +25,7 @@ const buildBySkill = (
     avgDurationMs: null,
     count: 1,
     errorCount: 0,
+    isOutcomeTelemetryOptedOut: false,
     outcomeCount: 0,
     presence: SKILL_PRESENCE.INSTALLED,
     scope: SKILL_USAGE_SCOPES.OURS,
@@ -98,6 +99,56 @@ describe('SkillUsageLeaderboard Component', () => {
     expect(
       component.queryByRole('cell', { name: '—' }),
     ).not.toBeInTheDocument();
+    expect(
+      component.queryByTestId('skill-usage-not-reported-by-design'),
+    ).not.toBeInTheDocument();
+  });
+
+  describe('a skill that opts out of outcome telemetry', () => {
+    test('says "Not reported by design" in both Outcomes and Avg duration', () => {
+      const component = renderComponent({
+        bySkill: [
+          buildBySkill({
+            avgDurationMs: null,
+            isOutcomeTelemetryOptedOut: true,
+            outcomeCount: 0,
+            skillName: 'ot-stack',
+          }),
+        ],
+      });
+
+      const cells = component.getAllByTestId(
+        'skill-usage-not-reported-by-design',
+      );
+      expect(cells).toHaveLength(2);
+      for (const cell of cells) {
+        expect(cell).toHaveAttribute(
+          'title',
+          SKILL_USAGE_COPY.notReportedByDesignTitle,
+        );
+        expect(cell).not.toHaveAttribute('href');
+      }
+      expect(
+        component.queryByTestId('skill-usage-not-measured'),
+      ).not.toBeInTheDocument();
+    });
+
+    test('still shows a metric the skill did report', () => {
+      const component = renderComponent({
+        bySkill: [
+          buildBySkill({
+            avgDurationMs: 1500,
+            isOutcomeTelemetryOptedOut: true,
+            outcomeCount: 0,
+          }),
+        ],
+      });
+
+      expect(
+        component.getAllByTestId('skill-usage-not-reported-by-design'),
+      ).toHaveLength(1);
+      expect(component.getByRole('cell', { name: '1.5s' })).toBeInTheDocument();
+    });
   });
 
   test('renders measured values without the not-measured state', () => {

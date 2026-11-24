@@ -66,6 +66,22 @@ describe('ProjectSkillsService', () => {
   });
 
   describe('getSkillsForProject', () => {
+    it('maps outcome_telemetry to staticOutcomeTelemetry', async () => {
+      projectSkillsRepository.listForProject.mockResolvedValue([
+        makeRow({ outcomeTelemetry: 'none', slug: 'ot-stack' }),
+        makeRow({ outcomeTelemetry: null, slug: 'ot-loop' }),
+        makeRow({ outcomeTelemetry: 'garbage', slug: 'odd' }),
+      ]);
+
+      const result = await service.getSkillsForProject(projectId);
+
+      expect(result.map((view) => view.staticOutcomeTelemetry)).toEqual([
+        'none',
+        undefined,
+        undefined,
+      ]);
+    });
+
     it('projects rows and preserves the tri-state static flag', async () => {
       projectSkillsRepository.listForProject.mockResolvedValue([
         makeRow({

@@ -33,6 +33,7 @@ describe('ProjectSkillsResolver', () => {
       source: 'openthrottle',
       sourceUrl: undefined,
       staticDisableModelInvocation: false,
+      staticOutcomeTelemetry: undefined,
       tags: ['planning'],
     },
     {
@@ -42,6 +43,7 @@ describe('ProjectSkillsResolver', () => {
       source: 'external',
       sourceUrl: undefined,
       staticDisableModelInvocation: undefined,
+      staticOutcomeTelemetry: undefined,
       tags: [],
     },
     {
@@ -51,6 +53,7 @@ describe('ProjectSkillsResolver', () => {
       source: 'external',
       sourceUrl: 'https://example.com/skills/github-commit',
       staticDisableModelInvocation: true,
+      staticOutcomeTelemetry: undefined,
       tags: ['git', 'github'],
     },
   ];
@@ -67,6 +70,7 @@ describe('ProjectSkillsResolver', () => {
     source: 'external',
     sourceUrl: undefined,
     staticDisableModelInvocation: undefined,
+    staticOutcomeTelemetry: undefined,
     tags: ['github'],
   };
 
@@ -123,6 +127,7 @@ describe('ProjectSkillsResolver', () => {
           source: 'openthrottle',
           sourceUrl: null,
           staticDisableModelInvocation: false,
+          staticOutcomeTelemetry: null,
           tags: ['planning'],
         },
         {
@@ -132,6 +137,7 @@ describe('ProjectSkillsResolver', () => {
           source: 'external',
           sourceUrl: null,
           staticDisableModelInvocation: null,
+          staticOutcomeTelemetry: null,
           tags: [],
         },
         {
@@ -141,6 +147,7 @@ describe('ProjectSkillsResolver', () => {
           source: 'external',
           sourceUrl: 'https://example.com/skills/github-commit',
           staticDisableModelInvocation: true,
+          staticOutcomeTelemetry: null,
           tags: ['git', 'github'],
         },
       ],
@@ -176,6 +183,25 @@ describe('ProjectSkillsResolver', () => {
     expect(mockProjectSkillsService.getSkillsForProject).not.toHaveBeenCalled();
   });
 
+  test('exposes an outcome-telemetry opt-out as staticOutcomeTelemetry', async () => {
+    vi.mocked(mockProjectSkillsService.getSkillsForProject).mockResolvedValue([
+      {
+        description: undefined,
+        orphanedAt: undefined,
+        slug: 'ot-stack',
+        source: 'openthrottle',
+        sourceUrl: undefined,
+        staticDisableModelInvocation: undefined,
+        staticOutcomeTelemetry: 'none',
+        tags: [],
+      },
+    ]);
+
+    const result = await resolver.projectSkills('explicit-project-id');
+
+    expect(result.skills[0]?.staticOutcomeTelemetry).toBe('none');
+  });
+
   test('lists orphan slugs for DB rows that ingest marked missing from disk', async () => {
     vi.mocked(mockProjectSkillsService.getSkillsForProject).mockResolvedValue([
       {
@@ -185,6 +211,7 @@ describe('ProjectSkillsResolver', () => {
         source: 'external',
         sourceUrl: undefined,
         staticDisableModelInvocation: undefined,
+        staticOutcomeTelemetry: undefined,
         tags: ['github'],
       },
     ]);
@@ -244,6 +271,7 @@ describe('ProjectSkillsResolver', () => {
       source: 'external',
       sourceUrl: null,
       staticDisableModelInvocation: null,
+      staticOutcomeTelemetry: null,
       tags: ['github'],
     });
   });

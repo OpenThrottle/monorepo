@@ -163,6 +163,41 @@ describe('routes/skills._index loader', () => {
     });
   });
 
+  describe('optedOutSlugs', () => {
+    test('lists a skill whose disk frontmatter opts out', async () => {
+      mockGetMonorepoRoot.mockReturnValue('/workspace/openthrottle');
+      mockDiscoverRepoSkills.mockReturnValue([
+        ...SAMPLE_ENTRIES,
+        {
+          disableModelInvocation: undefined,
+          layout: 'agents',
+          outcomeTelemetry: 'none',
+          repoRelativePath: '.agents/skills/ot-stack/SKILL.md',
+          slug: 'ot-stack',
+          source: 'openthrottle',
+          summary: 'Conventions.',
+          tags: undefined,
+        },
+      ]);
+
+      const result = await loader(loaderArgs);
+
+      expect(result.optedOutSlugs).toEqual(['ot-stack']);
+    });
+
+    test('takes the ingested value over disk', async () => {
+      mockGetMonorepoRoot.mockReturnValue('/workspace/openthrottle');
+      mockDiscoverRepoSkills.mockReturnValue(SAMPLE_ENTRIES);
+      mockGraphql([
+        { slug: 'nx-workspace', staticOutcomeTelemetry: 'none', tags: [] },
+      ]);
+
+      const result = await loader(loaderArgs);
+
+      expect(result.optedOutSlugs).toEqual(['nx-workspace']);
+    });
+  });
+
   test('overlays skillAvailability effective flag + provenance onto disk entries', async () => {
     mockGetMonorepoRoot.mockReturnValue('/workspace/openthrottle');
     mockDiscoverRepoSkills.mockReturnValue(SAMPLE_ENTRIES);

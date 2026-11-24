@@ -5,7 +5,7 @@ compatibility: 'git; the github-pull-request skill supplies the repo resolver an
 metadata:
   author: openthrottle
   last-reviewed: '2026-11-22'
-  version: '1.2.0'
+  version: '1.3.0'
 ---
 
 ## Resolve the host repo first
@@ -58,6 +58,9 @@ that is what keeps the commit traceable to its plan (see the `ot-plans` skill). 
 task rather than letting uncommitted work pile up. Work that is not an OpenThrottle plan carries
 neither footer.
 
+**The commit landing is the finish line.** Once `git log -1` shows it, report the outcome in the
+same step ([§ Report the outcome](#report-the-outcome)); if a hook stopped it, report `error`.
+
 ## Safety
 
 - **NEVER** commit or push to `DEFAULT_BRANCH` (or `master`), and get the user's confirmation before
@@ -97,7 +100,7 @@ Task-Id: 00000000-0000-4000-8000-000000000002
 
 ### Report the outcome
 
-Once, at the end — `error` if the commit could not be made, `abandoned` if called off ([why](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/skill-usage-telemetry-scope.md#reporting-an-outcome-from-a-skill)):
+Once per invocation, on every exit path: `success` when the commit lands, `error` if it could not be made, `abandoned` if called off ([why](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/skill-usage-telemetry-scope.md#reporting-an-outcome-from-a-skill)):
 
 ```bash
 r="$(command -v skill-usage-outcome.cjs || echo "$(git rev-parse --show-toplevel 2>/dev/null)/plugins/openthrottle/bin/skill-usage-outcome.cjs")"; if [ -f "$r" ]; then node "$r" --skill github-commit --outcome success; fi

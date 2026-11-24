@@ -53,6 +53,12 @@ export class ProjectSkillObject {
     nullable: true,
   })
   staticDisableModelInvocation!: boolean | null;
+
+  @Field(() => String, {
+    description: `Static frontmatter \`metadata.outcome-telemetry\`: 'none' when the skill deliberately reports no outcome or duration (usage views show "Not reported by design"); null when the skill does not opt out.`,
+    nullable: true,
+  })
+  staticOutcomeTelemetry!: string | null;
 }
 
 @ObjectType({

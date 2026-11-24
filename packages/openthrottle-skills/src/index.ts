@@ -4,11 +4,13 @@ export type {
   AgentAssetValidationIssue,
   PersonaFrontmatter,
   SkillFrontmatter,
+  SkillOutcomeTelemetry,
   SkillSource,
 } from './schemas/agent-asset-frontmatter.schemas.ts';
 export {
   AGENT_ASSET_SLUG_PATTERN,
   personaFrontmatterSchema,
+  SKILL_OUTCOME_TELEMETRY,
   SKILL_SOURCES,
   skillFrontmatterSchema,
 } from './schemas/agent-asset-frontmatter.schemas.ts';

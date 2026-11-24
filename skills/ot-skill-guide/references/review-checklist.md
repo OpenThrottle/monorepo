@@ -115,7 +115,17 @@ Skip when `skills/` and `.agents/skills/` are absent.
 - [ ] `quality` — `pnpm nx run monorepo:check-model-facing-text` passes; growth was accepted with
       `-- --write` only on purpose.
 - [ ] `quality` — OpenThrottle-only content (the telemetry outcome line included) sits under an
-      "In OpenThrottle repos" heading in any skill that ships to other repos.
+      "In OpenThrottle repos" heading in any skill that ships to other repos. The finish-line step
+      points to it there.
+- [ ] ⚙ `quality` — The skill reports its outcome or opts out with `outcome-telemetry: 'none'`
+      (`pnpm nx run monorepo:check-skill-outcome-reporting`). An opt-out on a skill that has a
+      finish line is a finding.
+- [ ] `quality` — The report sits in the finish-line step, not a trailing section; it fires once
+      per invocation (never per task or tool call) on every exit path, naming when to send `error`
+      and `abandoned`; and it passes no `--duration-ms`.
+- [ ] `quality` — Read the skill's `/skills` row. Reported outcomes far below invocations (1 in 19) means the report step is skipped or the finish line is unclear. Many `abandoned` means
+      the description loads the skill for requests it does not serve. Quote the row's numbers as
+      the evidence.
 - [ ] `nit` — Listed in the `docs/Skills.md` catalog.
 - [ ] ⚙ `nit` — Frontmatter in house order (`name`, `description`, `compatibility`, `metadata`),
       lowercase `author`, semver `version`.
