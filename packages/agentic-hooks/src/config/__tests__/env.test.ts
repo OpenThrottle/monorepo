@@ -21,10 +21,12 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   describeTelemetryConfig,
   isOpenThrottleCheckout,
+  loadRepoEnv,
   normalizeLoopbackHost,
   readRepoEnvFile,
   resolveAuthToken,
   resolveGraphqlUrl,
+  resolveOtEnv,
   resolveRepoIdentity,
   resolveReportableCwd,
   TELEMETRY_CONFIG_SOURCES,
@@ -247,6 +249,90 @@ describe('config/env resolution by location', () => {
         'OPENTHROTTLE_MCP_AUTH_TOKEN=mcp\nOPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN=worker\n',
       );
       expect(resolveAuthToken(otRepo)).toBe('mcp');
+    });
+
+    it('asks each layer for either key before falling through', () => {
+      writeEnv(otRepo, 'OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN=repo-worker\n');
+      writeEnv(
+        path.join(fakeHome, '.openthrottle'),
+        'OPENTHROTTLE_MCP_AUTH_TOKEN=home-token\n',
+      );
+      expect(resolveAuthToken(otRepo)).toBe('repo-worker');
+    });
+  });
+
+  describe('an explicit blank in the ambient shell stays blank', () => {
+    const writeUserEnv = (): void => {
+      writeEnv(
+        path.join(fakeHome, '.openthrottle'),
+        'OPENTHROTTLE_GRAPHQL_URL=http://home:3/graphql\nOPENTHROTTLE_MCP_AUTH_TOKEN=home-token\n',
+      );
+    };
+
+    it('a blank token never reaches the user-global file', () => {
+      writeUserEnv();
+      process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = '';
+      expect(resolveAuthToken(foreignRepo)).toBe('');
+      expect(resolveOtEnv(foreignRepo, 'OPENTHROTTLE_MCP_AUTH_TOKEN')).toBe('');
+    });
+
+    it('a blank for either token key closes the whole token concern', () => {
+      writeUserEnv();
+      process.env.OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN = '   ';
+      expect(resolveAuthToken(foreignRepo)).toBe('');
+    });
+
+    it('a blank endpoint never reaches the user-global file', () => {
+      writeUserEnv();
+      process.env.OPENTHROTTLE_GRAPHQL_URL = '';
+      expect(resolveGraphqlUrl(foreignRepo)).toBeNull();
+    });
+
+    it('an absent key still falls back to the user-global file', () => {
+      writeUserEnv();
+      expect(resolveAuthToken(foreignRepo)).toBe('home-token');
+      expect(resolveGraphqlUrl(foreignRepo)).toBe('http://home:3/graphql');
+    });
+
+    it('a blank does not hide a value set in the same shell', () => {
+      writeUserEnv();
+      process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = '';
+      process.env.OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN = 'shell-worker';
+      expect(resolveAuthToken(foreignRepo)).toBe('shell-worker');
+    });
+
+    it('a blank does not hide this OpenThrottle checkout .env, which ranks above the shell', () => {
+      writeUserEnv();
+      writeEnv(otRepo, 'OPENTHROTTLE_MCP_AUTH_TOKEN=repo-token\n');
+      process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = '';
+      expect(resolveAuthToken(otRepo)).toBe('repo-token');
+    });
+
+    it('a blank line in a file layer is a template line, not an explicit blank', () => {
+      writeUserEnv();
+      writeEnv(otRepo, 'OPENTHROTTLE_MCP_AUTH_TOKEN=\n');
+      expect(resolveAuthToken(otRepo)).toBe('home-token');
+    });
+
+    it('an OT Loop worker in a foreign checkout resolves no token', () => {
+      // The worker env OT Loop builds: every OT credential key set to ''.
+      writeUserEnv();
+      for (const key of [
+        'OPENTHROTTLE_MCP_AUTH_TOKEN',
+        'OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN',
+      ]) {
+        process.env[key] = '';
+      }
+      expect(resolveAuthToken(foreignRepo)).toBe('');
+      expect(resolveGraphqlUrl(foreignRepo)).toBe('http://home:3/graphql');
+    });
+
+    it('loadRepoEnv never turns a blank file line into an explicit blank', () => {
+      writeUserEnv();
+      writeEnv(otRepo, 'OPENTHROTTLE_MCP_AUTH_TOKEN=\n');
+      loadRepoEnv(otRepo);
+      expect(process.env.OPENTHROTTLE_MCP_AUTH_TOKEN).toBeUndefined();
+      expect(resolveAuthToken(foreignRepo)).toBe('home-token');
     });
   });
 });

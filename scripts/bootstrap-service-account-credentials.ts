@@ -13,10 +13,15 @@
  * - Mint-and-print (host `setup.sh` path): when the env var is unset, mint a
  *   random credential and print it once, skipping accounts that already have an
  *   active credential (unchanged legacy behavior).
+ *
+ * Either way it then points `~/.openthrottle/.env` at the MCP token it settled
+ * on ({@link syncUserEnvFileFromSecrets}), which is how `./scripts/setup.sh`
+ * and a token rotation both reach agents in other checkouts.
  */
 
 import { fileURLToPath } from 'node:url';
 
+import { ensureUserEnvEntries } from '@openthrottle/agentic-hooks';
 import {
   getOpenThrottleTypeOrmOptions,
   ServiceAccount,
@@ -30,7 +35,14 @@ import {
   readLocalSecrets,
   upsertLocalSecrets,
 } from './local-secrets-file.ts';
+import { isLinkedWorktree } from './utils/git.ts';
 import { createLogger } from './utils/logger.ts';
+import {
+  isWorktreeContext,
+  resolveScriptConfigDir,
+  resolveScriptGraphqlUrl,
+  syncUserEnvFile,
+} from './utils/user-env-file.ts';
 
 const logger = createLogger();
 
@@ -257,6 +269,27 @@ export async function provisionAccount(
   );
 }
 
+/**
+ * Point `~/.openthrottle/.env` at the MCP token this run settled on. Every
+ * provisioning path leaves that token in the local secrets file (minted,
+ * rotated, env-provided or already recorded), so reading it back covers all of
+ * them, and a rotation reaches agents in other checkouts without a server
+ * restart. A linked worktree never writes (see `utils/user-env-file.ts`).
+ */
+export async function syncUserEnvFileFromSecrets(): Promise<void> {
+  const [mcpAccount] = BOOTSTRAP_ACCOUNTS;
+  const secrets = await readLocalSecrets();
+
+  syncUserEnvFile({
+    authToken: secrets[mcpAccount.envVar],
+    configDir: resolveScriptConfigDir(process.env),
+    ensure: ensureUserEnvEntries,
+    graphqlUrl: resolveScriptGraphqlUrl(process.env),
+    isWorktree: isWorktreeContext(process.env, isLinkedWorktree),
+    logger,
+  });
+}
+
 async function main(): Promise<void> {
   const dataSource = new DataSource(getOpenThrottleTypeOrmOptions());
   await dataSource.initialize();
@@ -300,6 +333,8 @@ async function main(): Promise<void> {
   } finally {
     await dataSource.destroy();
   }
+
+  await syncUserEnvFileFromSecrets();
 }
 
 // Only run when invoked directly (not when imported by tests).

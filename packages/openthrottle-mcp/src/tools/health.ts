@@ -8,6 +8,7 @@ import { z } from 'zod';
 import type {
   EmbeddingsHealthFragment,
   ServerHealthWithEmbeddingsFragment,
+  UserEnvFileHealthFragment,
 } from '../__generated__/graphql.js';
 import { GetServerHealthWithEmbeddingsDocument } from '../__generated__/graphql.js';
 import type { ToolsetName } from '../config/toolsets.ts';
@@ -61,6 +62,35 @@ const describeEmbeddings = (
 };
 
 /**
+ * @description One line on `~/.openthrottle/.env`, the only way agents in other checkouts find
+ * this server since the agent child env is allowlisted. Statuses only; the server never sends the
+ * token. A not-ok status names the fix.
+ */
+const describeUserEnvFile = (
+  userEnvFile: UserEnvFileHealthFragment | null | undefined,
+): string[] => {
+  if (!userEnvFile) {
+    return [];
+  }
+
+  const { endpoint, token } = userEnvFile;
+  const line = `  ~/.openthrottle/.env: endpoint ${endpoint}, token ${token}`;
+  const needsFix = [endpoint, token].some((status) => {
+    return (
+      status === 'missing' || status === 'stale' || status === 'unreadable'
+    );
+  });
+  if (!needsFix) {
+    return [line];
+  }
+
+  return [
+    line,
+    `    agents in other checkouts cannot reach OpenThrottle; fix with \`pnpm run user-env:write\` (or \`pnpm run database:bootstrap-service-accounts\` on the server's checkout)`,
+  ];
+};
+
+/**
  * @description Which toolsets this process serves, and how to turn on the rest. Reported by `health`
  * because a disabled tool is absent from `tools/list`, so a client has no other way to learn it exists.
  */
@@ -95,7 +125,8 @@ export async function healthToolHandler(
       return null;
     }
 
-    const { api, database, embeddings, redis, websocket } = serverHealth;
+    const { api, database, embeddings, redis, userEnvFile, websocket } =
+      serverHealth;
     const toolsets = reportToolsets();
     const off = toolsets.disabled.map((t) => `${t.name} (${t.description})`);
     const lines = [
@@ -105,6 +136,7 @@ export async function healthToolHandler(
       `  redis: ${redis}`,
       `  websocket: ${websocket}`,
       ...describeEmbeddings(embeddings),
+      ...describeUserEnvFile(userEnvFile),
       `MCP toolsets loaded: ${toolsets.enabled.join(', ')}`,
     ];
     if (off.length > 0) {

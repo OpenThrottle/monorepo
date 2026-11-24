@@ -56,7 +56,14 @@ The remaining, permitted sources, in precedence order:
    `OPENTHROTTLE_SERVER_APP_URL`, …) — this is how **leg B** supplies the endpoint: the driver already
    controls the spawned process's environment, so no config needs to travel with the payload at all.
 2. Machine-global operator config at `~/.openthrottle/.env` — this is how **leg A** supplies it, since
-   a marketplace-installed plugin has no spawning parent to inherit from. The user writes it once.
+   a marketplace-installed plugin has no spawning parent to inherit from. OpenThrottle writes it for
+   the user; see [§ Who writes `~/.openthrottle/.env`](#who-writes-openthrottleenv).
+
+A key present in the process env with a **blank** value is an explicit "no value": it ends the lookup
+for its concern (endpoint or token), so the user-global file is never consulted. OT Loop blanks its
+worker's OT tokens on purpose (`OT_LOOP_WORKER_BLANKED_ENV_KEYS`), and before this rule the file handed
+the worker the machine token anyway. A blank line in a **file** layer is an unfilled template line
+(`.env.default` ships them) and still falls through.
 
 **As shipped, two things differ from this section's original draft.** There are no
 `SKILL_USAGE_GRAPHQL_URL` / `SKILL_USAGE_AUTH_TOKEN` overrides: a second name for the same value only
@@ -72,6 +79,59 @@ an endpoint into it would make the artifact operator-specific and break the one-
 **Multiple OT servers** resolve by precedence, not by merge: the first source that yields a URL wins and
 the rest are not consulted. An operator who runs several servers points each spawn at one of them via
 (2); there is no fan-out and no "send to all".
+
+### Who writes `~/.openthrottle/.env`
+
+The file is no longer a telemetry convenience. Agent CLIs started without a terminal get an
+allowlisted child env (PR #966), so in a foreign checkout this file is the **only** way the hooks in a
+scheduled-job or hook agent find OpenThrottle: skill-usage telemetry, heartbeats and the plan hooks
+alike. It is a credential path.
+
+**One writer.** Every trigger calls `ensureUserEnvEntries` (`packages/agentic-hooks`), which owns only
+the lines it wrote. Each one sits under a `# managed by openthrottle-server` marker. Any key the user set
+for a concern, alias included, leaves that whole concern alone. The file is mode 600 in a 700 directory
+and is written through a symlink, never over it.
+
+| Trigger                                                                                                          | Writes                                                                                                  |
+| ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Primary server boot (`main.ts`, after `listen`)                                                                  | `http://127.0.0.1:<PORT>/graphql` + the server's `OPENTHROTTLE_MCP_AUTH_TOKEN`                          |
+| `pnpm run database:bootstrap-service-accounts` (run by `./scripts/setup.sh`)                                     | the root `.env`'s `OPENTHROTTLE_*` URL (default `:6021`) + the MCP token it minted, rotated or verified |
+| Admin `createServiceAccountCredential` for the `openthrottle-mcp` account                                        | the server's loopback URL + the new token                                                               |
+| `pnpm run user-env:write -- [--url <graphql>] [--token <ot_sa>]` (token also from `OPENTHROTTLE_MCP_AUTH_TOKEN`) | the given values, for a hosted or remote server that cannot write a laptop's file                       |
+
+**Skip rules.**
+
+- **Worktree.** A worktree server (`OT_WORKTREE_DB`) and the scripts in a linked worktree never write:
+  the file would point every checkout at a server that disappears with the worktree. The manual command
+  still honours an explicit `--url` there.
+- **Container.** A container without `OPENTHROTTLE_USER_CONFIG_DIR` never writes, because its home is
+  not the host's. The Docker-native install mounts the host directory and names it there.
+- **No port or token.** A server with no usable `PORT`, or with no token to hand out, skips the write
+  and logs one warning.
+- **Electron.** The Electron shell does not write the file. It is a client with a sign-in session, not
+  the `ot_sa` token; a local server it talks to writes the file on boot.
+
+**Rotation.** A running server's own env token is fixed at boot, so rotation reaches the file through
+two paths: the credential bootstrap rewrites the managed line whenever it mints or rotates, and the
+admin mutation above rewrites it when an MCP credential is minted while the server runs. A credential
+revoked with no replacement shows up as `stale` in the health check below.
+
+**Health.** `serverHealth.userEnvFile` grades the endpoint and token lines as one of:
+
+- `ok`;
+- `missing`;
+- `stale`: a managed endpoint for another port, or a token that no longer authenticates, whoever set it;
+- `user_set`;
+- `unreadable`;
+- `not_applicable`: a worktree, a container or a portless server.
+
+The token check is read-only and never bumps `last_used_at`. The MCP `health` tool prints the line and
+names the fix. The server logs one boot warning when either line is `missing`, `stale` or `unreadable`.
+`plugins/openthrottle/bin/skill-usage-doctor.cjs` still checks the file from the agent's side.
+No surface ever returns the token.
+
+**Scope.** The file carries the full, unscoped MCP machine token; mode 600 limits it to processes
+running as the same user. A narrower hooks-only credential is follow-up plan `234a357e`.
 
 ## 3. Foreign-repo identity in the telemetry
 

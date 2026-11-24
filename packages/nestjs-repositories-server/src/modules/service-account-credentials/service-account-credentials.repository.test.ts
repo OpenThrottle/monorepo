@@ -397,6 +397,17 @@ describe('ServiceAccountCredentialsRepository', () => {
       );
     });
 
+    it('isActiveToken agrees with verifyBearerToken and never writes', async () => {
+      findOne.mockResolvedValue(await credentialWith({}));
+      await expect(repository.isActiveToken(bearer)).resolves.toBe(true);
+
+      findOne.mockResolvedValue(
+        await credentialWith({ revokedAt: new Date(FIXED_NOW) }),
+      );
+      await expect(repository.isActiveToken(bearer)).resolves.toBe(false);
+      expect(update).not.toHaveBeenCalled();
+    });
+
     describe('when the stored hash is a legacy bcrypt hash', () => {
       it('verifies and rewrites it to SHA-256 in place', async () => {
         findOne.mockResolvedValue(

@@ -7,7 +7,10 @@
  *    runs its own server on its own port, and a stale parent shell would
  *    otherwise divert this worktree's capture to a sibling's (or a
  *    pre-migration) schema.
- * 2. `process.env` — the ambient shell.
+ * 2. `process.env` — the ambient shell. A key present here with a blank value
+ *    is an explicit "no value" and ends the lookup for its concern (endpoint
+ *    or token): OT Loop blanks its worker's tokens, and the user-global file
+ *    must not hand them back.
  * 3. `~/.openthrottle/.env` — the user-global fallback, which is what makes
  *    telemetry configurable from a foreign repo without writing anything into
  *    it.
@@ -251,7 +254,7 @@ export const readUserEnvFile = (): Record<string, string> => {
 
 /**
  * Load KEY=VALUE pairs from repo `.env` into process.env without overriding
- * keys already set (fill-in for missing keys only).
+ * keys already set (fill-in for missing keys only). Blank values are skipped.
  *
  * @public
  */
@@ -259,7 +262,10 @@ export const loadRepoEnv = (repoRoot: string): void => {
   try {
     const fileEnv = readRepoEnvFile(repoRoot);
     for (const [key, value] of Object.entries(fileEnv)) {
-      if (process.env[key] === undefined) {
+      // A blank file value is not copied: in `process.env` a present-but-empty
+      // key is an explicit blank (see {@link envLayers}) and would shut off
+      // the user-global layer.
+      if (process.env[key] === undefined && value.trim() !== '') {
         process.env[key] = value;
       }
     }
@@ -283,24 +289,103 @@ export interface EnvResolutionOptions {
   readonly includeProcessEnv?: boolean;
 }
 
+/** Keys that set the GraphQL endpoint, in the order a layer is read. */
+const GRAPHQL_ENDPOINT_ENV_KEYS = [
+  'OPENTHROTTLE_GRAPHQL_URL',
+  'OPENTHROTTLE_WORKER_GRAPHQL_URL',
+  'OPENTHROTTLE_SERVER_APP_URL',
+] as const;
+
+/** Keys that set the ingest auth token, in the order a layer is read. */
+const AUTH_TOKEN_ENV_KEYS = [
+  'OPENTHROTTLE_MCP_AUTH_TOKEN',
+  'OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN',
+] as const;
+
+interface EnvLayer {
+  /**
+   * True only for `process.env`: a key present there with a blank value is an
+   * explicit "no value", and ends the lookup for its concern. OT Loop blanks
+   * its worker's OT tokens this way (`OT_LOOP_WORKER_BLANKED_ENV_KEYS`), and a
+   * blank that fell through to `~/.openthrottle/.env` would hand the worker
+   * the machine token anyway. A blank line in a FILE layer is just an unfilled
+   * template line (`.env.default` ships them) and never ends a lookup.
+   */
+  readonly blankIsTerminal: boolean;
+  readonly values: Record<string, string | undefined>;
+}
+
 /**
- * The layers, highest first. One definition, so `resolveOtEnv` and
- * `resolveGraphqlUrl` cannot disagree about order or membership.
+ * The layers, highest first. One definition, so `resolveOtEnv`,
+ * `resolveGraphqlUrl` and `resolveAuthToken` cannot disagree about order or
+ * membership.
  */
 const envLayers = (
   repoRoot: string | undefined,
   options: EnvResolutionOptions | undefined,
-): Array<Record<string, string | undefined>> => {
+): EnvLayer[] => {
+  const excludeProcessEnv = options?.includeProcessEnv === false;
+  const processLayer: EnvLayer[] = excludeProcessEnv
+    ? []
+    : [{ blankIsTerminal: true, values: process.env }];
   return [
-    repoRoot ? readRepoEnvFile(repoRoot) : {},
-    ...(options?.includeProcessEnv === false ? [] : [process.env]),
-    readUserEnvFile(),
+    {
+      blankIsTerminal: false,
+      values: repoRoot ? readRepoEnvFile(repoRoot) : {},
+    },
+    ...processLayer,
+    { blankIsTerminal: false, values: readUserEnvFile() },
   ];
+};
+
+/** True when `layer` ends the lookup for a concern made of `keys`. */
+const isExplicitlyBlank = (
+  layer: EnvLayer,
+  keys: readonly string[],
+): boolean => {
+  return (
+    layer.blankIsTerminal &&
+    keys.some((key) => {
+      const value = layer.values[key];
+      return value !== undefined && value.trim() === '';
+    })
+  );
+};
+
+/**
+ * Walk the layers for one concern: the first layer whose `pick` answers wins,
+ * and an explicit blank in `process.env` for any of `keys` answers "nothing".
+ */
+const resolveConcern = <TValue>(
+  repoRoot: string | undefined,
+  options: EnvResolutionOptions | undefined,
+  keys: readonly string[],
+  pick: (values: Record<string, string | undefined>) => TValue | null,
+): TValue | null => {
+  for (const layer of envLayers(repoRoot, options)) {
+    const answer = pick(layer.values);
+    if (answer !== null) {
+      return answer;
+    }
+    if (isExplicitlyBlank(layer, keys)) {
+      return null;
+    }
+  }
+  return null;
+};
+
+const pickTrimmed = (
+  values: Record<string, string | undefined>,
+  key: string,
+): string | null => {
+  const value = values[key]?.trim();
+  return value ? value : null;
 };
 
 /**
  * Resolve one OT env value by location: this OT checkout's `.env`, then the
- * ambient shell, then `~/.openthrottle/.env`.
+ * ambient shell, then `~/.openthrottle/.env`. A key set to `''` in the ambient
+ * shell resolves to `''` without consulting the user-global file.
  *
  * @public
  */
@@ -309,13 +394,11 @@ export const resolveOtEnv = (
   key: string,
   options?: EnvResolutionOptions,
 ): string => {
-  for (const layer of envLayers(repoRoot, options)) {
-    const value = layer[key];
-    if (value && value.trim()) {
-      return value.trim();
-    }
-  }
-  return '';
+  return (
+    resolveConcern(repoRoot, options, [key], (values) => {
+      return pickTrimmed(values, key);
+    }) ?? ''
+  );
 };
 
 /**
@@ -384,17 +467,18 @@ export const resolveGraphqlUrl = (
   repoRoot?: string,
   options?: EnvResolutionOptions,
 ): string | null => {
-  for (const layer of envLayers(repoRoot, options)) {
-    const url = graphqlUrlFromEnvMap(layer);
-    if (url) {
-      return url;
-    }
-  }
-  return null;
+  return resolveConcern(
+    repoRoot,
+    options,
+    GRAPHQL_ENDPOINT_ENV_KEYS,
+    graphqlUrlFromEnvMap,
+  );
 };
 
 /**
- * Auth token for ingest (service account or worker token).
+ * Auth token for ingest (service account or worker token), resolved as one
+ * concern: each layer is asked for either key before the next layer is read,
+ * and a blank for either key in the ambient shell resolves to `''`.
  *
  * @public
  */
@@ -403,8 +487,14 @@ export const resolveAuthToken = (
   options?: EnvResolutionOptions,
 ): string => {
   return (
-    resolveOtEnv(repoRoot, 'OPENTHROTTLE_MCP_AUTH_TOKEN', options) ||
-    resolveOtEnv(repoRoot, 'OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN', options) ||
-    ''
+    resolveConcern(repoRoot, options, AUTH_TOKEN_ENV_KEYS, (values) => {
+      for (const key of AUTH_TOKEN_ENV_KEYS) {
+        const value = pickTrimmed(values, key);
+        if (value !== null) {
+          return value;
+        }
+      }
+      return null;
+    }) ?? ''
   );
 };

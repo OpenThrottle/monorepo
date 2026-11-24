@@ -1,7 +1,11 @@
 /**
  * The writer for `~/.openthrottle/.env` — the user-global layer `readUserEnvFile`
- * reads. It exists so a local OpenThrottle server can make telemetry work in every
- * checkout on the machine without the user pasting a line anywhere.
+ * reads, and the only way an agent in a foreign checkout finds OpenThrottle now
+ * that agent child envs are allowlisted. Every trigger goes through it (server
+ * boot, the credential bootstrap, a minted MCP credential, `pnpm run
+ * user-env:write`); {@link inspectUserEnvEntries} reads it back under the same
+ * rules for the health check. Triggers and skip rules:
+ * docs/monorepo/child-repo-hook-telemetry-contract.md § Who writes `~/.openthrottle/.env`.
  *
  * **Fill in, never take over.** The file belongs to the user; the writer owns only
  * the lines it wrote, and it marks each one with {@link USER_ENV_MANAGED_MARKER} on
@@ -179,6 +183,87 @@ const writeAtomically = (envPath: string, text: string): void => {
 
 const isSingleLine = (value: string): boolean => {
   return value.trim() !== '' && !/[\r\n]/.test(value);
+};
+
+/** What the file holds for one concern, as the writer's rules see it. @public */
+export type UserEnvConcernState =
+  | { readonly kind: 'managed'; readonly value: string }
+  | { readonly kind: 'missing' }
+  | { readonly kind: 'user_set'; readonly value: string };
+
+/** @public */
+export interface UserEnvInspection {
+  readonly endpoint: UserEnvConcernState;
+  readonly envPath: string;
+  readonly token: UserEnvConcernState;
+}
+
+/** @public */
+export interface UserEnvInspectionSuccess extends UserEnvInspection {
+  readonly ok: true;
+}
+
+/** @public */
+export type InspectUserEnvEntriesResult =
+  UserEnvEntriesFailure | UserEnvInspectionSuccess;
+
+/**
+ * Read one concern under the same rule {@link applyConcern} writes by: the
+ * first unmarked key of the concern makes it the user's; otherwise the managed
+ * canonical line is ours; otherwise it is missing.
+ */
+const inspectConcern = (
+  lines: readonly string[],
+  keys: readonly string[],
+): UserEnvConcernState => {
+  const [canonicalKey] = keys;
+  let managed: string | undefined;
+
+  for (const [index, line] of lines.entries()) {
+    const assignment = parseEnvLine(line);
+    if (!assignment || !keys.includes(assignment.key)) {
+      continue;
+    }
+    if (!isManaged(lines, index)) {
+      return { kind: 'user_set', value: assignment.value.trim() };
+    }
+    if (assignment.key === canonicalKey && managed === undefined) {
+      managed = assignment.value.trim();
+    }
+  }
+
+  return managed === undefined
+    ? { kind: 'missing' }
+    : { kind: 'managed', value: managed };
+};
+
+/**
+ * Read `~/.openthrottle/.env` (or `<configDir>/.env`) without changing it, and
+ * say for the endpoint and the token whether each is writer-managed, set by the
+ * user or missing. A missing file is two `missing` concerns, not a failure.
+ * The values are returned for the caller to check; never log them.
+ *
+ * @public
+ */
+export const inspectUserEnvEntries = (
+  configDir: string = userConfigDir(),
+): InspectUserEnvEntriesResult => {
+  const envPath = path.join(configDir, '.env');
+  try {
+    const lines = toLines(readExisting(envPath));
+    return {
+      endpoint: inspectConcern(lines, USER_ENV_ENDPOINT_KEYS),
+      envPath,
+      ok: true,
+      token: inspectConcern(lines, USER_ENV_TOKEN_KEYS),
+    };
+  } catch (err) {
+    return {
+      envPath,
+      error: err instanceof Error ? err.message : String(err),
+      ok: false,
+    };
+  }
 };
 
 /**

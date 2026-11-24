@@ -76,20 +76,28 @@ Consumed by docker-compose (which maps them onto the un-namespaced `PORT`,
 
 ## 3. Auth and bootstrap
 
-| Variable                                 | Used for                                                                                                        | Defaults                                                                                                     |
-| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `OPENTHROTTLE_MCP_AUTH_TOKEN`            | Bearer token the OT MCP server presents to the GraphQL API                                                      | ✅ root `.env.default` (empty), ✅ server `.env.default` (empty), ✅ `applications/openthrottle` (empty)     |
-| `OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN` | Token for the OT Loop BullMQ worker's GraphQL calls                                                             | ✅ root (empty), ✅ server (empty)                                                                           |
-| `OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN`      | Fallback token for the OT Loop worker and `memory-reconcile` when the worker token is unset                     | ❌                                                                                                           |
-| `OPENTHROTTLE_AUTH_TOKEN`                | Generic token accepted by the OT MCP server (documented in `databases/openthrottle/README.md`)                  | ❌                                                                                                           |
-| `OPENTHROTTLE_BOOTSTRAP_USER_EMAIL`      | Seeded login user                                                                                               | ✅ root `developer@openthrottle.ai` (code default same)                                                      |
-| `OPENTHROTTLE_BOOTSTRAP_USER_PASSWORD`   | Seeded login password                                                                                           | ✅ root local-dev value; **no code default** — the bootstrap scripts fail without it                         |
-| `OPENTHROTTLE_BOOTSTRAP_USER_GITHUB`     | Seeded user's GitHub handle                                                                                     | ✅ root (empty); code default `openthrottle-developer`                                                       |
-| `OPENTHROTTLE_ADMIN_URL`                 | Admin URL passed to `scripts/bootstrap-default-user.ts`; one of six required keys in `.bootstrap-secrets.local` | ❌ (lives in `.bootstrap-secrets.local`)                                                                     |
-| `OPENTHROTTLE_DEVELOPER_URL`             | Same, for the developer app. Also the origin the OT MCP uses for blog editor links (`<url>/blog/<postId>`)      | ✅ root `.env.default` `http://localhost:6020` (code default same); also a key in `.bootstrap-secrets.local` |
-| `OPENTHROTTLE_GITHUB_USER`               | Forces the author/assignee handle the OT MCP writes; falls back to `GITHUB_USER`                                | ❌                                                                                                           |
-| `OPENTHROTTLE_GITHUB_OWNER`              | Default GitHub org for the developer app                                                                        | ✅ developer `.env.default` `visormatt`; code default `openthrottle`                                         |
-| `OPENTHROTTLE_GITHUB_REPO`               | Default GitHub repo                                                                                             | ✅ developer `.env.default` `monorepo`; code default `monorepo`                                              |
+| Variable                                 | Used for                                                                                                                | Defaults                                                                                                     |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `OPENTHROTTLE_MCP_AUTH_TOKEN`            | Bearer token the OT MCP server presents to the GraphQL API                                                              | ✅ root `.env.default` (empty), ✅ server `.env.default` (empty), ✅ `applications/openthrottle` (empty)     |
+| `OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN` | Token for the OT Loop BullMQ worker's GraphQL calls                                                                     | ✅ root (empty), ✅ server (empty)                                                                           |
+| `OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN`      | Fallback token for the OT Loop worker and `memory-reconcile` when the worker token is unset                             | ❌                                                                                                           |
+| `OPENTHROTTLE_AUTH_TOKEN`                | Generic token accepted by the OT MCP server (documented in `databases/openthrottle/README.md`)                          | ❌                                                                                                           |
+| `OPENTHROTTLE_BOOTSTRAP_USER_EMAIL`      | Seeded login user                                                                                                       | ✅ root `developer@openthrottle.ai` (code default same)                                                      |
+| `OPENTHROTTLE_BOOTSTRAP_USER_PASSWORD`   | Seeded login password                                                                                                   | ✅ root local-dev value; **no code default** — the bootstrap scripts fail without it                         |
+| `OPENTHROTTLE_BOOTSTRAP_USER_GITHUB`     | Seeded user's GitHub handle                                                                                             | ✅ root (empty); code default `openthrottle-developer`                                                       |
+| `OPENTHROTTLE_ADMIN_URL`                 | Admin URL passed to `scripts/bootstrap-default-user.ts`; one of six required keys in `.bootstrap-secrets.local`         | ❌ (lives in `.bootstrap-secrets.local`)                                                                     |
+| `OPENTHROTTLE_DEVELOPER_URL`             | Same, for the developer app. Also the origin the OT MCP uses for blog editor links (`<url>/blog/<postId>`)              | ✅ root `.env.default` `http://localhost:6020` (code default same); also a key in `.bootstrap-secrets.local` |
+| `OPENTHROTTLE_GITHUB_USER`               | Forces the author/assignee handle the OT MCP writes; falls back to `GITHUB_USER`                                        | ❌                                                                                                           |
+| `OPENTHROTTLE_GITHUB_OWNER`              | Default GitHub org for the developer app                                                                                | ✅ developer `.env.default` `visormatt`; code default `openthrottle`                                         |
+| `OPENTHROTTLE_GITHUB_REPO`               | Default GitHub repo                                                                                                     | ✅ developer `.env.default` `monorepo`; code default `monorepo`                                              |
+| `OPENTHROTTLE_USER_CONFIG_DIR`           | Directory holding the user-global `.env` the writers fill (instead of `~/.openthrottle`); also lifts the container skip | ❌ (set by docker-compose for the host mount)                                                                |
+
+`~/.openthrottle/.env` is the user-global layer the hooks read last. The server, the credential
+bootstrap and `pnpm run user-env:write` fill it with the endpoint and MCP token for agents in other
+checkouts. `OPENTHROTTLE_USER_CONFIG_DIR` points every writer at another directory; the Docker-native
+install uses it for the host mount. A key set to an empty value in an agent's process env is never
+filled from the file. Triggers, skip rules, rotation and the `serverHealth.userEnvFile` check:
+[child-repo-hook-telemetry-contract.md § Who writes `~/.openthrottle/.env`](./child-repo-hook-telemetry-contract.md#who-writes-openthrottleenv).
 
 ## 4. OT MCP server
 
@@ -163,6 +171,13 @@ debug level on the run's `DriverLogger`.
 
 The run's explicit env still wins over a passthrough entry, so naming `OPENTHROTTLE_MCP_AUTH_TOKEN`
 here does not hand OT Loop workers a token: they keep the blank.
+
+**How an agent child still reaches OT.** None of the OT endpoint or token keys are on the
+allowlist, so the hooks inside a headless agent in a foreign checkout find OpenThrottle only
+through `~/.openthrottle/.env`. The server, the credential bootstrap and `pnpm run user-env:write`
+keep that file filled, and `serverHealth.userEnvFile` says whether it works:
+[§ Who writes `~/.openthrottle/.env`](./child-repo-hook-telemetry-contract.md#who-writes-openthrottleenv).
+OT Loop's blanks are terminal: the hooks never fill a key that is present but empty from that file.
 
 **Operator migration note.** Before this change every headless run inherited the whole server
 env. If your agent runs relied on something outside the lists above, name it explicitly:

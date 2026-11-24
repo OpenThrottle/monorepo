@@ -91,6 +91,9 @@ export interface ServiceAccountCredentialsRepositoryMock extends BaseRepositoryM
   readonly findCredentials: Mock<
     ServiceAccountCredentialsRepository['findCredentials']
   >;
+  readonly isActiveToken: Mock<
+    ServiceAccountCredentialsRepository['isActiveToken']
+  >;
   readonly revokeCredential: Mock<
     ServiceAccountCredentialsRepository['revokeCredential']
   >;

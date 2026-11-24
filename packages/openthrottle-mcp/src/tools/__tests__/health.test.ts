@@ -85,6 +85,42 @@ describe('healthToolHandler', () => {
     });
   });
 
+  describe('when the server reports the user env file', () => {
+    const healthWith = (endpoint: string, token: string) => {
+      return {
+        serverHealth: {
+          api: 'ok',
+          database: 'ok',
+          redis: 'ok',
+          userEnvFile: { endpoint, token },
+          websocket: 'ok',
+        },
+      };
+    };
+
+    it('prints one line when it is healthy', async () => {
+      vi.mocked(executeGraphql).mockResolvedValue(healthWith('ok', 'user_set'));
+
+      const result = await healthToolHandler({});
+      const text = result.content[0]?.text ?? '';
+
+      expect(text).toContain(
+        '~/.openthrottle/.env: endpoint ok, token user_set',
+      );
+      expect(text).not.toContain('user-env:write');
+    });
+
+    it('names the fix when it is missing or stale', async () => {
+      vi.mocked(executeGraphql).mockResolvedValue(healthWith('ok', 'stale'));
+
+      const result = await healthToolHandler({});
+      const text = result.content[0]?.text ?? '';
+
+      expect(text).toContain('token stale');
+      expect(text).toContain('pnpm run user-env:write');
+    });
+  });
+
   describe('when only the default toolsets are active', () => {
     it('reports the disabled toolsets and how to enable them', async () => {
       setActiveToolsets(new Set(['core']));

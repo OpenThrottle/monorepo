@@ -186,6 +186,44 @@ export class ServiceAccountCredentialsRepository extends BaseRepository<
   async verifyBearerToken(
     authorizationOrToken: string,
   ): Promise<VerifiedServiceAccountCredential | null> {
+    const match = await this.findActiveCredential(authorizationOrToken);
+    if (match == null) {
+      return null;
+    }
+    const { credential, secret } = match;
+
+    if (
+      isLegacySecretHash(credential.secretHash) &&
+      secret.length >= SERVICE_ACCOUNT_SECRET_MIN_LENGTH
+    ) {
+      await this.updateMany(
+        { id: credential.id },
+        { lastUsedAt: new Date(), secretHash: hashSecret(secret) },
+      );
+    } else {
+      await this.touchLastUsedAt(credential.id);
+    }
+
+    return {
+      credentialId: credential.id,
+      serviceAccountId: credential.serviceAccountId,
+    };
+  }
+
+  /**
+   * @description True when `token` would authenticate right now (same checks as
+   * {@link verifyBearerToken}), without touching `last_used_at` or rehashing — for
+   * health probes that must not look like usage.
+   */
+  async isActiveToken(authorizationOrToken: string): Promise<boolean> {
+    return (await this.findActiveCredential(authorizationOrToken)) != null;
+  }
+
+  /** The live credential `token` names, with its parsed secret, or null. Read-only. */
+  private async findActiveCredential(authorizationOrToken: string): Promise<{
+    readonly credential: ServiceAccountCredential;
+    readonly secret: string;
+  } | null> {
     const token = normalizeServiceAccountBearerToken(authorizationOrToken);
     if (token == null) {
       return null;
@@ -222,22 +260,7 @@ export class ServiceAccountCredentialsRepository extends BaseRepository<
       return null;
     }
 
-    if (
-      isLegacySecretHash(credential.secretHash) &&
-      parsed.secret.length >= SERVICE_ACCOUNT_SECRET_MIN_LENGTH
-    ) {
-      await this.updateMany(
-        { id: credential.id },
-        { lastUsedAt: new Date(), secretHash: hashSecret(parsed.secret) },
-      );
-    } else {
-      await this.touchLastUsedAt(credential.id);
-    }
-
-    return {
-      credentialId: credential.id,
-      serviceAccountId: credential.serviceAccountId,
-    };
+    return { credential, secret: parsed.secret };
   }
 
   /**

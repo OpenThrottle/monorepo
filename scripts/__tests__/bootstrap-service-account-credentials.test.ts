@@ -1,6 +1,6 @@
 import { asMock } from '@openthrottle/nestjs-testing';
 import type { DataSource } from 'typeorm';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // The SUT pulls in TypeORM + repository entities at import time; stub those
 // modules so importing it stays cheap and never touches a DB. provisionAccount
@@ -23,14 +23,31 @@ vi.mock('../local-secrets-file.ts', () => ({
   upsertLocalSecrets: vi.fn(),
 }));
 
+// The writer would touch the real ~/.openthrottle/.env: replace it, keep the
+// rest of the package (the URL resolver is pure).
+vi.mock('@openthrottle/agentic-hooks', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@openthrottle/agentic-hooks')>(); // prettier-ignore
+  return { ...actual, ensureUserEnvEntries: vi.fn() };
+});
+
+vi.mock('../utils/git.ts', () => ({
+  isLinkedWorktree: vi.fn(() => false),
+}));
+
+import { ensureUserEnvEntries } from '@openthrottle/agentic-hooks';
+
 import {
   BOOTSTRAP_ACCOUNTS,
   provisionAccount,
+  syncUserEnvFileFromSecrets,
 } from '../bootstrap-service-account-credentials.ts';
 import { readLocalSecrets, upsertLocalSecrets } from '../local-secrets-file.ts';
+import { isLinkedWorktree } from '../utils/git.ts';
 
 const readLocalSecretsMock = vi.mocked(readLocalSecrets);
 const upsertLocalSecretsMock = vi.mocked(upsertLocalSecrets);
+const ensureUserEnvEntriesMock = vi.mocked(ensureUserEnvEntries);
+const isLinkedWorktreeMock = vi.mocked(isLinkedWorktree);
 
 const MCP_ACCOUNT = BOOTSTRAP_ACCOUNTS[0];
 const MCP_KEY = MCP_ACCOUNT.envVar;
@@ -167,5 +184,55 @@ describe('provisionAccount — skip branch (active credential exists)', () => {
     expect(service.revokeCredential).not.toHaveBeenCalled();
     expect(service.createCredential).not.toHaveBeenCalled();
     expect(upsertLocalSecretsMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('syncUserEnvFileFromSecrets', () => {
+  beforeEach(() => {
+    vi.stubEnv('OPENTHROTTLE_SERVER_APP_URL', 'http://localhost:6021');
+    vi.stubEnv('OPENTHROTTLE_USER_CONFIG_DIR', undefined);
+    vi.stubEnv('OT_WORKTREE_DB', undefined);
+    ensureUserEnvEntriesMock.mockReturnValue({
+      changed: true,
+      endpoint: 'added',
+      envPath: '/home/u/.openthrottle/.env',
+      ok: true,
+      token: 'refreshed',
+    });
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('writes the recorded MCP token and the loopback endpoint', async () => {
+    readLocalSecretsMock.mockResolvedValue({ [MCP_KEY]: 'ot_sa_rotated' });
+
+    await syncUserEnvFileFromSecrets();
+
+    expect(ensureUserEnvEntriesMock).toHaveBeenCalledWith(
+      {
+        authToken: 'ot_sa_rotated',
+        graphqlUrl: 'http://127.0.0.1:6021/graphql',
+      },
+      undefined,
+    );
+  });
+
+  it('never writes from a linked worktree', async () => {
+    readLocalSecretsMock.mockResolvedValue({ [MCP_KEY]: 'ot_sa_rotated' });
+    isLinkedWorktreeMock.mockReturnValueOnce(true);
+
+    await syncUserEnvFileFromSecrets();
+
+    expect(ensureUserEnvEntriesMock).not.toHaveBeenCalled();
+  });
+
+  it('never writes without a recorded token', async () => {
+    readLocalSecretsMock.mockResolvedValue({});
+
+    await syncUserEnvFileFromSecrets();
+
+    expect(ensureUserEnvEntriesMock).not.toHaveBeenCalled();
   });
 });

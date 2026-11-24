@@ -23,3 +23,25 @@ export const USER_ENV_FILE_CONTAINER_MARKERS = Object.freeze([
  * since the directory it names IS the host's.
  */
 export const USER_ENV_FILE_CONFIG_DIR_ENV = 'OPENTHROTTLE_USER_CONFIG_DIR';
+
+/**
+ * The service account whose token the file carries. A credential minted for it
+ * while the server runs is written straight to the file (`UserEnvFileService`).
+ */
+export const USER_ENV_FILE_SERVICE_ACCOUNT_NAME = 'openthrottle-mcp';
+
+/** How `~/.openthrottle/.env` looks to this server, per concern (endpoint, token). */
+export const USER_ENV_FILE_HEALTH = Object.freeze({
+  /** Nothing in the file for this concern: agents in other checkouts cannot reach OT. */
+  MISSING: 'missing',
+  /** This server does not own the file (worktree, container without a mounted dir, no port). */
+  NOT_APPLICABLE: 'not_applicable',
+  /** The managed line matches this server (endpoint) or authenticates (token). */
+  OK: 'ok',
+  /** A managed endpoint for another port, or a token that no longer authenticates. */
+  STALE: 'stale',
+  /** The file exists but could not be read. */
+  UNREADABLE: 'unreadable',
+  /** The user set it; the writer leaves it alone (a user-set token is still checked). */
+  USER_SET: 'user_set',
+} as const);
