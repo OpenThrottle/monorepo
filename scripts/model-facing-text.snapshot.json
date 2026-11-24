@@ -202,19 +202,20 @@
     "prompt/Job_Performance.md": 8936,
     "prompt/Job_ReplayDrift.md": 7809,
     "prompt/Job_Roadmap.md": 9551,
-    "prompt/Job_RulesConformance.md": 14873,
+    "prompt/Job_RulesConformance.md": 11706,
     "prompt/Job_Security.md": 9531,
     "prompt/Job_SkillReview.md": 5466,
     "prompt/Job_TestHealth.md": 8163,
     "prompt/Job_WorkInFlight.md": 9943,
     "skill/github-cleanup": 8122,
     "skill/github-commit": 5619,
-    "skill/github-pull-request": 11897,
+    "skill/github-pull-request": 12074,
     "skill/github-squash": 6945,
     "skill/ot-client-node-boundary": 3862,
+    "skill/ot-code-review": 8956,
     "skill/ot-folders": 13857,
     "skill/ot-generators": 6734,
-    "skill/ot-loop": 15868,
+    "skill/ot-loop": 16252,
     "skill/ot-onboarding": 17051,
     "skill/ot-plans": 9189,
     "skill/ot-postgres": 5672,
@@ -227,6 +228,7 @@
     "skillDescription/github-pull-request": 300,
     "skillDescription/github-squash": 296,
     "skillDescription/ot-client-node-boundary": 418,
+    "skillDescription/ot-code-review": 499,
     "skillDescription/ot-folders": 419,
     "skillDescription/ot-generators": 371,
     "skillDescription/ot-loop": 300,
@@ -247,10 +249,10 @@
     "mcpToolsFull": 74613
   },
   "totals": {
-    "alwaysInjected": 47675,
+    "alwaysInjected": 48174,
     "mcpInstructions": 2183,
     "mcpTools": 40039,
-    "prompts": 140957,
-    "skills": 152400
+    "prompts": 137790,
+    "skills": 161917
   }
 }

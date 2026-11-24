@@ -265,6 +265,9 @@ Finishing step 2). There is no Nx default for either: this repository commits it
 restored). A red final validation creates a `BLOCKED` task _Final validation failed_ carrying the
 tail, so the three-way close ends the plan `BLOCKED` and the PR stays draft.
 
+Finishing step 2 in the skill also runs the `ot-code-review` convention review after the gate. The
+job does not run it yet: OT plan `f66ad577-0f51-46f1-8173-bdd1cfe009b9` adds it.
+
 `{taskStartSha}` is the only placeholder, substituted shell-escaped.
 
 `resolveOtLoopCommands` (in `openthrottle-agentic-loop`) returns `resolved`, `none` or `invalid`. A
