@@ -213,6 +213,7 @@ describe('antigravity driver', () => {
     expect(antigravityDriver.capabilities).toEqual({
       attachesWorkspaceMcp: false,
       chatStreaming: true,
+      isolatesRepoAgentConfig: false,
       mcpAutoApprove: false,
       permissionMode: true,
       pluginDir: false,

@@ -18,6 +18,8 @@ import {
   createPlanRunsRepositoryMock,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
+import { getDriver } from '@openthrottle/openthrottle-drivers';
+import { UnrecoverableError } from 'bullmq';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { WorktreeSkillOverlayService } from '../foreign-skill-injection/worktree-skill-overlay/worktree-skill-overlay.service.ts';
@@ -68,6 +70,7 @@ describe('PlanRunWorkspaceService', () => {
   const mockRegister = vi.fn().mockResolvedValue(null);
   const mockFindByUserAndPath = vi.fn();
   const mockOnProvisioned = vi.fn();
+  const planOutputStream = createPlanOutputStreamRepositoryMock();
   let service: PlanRunWorkspaceService;
 
   beforeEach(() => {
@@ -75,6 +78,8 @@ describe('PlanRunWorkspaceService', () => {
     mockCheck.mockReturnValue(['no MCP config']);
     mockProvision.mockResolvedValue(WORKTREE);
     mockFindByUserAndPath.mockResolvedValue({
+      agentConfigTrusted: true,
+      filesystemPath: BASE,
       foreignSkillInjectionEnabled: true,
     });
     mockEnsureMaterialized.mockReturnValue({
@@ -96,9 +101,7 @@ describe('PlanRunWorkspaceService', () => {
 
     service = new PlanRunWorkspaceService(
       createMock<LoggerService>(),
-      asMock<PlanOutputStreamRepository>(
-        createPlanOutputStreamRepositoryMock(),
-      ),
+      asMock<PlanOutputStreamRepository>(planOutputStream),
       createMock<PlanRunsRepository>(planRunsRepository),
       createMock<PlanRunWorktreeCheckoutService>({ register: mockRegister }),
       createMock<PlanRunWorkspacePreflightService>({ check: mockCheck }),
@@ -182,8 +185,122 @@ describe('PlanRunWorkspaceService', () => {
       skipSkillInjection: true,
     });
 
-    expect(mockFindByUserAndPath).not.toHaveBeenCalled();
+    expect(mockFindByUserAndPath).not.toHaveBeenCalledWith(USER_ID, WORKTREE);
     expect(mockEnsureMaterialized).not.toHaveBeenCalled();
     expect(prepared.injectedSkillNames).toEqual([]);
+  });
+
+  describe('agent-config trust', () => {
+    it('reads trust from the base checkout, not the provisioned worktree', async () => {
+      await prepare({ skipMcpPreflight: false, skipSkillInjection: true });
+
+      expect(mockFindByUserAndPath).toHaveBeenCalledWith(USER_ID, BASE);
+    });
+
+    it('runs a trusted foreign checkout as before, with its MCP preflight', async () => {
+      const prepared = await prepare({
+        skipMcpPreflight: false,
+        skipSkillInjection: true,
+      });
+
+      expect(prepared.agentConfigTrust).toEqual({
+        posture: 'trusted',
+        reason: 'user-trusted',
+      });
+      expect(mockCheck).toHaveBeenCalledTimes(1);
+    });
+
+    it('isolates an untrusted foreign checkout, skips its MCP preflight and says so', async () => {
+      mockFindByUserAndPath.mockResolvedValue({
+        agentConfigTrusted: false,
+        filesystemPath: BASE,
+        foreignSkillInjectionEnabled: false,
+      });
+
+      const prepared = await prepare({
+        skipMcpPreflight: false,
+        skipSkillInjection: true,
+      });
+
+      expect(prepared.agentConfigTrust).toEqual({
+        posture: 'isolated',
+        reason: 'untrusted',
+      });
+      expect(mockCheck).not.toHaveBeenCalled();
+      expect(planOutputStream.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          content: expect.stringContaining('Untrusted checkout'),
+          planId: PLAN_ID,
+        }),
+      );
+    });
+
+    it('fails closed when the checkout lookup throws', async () => {
+      mockFindByUserAndPath.mockRejectedValue(new Error('db down'));
+
+      const prepared = await prepare({
+        skipMcpPreflight: true,
+        skipSkillInjection: true,
+      });
+
+      expect(prepared.agentConfigTrust.posture).toBe('isolated');
+    });
+  });
+
+  describe('buildRepoAgentConfig', () => {
+    it('is trusted for a trusted run', () => {
+      expect(
+        service.buildRepoAgentConfig({
+          posture: 'trusted',
+          reason: 'user-trusted',
+        }),
+      ).toEqual({ kind: 'trusted' });
+    });
+
+    it('is isolated with no MCP servers for an untrusted run', () => {
+      expect(
+        service.buildRepoAgentConfig({
+          posture: 'isolated',
+          reason: 'untrusted',
+        }),
+      ).toEqual({ kind: 'isolated', mcpServers: {} });
+    });
+  });
+
+  describe('refuseUnlessDriverHonoursPosture', () => {
+    it('lets claude run an isolated posture', async () => {
+      await expect(
+        service.refuseUnlessDriverHonoursPosture({
+          driver: getDriver('claude'),
+          planId: PLAN_ID,
+          repoAgentConfig: { kind: 'isolated', mcpServers: {} },
+        }),
+      ).resolves.toBeUndefined();
+    });
+
+    it('refuses cursor on an isolated posture and says why in plan output', async () => {
+      await expect(
+        service.refuseUnlessDriverHonoursPosture({
+          driver: getDriver('cursor'),
+          planId: PLAN_ID,
+          repoAgentConfig: { kind: 'isolated', mcpServers: {} },
+        }),
+      ).rejects.toBeInstanceOf(UnrecoverableError);
+      expect(planOutputStream.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          content: expect.stringContaining('Run refused'),
+        }),
+      );
+    });
+
+    it('lets any driver run a trusted posture', async () => {
+      await expect(
+        service.refuseUnlessDriverHonoursPosture({
+          driver: getDriver('cursor'),
+          planId: PLAN_ID,
+          repoAgentConfig: { kind: 'trusted' },
+        }),
+      ).resolves.toBeUndefined();
+    });
   });
 });

@@ -726,6 +726,10 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
   repository_checkouts: {
     classification: 'exported',
     columns: {
+      agent_config_trusted: {
+        action: 'keep',
+        reason: 'structural (boolean)',
+      },
       created_at: {
         action: 'keep',
         reason: 'structural (timestamp with time zone)',

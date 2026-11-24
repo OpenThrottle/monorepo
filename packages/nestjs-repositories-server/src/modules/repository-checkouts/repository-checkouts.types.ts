@@ -17,6 +17,7 @@ export type RepositoryCheckoutKind = (typeof REPOSITORY_CHECKOUT_KINDS)[number];
  * @public
  */
 export interface RepositoryCheckoutData {
+  readonly agentConfigTrusted: boolean;
   readonly displayName: string;
   readonly filesystemPath: string;
   readonly foreignSkillInjectionEnabled: boolean;
@@ -30,6 +31,7 @@ export interface RepositoryCheckoutData {
 }
 
 type RepositoryCheckoutDefaultedKeys =
+  | 'agentConfigTrusted'
   | 'foreignSkillInjectionEnabled'
   | 'inspection'
   | 'scannedAt'
@@ -115,6 +117,9 @@ export interface RepositoryCheckoutsRepositoryMock extends BaseRepositoryMock<
   >;
   readonly saveInspection: Mock<
     RepositoryCheckoutsRepository['saveInspection']
+  >;
+  readonly setAgentConfigTrustedForRepository: Mock<
+    RepositoryCheckoutsRepository['setAgentConfigTrustedForRepository']
   >;
   readonly setForeignSkillInjectionEnabledForRepository: Mock<
     RepositoryCheckoutsRepository['setForeignSkillInjectionEnabledForRepository']

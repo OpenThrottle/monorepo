@@ -59,6 +59,35 @@ export interface DriverEndpointConfig {
 }
 
 /**
+ * @description An MCP server definition in the canonical `.mcp.json` shape (`command`/`args`/`env`,
+ * or `type`/`url`), keyed by server name in {@link DriverRepoAgentConfigIsolated.mcpServers}.
+ * @public
+ */
+export type DriverMcpServerDefinition = Readonly<Record<string, unknown>>;
+
+/**
+ * @description Load the checkout's agent config as the CLI would by default.
+ * @public
+ */
+export interface DriverRepoAgentConfigTrusted {
+  readonly kind: 'trusted';
+}
+
+/**
+ * @description Suppress the checkout's agent config; only `mcpServers` (OT-supplied, possibly
+ * empty) and the run's plugin directories load.
+ * @public
+ */
+export interface DriverRepoAgentConfigIsolated {
+  readonly kind: 'isolated';
+  readonly mcpServers: Readonly<Record<string, DriverMcpServerDefinition>>;
+}
+
+/** @public */
+export type DriverRepoAgentConfig =
+  DriverRepoAgentConfigIsolated | DriverRepoAgentConfigTrusted;
+
+/**
  * @description Per-invocation inputs shared by every driver. Carries no plan-run-specific coupling.
  * @public
  */
@@ -110,6 +139,13 @@ export interface DriverInvocationConfig {
   readonly pluginDirs?: readonly string[];
   /** Full prompt passed to the CLI's print/headless mode. */
   readonly prompt: string;
+  /**
+   * Whether the checkout's own agent config may load. Omitted ⇒ trusted (the historical behaviour:
+   * the CLI loads whatever the workspace defines). Isolated ⇒ only OT-supplied MCP servers and
+   * plugin hooks load; a driver without {@link DriverCapabilities.isolatesRepoAgentConfig} is
+   * refused by the engine instead of spawned.
+   */
+  readonly repoAgentConfig?: DriverRepoAgentConfig;
   /** AbortSignal to cancel the invocation (async path only). */
   readonly signal?: AbortSignal;
   /** Per-invocation timeout in ms (async path only); on expiry the child is SIGTERM→SIGKILL'd. */
@@ -149,6 +185,15 @@ export interface DriverCapabilities {
    * asserts the two agree.
    */
   readonly chatStreaming: boolean;
+  /**
+   * Can honour {@link DriverRepoAgentConfigIsolated}: spawn the CLI so the checkout's own agent
+   * config (repo hooks, repo MCP servers, repo settings) does not load, while OT-supplied MCP
+   * servers and `--plugin-dir` hooks still do. An untrusted checkout's run on a driver without it is
+   * refused by the engine ({@link DriverInvocationConfig.repoAgentConfig}) rather than run with the
+   * repo's config — the trust gate fails closed. Each driver module records the CLI version this was
+   * verified against, or why its CLI has no equivalent (docs/monorepo/agent-config-trust.md).
+   */
+  readonly isolatesRepoAgentConfig: boolean;
   /**
    * The CLI needs explicit flags to attach the workspace's configured MCP servers in headless
    * mode, and this driver emits them (Cursor: `--approve-mcps --trust`). `false` means the driver

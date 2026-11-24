@@ -6502,6 +6502,8 @@ export type ReplaceAgentTrajectoryInput = {
 /** A per-user on-disk instance of a repository. Paths are on the server host. */
 export type RepositoryCheckoutObject = {
   __typename?: 'RepositoryCheckoutObject';
+  /** True when this user trusts the checkout's repo-local agent config (.claude/settings.json hooks, .mcp.json servers) to run during plan runs. Default false: plan runs suppress that config so only OpenThrottle-supplied MCP servers and plugin hooks load. The OpenThrottle checkout itself (isForeign false) is always trusted, whatever this says. */
+  agentConfigTrusted: Scalars['Boolean']['output'];
   createdAt: Scalars['DateTime']['output'];
   displayName: Scalars['String']['output'];
   /** Absolute path on the server host. */
@@ -6531,7 +6533,11 @@ export type RepositoryInspectionAgentConfigObject = {
   agentsMd: Scalars['Boolean']['output'];
   claudeMd: Scalars['Boolean']['output'];
   cursorRules: Scalars['Boolean']['output'];
+  /** Repo-local hook commands a plan run would execute (.claude/settings.json, .claude/settings.local.json, .cursor/hooks.json). Null until the checkout is rescanned. */
+  hookCount?: Maybe<Scalars['Int']['output']>;
   mcpJson: Scalars['Boolean']['output'];
+  /** Repo-local MCP servers a plan run would connect (.mcp.json, .cursor/mcp.json). Null until the checkout is rescanned. */
+  mcpServerCount?: Maybe<Scalars['Int']['output']>;
   skillsDir: Scalars['Boolean']['output'];
 };
 
@@ -8474,6 +8480,8 @@ export type UpdateProjectInput = {
 
 /** Edit an owned repository's name, default branch, and/or project link. Omitted fields are left unchanged. */
 export type UpdateRepositoryInput = {
+  /** Trust (or revoke trust in) the repo-local agent config of this user's checkouts of the repository, so plan runs load (or suppress) its hooks and MCP servers; omit to leave unchanged. Has no effect on the OpenThrottle checkout, which is always trusted. */
+  agentConfigTrusted?: InputMaybe<Scalars['Boolean']['input']>;
   /** New default branch; omit to leave unchanged. */
   defaultBranch?: InputMaybe<Scalars['String']['input']>;
   /** Opt this user's checkouts of the repository into (or out of) foreign-workspace skill injection; omit to leave unchanged. */

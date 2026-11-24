@@ -11,6 +11,7 @@ import { Link } from 'react-router';
 
 import type { WorkspaceRepositoryFieldsFragment } from '~/__generated__/graphql';
 import { WORKSPACE_REPOSITORY_DETAIL_COPY } from '~/routing/settings/data/data.copy';
+import { RepositoryAgentConfigTrust } from '~/routing/settings/repositories/components/RepositoryAgentConfigTrust';
 import { RepositoryDetailCheckout } from '~/routing/settings/repositories/components/RepositoryDetailCheckout';
 
 export interface RepositoryDetailProps {
@@ -124,6 +125,10 @@ export const RepositoryDetail = (
             </dl>
           </CardContent>
         </Card>
+        <RepositoryAgentConfigTrust
+          checkouts={checkouts}
+          repositoryId={repository.id}
+        />
       </div>
 
       <div>

@@ -9,7 +9,14 @@ export interface RepositoryInspectionAgentConfig {
   readonly agentsMd: boolean;
   readonly claudeMd: boolean;
   readonly cursorRules: boolean;
+  /**
+   * Repo-local hook commands a plan run would execute (Claude settings + Cursor hooks.json).
+   * Undefined on snapshots written before it was reported; read defensively.
+   */
+  readonly hookCount: number | undefined;
   readonly mcpJson: boolean;
+  /** Repo-local MCP servers a plan run would connect; undefined on older snapshots. */
+  readonly mcpServerCount: number | undefined;
   readonly skillsDir: boolean;
 }
 

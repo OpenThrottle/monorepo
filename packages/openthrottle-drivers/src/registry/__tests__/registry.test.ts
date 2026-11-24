@@ -18,6 +18,7 @@ const fakeDriver = (id: string): AgentDriver => {
     capabilities: {
       attachesWorkspaceMcp: false,
       chatStreaming: false,
+      isolatesRepoAgentConfig: false,
       mcpAutoApprove: false,
       permissionMode: false,
       pluginDir: false,

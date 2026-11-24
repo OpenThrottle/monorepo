@@ -1,6 +1,6 @@
 import { render } from '@testing-library/react';
 import * as React from 'react';
-import { MemoryRouter } from 'react-router';
+import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/settings.repositories.$repositoryId._index';
@@ -24,18 +24,26 @@ const repository: Route.ComponentProps['loaderData']['repository'] = {
   updatedAt: '2026-07-24T00:00:00.000Z',
 };
 
+// The detail's trust card submits through a fetcher, which needs a data router.
+const renderDetail = () => {
+  const Detail = () => {
+    return (
+      <Component
+        actionData={undefined}
+        loaderData={{ repository }}
+        matches={stubMatches()}
+        params={{ repositoryId: repository.id }}
+      />
+    );
+  };
+  const RoutesStub = createRoutesStub([{ Component: Detail, path: '/' }]);
+
+  return render(<RoutesStub />);
+};
+
 describe('routes/settings.repositories.$repositoryId._index.tsx', () => {
   test('renders the repository detail for the loaded repository', () => {
-    const view = render(
-      <MemoryRouter>
-        <Component
-          actionData={undefined}
-          loaderData={{ repository }}
-          matches={stubMatches()}
-          params={{ repositoryId: repository.id }}
-        />
-      </MemoryRouter>,
-    );
+    const view = renderDetail();
 
     expect(view.getByTestId('RepositoryDetail')).toBeInTheDocument();
     expect(view.getByText(repository.name)).toBeInTheDocument();
@@ -45,16 +53,7 @@ describe('routes/settings.repositories.$repositoryId._index.tsx', () => {
   });
 
   test('links the edit button to the repository edit route', () => {
-    const view = render(
-      <MemoryRouter>
-        <Component
-          actionData={undefined}
-          loaderData={{ repository }}
-          matches={stubMatches()}
-          params={{ repositoryId: repository.id }}
-        />
-      </MemoryRouter>,
-    );
+    const view = renderDetail();
 
     expect(view.getByRole('link', { name: /edit/i })).toHaveAttribute(
       'href',

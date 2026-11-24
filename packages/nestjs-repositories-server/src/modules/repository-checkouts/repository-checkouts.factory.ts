@@ -15,6 +15,7 @@ import type { RepositoryCheckout } from './repository-checkout.entity.ts';
  */
 export const repositoryCheckoutsFactory = Factory.define<RepositoryCheckout>(
   () => ({
+    agentConfigTrusted: false,
     createdAt: faker.date.past(),
     deletedAt: null,
     displayName: faker.lorem.words(2),

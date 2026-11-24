@@ -43,6 +43,14 @@ const capabilities: DriverCapabilities = {
    */
   attachesWorkspaceMcp: true,
   chatStreaming: true,
+  /**
+   * `false`: no flag suppresses the workspace layer. Checked against cursor-agent
+   * 2026.11.13-eacade1 `--help` (2026-11-22): there is no settings-source or strict-MCP option, and
+   * this driver's own {@link CURSOR_MCP_FLAGS} (`--approve-mcps --trust`) approve every server in
+   * the repo's `.cursor/mcp.json`. Dropping them would also drop `openthrottle-mcp`, and nothing
+   * says `.cursor/hooks.json` is gated by `--trust`. An untrusted checkout's cursor run is refused.
+   */
+  isolatesRepoAgentConfig: false,
   mcpAutoApprove: true,
   permissionMode: false,
   /**

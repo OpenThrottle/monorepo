@@ -6,7 +6,11 @@
  */
 
 import { defineDriver } from '../registry/index.ts';
-import type { DriverCapabilities, DriverModelListing } from '../types/index.ts';
+import type {
+  DriverCapabilities,
+  DriverModelListing,
+  DriverRepoAgentConfig,
+} from '../types/index.ts';
 import {
   parseClaudeStreamJsonOutput,
   renderClaudeStreamJsonLine,
@@ -28,16 +32,24 @@ const capabilities: DriverCapabilities = {
   attachesWorkspaceMcp: true,
   chatStreaming: true,
   /**
+   * Verified live against Claude Code 2.1.325 (2026-11-22) in a fixture repo: `--setting-sources
+   * user` stops the repo's `.claude/settings.json` (and `settings.local.json`) hooks, permissions and
+   * enabled plugins from loading, and `--strict-mcp-config --mcp-config <json>` stops its `.mcp.json`
+   * servers from spawning — while `--plugin-dir` hooks and the inline servers still load. See
+   * {@link buildClaudeIsolationFlags}.
+   */
+  isolatesRepoAgentConfig: true,
+  /**
    * No flag needed — verified against Claude Code 2.1.232. In headless `-p` mode the CLI loads the
    * workspace's project `.mcp.json` automatically and connects its servers with no approval step
    * and no per-path state written to `~/.claude.json`; `claude mcp list` in a first-seen worktree
    * reports the project-only servers as connected. `--permission-mode acceptEdits` (already emitted)
    * is likewise sufficient to CALL an MCP tool — tool permission is not a separate axis here.
    *
-   * So unlike Cursor, Claude needs nothing: `--mcp-config` / `--strict-mcp-config` exist but are for
-   * overriding discovery, and `--strict-mcp-config` would actively HARM us by suppressing the
-   * project file. Do not add them here. (The chat composer does use them, deliberately, to pin an
-   * explicit server allowlist — a different goal.)
+   * So unlike Cursor, Claude needs nothing for a TRUSTED checkout: `--mcp-config` /
+   * `--strict-mcp-config` would suppress the project file it relies on, so a trusted run never emits
+   * them. An UNTRUSTED checkout's run emits them on purpose, with OT's own servers inline — that is
+   * the trust gate ({@link buildClaudeIsolationFlags}), not MCP attachment.
    */
   mcpAutoApprove: false,
   permissionMode: true,
@@ -55,6 +67,26 @@ const capabilities: DriverCapabilities = {
   supportsModelFlag: true,
   worktree: true,
   worktreeBase: false,
+};
+
+/**
+ * @description Flags that keep an untrusted checkout's own agent config from loading:
+ * `--setting-sources user` skips the project and local settings files (their hooks, permissions
+ * and enabled plugins), and `--strict-mcp-config --mcp-config <json>` makes the inline OT servers
+ * the only MCP source, so the repo's `.mcp.json` never spawns. `--plugin-dir` is unaffected, so
+ * OT's own hooks still load. Empty for a trusted (or unspecified) posture, which keeps a trusted
+ * run's command byte-identical to the one before the trust gate.
+ */
+const buildClaudeIsolationFlags = (
+  posture: DriverRepoAgentConfig | undefined,
+): string => {
+  if (posture?.kind !== 'isolated') {
+    return '';
+  }
+
+  const mcpConfig = JSON.stringify({ mcpServers: posture.mcpServers });
+
+  return ` --setting-sources user --strict-mcp-config --mcp-config ${escapeShellArg(mcpConfig)}`;
 };
 
 /** `--verbose` is required by the CLI for `stream-json` under `--print`. */
@@ -96,8 +128,10 @@ export const claudeDriver = defineDriver({
       capabilities,
       config.pluginDirs,
     );
+    // The isolation flags follow `--plugin-dir` and precede the worktree flags.
+    const isolated = `${withPlugins}${buildClaudeIsolationFlags(config.repoAgentConfig)}`;
 
-    return appendWorktreeShellFlags(withPlugins, capabilities, config.worktree);
+    return appendWorktreeShellFlags(isolated, capabilities, config.worktree);
   },
   capabilities,
   discoverModels,

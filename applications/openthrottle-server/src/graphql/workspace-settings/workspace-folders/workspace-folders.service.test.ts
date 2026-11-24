@@ -125,6 +125,9 @@ describe('WorkspaceFoldersService', () => {
     vi.mocked(
       mockCheckoutsRepository.setWorktreeSkillOverlayEnabledForRepository,
     ).mockReset();
+    vi.mocked(
+      mockCheckoutsRepository.setAgentConfigTrustedForRepository,
+    ).mockReset();
     vi.mocked(mockForeignSkillMaterialization.applyForRepository).mockReset();
     mockProjectsRepository.create.mockReset();
     mockProjectsRepository.create.mockResolvedValue(
@@ -876,6 +879,35 @@ describe('WorkspaceFoldersService', () => {
         'repo-overlay',
         false,
       );
+      expect(
+        mockForeignSkillMaterialization.applyForRepository,
+      ).not.toHaveBeenCalled();
+      expect(
+        mockRepositoriesRepository.updateRepository,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('stores the agent-config trust flag without touching disk', async () => {
+      const repository = asMock<Repository>({
+        id: 'repo-trust',
+        name: 'acme/monorepo',
+        projectId: null,
+      });
+      vi.mocked(
+        mockCheckoutsRepository.findByRepositoryIdForUser,
+      ).mockResolvedValue([ownedCheckout(repository)]);
+
+      await service.updateRepository(userId, {
+        agentConfigTrusted: true,
+        id: 'repo-trust',
+      });
+
+      expect(
+        mockCheckoutsRepository.setAgentConfigTrustedForRepository,
+      ).toHaveBeenCalledWith(userId, 'repo-trust', true);
+      expect(
+        mockWorktreeSkillOverlay.applyForRepository,
+      ).not.toHaveBeenCalled();
       expect(
         mockForeignSkillMaterialization.applyForRepository,
       ).not.toHaveBeenCalled();

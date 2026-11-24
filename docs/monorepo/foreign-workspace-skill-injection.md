@@ -2,6 +2,8 @@
 
 **Related:** [agent-editor-folders.md](./agent-editor-folders.md), `skills/ot-skill-sync/scripts/` (the in-repo SSOT fan-out this extends), `packages/openthrottle-drivers/src/drivers/` (the supported CLI set §2 is measured against). Implementation: `packages/openthrottle-agentic-utils/src/utils/foreign-skill-injection/`.
 
+**Trust gate:** a foreign checkout's own hooks and MCP servers load in a plan run only once the user trusts it; skills are unaffected. See [agent-config-trust.md](./agent-config-trust.md).
+
 **Sibling — read alongside:** [child-repo-hook-overlay.md](./child-repo-hook-overlay.md) solves the same problem for **hooks**, and reaches the OPPOSITE conclusion for a concrete reason: §2 below establishes that no CLI exposes an out-of-repo skills directory **as a flag or env override** — the two config-file pointers that do exist (`agy`'s `.agents/skills.json`, opencode's `opencode.json`) live in tracked files inside the target repo, so they fail the non-mutation guarantee rather than supplying an out-of-repo hook-style escape. That is what forces materialization here. Every CLI we support _does_ expose out-of-repo hook config, so hooks are never written into a target repo. Do not generalize this doc's approach to hooks.
 
 ## What injection does

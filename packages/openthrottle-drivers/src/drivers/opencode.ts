@@ -21,6 +21,12 @@ const capabilities: DriverCapabilities = {
   attachesWorkspaceMcp: true,
   chatStreaming: true,
   /**
+   * `false`: opencode 1.19.5 reads the repo's `opencode.json` `mcp` block, and `run --pure` only
+   * skips external plugins, not the project config (`run --help` checked 2026-11-22). An untrusted
+   * checkout's opencode run is refused.
+   */
+  isolatesRepoAgentConfig: false,
+  /**
    * No flag needed — verified against opencode 1.18.16. OpenCode reads the repo's committed
    * `opencode.json` `mcp` block automatically, including in headless `run` mode, with no approval
    * step: `opencode run --auto "…"` in a first-seen worktree reports both `openthrottle-mcp` and

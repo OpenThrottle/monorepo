@@ -11,6 +11,7 @@ export * from './types/system-metrics.ts';
 export * from './types/workflow-config.ts';
 export * from './types/workflow-lifecycle.ts';
 export * from './types/workflow-run.ts';
+export * from './utils/agent-config-trust.ts';
 export * from './utils/cache/index.ts';
 export * from './utils/chat-completions/index.ts';
 export * from './utils/configuration.ts';

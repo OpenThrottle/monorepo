@@ -4,6 +4,9 @@
 problem, for skills — read the two together), [agent-cli-hook-capability-matrix.md](./agent-cli-hook-capability-matrix.md),
 [child-repo-hook-telemetry-contract.md](./child-repo-hook-telemetry-contract.md).
 
+> **Trust gate:** OT's own hooks load in every checkout, but the checkout's OWN hooks and MCP
+> servers load only once the user trusts it. See [agent-config-trust.md](./agent-config-trust.md).
+
 > **Superseded in part:** [hook-plugin-distribution.md](./hook-plugin-distribution.md) (accepted
 > 2026-11-13, OT plan `88d08c18`) is the shipped design. Bundles are no longer committed on `main`
 > and hooks no longer live under `.claude/hooks/` or `.cursor/hooks/`. The payload is split into

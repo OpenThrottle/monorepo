@@ -4,7 +4,7 @@
  * user's on-disk checkouts, and the cached inspection snapshot.
  */
 
-import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
 
 import { ProjectObject } from '../projects/project.object.ts';
 
@@ -21,8 +21,20 @@ export class RepositoryInspectionAgentConfigObject {
   @Field(() => Boolean)
   cursorRules!: boolean;
 
+  @Field(() => Int, {
+    description: `Repo-local hook commands a plan run would execute (.claude/settings.json, .claude/settings.local.json, .cursor/hooks.json). Null until the checkout is rescanned.`,
+    nullable: true,
+  })
+  hookCount!: number | null;
+
   @Field(() => Boolean)
   mcpJson!: boolean;
+
+  @Field(() => Int, {
+    description: `Repo-local MCP servers a plan run would connect (.mcp.json, .cursor/mcp.json). Null until the checkout is rescanned.`,
+    nullable: true,
+  })
+  mcpServerCount!: number | null;
 
   @Field(() => Boolean)
   skillsDir!: boolean;
@@ -155,6 +167,11 @@ export class RepositoryCheckoutObject {
     description: `Absolute path on the server host.`,
   })
   filesystemPath!: string;
+
+  @Field(() => Boolean, {
+    description: `True when this user trusts the checkout's repo-local agent config (.claude/settings.json hooks, .mcp.json servers) to run during plan runs. Default false: plan runs suppress that config so only OpenThrottle-supplied MCP servers and plugin hooks load. The OpenThrottle checkout itself (isForeign false) is always trusted, whatever this says.`,
+  })
+  agentConfigTrusted!: boolean;
 
   @Field(() => String)
   displayName!: string;

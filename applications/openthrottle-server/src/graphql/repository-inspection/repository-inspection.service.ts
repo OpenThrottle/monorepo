@@ -36,7 +36,10 @@ import type {
   RepositoryInspectionSnapshot,
   RepositoryInspectionStack,
 } from './repository-inspection.types.ts';
-import { validateInspectionPath } from './repository-inspection.utils.ts';
+import {
+  countRepoAgentConfig,
+  validateInspectionPath,
+} from './repository-inspection.utils.ts';
 import { parseLinkedWorktrees } from './repository-inspection.utils.ts';
 
 const execFileAsync = promisify(execFile);
@@ -154,11 +157,15 @@ export class RepositoryInspectionService {
   }
 
   private inspectAgentConfig(root: string): RepositoryInspectionAgentConfig {
+    const { hookCount, mcpServerCount } = countRepoAgentConfig(root);
+
     return {
       agentsMd: existsSync(join(root, 'AGENTS.md')),
       claudeMd: existsSync(join(root, 'CLAUDE.md')),
       cursorRules: existsSync(join(root, '.cursor/rules')),
+      hookCount,
       mcpJson: existsSync(join(root, '.mcp.json')),
+      mcpServerCount,
       skillsDir: SKILLS_DIRECTORIES.some((dir) => existsSync(join(root, dir))),
     };
   }

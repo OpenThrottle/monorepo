@@ -58,6 +58,11 @@ const capabilities: DriverCapabilities = {
    */
   chatStreaming: true,
   /**
+   * `false`, unverified: the CLI was not installed when the trust gate landed (2026-11-22), so its
+   * repo-config surface has not been checked. Fails closed until someone verifies one.
+   */
+  isolatesRepoAgentConfig: false,
+  /**
    * Emits no MCP flags. Antigravity does have a programmatic surface — an `mcp`
    * subcommand (`add`, `remove`, `list`, `enable`, `disable`) — but that mutates host config as a
    * separate side-effecting step, which is not what `buildShellCommand` does: this builder is pure

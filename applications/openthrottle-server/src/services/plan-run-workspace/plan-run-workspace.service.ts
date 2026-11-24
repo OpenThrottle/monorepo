@@ -14,18 +14,27 @@ import {
   applyPlanRunOtRootFromConfig,
   loadPlanRunConfig,
 } from '@openthrottle/openthrottle-agentic-loop';
+import type { AgentConfigTrust } from '@openthrottle/openthrottle-agentic-utils';
 import type {
   WorkflowConfigRunner,
   WorkflowCorrelation,
 } from '@openthrottle/openthrottle-agentic-utils';
 import {
+  AGENT_CONFIG_POSTURE,
   ensureMaterialized,
   getOpenThrottleRoot,
   getWorkflowConfigCwd,
+  isOpenThrottleCheckout,
   OPENTHROTTLE_WORKSPACE_MARKER,
+  resolveAgentConfigTrust,
   resolveForeignWorkspaceContext,
   resolvePersonalSkillsDir,
 } from '@openthrottle/openthrottle-agentic-utils';
+import type {
+  AgentDriver,
+  DriverRepoAgentConfig,
+} from '@openthrottle/openthrottle-drivers';
+import { checkRepoAgentConfig } from '@openthrottle/openthrottle-drivers';
 import { UnrecoverableError } from 'bullmq';
 
 import type { RunPlanOrchestratorJobData } from '../../queues/plans/plans.types.ts';
@@ -76,6 +85,18 @@ export class PlanRunWorkspaceService {
     // per-user injection gate need the acting user (run.actorUserId). Soft: null when unresolved.
     const run = await this.resolveRunFromCorrelation(correlation);
 
+    // Trust is the BASE checkout's: a provisioned worktree is a fresh checkout row that never carries
+    // the user's consent, and is the same repository's config either way.
+    const agentConfigTrust = await this.resolveAgentConfigTrust({
+      baseCheckoutCwd,
+      run,
+    });
+    await this.narrateAgentConfigTrust({
+      baseCheckoutCwd,
+      planId: jobData.planId,
+      trust: agentConfigTrust,
+    });
+
     // OpenThrottle owns the worktree (option A): create it here, at job start, so the path is known
     // before the first agent turn — which is what checkout registration, `.env` provisioning, and
     // per-path agent-CLI MCP approval all need. Everything downstream (config load, foreign-skill
@@ -105,7 +126,9 @@ export class PlanRunWorkspaceService {
 
     // A run that cannot reach openthrottle-mcp does its work and reports success having changed
     // nothing. Say so in the output stream, loudly, against the directory the agent actually uses.
-    if (!skipMcpPreflight) {
+    // An isolated run never reads the checkout's MCP config, so a preflight of it would only mislead.
+    const isolated = agentConfigTrust.posture === AGENT_CONFIG_POSTURE.ISOLATED;
+    if (!skipMcpPreflight && !isolated) {
       await this.warnOnWorkspacePreflight({
         driver: jobData.driver ?? 'cursor',
         planId: jobData.planId,
@@ -125,11 +148,143 @@ export class PlanRunWorkspaceService {
     applyPlanRunOtRootFromConfig(configCwd, process.env);
 
     return {
+      agentConfigTrust,
       config,
       injectedSkillNames,
       run,
       workingDirectory: configCwd,
     };
+  }
+
+  /**
+   * @description Turns a run's trust into the driver posture. An isolated run gets no MCP servers:
+   * the checkout's own are suppressed, and the OT Loop worker uses none of OpenThrottle's.
+   */
+  buildRepoAgentConfig(trust: AgentConfigTrust): DriverRepoAgentConfig {
+    if (trust.posture === AGENT_CONFIG_POSTURE.TRUSTED) {
+      return { kind: 'trusted' };
+    }
+
+    return { kind: 'isolated', mcpServers: {} };
+  }
+
+  /**
+   * @description Refuses a run before its first iteration when the posture is isolated and the
+   * driver cannot suppress the checkout's config, saying why in plan output. Throws
+   * `UnrecoverableError`: retrying cannot help until the user trusts the repository or picks
+   * another driver, and running anyway is exactly what the gate exists to prevent.
+   */
+  async refuseUnlessDriverHonoursPosture(params: {
+    readonly driver: AgentDriver;
+    readonly planId: string;
+    readonly repoAgentConfig: DriverRepoAgentConfig;
+  }): Promise<void> {
+    const { driver, planId, repoAgentConfig } = params;
+    const check = checkRepoAgentConfig(driver, { repoAgentConfig });
+    if (check.ok) {
+      return;
+    }
+
+    const content = `🔒 Run refused: ${check.reason}`;
+    this.logger.warn(content, PlanRunWorkspaceService.name);
+    try {
+      await this.planOutputStreamRepository.create({
+        content,
+        iteration: null,
+        planId,
+      });
+    } catch {
+      // The refusal stands even when it cannot be narrated.
+    }
+
+    throw new UnrecoverableError(check.reason);
+  }
+
+  /**
+   * @description Reads the acting user's checkout row for the base directory and resolves trust.
+   * Fails closed: no actor, no row, or a failed read all leave a foreign directory isolated.
+   */
+  private async resolveAgentConfigTrust(params: {
+    readonly baseCheckoutCwd: string;
+    readonly run: PlanRun | null;
+  }): Promise<AgentConfigTrust> {
+    const { baseCheckoutCwd, run } = params;
+    // The OpenThrottle checkout is trusted whatever its row says, so it needs no lookup at all.
+    const isOpenThrottle = isOpenThrottleCheckout(
+      resolveForeignWorkspaceContext(baseCheckoutCwd, process.env),
+    );
+    if (isOpenThrottle) {
+      return resolveAgentConfigTrust({
+        checkout: null,
+        isOpenThrottleCheckout: true,
+      });
+    }
+
+    const actorUserId = run?.actorUserId?.trim();
+    if (actorUserId === undefined || actorUserId === '') {
+      return resolveAgentConfigTrust({
+        checkout: null,
+        isOpenThrottleCheckout: false,
+      });
+    }
+
+    try {
+      const checkout =
+        await this.repositoryCheckoutsRepository.findByUserAndPath(
+          actorUserId,
+          baseCheckoutCwd,
+        );
+
+      return resolveAgentConfigTrust({
+        checkout: checkout ?? null,
+        isOpenThrottleCheckout: false,
+      });
+    } catch (error) {
+      this.logger.warn(
+        `Could not read checkout trust for ${baseCheckoutCwd}; treating it as untrusted: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+        PlanRunWorkspaceService.name,
+      );
+
+      return resolveAgentConfigTrust({
+        checkout: null,
+        isOpenThrottleCheckout: false,
+      });
+    }
+  }
+
+  /**
+   * @description Says once, at run start, that an untrusted checkout's own agent config is
+   * suppressed. A trusted run says nothing, so its output reads exactly as it did before the gate.
+   * Soft-fails.
+   */
+  private async narrateAgentConfigTrust(params: {
+    readonly baseCheckoutCwd: string;
+    readonly planId: string;
+    readonly trust: AgentConfigTrust;
+  }): Promise<void> {
+    const { baseCheckoutCwd, planId, trust } = params;
+    if (trust.posture === AGENT_CONFIG_POSTURE.TRUSTED) {
+      return;
+    }
+
+    const content = `🔒 Untrusted checkout ${baseCheckoutCwd}: its own hooks and MCP servers are suppressed; only OpenThrottle's plugin hooks load. Trust the repository on its settings page to change this.`;
+
+    try {
+      await this.planOutputStreamRepository.create({
+        content,
+        iteration: null,
+        planId,
+      });
+    } catch (error) {
+      this.logger.warn(
+        `Soft-fail narrating checkout trust for plan ${planId}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+        PlanRunWorkspaceService.name,
+      );
+    }
   }
 
   /**

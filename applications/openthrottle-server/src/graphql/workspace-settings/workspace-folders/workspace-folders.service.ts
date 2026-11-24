@@ -92,7 +92,11 @@ const toInspectionObject = (
   snapshot: RepositoryInspectionSnapshot,
 ): RepositoryInspectionObject => {
   return {
-    agentConfig: { ...snapshot.agentConfig },
+    agentConfig: {
+      ...snapshot.agentConfig,
+      hookCount: snapshot.agentConfig.hookCount ?? null,
+      mcpServerCount: snapshot.agentConfig.mcpServerCount ?? null,
+    },
     git: {
       currentBranch: snapshot.git.currentBranch,
       defaultBranch: snapshot.git.defaultBranch,
@@ -827,6 +831,7 @@ export class WorkspaceFoldersService {
   async updateRepository(
     userId: string,
     input: {
+      agentConfigTrusted?: boolean | null;
       defaultBranch?: string | null;
       foreignSkillInjectionEnabled?: boolean | null;
       id: string;
@@ -841,6 +846,16 @@ export class WorkspaceFoldersService {
     );
     if (owned.length === 0) {
       throw new NotFoundException('Repository not found');
+    }
+
+    // Trust is per-user consent like the injection opt-in, flipped across every one of the
+    // user's checkouts of the repository. Store-only: plan runs read it at spawn time.
+    if (input.agentConfigTrusted != null) {
+      await this.checkoutsRepository.setAgentConfigTrustedForRepository(
+        userId,
+        input.id,
+        input.agentConfigTrusted,
+      );
     }
 
     // The injection opt-in is a per-user, per-checkout flag (repository_checkouts),
@@ -997,6 +1012,7 @@ export class WorkspaceFoldersService {
     snapshot: RepositoryInspectionSnapshot | null,
   ): RepositoryCheckoutObject {
     return {
+      agentConfigTrusted: checkout.agentConfigTrusted,
       createdAt: checkout.createdAt,
       displayName: checkout.displayName,
       filesystemPath: checkout.filesystemPath,

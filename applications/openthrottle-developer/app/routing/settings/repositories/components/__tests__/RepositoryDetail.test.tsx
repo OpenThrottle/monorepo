@@ -11,6 +11,7 @@ import type { RepositoryDetailProps } from '../RepositoryDetail';
 import { RepositoryDetail } from '../RepositoryDetail';
 
 const checkout = {
+  agentConfigTrusted: false,
   createdAt: '2026-07-24T00:00:00.000Z',
   displayName: 'openthrottle',
   filesystemPath: '/Users/dev/Development/openthrottle',

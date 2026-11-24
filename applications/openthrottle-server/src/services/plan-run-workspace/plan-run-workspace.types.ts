@@ -1,6 +1,9 @@
 import type { PlanRun } from '@openthrottle/nestjs-repositories-server';
 import type { loadPlanRunConfig } from '@openthrottle/openthrottle-agentic-loop';
-import type { WorkflowCorrelation } from '@openthrottle/openthrottle-agentic-utils';
+import type {
+  AgentConfigTrust,
+  WorkflowCorrelation,
+} from '@openthrottle/openthrottle-agentic-utils';
 
 import type { RunPlanOrchestratorJobData } from '../../queues/plans/plans.types.ts';
 import type { ProvisionedPlanRunWorktree } from '../plan-run-worktree-provision/plan-run-worktree-provision.types.ts';
@@ -29,6 +32,12 @@ export interface PreparePlanRunWorkspaceParams {
 
 /** @description What a run needs once its workspace is ready. */
 export interface PreparedPlanRunWorkspace {
+  /**
+   * Whether the agent may load the checkout's own agent config, resolved from the BASE checkout's
+   * trust flag (a provisioned worktree inherits its parent's trust). Runners turn it into a driver
+   * posture with {@link PlanRunWorkspaceService.buildRepoAgentConfig}.
+   */
+  readonly agentConfigTrust: AgentConfigTrust;
   /** The repo's workflow config, with the OT root applied to the process env. */
   readonly config: PlanRunWorkspaceConfig;
   /** Names of foreign OT skills materialized for this run; empty when none (or skipped). */
