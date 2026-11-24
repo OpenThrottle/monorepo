@@ -693,9 +693,6 @@ const add = (a: number, b: number): number => {
 };
 ```
 
-Separately: exports that are a package's public API need a JSDoc `@public` tag so Knip does
-not report them as dead. See [Knip.md](./Knip.md).
-
 ## Naming
 
 ### Naming conventions
@@ -892,8 +889,6 @@ conformant.
   - Functions never — they go to the sibling `utils/`. See
     [Data files hold data](#data-files-hold-data).
 - The component imports the data via the `~/routing/<area>/data/…` alias and renders it.
-  Because the component imports it (a real cross-module use reachable from a route entry),
-  Knip treats it as used — no `@public` tag needed on data exports.
 
 **Testing data files:**
 

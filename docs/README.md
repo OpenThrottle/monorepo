@@ -54,7 +54,6 @@ Along the way:
 - **CI quality gates:** [monorepo/CI-quality-gates.md](./monorepo/CI-quality-gates.md)
 - **Releases:** [monorepo/releases.md](./monorepo/releases.md) — SemVer for the applications and the product from PR titles: the release PR, tags, image versions, rollback.
 - **Attribution guards:** [monorepo/attribution-guard-layers.md](./monorepo/attribution-guard-layers.md) — the four layers enforcing `AGENTS.md` § No agent attribution, and why the two local-and-rewritable ones strip while the two published ones refuse.
-- **Dead-code (Knip):** [monorepo/Knip.md](./monorepo/Knip.md)
 - **Source-first packages:** [monorepo/source-first-packages-and-strip-only.md](./monorepo/source-first-packages-and-strip-only.md) — why a package whose `exports` name `./src/` cannot use parameter properties, enums, decorators or namespaces, and how `erasableSyntaxOnly` and ESLint enforce it.
 - **Component shape:** [monorepo/component-primitive-shape.md](./monorepo/component-primitive-shape.md)
 - **Route shape:** [monorepo/route-primitive-shape.md](./monorepo/route-primitive-shape.md) — the enforceable standard every `app/routes/*.tsx` module follows.

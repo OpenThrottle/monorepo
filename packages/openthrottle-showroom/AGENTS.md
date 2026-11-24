@@ -7,7 +7,7 @@ pre-publish leak scan. Consumed only by this monorepo — never published.
 ## Layout
 
 - [src/index.ts](src/index.ts) — public entry point. Export the package's public
-  API here and tag exported public API with `@public` so Knip keeps it.
+  API here.
 - `src/episodes/` — one typed module per video. The **narration field is the
   literal TTS input** and the **action field is the literal flow step**; the flow
   transcribes the script rather than interpreting it. `registry.ts` knows what

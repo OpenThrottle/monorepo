@@ -18,7 +18,7 @@
 #      customizes where ITS worktrees go. Same variable, read from the repo.
 #   3. Default: $HOME/.openthrottle/worktrees. A hidden root OpenThrottle owns,
 #      outside every repo so worktrees stay clear of the Nx workspace (daemon
-#      watches, Vitest/knip/gitleaks globs, .gitignore). Mirrored in .env.default.
+#      watches, Vitest/gitleaks globs, .gitignore). Mirrored in .env.default.
 #
 # Then OpenThrottle ALWAYS organizes beneath it, as <org>/<repo>:
 #

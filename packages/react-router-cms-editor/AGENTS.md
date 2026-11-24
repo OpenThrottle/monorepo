@@ -7,7 +7,7 @@
 ## Layout
 
 - [src/index.ts](src/index.ts) — public entry point. Export the package's public
-  API here and tag exported public API with `@public` so Knip keeps it.
+  API here.
 
 ## Invariants & gotchas
 

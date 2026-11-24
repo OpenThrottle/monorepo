@@ -35,7 +35,7 @@ stay comparable — if a section exists there and not here, one of them has drif
 - **[`readonly` properties](../../docs/monorepo/code-style.md#readonly-properties)** — object type properties missing `readonly` where nothing mutates them.
 - **[Optional properties](../../docs/monorepo/code-style.md#optional-properties)** — `x?: T` where the value is always meant to be supplied; `x: T | undefined` is the rule.
 - **[Prefer results over throwing](../../docs/monorepo/code-style.md#prefer-results-over-throwing)** — a `throw` whose only consumer is a manual `try`/`catch` at the call site.
-- **[JSDoc](../../docs/monorepo/code-style.md#jsdoc-comments)** — and specifically missing **`@public`** tags on exports that are package public API, which is what keeps Knip from reporting them dead.
+- **[JSDoc](../../docs/monorepo/code-style.md#jsdoc-comments)** — JSDoc on self-evident code, or behavior that is not self-evident left undocumented.
 - **[File names](../../docs/monorepo/code-style.md#naming-conventions)** — kebab-case, except PascalCase React components. This is the one naming clause `@typescript-eslint/naming-convention` cannot see, because it operates on identifiers.
 - **[General](../../docs/monorepo/code-style.md#general)** — `const` over `let` where nothing reassigns; `async`/`await` over `.then()` chains; `import * as React from 'react'`.
 - **[Installing libraries](../../docs/monorepo/code-style.md#installing-libraries)** — a `package.json` version pinned by hand rather than resolved by `pnpm add`.

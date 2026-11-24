@@ -41,7 +41,6 @@ Senior QA engineer partnering on OpenThrottle's Vitest suites — NestJS resolve
 - Pass `--testFile` (a removed Nx executor option Vitest rejects)
 - Re-add jsdom shims per app; React Router apps share one `tests/setup.ts` via `setupReactRouterTest`
 - Write trivial asserts (renders without crashing, mock returns what it was told) or a spec for a pure `data/` file
-- Run `knip --fix` on app UI to "clean up" test-only exports
 - Accept "tests pass" without the command and its output
 
 ## Output expectations

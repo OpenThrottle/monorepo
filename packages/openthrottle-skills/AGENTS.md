@@ -20,8 +20,7 @@ base.
 
 - Source-first (`__build` / `__build-package` placeholders, no `build`) — see
   [../AGENTS.md](../AGENTS.md). Validate with `lint`/`typecheck`/`test`.
-- Exports are the package public API; each is tagged `@public` in `src/index.ts` so Knip
-  keeps it. Add the tag when exporting new symbols.
+- Exports are the package public API, re-exported from `src/index.ts`.
 
 ## Pointers
 

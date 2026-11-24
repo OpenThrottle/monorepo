@@ -15,8 +15,7 @@ marketplace installs them from `plugins-dist`. Hooks ship nowhere else: there ar
 
 ## Layout
 
-- `src/index.ts` — public entry point; re-exports every module. Tag public API `@public` so Knip
-  keeps it.
+- `src/index.ts` — public entry point; re-exports every module.
 - `src/types.ts` — **the producer contract.** `NormalizedInvocation` is the seam every adapter
   targets; `UsageEvent` / `OutcomeEvent` are what the core builds from it.
 - `src/adapters/<tool>/` — thin per-tool entrypoints **only**: `payload.ts` (a `<TOOL>_SOURCE`

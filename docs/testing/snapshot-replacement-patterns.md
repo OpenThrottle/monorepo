@@ -152,10 +152,8 @@ expect(
 
 Notes:
 
-- Keep the copy in `data/data.copy.ts`, not co-located in the component: the component
-  imports it (a real cross-module use reachable from a route entry), so Knip sees it as
-  used with no `@public` tag needed — and the component file stays limited to its
-  component + props.
+- Keep the copy in `data/data.copy.ts`, not co-located in the component, so the component
+  file stays limited to its component + props and the spec can import the same constant.
 - Worked examples in `openthrottle-developer`: `ProjectNotFound`, `PlanTaskNotFound`,
   `SkillsEmpty`, `PromptsEmpty` (and the `projects.$projectId` route spec, which
   imports `PROJECT_NOT_FOUND_COPY` rather than re-typing the sentence).

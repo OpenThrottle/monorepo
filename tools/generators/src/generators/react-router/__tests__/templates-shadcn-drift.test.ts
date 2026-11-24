@@ -5,8 +5,7 @@ import { describe, expect, test } from 'vitest';
 /**
  * Generator templates are `.ts`/`.tsx` files that nothing in this repo
  * compiles: they are excluded from lint and typecheck (eslint reports them as
- * "ignored because of a matching ignore pattern"), knip ignores them by glob,
- * and no test imports them. A template can therefore reference an export that
+ * "ignored because of a matching ignore pattern"), and no test imports them. A template can therefore reference an export that
  * its target package dropped months ago, and the failure lands on whoever next
  * runs the generator.
  *

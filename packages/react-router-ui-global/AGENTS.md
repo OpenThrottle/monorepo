@@ -45,7 +45,7 @@ shared per-row table Actions menu (`GlobalPopover`).
   own `tests/setup.ts`).
 - `window.env` must be defined before importing `@openthrottle/react-router-utils` (it snapshots
   env at module load); the active setup file does this.
-- Keep new public exports alphabetized in [src/index.ts](src/index.ts) and tagged `@public` for Knip.
+- Keep new public exports alphabetized in [src/index.ts](src/index.ts).
 
 ## Pointers
 

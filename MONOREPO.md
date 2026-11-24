@@ -312,7 +312,6 @@ behind `./unstable/*`).
 | `scripts/generate-cms-schemas.ts`                                  | 6.0.3                | same                          |
 | `@nx/js/typescript` config analysis + project graph                | 6.0.3                | same                          |
 | `react-router typegen`                                             | 6.0.3                | same                          |
-| knip                                                               | 6.0.3                | same                          |
 | `scripts/audit-component-shape.ts`, `scripts/audit-route-shape.ts` | 6.0.3                | same                          |
 
 Catalog entries (`pnpm-workspace.yaml`) — note these are the only catalog values that use an aliased

@@ -58,7 +58,7 @@ Cap the run at **12 findings**. If you find more, keep the top 12 and say in the
 - Never open a pull request, never commit, never push.
 - Never write a plan or task as a Markdown file anywhere — plans and tasks live in OpenThrottle only.
 - If the `openthrottle-mcp` MCP server is unavailable, **fail loudly**: report the error and stop. Do not fall back to any other medium.
-- Do not run destructive or stateful commands (no migrations, no `database:reset`, no `knip --fix`, no installs).
+- Do not run destructive or stateful commands (no migrations, no `database:reset`, no installs).
 - Author and assignee fields expect the GitHub username `visormatt`, not a display name.
 
 ## Dedupe

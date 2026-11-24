@@ -76,7 +76,6 @@
     "eslint": "catalog:",
     "graphql": "catalog:",
     "husky": "catalog:",
-    "knip": "catalog:",
     "lint-staged": "catalog:",
     "nx": "catalog:",
     "only-allow": "catalog:",
@@ -163,7 +162,6 @@
       "format": {},
       "generate-third-party-notices": {},
       "ingest-agent-assets": {},
-      "knip": {},
       "lint": {
         "executor": "nx:run-commands",
         "inputs": [
@@ -273,7 +271,6 @@
     "check:local:format": "pnpm nx run monorepo:format:check",
     "check:local:generated-attributes": "pnpm nx run monorepo:check-generated-attributes",
     "check:local:graphql-schema": "pnpm nx run-many --target=graphql-schema --configuration=check",
-    "check:local:knip": "pnpm nx run monorepo:knip",
     "check:local:lockfile": "pnpm nx run monorepo:check-lockfile",
     "check:local:migration-comments": "pnpm nx run monorepo:check-migration-table-comments",
     "check:local:migration-hygiene": "pnpm nx run monorepo:check-migration-hygiene",

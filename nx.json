@@ -684,23 +684,6 @@
         "cwd": "{workspaceRoot}"
       }
     },
-    "knip": {
-      "cache": true,
-      "dependsOn": ["^build"],
-      "executor": "nx:run-commands",
-      "metadata": {
-        "description": "Dead-code / unused-dependency report via knip (knip.jsonc). Report-only (dry-run) and non-blocking (--no-exit-code) — run on demand with `pnpm nx run monorepo:knip`. DO NOT add `--fix`/`--fix-type`/`--allow-remove-files` here; knip only mutates files with `--fix`. Triage findings piecemeal (`--include`/`--workspace`) — see docs/monorepo/Knip.md."
-      },
-      "options": {
-        "command": "knip --config knip.jsonc --no-exit-code",
-        "cwd": "{workspaceRoot}",
-        "env": {
-          "API_URL": "http://localhost/graphql",
-          "API_URL_INTERNAL": "http://localhost/graphql",
-          "APP_NAME": "openthrottle-developer"
-        }
-      }
-    },
     "lint": {
       "cache": true,
       "executor": "nx:run-commands",
