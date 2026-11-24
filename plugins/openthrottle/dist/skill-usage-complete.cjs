@@ -4966,6 +4966,9 @@ var CLAUDE_SOURCE = "claude-code";
 var nonEmptyString = (value) => {
   return typeof value === "string" && value.trim() !== "" ? value : null;
 };
+var resolvesSkillStarts = (hookEventName) => {
+  return hookEventName === "SessionEnd";
+};
 var normalizeClaudeStopPayload = (raw) => {
   if (!isRecord(raw)) {
     return null;
@@ -5579,11 +5582,13 @@ var main = async () => {
       );
       return;
     }
-    await completeOpenStartsForSession({
-      repoRoot,
-      sessionId: normalized.session_id,
-      source: CLAUDE_SOURCE
-    });
+    if (resolvesSkillStarts(normalized.hook_event_name)) {
+      await completeOpenStartsForSession({
+        repoRoot,
+        sessionId: normalized.session_id,
+        source: CLAUDE_SOURCE
+      });
+    }
     await sweepAbandonedStarts({
       currentSessionId: normalized.session_id,
       repoRoot,
