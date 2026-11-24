@@ -72,10 +72,9 @@ export const PlanTabOutput = (
                 title="No plan output chunks yet."
               />
               <p className="text-muted-foreground text-sm">
-                Iterations append here when agents call{' '}
+                Output appends here as a run progresses, and when agents call{' '}
                 <code className="text-xs">appendPlanOutput</code> (for example
-                from workflow-ralph or MCP). Local CLI runs log to your terminal
-                instead.
+                over MCP). Local CLI runs log to your terminal instead.
               </p>
             </div>
           );

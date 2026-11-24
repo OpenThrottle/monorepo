@@ -29,7 +29,7 @@ const entry = (
 const entries = [
   entry('ot-plans', 'openthrottle'),
   entry('brag-sheet', 'external'),
-  entry('workflow-ralph', 'openthrottle'),
+  entry('ot-stack', 'openthrottle'),
   entry('my-draft', 'external', 'personal'),
   entry('team-skill', 'external', 'custom'),
 ];
@@ -42,7 +42,7 @@ describe('filterSkillsBySource', () => {
   test('narrows to openthrottle entries', () => {
     expect(
       filterSkillsBySource(entries, 'openthrottle').map((e) => e.slug),
-    ).toEqual(['ot-plans', 'workflow-ralph']);
+    ).toEqual(['ot-plans', 'ot-stack']);
   });
 
   // A personal skill carries source: 'external' because it is not authored in

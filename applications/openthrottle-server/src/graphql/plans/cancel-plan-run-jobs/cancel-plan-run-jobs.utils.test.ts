@@ -2,8 +2,7 @@ import { createMock } from '@golevelup/ts-vitest';
 import type { Queue } from 'bullmq';
 import { describe, expect, test, vi } from 'vitest';
 
-import { RUN_PLAN_ORCHESTRATOR_JOB_NAME } from '../../../queues/agentic-ralph/agentic-ralph.constants.ts';
-import { RUN_PLAN_SPAWN_JOB_NAME } from '../../../queues/plans/plans.constants.ts';
+import { RUN_PLAN_ORCHESTRATOR_JOB_NAME } from '../../../queues/plans/plans.constants.ts';
 import type { RunPlanJobData } from '../../../queues/plans/plans.types.ts';
 import { cancelPlanRunJobsForPlan } from './cancel-plan-run-jobs.utils.ts';
 
@@ -41,34 +40,13 @@ describe('cancelPlanRunJobsForPlan', () => {
     expect(result.matchingJobCount).toBe(1);
   });
 
-  test('removes waiting run-plan job and records id', async () => {
-    const remove = vi.fn().mockResolvedValue(undefined);
-    const job = {
-      data: { planId: 'plan-1' },
-      id: 'j1',
-      name: RUN_PLAN_SPAWN_JOB_NAME,
-      remove,
-    };
-    const getJobs = vi.fn().mockResolvedValue([job]);
-    const queue = createMock<Queue<RunPlanJobData, void>>({
-      getJobs,
-    });
-
-    const result = await cancelPlanRunJobsForPlan(queue, 'plan-1');
-
-    expect(remove).toHaveBeenCalledOnce();
-    expect(result.removedJobIds).toEqual(['j1']);
-    expect(result.lockedActiveJobIds).toEqual([]);
-    expect(result.matchingJobCount).toBe(1);
-  });
-
   test('ignores jobs with different name or plan id', async () => {
     const remove = vi.fn().mockResolvedValue(undefined);
     const getJobs = vi.fn().mockResolvedValue([
       {
         data: { planId: 'other' },
         id: 'x',
-        name: RUN_PLAN_SPAWN_JOB_NAME,
+        name: RUN_PLAN_ORCHESTRATOR_JOB_NAME,
         remove,
       },
       {
@@ -93,7 +71,7 @@ describe('cancelPlanRunJobsForPlan', () => {
       data: { planId: 'plan-1' },
       getState,
       id: 'j-active',
-      name: RUN_PLAN_SPAWN_JOB_NAME,
+      name: RUN_PLAN_ORCHESTRATOR_JOB_NAME,
       remove,
     };
     const getJobs = vi.fn().mockResolvedValue([job]);
@@ -113,13 +91,13 @@ describe('cancelPlanRunJobsForPlan', () => {
       {
         data: { planId: 'plan-1' },
         id: 'a',
-        name: RUN_PLAN_SPAWN_JOB_NAME,
+        name: RUN_PLAN_ORCHESTRATOR_JOB_NAME,
         remove: remove1,
       },
       {
         data: { planId: 'plan-1' },
         id: 'b',
-        name: RUN_PLAN_SPAWN_JOB_NAME,
+        name: RUN_PLAN_ORCHESTRATOR_JOB_NAME,
         remove: remove2,
       },
     ]);
@@ -140,7 +118,7 @@ describe('cancelPlanRunJobsForPlan', () => {
       data: { planId: 'plan-1' },
       getState,
       id: 'j-w',
-      name: RUN_PLAN_SPAWN_JOB_NAME,
+      name: RUN_PLAN_ORCHESTRATOR_JOB_NAME,
       remove,
     };
     const getJobs = vi.fn().mockResolvedValue([job]);

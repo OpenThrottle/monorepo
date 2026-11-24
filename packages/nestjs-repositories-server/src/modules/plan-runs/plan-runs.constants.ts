@@ -4,9 +4,8 @@
  */
 
 /**
- * How often the owning run process (detached CLI loop or in-server worker) bumps
- * its `last_heartbeat_at`. The CLI mirrors this value with its OWN local constant
- * (tools/workflows must not import from this server package); keep the two in sync.
+ * How often the owning run process (in-server worker) bumps
+ * its `last_heartbeat_at`.
  */
 export const HEARTBEAT_INTERVAL_MS = 15_000;
 
@@ -70,7 +69,7 @@ export const PLAN_RUN_STATUS = {
  * The `plan_runs.settled_reason` each BACKSTOP writes when it settles a run the agent never
  * settled itself. Every backstop settles to STALE, so the status alone cannot say which one
  * fired; the reason does, which is what an operator needs when a live run is settled under them.
- * The agent's own `settleCliPlanRun` writes none: its status is the report.
+ * The agent's own `settlePlanRun` writes none: its status is the report.
  * @public
  */
 export const PLAN_RUN_SETTLED_REASON = {

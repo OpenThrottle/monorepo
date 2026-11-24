@@ -58,7 +58,7 @@ import type {
   ListPlansByStatusInput,
   UpdatePlanInput,
 } from './plan.input.ts';
-import { PlanRalphWorkflowModeGraphQL } from './plan.input.ts';
+import { PlanRunModeGraphQL } from './plan.input.ts';
 import { PlanEnqueueService } from './plan-enqueue/plan-enqueue.service.ts';
 import { PlanStatusService } from './plan-status/plan-status.service.ts';
 import { PlansResolver } from './plans.resolver.ts';
@@ -237,18 +237,17 @@ describe('PlansResolver', () => {
   // Enqueue mechanics now live in PlanEnqueueService (covered by plan-enqueue.service.test.ts);
   // the resolver only validates input, delegates, and maps the outcome — so mock the service here.
   const sampleEnqueueOutcome = {
-    executionBackend: 'cursor' as const,
+    driver: 'cursor' as const,
     jobId: 'job-enqueue-1',
     planId: mockPlan.id,
     queuePosition: 1,
     queueTotal: 1,
   };
-  const mockEnqueueSpawn = vi.fn().mockResolvedValue(sampleEnqueueOutcome);
   const mockEnqueueOrchestrator = vi
     .fn()
     .mockResolvedValue(sampleEnqueueOutcome);
   const sampleScheduleOutcome = {
-    executionBackend: 'cursor' as const,
+    driver: 'cursor' as const,
     jobId: 'scheduled-plan-run-1',
     planId: mockPlan.id,
     planRunId: 'run-scheduled-1',
@@ -257,7 +256,6 @@ describe('PlansResolver', () => {
   const mockSchedulePlanRun = vi.fn().mockResolvedValue(sampleScheduleOutcome);
   const mockPlanEnqueueService = createMock<PlanEnqueueService>({
     enqueueOrchestrator: mockEnqueueOrchestrator,
-    enqueueSpawn: mockEnqueueSpawn,
     schedulePlanRun: mockSchedulePlanRun,
   });
 
@@ -265,7 +263,7 @@ describe('PlansResolver', () => {
   const mockPlanRulesEvaluationService = createMock<PlanRulesEvaluationService>(
     {
       enqueueEvaluation: mockEnqueueEvaluation,
-      requestEnvironment: vi.fn().mockReturnValue('ralph'),
+      requestEnvironment: vi.fn().mockReturnValue('headless'),
     },
   );
 
@@ -945,22 +943,22 @@ describe('PlansResolver', () => {
 
   describe('enqueuePlanRun', () => {
     beforeEach(() => {
-      mockEnqueueSpawn.mockClear();
-      mockEnqueueSpawn.mockResolvedValue(sampleEnqueueOutcome);
+      mockEnqueueOrchestrator.mockClear();
+      mockEnqueueOrchestrator.mockResolvedValue(sampleEnqueueOutcome);
     });
 
-    test('delegates to PlanEnqueueService.enqueueSpawn and maps the outcome', async () => {
+    test('delegates to PlanEnqueueService.enqueueOrchestrator (no mode) and maps the outcome', async () => {
       const result = await resolver.enqueuePlanRun({
         branch: 'feature/test',
         idempotencyKey: 'caller-key',
         jobRunHooksJson: null,
         planId: mockPlan.id,
         priority: 5,
-        ralph: null,
+        tuning: null,
         workingDirectory: null,
       });
 
-      expect(mockEnqueueSpawn).toHaveBeenCalledWith({
+      expect(mockEnqueueOrchestrator).toHaveBeenCalledWith({
         actorKind: undefined,
         actorSub: undefined,
         actorUserId: null,
@@ -968,14 +966,16 @@ describe('PlansResolver', () => {
         cancelScheduled: null,
         idempotencyKey: 'caller-key',
         jobRunHooksJson: null,
+        mode: null,
         planId: mockPlan.id,
         priority: 5,
-        ralph: null,
+        taskId: null,
+        tuning: null,
         workingDirectory: null,
       });
       expect(result).toEqual(
         expect.objectContaining({
-          executionBackend: 'cursor',
+          driver: 'cursor',
           jobId: sampleEnqueueOutcome.jobId,
           planId: mockPlan.id,
           queuePosition: sampleEnqueueOutcome.queuePosition,
@@ -992,7 +992,7 @@ describe('PlansResolver', () => {
         workingDirectory: null,
       });
 
-      expect(mockEnqueueSpawn).toHaveBeenCalledWith(
+      expect(mockEnqueueOrchestrator).toHaveBeenCalledWith(
         expect.objectContaining({ idempotencyKey: null, planId: mockPlan.id }),
       );
     });
@@ -1009,7 +1009,7 @@ describe('PlansResolver', () => {
         'user',
       );
 
-      expect(mockEnqueueSpawn).toHaveBeenCalledWith(
+      expect(mockEnqueueOrchestrator).toHaveBeenCalledWith(
         expect.objectContaining({ actorUserId: 'user-uuid-1' }),
       );
     });
@@ -1026,13 +1026,13 @@ describe('PlansResolver', () => {
         'service_account',
       );
 
-      expect(mockEnqueueSpawn).toHaveBeenCalledWith(
+      expect(mockEnqueueOrchestrator).toHaveBeenCalledWith(
         expect.objectContaining({ actorUserId: null }),
       );
     });
 
     test('rejects an explicitly-chosen model the actor disabled, without enqueueing', async () => {
-      mockEnqueueSpawn.mockClear();
+      mockEnqueueOrchestrator.mockClear();
       mockAgentIsModelEnabled.mockResolvedValueOnce(false);
       await expect(
         resolver.enqueuePlanRun(
@@ -1040,7 +1040,7 @@ describe('PlansResolver', () => {
             branch: 'feature/test',
             planId: mockPlan.id,
             priority: null,
-            ralph: { backend: 'claude', model: 'opus' },
+            tuning: { driver: 'claude', model: 'opus' },
             workingDirectory: null,
           },
           'user-1',
@@ -1052,36 +1052,11 @@ describe('PlansResolver', () => {
         'claude',
         'opus',
       );
-      expect(mockEnqueueSpawn).not.toHaveBeenCalled();
+      expect(mockEnqueueOrchestrator).not.toHaveBeenCalled();
     });
   });
 
-  describe('workflowPlanRun', () => {
-    beforeEach(() => {
-      mockEnqueueSpawn.mockClear();
-      mockEnqueueSpawn.mockResolvedValue(sampleEnqueueOutcome);
-    });
-
-    test('delegates to enqueuePlanRun (enqueueSpawn) with an equivalent result', async () => {
-      const input = {
-        branch: 'feature/test',
-        jobRunHooksJson: null,
-        planId: mockPlan.id,
-        priority: null,
-        ralph: null,
-        workingDirectory: null,
-      };
-
-      const viaCanonical = await resolver.enqueuePlanRun(input);
-      const viaAlias = await resolver.workflowPlanRun(input);
-
-      expect(mockEnqueueSpawn).toHaveBeenCalledTimes(2);
-      expect(viaAlias.jobId).toBe(viaCanonical.jobId);
-      expect(viaAlias.planId).toBe(viaCanonical.planId);
-    });
-  });
-
-  describe('enqueuePlanRalphOrchestrator', () => {
+  describe('enqueuePlanRun with a mode', () => {
     beforeEach(() => {
       mockEnqueueOrchestrator.mockClear();
       mockEnqueueOrchestrator.mockResolvedValue(sampleEnqueueOutcome);
@@ -1090,14 +1065,14 @@ describe('PlansResolver', () => {
     });
 
     test('delegates to PlanEnqueueService.enqueueOrchestrator and maps the outcome', async () => {
-      const result = await resolver.enqueuePlanRalphOrchestrator({
+      const result = await resolver.enqueuePlanRun({
         branch: 'feature/test',
         idempotencyKey: null,
         mode: null,
         planId: mockPlan.id,
         priority: null,
-        ralph: null,
         taskId: null,
+        tuning: null,
         workingDirectory: null,
       });
 
@@ -1113,14 +1088,14 @@ describe('PlansResolver', () => {
 
     test('requires taskId when mode is task (no delegation)', async () => {
       await expect(
-        resolver.enqueuePlanRalphOrchestrator({
+        resolver.enqueuePlanRun({
           branch: 'feature/test',
           idempotencyKey: null,
-          mode: PlanRalphWorkflowModeGraphQL.task,
+          mode: PlanRunModeGraphQL.task,
           planId: mockPlan.id,
           priority: null,
-          ralph: null,
           taskId: null,
+          tuning: null,
           workingDirectory: null,
         }),
       ).rejects.toBeInstanceOf(BadRequestException);
@@ -1133,14 +1108,14 @@ describe('PlansResolver', () => {
         planId: mockPlan.id,
       });
 
-      await resolver.enqueuePlanRalphOrchestrator({
+      await resolver.enqueuePlanRun({
         branch: 'feature/test',
         idempotencyKey: null,
-        mode: PlanRalphWorkflowModeGraphQL.task,
+        mode: PlanRunModeGraphQL.task,
         planId: mockPlan.id,
         priority: null,
-        ralph: null,
         taskId: '45a30762-92a9-42f4-90e0-2437c7ef26a8',
+        tuning: null,
         workingDirectory: null,
       });
 
@@ -1162,14 +1137,14 @@ describe('PlansResolver', () => {
       taskRepo.findOne.mockResolvedValueOnce(null);
 
       await expect(
-        resolver.enqueuePlanRalphOrchestrator({
+        resolver.enqueuePlanRun({
           branch: 'feature/test',
           idempotencyKey: null,
-          mode: PlanRalphWorkflowModeGraphQL.task,
+          mode: PlanRunModeGraphQL.task,
           planId: mockPlan.id,
           priority: null,
-          ralph: null,
           taskId: '45a30762-92a9-42f4-90e0-2437c7ef26a8',
+          tuning: null,
           workingDirectory: null,
         }),
       ).rejects.toThrow(/Task not found for this plan/);
@@ -1195,7 +1170,7 @@ describe('PlansResolver', () => {
         {
           ...input,
           idempotencyKey: 'dedupe-1',
-          ralph: { effort: 'high' },
+          tuning: { effort: 'high' },
         },
         'user-1',
         'user',
@@ -1209,11 +1184,17 @@ describe('PlansResolver', () => {
           branch: 'feature/test',
           idempotencyKey: 'dedupe-1',
           planId: mockPlan.id,
-          ralph: { effort: 'high' },
           scheduledFor,
+          tuning: { effort: 'high' },
         }),
       );
-      expect(result).toEqual(sampleScheduleOutcome);
+      expect(result).toMatchObject({
+        driver: sampleScheduleOutcome.driver,
+        jobId: sampleScheduleOutcome.jobId,
+        planId: sampleScheduleOutcome.planId,
+        planRunId: sampleScheduleOutcome.planRunId,
+        scheduledFor: sampleScheduleOutcome.scheduledFor,
+      });
     });
 
     test('rejects a disabled agent backend before scheduling anything', async () => {
@@ -1221,7 +1202,7 @@ describe('PlansResolver', () => {
 
       await expect(
         resolver.schedulePlanRun(
-          { ...input, ralph: { backend: 'claude' } },
+          { ...input, tuning: { driver: 'claude' } },
           'user-1',
           'user',
         ),
@@ -1264,7 +1245,7 @@ describe('PlansResolver', () => {
       const scheduledFor = new Date('2026-11-02T09:00:00.000Z');
       const baseRow = planRunsFactory.build({
         createdAt: new Date('2026-11-01T12:00:00.000Z'),
-        executionBackend: 'claude',
+        driver: 'claude',
         heartbeatExpected: true,
         planId: mockPlan.id,
         queueName: PLANS_QUEUE_NAME,
@@ -1300,19 +1281,19 @@ describe('PlansResolver', () => {
       ]);
     });
 
-    test('returns recent persisted run audit rows with execution backend', async () => {
+    test('returns recent persisted run audit rows with driver', async () => {
       const createdAt = new Date('2026-05-09T12:00:00.000Z');
       const updatedAt = new Date('2026-05-09T12:01:00.000Z');
       planRunsRepository.findRecentByPlanId.mockResolvedValueOnce([
         planRunsFactory.build({
           bullmqJobId: 'job-claude-1',
           createdAt,
-          executionBackend: 'claude',
+          driver: 'claude',
           id: 'run-1',
           planId: mockPlan.id,
           queueName: PLANS_QUEUE_NAME,
           runConfigSnapshot: {
-            ralph: { executionBackend: 'claude', iterations: 3 },
+            run: { driver: 'claude' },
             target: { mode: 'plan', taskId: '' },
             version: 1,
             workspace: { workingDirectory: '' },
@@ -1335,9 +1316,9 @@ describe('PlansResolver', () => {
       expect(result).toEqual([
         expect.objectContaining({
           bullmqJobId: 'job-claude-1',
-          executionBackend: 'claude',
+          driver: 'claude',
           planId: mockPlan.id,
-          runConfigSnapshotJson: expect.stringContaining('"iterations":3'),
+          runConfigSnapshotJson: expect.stringContaining('"driver":"claude"'),
         }),
       ]);
     });
@@ -1348,7 +1329,7 @@ describe('PlansResolver', () => {
       const now = FIXED_NOW.getTime();
       const baseRow = planRunsFactory.build({
         bullmqJobId: null,
-        executionBackend: 'claude',
+        driver: 'claude',
         // The column's DEFAULT TRUE is the safety property: every pre-existing row
         // behaves exactly as it did before migration 110. These cases prove it.
         heartbeatExpected: true,
@@ -1426,11 +1407,11 @@ describe('PlansResolver', () => {
     });
   });
 
-  describe('registerCliPlanRun', () => {
+  describe('registerPlanRun', () => {
     const cliRunRow = planRunsFactory.build({
       bullmqJobId: null,
       createdAt: new Date('2026-07-22T00:00:00.000Z'),
-      executionBackend: 'claude',
+      driver: 'claude',
       hostname: 'laptop-1',
       id: 'cli-run-1',
       pid: 9999,
@@ -1446,8 +1427,8 @@ describe('PlansResolver', () => {
     test('delegates to registerCliRun and maps the null-job-id row', async () => {
       planRunsRepository.registerCliRun.mockResolvedValueOnce(cliRunRow);
 
-      const result = await resolver.registerCliPlanRun({
-        executionBackend: 'claude',
+      const result = await resolver.registerPlanRun({
+        driver: 'claude',
         hostname: 'laptop-1',
         pid: 9999,
         planId: mockPlan.id,
@@ -1457,7 +1438,7 @@ describe('PlansResolver', () => {
       expect(planRunsRepository.registerCliRun).toHaveBeenCalledWith(
         expect.objectContaining({
           branch: null,
-          executionBackend: 'claude',
+          driver: 'claude',
           // Both default so the detached CLI, which supplies neither, is untouched.
           heartbeatExpected: true,
           hostname: 'laptop-1',
@@ -1480,9 +1461,9 @@ describe('PlansResolver', () => {
     test('forwards a present branch verbatim (no trim/reject)', async () => {
       planRunsRepository.registerCliRun.mockResolvedValueOnce(cliRunRow);
 
-      await resolver.registerCliPlanRun({
+      await resolver.registerPlanRun({
         branch: '  capture-branch-name  ',
-        executionBackend: 'claude',
+        driver: 'claude',
         hostname: 'laptop-1',
         pid: 9999,
         planId: mockPlan.id,
@@ -1497,8 +1478,8 @@ describe('PlansResolver', () => {
     test('forwards null when branch is omitted', async () => {
       planRunsRepository.registerCliRun.mockResolvedValueOnce(cliRunRow);
 
-      await resolver.registerCliPlanRun({
-        executionBackend: 'claude',
+      await resolver.registerPlanRun({
+        driver: 'claude',
         hostname: null,
         pid: null,
         planId: mockPlan.id,
@@ -1513,9 +1494,9 @@ describe('PlansResolver', () => {
     test('forwards null when branch is explicitly null', async () => {
       planRunsRepository.registerCliRun.mockResolvedValueOnce(cliRunRow);
 
-      await resolver.registerCliPlanRun({
+      await resolver.registerPlanRun({
         branch: null,
-        executionBackend: 'claude',
+        driver: 'claude',
         hostname: null,
         pid: null,
         planId: mockPlan.id,
@@ -1529,8 +1510,8 @@ describe('PlansResolver', () => {
 
     test('forwards a present model verbatim, and null when omitted', async () => {
       planRunsRepository.registerCliRun.mockResolvedValueOnce(cliRunRow);
-      await resolver.registerCliPlanRun({
-        executionBackend: 'claude',
+      await resolver.registerPlanRun({
+        driver: 'claude',
         hostname: null,
         model: 'claude-opus-5',
         pid: null,
@@ -1545,8 +1526,8 @@ describe('PlansResolver', () => {
       // an empty string is a value that reads as an answer.
       planRunsRepository.registerCliRun.mockClear();
       planRunsRepository.registerCliRun.mockResolvedValueOnce(cliRunRow);
-      await resolver.registerCliPlanRun({
-        executionBackend: 'claude',
+      await resolver.registerPlanRun({
+        driver: 'claude',
         hostname: null,
         pid: null,
         planId: mockPlan.id,
@@ -1560,8 +1541,8 @@ describe('PlansResolver', () => {
     test('forwards an explicit heartbeatExpected false', async () => {
       planRunsRepository.registerCliRun.mockResolvedValueOnce(cliRunRow);
 
-      await resolver.registerCliPlanRun({
-        executionBackend: 'claude',
+      await resolver.registerPlanRun({
+        driver: 'claude',
         heartbeatExpected: false,
         hostname: null,
         pid: null,
@@ -1580,39 +1561,39 @@ describe('PlansResolver', () => {
       planRunsRepository.registerCliRun.mockResolvedValueOnce(
         planRunsFactory.build({
           ...cliRunRow,
-          executionBackend: 'antigravity',
+          driver: 'antigravity',
         }),
       );
 
-      const result = await resolver.registerCliPlanRun({
-        executionBackend: 'antigravity',
+      const result = await resolver.registerPlanRun({
+        driver: 'antigravity',
         hostname: null,
         pid: null,
         planId: mockPlan.id,
         workerId: null,
       });
 
-      expect(result.executionBackend).toBe('antigravity');
+      expect(result.driver).toBe('antigravity');
     });
 
-    test('rejects an invalid executionBackend without touching the service', async () => {
+    test('rejects an invalid driver without touching the service', async () => {
       planRunsRepository.registerCliRun.mockClear();
       await expect(
-        resolver.registerCliPlanRun({
-          executionBackend: 'gpt',
+        resolver.registerPlanRun({
+          driver: 'gpt',
           hostname: null,
           pid: null,
           planId: mockPlan.id,
           workerId: null,
         }),
-      ).rejects.toThrow(/Invalid executionBackend/);
+      ).rejects.toThrow(/Invalid driver/);
       expect(planRunsRepository.registerCliRun).not.toHaveBeenCalled();
     });
 
     test('names antigravity in the invalid-backend message', async () => {
       await expect(
-        resolver.registerCliPlanRun({
-          executionBackend: 'gpt',
+        resolver.registerPlanRun({
+          driver: 'gpt',
           hostname: null,
           pid: null,
           planId: mockPlan.id,
@@ -1625,9 +1606,9 @@ describe('PlansResolver', () => {
       planRunsRepository.registerCliRun.mockClear();
       mockAgentIsEnabled.mockResolvedValueOnce(false);
       await expect(
-        resolver.registerCliPlanRun(
+        resolver.registerPlanRun(
           {
-            executionBackend: 'claude',
+            driver: 'claude',
             hostname: null,
             pid: null,
             planId: mockPlan.id,
@@ -1642,13 +1623,13 @@ describe('PlansResolver', () => {
     });
   });
 
-  describe('settleCliPlanRun', () => {
+  describe('settlePlanRun', () => {
     test('normalizes status to uppercase, settles by id, and maps the row', async () => {
       planRunsRepository.settleCliRun.mockResolvedValueOnce(
         planRunsFactory.build({
           bullmqJobId: null,
           createdAt: new Date('2026-07-22T00:00:00.000Z'),
-          executionBackend: 'claude',
+          driver: 'claude',
           hostname: null,
           id: 'cli-run-1',
           pid: null,
@@ -1662,7 +1643,7 @@ describe('PlansResolver', () => {
         }),
       );
 
-      const result = await resolver.settleCliPlanRun({
+      const result = await resolver.settlePlanRun({
         headSha: null,
         planRunId: 'cli-run-1',
         prNumber: null,
@@ -1687,7 +1668,7 @@ describe('PlansResolver', () => {
         planRunsFactory.build({
           bullmqJobId: null,
           createdAt: new Date('2026-07-22T00:00:00.000Z'),
-          executionBackend: 'claude',
+          driver: 'claude',
           hostname: null,
           id: 'cli-run-1',
           pid: null,
@@ -1703,7 +1684,7 @@ describe('PlansResolver', () => {
         }),
       );
 
-      const result = await resolver.settleCliPlanRun({
+      const result = await resolver.settlePlanRun({
         headSha: null,
         planRunId: 'cli-run-1',
         prNumber: null,
@@ -1729,7 +1710,7 @@ describe('PlansResolver', () => {
     test('ignores usage-limit fields on any other status', async () => {
       planRunsRepository.settleCliRun.mockResolvedValueOnce(null);
 
-      await resolver.settleCliPlanRun({
+      await resolver.settlePlanRun({
         headSha: null,
         planRunId: 'cli-run-1',
         prNumber: null,
@@ -1748,7 +1729,7 @@ describe('PlansResolver', () => {
     test('rejects a non-terminal status without touching the service', async () => {
       planRunsRepository.settleCliRun.mockClear();
       await expect(
-        resolver.settleCliPlanRun({
+        resolver.settlePlanRun({
           headSha: null,
           planRunId: 'cli-run-1',
           prNumber: null,
@@ -1763,7 +1744,7 @@ describe('PlansResolver', () => {
     test('returns null when the run row no longer exists', async () => {
       planRunsRepository.settleCliRun.mockResolvedValueOnce(null);
 
-      const result = await resolver.settleCliPlanRun({
+      const result = await resolver.settlePlanRun({
         headSha: null,
         planRunId: 'missing',
         prNumber: null,
@@ -1780,7 +1761,7 @@ describe('PlansResolver', () => {
       const run = planRunsFactory.build({
         bullmqJobId: null,
         createdAt: new Date('2026-07-22T00:00:00.000Z'),
-        executionBackend: 'claude',
+        driver: 'claude',
         hostname: null,
         id: 'cli-run-1',
         pid: null,
@@ -1794,7 +1775,7 @@ describe('PlansResolver', () => {
       });
       planRunsRepository.settleCliRun.mockResolvedValueOnce(run);
 
-      await resolver.settleCliPlanRun({
+      await resolver.settlePlanRun({
         headSha: 'deadbeef',
         planRunId: 'cli-run-1',
         prNumber: 537,
@@ -1816,7 +1797,7 @@ describe('PlansResolver', () => {
         planRunsFactory.build({
           bullmqJobId: null,
           createdAt: new Date('2026-07-22T00:00:00.000Z'),
-          executionBackend: 'claude',
+          driver: 'claude',
           hostname: null,
           id: 'cli-run-1',
           pid: null,
@@ -1832,7 +1813,7 @@ describe('PlansResolver', () => {
 
       // A run that died mid-way may still have pushed a branch; that is not a claim
       // the ledger should make on its behalf.
-      await resolver.settleCliPlanRun({
+      await resolver.settlePlanRun({
         headSha: 'deadbeef',
         planRunId: 'cli-run-1',
         prNumber: null,
@@ -1855,7 +1836,7 @@ describe('PlansResolver', () => {
         planRunsFactory.build({
           bullmqJobId: null,
           createdAt: new Date(now - 5_000),
-          executionBackend: 'claude',
+          driver: 'claude',
           hostname: 'laptop-1',
           id: 'cli-run-1',
           lastHeartbeatAt: new Date(now),
@@ -1910,7 +1891,7 @@ describe('PlansResolver', () => {
         bullmqJobId: null,
         checkoutId: '44444444-4444-4444-8444-444444444444',
         createdAt: new Date('2026-08-02T00:00:00.000Z'),
-        executionBackend: 'claude',
+        driver: 'claude',
         hostname: null,
         id: 'cli-run-1',
         pid: null,
@@ -1971,7 +1952,7 @@ describe('PlansResolver', () => {
           bullmqJobId: null,
           checkoutId: null,
           createdAt: new Date('2026-08-02T00:00:00.000Z'),
-          executionBackend: 'claude',
+          driver: 'claude',
           heartbeatExpected: false,
           hostname: null,
           id: 'cli-run-1',
@@ -2150,16 +2131,16 @@ describe('PlansResolver', () => {
     test('normalizes legacy version-only shell from DB', () => {
       const planShellOnly: Plan = {
         ...mockPlan,
-        // @ts-expect-error legacy plans.run_config rows predate the ralph/target/workspace fields.
+        // @ts-expect-error legacy plans.run_config rows predate the run/target/workspace fields.
         runConfig: { version: 1 },
       };
       const json = resolver.runConfigJson(planShellOnly);
       const parsed: {
-        ralph: { executionBackend: string };
+        run: { driver: string };
         version: number;
       } = JSON.parse(json);
       expect(parsed.version).toBe(1);
-      expect(parsed.ralph.executionBackend).toBeDefined();
+      expect(parsed.run.driver).toBeDefined();
     });
   });
 
@@ -2171,7 +2152,7 @@ describe('PlansResolver', () => {
     test('returns false for legacy version-only shell from DB', () => {
       const planShellOnly: Plan = {
         ...mockPlan,
-        // @ts-expect-error legacy plans.run_config rows predate the ralph/target/workspace fields.
+        // @ts-expect-error legacy plans.run_config rows predate the run/target/workspace fields.
         runConfig: { version: 1 },
       };
       expect(resolver.hasCustomRunConfig(planShellOnly)).toBe(false);
@@ -2182,9 +2163,9 @@ describe('PlansResolver', () => {
         ...mockPlan,
         runConfig: {
           ...getDefaultPlanRunConfigStorage({ planId: mockPlan.id }),
-          ralph: {
-            ...getDefaultPlanRunConfigStorage({ planId: mockPlan.id }).ralph,
-            iterations: 42,
+          run: {
+            ...getDefaultPlanRunConfigStorage({ planId: mockPlan.id }).run,
+            maxRetries: 4,
           },
         },
       };
@@ -2201,7 +2182,7 @@ describe('PlansResolver', () => {
             {
               kind: 'prompt_profile',
               phase: 'before_run',
-              prompt: '/agents/ralph',
+              prompt: '/agents/plan-run',
               promptDelivery: 'named',
             },
           ],
@@ -2218,9 +2199,9 @@ describe('PlansResolver', () => {
       vi.mocked(repo.findOne).mockResolvedValue(mockPlan);
       const updatedConfig = {
         ...getDefaultPlanRunConfigStorage({ planId: mockPlan.id }),
-        ralph: {
-          ...getDefaultPlanRunConfigStorage({ planId: mockPlan.id }).ralph,
-          iterations: 42,
+        run: {
+          ...getDefaultPlanRunConfigStorage({ planId: mockPlan.id }).run,
+          maxRetries: 4,
         },
       };
       const configJson = JSON.stringify(updatedConfig);
@@ -2236,7 +2217,7 @@ describe('PlansResolver', () => {
       expect(repo.save).toHaveBeenCalledWith(
         expect.objectContaining({
           runConfig: expect.objectContaining({
-            ralph: expect.objectContaining({ iterations: 42 }),
+            run: expect.objectContaining({ maxRetries: 4 }),
           }),
         }),
       );
@@ -2286,9 +2267,9 @@ describe('PlansResolver', () => {
         ...mockPlan,
         runConfig: {
           ...getDefaultPlanRunConfigStorage({ planId: mockPlan.id }),
-          ralph: {
-            ...getDefaultPlanRunConfigStorage({ planId: mockPlan.id }).ralph,
-            iterations: 99,
+          run: {
+            ...getDefaultPlanRunConfigStorage({ planId: mockPlan.id }).run,
+            maxRetries: 3,
           },
         },
       };
@@ -2305,8 +2286,8 @@ describe('PlansResolver', () => {
       expect(repo.save).toHaveBeenCalledWith(
         expect.objectContaining({
           runConfig: expect.objectContaining({
-            ralph: expect.objectContaining({
-              iterations: 10,
+            run: expect.objectContaining({
+              driver: 'cursor',
             }),
           }),
         }),
@@ -2320,7 +2301,7 @@ describe('PlansResolver', () => {
           {
             kind: 'prompt_profile',
             phase: 'after_run',
-            prompt: '/agents/ralph',
+            prompt: '/agents/plan-run',
             promptDelivery: 'named',
           },
         ],
@@ -2464,7 +2445,7 @@ describe('PlansResolver', () => {
       });
     });
 
-    describe('IN_PROGRESS transition (openthrottle-ralph parity)', () => {
+    describe('IN_PROGRESS transition', () => {
       /**
        * @description Matches GraphQL clients that send only `id` + changed fields; `undefined`
        * means omitted so the resolver does not treat null clears as updates.
@@ -2754,7 +2735,7 @@ describe('PlansResolver', () => {
       expect(mockEnqueueEvaluation).toHaveBeenCalledWith(
         mockPlan.id,
         PLAN_RULES_TRIGGER_KINDS.MANUAL,
-        'ralph',
+        'headless',
       );
       expect(result).toEqual({
         enqueued: true,

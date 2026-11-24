@@ -1,9 +1,6 @@
 /**
  * @description Byte-identical parity tests: the `claude` / `cursor` drivers must emit exactly the
- * shell commands the legacy `buildClaudeShellCommand` / `buildCursorShellCommand` produced in
- * tools/workflows/src/bin/runIteration.ts. The expected strings are snapshots of the legacy output
- * (structure/flags/escaping are cross-checked against tools/workflows' run-iteration.test.ts
- * assertions); nothing is imported from tools/workflows here. `p $(x)` exercises `$` neutralization.
+ * shell commands below (structure, flags and escaping are asserted byte for byte). `p $(x)` exercises `$` neutralization.
  *
  * Cursor is the one deliberate divergence: it now also emits {@link CURSOR_MCP} to attach the
  * workspace's MCP servers headlessly (plan a08e7d24). Every cursor expectation below threads that

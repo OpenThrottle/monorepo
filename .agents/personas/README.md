@@ -1,6 +1,6 @@
 # Agent personas (`.agents/personas/`)
 
-**Personas** are lightweight **layer-1 prompt profiles** for agent runs: they steer tone, priorities, and review lens for a run. They do **not** replace repo rules, skills, backend selection, or the OpenThrottle plan/task workflow.
+**Personas** are lightweight **prompt profiles** for agent work: they steer tone, priorities, and review lens. They do **not** replace repo rules, skills, driver selection, or the OpenThrottle plan/task workflow.
 
 ## The personas
 
@@ -16,53 +16,25 @@ Each file's frontmatter `description` carries the full **USE WHEN** triggers.
 
 ## Who reads them today
 
-- **The Ralph runner** — `workflow-ralph --prompt-file .agents/personas/<id>.md` (below). Ralph is slated for retirement in favour of OT Loop.
 - **You, by hand** — attach the file in Claude Code or Cursor (`@.agents/personas/architect.md`) for a review pass.
 - **The OT database** — `pnpm run database:import-agent-assets` copies each persona into `custom_prompts` (this README and `_template.md` are skipped). That is an index for search, not a runtime input.
 
 **OT Loop does not read personas.** Neither `skills/ot-loop/SKILL.md` nor the headless job (`packages/openthrottle-agentic-loop`, [design](../../docs/workflows/ot-loop-job.md)) takes a persona or prompt file. The likely future consumer is the per-task critic panel in OT plan `012fa4b0` (correctness / conventions / taste / security lenses); until that lands, do not document persona wiring for OT Loop.
 
-## Personas vs skills vs Ralph
+## Personas vs skills
 
-| Concern    | Personas (this folder)                                            | Skills (`skills/` → `.agents/skills/`)            | Default Ralph (`/agents-ralph`)                                   |
-| ---------- | ----------------------------------------------------------------- | ------------------------------------------------- | ----------------------------------------------------------------- |
-| Purpose    | Domain lens (architect, QA, legal, …)                             | Task-specific procedures and tool routing         | Full OT plan loop: create tasks, one-at-a-time execution, commits |
-| Scope      | Tone, priorities, output shape                                    | Step-by-step workflows, MCP/tool choice           | End-to-end agentic loop                                           |
-| Invocation | `--prompt-file` (see below)                                       | Cursor skill attach or discovery in developer app | `--prompt /agents-ralph` (default)                                |
-| Authority  | Steers _how_ to think; `AGENTS.md` § Code style wins on conflicts | Instructs _what_ to do for a workflow             | Owns OT status, task picking, `<ralph:task-complete>` signals     |
+| Concern    | Personas (this folder)                                            | Skills (`skills/` → `.agents/skills/`)            |
+| ---------- | ----------------------------------------------------------------- | ------------------------------------------------- |
+| Purpose    | Domain lens (architect, QA, legal, …)                             | Task-specific procedures and tool routing         |
+| Scope      | Tone, priorities, output shape                                    | Step-by-step workflows, MCP/tool choice           |
+| Invocation | Attached by hand                                                  | Cursor skill attach or discovery in developer app |
+| Authority  | Steers _how_ to think; `AGENTS.md` § Code style wins on conflicts | Instructs _what_ to do for a workflow             |
 
-**Layer model**:
-
-1. **Prompt (layer 1)** — Persona or Ralph skill file (`--prompt` / `--prompt-file`).
-2. **Execution backend (layer 2)** — `cursor` or `claude` (`--backend`); unchanged by personas.
-3. **Run tuning (layer 3)** — Iterations, timeouts, model, worktree (`--iterations`, env, `.workflow-ralph.json`).
-
-Personas sit in layer 1 only. Pair a persona with the default Ralph loop by using a **persona file for a review pass** or by composing manually (attach persona context in Cursor, then run Ralph for execution). For automated queue runs, point `--prompt-file` at a persona when you want that lens for the whole iteration; use `/agents-ralph` when you need the full OT task loop.
+To run a plan end to end use `/ot-loop <planId>`; it owns OT status, task picking and commits. Pair a persona with it by using the persona file for a review pass or by attaching the persona context before you start the loop.
 
 ## How to invoke a persona
 
-### Ralph CLI (`workflow-ralph`)
-
-From the monorepo root:
-
-```bash
-pnpm exec workflow-ralph --plan <plan-uuid> \
-  --prompt-file .agents/personas/architect.md \
-  --prompt-file skills/agents-ralph/SKILL.md \
-  --prompt-file .agents/skills/shadcn/SKILL.md
-```
-
-- **`--prompt-file`** — UTF-8 path (relative to cwd or absolute). Repeat the flag to compose persona + skills; YAML frontmatter is stripped from each file before concatenation (same as skills).
-- Mutually exclusive with **`--prompt`** (named profile) and **`--prompt-stdin`**.
-- Env: `WORKFLOW_RALPH_PROMPT_FILE=.agents/personas/qa.md`
-- Defaults file: `"promptFile": ".agents/personas/product.md"` in `.workflow-ralph.json`
-
-Precedence: **CLI → env → `.workflow-ralph.json` → built-ins**. See [tools/workflows/README.md](../../tools/workflows/README.md).
-
-### Claude Code or Cursor (interactive)
-
-1. Open or attach the persona file (e.g. `@.agents/personas/architect.md`) for a chat or review.
-2. For Ralph-driven OT work, keep **`/agents-ralph`** (or `skills/agents-ralph/SKILL.md` via `--prompt-file`) as the execution prompt unless you intentionally substitute a persona-only profile.
+Open or attach the persona file (e.g. `@.agents/personas/architect.md`) in Claude Code or Cursor for a chat or review. For OT plan work, keep `/ot-loop` as the execution prompt unless you intentionally substitute a persona-only profile.
 
 Do **not** duplicate persona bodies into code or shadow copies elsewhere; this folder is canonical.
 
@@ -94,6 +66,5 @@ Copy [`_template.md`](./_template.md) when adding a persona. Fill every section;
 
 ## Related docs
 
-- [Ralph design](../../docs/workflows/ralph-design.md) — OT-injected plan context
-- [`skills/agents-ralph/SKILL.md`](../../skills/agents-ralph/SKILL.md) — default Ralph loop
-- [`tools/workflows/README.md`](../../tools/workflows/README.md) — Ralph CLI and queue summary
+- [`skills/ot-loop/SKILL.md`](../../skills/ot-loop/SKILL.md) — the plan loop
+- [OT Loop job](../../docs/workflows/ot-loop-job.md) — the headless implementation

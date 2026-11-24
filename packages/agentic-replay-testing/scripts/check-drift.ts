@@ -1,6 +1,5 @@
 /**
- * Re-record every scenario (except `synthetic` plan-run scenarios, recorded
- * against a stand-in CLI) against the locally installed CLIs and compare each
+ * Re-record every scenario against the locally installed CLIs and compare each
  * fresh transcript with its committed one (see `compareTranscripts`). Prints a
  * Markdown report and exits 1 when any committed transcript has drifted or can
  * no longer be recorded.
@@ -29,20 +28,12 @@ import type { DriftFinding, RecordingProfile } from '../src/index.ts';
 import {
   compareTranscripts,
   parseTranscript,
-  PLAN_RUN_SCENARIOS,
   RECORDING_PROFILES,
-  recordPlanRunScenario,
   recordScenario,
   SCENARIOS,
 } from '../src/index.ts';
 
 const FIXTURES_DIR = join(import.meta.dirname, '..', 'fixtures');
-
-const SYNTHETIC_SLUGS: ReadonlySet<string> = new Set(
-  PLAN_RUN_SCENARIOS.filter((scenario) => scenario.synthetic !== null).map(
-    (scenario) => scenario.slug,
-  ),
-);
 
 interface StemReport {
   readonly backend: string;
@@ -103,33 +94,13 @@ async function recordAll(
       failures.set(scenario.slug, result.error);
     }
   }
-  for (const scenario of PLAN_RUN_SCENARIOS) {
-    if (scenario.synthetic !== null) {
-      continue;
-    }
-    // eslint-disable-next-line no-await-in-loop -- recordings share one login and rate limit per CLI
-    const result = await recordPlanRunScenario({
-      model,
-      outDir,
-      profile,
-      realBin,
-      scenario,
-    });
-    if (!result.ok) {
-      failures.set(scenario.slug, result.error);
-    }
-  }
 
   return failures;
 }
 
 async function checkBackend(profile: RecordingProfile): Promise<BackendReport> {
   const committedDir = join(FIXTURES_DIR, profile.backend);
-  // A synthetic transcript came from a stand-in CLI: the real one has nothing
-  // to drift from it, so it is neither re-recorded nor compared.
-  const committed = listStems(committedDir).filter(
-    (stem) => !SYNTHETIC_SLUGS.has(stem),
-  );
+  const committed = listStems(committedDir);
   const realBin = resolveBin(profile.defaultBin);
   const base = {
     backend: profile.backend,

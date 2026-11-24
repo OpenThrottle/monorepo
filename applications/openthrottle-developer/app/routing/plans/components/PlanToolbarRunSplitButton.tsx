@@ -43,8 +43,8 @@ export interface PlanToolbarRunSplitButtonProps {
   /** @description Opens the Run dialog on the given tab; the dialog lives outside this control. */
   readonly onOpenDialog: (mode: PlanRunDialogMode) => void;
   readonly planStatus?: string;
-  readonly ralphTuningJson: string;
   readonly repositoryId?: string;
+  readonly runTuningJson: string;
   /** @description Tasks a whole-plan run would pick up; 0 disables Run and Schedule (the server refuses both). `undefined` = unknown, not gated. */
   readonly runnableTaskCount?: number;
   /** @description The soonest SCHEDULED run's fire time; non-null makes Run ask to unschedule first. */
@@ -75,8 +75,8 @@ export const PlanToolbarRunSplitButton = (
     onOpenCancelScheduled,
     onOpenDialog,
     planStatus,
-    ralphTuningJson,
     repositoryId,
+    runTuningJson,
     runnableTaskCount,
     scheduledRunAt,
     scheduledRunId,
@@ -90,8 +90,8 @@ export const PlanToolbarRunSplitButton = (
     branch,
     checkoutId,
     jobRunHooksJson,
-    ralphTuningJson,
     repositoryId,
+    runTuningJson,
     workingDirectory,
   });
   const runNowConfirm = usePlanRunNowConfirm({

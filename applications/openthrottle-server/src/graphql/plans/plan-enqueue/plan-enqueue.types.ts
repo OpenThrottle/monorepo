@@ -1,11 +1,11 @@
-import type { PlanRunExecutionBackend } from '@openthrottle/nestjs-repositories-server';
+import type { PlanRunDriver } from '@openthrottle/nestjs-repositories-server';
 
 import type { ScheduledPlanRunFireDecision } from '../../../queues/plans/scheduled-plan-run/scheduled-plan-run.types.ts';
 import type { PLAN_SCHEDULE_CONFLICT_CODE } from './plan-enqueue.constants.ts';
 
 /** @description Result of an enqueue: the persisted backend, job id, and live queue position. */
 export interface EnqueueOutcome {
-  readonly executionBackend: PlanRunExecutionBackend;
+  readonly driver: PlanRunDriver;
   readonly jobId: string;
   readonly planId: string;
   readonly queuePosition: number;
@@ -14,7 +14,7 @@ export interface EnqueueOutcome {
 
 /** @description Result of scheduling a run: the SCHEDULED row, its delayed job, and the instant it fires. */
 export interface ScheduleOutcome {
-  readonly executionBackend: PlanRunExecutionBackend;
+  readonly driver: PlanRunDriver;
   readonly jobId: string;
   readonly planId: string;
   readonly planRunId: string;

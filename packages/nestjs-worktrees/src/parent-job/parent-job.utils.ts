@@ -1,5 +1,5 @@
 /**
- * Parent job: acquire a worktree target and create a branch for the child (Ralph) job.
+ * Parent job: acquire a worktree target and create a branch for the child (plan-run) job.
  * After child completes, ensure the working tree is committed/clean before release.
  *
  * Note: ensureCommit is commit/clean-only. The lint/typecheck/test enforcement it used to run
@@ -33,7 +33,7 @@ const MAX_SLUG_LENGTH = 50;
  * - Replaces spaces and special characters with hyphens
  * - Removes consecutive hyphens
  * - Trims hyphens from start/end
- * - Truncates to max 50 characters (leaving room for ralph/ prefix and uniqueness suffix)
+ * - Truncates to max 50 characters (leaving room for plan-run/ prefix and uniqueness suffix)
  */
 function slugifyForBranch(title: string): string {
   if (!title || title.trim().length === 0) {
@@ -54,8 +54,8 @@ const UNIQUENESS_SUFFIX_LENGTH = 6;
 
 /**
  * @description Derives a unique branch name. When planTitle is provided, uses
- * `ralph/{slugified-title}-{suffix}` format (e.g., `ralph/human-readable-branch-names-a1b2c3`).
- * Falls back to `ralph/{lockedBy-slug}-{timestamp}` when no title is provided.
+ * `plan-run/{slugified-title}-{suffix}` format (e.g., `plan-run/human-readable-branch-names-a1b2c3`).
+ * Falls back to `plan-run/{lockedBy-slug}-{timestamp}` when no title is provided.
  */
 export function deriveBranchName(lockedBy: string, planTitle?: string): string {
   if (planTitle) {
@@ -64,13 +64,13 @@ export function deriveBranchName(lockedBy: string, planTitle?: string): string {
     if (slug.length > 0) {
       const suffix = Date.now().toString(36).slice(-UNIQUENESS_SUFFIX_LENGTH);
 
-      return `ralph/${slug}-${suffix}`;
+      return `plan-run/${slug}-${suffix}`;
     }
   }
 
   const slug = lockedBy.replace(/[^a-zA-Z0-9_-]/g, '-').slice(0, 12);
 
-  return `ralph/${slug}-${Date.now()}`;
+  return `plan-run/${slug}-${Date.now()}`;
 }
 
 /**
@@ -227,7 +227,7 @@ export function isWorktreeClean(worktreePath: string): boolean {
  * having work to push") in two distinct non-zero-exit cases, so a caller using it
  * to gate a push never *suppresses* a push that might be needed:
  *
- *   1. No upstream configured. A fresh `ralph/*` branch created in the worktree has
+ *   1. No upstream configured. A fresh `plan-run/*` branch created in the worktree has
  *      no `@{upstream}`, so `rev-list @{upstream}..HEAD` exits non-zero with a
  *      "no upstream configured" message. This is the normal first-push case and is
  *      genuinely "has work" — the branch's commits exist only locally. The caller

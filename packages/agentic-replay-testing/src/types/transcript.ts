@@ -39,13 +39,12 @@ export const TRANSCRIPT_CHANNELS = {
 
 /**
  * Which production seam drove the recording: a chat turn through a
- * conversation backend, or a plan-run iteration through a driver.
+ * conversation backend.
  *
  * @public
  */
 export const TRANSCRIPT_SURFACES = {
   conversation: 'conversation',
-  planRun: 'plan-run',
 } as const;
 
 /** @public */

@@ -20,7 +20,7 @@ OpenThrottle drives six agent CLIs (`antigravity`, `claude`, `codex`, `cursor`, 
 driver or model made a run better or worse. Two gaps are visible in the code:
 
 - **Run transcripts are thrown away.** Plan runs spawn agents through `runDriverAsync`
-  (`tools/workflows/src/bin/runIteration.ts`, plus the scheduled-agent runner). Only
+  (the OT Loop job, plus the scheduled-agent runner). Only
   `drivers/claude.ts` implements `AgentDriver.parseOutput`, and it keeps only the final text and the
   usage-limit signal. The other five drivers run in plain-text mode. Nothing records tool calls,
   tokens, cost, duration and exit status together, and `agent_token_usage` has no `plan_run_id`.
@@ -188,11 +188,10 @@ covered by the existing backups.
   as an escaped string inside the body. The 4 MiB storage cap stays on the server as a backstop. If
   real trajectories are often trimmed, raise the body limit for this mutation rather than the cap.
 - **As built (task 4, 2026-11-06):**
-  - **Capture path.** Every spawned iteration goes through `runIterationAsync` in
-    `tools/workflows`, both from the server's orchestrator and from a detached `workflow-ralph`.
-    It runs the agent through `withStructuredOutput` and gets the raw stdout from the engine's new
-    `onRawOutput` hook, then builds the record (`buildTrajectoryRecord`). It hands the record to an
-    `onTrajectory` callback that sends `recordAgentTrajectory`.
+  - **Capture path.** The record builder (`buildTrajectoryRecord`, in
+    `@openthrottle/openthrottle-agentic-utils`) turns the agent's raw stdout into an ATIF
+    record, and the capture client hands it to `recordAgentTrajectory`. The OT Loop job's worker runs
+    do not call it today; evals and the hook adapters do.
   - **What's covered.** Only runs with a `plan_runs` row record anything. Interactive TTY runs
     use the sync path and stay in text mode, and scheduled agent jobs, which have no plan run, are
     out of scope.

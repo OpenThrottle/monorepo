@@ -21,7 +21,7 @@ export const USAGE_DAILY_STATS_SERIES: readonly UsageDailyStatsSeries[] = [
     seriesKey: `plansCompleted`,
   },
   {
-    description: `New plan records created in OpenThrottle for that day (Ralph, portal, or API), per daily aggregation.`,
+    description: `New plan records created in OpenThrottle for that day (agent runs, portal, or API), per daily aggregation.`,
     label: `Plans created`,
     seriesKey: `plansCreated`,
   },

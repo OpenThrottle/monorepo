@@ -8,8 +8,7 @@ export interface OpenThrottleClipboardProps {
 }
 
 /**
- * @description Renders a button that copies the Ralph workflow command
- * for this plan to the clipboard.
+ * @description Renders a button that copies the given text to the clipboard.
  */
 export const OpenThrottleClipboard = (
   props: OpenThrottleClipboardProps,
@@ -20,8 +19,6 @@ export const OpenThrottleClipboard = (
   const [copied, setCopied] = React.useState(false);
 
   // Setup
-  // const RALPH_CMD_PREFIX = 'pnpm exec workflow-ralph --plan ';
-  // const command = `${RALPH_CMD_PREFIX}${planId}`;
 
   // Handlers
   const onClick = (): void => {

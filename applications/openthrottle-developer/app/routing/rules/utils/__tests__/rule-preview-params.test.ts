@@ -12,7 +12,7 @@ const request: RulePreviewRequest = {
   evaluateEnvironment: 'ci',
   match: {
     actionType: 'inject-task',
-    environment: 'ralph',
+    environment: 'headless',
     projectId: 'proj-1',
     repositoryId: 'repo-1',
     status: 'PENDING',

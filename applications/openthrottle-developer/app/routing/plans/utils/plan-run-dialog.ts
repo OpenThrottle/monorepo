@@ -1,6 +1,6 @@
 /**
  * @description Pure helpers behind the Run dialog ({@link PlanRunDialog}): the draft
- * it opens with, the named reason a submit is blocked, the iterations field, and the
+ * it opens with, the named reason a submit is blocked, and the
  * hidden form fields the plan detail action reads. Gating reuses the toolbar's
  * copy and status predicates so the dialog and the toolbar's Run button agree on
  * when and why a run cannot start.
@@ -22,7 +22,7 @@ import { reconcilePlanRunEffort } from '~/routing/plans/utils/plan-run-model-eff
 import {
   formatOtLoopCommandsText,
   parseOtLoopCommandsText,
-  resolvePlanRunRunner,
+  PLAN_RUN_OT_LOOP_SETTINGS_FIELD,
 } from '~/routing/plans/utils/plan-run-ot-loop';
 import {
   composeScheduleInstant,
@@ -58,20 +58,8 @@ export const getPlanConfigurationTabHref = (): string => {
 };
 
 /**
- * @description The plan's configured iterations, read from `runConfigJson` (the default
- * when it is missing or unreadable).
- */
-export const getPlanConfiguredIterations = (
-  planId: string,
-  runConfigJson: string | null | undefined,
-): number => {
-  return hydratePlanRunConfigUiState(planId, runConfigJson).workflowInput
-    .iterations;
-};
-
-/**
  * @description The draft a freshly opened dialog starts from: the plan's saved
- * backend / model / effort and its configured iterations, with the Schedule tab seeded
+ * driver / model / effort and OT Loop settings, with the Schedule tab seeded
  * to the plan's current scheduled time when it has one (Reschedule…), else to the next
  * sensible hour. Nothing from an earlier open survives.
  */
@@ -87,7 +75,7 @@ export const createPlanRunDialogDraft = (input: {
   const { defaultAgent, mode, now, planId, runConfigJson, scheduledRunAt } =
     input;
   const hydrated = hydratePlanRunConfigUiState(planId, runConfigJson);
-  const { otLoop, runner } = hydrated;
+  const { otLoop } = hydrated;
   const workflowInput = seedPlanRunAgent(hydrated.workflowInput, defaultAgent);
   const scheduledInstant =
     scheduledRunAt == null ? undefined : new Date(scheduledRunAt);
@@ -98,37 +86,16 @@ export const createPlanRunDialogDraft = (input: {
     : getDefaultScheduleInstant(now);
 
   return {
-    backend: workflowInput.executionBackend,
-    effort: reconcilePlanRunEffort(
-      workflowInput.executionBackend,
-      workflowInput.effort,
-    ),
-    iterationsText: String(workflowInput.iterations),
+    driver: workflowInput.driver,
+    effort: reconcilePlanRunEffort(workflowInput.driver, workflowInput.effort),
     mode,
     model: workflowInput.model,
     otLoopMaxRetriesText:
       otLoop?.maxRetries === undefined ? '' : String(otLoop.maxRetries),
     otLoopValidationText: formatOtLoopCommandsText(otLoop?.validationCommands),
-    runner: resolvePlanRunRunner(runner),
     scheduleDate: defaultInstant,
     scheduleTime: formatScheduleTime(defaultInstant),
   };
-};
-
-/**
- * @description The positive whole number in the iterations field, `undefined` when it is
- * blank (the plan's configured value applies) and `null` when it is not a valid count.
- */
-export const parsePlanRunDialogIterations = (
-  text: string,
-): number | null | undefined => {
-  const trimmed = text.trim();
-
-  if (trimmed === '') {
-    return undefined;
-  }
-
-  return /^\d+$/.test(trimmed) && Number(trimmed) >= 1 ? Number(trimmed) : null;
 };
 
 export interface PlanRunDialogGatingInput {
@@ -173,8 +140,7 @@ export const getPlanRunDialogBlockedReason = (
 
   if (workflowRunBlocked) {
     return (
-      workflowRunBlockedReason ??
-      'Fix workflow run options in Configuration (aligned with workflow-ralph argv).'
+      workflowRunBlockedReason ?? PLAN_TOOLBAR_COPY.workflowRunBlockedFallback
     );
   }
 
@@ -189,20 +155,18 @@ export interface PlanRunDialogFieldsInput {
   readonly branch: string;
   readonly checkoutId: string;
   readonly draft: PlanRunDialogDraft;
-  readonly iterations: number | null | undefined;
   readonly jobRunHooksJson: string;
-  readonly ralphTuningJson: string;
   readonly repositoryId: string;
+  readonly runTuningJson: string;
   readonly scheduledFor: Date | undefined;
   readonly workingDirectory: string;
 }
 
 /**
  * @description The hidden form fields the plan detail action reads, keys in alphabetical
- * order. Blank values are left out, as the toolbar's one-click Run form does. `backend` +
- * `model` always travel together; `effort` is omitted when unset; `iterations` is only the
- * per-run override and Ralph-only (dropped for OT Loop); the `otLoop*` fields travel only for
- * OT Loop, and `runner` always travels; `scheduledFor` (an ISO instant) exists on the Schedule tab alone.
+ * order. Blank values are left out, as the toolbar's one-click Run form does. `driver` +
+ * `model` always travel together; `effort` is omitted when unset; the OT Loop fields and the
+ * runner id always travel; `scheduledFor` (an ISO instant) exists on the Schedule tab alone.
  */
 export const buildPlanRunDialogFields = (
   input: PlanRunDialogFieldsInput,
@@ -211,36 +175,28 @@ export const buildPlanRunDialogFields = (
     branch,
     checkoutId,
     draft,
-    iterations,
     jobRunHooksJson,
-    ralphTuningJson,
     repositoryId,
+    runTuningJson,
     scheduledFor,
     workingDirectory,
   } = input;
-  const isOtLoop = draft.runner === 'ot-loop';
   const entries: readonly (readonly [string, string | undefined])[] = [
-    ['backend', draft.backend],
+    ['driver', draft.driver],
     ['branch', branch],
     ['checkoutId', checkoutId],
     ['effort', draft.effort],
     ['intent', draft.mode === 'schedule' ? 'schedulePlanRun' : 'runPlan'],
-    [
-      'iterations',
-      iterations == null || isOtLoop ? undefined : String(iterations),
-    ],
     ['jobRunHooksJson', jobRunHooksJson],
     ['model', draft.model],
-    ['otLoopMaxRetries', isOtLoop ? draft.otLoopMaxRetriesText : undefined],
+    ['otLoopMaxRetries', draft.otLoopMaxRetriesText],
+    [PLAN_RUN_OT_LOOP_SETTINGS_FIELD, 'true'],
     [
       'otLoopValidationCommands',
-      isOtLoop
-        ? parseOtLoopCommandsText(draft.otLoopValidationText).join('\n')
-        : undefined,
+      parseOtLoopCommandsText(draft.otLoopValidationText).join('\n'),
     ],
-    ['ralphTuning', ralphTuningJson],
     ['repositoryId', repositoryId],
-    ['runner', draft.runner],
+    ['runTuning', runTuningJson],
     [
       'scheduledFor',
       draft.mode === 'schedule' ? scheduledFor?.toISOString() : undefined,

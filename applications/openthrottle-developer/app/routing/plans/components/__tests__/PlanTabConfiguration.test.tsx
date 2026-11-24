@@ -8,10 +8,9 @@ import { beforeEach, describe, expect, test } from 'vitest';
 
 import {
   resetWorkflowRunToDefaultsAtom,
-  workflowRalphRunOptionsAtom,
-  workflowRunnerAtom,
+  workflowRunOptionsAtom,
 } from '~/routing/plans/data/data.atom-plan';
-import { PLAN_RUN_RUNNER_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_RUN_OT_LOOP_COPY } from '~/routing/plans/data/data.copy';
 import { MOCK_PLAN_RUN_MODELS } from '~/routing/plans/data/mock.plan-run-models';
 
 import type { PlanTabConfigurationProps } from '../PlanTabConfiguration';
@@ -37,19 +36,17 @@ describe('PlanTabConfiguration Component', () => {
     getDefaultStore().set(resetWorkflowRunToDefaultsAtom, undefined);
   });
 
-  test('renders workflow command preview from the run-config atoms', async () => {
+  test('renders the configuration header bar without a CLI preview', async () => {
     const props: PlanTabConfigurationProps = {
       models: Promise.resolve([]),
       onSaveJobRunHooks: () => undefined,
       repositories: Promise.resolve([]),
     };
-    const { findByTestId, getByTestId } = renderTab(props);
+    const { findByTestId, queryByTestId } = renderTab(props);
 
     // The whole tab body sits behind the deferred repositories boundary.
-    expect(await findByTestId('PlanWorkflowCommand')).toBeInTheDocument();
-    expect(getByTestId('workflow-run-cli-preview')).toHaveTextContent(
-      'pnpm exec workflow-ralph',
-    );
+    expect(await findByTestId('PlanWorkflowConfigActions')).toBeInTheDocument();
+    expect(queryByTestId('workflow-run-cli-preview')).not.toBeInTheDocument();
   });
 
   test('renders the skeleton while workspace repositories are pending', () => {
@@ -61,10 +58,10 @@ describe('PlanTabConfiguration Component', () => {
     const { getByTestId, queryByTestId } = renderTab(props);
 
     expect(getByTestId('PlanConfigurationTabSkeleton')).toBeInTheDocument();
-    expect(queryByTestId('PlanWorkflowCommand')).not.toBeInTheDocument();
+    expect(queryByTestId('PlanWorkflowConfigActions')).not.toBeInTheDocument();
   });
 
-  test('renders the model picker and writes model and backend to the run-config atom', async () => {
+  test('renders the model picker and writes model and driver to the run-config atom', async () => {
     const user = userEvent.setup();
     const props: PlanTabConfigurationProps = {
       models: Promise.resolve(MOCK_PLAN_RUN_MODELS),
@@ -79,8 +76,8 @@ describe('PlanTabConfiguration Component', () => {
       component.getByTestId('ChatModelPicker-option-claude-claude|opus'),
     );
 
-    expect(getDefaultStore().get(workflowRalphRunOptionsAtom)).toMatchObject({
-      executionBackend: 'claude',
+    expect(getDefaultStore().get(workflowRunOptionsAtom)).toMatchObject({
+      driver: 'claude',
       model: 'opus',
     });
     // Effort becomes a real control once the runner has a reasoning knob.
@@ -102,8 +99,7 @@ describe('PlanTabConfiguration Component', () => {
     ).toBeInTheDocument();
   });
 
-  test('selecting OT Loop hides the Ralph prompt and iterations; Ralph shows them again', async () => {
-    const user = userEvent.setup();
+  test('has no runner choice, prompt or iteration fields, and always shows the OT Loop fields', async () => {
     const props: PlanTabConfigurationProps = {
       models: Promise.resolve([]),
       onSaveJobRunHooks: () => undefined,
@@ -111,19 +107,9 @@ describe('PlanTabConfiguration Component', () => {
     };
     const component = renderTab(props);
 
-    await component.findByTestId('PlanWorkflowConfigRunner');
-    expect(
-      component.getByTestId('PlanWorkflowConfigPrompt'),
-    ).toBeInTheDocument();
-    expect(
-      component.getByRole('spinbutton', { name: /Iteration count/ }),
-    ).toBeInTheDocument();
+    await component.findByTestId('PlanWorkflowConfigValidation');
 
-    await user.click(
-      component.getByRole('radio', { name: PLAN_RUN_RUNNER_COPY.otLoopLabel }),
-    );
-
-    expect(getDefaultStore().get(workflowRunnerAtom)).toBe('ot-loop');
+    expect(component.queryByRole('radio')).not.toBeInTheDocument();
     expect(
       component.queryByTestId('PlanWorkflowConfigPrompt'),
     ).not.toBeInTheDocument();
@@ -132,16 +118,8 @@ describe('PlanTabConfiguration Component', () => {
     ).not.toBeInTheDocument();
     expect(
       component.getByRole('textbox', {
-        name: PLAN_RUN_RUNNER_COPY.validationLabel,
+        name: PLAN_RUN_OT_LOOP_COPY.validationLabel,
       }),
-    ).toBeInTheDocument();
-
-    await user.click(
-      component.getByRole('radio', { name: PLAN_RUN_RUNNER_COPY.ralphLabel }),
-    );
-
-    expect(
-      component.getByTestId('PlanWorkflowConfigPrompt'),
     ).toBeInTheDocument();
   });
 });

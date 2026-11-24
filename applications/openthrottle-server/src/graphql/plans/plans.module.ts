@@ -1,5 +1,5 @@
 /**
- * @description GraphQL module that registers PlansResolver and PlansLoaders (request-scoped DataLoaders) and imports the table modules its services and GqlPermissionsGuard read, PlansQueueProducerModule for enqueuePlanRun, and QueuesGraphqlModule for enqueuePlanRalphOrchestrator.
+ * @description GraphQL module that registers PlansResolver and PlansLoaders (request-scoped DataLoaders) and imports the table modules its services and GqlPermissionsGuard read, PlansQueueProducerModule for enqueuePlanRun, and QueuesGraphqlModule for the queue service enqueue.
  */
 
 import { Module } from '@nestjs/common';

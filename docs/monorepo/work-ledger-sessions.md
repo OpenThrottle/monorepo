@@ -96,9 +96,9 @@ Two ideas underpin all of them.
 
 Historical, and complete: it is cited only by `databases/openthrottle/migrations/075_drop_commit_links.sql`. Before the ledger, git provenance lived in a `commit_links` table. Rather than keep two schemas alive side by side, the cutover happened in one plan: existing rows were backfilled into `git_commit` artifacts (migration 069), writers dual-wrote only until every reader had moved to the ledger, and then the table was dropped (075, which asserts parity before dropping). The ledger is now the only home for commit provenance.
 
-### G5 — Ralph worker sessions are actored to the real principal
+### G5 — Plan-run worker sessions are actored to the real principal
 
-The Ralph plan worker is server-side code, so `WorkLedgerRunService` opens and closes its run session directly through the repositories rather than calling GraphQL on itself. The session's actor is the worker's **own** service-account principal, resolved from the same bearer token the orchestrator uses for its status mutations (falling back to the seeded `workflow-ralph` account by name only when no token resolves). Two things follow:
+The plan-run worker is server-side code, so `WorkLedgerRunService` opens and closes its run session directly through the repositories rather than calling GraphQL on itself. The session's actor is the worker's **own** service-account principal, resolved from the same bearer token the orchestrator uses for its status mutations (falling back to the seeded `plan-runner` account by name only when no token resolves). Two things follow:
 
 - `on_behalf_of_user_id` is inherited from `plan_runs.actor_user_id`, which the server stamped from an authenticated principal at enqueue time, so it is saved with `on_behalf_of_verified = TRUE`. This is the one path where the human behind machine work is a verified fact rather than a hint.
 - Because the session actor equals the principal the server sees on the orchestrator's mutations, the ambient-session check in G11 passes, and those status changes attach to the run session instead of each opening an instant one.

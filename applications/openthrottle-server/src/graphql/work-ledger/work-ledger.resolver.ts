@@ -132,7 +132,7 @@ export class WorkLedgerResolver {
       // v1: on_behalf_of via this mutation is always an unverified hint
       // (verified inheritance is a server-stamped fact — see the actor model in
       // docs/monorepo/work-ledger-sessions.md).
-      // Ralph's verified inheritance is stamped on its own write path (slice 4).
+      // A plan run's verified inheritance is stamped on its own write path (slice 4).
       onBehalfOfVerified: false,
       planRunId: input.planRunId,
       // started_at is NOT NULL DEFAULT NOW() in the DB, but a DB default is not read back by

@@ -1,5 +1,5 @@
 /**
- * @description Run-config / workflow-ralph save actions for the plan detail route:
+ * @description Run-config save actions for the plan detail route:
  * the two save fetchers (with pending flags + success/error toasts), reset-to-defaults,
  * and the expand/collapse handler. All form STATE lives in the route-scoped Jotai
  * atoms (`app/routing/plans/data/data.atom-plan.ts`); this hook reads the derived

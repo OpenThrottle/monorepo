@@ -71,8 +71,8 @@ describe('resolveTimelineWindow', () => {
 
 describe('parseTimelineGrouping', () => {
   it('reads a valid grouping', () => {
-    expect(parseTimelineGrouping(params('grouping=BY_BACKEND'))).toBe(
-      TimelineLaneGrouping.ByBackend,
+    expect(parseTimelineGrouping(params('grouping=BY_DRIVER'))).toBe(
+      TimelineLaneGrouping.ByDriver,
     );
   });
 

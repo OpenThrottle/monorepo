@@ -16,12 +16,12 @@ export type PlanRunKind = 'orchestrator' | 'spawn';
 
 /**
  * @description Supported agent-CLI backends for a plan run. Kept in lockstep with the
- * `openthrottle-drivers` `DRIVER_IDS` set and the `plan_runs_execution_backend_check`
+ * `openthrottle-drivers` `DRIVER_IDS` set and the `plan_runs_driver_check`
  * constraint (see databases/openthrottle/migrations/156). Declared as a standalone union so the
  * repositories layer stays decoupled from the CLI-invocation package.
  * @public
  */
-export type PlanRunExecutionBackend =
+export type PlanRunDriver =
   'antigravity' | 'claude' | 'codex' | 'cursor' | 'grok' | 'opencode';
 
 /** @public */
@@ -37,7 +37,7 @@ export type PlanRunData = Pick<
   | 'bullmqJobId'
   | 'cancelRequestedAt'
   | 'createdAt'
-  | 'executionBackend'
+  | 'driver'
   | 'heartbeatExpected'
   | 'hostname'
   | 'id'
@@ -84,8 +84,8 @@ export interface RecordQueuedPlanRunInput {
   readonly bullmqJobId: string;
   /** Worktree/checkout the run runs in (repository_checkouts.id); the durable on-disk home for deep-links. */
   readonly checkoutId?: string | null;
-  readonly executionBackend: PlanRunExecutionBackend;
-  /** Resolved agent model id (queryable projection of run_config_snapshot.ralph.model). */
+  readonly driver: PlanRunDriver;
+  /** Resolved agent model id (queryable projection of run_config_snapshot.run.model). */
   readonly model?: string | null;
   readonly planId: string;
   readonly queueName: string;
@@ -112,7 +112,7 @@ export interface UsageLimitSettleInput {
 }
 
 /**
- * @description Input for a detached workflow-ralph CLI run row. The CLI carries no BullMQ job
+ * @description Input for a detached plan run row. The run carries no BullMQ job
  * and drives its own iteration loop, so the row is inserted with a null bullmqJobId and runKind
  * 'orchestrator'.
  * @public
@@ -125,10 +125,10 @@ export interface RegisterCliPlanRunInput {
    * strings are stored verbatim (no trim/reject — enqueue remains the REQUIRED boundary).
    */
   readonly branch?: string | null;
-  readonly executionBackend: PlanRunExecutionBackend;
+  readonly driver: PlanRunDriver;
   /**
    * Whether this run's owner bumps its heartbeat on a timer. Defaults to true so
-   * the detached workflow-ralph CLI (which does, on a ~15s timer) is untouched;
+   * a detached run that does bump it (on a ~15s timer) is untouched;
    * an owner with no timer — an interactive /ot-loop agent turn — passes false to
    * opt out of every heartbeat-based liveness judgement (migration 110).
    */

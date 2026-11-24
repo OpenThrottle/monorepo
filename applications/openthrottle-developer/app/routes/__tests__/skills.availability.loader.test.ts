@@ -84,7 +84,7 @@ describe('routes/skills.availability loader', () => {
                 posture: 'deny',
                 rules: [
                   {
-                    environment: 'ralph',
+                    environment: 'headless',
                     id: 'rule-1',
                     slugAllow: ['git-commit'],
                     slugDeny: [],
@@ -114,7 +114,7 @@ describe('routes/skills.availability loader', () => {
     expect(result.posture).toBe('deny');
     expect(result.rules).toHaveLength(1);
     expect(result.rules[0]).toMatchObject({
-      environment: 'ralph',
+      environment: 'headless',
       id: 'rule-1',
       tagAllow: ['github'],
     });

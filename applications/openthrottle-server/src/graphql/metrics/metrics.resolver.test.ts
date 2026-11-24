@@ -169,7 +169,7 @@ describe('MetricsResolver', () => {
     test('maps job DTOs to PlanRunMetricsEntryObject with taskRunMetrics', async () => {
       const jobDto = {
         data: JSON.stringify({ planId: 'plan-1' }),
-        executionBackend: null,
+        driver: null,
         failedReason: null,
         finishedOn: 1700000000000,
         id: 'job-123',

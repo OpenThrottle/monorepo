@@ -40,4 +40,4 @@ Advisory rules (prose):
 
 ## Headless runners
 
-The OT Loop job routes each task by this same policy (loaded from the OT root), falling back to the run's model when its driver does not list the tier's, and records whichever model it passed. Ralph and `workflow-ralph` have no router: the whole plan runs on the model fixed at enqueue, but each task should still declare that model via `begin_task_session`.
+The OT Loop job routes each task by this same policy (loaded from the OT root), falling back to the run's model when its driver does not list the tier's, and records whichever model it passed. A run whose config pins a model keeps that model for every task, and each task should still declare it via `begin_task_session`.

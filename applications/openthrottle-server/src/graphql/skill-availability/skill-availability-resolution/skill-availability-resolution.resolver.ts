@@ -65,7 +65,7 @@ export class SkillAvailabilityResolutionResolver {
   ) {}
 
   @Query(() => SkillAvailabilityResolutionResult, {
-    description: `Resolve every skill's effective disable-model-invocation for a project and environment. Omit projectId to resolve the dogfood monorepo project (nx_project_name = 'monorepo'); returns an empty result when the project or its ingested rows are absent. environment (ci | interactive | ralph, default interactive) is rejected when unknown. Concerns model auto-invocation only — human /skill invocation is never gated.`,
+    description: `Resolve every skill's effective disable-model-invocation for a project and environment. Omit projectId to resolve the dogfood monorepo project (nx_project_name = 'monorepo'); returns an empty result when the project or its ingested rows are absent. environment (default interactive) is rejected when it is not a known environment. Concerns model auto-invocation only — human /skill invocation is never gated.`,
   })
   async skillAvailability(
     @CurrentUser('sub') userId: string,

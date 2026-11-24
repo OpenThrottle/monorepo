@@ -1,6 +1,6 @@
 # Authoring OpenThrottle plans & tasks from your editor/agent (via MCP)
 
-How to turn an idea into structured, executable work in **OpenThrottle (OT)** — from Cursor, Claude Code, or any MCP-capable editor or agent — using the `openthrottle-mcp` server. You author **plans** and **tasks** that land as rows in OT's database, then queue and execute them (Ralph / `workflow-ralph`) with full git traceability.
+How to turn an idea into structured, executable work in **OpenThrottle (OT)** — from Cursor, Claude Code, or any MCP-capable editor or agent — using the `openthrottle-mcp` server. You author **plans** and **tasks** that land as rows in OT's database, then queue and execute them (OT Loop) with full git traceability.
 
 > **Scope:** the mental model and the authoring loop (idea → plan → tasks → queue → commit → link). This guide does **not** re-document MCP registration mechanics — for that see [mcp-registration.md](./mcp-registration.md). The [`ot-plans` skill](../../.agents/skills/ot-plans/SKILL.md) is the canonical tool/traceability reference; this guide aligns with it and cross-links rather than diverging.
 
@@ -12,7 +12,7 @@ How to turn an idea into structured, executable work in **OpenThrottle (OT)** �
 - [OpenThrottle is DB-backed PM software](#openthrottle-is-db-backed-pm-software) — the mental model
 - [Connect your editor/agent to OT](#connect-your-editoragent-to-ot) — get oriented, then link the registration docs
 - [Author plans & tasks via MCP tools](#author-plans--tasks-via-mcp-tools) — copy-pasteable tool usage
-- [Queue, execute & trace](#queue-execute--trace) — Ralph, output stream, Plan-Id/Task-Id, work-ledger commit recording
+- [Queue, execute & trace](#queue-execute--trace) — OT Loop, output stream, Plan-Id/Task-Id, work-ledger commit recording
 - [End-to-end worked example](#end-to-end-worked-example) — the whole loop in one narrative
 - [See also](#see-also)
 
@@ -34,7 +34,7 @@ The consequence worth internalizing: **plans and tasks are first-class rows, not
 
 ### `sortOrder` is the canonical execution order
 
-Tasks within a plan are sequenced by **`sortOrder`** (DB column `sort_order`, `INTEGER NOT NULL`), enforced unique per plan (`UNIQUE (plan_id, sort_order)`). This is not a cosmetic display order — it is the order Ralph, prompt injection, and every MCP list tool use to walk the plan.
+Tasks within a plan are sequenced by **`sortOrder`** (DB column `sort_order`, `INTEGER NOT NULL`), enforced unique per plan (`UNIQUE (plan_id, sort_order)`). This is not a cosmetic display order — it is the order plan runs, prompt injection, and every MCP list tool use to walk the plan.
 
 - **Canonical sort:** `sortOrder ASC`, then `createdAt ASC` as a tiebreaker only.
 - **Auto-assign on create:** omit `sortOrder` and OT appends `MAX(sort_order) + 1000` (first task → `1000`, next → `2000`, …). Batch creates preserve array order.
@@ -84,7 +84,7 @@ PENDING ──▶ IN_PROGRESS ──▶ COMPLETED
 
 - **Plans only, server-written.** Only scheduling a run writes it; tasks never take it. `update_plan` / `setPlanStatus` reject a manual `SCHEDULED` (re-sending `SCHEDULED` for a plan that already is one is a harmless no-op).
 - **Only `PENDING` and `BACKLOG` plans can be scheduled.** Anything else is rejected with a GraphQL error whose `extensions.code` says why: `PLAN_ACTIVE` (the plan is `QUEUED` — a usage-limit resume wait included — or `IN_PROGRESS`), `PLAN_NOT_SCHEDULABLE` (`BLOCKED` or terminal) or `PLAN_ALREADY_SCHEDULED`. The error also carries `planRunId` and `scheduledFor` of the run already scheduled, when there is one.
-- **At most one scheduled run per plan** (a partial unique index backs it). Scheduling again is `PLAN_ALREADY_SCHEDULED` unless you pass `replaceScheduled: true`, which cancels the old run and schedules the new one in one transaction — the plan stays `SCHEDULED`. Running now is `PLAN_ALREADY_SCHEDULED` unless you pass `cancelScheduled: true` to `enqueuePlanRun` / `enqueuePlanRalphOrchestrator`, which cancels the scheduled run and enqueues a normal one.
+- **At most one scheduled run per plan** (a partial unique index backs it). Scheduling again is `PLAN_ALREADY_SCHEDULED` unless you pass `replaceScheduled: true`, which cancels the old run and schedules the new one in one transaction — the plan stays `SCHEDULED`. Running now is `PLAN_ALREADY_SCHEDULED` unless you pass `cancelScheduled: true` to `enqueuePlanRun`, which cancels the scheduled run and enqueues a normal one.
 - **Leaving it.** When the run fires the plan moves to `QUEUED` as for any run. Every other exit — cancelling the scheduled run, or the run settling `MISSED`, `SUPERSEDED` or with nothing to run — returns the plan to **`PENDING`**, whatever it was scheduled from.
 - **Any status change away from `SCHEDULED` cancels the scheduled run.** Mark Complete, `update_plan`, a task going `IN_PROGRESS`, or the last task completing all move the plan on and cancel its run in the same write; `update_plan` says so in its response.
 
@@ -108,7 +108,7 @@ PENDING ──▶ IN_PROGRESS ──▶ COMPLETED
 
 ### From authored to executable
 
-Because a plan is live state, authoring it is the same act as making it runnable. Once a plan has ordered tasks, it can be **queued and executed** by the Ralph tooling (`workflow-ralph`), which walks tasks in `sortOrder`, does the work, and narrates progress back into the plan's output stream. Authoring well — clear task boundaries, correct order, precise descriptions — is what makes an autonomous run go smoothly. See [Queue, execute & trace](#queue-execute--trace).
+Because a plan is live state, authoring it is the same act as making it runnable. Once a plan has ordered tasks, it can be **queued and executed** by OT Loop (`/ot-loop` interactively, or the server's job), which walks tasks in `sortOrder`, does the work, and narrates progress back into the plan's output stream. Authoring well — clear task boundaries, correct order, precise descriptions — is what makes an autonomous run go smoothly. See [Queue, execute & trace](#queue-execute--trace).
 
 ## Connect your editor/agent to OT
 
@@ -272,22 +272,20 @@ Plans have the analogous `update_plan(id, …)`. Reading back: `get_plan(id)`, `
 
 ## Queue, execute & trace
 
-An authored plan is already executable. This section covers how it runs and — just as important — how the resulting git history stays tied back to the plan. Depth on the run loop itself lives in the Ralph docs; this is the authoring-guide-level view.
+An authored plan is already executable. This section covers how it runs and — just as important — how the resulting git history stays tied back to the plan. Depth on the run loop itself lives in the OT Loop docs; this is the authoring-guide-level view.
 
-### Queue & execute (Ralph / `workflow-ralph`)
+### Queue & execute (OT Loop)
 
-The Ralph tooling walks a plan's tasks in `sortOrder`, taking each `PENDING` task to `IN_PROGRESS`, doing the work, validating, and marking it `COMPLETED`. Two entry points:
+OT Loop walks a plan's tasks in `sortOrder`, taking each `PENDING` task to `IN_PROGRESS`, doing the work, validating, and marking it `COMPLETED`. Two entry points:
 
-- **CLI:** `pnpm exec workflow-ralph --plan <plan-uuid>` (or `--task <task-uuid>` for a single task). Run `pnpm exec workflow-ralph --help` for options.
+- **Interactive:** `/ot-loop <plan-uuid>` drives the plan from your editor session.
 - **Queue:** enqueue a Run-plan job (BullMQ) — the plan flips to `QUEUED` until a worker picks it up, then `IN_PROGRESS`.
 
-Two runners can execute a queued plan, chosen per plan by `runConfigJson.runner` (or the enqueue input's `runner`; the Developer UI run dialog and Configuration tab expose it). **Ralph** is the default when `runner` is absent and is the only runner that uses the `/agents-ralph` prompt (until a follow-up plan retires it). **OT Loop** (`'ot-loop'`) is the headless implementation of the [`ot-loop`](../../skills/ot-loop/SKILL.md) skill's loop: it feeds any driver CLI a standalone prompt built from the task row, routes a model per task, and owns validation itself, configurable per repository in a committed `.openthrottle/ot-loop.json`. See [docs/workflows/ot-loop-job.md](../workflows/ot-loop-job.md).
-
-For the full run loop, worker-vs-orchestrator modes, and worktree behavior, see [tools/workflows/README.md](../../tools/workflows/README.md) (there is no `workflow-ralph` skill — the loop prompt is [`agents-ralph`](../../skills/agents-ralph/SKILL.md)). Don't reproduce that here — author good tasks and let the run loop own execution.
+A queued plan runs on **OT Loop**, the headless implementation of the [`ot-loop`](../../skills/ot-loop/SKILL.md) skill's loop: it feeds the chosen driver CLI a standalone prompt built from the task row, routes a model per task, and owns validation itself, configurable per repository in a committed `.openthrottle/ot-loop.json`. A plan's saved tuning is the `run` block of `runConfigJson` (driver, model, effort, worktree and validation settings). See [docs/workflows/ot-loop-job.md](../workflows/ot-loop-job.md) for the job's contract, and don't reproduce it here — author good tasks and let the run loop own execution.
 
 ### Narrate progress — `append_plan_output` / `get_plan_output`
 
-A running plan has an **output stream** — an append-only log of what happened, iteration by iteration. Use `append_plan_output(planId, content, iteration?)` to record progress (Ralph does this automatically; you can too when driving a plan by hand) and `get_plan_output(planId)` to read it back for debugging or a status recap. This is narration, **not** the traceability record — commits are.
+A running plan has an **output stream** — an append-only log of what happened, iteration by iteration. Use `append_plan_output(planId, content, iteration?)` to record progress (the OT Loop job does this automatically; you can too when driving a plan by hand) and `get_plan_output(planId)` to read it back for debugging or a status recap. This is narration, **not** the traceability record — commits are.
 
 ### Traceability: the two-part contract
 
@@ -330,8 +328,6 @@ record_artifact({ "type": "git_commit",
                   "message": "feat(server): add rate-limit guard (#123)" })
 ```
 
-Do not reach for `workflow-link-merge` — it lives in the deprecated `@tools/workflows` package.
-
 The merge-queue caveat still holds where it always did: `gh pr merge --auto` may only _enqueue_ a PR, so do not call it merged, or read a landed sha from it, until `gh pr view <n> --json mergedAt,mergeCommit --jq '{mergedAt, sha: .mergeCommit.oid}'` shows one. It no longer gates ledger recording.
 
 > **Why the split?** Footers give you cheap, per-commit traceability while work is in flight; the ledger artifacts give OT a clean record of exactly one commit per PR. Recording every branch commit would pollute that record — so footers during, one ledger artifact when the PR opens. The footers also double as the harvest's input, which is what makes them worth enforcing.
@@ -354,7 +350,7 @@ create_plan({
 // → { "plan": { "id": "1a2b3c4d-0000-4000-8000-000000000001", "status": "PENDING" } }
 ```
 
-**2 — Batch-create the tasks, in execution order.** The array order _is_ the order Ralph will run them.
+**2 — Batch-create the tasks, in execution order.** The array order _is_ the order a plan run will take them.
 
 ```jsonc
 create_tasks({
@@ -380,7 +376,7 @@ get_tasks_by_plan_id({ "planId": "1a2b3c4d-0000-4000-8000-000000000001" })
 // → tasks in sortOrder ASC; note the 2nd task's id: 9f8e7d6c-…-…
 ```
 
-**4 — Start a task.** (By hand or via `pnpm exec workflow-ralph --plan <plan-uuid>` — same state transitions either way.)
+**4 — Start a task.** (By hand or via `/ot-loop <plan-uuid>` — same state transitions either way.)
 
 ```jsonc
 update_task({ "id": "9f8e7d6c-0000-4000-8000-000000000002", "status": "IN_PROGRESS" })
@@ -428,19 +424,19 @@ Nothing to do after the merge — the verifier resolves the squash commit itself
 
 ## See also
 
-| Topic                                              | Reference                                                                                                                |
-| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| **Canonical tool + traceability reference**        | [`ot-plans` skill](../../.agents/skills/ot-plans/SKILL.md)                                                               |
-| **When to use which OT tool**                      | [`skills/ot-plans/SKILL.md`](../../skills/ot-plans/SKILL.md)                                                             |
-| **Register the MCP server** (config, launcher)     | [mcp-registration.md](./mcp-registration.md)                                                                             |
-| **Worktree-aware identity / live server URL**      | [mcp-registration.md § Worktrees](./mcp-registration.md#worktrees)                                                       |
-| **First-time onboarding** (mental model, prompts)  | [first-time-onboarding.md](./first-time-onboarding.md)                                                                   |
-| **Local server + developer app**                   | [run-openthrottle-server-developer.md](./run-openthrottle-server-developer.md)                                           |
-| **MCP env, smoke checks, secondary workspace**     | [verification-environment.md](../../packages/openthrottle-mcp/docs/verification-environment.md)                          |
-| **Service-account tokens & rotation**              | [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md)                                                                  |
-| **Project association** (when to set `projectId`)  | See the “When to set `project`/`projectId`” note above.                                                                  |
-| **Run loop / queue** (Ralph)                       | [tools/workflows/README.md](../../tools/workflows/README.md), [`agents-ralph` skill](../../skills/agents-ralph/SKILL.md) |
-| **Conventional commits & staging**                 | [`github-commit` skill](../../skills/github-commit/SKILL.md)                                                             |
-| **Schema, migrations, `sort_order`, commit links** | [databases/openthrottle/README.md](../../databases/openthrottle/README.md)                                               |
-| **`wave` full contract** (why a layer, not a DAG)  | [task-wave-encoding.md](./task-wave-encoding.md)                                                                         |
-| **Monorepo-wide agent conventions**                | [AGENTS.md § OpenThrottle](../../AGENTS.md), [CLAUDE.md](../../CLAUDE.md)                                                |
+| Topic                                              | Reference                                                                                                      |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| **Canonical tool + traceability reference**        | [`ot-plans` skill](../../.agents/skills/ot-plans/SKILL.md)                                                     |
+| **When to use which OT tool**                      | [`skills/ot-plans/SKILL.md`](../../skills/ot-plans/SKILL.md)                                                   |
+| **Register the MCP server** (config, launcher)     | [mcp-registration.md](./mcp-registration.md)                                                                   |
+| **Worktree-aware identity / live server URL**      | [mcp-registration.md § Worktrees](./mcp-registration.md#worktrees)                                             |
+| **First-time onboarding** (mental model, prompts)  | [first-time-onboarding.md](./first-time-onboarding.md)                                                         |
+| **Local server + developer app**                   | [run-openthrottle-server-developer.md](./run-openthrottle-server-developer.md)                                 |
+| **MCP env, smoke checks, secondary workspace**     | [verification-environment.md](../../packages/openthrottle-mcp/docs/verification-environment.md)                |
+| **Service-account tokens & rotation**              | [AUTH.md](../../packages/openthrottle-mcp/docs/AUTH.md)                                                        |
+| **Project association** (when to set `projectId`)  | See the “When to set `project`/`projectId`” note above.                                                        |
+| **Run loop / queue** (OT Loop)                     | [docs/workflows/ot-loop-job.md](../workflows/ot-loop-job.md), [`ot-loop` skill](../../skills/ot-loop/SKILL.md) |
+| **Conventional commits & staging**                 | [`github-commit` skill](../../skills/github-commit/SKILL.md)                                                   |
+| **Schema, migrations, `sort_order`, commit links** | [databases/openthrottle/README.md](../../databases/openthrottle/README.md)                                     |
+| **`wave` full contract** (why a layer, not a DAG)  | [task-wave-encoding.md](./task-wave-encoding.md)                                                               |
+| **Monorepo-wide agent conventions**                | [AGENTS.md § OpenThrottle](../../AGENTS.md), [CLAUDE.md](../../CLAUDE.md)                                      |

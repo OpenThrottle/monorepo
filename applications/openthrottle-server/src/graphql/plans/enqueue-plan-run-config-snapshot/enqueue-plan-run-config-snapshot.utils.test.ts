@@ -2,7 +2,7 @@ import { tmpdir } from 'node:os';
 
 import { describe, expect, test } from 'vitest';
 
-import { buildRunPlanOrchestratorJobData } from '../enqueue-plan-ralph-tuning/enqueue-plan-ralph-tuning.utils.ts';
+import { buildRunPlanOrchestratorJobData } from '../enqueue-plan-run-tuning/enqueue-plan-run-tuning.utils.ts';
 import {
   buildPlanRunConfigSnapshotFromJobData,
   orchestratorJobInputFromSnapshot,
@@ -11,24 +11,24 @@ import {
 describe('buildPlanRunConfigSnapshotFromJobData', () => {
   test('maps orchestrator job data to plan-target snapshot', () => {
     const snapshot = buildPlanRunConfigSnapshotFromJobData({
-      executionBackend: 'cursor',
+      driver: 'cursor',
       planId: '7a293e25-e50d-4d4e-86a0-768b779ab0d9',
-      ralph: { iterations: 5 },
       runKind: 'orchestrator',
+      tuning: { model: 'm-1' },
       workingDirectory: '/tmp/repo',
     });
 
     expect(snapshot.target).toEqual({ mode: 'plan', taskId: '' });
     expect(snapshot.workspace.workingDirectory).toBe('/tmp/repo');
-    expect(snapshot.ralph).toEqual({
-      executionBackend: 'cursor',
-      iterations: 5,
+    expect(snapshot.run).toEqual({
+      driver: 'cursor',
+      model: 'm-1',
     });
   });
 
   test('maps orchestrator task mode snapshot', () => {
     const snapshot = buildPlanRunConfigSnapshotFromJobData({
-      executionBackend: 'claude',
+      driver: 'claude',
       mode: 'task',
       planId: '7a293e25-e50d-4d4e-86a0-768b779ab0d9',
       runKind: 'orchestrator',
@@ -39,58 +39,57 @@ describe('buildPlanRunConfigSnapshotFromJobData', () => {
       mode: 'task',
       taskId: '45a30762-92a9-42f4-90e0-2437c7ef26a8',
     });
-    expect(snapshot.ralph.executionBackend).toBe('claude');
+    expect(snapshot.run.driver).toBe('claude');
   });
 
-  test('carries ralph.effort on the snapshot (plan and task runs)', () => {
+  test('carries run.effort on the snapshot (plan and task runs)', () => {
     const plan = buildPlanRunConfigSnapshotFromJobData({
-      executionBackend: 'cursor',
+      driver: 'cursor',
       planId: '7a293e25-e50d-4d4e-86a0-768b779ab0d9',
-      ralph: { effort: 'max' },
       runKind: 'orchestrator',
+      tuning: { effort: 'max' },
     });
-    expect(plan.ralph.effort).toBe('max');
+    expect(plan.run.effort).toBe('max');
 
     const task = buildPlanRunConfigSnapshotFromJobData({
-      executionBackend: 'cursor',
+      driver: 'cursor',
       mode: 'task',
       planId: '7a293e25-e50d-4d4e-86a0-768b779ab0d9',
-      ralph: { effort: 'low' },
       runKind: 'orchestrator',
       taskId: '45a30762-92a9-42f4-90e0-2437c7ef26a8',
+      tuning: { effort: 'low' },
     });
-    expect(task.ralph.effort).toBe('low');
+    expect(task.run.effort).toBe('low');
   });
 
-  test('carries runner and otLoop on the snapshot and omits them when unset', () => {
+  test('folds otLoop into the snapshot run block and omits it when unset', () => {
     const otLoop = { validationCommands: ['pnpm nx run x:test'] };
     const snapshot = buildPlanRunConfigSnapshotFromJobData({
-      executionBackend: 'cursor',
+      driver: 'cursor',
       otLoop,
       planId: '7a293e25-e50d-4d4e-86a0-768b779ab0d9',
       runKind: 'orchestrator',
-      runner: 'ot-loop',
     });
-    expect(snapshot.runner).toBe('ot-loop');
-    expect(snapshot.otLoop).toEqual(otLoop);
+    expect(snapshot.run.validationCommands).toEqual(otLoop.validationCommands);
+    expect(snapshot).not.toHaveProperty('otLoop');
+    expect(snapshot).not.toHaveProperty('runner');
 
     const plain = buildPlanRunConfigSnapshotFromJobData({
-      executionBackend: 'cursor',
+      driver: 'cursor',
       planId: '7a293e25-e50d-4d4e-86a0-768b779ab0d9',
       runKind: 'orchestrator',
     });
-    expect(plain).not.toHaveProperty('runner');
-    expect(plain).not.toHaveProperty('otLoop');
+    expect(plain.run).not.toHaveProperty('validationCommands');
   });
 
   test('omits effort from the snapshot when unset', () => {
     const snapshot = buildPlanRunConfigSnapshotFromJobData({
-      executionBackend: 'cursor',
+      driver: 'cursor',
       planId: '7a293e25-e50d-4d4e-86a0-768b779ab0d9',
-      ralph: { iterations: 1 },
       runKind: 'orchestrator',
+      tuning: { model: 'm-1' },
     });
-    expect(snapshot.ralph).not.toHaveProperty('effort');
+    expect(snapshot.run).not.toHaveProperty('effort');
   });
 });
 
@@ -119,24 +118,24 @@ describe('orchestratorJobInputFromSnapshot', () => {
     const { original, rebuilt } = roundTrip({
       mode: null,
       planId,
-      ralph: { backend: 'claude', effort: 'high', iterations: 7, model: 'm-1' },
       taskId: null,
+      tuning: { driver: 'claude', effort: 'high', model: 'm-1' },
       workingDirectory: tmpdir(),
     });
 
     expect(rebuilt).toEqual(original);
   });
 
-  test('keeps an opted-out worktree opted out instead of re-applying the default', () => {
+  test('keeps an explicit debug opt-out instead of re-applying the verbose default', () => {
     const { original, rebuilt } = roundTrip({
       mode: null,
       planId,
-      ralph: { disableWorktree: true, ralphDebugCli: 'omit' },
       taskId: null,
+      tuning: { debugCli: 'omit' },
       workingDirectory: null,
     });
 
-    expect(original.ralph?.worktree).toBeUndefined();
+    expect(original.tuning?.debug).toBe('omit');
     expect(rebuilt).toEqual(original);
   });
 
@@ -147,15 +146,15 @@ describe('orchestratorJobInputFromSnapshot', () => {
           {
             kind: 'prompt_profile',
             phase: 'beforeAll',
-            prompt: '/agents/ralph',
+            prompt: '/agents/plan-run',
             promptDelivery: 'named',
           },
         ],
       }),
       mode: null,
       planId,
-      ralph: null,
       taskId: null,
+      tuning: null,
       workingDirectory: null,
     });
 
@@ -167,15 +166,15 @@ describe('orchestratorJobInputFromSnapshot', () => {
     const { original, rebuilt } = roundTrip({
       mode: 'task',
       planId,
-      ralph: null,
       taskId: '45a30762-92a9-42f4-90e0-2437c7ef26a8',
+      tuning: null,
       workingDirectory: null,
     });
 
     expect(rebuilt).toEqual(original);
   });
 
-  test('carries runner and otLoop through snapshot and back (OT Loop never becomes Ralph)', () => {
+  test('carries otLoop through snapshot and back', () => {
     const otLoop = {
       finalValidationCommands: ['pnpm run check:local'],
       maxRetries: 3,
@@ -186,26 +185,20 @@ describe('orchestratorJobInputFromSnapshot', () => {
       mode: null,
       otLoop,
       planId,
-      ralph: null,
-      runner: 'ot-loop',
       taskId: null,
       workingDirectory: null,
     });
 
-    expect(original.runner).toBe('ot-loop');
     expect(original.otLoop).toEqual(otLoop);
     expect(rebuilt).toEqual(original);
-    expect(rebuilt.runner).toBe('ot-loop');
     expect(rebuilt.otLoop).toEqual(otLoop);
   });
 
-  test('carries runner and otLoop for a task-mode run', () => {
+  test('carries otLoop for a task-mode run', () => {
     const { original, rebuilt } = roundTrip({
       mode: 'task',
       otLoop: { maxRetries: 0 },
       planId,
-      ralph: null,
-      runner: 'ot-loop',
       taskId: '45a30762-92a9-42f4-90e0-2437c7ef26a8',
       workingDirectory: null,
     });
@@ -214,13 +207,9 @@ describe('orchestratorJobInputFromSnapshot', () => {
     expect(rebuilt.otLoop).toEqual({ maxRetries: 0 });
   });
 
-  test('an explicit ralph runner round-trips and an absent runner stays absent', () => {
-    const explicit = roundTrip({ planId, runner: 'ralph' });
-    expect(explicit.rebuilt.runner).toBe('ralph');
-
+  test('an absent otLoop stays absent', () => {
     const absent = roundTrip({ planId });
-    expect(absent.original).not.toHaveProperty('runner');
-    expect(absent.rebuilt).not.toHaveProperty('runner');
+    expect(absent.original).not.toHaveProperty('otLoop');
     expect(absent.rebuilt).not.toHaveProperty('otLoop');
   });
 });

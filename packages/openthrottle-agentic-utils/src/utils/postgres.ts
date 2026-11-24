@@ -1,7 +1,7 @@
 import pg from 'pg';
 
 /**
- * Env var set by BullMQ workers when spawning nested `workflow-ralph` so plan
+ * Env var set by BullMQ workers when spawning a nested plan run so plan
  * lookup uses the same OpenThrottle DB as the server even when `cwd` is another repo
  * whose tooling overwrites `POSTGRES_URL`.
  */

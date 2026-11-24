@@ -52,10 +52,10 @@ const byCheckout = (facts: TimelineLaneFacts): TimelineLane => {
   return UNATTRIBUTED_LANE;
 };
 
-const byBackend = (facts: TimelineLaneFacts): TimelineLane => {
-  if (!isPresent(facts.backend)) return UNATTRIBUTED_LANE;
+const byDriver = (facts: TimelineLaneFacts): TimelineLane => {
+  if (!isPresent(facts.driver)) return UNATTRIBUTED_LANE;
 
-  return { key: `backend:${facts.backend}`, label: facts.backend };
+  return { key: `driver:${facts.driver}`, label: facts.driver };
 };
 
 /**
@@ -76,7 +76,7 @@ export function resolveTimelineLane(
   }
 
   if (grouping === TimelineLaneGrouping.BY_CHECKOUT) return byCheckout(facts);
-  if (grouping === TimelineLaneGrouping.BY_BACKEND) return byBackend(facts);
+  if (grouping === TimelineLaneGrouping.BY_DRIVER) return byDriver(facts);
 
   return byPlan(facts);
 }

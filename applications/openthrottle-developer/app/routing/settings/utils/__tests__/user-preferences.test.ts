@@ -26,7 +26,7 @@ describe('resolveDefaultAgent', () => {
     );
 
     expect(resolved).toEqual({
-      draft: { backend: 'claude', effort: 'high', model: 'opus' },
+      draft: { driver: 'claude', effort: 'high', model: 'opus' },
       kind: 'valid',
       optionId: 'claude|opus',
     });

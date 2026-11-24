@@ -34,7 +34,7 @@ export const PersonasIntroduction = (
         title="Personas"
       />
       <p className="text-muted-foreground text-sm">
-        Disk-backed Ralph prompt profiles from{' '}
+        Disk-backed prompt profiles from{' '}
         <code className="text-xs">.agents/personas/*.md</code> —{' '}
         {entries.length} discovered. Semantic search and in-app editing are out
         of scope for phase 1.

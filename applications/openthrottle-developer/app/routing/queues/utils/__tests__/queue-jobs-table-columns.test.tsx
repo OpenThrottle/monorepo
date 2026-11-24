@@ -215,13 +215,13 @@ describe('buildQueueJobsTableColumns', () => {
 
   test('run cell renders the runKind/mode label or an em dash', () => {
     const withRun = buildJob({
-      data: JSON.stringify({ mode: 'auto', runKind: 'ralph' }),
+      data: JSON.stringify({ mode: 'auto', runKind: 'orchestrator' }),
       id: 'job-5',
     });
     const rendered = renderRoutesStub(
       <Harness job={withRun} queueName="my-queue" />,
     );
-    expect(rendered.getByText('ralph · auto')).toBeInTheDocument();
+    expect(rendered.getByText('orchestrator · auto')).toBeInTheDocument();
 
     const withoutRun = buildJob({ data: null, id: 'job-6' });
     const renderedEmpty = renderRoutesStub(

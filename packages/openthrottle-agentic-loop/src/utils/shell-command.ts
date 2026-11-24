@@ -88,5 +88,7 @@ export const substituteTaskStartSha = (
   command: string,
   taskStartSha: string,
 ): string => {
-  return command.replaceAll(PLACEHOLDER, shellEscape(taskStartSha));
+  return command.replaceAll(PLACEHOLDER, () => {
+    return shellEscape(taskStartSha);
+  });
 };

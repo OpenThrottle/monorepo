@@ -23,7 +23,7 @@ describe('createPlanRunsRepositoryMock', () => {
     await expect(
       repository.recordQueuedRun({
         bullmqJobId: 'job-1',
-        executionBackend: 'claude',
+        driver: 'claude',
         planId: 'plan-1',
         queueName: 'plans',
         runKind: 'orchestrator',
@@ -35,7 +35,7 @@ describe('createPlanRunsRepositoryMock', () => {
     });
     await expect(
       repository.registerCliRun({
-        executionBackend: 'claude',
+        driver: 'claude',
         heartbeatExpected: false,
         hostname: 'host',
         pid: 1,

@@ -113,8 +113,8 @@ unique index, and does not reorder anything.
 
 Lifecycle hook tasks (`hookRole` non-NULL, migration `071`) exist to bracket other work, so a hook
 that overlaps what it brackets is meaningless. Hook tasks carry `wave = NULL` and always run at
-their anchored position. Ralph already routes them separately —
-`packages/openthrottle-agentic-ralph/src/utils/plan-task-list-order.ts` — and that routing is
+their anchored position. The OT Loop package already routes them separately —
+`packages/openthrottle-agentic-loop/src/utils/plan-task-list-order.ts` — and that routing is
 unchanged.
 
 ## Waves do not by themselves grant concurrency
@@ -180,8 +180,7 @@ Honest scope for task 3, so it is not discovered a layer at a time:
 | GraphQL          | `applications/openthrottle-server/src/graphql/tasks/task.object.ts`, `task.input.ts` (`CreateTaskInput`, `CreateTasksItemInput`, `UpdateTaskInput`), `tasks.resolver.ts`                        |
 | Generated schema | `applications/openthrottle-server/schema.gql` + all `__generated__` output                                                                                                                      |
 | MCP              | `packages/openthrottle-mcp/src/tools/tasks.ts` — the generated zod schemas follow the GraphQL inputs automatically, but `createTasksItemSchema` is **hand-written** and must be updated by hand |
-| Ralph            | `packages/openthrottle-agentic-ralph/src/utils/plan-task-list-order.ts` and `src/graphql/ralph/fragments.graphql`                                                                               |
-| Workflows CLI    | `tools/workflows/src/utils/openthrottle-ralph-postgres.ts` — raw SQL with explicit column lists, which a new column does not reach on its own                                                   |
+| OT Loop          | `packages/openthrottle-agentic-loop/src/utils/plan-task-list-order.ts`                                                                                                                          |
 | Developer UI     | `applications/openthrottle-developer/app/routes/plans.$planId._index.tsx.graphql` and `app/routing/plans/utils/sortPlanTasksByListOrder.ts`                                                     |
 
 ## See also

@@ -10,7 +10,7 @@ import type { ServiceAccount } from './service-account.entity.ts';
 /**
  * Factory for building ServiceAccount-shaped objects (plain data for mocks / tests): a live,
  * enabled, unlinked account with no relations by default. Override any field via
- * .build({ name: 'workflow-ralph' }) or .buildList(3).
+ * .build({ name: 'plan-runner' }) or .buildList(3).
  * @public
  */
 export const serviceAccountsFactory = Factory.define<ServiceAccount>(() => ({

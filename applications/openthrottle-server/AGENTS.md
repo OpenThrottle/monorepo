@@ -16,8 +16,14 @@ apps, `packages/openthrottle-mcp`) consumes its schema through the committed
 - `pnpm nx run openthrottle-server:start` — no-watch start; builds dependency packages first.
 - `pnpm nx run openthrottle-server:docker-build` — builds from root `Dockerfile.NestJS`
   (monorepo context); expects `GITHUB_TOKEN` in the environment.
-- The single `typecheck` target type-checks source and test files here; `test` is plain Vitest and does not depend on any
-  `__generated__` output (the server is code-first, not a codegen consumer).
+- The single `typecheck` target type-checks source and test files here; `test` is plain Vitest.
+- `pnpm nx run openthrottle-server:codegen-graphql` — the server is code-first, but it also has a small
+  client codegen: `codegen.ts` reads the plan-run documents `packages/openthrottle-mcp` owns
+  (`src/graphql/operations/`, `plan-messages.graphql`, `work-sessions.graphql`) and emits typed
+  `*Document` consts and fragment types into the **committed** `src/__generated__/` (the package
+  `.gitignore` negates the root rule, so `build`/`graphql-schema:write` never run codegen). The OT
+  Loop job (`src/queues/ot-loop/`) imports from it. Edit the documents in `openthrottle-mcp`,
+  never `__generated__`.
 
 ## Layout
 
@@ -30,12 +36,13 @@ apps, `packages/openthrottle-mcp`) consumes its schema through the committed
   queue-job log tail API; design doc in [docs/log-tail-api-design.md](./docs/log-tail-api-design.md)).
 - `src/queues/` — BullMQ queue modules (plans, code-index, daily-stats, database-backup,
   agentic-test) plus `bullmq-run-output.module.ts`.
-- **Plan runners:** both runners execute on the `Plans` queue under the one `'Agentic Ralph'` job
-  name; `PlansProcessor.processOrchestrator` dispatches on `jobData.runner` (absent = Ralph,
-  `'ot-loop'` = `src/queues/ot-loop/`, `OtLoopOrchestratorService`). Both return a
-  `WorkflowRunResult`, so every settle branch is shared. Run-start workspace setup (worktree,
-  checkout registration, config) is `src/services/plan-run-workspace/`; OT Loop skips its MCP
-  preflight and skill injection. Design: [`docs/workflows/ot-loop-job.md`](../../docs/workflows/ot-loop-job.md).
+- **Plan runner:** OT Loop is the only runner. Plan runs execute on the `Plans` queue under the
+  `'Plan Run'` job name;
+  `PlansProcessor.processOrchestrator` hands every job to `src/queues/ot-loop/`
+  (`OtLoopOrchestratorService`), which returns a `WorkflowRunResult` the processor settles. `enqueuePlanRun` is the one enqueue mutation (a `mode: PlanRunMode` input scopes it to a task);
+  Run-start workspace setup (worktree, checkout
+  registration, config) is `src/services/plan-run-workspace/`; OT Loop skips its MCP preflight and
+  skill injection. Design: [`docs/workflows/ot-loop-job.md`](../../docs/workflows/ot-loop-job.md).
 - `src/guards/` + `src/auth/` — `GlobalAuthGuard` (service-account `ot_sa_…` tokens first, then
   JWT) and the CLS auth hook; registered as `APP_GUARD`.
 - `src/main.ts` — bootstrap: `rawBody: true`, CORS from `@openthrottle/nestjs-rbac`, shutdown

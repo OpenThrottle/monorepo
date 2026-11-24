@@ -77,7 +77,7 @@ describe('ProjectSkillsService', () => {
         makeRow({
           description: null,
           disableModelInvocation: false,
-          slug: 'agents-ralph',
+          slug: 'ot-loop',
         }),
         makeRow({
           description: null,
@@ -101,7 +101,7 @@ describe('ProjectSkillsService', () => {
         {
           description: undefined,
           orphanedAt: undefined,
-          slug: 'agents-ralph',
+          slug: 'ot-loop',
           source: 'external',
           sourceUrl: undefined,
           staticDisableModelInvocation: false,

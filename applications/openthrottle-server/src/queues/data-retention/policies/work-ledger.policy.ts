@@ -2,7 +2,7 @@
  * @description Retention policy for the work ledger — `work_sessions` and, by
  * cascade, `work_session_subjects` and `work_artifacts`.
  *
- * One row set is written per work session: every plan run, every Ralph iteration,
+ * One row set is written per work session: every plan run, every plan-run iteration,
  * every MCP session that attaches a subject. The abandoned-session sweeper closes
  * sessions that were never ended, but nothing has ever deleted historical closed
  * ones. The audited database held ~3.5k sessions / ~3.7k subjects / ~4k artifacts

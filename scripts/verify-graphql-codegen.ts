@@ -24,9 +24,9 @@
  * gitignored and built on demand), a regeneration has nothing to disagree with.
  * That run still proves codegen succeeds against the committed schema, and the
  * script says plainly that the comparison was vacuous. The drift itself stays
- * covered in CI by the projects that DO commit their output — openthrottle-mcp
- * and openthrottle-agentic-ralph, which owns the shared plan/task documents
- * every other consumer spreads.
+ * covered in CI by the projects that DO commit their output — openthrottle-mcp,
+ * which owns the shared plan/task documents every other consumer (the server's
+ * codegen) reads.
  */
 
 import {

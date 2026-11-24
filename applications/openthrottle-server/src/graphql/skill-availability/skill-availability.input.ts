@@ -10,7 +10,7 @@ import { Field, InputType } from '@nestjs/graphql';
 @InputType()
 export class SkillAvailabilityRuleInput {
   @Field(() => String, {
-    description: `Environment qualifier: omit/null for all environments, or "ci" | "interactive" | "ralph" to scope the rule.`,
+    description: `Environment qualifier: omit/null for all environments, or a known environment name (such as "ci" or "interactive") to scope the rule.`,
     nullable: true,
   })
   environment?: string | null;

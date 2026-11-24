@@ -5,8 +5,8 @@ import {
 import { describe, expect, test } from 'vitest';
 
 import {
+  mergeOtLoopSelectionIntoRunConfig,
   mergePersistedSelectionIntoRunConfig,
-  mergeRunnerSelectionIntoRunConfig,
   overlayPlanRunTuning,
   parsePlanRunForm,
   parseScheduledFor,
@@ -24,49 +24,45 @@ const form = (entries: Record<string, string>): FormData => {
 
 describe('overlayPlanRunTuning', () => {
   test('returns undefined when there is nothing to send', () => {
-    expect(
-      overlayPlanRunTuning(undefined, {
-        iterations: undefined,
-        persisted: undefined,
-      }),
-    ).toBeUndefined();
+    expect(overlayPlanRunTuning(undefined, undefined)).toBeUndefined();
   });
 
-  test('iterations override replaces the submitted value', () => {
+  test('keeps the submitted tuning when nothing is persisted', () => {
     expect(
-      overlayPlanRunTuning(
-        { iterations: 3, project: 'apps/x' },
-        { iterations: 12, persisted: undefined },
-      ),
-    ).toEqual({ iterations: 12, project: 'apps/x' });
+      overlayPlanRunTuning({ iterationTimeoutSeconds: 60 }, undefined),
+    ).toEqual({ iterationTimeoutSeconds: 60 });
   });
 
-  test('a selection overlays backend, model and effort', () => {
+  test('a selection overlays driver, model and effort', () => {
     expect(
       overlayPlanRunTuning(undefined, {
-        iterations: undefined,
-        persisted: { backend: 'claude', effort: 'high', model: 'opus' },
+        driver: 'claude',
+        effort: 'high',
+        model: 'opus',
       }),
-    ).toEqual({ backend: 'claude', effort: 'high', model: 'opus' });
+    ).toEqual({ driver: 'claude', effort: 'high', model: 'opus' });
   });
 
   test('a selection that returns to defaults clears the stale tuning keys', () => {
     expect(
       overlayPlanRunTuning(
-        { backend: 'claude', effort: 'high', model: 'opus', project: 'p' },
         {
-          iterations: undefined,
-          persisted: { backend: 'cursor', effort: '', model: 'auto' },
+          driver: 'claude',
+          effort: 'high',
+          iterationTimeoutSeconds: 60,
+          model: 'opus',
         },
+        { driver: 'cursor', effort: '', model: 'auto' },
       ),
-    ).toEqual({ project: 'p' });
+    ).toEqual({ iterationTimeoutSeconds: 60 });
   });
 
   test('does not mutate the submitted tuning', () => {
     const tuning = { model: 'opus' };
     overlayPlanRunTuning(tuning, {
-      iterations: 5,
-      persisted: { backend: 'cursor', effort: '', model: 'auto' },
+      driver: 'cursor',
+      effort: '',
+      model: 'auto',
     });
 
     expect(tuning).toEqual({ model: 'opus' });
@@ -80,42 +76,41 @@ describe('mergePersistedSelectionIntoRunConfig', () => {
         const defaults = getDefaultPlanRunConfigStorage({ planId });
         return {
           ...defaults,
-          ralph: { ...defaults.ralph, iterations: 40, project: 'apps/x' },
+          run: { ...defaults.run, worktreeName: 'my-tree' },
         };
       })(),
       { planId },
     );
   };
 
-  test('writes model, backend and effort and preserves everything else', () => {
+  test('writes model, driver and effort and preserves everything else', () => {
     const merged = mergePersistedSelectionIntoRunConfig({
-      persisted: { backend: 'claude', effort: 'high', model: 'opus' },
+      persisted: { driver: 'claude', effort: 'high', model: 'opus' },
       planId,
       runConfigJson: stored(),
     });
 
     expect(merged.changed).toBe(true);
     expect(JSON.parse(merged.runConfigJson)).toMatchObject({
-      ralph: {
+      run: {
+        driver: 'claude',
         effort: 'high',
-        executionBackend: 'claude',
-        iterations: 40,
         model: 'opus',
-        project: 'apps/x',
+        worktreeName: 'my-tree',
       },
     });
   });
 
   test('reports unchanged when the config already holds the selection', () => {
     const first = mergePersistedSelectionIntoRunConfig({
-      persisted: { backend: 'claude', effort: 'high', model: 'opus' },
+      persisted: { driver: 'claude', effort: 'high', model: 'opus' },
       planId,
       runConfigJson: stored(),
     });
 
     expect(
       mergePersistedSelectionIntoRunConfig({
-        persisted: { backend: 'claude', effort: 'high', model: 'opus' },
+        persisted: { driver: 'claude', effort: 'high', model: 'opus' },
         planId,
         runConfigJson: first.runConfigJson,
       }).changed,
@@ -124,21 +119,21 @@ describe('mergePersistedSelectionIntoRunConfig', () => {
 
   test('builds from defaults when the plan has no saved config', () => {
     const merged = mergePersistedSelectionIntoRunConfig({
-      persisted: { backend: 'claude', effort: '', model: 'opus' },
+      persisted: { driver: 'claude', effort: '', model: 'opus' },
       planId,
       runConfigJson: null,
     });
 
     expect(merged.changed).toBe(true);
     expect(JSON.parse(merged.runConfigJson)).toMatchObject({
-      ralph: { executionBackend: 'claude', iterations: 10, model: 'opus' },
+      run: { driver: 'claude', model: 'opus' },
     });
   });
 
   test('throws on a saved config that is not JSON', () => {
     expect(() =>
       mergePersistedSelectionIntoRunConfig({
-        persisted: { backend: 'claude', effort: '', model: 'opus' },
+        persisted: { driver: 'claude', effort: '', model: 'opus' },
         planId,
         runConfigJson: '{bad',
       }),
@@ -150,43 +145,43 @@ describe('parsePlanRunForm', () => {
   test('reads the enqueue fields with the interactive priority default', () => {
     expect(parsePlanRunForm(form({ branch: 'main' }))).toEqual({
       fields: { branch: 'main', priority: 1 },
+      otLoopSelection: undefined,
       persisted: undefined,
       success: true,
     });
   });
 
-  test('overlays iterations on ralphTuning and carries the persisted selection', () => {
+  test('overlays the persisted selection on runTuning and carries it', () => {
     expect(
       parsePlanRunForm(
         form({
-          backend: 'claude',
           branch: 'main',
+          driver: 'claude',
           effort: 'max',
-          iterations: '7',
           model: 'opus',
-          ralphTuning: JSON.stringify({ iterations: 2, project: 'p' }),
+          runTuning: JSON.stringify({ iterationTimeoutSeconds: 60 }),
         }),
       ),
     ).toEqual({
       fields: {
         branch: 'main',
         priority: 1,
-        ralph: {
-          backend: 'claude',
+        tuning: {
+          driver: 'claude',
           effort: 'max',
-          iterations: 7,
+          iterationTimeoutSeconds: 60,
           model: 'opus',
-          project: 'p',
         },
       },
-      persisted: { backend: 'claude', effort: 'max', model: 'opus' },
+      otLoopSelection: undefined,
+      persisted: { driver: 'claude', effort: 'max', model: 'opus' },
       success: true,
     });
   });
 
   test('treats a blank effort as unset', () => {
     const result = parsePlanRunForm(
-      form({ backend: 'claude', branch: 'main', effort: '', model: 'opus' }),
+      form({ branch: 'main', driver: 'claude', effort: '', model: 'opus' }),
     );
 
     expect(result).toMatchObject({
@@ -196,12 +191,10 @@ describe('parsePlanRunForm', () => {
   });
 
   test.each([
-    [{ iterations: '0' }, 'at least 1'],
-    [{ iterations: '1.5' }, 'whole number'],
-    [{ backend: 'codex', model: 'm' }, 'Unknown execution backend "codex".'],
+    [{ driver: 'codex', model: 'm' }, 'Unknown driver "codex".'],
     [{ effort: 'high' }, 'only be saved together with a model'],
     [{ model: 'opus' }, 'submitted together'],
-    [{ ralphTuning: 'not-json' }, 'Invalid workflow run options payload.'],
+    [{ runTuning: 'not-json' }, 'Invalid workflow run options payload.'],
     [{ jobRunHooksJson: '{"hooks":"nope"}' }, 'Invalid job run hooks'],
   ])('rejects %j', (extra, message) => {
     const result = parsePlanRunForm(form({ branch: 'main', ...extra }));
@@ -246,58 +239,47 @@ describe('parseScheduledFor', () => {
   });
 });
 
-describe('parsePlanRunForm runner', () => {
+describe('parsePlanRunForm OT Loop settings', () => {
   const base = { branch: 'feat/x' };
 
-  test('sends no runner and persists nothing when the form carries none', () => {
+  test('persists nothing when the form carries no OT Loop settings', () => {
     const parsed = parsePlanRunForm(form(base));
 
-    expect(parsed).toMatchObject({ runnerSelection: undefined, success: true });
-    expect(parsed.success && parsed.fields).not.toHaveProperty('runner');
+    expect(parsed).toMatchObject({ otLoopSelection: undefined, success: true });
+    expect(parsed.success && parsed.fields).not.toHaveProperty(
+      'otLoopSettings',
+    );
   });
 
-  test('OT Loop reaches the enqueue fields and the persisted selection, trimmed', () => {
+  test('the OT Loop fields reach the OT Loop selection, trimmed, and never the enqueue fields', () => {
     const parsed = parsePlanRunForm(
       form({
         ...base,
         otLoopMaxRetries: '4',
+        otLoopSettings: 'true',
         otLoopValidationCommands: ' pnpm test \n\n  pnpm lint  ',
-        runner: 'ot-loop',
       }),
     );
 
+    expect(parsed.success && parsed.fields).not.toHaveProperty(
+      'otLoopSettings',
+    );
     expect(parsed).toMatchObject({
-      fields: { runner: 'ot-loop' },
-      runnerSelection: {
-        otLoop: {
-          maxRetries: 4,
-          validationCommands: ['pnpm test', 'pnpm lint'],
-        },
-        runner: 'ot-loop',
+      otLoopSelection: {
+        maxRetries: 4,
+        validationCommands: ['pnpm test', 'pnpm lint'],
       },
       success: true,
     });
   });
 
-  test('Ralph carries no OT Loop edit', () => {
-    expect(
-      parsePlanRunForm(
-        form({ ...base, otLoopMaxRetries: '4', runner: 'ralph' }),
-      ),
-    ).toMatchObject({
-      fields: { runner: 'ralph' },
-      runnerSelection: { otLoop: undefined, runner: 'ralph' },
-    });
-  });
-
   test.each([
-    [{ runner: 'turbo' }, 'Unknown runner "turbo".'],
     [
-      { otLoopMaxRetries: '6', runner: 'ot-loop' },
+      { otLoopMaxRetries: '6', otLoopSettings: 'true' },
       'Retries must be a whole number from 0 to 5.',
     ],
     [
-      { otLoopMaxRetries: '1.5', runner: 'ot-loop' },
+      { otLoopMaxRetries: '1.5', otLoopSettings: 'true' },
       'Retries must be a whole number from 0 to 5.',
     ],
   ])('rejects %j', (extra, error) => {
@@ -308,7 +290,7 @@ describe('parsePlanRunForm runner', () => {
   });
 });
 
-describe('mergeRunnerSelectionIntoRunConfig', () => {
+describe('mergeOtLoopSelectionIntoRunConfig', () => {
   const stored = (extra: Record<string, unknown> = {}): string => {
     return serializePlanRunConfigForGraphql(
       { ...getDefaultPlanRunConfigStorage({ planId }), ...extra },
@@ -316,69 +298,75 @@ describe('mergeRunnerSelectionIntoRunConfig', () => {
     );
   };
 
-  test('writes OT Loop and merges the edited fields, keeping setup commands', () => {
-    const merged = mergeRunnerSelectionIntoRunConfig({
+  const storedRun = (run: Record<string, unknown>): string => {
+    return stored({
+      run: { ...getDefaultPlanRunConfigStorage({ planId }).run, ...run },
+    });
+  };
+
+  test('merges the edited fields, keeping setup commands', () => {
+    const merged = mergeOtLoopSelectionIntoRunConfig({
       planId,
-      runConfigJson: stored({
-        otLoop: { setupCommands: ['pnpm i'], validationCommands: ['old'] },
-        runner: 'ot-loop',
+      runConfigJson: storedRun({
+        setupCommands: ['pnpm i'],
+        validationCommands: ['old'],
       }),
-      selection: {
-        otLoop: { maxRetries: 1, validationCommands: ['new'] },
-        runner: 'ot-loop',
-      },
+      selection: { maxRetries: 1, validationCommands: ['new'] },
     });
 
     expect(merged.changed).toBe(true);
-    expect(JSON.parse(merged.runConfigJson)).toMatchObject({
-      otLoop: {
-        maxRetries: 1,
-        setupCommands: ['pnpm i'],
-        validationCommands: ['new'],
-      },
-      runner: 'ot-loop',
+    expect(JSON.parse(merged.runConfigJson).run).toMatchObject({
+      maxRetries: 1,
+      setupCommands: ['pnpm i'],
+      validationCommands: ['new'],
     });
   });
 
   test('an empty list and blank retries clear their keys', () => {
-    const merged = mergeRunnerSelectionIntoRunConfig({
+    const merged = mergeOtLoopSelectionIntoRunConfig({
       planId,
-      runConfigJson: stored({
-        otLoop: { maxRetries: 2, validationCommands: ['old'] },
-        runner: 'ot-loop',
+      runConfigJson: storedRun({
+        maxRetries: 2,
+        validationCommands: ['old'],
       }),
-      selection: {
-        otLoop: { maxRetries: undefined, validationCommands: [] },
-        runner: 'ot-loop',
-      },
+      selection: { maxRetries: undefined, validationCommands: [] },
     });
 
-    expect(JSON.parse(merged.runConfigJson)).not.toHaveProperty('otLoop');
+    expect(JSON.parse(merged.runConfigJson).run).not.toHaveProperty(
+      'maxRetries',
+    );
+    expect(JSON.parse(merged.runConfigJson).run).not.toHaveProperty(
+      'validationCommands',
+    );
   });
 
-  test('Ralph removes the runner key and leaves the stored otLoop alone', () => {
-    const merged = mergeRunnerSelectionIntoRunConfig({
+  test('keeps the stored setup and final-validation commands in the run block', () => {
+    const merged = mergeOtLoopSelectionIntoRunConfig({
       planId,
       runConfigJson: stored({
-        otLoop: { validationCommands: ['keep'] },
-        runner: 'ot-loop',
+        run: {
+          ...getDefaultPlanRunConfigStorage({ planId }).run,
+          setupCommands: ['pnpm i'],
+          validationCommands: ['old'],
+        },
       }),
-      selection: { otLoop: undefined, runner: 'ralph' },
+      selection: { maxRetries: undefined, validationCommands: ['keep'] },
     });
 
     expect(merged.changed).toBe(true);
-    expect(JSON.parse(merged.runConfigJson)).not.toHaveProperty('runner');
-    expect(JSON.parse(merged.runConfigJson)).toMatchObject({
-      otLoop: { validationCommands: ['keep'] },
+    expect(JSON.parse(merged.runConfigJson)).not.toHaveProperty('otLoop');
+    expect(JSON.parse(merged.runConfigJson).run).toMatchObject({
+      setupCommands: ['pnpm i'],
+      validationCommands: ['keep'],
     });
   });
 
-  test('reports no change when the saved config already holds the choice', () => {
+  test('reports no change when the saved config already holds the settings', () => {
     expect(
-      mergeRunnerSelectionIntoRunConfig({
+      mergeOtLoopSelectionIntoRunConfig({
         planId,
         runConfigJson: stored(),
-        selection: { otLoop: undefined, runner: 'ralph' },
+        selection: { maxRetries: undefined, validationCommands: [] },
       }).changed,
     ).toBe(false);
   });

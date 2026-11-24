@@ -431,7 +431,7 @@ describe('PlanContextAvailabilityService', () => {
   });
 
   describe('attached prompts', () => {
-    const resolve = (environment?: 'ci' | 'interactive' | 'ralph') => {
+    const resolve = (environment?: 'ci' | 'interactive' | 'headless') => {
       return service.resolveForPlan({
         environment,
         planId,
@@ -557,14 +557,14 @@ describe('PlanContextAvailabilityService', () => {
         attachRow(
           'a',
           { placement: 'end', promptId: 'p-a', promptType: 'prompts' },
-          'ralph',
+          'headless',
         ),
       ]);
       customPromptsRepository.findVisibleById.mockResolvedValue(
         livePrompt('p-a'),
       );
 
-      expect((await resolve('ralph')).attachedPrompts).toHaveLength(1);
+      expect((await resolve('headless')).attachedPrompts).toHaveLength(1);
       expect((await resolve('ci')).attachedPrompts).toEqual([]);
       expect((await resolve()).attachedPrompts).toEqual([]);
     });

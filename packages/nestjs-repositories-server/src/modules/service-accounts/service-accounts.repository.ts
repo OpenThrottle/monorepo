@@ -67,7 +67,7 @@ export class ServiceAccountsRepository extends BaseRepository<
   }
 
   /**
-   * @description Finds a live service account by its unique name (e.g. 'workflow-ralph'), or null.
+   * @description Finds a live service account by its unique name (e.g. 'plan-runner'), or null.
    */
   async findByName(name: string): Promise<ServiceAccount | null> {
     return this.repository.findOne({ where: { name } });

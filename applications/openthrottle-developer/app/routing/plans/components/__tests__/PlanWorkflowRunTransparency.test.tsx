@@ -7,28 +7,28 @@ import { describe, expect, test } from 'vitest';
 
 import { PLAN_RUN_TRANSPARENCY_COPY } from '~/routing/plans/data/data.copy';
 import {
-  getDefaultWorkflowRalphRunOptionsInput,
+  getDefaultPlanRunOptions,
   PLAN_RUN_BULLMQ_QUEUE_NAME,
-} from '~/routing/plans/utils/build-workflow-ralph-argv';
+} from '~/routing/plans/utils/plan-run-options';
 
 import type { PlanWorkflowRunTransparencyProps } from '../PlanWorkflowRunTransparency';
 import { PlanWorkflowRunTransparency } from '../PlanWorkflowRunTransparency';
 
 const planId = '0c2720a9-920f-4b16-865a-f803eb444e18';
 
-const baseWorkflow = getDefaultWorkflowRalphRunOptionsInput({ planId });
+const baseWorkflow = getDefaultPlanRunOptions({ planId });
 
 const completedRun: PlanWorkflowRunTransparencyProps['planRunAuditRows'][number] =
   {
     __typename: 'PlanRunObject',
     bullmqJobId: 'job-snap-1',
     createdAt: '2024-01-02T03:04:05.000Z',
-    executionBackend: 'cursor',
+    driver: 'cursor',
     heartbeatExpected: true,
     id: 'run-1',
     isStale: false,
     runConfigSnapshotJson: JSON.stringify({
-      ralph: { executionBackend: 'cursor' },
+      run: { driver: 'cursor' },
       target: { mode: 'plan', taskId: '' },
       version: 1,
       workspace: { workingDirectory: '' },
@@ -152,7 +152,7 @@ describe('PlanWorkflowRunTransparency', () => {
         PLAN_RUN_TRANSPARENCY_COPY.upcoming.heading,
         PLAN_RUN_TRANSPARENCY_COPY.latest.heading,
         PLAN_RUN_TRANSPARENCY_COPY.history.heading,
-        PLAN_RUN_TRANSPARENCY_COPY.cli.heading,
+        PLAN_RUN_TRANSPARENCY_COPY.tuning.heading,
       ]);
     });
   });
@@ -170,47 +170,42 @@ describe('PlanWorkflowRunTransparency', () => {
       ).not.toBeInTheDocument();
     });
 
-    test('still renders CLI & debug', () => {
+    test('still renders the run tuning section', () => {
       const component = renderTransparency();
 
       expect(
         component.getByRole('button', {
-          name: PLAN_RUN_TRANSPARENCY_COPY.cli.heading,
+          name: PLAN_RUN_TRANSPARENCY_COPY.tuning.heading,
         }),
       ).toBeInTheDocument();
     });
   });
 
-  describe('CLI & debug', () => {
+  describe('run tuning', () => {
     test('is collapsed by default', () => {
       const component = renderTransparency();
 
       const trigger = component.getByRole('button', {
-        name: PLAN_RUN_TRANSPARENCY_COPY.cli.heading,
+        name: PLAN_RUN_TRANSPARENCY_COPY.tuning.heading,
       });
       expect(trigger).toHaveAttribute('aria-expanded', 'false');
       expect(
-        component.queryByRole('button', {
-          name: PLAN_RUN_TRANSPARENCY_COPY.cli.copyDebugBundle,
+        component.queryByRole('link', {
+          name: PLAN_RUN_TRANSPARENCY_COPY.tuning.configurationLink,
         }),
       ).not.toBeInTheDocument();
     });
 
-    test('expands on click to show the actions as buttons', async () => {
+    test('expands on click to show the queue link and the configuration link', async () => {
       const user = userEvent.setup();
       const component = renderTransparency();
 
       await user.click(
         component.getByRole('button', {
-          name: PLAN_RUN_TRANSPARENCY_COPY.cli.heading,
+          name: PLAN_RUN_TRANSPARENCY_COPY.tuning.heading,
         }),
       );
 
-      expect(
-        component.getByRole('button', {
-          name: PLAN_RUN_TRANSPARENCY_COPY.cli.copyDebugBundle,
-        }),
-      ).toBeInTheDocument();
       expect(
         component.getByRole('link', {
           name: new RegExp(PLAN_RUN_BULLMQ_QUEUE_NAME, 'i'),
@@ -221,11 +216,11 @@ describe('PlanWorkflowRunTransparency', () => {
       );
       expect(
         component.getByRole('link', {
-          name: PLAN_RUN_TRANSPARENCY_COPY.cli.configurationLink,
+          name: PLAN_RUN_TRANSPARENCY_COPY.tuning.configurationLink,
         }),
       ).toHaveAttribute('href', `/plans/${planId}?tab=configuration`);
       expect(
-        component.getByText(PLAN_RUN_TRANSPARENCY_COPY.cli.diffEmpty),
+        component.getByText(PLAN_RUN_TRANSPARENCY_COPY.tuning.diffEmpty),
       ).toBeInTheDocument();
     });
 
@@ -234,7 +229,7 @@ describe('PlanWorkflowRunTransparency', () => {
       const component = renderTransparency();
 
       const trigger = component.getByRole('button', {
-        name: PLAN_RUN_TRANSPARENCY_COPY.cli.heading,
+        name: PLAN_RUN_TRANSPARENCY_COPY.tuning.heading,
       });
       trigger.focus();
       await user.keyboard('{Enter}');
@@ -245,17 +240,17 @@ describe('PlanWorkflowRunTransparency', () => {
     test('lists tuning that differs from the defaults', async () => {
       const user = userEvent.setup();
       const component = renderTransparency({
-        workflowInput: { ...baseWorkflow, iterations: 3 },
+        workflowInput: { ...baseWorkflow, effort: 'high' },
       });
 
       await user.click(
         component.getByRole('button', {
-          name: PLAN_RUN_TRANSPARENCY_COPY.cli.heading,
+          name: PLAN_RUN_TRANSPARENCY_COPY.tuning.heading,
         }),
       );
 
       expect(
-        component.queryByText(PLAN_RUN_TRANSPARENCY_COPY.cli.diffEmpty),
+        component.queryByText(PLAN_RUN_TRANSPARENCY_COPY.tuning.diffEmpty),
       ).not.toBeInTheDocument();
       expect(component.getAllByRole('listitem').length).toBeGreaterThan(0);
     });

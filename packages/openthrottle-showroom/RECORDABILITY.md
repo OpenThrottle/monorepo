@@ -57,7 +57,7 @@ take below**: no take has been reviewed by a person yet, so none is `ready`.
 | 04-mental-model             | 46s  | 0 / 3                  | 2: the `/plans` project column is gone (beat rewritten to the project's plans list); two regions pointed at elements that appear after a click   |
 | 05-connect-ot-mcp           | 61s  | 0 / 23                 | none                                                                                                                                             |
 | 07-semantic-search          | 46s  | 0 / 736                | 2: plain-anchor and GET-form navigations dropped the hide stylesheet, so the metrics strip came back (runner now re-installs it after `waitFor`) |
-| 11-ralph-one-task           | 80s  | 0 / 6                  | none; recorded twice, identical step manifests                                                                                                   |
+| 11-plan-run-one-task        | 80s  | 0 / 6                  | none; recorded twice, identical step manifests                                                                                                   |
 | 12-watch-run-live           | 79s  | 0 / 11                 | none; recorded twice, identical step manifests                                                                                                   |
 | 13-plan-id-traceability     | 68s  | 0 / 5                  | none                                                                                                                                             |
 | 21-dashboard-tour           | 36s  | 0 / 6                  | none                                                                                                                                             |
@@ -231,13 +231,13 @@ under `FEATURE_BETA_PREVIEW`, which recordings keep off (2026-11-21).
 Beats 0 and 3 are fine. The episode stays blocked because beats 4–5 are the
 whole thesis of the video ("context your agents can actually find").
 
-### 11-ralph-one-task — `data-gap`, waiting on the in-progress-run task
+### 11-plan-run-one-task — `data-gap`, waiting on the in-progress-run task
 
 Beats 0 and 3 need a task `IN_PROGRESS` and a run that reads as live. Every
 imported run is coerced to `COMPLETED` at load, deliberately. Blocked on task
 `8dd502d0` of this plan, not on the app.
 
-2026-11-22: flow authored (`src/episodes/11-ralph-one-task/flow.ts`), `liveRun` on the hero run with task `…0102` held `IN_PROGRESS`. Nothing appends output during a take: "streaming" is the hero plan's 19 seeded chunks, and the beats show only what they contain. The hero tasks are one COMPLETED, one IN_PROGRESS, one PENDING, so the beats were rewritten to say so (they asked for "the rest pending" and "two tasks complete"), Tasks and Output are separate tabs so "output below it" became a tab switch, and the task "flip" is the log's own `-> COMPLETED` / `-> IN_PROGRESS` lines, not a live transition. No chunk runs a type check, so narration "Lint, types, tests" became "Tests, then lint". The test run fails once and then passes (the log shows it); the beat claims only the pass.
+2026-11-22: flow authored (`src/episodes/11-plan-run-one-task/flow.ts`), `liveRun` on the hero run with task `…0102` held `IN_PROGRESS`. Nothing appends output during a take: "streaming" is the hero plan's 19 seeded chunks, and the beats show only what they contain. The hero tasks are one COMPLETED, one IN_PROGRESS, one PENDING, so the beats were rewritten to say so (they asked for "the rest pending" and "two tasks complete"), Tasks and Output are separate tabs so "output below it" became a tab switch, and the task "flip" is the log's own `-> COMPLETED` / `-> IN_PROGRESS` lines, not a live transition. No chunk runs a type check, so narration "Lint, types, tests" became "Tests, then lint". The test run fails once and then passes (the log shows it); the beat claims only the pass.
 
 ### 12-watch-run-live — `recordable` with one caveat
 
@@ -399,7 +399,7 @@ Four more episodes are blocked by this, on top of the nine above:
   applications list) works.
 - **L1** — beat 9 starts a run from the plan.
 
-11-ralph-one-task and 12-watch-run-live survive it, because neither touches the
+11-plan-run-one-task and 12-watch-run-live survive it, because neither touches the
 toolbar: they open on a plan that is already running and read its output.
 
 ## The live-run mechanism, and what it does not fix

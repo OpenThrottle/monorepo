@@ -1,8 +1,7 @@
+import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import type { ExecuteGraphqlOptionsV2 } from '@openthrottle/nodejs-graphql';
 import type { LoopOutputKind } from '@openthrottle/openthrottle-agentic-loop';
-import type {
-  WorkflowExecuteGraphqlV2,
-  WorkflowRalphCommandRunner,
-} from '@openthrottle/openthrottle-agentic-ralph';
+import type { PlanRunCommandRunner } from '@openthrottle/openthrottle-agentic-utils';
 import type {
   AgentDriver,
   DriverInvocationConfig,
@@ -11,8 +10,32 @@ import type {
   UsageLimit,
 } from '@openthrottle/openthrottle-drivers';
 
-/** @description The worker-scoped GraphQL executor (same contract as Ralph's). */
-export type OtLoopExecuteGraphql = WorkflowExecuteGraphqlV2;
+/**
+ * @description The worker-scoped GraphQL executor: the contract of `executeGraphqlV2` from
+ * `@openthrottle/nodejs-graphql`, called with codegen `TypedDocumentNode` operations only.
+ */
+export type OtLoopExecuteGraphql = <
+  TData,
+  TVariables extends Record<string, unknown>,
+>(
+  document: TypedDocumentNode<TData, TVariables>,
+  variables?: TVariables,
+  options?: ExecuteGraphqlOptionsV2,
+) => Promise<TData>;
+
+/**
+ * @description Explicit GraphQL endpoint and Bearer credentials for worker/BullMQ runs. Workers have
+ * no HTTP session, so the server supplies these from env (see `resolvePlanRunWorkerGraphqlConfigFromEnv`).
+ */
+export type PlanRunWorkerGraphqlAuth = ExecuteGraphqlOptionsV2;
+
+/** @description Worker GraphQL auth + URL overrides read from env, before the URL is resolved. */
+export interface PlanRunWorkerGraphqlConfig {
+  /** POST here instead of resolving `API_URL_INTERNAL` + `/graphql` inside `@openthrottle/nodejs-graphql`. */
+  readonly graphqlUrl: string | undefined;
+  /** Bearer token for OpenThrottle GraphQL; `undefined` for unauthenticated calls. */
+  readonly token: string | undefined;
+}
 
 /** @description One chunk for plan output: what it is, and where in the run it belongs. */
 export interface PlanOutputChunk {
@@ -79,5 +102,5 @@ export interface OtLoopFinalizeOptions {
   readonly cwd: string;
   readonly executeGraphqlV2: OtLoopExecuteGraphql;
   readonly output: PlanOutputWriter;
-  readonly runCommand: WorkflowRalphCommandRunner;
+  readonly runCommand: PlanRunCommandRunner;
 }

@@ -17,7 +17,7 @@ export const PLAN_RUN_WORKTREE_TEARDOWN_REASONS: readonly string[] = [
  * - `NO_WORKTREE` — the run worked in the base checkout; there is nothing to remove.
  * - `REASON` — the run did not finish in a state that allows teardown.
  * - `NO_PR` — the run finished but opened no PR.
- * - `KEEP` — the plan's `ralph.worktreeCleanup` is `'keep'`.
+ * - `KEEP` — the plan's `run.worktreeCleanup` is `'keep'`.
  * - `PLAN_UNREADABLE` — the plan could not be read, so its choice is unknown.
  */
 export const PLAN_RUN_WORKTREE_CLEANUP_SKIP = {

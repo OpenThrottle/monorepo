@@ -2,11 +2,14 @@
  * @description Parses and resolves job-run lifecycle hooks for plan storage and BullMQ enqueue.
  */
 
+import type {
+  JobRunHookEntry,
+  JobRunHooksConfig,
+} from '@openthrottle/openthrottle-agentic-utils';
+import { parseJobRunHooksConfig } from '@openthrottle/openthrottle-agentic-utils';
 import type { PlanJobRunHooksStorage } from '@openthrottle/openthrottle-plan-config';
-import type { JobRunHookEntry, JobRunHooksConfig } from '@tools/workflows';
-import { parseJobRunHooksConfig } from '@tools/workflows';
 
-import { validateWorkingDirectory } from '../enqueue-plan-ralph-tuning/enqueue-plan-ralph-tuning.utils.ts';
+import { validateWorkingDirectory } from '../enqueue-plan-run-tuning/enqueue-plan-run-tuning.utils.ts';
 
 const MAX_JOB_RUN_HOOKS_JSON_LEN = 512_000;
 

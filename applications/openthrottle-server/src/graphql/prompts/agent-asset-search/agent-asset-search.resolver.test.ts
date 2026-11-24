@@ -126,7 +126,7 @@ describe('AgentAssetSearchResolver', () => {
       limit: 100,
       projectId: 'project-uuid',
       promptTypes: [CustomPromptTypeEnum.SKILLS],
-      query: 'ralph',
+      query: 'headless',
     });
 
     expect(searchAgentAssets).toHaveBeenCalledWith(
@@ -145,7 +145,7 @@ describe('AgentAssetSearchResolver', () => {
     vi.mocked(searchAgentAssets).mockResolvedValue([]);
 
     await resolver.searchAgentAssets(
-      { limit: 5, projectId: null, promptTypes: null, query: 'ralph' },
+      { limit: 5, projectId: null, promptTypes: null, query: 'headless' },
       'service-account-sub',
     );
 
@@ -166,7 +166,7 @@ describe('AgentAssetSearchResolver', () => {
     vi.mocked(searchAgentAssets).mockResolvedValue([]);
 
     await resolver.searchAgentAssets(
-      { limit: 5, projectId: null, promptTypes: null, query: 'ralph' },
+      { limit: 5, projectId: null, promptTypes: null, query: 'headless' },
       'unlinked-service-account',
     );
 

@@ -1,13 +1,13 @@
-import type { WorkflowRalphExecutionBackendUi } from '~/routing/plans/utils/build-workflow-ralph-argv';
+import type { PlanRunDriverUi } from '~/routing/plans/utils/plan-run-options';
 
-/** Runner backends offered in the execution selector, in display order. */
-export const EXECUTION_BACKENDS = [
+/** Runner drivers offered in the execution selector, in display order. */
+export const PLAN_RUN_SELECTABLE_DRIVERS = [
   'cursor',
   'claude',
-] as const satisfies readonly WorkflowRalphExecutionBackendUi[];
+] as const satisfies readonly PlanRunDriverUi[];
 
-export const isExecutionBackend = (
+export const isSelectablePlanRunDriver = (
   value: string,
-): value is WorkflowRalphExecutionBackendUi => {
-  return EXECUTION_BACKENDS.some((backend) => backend === value);
+): value is PlanRunDriverUi => {
+  return PLAN_RUN_SELECTABLE_DRIVERS.some((driver) => driver === value);
 };

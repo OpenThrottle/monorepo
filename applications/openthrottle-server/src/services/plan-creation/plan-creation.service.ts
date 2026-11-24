@@ -122,7 +122,7 @@ export class PlanCreationService {
 
   /**
    * @description The run config a plan gets when the caller sent none: the system defaults, with
-   * the creating user's default agent (backend + model + effort) stamped over the Ralph runner
+   * the creating user's default agent (driver + model + effort) stamped over the plan-run config
    * when they have one that is still valid.
    *
    * Only reached when `runConfigJson` is absent — an explicit run config always wins (D3).

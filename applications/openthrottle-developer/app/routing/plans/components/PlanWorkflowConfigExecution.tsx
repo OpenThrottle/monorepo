@@ -9,19 +9,17 @@ import {
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 import * as React from 'react';
 
-import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
+import type { PlanRunOptions } from '~/routing/plans/utils/plan-run-options';
 import {
-  EXECUTION_BACKENDS,
-  isExecutionBackend,
+  isSelectablePlanRunDriver,
+  PLAN_RUN_SELECTABLE_DRIVERS,
 } from '~/routing/plans/utils/plan-workflow-config-execution';
 
 export interface PlanWorkflowConfigExecutionProps {
   className?: string;
   heading: string;
-  input: WorkflowRalphRunOptionsInput;
-  setInput: (
-    updater: React.SetStateAction<WorkflowRalphRunOptionsInput>,
-  ) => void;
+  input: PlanRunOptions;
+  setInput: (updater: React.SetStateAction<PlanRunOptions>) => void;
 }
 
 export const PlanWorkflowConfigExecution = (
@@ -32,8 +30,8 @@ export const PlanWorkflowConfigExecution = (
   // Hooks
 
   // Setup
-  const isCursor = input.executionBackend === 'cursor';
-  const backendLabel = isCursor ? 'Cursor (cursor-agent)' : 'Claude Code CLI';
+  const isCursor = input.driver === 'cursor';
+  const driverLabel = isCursor ? 'Cursor (cursor-agent)' : 'Claude Code CLI';
 
   // Handlers
 
@@ -50,34 +48,32 @@ export const PlanWorkflowConfigExecution = (
       legend={heading}
     >
       <p className="text-muted-foreground text-xs">
-        One runner for the entire plan run—serialized as{' '}
-        <code className="text-xs">--backend</code> on{' '}
-        <code className="text-xs">workflow-ralph</code> and stored on the queued
-        job for auditing.
+        One agent CLI for the entire plan run, stored on the queued job for
+        auditing.
       </p>
       <div className="space-y-2">
-        <Label htmlFor="plan-workflow-config-backend">Runner</Label>
+        <Label htmlFor="plan-workflow-config-driver">Agent CLI</Label>
         <Select
           onValueChange={(next) => {
-            if (!isExecutionBackend(next)) {
+            if (!isSelectablePlanRunDriver(next)) {
               return;
             }
             setInput((prev) => ({
               ...prev,
-              executionBackend: next,
+              driver: next,
             }));
           }}
-          value={input.executionBackend}
+          value={input.driver}
         >
           <SelectTrigger
-            aria-label="Execution backend for this plan run"
+            aria-label="Driver for this plan run"
             className="max-w-md"
-            id="plan-workflow-config-backend"
+            id="plan-workflow-config-driver"
           >
-            <SelectValue>{backendLabel}</SelectValue>
+            <SelectValue>{driverLabel}</SelectValue>
           </SelectTrigger>
           <SelectContent>
-            {EXECUTION_BACKENDS.map((id) => (
+            {PLAN_RUN_SELECTABLE_DRIVERS.map((id) => (
               <SelectItem key={id} value={id}>
                 {id === 'cursor' ? 'Cursor (cursor-agent)' : 'Claude Code CLI'}
               </SelectItem>

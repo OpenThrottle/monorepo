@@ -1,30 +1,20 @@
 /**
- * @description Pure helpers for the OT Loop fields (runner choice, validation command
- * override, retry count) shared by the Run dialog and the Configuration tab. Mirrors the
- * `runner` / `otLoop` keys of `runConfigJson` (docs/workflows/ot-loop-job.md § 1).
+ * @description Pure helpers for the OT Loop fields (validation command override, retry
+ * count) shared by the Run dialog and the Configuration tab. Mirrors the OT Loop fields of the
+ * `run` block of `runConfigJson` (docs/workflows/ot-loop-job.md § 1).
  */
-import type {
-  PlanRunConfigOtLoop,
-  PlanRunConfigRunner,
-} from '@openthrottle/openthrottle-plan-config';
+import type { PlanRunConfigOtLoop } from '@openthrottle/openthrottle-plan-config';
 import { MAX_PLAN_RUN_OT_LOOP_RETRIES } from '@openthrottle/openthrottle-plan-config';
 
-/** @description Retry count the runner uses when `otLoop.maxRetries` is unset. */
+/**
+ * @description Form field the Run dialog sets on every submit that carries its OT Loop settings, so a
+ * blank retries field and an empty command list (both dropped from the form) still clear the saved
+ * values. The toolbar's one-click Run omits it and edits nothing.
+ */
+export const PLAN_RUN_OT_LOOP_SETTINGS_FIELD = 'otLoopSettings';
+
+/** @description Retry count the runner uses when `run.maxRetries` is unset. */
 export const DEFAULT_PLAN_RUN_OT_LOOP_RETRIES = 2;
-
-/** @description Type guard for the two runner ids a run config can name. */
-export const isPlanRunRunner = (
-  value: unknown,
-): value is PlanRunConfigRunner => {
-  return value === 'ralph' || value === 'ot-loop';
-};
-
-/** @description An absent runner means Ralph. */
-export const resolvePlanRunRunner = (
-  runner: PlanRunConfigRunner | undefined,
-): PlanRunConfigRunner => {
-  return runner ?? 'ralph';
-};
 
 /** @description One command per line to a list: trimmed, blank lines dropped. */
 export const parseOtLoopCommandsText = (text: string): string[] => {
@@ -65,7 +55,7 @@ export const parseOtLoopMaxRetriesText = (
 
 /**
  * @description Applies the edited validation commands and retry count onto a stored
- * `otLoop` block, keeping its setup and final-validation commands. An empty command list
+ * OT Loop fields, keeping its setup and final-validation commands. An empty command list
  * or blank retries removes that key; `undefined` when nothing is left.
  */
 export const mergeOtLoopFields = (

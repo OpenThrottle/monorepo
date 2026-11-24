@@ -9,36 +9,36 @@ import { PLAN_STATUS_LIST } from '@openthrottle/nestjs-repositories-server';
 import { PlanTaskStatus } from './plan-task-status.enum.ts';
 
 /**
- * @description Matches {@link RalphNestedDebugCli} for nested `workflow-ralph` spawns.
+ * @description Agent CLI logging level for a plan run.
  */
-const RalphNestedDebugCliGraphQL = {
+const PlanRunDebugCliGraphQL = {
   debug: 'debug',
   omit: 'omit',
   verbose: 'verbose',
 } as const;
 
-type RalphNestedDebugCliGraphQL =
-  (typeof RalphNestedDebugCliGraphQL)[keyof typeof RalphNestedDebugCliGraphQL];
+type PlanRunDebugCliGraphQL =
+  (typeof PlanRunDebugCliGraphQL)[keyof typeof PlanRunDebugCliGraphQL];
 
-registerEnumType(RalphNestedDebugCliGraphQL, {
-  description: `Nested workflow-ralph logging: omit (default CLI/env), --debug, or --verbose.`,
-  name: 'RalphNestedDebugCli',
+registerEnumType(PlanRunDebugCliGraphQL, {
+  description: `Agent CLI logging for a plan run: omit (default), --debug, or --verbose.`,
+  name: 'PlanRunDebugCli',
 });
 
 /**
- * @description Plan vs task-centric scope for in-process Ralph orchestrator runs (matches `WorkflowRalphContext` / CLI `--plan` vs `--task`).
+ * @description Plan vs task-centric scope for a plan run.
  */
-export const PlanRalphWorkflowModeGraphQL = {
+export const PlanRunModeGraphQL = {
   plan: 'plan',
   task: 'task',
 } as const;
 
-export type PlanRalphWorkflowModeGraphQL =
-  (typeof PlanRalphWorkflowModeGraphQL)[keyof typeof PlanRalphWorkflowModeGraphQL];
+export type PlanRunModeGraphQL =
+  (typeof PlanRunModeGraphQL)[keyof typeof PlanRunModeGraphQL];
 
-registerEnumType(PlanRalphWorkflowModeGraphQL, {
+registerEnumType(PlanRunModeGraphQL, {
   description: `Plan-scoped run (default) or task-centric run ("task" requires taskId).`,
-  name: 'PlanRalphWorkflowMode',
+  name: 'PlanRunMode',
 });
 
 @InputType()
@@ -83,7 +83,7 @@ export class CreatePlanInput {
   title!: string;
 
   @Field(() => String, {
-    description: `JSON string of workflow-ralph run configuration (PlanRunConfigStorage v1). Omit to use defaults.`,
+    description: `JSON string of the plan run configuration (PlanRunConfigStorage v1). Omit to use defaults.`,
     nullable: true,
   })
   runConfigJson?: string | null;
@@ -148,7 +148,7 @@ export class UpdatePlanInput {
   jobRunHooksJson?: string | null;
 
   @Field(() => String, {
-    description: `JSON string of workflow-ralph run configuration (PlanRunConfigStorage v1). Pass null to reset to default v1 shell; omit to leave unchanged.`,
+    description: `JSON string of the plan run configuration (PlanRunConfigStorage v1). Pass null to reset to default v1 shell; omit to leave unchanged.`,
     nullable: true,
   })
   runConfigJson?: string | null;
@@ -239,7 +239,7 @@ export class ReschedulePlanRunInput {
 @InputType()
 export class CancelPlanRunInput {
   @Field(() => ID, {
-    description: `Plan id whose in-queue run-plan (Ralph) job should be cancelled`,
+    description: `Plan id whose in-queue plan-run job should be cancelled`,
   })
   planId!: string;
 
@@ -251,84 +251,42 @@ export class CancelPlanRunInput {
 }
 
 @InputType()
-export class RalphPlanRunTuningInput {
-  @Field(() => String, {
-    description: `Execution backend (e.g. cursor). Omit to use worktree defaults.`,
+export class PlanRunTuningInput {
+  @Field(() => PlanRunDebugCliGraphQL, {
+    description: `Agent CLI logging for the run: omit, debug or verbose. Omit this field for the verbose default.`,
     nullable: true,
   })
-  backend?: string | null;
+  debugCli?: PlanRunDebugCliGraphQL | null;
 
   @Field(() => String, {
-    description: `Reasoning-effort level for the run: "low", "medium", "high", "extraHigh", "max", or "ultra" (the same vocabulary as the chat composer's reasoning). Nullable + additive: omit to leave the run's effort unchanged. An unrecognized level is rejected. Recorded on the run's runConfigSnapshot and forwarded to the agent CLI, where each backend maps it to its own flag (claude --effort, codex -c model_reasoning_effort=, grok --reasoning-effort, opencode --variant), clamping to its accepted set; a backend with no reasoning knob (antigravity, cursor) ignores it.`,
+    description: `Agent driver to run with (e.g. claude, codex, cursor). Omit to use the default.`,
+    nullable: true,
+  })
+  driver?: string | null;
+
+  @Field(() => String, {
+    description: `Reasoning-effort level for the run: "low", "medium", "high", "extraHigh", "max", or "ultra" (the same vocabulary as the chat composer's reasoning). Nullable + additive: omit to leave the run's effort unchanged. An unrecognized level is rejected. Recorded on the run's runConfigSnapshot and forwarded to the agent CLI, where each driver maps it to its own flag (claude --effort, codex -c model_reasoning_effort=, grok --reasoning-effort, opencode --variant), clamping to its accepted set; a driver with no reasoning knob (antigravity, cursor) ignores it.`,
     nullable: true,
   })
   effort?: string | null;
 
   @Field(() => Int, {
-    description: `Per-iteration timeout in seconds (positive integer).`,
+    description: `Per-attempt agent timeout in seconds (positive integer). Omit for no timeout.`,
     nullable: true,
   })
   iterationTimeoutSeconds?: number | null;
 
-  @Field(() => Int, {
-    description: `Max Ralph iterations for this run (positive integer).`,
-    nullable: true,
-  })
-  iterations?: number | null;
-
   @Field(() => String, {
-    description: `Model id passed to workflow-ralph --model.`,
+    description: `Model id passed to the agent CLI.`,
     nullable: true,
   })
   model?: string | null;
 
   @Field(() => String, {
-    description: `Nx project name for workflow-ralph --project.`,
+    description: `Worktree name override for this run. When omitted, OpenThrottle derives plan-<short plan id> and creates that worktree itself. Every run gets a worktree.`,
     nullable: true,
   })
-  project?: string | null;
-
-  @Field(() => String, {
-    description: `Prompt profile path (e.g. /agents-ralph) for --prompt.`,
-    nullable: true,
-  })
-  prompt?: string | null;
-
-  @Field(() => String, {
-    description: `Repo-relative or absolute path for --prompt-file (layer-1 prompt file).`,
-    nullable: true,
-  })
-  promptFile?: string | null;
-
-  @Field(() => RalphNestedDebugCliGraphQL, {
-    description: `Whether to pass --debug / --verbose to nested workflow-ralph.`,
-    nullable: true,
-  })
-  ralphDebugCli?: RalphNestedDebugCliGraphQL | null;
-
-  @Field(() => Boolean, {
-    description: `Opt out of the worktree default and run in the base checkout. Omit to get the worktree OpenThrottle derives for the plan; only an explicit true disables it.`,
-    nullable: true,
-  })
-  disableWorktree?: boolean | null;
-
-  @Field(() => String, {
-    description: `Worktree name for this run. When omitted, OpenThrottle derives plan-<short plan id> and creates that worktree itself; pass disableWorktree to run without one.`,
-    nullable: true,
-  })
-  worktree?: string | null;
-
-  @Field(() => String, {
-    description: `Cursor-only: branch/ref for --worktree-base.`,
-    nullable: true,
-  })
-  worktreeBase?: string | null;
-
-  @Field(() => Boolean, {
-    description: `Cursor-only: pass --skip-worktree-setup to cursor-agent.`,
-    nullable: true,
-  })
-  skipWorktreeSetup?: boolean | null;
+  worktreeName?: string | null;
 }
 
 /**
@@ -358,17 +316,11 @@ export class PlanRunOptionsInput {
   })
   priority?: number | null;
 
-  @Field(() => String, {
-    description: `Which runner executes the run: "ralph" (the default) or "ot-loop" (the per-task discipline of /ot-loop run as deterministic job code, with a fresh worker per task). Nullable + additive: omit to use the plan's stored runConfig runner, else Ralph. An unrecognized value is rejected. "ot-loop" is also rejected when the run has no worktree (disableWorktree) or when no validation command resolves (set otLoop.validationCommands on the plan, or commit .openthrottle/ot-loop.json).`,
+  @Field(() => PlanRunTuningInput, {
+    description: `Optional runtime tuning for the run: driver, model, reasoning effort, agent CLI logging and a worktree name override. Omitted fields keep their defaults.`,
     nullable: true,
   })
-  runner?: string | null;
-
-  @Field(() => RalphPlanRunTuningInput, {
-    description: `Optional Ralph / workflow-ralph runtime tuning (iterations, model, backend, etc.). When set, queued workers pass these to nested workflow-ralph; when omitted, defaults come from env and .workflow-ralph.json in the worktree cwd.`,
-    nullable: true,
-  })
-  ralph?: RalphPlanRunTuningInput | null;
+  tuning?: PlanRunTuningInput | null;
 
   @Field(() => ID, {
     description: `Optional registered checkout id (highest precedence). Resolved server-side to its filesystem path for this run; when set it overrides repositoryId and workingDirectory.`,
@@ -395,7 +347,7 @@ export class PlanRunOptionsInput {
   jobRunHooksJson?: string | null;
 }
 
-/** Input for {@link PlansResolver.enqueuePlanRun} (canonical spawn enqueue). Also accepted by deprecated `workflowPlanRun`. */
+/** Input for {@link PlansResolver.enqueuePlanRun}: a whole-plan run or, with `mode` task, one task. */
 @InputType()
 export class EnqueuePlanRunInput extends PlanRunOptionsInput {
   @Field(() => Boolean, {
@@ -403,6 +355,18 @@ export class EnqueuePlanRunInput extends PlanRunOptionsInput {
     nullable: true,
   })
   cancelScheduled?: boolean | null;
+
+  @Field(() => PlanRunModeGraphQL, {
+    description: `Omit or "plan" for a plan-scoped run; "task" requires taskId (task-centric run).`,
+    nullable: true,
+  })
+  mode?: PlanRunModeGraphQL | null;
+
+  @Field(() => ID, {
+    description: `Required when mode is task; must belong to the plan.`,
+    nullable: true,
+  })
+  taskId?: string | null;
 }
 
 /**
@@ -421,83 +385,6 @@ export class SchedulePlanRunInput extends PlanRunOptionsInput {
     description: `REQUIRED absolute instant the run fires at (an ISO-8601 DateTime; send UTC or an explicit offset). Must be strictly in the future and no more than 30 days from now (SCHEDULED_PLAN_RUN_MAX_HORIZON_DAYS); the server rejects anything else.`,
   })
   scheduledFor!: Date;
-}
-
-@InputType()
-export class EnqueuePlanRalphOrchestratorInput {
-  @Field(() => Boolean, {
-    description: `Set true to run a SCHEDULED plan now: its scheduled run is cancelled and this run is enqueued in its place, in one transaction. Without it, a plan with a scheduled run fails with extensions.code PLAN_ALREADY_SCHEDULED.`,
-    nullable: true,
-  })
-  cancelScheduled?: boolean | null;
-
-  @Field(() => String, {
-    description: `REQUIRED git branch this run operates on. Captured on plan_runs.branch as run provenance (powers branch->PR mapping). Passed explicitly by callers (skills/UI may pre-fill a default from the worktree name / HEAD) and never inferred server-side; enqueue fails fast when missing or blank.`,
-  })
-  branch!: string;
-
-  @Field(() => String, {
-    description: `Optional dedupe key passed to BullMQ as jobId. Re-enqueue with the same key returns the existing job id.`,
-    nullable: true,
-  })
-  idempotencyKey?: string | null;
-
-  @Field(() => PlanRalphWorkflowModeGraphQL, {
-    description: `Omit or "plan" for plan-scoped run; "task" requires taskId (task-centric).`,
-    nullable: true,
-  })
-  mode?: PlanRalphWorkflowModeGraphQL | null;
-
-  @Field(() => ID, { description: 'Plan id to run the orchestrator for' })
-  planId!: string;
-
-  @Field(() => Int, {
-    description: `Job priority (lower = higher priority). Same as enqueuePlanRun.`,
-    nullable: true,
-  })
-  priority?: number | null;
-
-  @Field(() => String, {
-    description: `Which runner executes the run: "ralph" (the default) or "ot-loop" (the per-task discipline of /ot-loop run as deterministic job code, with a fresh worker per task). Nullable + additive: omit to use the plan's stored runConfig runner, else Ralph. An unrecognized value is rejected. "ot-loop" is also rejected when the run has no worktree (disableWorktree) or when no validation command resolves (set otLoop.validationCommands on the plan, or commit .openthrottle/ot-loop.json).`,
-    nullable: true,
-  })
-  runner?: string | null;
-
-  @Field(() => RalphPlanRunTuningInput, {
-    description: `Optional Ralph tuning for the in-process orchestrator (iterations, model, backend, etc.).`,
-    nullable: true,
-  })
-  ralph?: RalphPlanRunTuningInput | null;
-
-  @Field(() => ID, {
-    description: `Required when mode is task; must belong to the plan.`,
-    nullable: true,
-  })
-  taskId?: string | null;
-
-  @Field(() => ID, {
-    description: `Optional registered checkout id (highest precedence). Resolved server-side to its filesystem path for this run; when set it overrides repositoryId and workingDirectory.`,
-    nullable: true,
-  })
-  checkoutId?: string | null;
-
-  @Field(() => ID, {
-    description: `Optional registered repository id. Resolved to the enqueuing user's single checkout of that repository (errors when there is no checkout, or when it is ambiguous). Used when checkoutId is omitted.`,
-    nullable: true,
-  })
-  repositoryId?: string | null;
-
-  @Field(() => String, {
-    description: `Optional absolute path to a local project directory used as the working directory for this run. Escape hatch used only when checkoutId and repositoryId are omitted. When all three are omitted, defaults to the monorepo root (WORKSPACE_ROOT or process.cwd()). Must be an existing directory; validated server-side.`,
-    nullable: true,
-  })
-  workingDirectory?: string | null;
-
-  @Field(() => String, {
-    description: `Optional JSON override for job-run lifecycle hooks for this enqueue only ({ hooks: [...] }). When omitted, hooks are copied from the plan.`,
-    nullable: true,
-  })
-  jobRunHooksJson?: string | null;
 }
 
 @InputType()
@@ -520,28 +407,28 @@ export class PlanRunsByPlanIdInput {
   planId!: string;
 }
 
-/** Input for {@link PlansResolver.registerCliPlanRun}: a detached workflow-ralph CLI run. */
+/** Input for {@link PlansResolver.registerPlanRun}: a run whose owner is outside the queue, such as an interactive /ot-loop. */
 @InputType()
-export class RegisterCliPlanRunInput {
+export class RegisterPlanRunInput {
   @Field(() => String, {
-    description: `OPTIONAL git branch this detached-CLI run operates on. Captured on plan_runs.branch as run provenance. Omit or null → store null; non-empty strings are stored verbatim (no server-side trim/reject — enqueue remains the REQUIRED branch boundary).`,
+    description: `OPTIONAL git branch this run operates on. Captured on plan_runs.branch as run provenance. Omit or null → store null; non-empty strings are stored verbatim (no server-side trim/reject — enqueue remains the REQUIRED branch boundary).`,
     nullable: true,
   })
   branch?: string | null;
 
   @Field(() => String, {
-    description: `Execution backend for this run: antigravity, claude, codex, cursor, grok, or opencode.`,
+    description: `Agent driver for this run: antigravity, claude, codex, cursor, grok, or opencode.`,
   })
-  executionBackend!: string;
+  driver!: string;
 
   @Field(() => Boolean, {
-    description: `Whether this run's owner bumps its heartbeat on a ~15s timer. Omit or null → true, so the detached workflow-ralph CLI (which does) is unaffected. Pass false for an owner with no timer — an interactive /ot-loop agent turn, where a single test run outlives the staleness cutoff. A false run is exempt from the stale sweep, always reports isStale false, and can never yield RUN_STOPPING on cancel; nothing server-side will ever settle it, so its owner must.`,
+    description: `Whether this run's owner bumps its heartbeat on a ~15s timer. Omit or null → true. Pass false for an owner with no timer — an interactive /ot-loop agent turn, where a single test run outlives the staleness cutoff. A false run is exempt from the stale sweep, always reports isStale false, and can never yield RUN_STOPPING on cancel; nothing server-side will ever settle it, so its owner must.`,
     nullable: true,
   })
   heartbeatExpected?: boolean | null;
 
   @Field(() => String, {
-    description: `Host the CLI is running on (diagnostic; cleared on settle). Null when unknown.`,
+    description: `Host the run owner is on (diagnostic; cleared on settle). Null when unknown.`,
     nullable: true,
   })
   hostname?: string | null;
@@ -553,24 +440,24 @@ export class RegisterCliPlanRunInput {
   model?: string | null;
 
   @Field(() => Int, {
-    description: `OS process id of the CLI process (cleared on settle). Null when unknown.`,
+    description: `OS process id of the run owner (cleared on settle). Null when unknown.`,
     nullable: true,
   })
   pid?: number | null;
 
-  @Field(() => ID, { description: `Plan id this detached-CLI run executes.` })
+  @Field(() => ID, { description: `Plan id this run executes.` })
   planId!: string;
 
   @Field(() => String, {
-    description: `Worker/run identifier for the CLI (cleared on settle). Null when unknown.`,
+    description: `Worker/run identifier of the run owner (cleared on settle). Null when unknown.`,
     nullable: true,
   })
   workerId?: string | null;
 }
 
-/** Input for {@link PlansResolver.settleCliPlanRun}: settle a detached-CLI run on exit. */
+/** Input for {@link PlansResolver.settlePlanRun}: settle a run whose owner is outside the queue. */
 @InputType()
-export class SettleCliPlanRunInput {
+export class SettlePlanRunInput {
   @Field(() => String, {
     description: `Branch head sha at PR-open. Recorded as a git_commit artifact on COMPLETED; the verifier maps it to its squash commit once the PR merges. Optional — a run that exits without opening a PR has none.`,
     nullable: true,
@@ -578,7 +465,7 @@ export class SettleCliPlanRunInput {
   headSha!: string | null;
 
   @Field(() => ID, {
-    description: `Plan-run row id to settle (returned by registerCliPlanRun).`,
+    description: `Plan-run row id to settle (returned by registerPlanRun).`,
   })
   planRunId!: string;
 
@@ -625,11 +512,11 @@ export class ForceSettlePlanRunInput {
   reason!: string | null;
 }
 
-/** Input for {@link PlansResolver.recordPlanRunHeartbeat}: bump a detached-CLI run's liveness. */
+/** Input for {@link PlansResolver.recordPlanRunHeartbeat}: bump an externally owned run's liveness. */
 @InputType()
 export class RecordPlanRunHeartbeatInput {
   @Field(() => ID, {
-    description: `Plan-run row id to bump the liveness heartbeat on (returned by registerCliPlanRun).`,
+    description: `Plan-run row id to bump the liveness heartbeat on (returned by registerPlanRun).`,
   })
   planRunId!: string;
 }

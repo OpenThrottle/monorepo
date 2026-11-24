@@ -50,10 +50,10 @@ const triStateEntries: readonly RepoSkillEntry[] = [
   {
     disableModelInvocation: false,
     layout: 'agents',
-    repoRelativePath: '.agents/skills/agents-ralph/SKILL.md',
-    slug: 'agents-ralph',
+    repoRelativePath: '.agents/skills/ot-loop/SKILL.md',
+    slug: 'ot-loop',
     source: 'external',
-    summary: 'Ralph loop.',
+    summary: 'OT Loop.',
     tags: ['planning'],
   },
   {

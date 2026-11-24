@@ -76,7 +76,7 @@ describe('QueuesResolver', () => {
         jobs: [
           {
             data: '{"planId":"p1"}',
-            executionBackend: null,
+            driver: null,
             failedReason: null,
             finishedOn: null,
             id: 'job-1',
@@ -142,7 +142,7 @@ describe('QueuesResolver', () => {
         jobs: [
           {
             data: '{"planId":"p1"}',
-            executionBackend: null,
+            driver: null,
             failedReason: null,
             finishedOn: 1234567890,
             id: 'job-2',
@@ -188,7 +188,7 @@ describe('QueuesResolver', () => {
     test('returns JobObject when job exists', async () => {
       vi.mocked(mockQueuesService.getJob).mockResolvedValueOnce({
         data: '{"planId":"p1"}',
-        executionBackend: null,
+        driver: null,
         failedReason: null,
         finishedOn: 1234567890,
         id: 'job-1',
@@ -237,7 +237,7 @@ describe('QueuesResolver', () => {
       });
       vi.mocked(mockQueuesService.getJob).mockResolvedValueOnce({
         data: '{"planId":"p1"}',
-        executionBackend: null,
+        driver: null,
         failedReason: null,
         finishedOn: 1234567890,
         id: 'job-1',
@@ -281,7 +281,7 @@ describe('QueuesResolver', () => {
       });
       vi.mocked(mockQueuesService.getJob).mockResolvedValueOnce({
         data: '{}',
-        executionBackend: null,
+        driver: null,
         failedReason: null,
         finishedOn: 1234567890,
         id: 'job-1',
@@ -341,7 +341,7 @@ describe('QueuesResolver', () => {
       });
       vi.mocked(mockQueuesService.getJob).mockResolvedValueOnce({
         data: '{"planId":"p1"}',
-        executionBackend: null,
+        driver: null,
         failedReason: null,
         finishedOn: 1234567890,
         id: 'job-1',

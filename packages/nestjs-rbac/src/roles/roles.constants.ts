@@ -11,9 +11,9 @@ import type { Permission, Role } from './roles.types.ts';
 export const ROLES = {
   ADMIN: 'admin',
   MCP: 'mcp',
+  PLAN_RUNNER: 'plan-runner',
   USER: 'user',
   VIEWER: 'viewer',
-  WORKFLOW_RALPH: 'workflow-ralph',
 } as const;
 
 /** Built-in permission identifiers (resource:action style). */
@@ -66,5 +66,5 @@ export const ROLE_PERMISSIONS: Readonly<Record<Role, readonly Permission[]>> = {
     PERMISSIONS.PLANS_READ,
     PERMISSIONS.PLANS_WRITE,
   ],
-  [ROLES.WORKFLOW_RALPH]: [PERMISSIONS.PLANS_READ, PERMISSIONS.PLANS_WRITE],
+  [ROLES.PLAN_RUNNER]: [PERMISSIONS.PLANS_READ, PERMISSIONS.PLANS_WRITE],
 };

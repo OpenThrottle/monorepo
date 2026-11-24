@@ -14,7 +14,7 @@ const row = (overrides: Partial<Row> & Pick<Row, 'id' | 'status'>): Row => {
   return {
     __typename: 'PlanRunObject',
     createdAt: '2026-11-01T00:00:00.000Z',
-    executionBackend: 'claude',
+    driver: 'claude',
     heartbeatExpected: true,
     isStale: false,
     model: 'claude-opus',

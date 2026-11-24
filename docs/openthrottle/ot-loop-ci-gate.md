@@ -164,7 +164,7 @@ the fact.
 
 ## Proposed wording for `ot-loop` § Finishing
 
-Not applied here. `skills/ot-loop/SKILL.md` and `skills/agents-ralph/SKILL.md` mirror the per-task
+Not applied here. `skills/ot-loop/SKILL.md` and the OT Loop job mirror the per-task
 discipline between them, so a change to either lands through its own human-reviewed PR. This is the
 text to land.
 

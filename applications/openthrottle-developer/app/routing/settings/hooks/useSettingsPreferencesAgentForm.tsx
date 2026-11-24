@@ -104,7 +104,7 @@ export const useSettingsPreferencesAgentForm = (
 
     setDraft((previous) => ({
       ...selection,
-      effort: reconcilePlanRunEffort(selection.backend, previous?.effort ?? ''),
+      effort: reconcilePlanRunEffort(selection.driver, previous?.effort ?? ''),
     }));
   };
 

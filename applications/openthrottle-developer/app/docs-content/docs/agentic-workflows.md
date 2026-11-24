@@ -1,13 +1,13 @@
 ---
-description: How the Ralph agentic loop turns a plan into committed work, one task at a time.
+description: How the OT Loop agentic runner turns a plan into committed work, one task at a time.
 group: 01. Concepts
 order: 3
-title: Agentic workflows (Ralph)
+title: Agentic workflows (OT Loop)
 ---
 
-# Agentic workflows (Ralph)
+# Agentic workflows (OT Loop)
 
-"Ralph" is OpenThrottle's agentic loop for executing a plan autonomously, one task at a time, with full traceability back to the plan and task.
+"OT Loop" is OpenThrottle's agentic runner for executing a plan autonomously, one task at a time, with full traceability back to the plan and task.
 
 ## The loop
 
@@ -23,7 +23,7 @@ Progress is narrated onto the plan's output stream as the loop runs, so a human 
 
 ## Where it lives
 
-The Ralph CLI ships in `@tools/workflows` (`tools/`). Individual agentic building blocks live in the `openthrottle-agentic-*` packages under `packages/`.
+The runner's job code lives in `@openthrottle/openthrottle-agentic-loop` and runs in the `openthrottle-server` worker. Individual agentic building blocks live in the `openthrottle-agentic-*` packages under `packages/`.
 
 ## Isolation
 

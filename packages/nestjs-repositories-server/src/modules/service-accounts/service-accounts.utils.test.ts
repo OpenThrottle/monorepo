@@ -8,7 +8,7 @@ describe('createServiceAccountsRepositoryMock', () => {
     const repository = createServiceAccountsRepositoryMock();
 
     await expect(repository.findAll()).resolves.toEqual([]);
-    await expect(repository.findByName('workflow-ralph')).resolves.toBeNull();
+    await expect(repository.findByName('plan-runner')).resolves.toBeNull();
     await expect(repository.resolveActingUserId('a')).resolves.toBeNull();
     await expect(repository.findOne({ where: {} })).resolves.toBeNull();
   });

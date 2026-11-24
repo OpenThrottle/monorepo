@@ -10,7 +10,7 @@ Scope note: names like `OPENTHROTTLE_LEGAL_NOTICE`, `OPENTHROTTLE_GITHUB_URL`,
 constants** (mostly in `@openthrottle/react-router-utils` and
 `@openthrottle/nestjs-repositories-server`). They are not read from the environment and
 are excluded below. Likewise `*_ENV` suffixed identifiers
-(`OPENTHROTTLE_POSTGRES_URL_ENV`, `OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS_ENV`) are
+(`OPENTHROTTLE_POSTGRES_URL_ENV`, `PLAN_RUN_OT_ROOT_ENV`) are
 constants that _hold_ an env-var name.
 
 There are four `.env.default` files that carry namespaced values:
@@ -79,8 +79,8 @@ Consumed by docker-compose (which maps them onto the un-namespaced `PORT`,
 | Variable                                 | Used for                                                                                                        | Defaults                                                                                                     |
 | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
 | `OPENTHROTTLE_MCP_AUTH_TOKEN`            | Bearer token the OT MCP server presents to the GraphQL API                                                      | ✅ root `.env.default` (empty), ✅ server `.env.default` (empty), ✅ `applications/openthrottle` (empty)     |
-| `OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN` | Token for the agentic-ralph BullMQ worker's GraphQL calls                                                       | ✅ root (empty), ✅ server (empty)                                                                           |
-| `OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN`      | Shared fallback token for workflow-ralph GraphQL calls                                                          | ❌                                                                                                           |
+| `OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN` | Token for the OT Loop BullMQ worker's GraphQL calls                                                             | ✅ root (empty), ✅ server (empty)                                                                           |
+| `OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN`      | Fallback token for the OT Loop worker and `memory-reconcile` when the worker token is unset                     | ❌                                                                                                           |
 | `OPENTHROTTLE_AUTH_TOKEN`                | Generic token accepted by the OT MCP server (documented in `databases/openthrottle/README.md`)                  | ❌                                                                                                           |
 | `OPENTHROTTLE_BOOTSTRAP_USER_EMAIL`      | Seeded login user                                                                                               | ✅ root `developer@openthrottle.ai` (code default same)                                                      |
 | `OPENTHROTTLE_BOOTSTRAP_USER_PASSWORD`   | Seeded login password                                                                                           | ✅ root local-dev value; **no code default** — the bootstrap scripts fail without it                         |
@@ -107,8 +107,8 @@ Consumed by docker-compose (which maps them onto the un-namespaced `PORT`,
 | `OT_MCP_TARGET`                      | `worktree` prefers this worktree's server over the main checkout                               | ❌                                                           |
 | `OPENTHROTTLE_MCP_WORKSPACE_PATH`    | Workspace the stdio transport reports (plan↔repo linking)                                      | ❌                                                           |
 | `OPENTHROTTLE_GRAPHQL_URL`           | GraphQL endpoint for `@openthrottle/agentic-hooks`                                             | ❌                                                           |
-| `OPENTHROTTLE_WORKER_GRAPHQL_URL`    | GraphQL endpoint override for the agentic-ralph worker                                         | Commented out in server `.env.default`                       |
-| `OPENTHROTTLE_WORKFLOWS_GRAPHQL_URL` | GraphQL endpoint for workflow-ralph                                                            | ❌                                                           |
+| `OPENTHROTTLE_WORKER_GRAPHQL_URL`    | GraphQL endpoint override for the OT Loop worker                                               | Commented out in server `.env.default`                       |
+| `OPENTHROTTLE_WORKFLOWS_GRAPHQL_URL` | Fallback GraphQL endpoint for the OT Loop worker and `memory-reconcile`                        | ❌                                                           |
 
 ## 5. Agent CLI drivers
 
@@ -117,7 +117,7 @@ Binary overrides — each names the executable for one driver; unset (or blank) 
 
 One rule (`resolveDriverBinary` in `@openthrottle/openthrottle-drivers`) applies on every
 surface that spawns a CLI: agent discovery and version probes, chat, install/update, and the
-run engine behind plan runs (orchestrator and `workflow-ralph`) and scheduled agent jobs. The
+run engine behind plan runs (the OT Loop job) and scheduled agent jobs. The
 run engine reads the override from the child's effective env — the server's `process.env`
 plus any per-run `env` — so a stub named here is the binary a run actually spawns.
 
@@ -154,7 +154,6 @@ plus any per-run `env` — so a stub named here is the binary a run actually spa
 | `OPENTHROTTLE_AGENT_KILL_GRACE_MS`            | SIGTERM → SIGKILL grace                                                                                              | `5000`                      |
 | `OPENTHROTTLE_AGENT_SESSION_TIMEOUT_MS`       | Timeout for minting a CLI session                                                                                    | `30000`                     |
 | `OPENTHROTTLE_CHAT_IDLE_TIMEOUT_MS`           | Chat-stream orchestrator backstop                                                                                    | agent idle + `30000` margin |
-| `OPENTHROTTLE_RALPH_MAX_TOTAL_MS`             | Cumulative wall-clock budget for a Ralph run                                                                         | unset → derived ceiling     |
 
 ## 6. Plans, runs and workspaces
 
@@ -168,7 +167,13 @@ plus any per-run `env` — so a stub named here is the binary a run actually spa
 | `OPENTHROTTLE_CHECKOUT_ROOT`              | Where `git clone` from the UI writes; cloning is refused when unset                                                                                                               | Commented out in root `.env.default` (`~/OpenThrottle/repositories`)                                       |
 | `OPENTHROTTLE_NATIVE_PICKER`              | Force the native OS folder dialog on/off; unset = auto-detect                                                                                                                     | ❌                                                                                                         |
 | `OPENTHROTTLE_DEFAULT_RUN_KIND`           | Historical `spawn` rollback knob — **removed**, referenced only in a code comment                                                                                                 | ❌                                                                                                         |
-| `OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS`    | Server worker spawn diagnostics                                                                                                                                                   | ✅ server `.env.default` `"1"`; commented out at root                                                      |
+| `OPENTHROTTLE_PLAN_RUN_DRIVER`            | Default agent driver for a plan run (`cursor`)                                                                                                                                    |
+| `OPENTHROTTLE_PLAN_RUN_ITERATION_TIMEOUT` | Default per-attempt agent timeout, in seconds                                                                                                                                     |
+| `OPENTHROTTLE_PLAN_RUN_MODEL`             | Default model id for a plan run (`auto`)                                                                                                                                          |
+| `OPENTHROTTLE_PLAN_RUN_WORKTREE_BASE`     | Base branch a finished plan run opens its PR against                                                                                                                              |
+| `OPENTHROTTLE_PLAN_RUN_OT_ROOT`           | Explicit OpenThrottle monorepo root for a foreign cwd                                                                                                                             |
+| `OPENTHROTTLE_PLAN_RUN_DEBUG`             | Plan-run debug shim (`1`, `verbose`)                                                                                                                                              |
+| `OPENTHROTTLE_PLAN_RUN_VERBOSE`           | Noisiest plan-run debug lines                                                                                                                                                     |
 | `OPENTHROTTLE_LIFECYCLE_HOOKS_CHILD_JOBS` | Enables lifecycle-hook child jobs                                                                                                                                                 | Commented out in root `.env.default`                                                                       |
 | `OPENTHROTTLE_HOOK_PLUGIN_ENABLED`        | Injects the OT hook plugin into child agents                                                                                                                                      | ❌; code default **on** (only explicit falsy disables)                                                     |
 | `OPENTHROTTLE_HOOK_PLUGIN_DIR`            | Override for the plugin payload dir                                                                                                                                               | ❌; defaults to `<ot-root>/plugin`                                                                         |
@@ -257,11 +262,11 @@ Read only by `scripts/gcs-docker-upload.ts`. None are in a `.env.default`.
 `OPENTHROTTLE_MCP_PORT`, `OPENTHROTTLE_MCP_UPSTREAM_URL`,
 `OPENTHROTTLE_WORKSPACES_DIR`.
 Commented out (documented but inactive): `OPENTHROTTLE_CHECKOUT_ROOT`,
-`OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS`, `OPENTHROTTLE_LIFECYCLE_HOOKS_CHILD_JOBS`.
+`OPENTHROTTLE_PLAN_RUN_DRIVER`, `OPENTHROTTLE_PLAN_RUN_ITERATION_TIMEOUT`, `OPENTHROTTLE_PLAN_RUN_MODEL`, `OPENTHROTTLE_PLAN_RUN_WORKTREE_BASE`, `OPENTHROTTLE_PLAN_RUN_OT_ROOT`, `OPENTHROTTLE_PLAN_RUN_VERBOSE`, `OPENTHROTTLE_LIFECYCLE_HOOKS_CHILD_JOBS`.
 
 **Shipped in `applications/openthrottle-server/.env.default`** (5 active):
 `OPENTHROTTLE_MCP_AUTH_TOKEN`, `OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN`,
-`OT_AGENT_CLI_INSTALL_ENABLED`, `OPENTHROTTLE_PLANS_SPAWN_DIAGNOSTICS`,
+`OT_AGENT_CLI_INSTALL_ENABLED`, `OPENTHROTTLE_PLAN_RUN_DEBUG`,
 `OT_SERVER_DEV_JSONL_LOGGING`.
 Commented out: `OPENTHROTTLE_WORKER_GRAPHQL_URL`, `OT_SERVER_DEV_JSONL_LOG_DIR`,
 `OT_QUEUE_PREFIX`.

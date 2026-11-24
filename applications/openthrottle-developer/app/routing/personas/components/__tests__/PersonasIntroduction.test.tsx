@@ -27,7 +27,7 @@ describe('PersonasIntroduction Component', () => {
       component.getByRole('heading', { name: 'Personas' }),
     ).toBeInTheDocument();
     expect(
-      component.getByText(/Disk-backed Ralph prompt profiles/i),
+      component.getByText(/Disk-backed prompt profiles/i),
     ).toBeInTheDocument();
   });
 });

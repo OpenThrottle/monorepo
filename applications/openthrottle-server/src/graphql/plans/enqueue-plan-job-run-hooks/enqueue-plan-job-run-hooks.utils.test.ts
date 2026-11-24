@@ -25,7 +25,7 @@ describe('parseJobRunHooksJsonInput', () => {
           {
             kind: 'prompt_profile',
             phase: 'before_run',
-            prompt: '/agents/ralph',
+            prompt: '/agents/plan-run',
             promptDelivery: 'named',
           },
         ],
@@ -45,7 +45,7 @@ describe('parseJobRunHooksJsonInput', () => {
         {
           kind: 'prompt_profile',
           phase: 'before_run',
-          prompt: '/agents/ralph',
+          prompt: '/agents/plan-run',
           promptDelivery: 'named',
         },
       ],
@@ -63,7 +63,7 @@ describe('resolveJobRunHooksForEnqueue', () => {
           {
             kind: 'prompt_profile',
             phase: 'after_run',
-            prompt: '/agents/ralph',
+            prompt: '/agents/plan-run',
             promptDelivery: 'named',
           },
         ],
@@ -90,7 +90,7 @@ describe('resolveJobRunHooksForEnqueue', () => {
           {
             kind: 'prompt_profile',
             phase: 'after_run',
-            prompt: '/agents/ralph',
+            prompt: '/agents/plan-run',
             promptDelivery: 'named',
           },
         ],
@@ -126,7 +126,7 @@ describe('resolveJobRunHooksForEnqueue', () => {
           {
             kind: 'prompt_profile',
             phase: 'before_run',
-            prompt: '/agents/ralph',
+            prompt: '/agents/plan-run',
             promptDelivery: 'named',
           },
         ],
@@ -182,7 +182,7 @@ describe('serializeJobRunHooksForGraphql', () => {
         {
           kind: 'skill',
           phase: 'before_run',
-          skillPath: '.agents/skills/workflow-ralph/SKILL.md',
+          skillPath: '.agents/skills/ot-loop/SKILL.md',
         },
       ],
     });

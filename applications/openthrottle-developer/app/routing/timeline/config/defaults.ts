@@ -47,7 +47,7 @@ export const DEFAULT_TIMELINE_GROUPING = TimelineLaneGrouping.ByPlan;
 export const TIMELINE_GROUPINGS: readonly TimelineLaneGrouping[] = [
   TimelineLaneGrouping.ByPlan,
   TimelineLaneGrouping.ByCheckout,
-  TimelineLaneGrouping.ByBackend,
+  TimelineLaneGrouping.ByDriver,
 ];
 
 /** Search-param names, so the route and its controls cannot drift apart. */

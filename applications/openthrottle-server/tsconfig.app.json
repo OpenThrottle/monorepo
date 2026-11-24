@@ -8,9 +8,6 @@
   "exclude": ["build", "src/**/*.test.ts"],
   "references": [
     {
-      "path": "../../tools/workflows/tsconfig.lib.json"
-    },
-    {
       "path": "../../packages/openthrottle-skills/tsconfig.lib.json"
     },
     {
@@ -23,13 +20,7 @@
       "path": "../../packages/openthrottle-drivers/tsconfig.lib.json"
     },
     {
-      "path": "../../packages/openthrottle-agentic-workflow/tsconfig.lib.json"
-    },
-    {
       "path": "../../packages/openthrottle-agentic-utils/tsconfig.lib.json"
-    },
-    {
-      "path": "../../packages/openthrottle-agentic-ralph/tsconfig.lib.json"
     },
     {
       "path": "../../packages/openthrottle-agentic-loop/tsconfig.lib.json"
@@ -110,9 +101,6 @@
       "path": "../../packages/nestjs-auth/tsconfig.lib.json"
     },
     {
-      "path": "../../packages/nestjs-agentic-workflow/tsconfig.lib.json"
-    },
-    {
       "path": "../../packages/agentic-token-usage/tsconfig.lib.json"
     },
     {
@@ -129,6 +117,9 @@
     },
     {
       "path": "../../tools/dotfiles/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/graphql-codegen/tsconfig.lib.json"
     }
   ]
 }

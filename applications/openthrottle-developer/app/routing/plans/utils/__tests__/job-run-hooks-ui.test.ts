@@ -21,7 +21,7 @@ describe('job-run-hooks-ui', () => {
           {
             kind: 'prompt_profile',
             phase: 'before_run',
-            prompt: '/agents/ralph',
+            prompt: '/my-prompt',
             promptDelivery: 'named',
           },
         ],

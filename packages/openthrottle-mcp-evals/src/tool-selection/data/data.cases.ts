@@ -331,7 +331,7 @@ export const TOOL_SELECTION_CASES: readonly ToolSelectionCase[] = [
     ],
     id: 'output-read-iteration-log',
     origin: SEED,
-    prompt: `Show me the Ralph iteration log for plan ${PLAN_ID}.`,
+    prompt: `Show me the plan-run iteration log for plan ${PLAN_ID}.`,
   },
   {
     area: 'output',

@@ -5,8 +5,8 @@ import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { PLAN_CONFIG_WORKTREE_CLEANUP_COPY } from '~/routing/plans/data/data.copy';
-import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
-import { getDefaultWorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
+import type { PlanRunOptions } from '~/routing/plans/utils/plan-run-options';
+import { getDefaultPlanRunOptions } from '~/routing/plans/utils/plan-run-options';
 
 import type { PlanWorkflowConfigWorktreeCleanupProps } from '../PlanWorkflowConfigWorktreeCleanup';
 import { PlanWorkflowConfigWorktreeCleanup } from '../PlanWorkflowConfigWorktreeCleanup';
@@ -33,7 +33,7 @@ describe('PlanWorkflowConfigWorktreeCleanup Component', () => {
   describe('when the worktree is on', () => {
     test('defaults to removing the worktree once the run opens a PR', () => {
       const component = renderCleanup({
-        input: getDefaultWorkflowRalphRunOptionsInput(),
+        input: getDefaultPlanRunOptions(),
         setInput,
       });
 
@@ -49,7 +49,7 @@ describe('PlanWorkflowConfigWorktreeCleanup Component', () => {
 
     test('records a keep choice', async () => {
       const user = userEvent.setup();
-      const input = getDefaultWorkflowRalphRunOptionsInput();
+      const input = getDefaultPlanRunOptions();
       const component = renderCleanup({ input, setInput });
 
       await user.click(
@@ -66,29 +66,8 @@ describe('PlanWorkflowConfigWorktreeCleanup Component', () => {
       expect(setInput).toHaveBeenCalledTimes(1);
       const updater = setInput.mock.calls[0]?.[0];
       if (typeof updater !== 'function') throw new Error('expected updater');
-      const next: WorkflowRalphRunOptionsInput = updater(input);
+      const next: PlanRunOptions = updater(input);
       expect(next.worktreeCleanup).toBe('keep');
-    });
-  });
-
-  describe('when the worktree is off', () => {
-    test('disables the control and says why', () => {
-      const component = renderCleanup({
-        input: {
-          ...getDefaultWorkflowRalphRunOptionsInput(),
-          worktreeCli: 'omit',
-        },
-        setInput,
-      });
-
-      expect(
-        component.getByRole('combobox', {
-          name: PLAN_CONFIG_WORKTREE_CLEANUP_COPY.label,
-        }),
-      ).toBeDisabled();
-      expect(
-        component.getByText(PLAN_CONFIG_WORKTREE_CLEANUP_COPY.disabledHint),
-      ).toBeInTheDocument();
     });
   });
 });

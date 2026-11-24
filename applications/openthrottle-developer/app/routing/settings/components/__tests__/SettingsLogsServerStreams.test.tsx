@@ -25,9 +25,9 @@ describe('SettingsLogsServerStreams Component', () => {
     expect(component.getByText('Workflow & Server Logs')).toBeInTheDocument();
   });
 
-  test('renders a link to the tools/workflows README', () => {
+  test('renders a link to the OT Loop job design', () => {
     const link = component.getByRole('link', {
-      name: 'tools/workflows README',
+      name: 'OT Loop job design',
     });
     expect(link).toHaveAttribute('target', '_blank');
   });

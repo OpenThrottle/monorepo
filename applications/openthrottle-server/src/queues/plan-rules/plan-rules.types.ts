@@ -10,7 +10,7 @@ export type PlanRulesTriggerKind =
 
 /**
  * @description The environment an evaluation pass runs in: the same
- * `ci | interactive | ralph` union as `tag_action_rules.environment`, or null
+ * `ci | headless | interactive` union as `tag_action_rules.environment`, or null
  * when the trigger does not know its environment (environment-qualified rules
  * then do not match).
  */

@@ -31,7 +31,7 @@ describe('resolveTimelineLane', () => {
 
     it('collapses a row with no plan into the shared lane', () => {
       const lane = resolveTimelineLane(TimelineLaneGrouping.BY_PLAN, {
-        backend: 'claude',
+        driver: 'claude',
         planId: null,
       });
 
@@ -86,17 +86,17 @@ describe('resolveTimelineLane', () => {
     });
   });
 
-  describe('BY_BACKEND', () => {
-    it('keys on the backend', () => {
-      const lane = resolveTimelineLane(TimelineLaneGrouping.BY_BACKEND, {
-        backend: 'claude',
+  describe('BY_DRIVER', () => {
+    it('keys on the driver', () => {
+      const lane = resolveTimelineLane(TimelineLaneGrouping.BY_DRIVER, {
+        driver: 'claude',
       });
 
-      expect(lane).toEqual({ key: 'backend:claude', label: 'claude' });
+      expect(lane).toEqual({ key: 'driver:claude', label: 'claude' });
     });
 
-    it('collapses a row that carries no backend, such as a task marker', () => {
-      const lane = resolveTimelineLane(TimelineLaneGrouping.BY_BACKEND, {
+    it('collapses a row that carries no driver, such as a task marker', () => {
+      const lane = resolveTimelineLane(TimelineLaneGrouping.BY_DRIVER, {
         planId: 'plan-1',
         planTitle: 'Plan One',
       });

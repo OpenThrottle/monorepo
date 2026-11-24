@@ -23,7 +23,7 @@ export interface PlanWorkflowRunLatestProps {
 /**
  * @description The Runs card's Latest run section: the active (QUEUED / IN_PROGRESS) run, else the
  * newest run that is not SCHEDULED (see {@link selectLatestRun}). Shows its status (with the
- * usage-limit resume line), start time, model · backend, provenance, and either a last-heartbeat
+ * usage-limit resume line), start time, model · driver, provenance, and either a last-heartbeat
  * line or a stale warning. Kill and Settle stay in the toolbar. Renders nothing when every run is
  * SCHEDULED; the same run is also history's first row.
  */

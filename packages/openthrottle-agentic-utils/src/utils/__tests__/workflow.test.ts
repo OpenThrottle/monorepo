@@ -5,10 +5,9 @@ import * as path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import {
-  WORKFLOW_RALPH_DEBUG_ENV,
-  WORKFLOW_RALPH_DEBUG_LEGACY_ENV,
-  WORKFLOW_RALPH_OT_ROOT_ENV,
-  WORKFLOW_RALPH_VERBOSE_ENV,
+  PLAN_RUN_DEBUG_ENV,
+  PLAN_RUN_OT_ROOT_ENV,
+  PLAN_RUN_VERBOSE_ENV,
   WORKFLOW_RUNNER_IDS,
 } from '../../config/index.ts';
 import {
@@ -51,15 +50,15 @@ afterAll(() => {
 });
 
 describe('getOpenThrottleRoot', () => {
-  it('honors an explicit WORKFLOW_RALPH_OT_ROOT when the directory exists', () => {
-    expect(getOpenThrottleRoot({ [WORKFLOW_RALPH_OT_ROOT_ENV]: otRoot })).toBe(
+  it('honors an explicit OPENTHROTTLE_PLAN_RUN_OT_ROOT when the directory exists', () => {
+    expect(getOpenThrottleRoot({ [PLAN_RUN_OT_ROOT_ENV]: otRoot })).toBe(
       otRoot,
     );
   });
 
   it('falls through past a missing explicit root to the module walk-up', () => {
     const resolved = getOpenThrottleRoot({
-      [WORKFLOW_RALPH_OT_ROOT_ENV]: path.join(otRoot, 'does-not-exist'),
+      [PLAN_RUN_OT_ROOT_ENV]: path.join(otRoot, 'does-not-exist'),
     });
 
     expect(resolved).toBeDefined();
@@ -75,7 +74,7 @@ describe('getOpenThrottleRoot', () => {
 
   it('ignores WORKSPACE_ROOT without the workspace marker', () => {
     const resolved = getOpenThrottleRoot({
-      [WORKFLOW_RALPH_OT_ROOT_ENV]: otRoot,
+      [PLAN_RUN_OT_ROOT_ENV]: otRoot,
       WORKSPACE_ROOT: emptyRoot,
     });
 
@@ -115,54 +114,44 @@ describe('readWorkflowDebugLevelFromEnv', () => {
   it('returns off when unset and legacy unset', () => {
     expect(
       readWorkflowDebugLevelFromEnv({
-        [WORKFLOW_RALPH_DEBUG_ENV]: undefined,
-        [WORKFLOW_RALPH_DEBUG_LEGACY_ENV]: undefined,
-        [WORKFLOW_RALPH_VERBOSE_ENV]: undefined,
+        [PLAN_RUN_DEBUG_ENV]: undefined,
+        [PLAN_RUN_VERBOSE_ENV]: undefined,
       }),
     ).toBe('off');
   });
 
-  it('maps truthy WORKFLOW_RALPH_DEBUG to debug', () => {
+  it('maps truthy OPENTHROTTLE_PLAN_RUN_DEBUG to debug', () => {
+    expect(readWorkflowDebugLevelFromEnv({ [PLAN_RUN_DEBUG_ENV]: '1' })).toBe(
+      'debug',
+    );
     expect(
-      readWorkflowDebugLevelFromEnv({ [WORKFLOW_RALPH_DEBUG_ENV]: '1' }),
-    ).toBe('debug');
-    expect(
-      readWorkflowDebugLevelFromEnv({ [WORKFLOW_RALPH_DEBUG_ENV]: 'true' }),
+      readWorkflowDebugLevelFromEnv({ [PLAN_RUN_DEBUG_ENV]: 'true' }),
     ).toBe('debug');
   });
 
-  it('maps RALPH_DEBUG legacy when primary unset', () => {
+  it('maps verbose level from OPENTHROTTLE_PLAN_RUN_DEBUG', () => {
     expect(
       readWorkflowDebugLevelFromEnv({
-        [WORKFLOW_RALPH_DEBUG_ENV]: undefined,
-        [WORKFLOW_RALPH_DEBUG_LEGACY_ENV]: 'yes',
-      }),
-    ).toBe('debug');
-  });
-
-  it('maps verbose level from WORKFLOW_RALPH_DEBUG', () => {
-    expect(
-      readWorkflowDebugLevelFromEnv({
-        [WORKFLOW_RALPH_DEBUG_ENV]: 'verbose',
+        [PLAN_RUN_DEBUG_ENV]: 'verbose',
       }),
     ).toBe('verbose');
-    expect(
-      readWorkflowDebugLevelFromEnv({ [WORKFLOW_RALPH_DEBUG_ENV]: '2' }),
-    ).toBe('verbose');
+    expect(readWorkflowDebugLevelFromEnv({ [PLAN_RUN_DEBUG_ENV]: '2' })).toBe(
+      'verbose',
+    );
   });
 
-  it('maps WORKFLOW_RALPH_VERBOSE to verbose', () => {
-    expect(
-      readWorkflowDebugLevelFromEnv({ [WORKFLOW_RALPH_VERBOSE_ENV]: '1' }),
-    ).toBe('verbose');
+  it('maps OPENTHROTTLE_PLAN_RUN_VERBOSE to verbose', () => {
+    expect(readWorkflowDebugLevelFromEnv({ [PLAN_RUN_VERBOSE_ENV]: '1' })).toBe(
+      'verbose',
+    );
   });
 
   it('returns off for explicit falsy strings', () => {
+    expect(readWorkflowDebugLevelFromEnv({ [PLAN_RUN_DEBUG_ENV]: '0' })).toBe(
+      'off',
+    );
     expect(
-      readWorkflowDebugLevelFromEnv({ [WORKFLOW_RALPH_DEBUG_ENV]: '0' }),
-    ).toBe('off');
-    expect(
-      readWorkflowDebugLevelFromEnv({ [WORKFLOW_RALPH_DEBUG_ENV]: 'false' }),
+      readWorkflowDebugLevelFromEnv({ [PLAN_RUN_DEBUG_ENV]: 'false' }),
     ).toBe('off');
   });
 });
@@ -186,7 +175,7 @@ describe('parseWorkflowRunnerId', () => {
 
   it('rejects unknown backends', () => {
     expect(() => parseWorkflowRunnerId('copilot', 'cli')).toThrow(
-      /Unknown execution backend/,
+      /Unknown driver/,
     );
   });
 

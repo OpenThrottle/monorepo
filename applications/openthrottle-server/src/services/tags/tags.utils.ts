@@ -8,7 +8,7 @@ import type { TagCaller } from './tags.types.ts';
 /**
  * @description Derives the provenance source from the caller identity:
  * user → `human`; the tagging service account → `server-llm`; any other
- * service account (MCP, Ralph workers) → `agent`.
+ * service account (MCP, plan-run workers) → `agent`.
  */
 export const deriveTagSource = (caller: TagCaller): TagSource => {
   if (caller.principalKind === 'user') {

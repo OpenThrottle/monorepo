@@ -117,12 +117,12 @@ Two hook systems touch a plan run. Keep them apart.
   turn ends, session start. They ship as the `plugins/` payloads, run in the agent's process tree and
   see only what the CLI hands them (the payload and the transcript). The `openthrottle-workflow`
   hooks bind to a run through the session's own `register_plan_run`. An interactive `/ot-loop` has
-  one; a headless worker spawned by Ralph or OT Loop does not, so in a worker every workflow hook is
+  one; a headless worker spawned by OT Loop does not, so in a worker every workflow hook is
   a no-op except `plan-inbox-claim`, which also reads the run identity env the orchestrator exports.
   What each CLI can fire: [agent-cli-hook-capability-matrix.md](../../docs/monorepo/agent-cli-hook-capability-matrix.md).
-- **Plan-run layer.** A plan's `jobRunHooksJson` (`tools/workflows/src/types/job-run-lifecycle-hooks.ts`,
+- **Plan-run layer.** A plan's `jobRunHooksJson` (`packages/openthrottle-agentic-utils/src/utils/job-run-lifecycle-hooks-validation.ts`,
   OT `1bee2916`): `beforeAll` / `beforeEach` / `afterEach` / `afterAll` prompt-profile and skill
-  hooks that the runner (the `workflow-ralph` CLI or the BullMQ worker) fires around a run and its
+  hooks that the runner (the BullMQ worker) fires around a run and its
   iterations. They change what the agent is told. They never see a tool call.
 
 When both are active for one run (a queued plan whose worker spawns Claude Code with these

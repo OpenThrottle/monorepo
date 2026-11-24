@@ -47,7 +47,7 @@ describe('SkillAvailabilityRulesEditor Component', () => {
     const component = renderEditor({
       rules: [
         {
-          environment: 'ralph',
+          environment: 'headless',
           id: 'rule-1',
           slugAllow: [],
           slugDeny: [],

@@ -1,5 +1,5 @@
 /**
- * @description In-process work-ledger capture for the Ralph plan worker (G5 in
+ * @description In-process work-ledger capture for the plan-run worker (G5 in
  * docs/monorepo/work-ledger-sessions.md).
  * The plans worker is server-side code, so it opens/closes its run session directly via the
  * repositories (no GraphQL round-trip to itself). on_behalf_of is inherited VERIFIED from
@@ -10,7 +10,7 @@
  * the request principal the server sees. That makes the run session pass the capture guard's
  * actor-match check (G11 in docs/monorepo/work-ledger-sessions.md) when the orchestrator sends
  * X-OT-Session-Id, attaching status_change artifacts to this run session instead of per-mutation
- * instant sessions. Falls back to the seeded `workflow-ralph` service account by name when the
+ * instant sessions. Falls back to the seeded `plan-runner` service account by name when the
  * token can't be resolved (e.g. no worker token configured) — the pre-follow-up behavior.
  *
  * Every method is best-effort and NEVER throws: ledger bookkeeping must not break a plan run.
@@ -29,12 +29,12 @@ import {
   WorkSessionSubjectsRepository,
 } from '@openthrottle/nestjs-repositories-server';
 
-import { resolveAgenticRalphWorkerWorkflowGraphqlConfigFromEnv } from '../../agentic-ralph/agentic-ralph.utils.ts';
-import type { OpenRalphSessionInput } from './work-ledger-run.types.ts';
+import { resolvePlanRunWorkerGraphqlConfigFromEnv } from '../../ot-loop/ot-loop.utils.ts';
+import type { OpenPlanRunSessionInput } from './work-ledger-run.types.ts';
 
-/** Seeded service account that owns Ralph runs (databases/openthrottle/migrations/045). */
-const WORKFLOW_RALPH_SERVICE_ACCOUNT_NAME = 'workflow-ralph';
-const TOOL_NAME = 'workflow-ralph';
+/** Seeded service account that owns plan-run worker writes (migration 197 names it `plan-runner`). */
+const PLAN_RUNNER_SERVICE_ACCOUNT_NAME = 'plan-runner';
+const TOOL_NAME = 'plan-runner';
 
 @Injectable()
 export class WorkLedgerRunService {
@@ -48,11 +48,13 @@ export class WorkLedgerRunService {
   ) {}
 
   /**
-   * @description Opens a work session for a Ralph run and attaches the plan subject. Returns the
+   * @description Opens a work session for a plan run and attaches the plan subject. Returns the
    * session id, or null when prerequisites are missing / anything fails (best-effort). The caller
-   * passes the returned id to {@link closeRalphSession} in its finally block.
+   * passes the returned id to {@link closePlanRunSession} in its finally block.
    */
-  async openRalphSession(input: OpenRalphSessionInput): Promise<string | null> {
+  async openPlanRunSession(
+    input: OpenPlanRunSessionInput,
+  ): Promise<string | null> {
     try {
       const planRun =
         await this.planRunsRepository.findByQueueNameAndBullmqJobId(
@@ -63,7 +65,7 @@ export class WorkLedgerRunService {
 
       if (actorServiceAccountId == null) {
         this.logger.warn(
-          `Work-ledger: could not resolve a service account for the Ralph worker; skipping run session for plan ${input.planId}.`,
+          `Work-ledger: could not resolve a service account for the plan-run worker; skipping run session for plan ${input.planId}.`,
           WorkLedgerRunService.name,
         );
         return null;
@@ -111,11 +113,11 @@ export class WorkLedgerRunService {
    * worker's OWN bearer-token principal (same token the orchestrator uses for GraphQL), so the
    * session actor equals the request principal and the capture guard's actor-match
    * (G11 in docs/monorepo/work-ledger-sessions.md) attaches status changes to this session. Falls
-   * back to the seeded `workflow-ralph` account by name when no worker token is configured or the
+   * back to the seeded `plan-runner` account by name when no worker token is configured or the
    * token does not verify. Returns null when neither resolves.
    */
   private async resolveActorServiceAccountId(): Promise<string | null> {
-    const token = resolveAgenticRalphWorkerWorkflowGraphqlConfigFromEnv().token;
+    const token = resolvePlanRunWorkerGraphqlConfigFromEnv().token;
 
     if (token != null && token !== '') {
       try {
@@ -129,23 +131,23 @@ export class WorkLedgerRunService {
         }
       } catch (error) {
         this.logger.warn(
-          `Work-ledger: failed to resolve the Ralph worker principal from its token; falling back to '${WORKFLOW_RALPH_SERVICE_ACCOUNT_NAME}': ${String(error)}`,
+          `Work-ledger: failed to resolve the plan-run worker principal from its token; falling back to '${PLAN_RUNNER_SERVICE_ACCOUNT_NAME}': ${String(error)}`,
           WorkLedgerRunService.name,
         );
       }
     }
 
-    const ralphAccount = await this.serviceAccountsRepository.findByName(
-      WORKFLOW_RALPH_SERVICE_ACCOUNT_NAME,
+    const planRunnerAccount = await this.serviceAccountsRepository.findByName(
+      PLAN_RUNNER_SERVICE_ACCOUNT_NAME,
     );
 
-    return ralphAccount?.id ?? null;
+    return planRunnerAccount?.id ?? null;
   }
 
   /**
    * @description Closes a run session (idempotent: only stamps a still-open session). Best-effort.
    */
-  async closeRalphSession(
+  async closePlanRunSession(
     sessionId: string | null,
     summary: string | null,
   ): Promise<void> {

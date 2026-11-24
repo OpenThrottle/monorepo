@@ -50,7 +50,7 @@ export const getPlanIsRunning = (
 };
 
 /**
- * Whether the UI should offer stopping a Ralph / plan-run job
+ * Whether the UI should offer stopping a plan-run job
  * for this plan status (queue or active worker). Shares the exact
  * QUEUED/IN_PROGRESS condition with {@link getPlanIsRunning}.
  */

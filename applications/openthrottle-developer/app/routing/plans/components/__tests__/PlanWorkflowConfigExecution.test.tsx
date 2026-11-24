@@ -4,7 +4,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { getDefaultWorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
+import { getDefaultPlanRunOptions } from '~/routing/plans/utils/plan-run-options';
 
 import type { PlanWorkflowConfigExecutionProps } from '../PlanWorkflowConfigExecution';
 import { PlanWorkflowConfigExecution } from '../PlanWorkflowConfigExecution';
@@ -14,7 +14,7 @@ describe('PlanWorkflowConfigExecution Component', () => {
   let props: PlanWorkflowConfigExecutionProps;
 
   beforeEach(() => {
-    const input = getDefaultWorkflowRalphRunOptionsInput({
+    const input = getDefaultPlanRunOptions({
       planId: '0c2720a9-920f-4b16-865a-f803eb444e18',
     });
     props = {
@@ -31,15 +31,15 @@ describe('PlanWorkflowConfigExecution Component', () => {
     component = render(<RoutesStub />);
   });
 
-  test('should render execution backend runner select', () => {
+  test('should render driver runner select', () => {
     const group = component.getByRole('group', {
       name: '05. Life Cycle',
     });
     expect(group).not.toBeDisabled();
-    expect(group).toHaveTextContent('workflow-ralph');
+    expect(group).toHaveTextContent('Agent CLI');
     expect(
       component.getByRole('combobox', {
-        name: 'Execution backend for this plan run',
+        name: 'Driver for this plan run',
       }),
     ).not.toBeDisabled();
   });

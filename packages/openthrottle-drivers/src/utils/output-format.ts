@@ -5,7 +5,7 @@
  * stream (the same flag the chat composer's argv builders use), which is what a run transcript is
  * built from. Opting in is only safe through a caller that also installs a matching `parseOutput`
  * and `renderOutputLine` — `withStructuredOutput` in `@openthrottle/openthrottle-agentic-utils` —
- * because Ralph reads its `<promise>…</promise>` markers from the recovered text.
+ * because the plan run reads its `<promise>…</promise>` markers from the recovered text.
  */
 
 import type { DriverInvocationConfig } from '../types/index.ts';

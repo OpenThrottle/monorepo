@@ -2,8 +2,8 @@
  * @description Soft-fail upsert of a linked worktree checkout for a plan run,
  * then write `plan_runs.checkout_id` (and `branch` from HEAD) to that worktree —
  * overwriting a scheduling-time primary checkout when the run moved into a
- * worktree. Shared by the GraphQL mutation, the in-process Ralph orchestrator
- * run-start hook, and the CLI `workflow-ralph` run-start hook. Shell
+ * worktree. Shared by the GraphQL mutation, the in-process plan-run orchestrator
+ * run-start hook, and the interactive run-start hook. Shell
  * provision-time registration from `worktree:new` / `setup_worktree.ts`
  * (service-account callback) is explicitly deferred — see
  * docs/monorepo/git-worktree-setup-timing.md.

@@ -11,10 +11,7 @@ import { BaseHardDeleteModel } from '@openthrottle/nestjs-postgres';
 import type { PlanRunConfigSnapshot } from '@openthrottle/openthrottle-plan-config';
 import { Column, Entity, UpdateDateColumn } from 'typeorm';
 
-import type {
-  PlanRunExecutionBackend,
-  PlanRunKind,
-} from './plan-runs.types.ts';
+import type { PlanRunDriver, PlanRunKind } from './plan-runs.types.ts';
 
 /**
  * Uniqueness on (queue_name, bullmq_job_id) is enforced by the PARTIAL unique
@@ -65,8 +62,8 @@ export class PlanRun extends BaseHardDeleteModel {
   @Column({ name: 'checkout_id', nullable: true, type: 'uuid' })
   checkoutId!: string | null;
 
-  @Column({ default: 'cursor', name: 'execution_backend', type: 'text' })
-  executionBackend!: PlanRunExecutionBackend;
+  @Column({ default: 'cursor', name: 'driver', type: 'text' })
+  driver!: PlanRunDriver;
 
   /**
    * Whether this run's owner bumps {@link PlanRun.lastHeartbeatAt} on a timer
@@ -100,7 +97,7 @@ export class PlanRun extends BaseHardDeleteModel {
 
   /**
    * Resolved agent model id for this run (e.g. 'claude-fable-5'), captured at
-   * kickoff. Queryable projection of run_config_snapshot.ralph.model (the raw
+   * kickoff. Queryable projection of run_config_snapshot.run.model (the raw
    * record stays the source). Null for legacy rows lacking snapshot data.
    */
   @Column({ name: 'model', nullable: true, type: 'text' })

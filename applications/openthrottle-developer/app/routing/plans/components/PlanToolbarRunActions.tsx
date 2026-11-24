@@ -45,14 +45,14 @@ export interface PlanToolbarRunActionsProps {
   readonly planId: string;
   readonly planStatus?: string;
   readonly planTitle: string;
-  readonly ralphTuningJson: string;
   /** @description Deferred repositories; the Run dialog names the checkout from them. */
   readonly repositories?: Promise<
     readonly PlanRunConfigRepositoryFieldsFragment[]
   >;
   readonly repositoryId?: string;
-  /** @description The plan's saved run config the Run dialog seeds model, effort and iterations from. */
+  /** @description The plan's saved run config the Run dialog seeds model, effort and OT Loop settings from. */
   readonly runConfigJson: string | null | undefined;
+  readonly runTuningJson: string;
   /** @description Tasks a whole-plan run would pick up; 0 disables Run and Schedule. */
   readonly runnableTaskCount?: number;
   /** @description The soonest SCHEDULED run's fire time; non-null gates every run-now path. */
@@ -88,7 +88,7 @@ export const PlanToolbarRunActions = (
     planId,
     planStatus,
     planTitle,
-    ralphTuningJson,
+    runTuningJson,
     repositories,
     repositoryId,
     runConfigJson,
@@ -131,8 +131,8 @@ export const PlanToolbarRunActions = (
         onOpenCancelScheduled={onOpenCancelScheduled}
         onOpenDialog={runDialog.onOpenDialog}
         planStatus={planStatus}
-        ralphTuningJson={ralphTuningJson}
         repositoryId={repositoryId}
+        runTuningJson={runTuningJson}
         runnableTaskCount={runnableTaskCount}
         scheduledRunAt={scheduledRunAt}
         scheduledRunId={scheduledRunId}
@@ -190,10 +190,10 @@ export const PlanToolbarRunActions = (
         open={runDialog.open}
         planId={planId}
         planStatus={planStatus}
-        ralphTuningJson={ralphTuningJson}
         repositories={runDialog.repositories}
         repositoryId={repositoryId ?? ''}
         runConfigJson={runConfigJson}
+        runTuningJson={runTuningJson}
         scheduledRunAt={scheduledRunAt}
         workflowRunBlocked={workflowRunBlocked}
         workflowRunBlockedReason={workflowRunBlockedReason}

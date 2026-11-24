@@ -7,7 +7,7 @@ description: >-
   Drive one OpenThrottle plan to a PR with the built-in /loop, a task at a time
   in an isolated worktree. USE WHEN the user runs /ot-loop <planId>, says
   "loop over plan <id>", or wants a plan executed autonomously. Not for authoring
-  plans (ot-plans) or the headless Ralph runner (agents-ralph).
+  plans (ot-plans) or the headless server-side runner (the OT Loop job).
 metadata:
   author: openthrottle
   last-reviewed: '2026-11-14'
@@ -17,7 +17,7 @@ name: ot-loop
 
 Important: `$planId` is the first (and only) argument passed to this prompt. If that value does not map back to an OpenThrottle Plan or Task ID, throw an error immediately!
 
-Your job is to run the built-in **`/loop`** over OpenThrottle plan **`$planId`** and its tasks — executing one task at a time, keeping status in OT in sync, appending progress to the plan output stream as you go, and opening a PR when the plan is done. This is **Ralph driven interactively via `/loop`** rather than the workflow CLI: the loop is the outer driver, but the per-task discipline is identical to the `agents-ralph` skill.
+Your job is to run the built-in **`/loop`** over OpenThrottle plan **`$planId`** and its tasks — executing one task at a time, keeping status in OT in sync, appending progress to the plan output stream as you go, and opening a PR when the plan is done. This is the interactive form of OT Loop: the built-in `/loop` is the outer driver, and the per-task discipline is the same one the headless OT Loop job runs.
 
 ## Setup (once, before the loop)
 
@@ -37,7 +37,7 @@ A session started from a kickoff brief (`/ot-loop <planUuid>` on line 1 — [`ot
 4. **Open a run row so this run is attributable** — `register_plan_run({ planId, model, branch })`.
 
    - **Declare the `model` you are actually running as.** If you cannot determine it, pass null rather than a plausible guess — a wrong value in a provenance column is worse than a missing one, because nothing downstream can tell it is wrong. Null is a legible answer.
-   - **Do not declare `executionBackend`.** The MCP detects it from the harness that launched it. Pass one only if the tool tells you detection found nothing.
+   - **Do not declare `driver`.** The MCP detects it from the harness that launched it. Pass one only if the tool tells you detection found nothing.
    - **Capture the returned run id** and carry it as loop state for the rest of the run. You need it to settle.
    - **Best-effort**: if register fails, say so and keep working; never block real work on telemetry.
 
@@ -48,9 +48,8 @@ A session started from a kickoff brief (`/ot-loop <planUuid>` on line 1 — [`ot
 
 ## The loop (one task at a time)
 
-> **This section is the canonical statement of the per-task discipline.** Two deliberate
-> restatements change with it, in the same PR: the `agents-ralph` skill (a
-> standalone prompt for the Ralph runner) and the OT Loop job, its headless implementation in code
+> **This section is the canonical statement of the per-task discipline.** One deliberate
+> restatement changes with it, in the same PR: the OT Loop job, its headless implementation in code
 > (`packages/openthrottle-agentic-loop`; [design](https://github.com/openthrottle/monorepo/blob/main/docs/workflows/ot-loop-job.md), whose § 9
 > names its one exception). Everything else links here.
 
@@ -110,10 +109,8 @@ Cheap-tier fan-out is capped at 4 agents at once, non-default tier at 1. Read
 ## Your run row
 
 Everything here is specific to running interactively. It is deliberately outside the canonical
-block above, because the detached `workflow-ralph` CLI already does all of it — it heartbeats on
-a timer and polls the cancel marker itself. Only an agent turn has to do it by hand. The one
-exception is the inbox claim: no CLI does it, so the `agents-ralph`
-prompt carries the same step for the agent under `workflow-ralph`.
+block above, because the headless OT Loop job already does all of it — it heartbeats on
+a timer and polls the cancel marker itself. Only an agent turn has to do it by hand.
 
 **Poll for a cancel at each task boundary.** Call `get_plan_runs(planId)` and check your run's
 `cancelRequestedAt`. If it is set, stop where you are and settle `CANCELLED`.

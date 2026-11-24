@@ -96,8 +96,8 @@ describe('setupGlobalCls', () => {
   });
 
   it('captures x-ot-environment trimmed and unvalidated', () => {
-    expect(runSetupEnvironment({ 'x-ot-environment': ' ralph ' })).toBe(
-      'ralph',
+    expect(runSetupEnvironment({ 'x-ot-environment': ' headless ' })).toBe(
+      'headless',
     );
     expect(runSetupEnvironment({ 'x-ot-environment': 'bogus' })).toBe('bogus');
   });

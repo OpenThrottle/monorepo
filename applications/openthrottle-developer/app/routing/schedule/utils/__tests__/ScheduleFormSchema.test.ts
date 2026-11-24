@@ -6,7 +6,7 @@ import { SCHEDULE_REPOSITORY_NONE_VALUE } from '~/routing/schedule/data/data.rep
 import { ScheduleFormSchema } from '../ScheduleFormSchema';
 
 const required = {
-  driverId: 'ralph',
+  driverId: 'claude',
   name: 'Nightly',
   prompt: 'Audit dependencies',
 };
@@ -41,7 +41,7 @@ describe('ScheduleFormSchema', () => {
       }),
     ).toMatchObject({
       cronPattern: '0 9 * * *',
-      driverId: 'ralph',
+      driverId: 'claude',
       enabled: true,
       name: 'Nightly',
       timeoutMs: 5000,

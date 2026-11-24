@@ -1,6 +1,6 @@
 /**
  * @description Server wiring for job-run lifecycle hooks: plan/task context, plan output stream,
- * and a single in-process agent iteration per hook.
+ * and a single in-process agent run (`runDriverAsync`) per hook.
  */
 import { AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT } from '@openthrottle/nestjs-auth';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
@@ -10,27 +10,27 @@ import type {
   TasksRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import { PLAN_TASK_LIST_ORDER } from '@openthrottle/nestjs-repositories-server';
-import { formatPlanAndTasksForPrompt } from '@openthrottle/openthrottle-agentic-ralph';
-import type { WorkflowLifecycleDispatcher } from '@openthrottle/openthrottle-agentic-workflow';
-import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
 import type {
   ExecuteJobRunHooksPhaseResult,
   JobRunHookPhase,
   JobRunHookRunKind,
   JobRunHooksConfig,
-  RalphNestedRunTuningInput,
-} from '@tools/workflows';
+  PlanRunTuningSettings,
+  WorkflowConfigRunner,
+  WorkflowLifecycleDispatcher,
+} from '@openthrottle/openthrottle-agentic-utils';
 import {
-  createCursorWorkflowRalphIterationRunner,
   executeJobRunHooksPhase,
   formatJobRunHookEntryLabel,
-  mergeRalphNestedRunTuningWithExecutionBackend,
-} from '@tools/workflows';
+  formatPlanAndTasksForPrompt,
+  mergePlanRunTuningWithDriver,
+  runJobRunHookAgent,
+} from '@openthrottle/openthrottle-agentic-utils';
 
 import type { PlanStatusService } from '../../graphql/plans/plan-status/plan-status.service.ts';
 import type { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account/status-change-system-account.service.ts';
-import { isRunPlanOrchestratorJobData } from '../agentic-ralph/agentic-ralph.utils.ts';
 import type { RunPlanJobData } from '../plans/plans.types.ts';
+import { isRunPlanOrchestratorJobData } from '../plans/plans.utils.ts';
 import type {
   ExecutePlanJobRunHooksParams,
   PlanJobRunHooksServices,
@@ -47,18 +47,13 @@ function runKindFromJobData(jobData: RunPlanJobData): JobRunHookRunKind {
   return isRunPlanOrchestratorJobData(jobData) ? 'orchestrator' : 'spawn';
 }
 
-function executionBackendFromJobData(
-  jobData: RunPlanJobData,
-): WorkflowConfigRunner {
-  const merged = mergeRalphNestedRunTuningWithExecutionBackend(
-    jobData.ralph,
-    jobData.executionBackend,
-  );
+function driverFromJobData(jobData: RunPlanJobData): WorkflowConfigRunner {
+  const merged = mergePlanRunTuningWithDriver(jobData.tuning, jobData.driver);
 
-  return merged.backend ?? jobData.executionBackend ?? 'cursor';
+  return merged.driver ?? jobData.driver ?? 'cursor';
 }
 
-const BEFORE_PHASE_SUFFIX = `Complete any preflight work for this plan job. The main Ralph run starts only if this hook succeeds (or on_failure allows it).`;
+const BEFORE_PHASE_SUFFIX = `Complete any preflight work for this plan job. The main plan run starts only if this hook succeeds (or on_failure allows it).`;
 const AFTER_PHASE_SUFFIX = `The main plan job has finished (or was blocked before start). Summarize, file follow-ups, or run post-run checks as configured.`;
 const BEFORE_EACH_SUFFIX = `This hook runs before the task iterations begin. Complete any pre-task setup; the task run continues only if this hook succeeds (or on_failure allows it).`;
 const AFTER_EACH_SUFFIX = `This hook runs after the task reached a terminal status. Summarize, run per-task checks, or file follow-ups as configured.`;
@@ -148,11 +143,9 @@ export const executePlanJobRunHooks = async (
 
   const planContextBlock = formatPlanAndTasksForPrompt(plan, tasks);
   const cwd = getWorkspaceRoot(jobData);
-  const backend = executionBackendFromJobData(jobData);
-  const ralph: RalphNestedRunTuningInput | undefined = jobData.ralph;
-  const model = ralph?.model ?? undefined;
-
-  const iterationRunner = createCursorWorkflowRalphIterationRunner();
+  const backend = driverFromJobData(jobData);
+  const tuning: PlanRunTuningSettings | undefined = jobData.tuning;
+  const model = tuning?.model ?? undefined;
 
   const appendPlanOutput = async (
     content: string,
@@ -171,37 +164,15 @@ export const executePlanJobRunHooks = async (
     deps: {
       appendPlanOutput,
       cwd,
-      runHookIteration: async ({
-        agentPrompt,
-        hookIndex,
-        signal,
-        timeoutMs,
-      }) => {
-        try {
-          const output = await iterationRunner.run({
-            agentPrompt,
-            iteration: hookIndex,
-            model,
-            runner: backend,
-            signal,
-            timeoutMs,
-          });
-
-          return { ok: true, output };
-        } catch (error) {
-          const message =
-            error instanceof Error ? error.message : String(error);
-
-          if (signal?.aborted === true) {
-            return {
-              cancelled: true,
-              errorMessage: message,
-              ok: false,
-            };
-          }
-
-          return { errorMessage: message, ok: false };
-        }
+      runHookAgent: ({ agentPrompt, hookIndex, signal, timeoutMs }) => {
+        return runJobRunHookAgent({
+          agentPrompt,
+          backend,
+          hookIndex,
+          model,
+          signal,
+          timeoutMs,
+        });
       },
     },
     hooks: params.hooks,

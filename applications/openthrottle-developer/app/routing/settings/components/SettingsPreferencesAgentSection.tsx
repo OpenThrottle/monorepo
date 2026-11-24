@@ -105,7 +105,7 @@ export const SettingsPreferencesAgentSection = (
       <Label>{copy.agentEffortLabel}</Label>
       <div>
         <PlanRunEffortControl
-          backend={draft.backend}
+          driver={draft.driver}
           effort={draft.effort}
           onEffortChange={onEffortChange}
         />
@@ -116,7 +116,7 @@ export const SettingsPreferencesAgentSection = (
 
   const draftFields = draft !== null && (
     <>
-      <input name="backend" type="hidden" value={draft.backend} />
+      <input name="backend" type="hidden" value={draft.driver} />
       <input name="model" type="hidden" value={draft.model} />
       <input name="effort" type="hidden" value={draft.effort} />
     </>

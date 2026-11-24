@@ -42,7 +42,7 @@ export class UpsertTagActionRuleInput {
   status?: string | null;
 
   @Field(() => String, {
-    description: `Optional environment qualifier: ci | interactive | ralph.`,
+    description: `Optional environment qualifier, such as ci or interactive.`,
     nullable: true,
   })
   environment?: string | null;

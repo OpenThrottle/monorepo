@@ -532,7 +532,7 @@ function renderPlanRuns(envelope: ReportEnvelope): string {
   const runs = envelope.metrics.plan_runs;
   if (!isPlanRunsMetrics(runs)) return '';
 
-  const shownGroups = runs.byBackendKindStatus.slice(0, TABLE_ROW_LIMIT);
+  const shownGroups = runs.byDriverKindStatus.slice(0, TABLE_ROW_LIMIT);
 
   return [
     '## Plan runs',
@@ -548,28 +548,28 @@ function renderPlanRuns(envelope: ReportEnvelope): string {
       ],
     ),
     '',
-    '**Success rate by backend:**',
+    '**Success rate by driver:**',
     '',
     renderTable(
-      ['Backend', 'Total', 'Success rate'],
-      runs.successRateByBackend.map((row) => [
-        row.executionBackend,
+      ['Driver', 'Total', 'Success rate'],
+      runs.successRateByDriver.map((row) => [
+        row.driver,
         formatInt(row.totalCount),
         formatRatio(row.successRate),
       ]),
     ),
     '',
-    '**By backend / kind / status:**',
+    '**By driver / kind / status:**',
     '',
     renderTable(
-      ['Backend', 'Kind', 'Status', 'Count'],
+      ['Driver', 'Kind', 'Status', 'Count'],
       shownGroups.map((row) => [
-        row.executionBackend,
+        row.driver,
         row.runKind,
         row.status,
         formatInt(row.count),
       ]),
-    ) + renderCapNote(runs.byBackendKindStatus.length, shownGroups.length),
+    ) + renderCapNote(runs.byDriverKindStatus.length, shownGroups.length),
     '',
   ].join('\n');
 }

@@ -30,11 +30,11 @@ const hoursAgo = (hours: number): string => {
 export const TIMELINE_FIXTURE_SPANS: readonly TimelineSpanRowFragment[] = [
   // Three overlapping runs in one lane — the case the whole view exists for.
   {
-    backend: 'claude',
     branch: 'loop/timeline-beta',
     checkoutId: 'checkout-1',
     conversationId: null,
     derivedEnd: true,
+    driver: 'claude',
     endsAt: hoursAgo(20),
     id: 'run-a',
     kind: TimelineSpanKind.PlanRun,
@@ -47,11 +47,11 @@ export const TIMELINE_FIXTURE_SPANS: readonly TimelineSpanRowFragment[] = [
     title: 'Beta /timeline',
   },
   {
-    backend: 'cursor',
     branch: 'loop/timeline-beta',
     checkoutId: 'checkout-1',
     conversationId: null,
     derivedEnd: true,
+    driver: 'cursor',
     endsAt: hoursAgo(18),
     id: 'run-b',
     kind: TimelineSpanKind.PlanRun,
@@ -64,11 +64,11 @@ export const TIMELINE_FIXTURE_SPANS: readonly TimelineSpanRowFragment[] = [
     title: 'Beta /timeline',
   },
   {
-    backend: 'claude-code',
     branch: null,
     checkoutId: null,
     conversationId: 'conversation-1',
     derivedEnd: false,
+    driver: 'claude-code',
     endsAt: hoursAgo(19),
     id: 'session-a',
     kind: TimelineSpanKind.WorkSession,
@@ -82,11 +82,11 @@ export const TIMELINE_FIXTURE_SPANS: readonly TimelineSpanRowFragment[] = [
   },
   // Starts before the window — must render an edge indicator, not be dropped.
   {
-    backend: 'claude',
     branch: 'main',
     checkoutId: 'checkout-1',
     conversationId: null,
     derivedEnd: true,
+    driver: 'claude',
     endsAt: hoursAgo(160),
     id: 'run-clipped',
     kind: TimelineSpanKind.PlanRun,
@@ -100,11 +100,11 @@ export const TIMELINE_FIXTURE_SPANS: readonly TimelineSpanRowFragment[] = [
   },
   // Still open — end is clamped to now and flagged derived.
   {
-    backend: 'claude-code',
     branch: null,
     checkoutId: null,
     conversationId: null,
     derivedEnd: true,
+    driver: 'claude-code',
     endsAt: hoursAgo(0),
     id: 'session-open',
     kind: TimelineSpanKind.WorkSession,
@@ -117,11 +117,11 @@ export const TIMELINE_FIXTURE_SPANS: readonly TimelineSpanRowFragment[] = [
     title: 'openthrottle-mcp',
   },
   {
-    backend: 'claude',
     branch: null,
     checkoutId: null,
     conversationId: null,
     derivedEnd: false,
+    driver: 'claude',
     endsAt: hoursAgo(46),
     id: 'scheduled-a',
     kind: TimelineSpanKind.ScheduledRun,

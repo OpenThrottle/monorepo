@@ -1,19 +1,19 @@
 /**
- * @description Test fixture: a plan's `runConfigJson` with the ralph fields the Run
- * dialog reads (backend, model, effort, iterations) overridden. Built from the
- * package's own defaults so the JSON stays valid as the storage shape evolves.
+ * @description Test fixture: a plan's `runConfigJson` with the agent fields the Run
+ * dialog reads (driver, model, effort) overridden. Built from the package's own
+ * defaults so the JSON stays valid as the storage shape evolves; the stored
+ * block that holds them is `run`.
  */
 import { getDefaultPlanRunConfigStorage } from '@openthrottle/openthrottle-plan-config';
 
 export const buildPlanRunConfigJson = (
-  ralph: {
+  agent: {
     readonly effort?: string;
-    readonly executionBackend?: 'claude' | 'cursor';
-    readonly iterations?: number;
+    readonly driver?: 'claude' | 'cursor';
     readonly model?: string;
   } = {},
 ): string => {
   const stored = getDefaultPlanRunConfigStorage({ planId: 'plan-1' });
 
-  return JSON.stringify({ ...stored, ralph: { ...stored.ralph, ...ralph } });
+  return JSON.stringify({ ...stored, run: { ...stored.run, ...agent } });
 };

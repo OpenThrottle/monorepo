@@ -144,8 +144,8 @@ const DEV_TARGET = 'dev';
  * modelled on reached zero and was deleted.
  *
  * **Currently empty, and that is the intended steady state.** It held
- * `@openthrottle/nestjs-agentic-workflow` until the two defects behind it were
- * fixed in `@openthrottle/openthrottle-agentic-ralph`: generated code emitting
+ * a package (since deleted) until the two defects behind it were
+ * fixed: generated code emitting
  * `.js` specifiers for a source-first package, and a types-only import emitted as
  * a value import. Both are now prevented at the codegen config rather than per
  * package — see `@openthrottle/graphql-codegen`'s `importExtension` and

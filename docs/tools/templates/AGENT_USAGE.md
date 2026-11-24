@@ -223,11 +223,11 @@ and this doc plus `ot-generators` (scaffolding). Full layout:
 Invoke a skill **before** writing code when the task matches its **USE WHEN**
 trigger. For `@tools/generators`, reach for **ot-generators** first.
 
-| Source                                                      | Purpose                                                                                         |
-| ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `skills/ot-generators/SKILL.md`                             | `@tools/generators`: `NX_ISOLATE_PLUGINS=false`, list/describe/`--list`, and this doc           |
-| [AGENTS.md](../../../AGENTS.md) § OpenThrottle Agent Skills | Index of the OT skill set — **ot-stack**, **ot-plans**, **agents-ralph**, plus **nx-workspace** |
-| [AGENTS.md](../../../AGENTS.md) § When to use nx_docs       | Nx task execution (`pnpm nx run`, `affected`), the Nx MCP, when to use **nx_docs**              |
+| Source                                                      | Purpose                                                                                    |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `skills/ot-generators/SKILL.md`                             | `@tools/generators`: `NX_ISOLATE_PLUGINS=false`, list/describe/`--list`, and this doc      |
+| [AGENTS.md](../../../AGENTS.md) § OpenThrottle Agent Skills | Index of the OT skill set — **ot-stack**, **ot-plans**, **ot-loop**, plus **nx-workspace** |
+| [AGENTS.md](../../../AGENTS.md) § When to use nx_docs       | Nx task execution (`pnpm nx run`, `affected`), the Nx MCP, when to use **nx_docs**         |
 
 Skill **bodies** are authored under `skills/<slug>/`, generated into
 `.agents/skills/`, and fanned out to `.claude/skills/`. Which
@@ -249,7 +249,7 @@ hand-edit a generated skill directory.
 | Intent           | Command / reference                                                                 |
 | ---------------- | ----------------------------------------------------------------------------------- |
 | Run tasks        | `pnpm nx run <project>:<target>`, `nx run-many`, `nx affected` (see AGENTS.md)      |
-| Workflow CLI     | `pnpm exec workflow-ralph --plan <uuid>` (see AGENTS.md § Workflow CLI)             |
+| Plan runs        | `/ot-loop <planUuid>` (see AGENTS.md § Plan runs)                                   |
 | OpenThrottle     | Use `openthrottle-mcp` tools per the `ot-plans` skill                               |
 | SSOT drift guard | `pnpm nx run monorepo:check-agent-assets-ssot` (see CONTRIBUTING.md § Agent assets) |
 

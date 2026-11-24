@@ -4,10 +4,10 @@ Tools that call authenticated GraphQL (plans, tasks, notes, semantic search, and
 
 ## Token types
 
-| Token                                     | Format                                 | Who uses it                   | Lifetime                                                                 |
-| ----------------------------------------- | -------------------------------------- | ----------------------------- | ------------------------------------------------------------------------ |
-| **Service account** (recommended for MCP) | `ot_sa_<prefix>_<secret>`              | Cursor MCP, CI, Ralph workers | Long-lived; rotate by creating a new credential and revoking the old one |
-| **Human JWT**                             | Standard JWT from `login` / `register` | Developer UI, admin GraphQL   | ~24h; must re-login or refresh manually                                  |
+| Token                                     | Format                                 | Who uses it                      | Lifetime                                                                 |
+| ----------------------------------------- | -------------------------------------- | -------------------------------- | ------------------------------------------------------------------------ |
+| **Service account** (recommended for MCP) | `ot_sa_<prefix>_<secret>`              | Cursor MCP, CI, plan-run workers | Long-lived; rotate by creating a new credential and revoking the old one |
+| **Human JWT**                             | Standard JWT from `login` / `register` | Developer UI, admin GraphQL      | ~24h; must re-login or refresh manually                                  |
 
 Use a **service account** token for `OPENTHROTTLE_MCP_AUTH_TOKEN` so automation does not depend on a human session that expires. Human JWTs still work, but they are a poor fit for always-on MCP.
 
@@ -20,7 +20,7 @@ Use a **service account** token for `OPENTHROTTLE_MCP_AUTH_TOKEN` so automation 
  pnpm run database:migrate
 ```
 
-Migration `045_seed_service_accounts_bootstrap.sql` creates service accounts `openthrottle-mcp` and `workflow-ralph` with roles `mcp` and `workflow-ralph` (`plans:read`, `plans:write`). It does **not** store secrets. 2. Mint bearer tokens (plaintext shown once):
+Migration `045_seed_service_accounts_bootstrap.sql` creates the `openthrottle-mcp` service account (role `mcp`) and the plan-run worker's account; migration 197 names that account and its role `plan-runner` (`plans:read`, `plans:write`). It does **not** store secrets. 2. Mint bearer tokens (plaintext shown once):
 
 ```bash
  pnpm run database:bootstrap-service-accounts
@@ -29,7 +29,7 @@ Migration `045_seed_service_accounts_bootstrap.sql` creates service accounts `op
 3. Copy output into env:
 
 - `**OPENTHROTTLE_MCP_AUTH_TOKEN**` — Cursor MCP, CLI, embedded server tools
-- `**OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN**` — BullMQ / in-process Ralph orchestrator (optional separate `workflow-ralph` account)
+- `**OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN**` — BullMQ / in-process OT Loop worker (optional separate `plan-runner` account)
   Also set in `applications/openthrottle-server/.env` if the server or workers read tokens from that file.
 
 4. Restart openthrottle-server and reload the MCP in Cursor after changing tokens.
@@ -40,7 +40,7 @@ Every minted/rotated line is also written to the git-ignored `.bootstrap-secrets
 
 `.bootstrap-secrets.local` must always hold all six keys: `OPENTHROTTLE_ADMIN_URL`, `OPENTHROTTLE_BOOTSTRAP_USER_EMAIL`, `OPENTHROTTLE_BOOTSTRAP_USER_PASSWORD`, `OPENTHROTTLE_DEVELOPER_URL`, `OPENTHROTTLE_MCP_AUTH_TOKEN`, `OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN`. A token line only appears when its credential is **freshly minted, rotated, or provisioned from the environment** — the stored value is a one-way SHA-256 hash, so a plaintext token can **never** be re-derived from the database once minted.
 
-`pnpm database:bootstrap-service-accounts` now **self-heals**: if a service account already has an active credential but its key is absent from the file, it revokes the stale credential(s), mints a fresh token, and writes it (restricted to the `openthrottle-mcp` / `workflow-ralph` bootstrap accounts). So the normal recovery is simply:
+`pnpm database:bootstrap-service-accounts` now **self-heals**: if a service account already has an active credential but its key is absent from the file, it revokes the stale credential(s), mints a fresh token, and writes it (restricted to the `openthrottle-mcp` / `plan-runner` bootstrap accounts). So the normal recovery is simply:
 
 ```bash
 pnpm database:bootstrap-service-accounts   # auto-rotates the missing key
@@ -152,7 +152,7 @@ Use the `serviceAccountId` for `openthrottle-mcp` in `CreateServiceAccountCreden
 
 ## Workflow worker token
 
-Plans queue / Ralph orchestration can call GraphQL with `**OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN**` (service account `workflow-ralph`). Mint via the same bootstrap script or admin GraphQL.
+Plans queue / OT Loop orchestration can call GraphQL with `**OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN**` (service account `plan-runner`). Mint via the same bootstrap script or admin GraphQL.
 
 See `applications/openthrottle-server/.env.default` and [databases/openthrottle/README.md](../../../databases/openthrottle/README.md).
 

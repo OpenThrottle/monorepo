@@ -424,13 +424,12 @@ unless you deliberately make it otherwise, so in practice _extensions are requir
 mechanism is not a choice you get to make. `#536` moved 26 packages across that line in a single
 commit, adding ~2,560 extensions via `scripts/codemod-import-extensions.ts`.
 
-The three exceptions, and why each is exempt:
+The two exceptions, and why each is exempt:
 
 | project                 | why CommonJS                                                                     |
 | ----------------------- | -------------------------------------------------------------------------------- |
 | `packages/nestjs-redis` | third-party dual-package type conflict, recorded at the call site that causes it |
 | `tools/generators`      | generator tooling, not consumed as a library                                     |
-| `tools/workflows`       | CLI with live `build` / `build:tsc` / `dev` targets                              |
 
 **The gate is deliberately stricter than the rule.** `scripts/check-nodenext-references.ts`
 (wired into `check:local`) accepts a dependency if it has a project reference **or** zero

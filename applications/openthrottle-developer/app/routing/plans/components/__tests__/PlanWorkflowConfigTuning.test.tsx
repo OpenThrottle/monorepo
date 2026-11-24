@@ -6,10 +6,7 @@ import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { MOCK_PLAN_RUN_MODELS } from '~/routing/plans/data/mock.plan-run-models';
-import {
-  DEFAULT_RALPH_ITERATIONS,
-  getDefaultWorkflowRalphRunOptionsInput,
-} from '~/routing/plans/utils/build-workflow-ralph-argv';
+import { getDefaultPlanRunOptions } from '~/routing/plans/utils/plan-run-options';
 
 import type { PlanWorkflowConfigTuningProps } from '../PlanWorkflowConfigTuning';
 import { PlanWorkflowConfigTuning } from '../PlanWorkflowConfigTuning';
@@ -19,8 +16,8 @@ describe('PlanWorkflowConfigTuning Component', () => {
 
   beforeEach(() => {
     props = {
-      heading: '07. Run Tuning',
-      input: getDefaultWorkflowRalphRunOptionsInput(),
+      heading: '06. Run Tuning',
+      input: getDefaultPlanRunOptions(),
       iterationTimeoutText: '',
       models: Promise.resolve(MOCK_PLAN_RUN_MODELS),
       setInput: vi.fn(),
@@ -40,15 +37,10 @@ describe('PlanWorkflowConfigTuning Component', () => {
     const component = render(<RoutesStub />);
 
     expect(
-      component.getByRole('group', { name: '07. Run Tuning' }),
+      component.getByRole('group', { name: '06. Run Tuning' }),
     ).toBeInTheDocument();
     expect(
-      component.getByLabelText('Iteration count for --iterations'),
-    ).toBeInTheDocument();
-    expect(
-      component.getByLabelText(
-        'Per-iteration timeout in seconds for --iteration-timeout',
-      ),
+      component.getByLabelText('Agent timeout in seconds'),
     ).toBeInTheDocument();
     // The free-text --model input is replaced by the shared model picker.
     expect(
@@ -61,9 +53,13 @@ describe('PlanWorkflowConfigTuning Component', () => {
     expect(
       component.getByTestId('PlanRunEffortControl-disabled'),
     ).toBeInTheDocument();
+    // Fields only the retired runner read are gone.
     expect(
-      component.getByLabelText('NX project name for --project'),
-    ).toBeInTheDocument();
+      component.queryByLabelText('Iteration count for --iterations'),
+    ).not.toBeInTheDocument();
+    expect(
+      component.queryByLabelText('NX project name for --project'),
+    ).not.toBeInTheDocument();
   });
 
   test('should call setIterationTimeoutText when iteration timeout input changes', async () => {
@@ -84,19 +80,14 @@ describe('PlanWorkflowConfigTuning Component', () => {
     const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
     const { getByLabelText } = render(<RoutesStub />);
 
-    await user.type(
-      getByLabelText(
-        'Per-iteration timeout in seconds for --iteration-timeout',
-      ),
-      '1800',
-    );
+    await user.type(getByLabelText('Agent timeout in seconds'), '1800');
 
     expect(setIterationTimeoutText.mock.calls.map((c) => c[0]).join('')).toBe(
       '1800',
     );
   });
 
-  test('should write the picked model and its backend through setInput', async () => {
+  test('should write the picked model and its driver through setInput', async () => {
     const user = userEvent.setup();
     const setInput = vi.fn();
     props = { ...props, setInput };
@@ -121,49 +112,9 @@ describe('PlanWorkflowConfigTuning Component', () => {
     expect(typeof updater).toBe('function');
     if (typeof updater === 'function') {
       expect(updater(props.input)).toMatchObject({
-        executionBackend: 'claude',
+        driver: 'claude',
         model: 'opus',
       });
     }
-  });
-
-  describe('when iterations input blurs with a value below 1', () => {
-    test('should reset iterations to default via setInput', async () => {
-      const user = userEvent.setup();
-      const setInput = vi.fn();
-      const invalidInput = {
-        ...getDefaultWorkflowRalphRunOptionsInput(),
-        iterations: 0,
-      };
-      props = {
-        heading: '07. Run Tuning',
-        input: invalidInput,
-        iterationTimeoutText: '',
-        models: Promise.resolve(MOCK_PLAN_RUN_MODELS),
-        setInput,
-        setIterationTimeoutText: vi.fn(),
-      };
-      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
-      const Component = () => {
-        return (
-          <TooltipProvider>
-            <PlanWorkflowConfigTuning {...props} />
-          </TooltipProvider>
-        );
-      };
-      const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
-      const { getByLabelText } = render(<RoutesStub />);
-
-      await user.click(getByLabelText('Iteration count for --iterations'));
-      await user.tab();
-
-      expect(setInput).toHaveBeenCalled();
-      const updater = setInput.mock.calls[0]?.[0];
-      expect(typeof updater).toBe('function');
-      if (typeof updater === 'function') {
-        const next = updater(invalidInput);
-        expect(next.iterations).toBe(DEFAULT_RALPH_ITERATIONS);
-      }
-    });
   });
 });

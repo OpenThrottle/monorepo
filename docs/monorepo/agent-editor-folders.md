@@ -10,14 +10,14 @@ Single entry point for **where agent- and editor-specific config lives** in the 
 
 **Related entry points (link, don't fork):**
 
-| Document                                                             | Scope                                                                              |
-| -------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| [AGENTS.md](../../AGENTS.md)                                         | Cross-editor handbook: Nx, OT skills index, workflow-ralph CLI, code-style pointer |
-| [CLAUDE.md](../../CLAUDE.md)                                         | Claude Code only: model picking, `.claude/` config; all else is in `AGENTS.md`     |
-| [docs/Skills.md](../Skills.md)                                       | Skill adoption policy, installed set, skip-list                                    |
-| [skills/ot-skill-sync/SKILL.md](../../skills/ot-skill-sync/SKILL.md) | The ot-skill-sync architecture + `sync.sh` / `--check` commands                    |
-| [code-style.md](./code-style.md)                                     | The coding rules: rationale, examples, and each rule's enforcement label           |
-| [AGENT_USAGE.md](../tools/templates/AGENT_USAGE.md)                  | What agents should load: rules pointer, generator commands, discoverability        |
+| Document                                                             | Scope                                                                          |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| [AGENTS.md](../../AGENTS.md)                                         | Cross-editor handbook: Nx, OT skills index, plan runs, code-style pointer      |
+| [CLAUDE.md](../../CLAUDE.md)                                         | Claude Code only: model picking, `.claude/` config; all else is in `AGENTS.md` |
+| [docs/Skills.md](../Skills.md)                                       | Skill adoption policy, installed set, skip-list                                |
+| [skills/ot-skill-sync/SKILL.md](../../skills/ot-skill-sync/SKILL.md) | The ot-skill-sync architecture + `sync.sh` / `--check` commands                |
+| [code-style.md](./code-style.md)                                     | The coding rules: rationale, examples, and each rule's enforcement label       |
+| [AGENT_USAGE.md](../tools/templates/AGENT_USAGE.md)                  | What agents should load: rules pointer, generator commands, discoverability    |
 
 ---
 
@@ -26,7 +26,6 @@ Single entry point for **where agent- and editor-specific config lives** in the 
 ```bash
 repo root
 ├── AGENTS.md, CLAUDE.md              # Cross-editor entry points (edit in place)
-├── .workflow-ralph.json.example      # Ralph CLI local defaults (example)
 ├── skills/                           # ★ SSOT for OT-authored skills (one dir per skill, committed)
 ├── skills-lock.json                  # Lockfile for external skills (npx skills add …), hash-pinned
 ├── .agents/                          # SSOT for personas, prompts
@@ -91,19 +90,19 @@ bash skills/ot-skill-sync/scripts/sync.sh --check  # validate without writing (C
 | External skills    | `npx skills add <owner>/<repo> --skill <name> --agent universal` (→ `skills-lock.json` + a real dir in `.agents/skills/`)                          | `.claude/skills/<slug>`                                    |
 | Personal skills    | `~/.openthrottle/skills/<slug>/SKILL.md` — **outside the repo**, per-user, never committed (`OPENTHROTTLE_PERSONAL_SKILLS_DIR` overrides the root) | `.agents/skills/<slug>` (symlink), `.claude/skills/<slug>` |
 | Code style         | `AGENTS.md` § Code style + `docs/monorepo/code-style.md`                                                                                           | — (no generated view; read natively)                       |
-| Personas / prompts | `.agents/personas/`, `.agents/prompts/`                                                                                                            | — (loaded via Ralph `--prompt-file`)                       |
+| Personas / prompts | `.agents/personas/`, `.agents/prompts/`                                                                                                            | — (attached by hand or run as a scheduled job)             |
 | Skill tags         | `project_skills.tags` (GraphQL / `/skills` UI; ingest does not write tags)                                                                         | —                                                          |
 
 ### Prompt filename conventions (`.agents/prompts/`)
 
 Prompts are flat files in `.agents/prompts/`; the walker derives slug and title from the filename, so **no frontmatter is required**. The filename prefix says how the prompt is invoked:
 
-| Prefix       | Meaning                                                                                                                                                                                                  | Example             |
-| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
-| `Before_*`   | Lifecycle hook — injected before a run                                                                                                                                                                   | `Before_Joke.md`    |
-| `After_*`    | Lifecycle hook — injected after a run                                                                                                                                                                    | `After_Fact.md`     |
-| `Job_*`      | Standalone **scheduled run**, not a lifecycle hook. Self-contained; invoked via Ralph `--prompt-file` or an OT scheduled job. Read-only on source; its only side effect is filing one OpenThrottle plan. | `Job_TestHealth.md` |
-| `_template*` | Authoring template, skipped by the walker                                                                                                                                                                | `_template.md`      |
+| Prefix       | Meaning                                                                                                                                                                    | Example             |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| `Before_*`   | Lifecycle hook — injected before a run                                                                                                                                     | `Before_Joke.md`    |
+| `After_*`    | Lifecycle hook — injected after a run                                                                                                                                      | `After_Fact.md`     |
+| `Job_*`      | Standalone **scheduled run**, not a lifecycle hook. Self-contained; run by an OT scheduled job. Read-only on source; its only side effect is filing one OpenThrottle plan. | `Job_TestHealth.md` |
+| `_template*` | Authoring template, skipped by the walker                                                                                                                                  | `_template.md`      |
 
 `Job_*` prompts deliberately repeat their shared rules rather than referencing a common preamble — they must work standalone when handed to any agent CLI, and a broken cross-file reference in an unattended run costs more than the duplication.
 
@@ -140,9 +139,8 @@ Claude Code reads `CLAUDE.md` natively but only loads a sibling `AGENTS.md` when
 | Install an **external skill**          | `npx skills add <owner>/<repo> --skill <name> --agent universal`, run `sync.sh` (keep it 1:1)                                                    |
 | **Customize** an external skill        | Author a companion skill/rule that references it — don't edit the vendored copy (see §2)                                                         |
 | Change **TypeScript / JS style**       | `docs/monorepo/code-style.md` for the rationale, and `AGENTS.md` § Code style for the normative line                                             |
-| Change **OT / GitHub / Ralph rules**   | the skill that owns it: `skills/ot-plans/`, `skills/github-*/`, `skills/agents-ralph/`                                                           |
-| Change **Ralph loop** behavior         | `skills/agents-ralph/SKILL.md`                                                                                                                   |
-| Change **Ralph CLI** flags / queue     | `skills/workflow-ralph/`, `tools/workflows/`                                                                                                     |
+| Change **OT / GitHub rules**           | the skill that owns it: `skills/ot-plans/`, `skills/github-*/`                                                                                   |
+| Change **plan run** behavior           | `skills/ot-loop/SKILL.md` § The loop and `docs/workflows/ot-loop-job.md`; the job code is `packages/openthrottle-agentic-loop`                   |
 | Add a **persona**                      | `.agents/personas/<id>.md` from `_template.md`                                                                                                   |
 | Configure **openthrottle-mcp** locally | Copy `.cursor/mcp.json` → `.cursor/mcp.json` (full guide: [mcp-registration.md](../openthrottle/mcp-registration.md))                            |
 | Recreate generated links after clone   | `bash skills/ot-skill-sync/scripts/sync.sh`                                                                                                      |
@@ -180,7 +178,7 @@ Generated skill/rule links are symlinks. On Windows, enable symlink support (`gi
 | **This doc**                                                             | Folder layout, authored-vs-generated, where to edit                  | Rule/skill bodies, the ot-skill-sync contract |
 | **[skills/ot-skill-sync/SKILL.md](../../skills/ot-skill-sync/SKILL.md)** | The ot-skill-sync architecture, `sync.sh`/`--check`, ownership rules | Personas/prompts layout, code style           |
 | **[docs/Skills.md](../Skills.md)**                                       | Skill adoption policy, installed set, skip-list                      | Physical folder tree                          |
-| **[AGENTS.md](../../AGENTS.md)**                                         | Nx guidelines, skills index, workflow-ralph CLI, code style          | Per-editor folder inventory                   |
+| **[AGENTS.md](../../AGENTS.md)**                                         | Nx guidelines, skills index, plan runs, code style                   | Per-editor folder inventory                   |
 | **[AGENT_USAGE.md](../tools/templates/AGENT_USAGE.md)**                  | What agents load: the rule set, generator commands, discoverability  | Physical folder tree                          |
 
 When onboarding agents: point them at **[AGENT_USAGE.md](../tools/templates/AGENT_USAGE.md)** for _what to load_ and **this doc** for _where files live_. When changing behavior: author skills in `skills/` (or install external ones with the CLI) — never the generated trees — and change code style in `AGENTS.md` § Code style plus [code-style.md](./code-style.md).

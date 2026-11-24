@@ -163,7 +163,7 @@ const errorMessageForAgentStatus = (
  * queueJobLogs/queueJobLogTail), runs it via {@link ScheduledAgentRunnerService} (→ drivers
  * `runAgentPrompt`) under a per-run AbortSignal, and records the terminal status + exit code. The run
  * row is authoritative; `failed`/`stalled` events are a crash safety net so nothing stays `running`.
- * Modeled on `PlansProcessor`, minus the Ralph/plan specifics.
+ * Modeled on `PlansProcessor`, minus the plan-run specifics.
  */
 @Processor(SCHEDULED_AGENT_JOBS_QUEUE_NAME, {
   ...defaultWorkerOptions,

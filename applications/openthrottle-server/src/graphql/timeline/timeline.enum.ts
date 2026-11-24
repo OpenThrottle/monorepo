@@ -25,7 +25,7 @@ registerEnumType(TimelineSpanKind, {
   name: 'TimelineSpanKind',
   valuesMap: {
     PLAN_RUN: {
-      description: `A queued Ralph plan run (plan_runs). Its end is always derived — the table records no finish timestamp.`,
+      description: `A queued plan run (plan_runs). Its end is always derived — the table records no finish timestamp.`,
     },
     SCHEDULED_RUN: {
       description: `A scheduled agent job run (scheduled_agent_job_runs). Carries measured started_at/finished_at.`,
@@ -74,8 +74,8 @@ registerEnumType(TimelineMarkerKind, {
 
 /** How lanes are keyed. Every kind resolves a lane key under every mode. */
 export const TimelineLaneGrouping = {
-  BY_BACKEND: 'BY_BACKEND',
   BY_CHECKOUT: 'BY_CHECKOUT',
+  BY_DRIVER: 'BY_DRIVER',
   BY_PLAN: 'BY_PLAN',
 } as const;
 
@@ -86,11 +86,11 @@ registerEnumType(TimelineLaneGrouping, {
   description: `How timeline rows are grouped into lanes.`,
   name: 'TimelineLaneGrouping',
   valuesMap: {
-    BY_BACKEND: {
-      description: 'One lane per execution backend / tool / driver.',
-    },
     BY_CHECKOUT: {
       description: 'One lane per repository checkout (falling back to branch).',
+    },
+    BY_DRIVER: {
+      description: 'One lane per agent driver or tool.',
     },
     BY_PLAN: { description: 'One lane per plan. The default.' },
   },

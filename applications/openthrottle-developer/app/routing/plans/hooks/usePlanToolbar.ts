@@ -13,7 +13,7 @@ import type { action } from '~/routes/plans.$planId._index';
 import {
   PLAN_RUN_BULLMQ_QUEUE_NAME,
   planRunJobDetailPath,
-} from '~/routing/plans/utils/build-workflow-ralph-argv';
+} from '~/routing/plans/utils/plan-run-options';
 import { readActionError } from '~/routing/plans/utils/readActionError';
 import {
   getPlanIsRunning,

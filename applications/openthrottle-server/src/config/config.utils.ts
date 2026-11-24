@@ -94,7 +94,7 @@ export const getBullMqRunOutputRetentionConfig = ():
 const RUN_OUTPUT_DIR_ENV = 'BULLMQ_RUN_OUTPUT_DIR';
 
 /**
- * @description When set to a non-empty string, plan/workflow BullMQ workers append Ralph spawn
+ * @description When set to a non-empty string, plan/workflow BullMQ workers append plan-run spawn
  * stdout/stderr to per-job JSONL under this directory via `KeyedJsonlWriter` from `@openthrottle/nestjs-logging`.
  */
 export const getBullMqRunOutputBaseDirectory = (): string | undefined => {

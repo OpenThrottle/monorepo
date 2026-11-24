@@ -64,7 +64,7 @@ describe('SkillAvailabilityResolver', () => {
       posture: 'deny',
       rules: [
         {
-          environment: 'ralph',
+          environment: 'headless',
           id: 'rule-1',
           slugAllow: ['git-commit'],
           slugDeny: [],
@@ -80,7 +80,7 @@ describe('SkillAvailabilityResolver', () => {
       posture: 'deny',
       rules: [
         {
-          environment: 'ralph',
+          environment: 'headless',
           id: 'rule-1',
           slugAllow: ['git-commit'],
           slugDeny: [],

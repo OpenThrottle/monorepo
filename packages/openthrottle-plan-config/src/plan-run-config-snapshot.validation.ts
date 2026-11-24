@@ -4,18 +4,14 @@
 
 import { z } from 'zod';
 
-import {
-  planRunConfigOtLoopSchema,
-  planRunConfigRunnerSchema,
-} from './plan-run-config-ot-loop.validation.ts';
+import { planRunConfigOtLoopShape } from './plan-run-config-ot-loop.validation.ts';
 import { PLAN_RUN_CONFIG_SNAPSHOT_VERSION } from './plan-run-config-snapshot.constants.ts';
 import type { PlanRunConfigSnapshot } from './plan-run-config-snapshot.types.ts';
 import {
-  MAX_PLAN_RUN_ITERATIONS,
-  MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN,
+  MAX_PLAN_RUN_STRING_FIELD_LEN,
   MAX_PLAN_RUN_WORKING_DIRECTORY_LEN,
   PLAN_RUN_CONFIG_UUID_REGEX,
-  PLAN_RUN_KNOWN_BACKENDS,
+  PLAN_RUN_KNOWN_DRIVERS,
 } from './plan-run-config-storage.constants.ts';
 
 const trimToMax = (max: number) => {
@@ -25,20 +21,15 @@ const trimToMax = (max: number) => {
     .transform((s) => s.trim());
 };
 
-const planRunConfigSnapshotRalphV1Schema = z
+const planRunConfigSnapshotRunV1Schema = z
   .object({
+    ...planRunConfigOtLoopShape,
     debug: z.enum(['debug', 'omit', 'verbose']).optional(),
-    effort: trimToMax(MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN).optional(),
-    executionBackend: z.enum(PLAN_RUN_KNOWN_BACKENDS),
+    driver: z.enum(PLAN_RUN_KNOWN_DRIVERS),
+    effort: trimToMax(MAX_PLAN_RUN_STRING_FIELD_LEN).optional(),
     iterationTimeoutSeconds: z.number().int().min(1).optional(),
-    iterations: z.number().int().min(1).max(MAX_PLAN_RUN_ITERATIONS).optional(),
-    model: trimToMax(MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN).optional(),
-    project: trimToMax(MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN).optional(),
-    prompt: trimToMax(MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN).optional(),
-    promptFile: trimToMax(MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN).optional(),
-    skipWorktreeSetup: z.boolean().optional(),
-    worktree: trimToMax(MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN).optional(),
-    worktreeBase: trimToMax(MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN).optional(),
+    model: trimToMax(MAX_PLAN_RUN_STRING_FIELD_LEN).optional(),
+    worktreeName: trimToMax(MAX_PLAN_RUN_STRING_FIELD_LEN).optional(),
   })
   .strict();
 
@@ -50,20 +41,18 @@ const planRunConfigSnapshotV1Schema = z
       })
       .strict()
       .optional(),
-    otLoop: planRunConfigOtLoopSchema.optional(),
-    ralph: planRunConfigSnapshotRalphV1Schema,
-    runner: planRunConfigRunnerSchema.optional(),
+    run: planRunConfigSnapshotRunV1Schema,
     target: z
       .object({
         mode: z.enum(['plan', 'task']),
-        taskId: trimToMax(MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN),
+        taskId: trimToMax(MAX_PLAN_RUN_STRING_FIELD_LEN),
       })
       .strict(),
     version: z.literal(PLAN_RUN_CONFIG_SNAPSHOT_VERSION),
     workspace: z
       .object({
-        checkoutId: trimToMax(MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN).optional(),
-        repositoryId: trimToMax(MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN).optional(),
+        checkoutId: trimToMax(MAX_PLAN_RUN_STRING_FIELD_LEN).optional(),
+        repositoryId: trimToMax(MAX_PLAN_RUN_STRING_FIELD_LEN).optional(),
         workingDirectory: trimToMax(MAX_PLAN_RUN_WORKING_DIRECTORY_LEN),
       })
       .strict(),

@@ -2,7 +2,7 @@
  * @description Retention policy for `plan_output_stream` — the per-plan agent
  * narration log written by `append_plan_output`.
  *
- * The table is append-only and had no delete path: every Ralph iteration, every
+ * The table is append-only and had no delete path: every plan-run iteration, every
  * `/loop` task and every MCP progress note adds a chunk that stays forever. The
  * audited database held ~3.4k chunks / ~4.4MB spanning nearly seven months, with
  * the largest single plan at ~70 chunks.

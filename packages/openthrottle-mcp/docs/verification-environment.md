@@ -112,7 +112,7 @@ These three read-only tools query persisted **web chat** threads (`agent_convers
 3. **`agent_conversation_list`** — response **`structuredContent.conversations`** includes the conversation id; default pagination is limit **20**, status **`active`**.
 4. **`agent_conversation_get`** with **`id`** — same conversation row as step 3.
 5. **`agent_conversation_get_messages`** with **`conversationId`** — user and assistant rows; assistant rows include **`routingConfidence`**, **`routingModel`**, **`routingReason`**, **`routingTier`**, **`toolMetadataJson`** when present.
-6. **Boundary:** Tool descriptions warn that these are web chat threads only — use **`get_plan_output`** for Ralph/plan iteration logs.
+6. **Boundary:** Tool descriptions warn that these are web chat threads only — use **`get_plan_output`** for plan iteration logs.
 
 **Negative check:** With an **`ot_sa_…`** token, expect **403** on all three tools (confirms user-scoped human auth).
 

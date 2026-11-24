@@ -26,6 +26,7 @@
   "devDependencies": {
     "@nestjs/testing": "catalog:",
     "esbuild": "catalog:",
+    "graphql": "catalog:",
     "graphql-codegen-typescript-validation-schema": "catalog:",
     "reflect-metadata": "catalog:",
     "vitest": "catalog:"
@@ -97,12 +98,7 @@
           "tsConfig": "{projectRoot}/tsconfig.build.json"
         }
       },
-      "codegen-graphql": {
-        "inputs": [
-          "codegenGraphqlInputs",
-          "{workspaceRoot}/packages/openthrottle-agentic-ralph/src/graphql/ralph/**/*.graphql"
-        ]
-      },
+      "codegen-graphql": {},
       "codegen-graphql-watch": {},
       "lint": {},
       "measure-tool-surface": {

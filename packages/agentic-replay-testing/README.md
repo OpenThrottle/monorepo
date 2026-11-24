@@ -43,13 +43,13 @@ every turn, so each claude transcript carries one; a real rejection cannot be pr
 
 ## Backends recorded
 
-| Backend     | Session                          | Conversation | Plan run | Gaps                                                                 |
-| ----------- | -------------------------------- | ------------ | -------- | -------------------------------------------------------------------- |
-| claude      | caller UUID                      | 11           | 3        | —                                                                    |
-| codex       | CLI-minted thread id             | 11           | 3        | `resume.turn-2` pins a known bug (`exec resume` rejects `--sandbox`) |
-| cursor      | caller, pre-minted `create-chat` | 10           | 3        | no `permission-denied`: supervised let the write through             |
-| opencode    | CLI-minted `ses_…`               | 10           | 0        | no `permission-denied` (same); plan-run model gated on the account   |
-| antigravity | CLI-minted conversation id       | 11           | 3        | —                                                                    |
+| Backend     | Session                          | Conversation | Gaps                                                                 |
+| ----------- | -------------------------------- | ------------ | -------------------------------------------------------------------- |
+| claude      | caller UUID                      | 11           | —                                                                    |
+| codex       | CLI-minted thread id             | 11           | `resume.turn-2` pins a known bug (`exec resume` rejects `--sandbox`) |
+| cursor      | caller, pre-minted `create-chat` | 10           | no `permission-denied`: supervised let the write through             |
+| opencode    | CLI-minted `ses_…`               | 10           | no `permission-denied` (same)                                        |
+| antigravity | CLI-minted conversation id       | 11           | —                                                                    |
 
 Session strategy (`sessionStrategy` on each profile) decides what a resume turn continues. Every
 turn carries the full history, and a later turn's replay first replays the earlier turns, each
@@ -82,26 +82,6 @@ did. When the CLI was terminated (exit 130/143 or a signal), it waits for the ba
 Every run writes a `ReplayReport`. A `null` report means the bin never ran, i.e. the backend did not
 spawn through its override. For a lower-level seam, `installReplayBin(path)` returns the bin path
 and `readReport`.
-
-## Plan runs (the Ralph engine)
-
-Plan-run scenarios (`plan-run-complete`, `plan-run-error`, `plan-run-no-marker`, in
-`src/data/data.plan-run-scenarios.ts`) are recorded and replayed through the **real Ralph
-orchestrator** (`createWorkflowRalphOrchestrator`) with an iteration runner on the production
-drivers engine (`runDriverAsync` + `withStructuredOutput`) — the same path `runIterationAsync`
-takes. The only stand-ins are OpenThrottle (a stateful in-memory store of the seven GraphQL
-operations the orchestrator performs) and the agent process.
-
-The drivers engine spawns `claude -p …` through a shell and never reads `OPENTHROTTLE_CLAUDE_BIN`,
-so the shim or replay bin is installed as a bare `claude` first on `PATH`. Plan and task ids are
-placeholder UUIDs from the start, and timestamps are fixed, so the orchestrator's prompt is
-byte-identical between recording and replay; the prompt also names the OpenThrottle checkout,
-tokenized as `<OT_ROOT>`.
-
-```ts
-const result = await replayPlanRun(replayFixturePath('claude', 'plan-run-complete'));
-expect(result.store.statusChanges()).toEqual([...]);
-```
 
 ## Drift check (scheduled re-recording)
 

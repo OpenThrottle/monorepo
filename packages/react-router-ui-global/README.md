@@ -140,7 +140,7 @@ glob) is a follow-up if visual browsing becomes worth the wiring cost.
 | --------------------------------------------------------------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------- |
 | ESLint: ban `DropdownMenu` imports inside `*Table.tsx` / `*-table-columns.tsx`          | Catches the most common re-invention | High FP — tables still use `DropdownMenu` for column visibility, filters, and non-row menus |
 | `audit:` script: require `GlobalPopoverActionsHeader` whenever an Actions column exists | Keeps header markup consistent       | Needs AST/heuristic for “Actions column”; brittle across TanStack `header` shapes           |
-| Docs + coding rule (current)                                                            | Cheap, already where agents look     | Relies on review / Ralph following the rule                                                 |
+| Docs + coding rule (current)                                                            | Cheap, already where agents look     | Relies on review / agents following the rule                                                |
 
 Ship docs + the frontend-design rule for now. Revisit a narrow audit (e.g. flag
 `header: () => 'Actions'` string literals in table files) only if regressions

@@ -1,11 +1,13 @@
-import type { TaskFragment } from '@openthrottle/openthrottle-agentic-ralph';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
+import type { TaskFragment } from '../../__generated__/graphql.ts';
 import {
   buildFinalValidationDescription,
+  buildPlanRunWorkerGraphqlOptions,
   buildSessionOptions,
   buildWorkerEnv,
   formatNarration,
+  resolvePlanRunWorkerGraphqlConfigFromEnv,
   toLoopTask,
   toTimeoutMs,
 } from './ot-loop.utils.ts';
@@ -136,5 +138,115 @@ describe('buildFinalValidationDescription', () => {
     expect(text).toContain('Command: pnpm test');
     expect(text).toContain('Exit code: 2');
     expect(text).toContain('boom');
+  });
+});
+
+describe('resolvePlanRunWorkerGraphqlConfigFromEnv (auth token)', () => {
+  const snapshot = { ...process.env };
+
+  const clearAuthTokenEnv = (): void => {
+    delete process.env.OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN;
+    delete process.env.OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN;
+    delete process.env.OPENTHROTTLE_MCP_AUTH_TOKEN;
+  };
+
+  afterEach(() => {
+    process.env = { ...snapshot };
+  });
+
+  it('prefers OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN', () => {
+    clearAuthTokenEnv();
+    process.env.OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN = 'worker-token';
+    process.env.OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN = 'wf-token';
+    process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = 'mcp-token';
+
+    expect(resolvePlanRunWorkerGraphqlConfigFromEnv().token).toBe(
+      'worker-token',
+    );
+  });
+
+  it('falls back to OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN', () => {
+    clearAuthTokenEnv();
+    process.env.OPENTHROTTLE_WORKFLOWS_AUTH_TOKEN = 'wf-token';
+    process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = 'mcp-token';
+
+    expect(resolvePlanRunWorkerGraphqlConfigFromEnv().token).toBe('wf-token');
+  });
+
+  it('falls back to OPENTHROTTLE_MCP_AUTH_TOKEN', () => {
+    clearAuthTokenEnv();
+    process.env.OPENTHROTTLE_MCP_AUTH_TOKEN = 'mcp-token';
+
+    expect(resolvePlanRunWorkerGraphqlConfigFromEnv().token).toBe('mcp-token');
+  });
+
+  it('returns undefined when no auth token env vars are set', () => {
+    clearAuthTokenEnv();
+
+    expect(resolvePlanRunWorkerGraphqlConfigFromEnv().token).toBeUndefined();
+  });
+});
+
+describe('resolvePlanRunWorkerGraphqlConfigFromEnv (graphql url)', () => {
+  const snapshot = { ...process.env };
+
+  afterEach(() => {
+    process.env = { ...snapshot };
+  });
+
+  it('prefers OPENTHROTTLE_WORKER_GRAPHQL_URL', () => {
+    process.env.OPENTHROTTLE_WORKER_GRAPHQL_URL = 'http://worker/graphql';
+    process.env.OPENTHROTTLE_WORKFLOWS_GRAPHQL_URL = 'http://wf/graphql';
+
+    expect(resolvePlanRunWorkerGraphqlConfigFromEnv().graphqlUrl).toBe(
+      'http://worker/graphql',
+    );
+  });
+
+  it('falls back to OPENTHROTTLE_WORKFLOWS_GRAPHQL_URL', () => {
+    delete process.env.OPENTHROTTLE_WORKER_GRAPHQL_URL;
+    process.env.OPENTHROTTLE_WORKFLOWS_GRAPHQL_URL = 'http://wf/graphql';
+
+    expect(resolvePlanRunWorkerGraphqlConfigFromEnv().graphqlUrl).toBe(
+      'http://wf/graphql',
+    );
+  });
+});
+
+describe('resolvePlanRunWorkerGraphqlConfigFromEnv', () => {
+  const snapshot = { ...process.env };
+
+  afterEach(() => {
+    process.env = { ...snapshot };
+  });
+
+  it('combines token and url overrides', () => {
+    process.env.OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN = 't';
+    process.env.OPENTHROTTLE_WORKER_GRAPHQL_URL = 'http://localhost/g';
+
+    expect(resolvePlanRunWorkerGraphqlConfigFromEnv()).toEqual({
+      graphqlUrl: 'http://localhost/g',
+      token: 't',
+    });
+  });
+});
+
+describe('buildPlanRunWorkerGraphqlOptions', () => {
+  it('uses the configured url and a trimmed token', () => {
+    expect(
+      buildPlanRunWorkerGraphqlOptions({
+        graphqlUrl: ' http://localhost/g ',
+        token: ' t ',
+      }),
+    ).toEqual({ token: 't', url: 'http://localhost/g' });
+  });
+
+  it('omits a blank token', () => {
+    expect(
+      buildPlanRunWorkerGraphqlOptions({
+        graphqlUrl: 'http://localhost/g',
+        token: '  ',
+      }),
+    ).toEqual({ url: 'http://localhost/g' });
   });
 });

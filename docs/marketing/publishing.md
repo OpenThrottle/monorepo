@@ -23,7 +23,7 @@ if two episodes claim one slot. In order:
 | 2    | `03-first-plan`                                   | The first thing a new viewer would do                               |
 | 3    | `02-one-command-boot`                             | Removes the "can I even run it" objection                           |
 | 4    | `L2-setup-from-scratch`                           | For the people the last one converted                               |
-| 5    | `11-ralph-one-task`                               | The payoff: agents doing the work                                   |
+| 5    | `11-plan-run-one-task`                            | The payoff: agents doing the work                                   |
 | 6    | `05-connect-ot-mcp`                               | How to get there from their own editor                              |
 | 7    | `21-dashboard-tour`                               | Orientation, once they have something to look at                    |
 | 8–21 | 4, 7, 17, 13, 6, 19, 14, 8, 10, 20, 9, 12, 18, 22 | Breadth                                                             |

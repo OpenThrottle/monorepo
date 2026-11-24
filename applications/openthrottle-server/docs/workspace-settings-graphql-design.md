@@ -61,7 +61,7 @@ Stored in `enabled_editors` as a JSON array of strings (e.g. `["cursor","vscode"
 
 ### Filesystem path (`filesystem_path`)
 
-Reuse the same rules as plan Ralph `workingDirectory` (`validateWorkingDirectory` in `enqueue-plan-ralph-tuning.ts`):
+Reuse the same rules as plan-run `workingDirectory` (`validateWorkingDirectory` in `enqueue-plan-run-tuning.utils.ts`):
 
 1. Trim whitespace; empty is invalid on create.
 2. Max length **4096** characters.
@@ -284,7 +284,7 @@ Developer UI: Settings → Workspace → **Apply editor configuration** (after e
 
 ## Related code
 
-- Path validation (Ralph): `applications/openthrottle-server/src/graphql/plans/enqueue-plan-ralph-tuning/enqueue-plan-ralph-tuning.utils.ts` — `validateWorkingDirectory`
+- Path validation (plan runs): `applications/openthrottle-server/src/graphql/plans/enqueue-plan-run-tuning/enqueue-plan-run-tuning.utils.ts` — `validateWorkingDirectory`
 - Client path validation: `applications/openthrottle-developer/app/routing/plans/utils/workspace-path.ts`
 - Skill registry (UI): `applications/openthrottle-developer/app/routing/agents/data/data.repo-skills-registry.ts`
 - Skill paths (apply): `packages/nestjs-repositories-server/.../openthrottle-repo-skill-paths.ts`

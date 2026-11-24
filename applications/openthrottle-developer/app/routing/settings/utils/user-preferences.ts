@@ -18,7 +18,7 @@ import {
   reconcilePlanRunEffort,
   toPlanRunModelOptionId,
 } from '~/routing/plans/utils/plan-run-model-effort';
-import { isExecutionBackend } from '~/routing/plans/utils/plan-workflow-config-execution';
+import { isSelectablePlanRunDriver } from '~/routing/plans/utils/plan-workflow-config-execution';
 import type { PreferencesActionResult } from '~/routing/settings/data/data.preferences';
 
 /**
@@ -64,7 +64,7 @@ export const resolveDefaultAgent = (
 
   const { backend, effort, model } = stored;
 
-  if (!isExecutionBackend(backend)) {
+  if (!isSelectablePlanRunDriver(backend)) {
     return { kind: 'stale', stored };
   }
 
@@ -76,7 +76,7 @@ export const resolveDefaultAgent = (
 
   return {
     draft: {
-      backend,
+      driver: backend,
       effort: reconcilePlanRunEffort(backend, effort ?? ''),
       model,
     },
@@ -106,16 +106,12 @@ export const describeAgentDraft = (
   }
 
   const { reasoningLevels } = capabilitiesForChatOption({
-    backend: draft.backend,
+    backend: draft.driver,
   });
 
   return {
     effortSupported: reasoningLevels.length > 0,
-    selectedOptionId: toPlanRunModelOptionId(
-      draft.backend,
-      draft.model,
-      models,
-    ),
+    selectedOptionId: toPlanRunModelOptionId(draft.driver, draft.model, models),
   };
 };
 

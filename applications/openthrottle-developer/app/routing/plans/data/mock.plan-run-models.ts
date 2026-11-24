@@ -2,7 +2,7 @@ import type { ChatModelOption } from '@openthrottle/react-router-chat';
 
 /**
  * @description Discovered agent+model options as the loader's `loadComposerModels`
- * emits them (`backend|model` ids), plus a local OpenAI endpoint a plan run cannot use.
+ * emits them (`driver|model` ids), plus a local OpenAI endpoint a plan run cannot use.
  * Shared by the plan-run model picker and effort control specs.
  */
 export const MOCK_PLAN_RUN_MODELS: readonly ChatModelOption[] = [

@@ -300,9 +300,9 @@ export const SEARCH_RANKING_CASES: readonly SearchRankingCase[] = [
     split: 'dev',
   },
   {
-    id: 'topic-ralph-stuck-in-progress',
+    id: 'topic-plan-run-stuck-in-progress',
     kind: 'topic',
-    query: 'a Ralph run that cannot make progress is left stuck in progress',
+    query: 'a plan run that cannot make progress is left stuck in progress',
     relevant: [plan('d08a979b-dd25-4659-860f-c80f0819fb17')],
     split: 'test',
   },

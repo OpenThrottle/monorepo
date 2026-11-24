@@ -19,8 +19,8 @@ import {
   PLAN_RUN_HISTORY_COLUMN_COUNT,
   PLAN_RUN_HISTORY_META_FIELDS,
 } from '~/routing/plans/data/data.plan-run-history';
-import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import type { PlanRunJobMetrics } from '~/routing/plans/utils/joinPlanRunJobMetrics';
+import type { PlanRunOptions } from '~/routing/plans/utils/plan-run-options';
 import { buildPlanRunMetaItems } from '~/routing/plans/utils/plan-run-sections';
 
 export interface PlanWorkflowRunHistoryRowProps {
@@ -29,14 +29,14 @@ export interface PlanWorkflowRunHistoryRowProps {
   /** A continuation run exists for this run (see `collectResumedRunIds`). */
   readonly resumeScheduled: boolean;
   readonly row: PlanRunHistoryEntryFragment;
-  readonly workflowInput: WorkflowRalphRunOptionsInput;
+  readonly workflowInput: PlanRunOptions;
   readonly workingDirectory: string;
 }
 
 /**
- * @description One Run history run: a summary row (chevron, when, status, model / backend,
+ * @description One Run history run: a summary row (chevron, when, status, model / driver,
  * branch / PR, ⋯) plus, while expanded, a full-width detail row
- * ({@link PlanWorkflowRunHistoryDetail}). Each row expands independently. Model / backend and
+ * ({@link PlanWorkflowRunHistoryDetail}). Each row expands independently. Model / driver and
  * Branch / PR are hidden below `sm` and repeat in the detail instead.
  */
 export const PlanWorkflowRunHistoryRow = (

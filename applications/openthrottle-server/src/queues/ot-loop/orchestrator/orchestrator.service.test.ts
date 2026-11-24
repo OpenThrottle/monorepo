@@ -18,14 +18,14 @@ import type {
   LoopOutcome,
   LoopTask,
 } from '@openthrottle/openthrottle-agentic-loop';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import {
   AppendPlanOutputDocument,
   CreateTaskDocument,
   GetTasksByPlanIdDocument,
   UpdatePlanDocument,
-} from '@openthrottle/openthrottle-agentic-ralph';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-
+} from '../../../__generated__/graphql.ts';
 import type { PlanRunWorkspaceService } from '../../../services/plan-run-workspace/plan-run-workspace.service.ts';
 import type { PreparedPlanRunWorkspace } from '../../../services/plan-run-workspace/plan-run-workspace.types.ts';
 import type { OtLoopExecuteGraphql } from '../ot-loop.types.ts';
@@ -54,24 +54,13 @@ vi.mock('@openthrottle/openthrottle-agentic-loop', async (importOriginal) => {
   return {
     ...actual,
     finalizeOtLoopRun: mocks.finalizeOtLoopRun,
+    mergePlanRunTuningWithConfig: mocks.merge,
+    preparePlanRunPrDraftDir: mocks.prepareDraft,
     prepareResultDir: mocks.prepareResultDir,
     readModelRoutingPolicyFromRoot: mocks.readPolicy,
     resolveOtLoopCommands: mocks.resolveCommands,
     runCommandSequence: mocks.runCommandSequence,
     runOtLoop: mocks.runOtLoop,
-  };
-});
-
-vi.mock('@openthrottle/openthrottle-agentic-ralph', async (importOriginal) => {
-  const actual =
-    await importOriginal<
-      typeof import('@openthrottle/openthrottle-agentic-ralph')
-    >();
-
-  return {
-    ...actual,
-    createDefaultWorkflowRalphCommandRunner: () => vi.fn(),
-    preparePlanRunPrDraftDir: mocks.prepareDraft,
   };
 });
 
@@ -83,6 +72,7 @@ vi.mock('@openthrottle/openthrottle-agentic-utils', async (importOriginal) => {
 
   return {
     ...actual,
+    createPlanRunCommandRunner: () => vi.fn(),
     discoverAgentClis: mocks.discoverAgentClis,
     getOpenThrottleRoot: mocks.getOpenThrottleRoot,
   };
@@ -94,10 +84,6 @@ vi.mock('@openthrottle/openthrottle-drivers', async (importOriginal) => {
 
   return { ...actual, runDriverAsync: mocks.runDriver };
 });
-
-vi.mock('@tools/workflows', () => ({
-  mergePlanRunTuningWithWorkflowRalphConfig: mocks.merge,
-}));
 
 type CancelRead = Awaited<
   ReturnType<PlanRunsRepository['readCancelRequested']>
@@ -187,11 +173,10 @@ describe('OtLoopOrchestratorService', () => {
         queueName: 'Plans',
       },
       jobData: {
-        executionBackend: 'claude',
+        driver: 'claude',
         planId: PLAN_ID,
-        ralph: { worktree: 'plan-aaaaaaaa' },
         runKind: 'orchestrator',
-        runner: 'ot-loop',
+        tuning: { worktreeName: 'plan-aaaaaaaa' },
         ...overrides.jobData,
       },
       signal: overrides.signal ?? new AbortController().signal,
@@ -272,7 +257,7 @@ describe('OtLoopOrchestratorService', () => {
       );
     });
 
-    it('lets a workspace failure propagate so BullMQ retries it, as for Ralph', async () => {
+    it('lets a workspace failure propagate so BullMQ retries it', async () => {
       prepare.mockRejectedValueOnce(new Error('worktree provisioning failed'));
 
       await expect(runJob()).rejects.toThrow('worktree provisioning failed');
@@ -513,6 +498,11 @@ describe('OtLoopOrchestratorService', () => {
           draftDir: '/worktrees/plan-aaaaaaaa/.ot-pr-draft',
           outcome: 'complete',
           planId: PLAN_ID,
+          port: expect.objectContaining({
+            appendOutput: expect.any(Function),
+            readPlan: expect.any(Function),
+            readTasks: expect.any(Function),
+          }),
           squashSubject: undefined,
           taskIds: ['t2', 't1'],
         }),

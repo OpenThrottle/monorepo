@@ -1,9 +1,9 @@
 fragment TimelineSpanRow on TimelineSpanObject {
-  backend
   branch
   checkoutId
   conversationId
   derivedEnd
+  driver
   endsAt
   id
   kind

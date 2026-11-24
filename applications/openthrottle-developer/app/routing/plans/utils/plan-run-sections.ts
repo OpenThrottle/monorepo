@@ -11,7 +11,7 @@ import {
   readPlanRunSnapshotEffort,
   readPlanRunSnapshotWorkspacePath,
 } from '~/routing/plans/utils/plan-run-config-snapshot-ui';
-import { formatWorkflowRalphExecutionBackendLabel } from '~/routing/plans/utils/workflow-ralph-config';
+import { formatPlanRunDriverLabel } from '~/routing/plans/utils/plan-run-options';
 
 /** The slice of a `planRunsByPlanId` row these selectors read. */
 interface SectionRun {
@@ -136,13 +136,13 @@ export interface PlanRunMetaItem {
 }
 
 interface MetaRun {
-  readonly executionBackend?: string | null;
+  readonly driver?: string | null;
   readonly model?: string | null;
   readonly runConfigSnapshotJson?: string | null;
 }
 
 /**
- * @description The "model · effort · backend · workspace" line for a run, in that order, omitting
+ * @description The "model · effort · driver · workspace" line for a run, in that order, omitting
  * whatever the run did not record. `fields` picks which of the four to include; the output order
  * is fixed here, not taken from `fields`.
  */
@@ -150,13 +150,9 @@ export const buildPlanRunMetaItems = (
   run: MetaRun,
   fields: readonly PlanRunMetaField[],
 ): PlanRunMetaItem[] => {
-  const { executionBackend } = run;
-  let backend: string | null = null;
-  if (executionBackend) {
-    backend = formatWorkflowRalphExecutionBackendLabel(executionBackend);
-  }
+  const driverLabel = run.driver ? formatPlanRunDriverLabel(run.driver) : null;
   const values: Record<PlanRunMetaField, string | null> = {
-    backend,
+    driver: driverLabel,
     effort: readPlanRunSnapshotEffort(run.runConfigSnapshotJson),
     model: readPlanRunModel(run),
     workspace: readPlanRunSnapshotWorkspacePath(run.runConfigSnapshotJson),
@@ -164,7 +160,7 @@ export const buildPlanRunMetaItems = (
   const order: readonly PlanRunMetaField[] = [
     PLAN_RUN_META_FIELDS.model,
     PLAN_RUN_META_FIELDS.effort,
-    PLAN_RUN_META_FIELDS.backend,
+    PLAN_RUN_META_FIELDS.driver,
     PLAN_RUN_META_FIELDS.workspace,
   ];
 

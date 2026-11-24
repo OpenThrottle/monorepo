@@ -1,6 +1,5 @@
 /**
- * @description Cursor CLI driver: non-interactive mode (`cursor-agent --force -p …`). Originally a
- * byte-for-byte port of tools/workflows' `buildCursorShellCommand`; it has since diverged by adding
+ * @description Cursor CLI driver: non-interactive mode (`cursor-agent --force -p …`). Also emits
  * the MCP-attachment flags (see {@link CURSOR_MCP_FLAGS}). Unlike Claude, Cursor emits `--model` for
  * any non-empty value (including `auto`), and supports the Cursor-only `--worktree-base` /
  * `--skip-worktree-setup` flags.

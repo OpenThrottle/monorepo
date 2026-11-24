@@ -3,11 +3,9 @@ import { describe, expect, it } from 'vitest';
 
 import { planHasCustomRunConfig } from '../plan-run-config-storage.compare.ts';
 import {
-  DEFAULT_PLAN_RUN_RALPH_EFFORT,
-  DEFAULT_PLAN_RUN_RALPH_ITERATIONS,
-  DEFAULT_PLAN_RUN_RALPH_MODEL,
-  DEFAULT_PLAN_RUN_RALPH_PROMPT,
-  DEFAULT_PLAN_RUN_RALPH_RUNNER,
+  DEFAULT_PLAN_RUN_DRIVER,
+  DEFAULT_PLAN_RUN_EFFORT,
+  DEFAULT_PLAN_RUN_MODEL,
   PLAN_RUN_CONFIG_VERSION,
 } from '../plan-run-config-storage.constants.ts';
 import {
@@ -15,7 +13,6 @@ import {
   getDefaultPlanWorkflowUiState,
 } from '../plan-run-config-storage.defaults.ts';
 import {
-  buildRalphPlanRunTuningFromPlanRunConfig,
   parsePlanRunIterationTimeoutSeconds,
   planRunConfigFromWorkflowUiState,
   workflowUiStateFromPlanRunConfig,
@@ -41,11 +38,9 @@ describe('getDefaultPlanRunConfigStorage', () => {
     expect(config.version).toBe(PLAN_RUN_CONFIG_VERSION);
     expect(config.target).toEqual({ mode: 'plan', taskId: '' });
     expect(config.workspace.workingDirectory).toBe('');
-    expect(config.ralph.executionBackend).toBe(DEFAULT_PLAN_RUN_RALPH_RUNNER);
-    expect(config.ralph.iterations).toBe(DEFAULT_PLAN_RUN_RALPH_ITERATIONS);
-    expect(config.ralph.prompt).toBe(DEFAULT_PLAN_RUN_RALPH_PROMPT);
-    expect(config.ralph.model).toBe(DEFAULT_PLAN_RUN_RALPH_MODEL);
-    expect(config.ralph.effort).toBe(DEFAULT_PLAN_RUN_RALPH_EFFORT);
+    expect(config.run.driver).toBe(DEFAULT_PLAN_RUN_DRIVER);
+    expect(config.run.model).toBe(DEFAULT_PLAN_RUN_MODEL);
+    expect(config.run.effort).toBe(DEFAULT_PLAN_RUN_EFFORT);
   });
 
   it('defaults to task mode when only taskId is seeded', () => {
@@ -69,7 +64,7 @@ describe('parsePlanRunConfigStorage', () => {
   it('rejects unknown version', () => {
     expect(() =>
       parsePlanRunConfigStorage({
-        ralph: getDefaultPlanRunConfigStorage().ralph,
+        run: getDefaultPlanRunConfigStorage().run,
         target: { mode: 'plan', taskId: '' },
         version: 2,
         workspace: { workingDirectory: '' },
@@ -80,7 +75,7 @@ describe('parsePlanRunConfigStorage', () => {
   it('requires task UUID when target mode is task', () => {
     expect(() =>
       parsePlanRunConfigStorage({
-        ralph: getDefaultPlanRunConfigStorage().ralph,
+        run: getDefaultPlanRunConfigStorage().run,
         target: { mode: 'task', taskId: 'not-a-uuid' },
         version: PLAN_RUN_CONFIG_VERSION,
         workspace: { workingDirectory: '' },
@@ -97,16 +92,47 @@ describe('parsePlanRunConfigStorage', () => {
     ).toThrow(/absolute path/);
   });
 
-  it('rejects invalid iteration timeout text', () => {
+  it('rejects a non-positive iteration timeout', () => {
     expect(() =>
       parsePlanRunConfigStorage({
         ...getDefaultPlanRunConfigStorage({ planId }),
-        ralph: {
-          ...getDefaultPlanRunConfigStorage({ planId }).ralph,
-          iterationTimeoutText: 'nope',
+        run: {
+          ...getDefaultPlanRunConfigStorage({ planId }).run,
+          iterationTimeoutSeconds: 0,
         },
       }),
-    ).toThrow(/iterationTimeoutText/);
+    ).toThrow(/iterationTimeoutSeconds/);
+  });
+
+  it('rejects unknown top-level keys', () => {
+    const base = getDefaultPlanRunConfigStorage({ planId });
+
+    expect(() =>
+      parsePlanRunConfigStorage({ ...base, retiredRun: base.run }),
+    ).toThrow(/validation failed/);
+    expect(() => parsePlanRunConfigStorage({ ...base, otLoop: {} })).toThrow(
+      /validation failed/,
+    );
+    expect(() =>
+      parsePlanRunConfigStorage({ ...base, runner: 'ot-loop' }),
+    ).toThrow(/validation failed/);
+  });
+
+  it('rejects a run block carrying a dropped field', () => {
+    const base = getDefaultPlanRunConfigStorage({ planId });
+
+    expect(() =>
+      parsePlanRunConfigStorage({
+        ...base,
+        run: { ...base.run, iterations: 10 },
+      }),
+    ).toThrow(/validation failed/);
+    expect(() =>
+      parsePlanRunConfigStorage({
+        ...base,
+        run: { ...base.run, backend: 'cursor' },
+      }),
+    ).toThrow(/validation failed/);
   });
 
   it('defaults workspace checkout/repository ids to empty for legacy configs', () => {
@@ -196,24 +222,22 @@ describe('planRunConfig round-trip', () => {
     return {
       checkoutId: '11111111-1111-4111-8111-111111111111',
       iterationTimeoutText: '120',
+      otLoop: {
+        finalValidationCommands: ['pnpm run check:local'],
+        maxRetries: 5,
+        setupCommands: ['pnpm install'],
+        validationCommands: ['pnpm nx run x:test'],
+      },
       repositoryId: '22222222-2222-4222-8222-222222222222',
       workflowInput: {
         debugCli: 'debug',
+        driver: 'claude',
         effort: 'max',
-        executionBackend: 'claude',
-        iterations: 7,
         model: 'fast',
         planId,
-        project: 'openthrottle-workflows',
-        prompt: '/custom',
-        promptFile: '',
-        promptLayer: 'named',
-        skipWorktreeSetup: false,
         targetMode: 'plan',
         taskId: '',
-        worktreeBase: '',
         worktreeCleanup: 'keep',
-        worktreeCli: 'named',
         worktreeName: 'my-worktree',
       },
       workingDirectory: '/Users/matt/Development/other-repo',
@@ -252,36 +276,11 @@ describe('planHasCustomRunConfig', () => {
     ).toBe(false);
   });
 
-  it('returns true when iterations differ from defaults', () => {
+  it('returns true when the worktree name differs from defaults', () => {
     const stored = planRunConfigFromWorkflowUiState({
       ...getDefaultPlanWorkflowUiState({ planId }),
       workflowInput: {
         ...getDefaultPlanWorkflowUiState({ planId }).workflowInput,
-        iterations: 3,
-      },
-    });
-
-    expect(planHasCustomRunConfig(stored, { planId })).toBe(true);
-  });
-
-  it('returns true when prompt differs from defaults', () => {
-    const stored = planRunConfigFromWorkflowUiState({
-      ...getDefaultPlanWorkflowUiState({ planId }),
-      workflowInput: {
-        ...getDefaultPlanWorkflowUiState({ planId }).workflowInput,
-        prompt: '/custom-prompt',
-      },
-    });
-
-    expect(planHasCustomRunConfig(stored, { planId })).toBe(true);
-  });
-
-  it('returns true when worktree differs from defaults', () => {
-    const stored = planRunConfigFromWorkflowUiState({
-      ...getDefaultPlanWorkflowUiState({ planId }),
-      workflowInput: {
-        ...getDefaultPlanWorkflowUiState({ planId }).workflowInput,
-        worktreeCli: 'named',
         worktreeName: 'feature-branch',
       },
     });
@@ -289,12 +288,12 @@ describe('planHasCustomRunConfig', () => {
     expect(planHasCustomRunConfig(stored, { planId })).toBe(true);
   });
 
-  it('returns true when execution backend differs from defaults', () => {
+  it('returns true when the driver differs from defaults', () => {
     const stored = planRunConfigFromWorkflowUiState({
       ...getDefaultPlanWorkflowUiState({ planId }),
       workflowInput: {
         ...getDefaultPlanWorkflowUiState({ planId }).workflowInput,
-        executionBackend: 'claude',
+        driver: 'claude',
       },
     });
 
@@ -332,21 +331,19 @@ describe('parsePlanRunIterationTimeoutSeconds', () => {
 });
 
 describe('programmatic run defaults', () => {
-  it('defaults a new plan to a named worktree with verbose logging', () => {
-    const ralph = getDefaultPlanRunConfigStorage({ planId }).ralph;
+  it('defaults a new plan to verbose logging and the cursor driver', () => {
+    const run = getDefaultPlanRunConfigStorage({ planId }).run;
 
-    expect(ralph.debugCli).toBe('verbose');
-    expect(ralph.worktreeCli).toBe('named');
+    expect(run.debugCli).toBe('verbose');
     // Blank means "derive the name at enqueue", not "no worktree".
-    expect(ralph.worktreeName).toBe('');
-    expect(ralph.executionBackend).toBe('cursor');
+    expect(run.worktreeName).toBe('');
+    expect(run.driver).toBe('cursor');
   });
 
   it('keeps stored defaults and Configuration tab defaults identical', () => {
     const ui = getDefaultPlanWorkflowUiState({ planId });
 
     expect(ui.workflowInput.debugCli).toBe('verbose');
-    expect(ui.workflowInput.worktreeCli).toBe('named');
     expect(planRunConfigFromWorkflowUiState(ui)).toEqual(
       getDefaultPlanRunConfigStorage({ planId }),
     );
@@ -369,54 +366,45 @@ describe('programmatic run defaults', () => {
   });
 });
 
-describe('back-compat for plans stored under the old defaults', () => {
-  const storedRalph = (
+describe('absent keys in a stored run block', () => {
+  const storedRun = (
     overrides: Record<string, unknown> = {},
   ): Record<string, unknown> => {
     return {
-      executionBackend: 'cursor',
-      iterationTimeoutText: '',
-      iterations: 10,
+      driver: 'cursor',
       model: 'auto',
-      project: '',
-      prompt: '/agents-ralph',
-      promptFile: '',
-      promptLayer: 'named',
-      skipWorktreeSetup: false,
-      worktreeBase: '',
       worktreeName: '',
       ...overrides,
     };
   };
 
-  it('resolves ABSENT worktree/debug keys to the new defaults', () => {
+  it('resolves ABSENT debug and cleanup keys to the defaults', () => {
     const parsed = parsePlanRunConfigStorage({
-      ralph: storedRalph(),
+      run: storedRun(),
       target: { mode: 'plan', taskId: '' },
       version: 1,
       workspace: { workingDirectory: '' },
     });
 
-    expect(parsed.ralph.debugCli).toBe('verbose');
-    expect(parsed.ralph.worktreeCleanup).toBe('on-pr');
-    expect(parsed.ralph.worktreeCli).toBe('named');
+    expect(parsed.run.debugCli).toBe('verbose');
+    expect(parsed.run.worktreeCleanup).toBe('on-pr');
   });
 
   it('preserves a persisted worktreeCleanup choice', () => {
     const parsed = parsePlanRunConfigStorage({
-      ralph: storedRalph({ worktreeCleanup: 'keep' }),
+      run: storedRun({ worktreeCleanup: 'keep' }),
       target: { mode: 'plan', taskId: '' },
       version: 1,
       workspace: { workingDirectory: '' },
     });
 
-    expect(parsed.ralph.worktreeCleanup).toBe('keep');
+    expect(parsed.run.worktreeCleanup).toBe('keep');
   });
 
   it('rejects an unknown worktreeCleanup value', () => {
     expect(() =>
       parsePlanRunConfigStorage({
-        ralph: storedRalph({ worktreeCleanup: 'always' }),
+        run: storedRun({ worktreeCleanup: 'always' }),
         target: { mode: 'plan', taskId: '' },
         version: 1,
         workspace: { workingDirectory: '' },
@@ -424,113 +412,72 @@ describe('back-compat for plans stored under the old defaults', () => {
     ).toThrow();
   });
 
-  it('preserves a persisted explicit opt-out', () => {
+  it('preserves a persisted debug opt-out', () => {
     const parsed = parsePlanRunConfigStorage({
-      ralph: storedRalph({ debugCli: 'omit', worktreeCli: 'omit' }),
+      run: storedRun({ debugCli: 'omit' }),
       target: { mode: 'plan', taskId: '' },
       version: 1,
       workspace: { workingDirectory: '' },
     });
 
-    expect(parsed.ralph.debugCli).toBe('omit');
-    expect(parsed.ralph.worktreeCli).toBe('omit');
+    expect(parsed.run.debugCli).toBe('omit');
   });
 
-  it('resolves a bare {"version":1} shell to the new defaults', () => {
+  it('resolves a bare {"version":1} shell to the defaults', () => {
     const parsed = planRunConfigFromPlanStorage({ version: 1 }, { planId });
 
-    expect(parsed.ralph.debugCli).toBe('verbose');
-    expect(parsed.ralph.worktreeCli).toBe('named');
+    expect(parsed.run.debugCli).toBe('verbose');
+    expect(parsed.run.driver).toBe('cursor');
   });
 });
 
-describe('buildRalphPlanRunTuningFromPlanRunConfig', () => {
-  it('returns undefined for default storage', () => {
-    expect(
-      buildRalphPlanRunTuningFromPlanRunConfig(
-        getDefaultPlanRunConfigStorage({ planId }),
-      ),
-    ).toBeUndefined();
-  });
-
-  it('maps non-default tuning fields', () => {
-    const ui = fullUiForTuning();
-    const stored = planRunConfigFromWorkflowUiState(ui);
-    const tuning = buildRalphPlanRunTuningFromPlanRunConfig(stored);
-
-    expect(tuning).toEqual({
-      backend: 'claude',
-      effort: 'high',
-      iterationTimeoutSeconds: 120,
-      iterations: 7,
-      model: 'fast',
-      project: 'openthrottle-workflows',
-      prompt: '/custom',
-      ralphDebugCli: 'debug',
-      worktree: 'my-worktree',
-    });
-  });
-});
-
-const fullUiForTuning = (): PlanWorkflowUiState => {
+const fullUiForCompare = (): PlanWorkflowUiState => {
   return {
     iterationTimeoutText: '120',
     workflowInput: {
       debugCli: 'debug',
+      driver: 'claude',
       effort: 'high',
-      executionBackend: 'claude',
-      iterations: 7,
       model: 'fast',
       planId,
-      project: 'openthrottle-workflows',
-      prompt: '/custom',
-      promptFile: '',
-      promptLayer: 'named',
-      skipWorktreeSetup: false,
       targetMode: 'plan',
       taskId: '',
-      worktreeBase: '',
       worktreeCleanup: 'on-pr',
-      worktreeCli: 'named',
       worktreeName: 'my-worktree',
     },
     workingDirectory: '',
   };
 };
 
-const fullUiForCompare = (): PlanWorkflowUiState => {
-  return fullUiForTuning();
-};
-
-describe('ralph.effort', () => {
+describe('run.effort', () => {
   it('is accepted, trimmed and kept by the storage schema', () => {
     const parsed = parsePlanRunConfigStorage({
       ...getDefaultPlanRunConfigStorage({ planId }),
-      ralph: {
-        ...getDefaultPlanRunConfigStorage({ planId }).ralph,
+      run: {
+        ...getDefaultPlanRunConfigStorage({ planId }).run,
         effort: '  extraHigh ',
       },
     });
 
-    expect(parsed.ralph.effort).toBe('extraHigh');
+    expect(parsed.run.effort).toBe('extraHigh');
   });
 
   it('reads as unset on a config written before effort existed', () => {
-    const { effort: _effort, ...legacyRalph } = getDefaultPlanRunConfigStorage({
+    const { effort: _effort, ...legacyRun } = getDefaultPlanRunConfigStorage({
       planId,
-    }).ralph;
+    }).run;
 
     const parsed = parsePlanRunConfigStorage({
       ...getDefaultPlanRunConfigStorage({ planId }),
-      ralph: legacyRalph,
+      run: legacyRun,
     });
 
-    expect(parsed.ralph.effort).toBe('');
+    expect(parsed.run.effort).toBe('');
     expect(
       planHasCustomRunConfig(
         {
           ...getDefaultPlanRunConfigStorage({ planId }),
-          ralph: legacyRalph,
+          run: legacyRun,
         },
         { planId },
       ),
@@ -542,8 +489,8 @@ describe('ralph.effort', () => {
       planHasCustomRunConfig(
         {
           ...getDefaultPlanRunConfigStorage({ planId }),
-          ralph: {
-            ...getDefaultPlanRunConfigStorage({ planId }).ralph,
+          run: {
+            ...getDefaultPlanRunConfigStorage({ planId }).run,
             effort: 'high',
           },
         },
@@ -559,80 +506,80 @@ describe('ralph.effort', () => {
       workflowInput: { ...ui.workflowInput, effort: ' ultra ' },
     });
 
-    expect(stored.ralph.effort).toBe('ultra');
+    expect(stored.run.effort).toBe('ultra');
     expect(
       workflowUiStateFromPlanRunConfig(planId, stored).workflowInput.effort,
     ).toBe('ultra');
   });
-
-  it('is omitted from enqueue tuning when unset', () => {
-    expect(
-      buildRalphPlanRunTuningFromPlanRunConfig(
-        getDefaultPlanRunConfigStorage({ planId }),
-      ),
-    ).toBeUndefined();
-  });
-
-  it('is sent as tuning.effort when chosen', () => {
-    expect(
-      buildRalphPlanRunTuningFromPlanRunConfig({
-        ...getDefaultPlanRunConfigStorage({ planId }),
-        ralph: {
-          ...getDefaultPlanRunConfigStorage({ planId }).ralph,
-          effort: 'max',
-        },
-      }),
-    ).toEqual({ effort: 'max' });
-  });
 });
 
-describe('runner and otLoop', () => {
+describe('OT Loop validation fields on the run block', () => {
   const base = getDefaultPlanRunConfigStorage({ planId });
 
   it('parses a config without them unchanged and keeps it default', () => {
     const parsed = parsePlanRunConfigStorage(base);
 
-    expect(parsed).not.toHaveProperty('runner');
-    expect(parsed).not.toHaveProperty('otLoop');
+    expect(parsed.run).not.toHaveProperty('maxRetries');
     expect(planHasCustomRunConfig(parsed, { planId })).toBe(false);
   });
 
-  it('accepts and round-trips runner and otLoop through JSON and the UI state', () => {
+  it('accepts and round-trips them through JSON and the UI state', () => {
     const config: PlanRunConfigStorage = {
       ...base,
-      otLoop: {
+      run: {
+        ...base.run,
         finalValidationCommands: ['pnpm run check:local'],
         maxRetries: 5,
         setupCommands: ['pnpm install'],
         validationCommands: ['pnpm nx run x:test'],
       },
-      runner: 'ot-loop',
     };
 
     const reparsed = parsePlanRunConfigJson(JSON.stringify(config));
     expect(reparsed).toEqual(config);
 
     const ui = workflowUiStateFromPlanRunConfig(planId, config);
-    expect(ui.runner).toBe('ot-loop');
+    expect(ui.otLoop).toEqual({
+      finalValidationCommands: ['pnpm run check:local'],
+      maxRetries: 5,
+      setupCommands: ['pnpm install'],
+      validationCommands: ['pnpm nx run x:test'],
+    });
     expect(planRunConfigFromWorkflowUiState(ui)).toEqual(config);
     expect(planHasCustomRunConfig(config, { planId })).toBe(true);
   });
 
-  it('rejects an unknown runner, out-of-range retries and empty commands', () => {
+  it('round-trips the iteration timeout as seconds', () => {
+    const ui = getDefaultPlanWorkflowUiState({ planId });
+    const stored = planRunConfigFromWorkflowUiState({
+      ...ui,
+      iterationTimeoutText: ' 90 ',
+    });
+
+    expect(stored.run.iterationTimeoutSeconds).toBe(90);
+    expect(
+      workflowUiStateFromPlanRunConfig(planId, stored).iterationTimeoutText,
+    ).toBe('90');
+  });
+
+  it('rejects out-of-range retries and empty commands', () => {
     expect(() =>
-      parsePlanRunConfigStorage({ ...base, runner: 'other' }),
+      parsePlanRunConfigStorage({
+        ...base,
+        run: { ...base.run, maxRetries: 6 },
+      }),
     ).toThrow();
     expect(() =>
-      parsePlanRunConfigStorage({ ...base, otLoop: { maxRetries: 6 } }),
+      parsePlanRunConfigStorage({
+        ...base,
+        run: { ...base.run, maxRetries: 1.5 },
+      }),
     ).toThrow();
     expect(() =>
-      parsePlanRunConfigStorage({ ...base, otLoop: { maxRetries: 1.5 } }),
-    ).toThrow();
-    expect(() =>
-      parsePlanRunConfigStorage({ ...base, otLoop: { setupCommands: [''] } }),
-    ).toThrow();
-    expect(() =>
-      parsePlanRunConfigStorage({ ...base, otLoop: { extra: true } }),
+      parsePlanRunConfigStorage({
+        ...base,
+        run: { ...base.run, setupCommands: [''] },
+      }),
     ).toThrow();
   });
 });

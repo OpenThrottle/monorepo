@@ -53,13 +53,16 @@ describe('RulePreviewEnvironmentSelect', () => {
     const router = createMemoryRouter(
       [{ element: <RulePreviewEnvironmentSelect />, path: '/rules/:ruleId' }],
       {
-        initialEntries: [`/rules/r1?${RULE_PREVIEW_ENVIRONMENT_PARAM}=ralph`],
+        initialEntries: [
+          `/rules/r1?${RULE_PREVIEW_ENVIRONMENT_PARAM}=headless`,
+        ],
       },
     );
 
     const html = renderToString(<RouterProvider router={router} />);
 
-    expect(html).toContain('>ralph<');
+    // The stored value is `headless` and the UI shows it as stored.
+    expect(html).toContain('>headless<');
   });
 
   test('defaults to None when the URL has no environment', async () => {
@@ -81,10 +84,10 @@ describe('RulePreviewEnvironmentSelect', () => {
         name: RULE_PREVIEW_COPY.environmentLabel,
       }),
     );
-    await user.click(component.getByRole('option', { name: 'ralph' }));
+    await user.click(component.getByRole('option', { name: 'headless' }));
 
     expect(component.getByTestId('Search')).toHaveTextContent(
-      `${RULE_PREVIEW_ENVIRONMENT_PARAM}=ralph`,
+      `${RULE_PREVIEW_ENVIRONMENT_PARAM}=headless`,
     );
 
     await user.click(

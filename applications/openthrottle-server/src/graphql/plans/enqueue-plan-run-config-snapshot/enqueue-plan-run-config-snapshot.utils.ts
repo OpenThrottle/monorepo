@@ -5,17 +5,17 @@
 import type {
   PlanJobRunHooksStorage,
   PlanRunConfigOtLoop,
-  PlanRunConfigRunner,
   PlanRunConfigSnapshot,
 } from '@openthrottle/openthrottle-plan-config';
 import {
   buildPlanRunConfigSnapshot,
-  DEFAULT_PLAN_RUN_RALPH_RUNNER,
+  DEFAULT_PLAN_RUN_DRIVER,
+  pickPlanRunConfigOtLoop,
 } from '@openthrottle/openthrottle-plan-config';
 
-import { isRunPlanOrchestratorJobData } from '../../../queues/agentic-ralph/agentic-ralph.utils.ts';
 import type { RunPlanJobData } from '../../../queues/plans/plans.types.ts';
-import type { RalphPlanRunTuningInput } from '../plan.input.ts';
+import { isRunPlanOrchestratorJobData } from '../../../queues/plans/plans.utils.ts';
+import type { PlanRunTuningInput } from '../plan.input.ts';
 
 /**
  * @description The `buildRunPlanOrchestratorJobData` input that reproduces a run's job payload from
@@ -28,9 +28,8 @@ interface OrchestratorJobInputFromSnapshot {
   readonly otLoop: PlanRunConfigOtLoop | null;
   readonly planId: string;
   readonly planJobRunHooks: PlanJobRunHooksStorage | null;
-  readonly ralph: RalphPlanRunTuningInput;
-  readonly runner: PlanRunConfigRunner | null;
   readonly taskId: string | null;
+  readonly tuning: PlanRunTuningInput;
   readonly workingDirectory: string | null;
 }
 
@@ -43,15 +42,13 @@ interface ResolvedWorkspaceIds {
   readonly repositoryId?: string | null;
 }
 
-type SnapshotBackend = PlanRunConfigSnapshot['ralph']['executionBackend'];
+type SnapshotDriver = PlanRunConfigSnapshot['run']['driver'];
 
-const nonDefaultBackend = (
-  backend: SnapshotBackend,
-): SnapshotBackend | null => {
-  if (backend === DEFAULT_PLAN_RUN_RALPH_RUNNER) {
+const nonDefaultDriver = (driver: SnapshotDriver): SnapshotDriver | null => {
+  if (driver === DEFAULT_PLAN_RUN_DRIVER) {
     return null;
   }
-  return backend;
+  return driver;
 };
 
 const workingDirectoryOrNull = (workingDirectory: string): string | null => {
@@ -61,23 +58,17 @@ const workingDirectoryOrNull = (workingDirectory: string): string | null => {
   return workingDirectory;
 };
 
-const toRalphSnapshot = (ralph: RunPlanJobData['ralph'] | null) => {
-  if (!ralph) {
+const toSnapshotTuning = (tuning: RunPlanJobData['tuning'] | null) => {
+  if (!tuning) {
     return null;
   }
 
   return {
-    debug: ralph.debug ?? null,
-    effort: ralph.effort ?? null,
-    iterationTimeoutSeconds: ralph.iterationTimeoutSeconds ?? null,
-    iterations: ralph.iterations ?? null,
-    model: ralph.model ?? null,
-    project: ralph.project ?? null,
-    prompt: ralph.prompt ?? null,
-    promptFile: ralph.promptFile ?? null,
-    skipWorktreeSetup: ralph.skipWorktreeSetup ?? null,
-    worktree: ralph.worktree ?? null,
-    worktreeBase: ralph.worktreeBase ?? null,
+    debug: tuning.debug ?? null,
+    effort: tuning.effort ?? null,
+    iterationTimeoutSeconds: tuning.iterationTimeoutSeconds ?? null,
+    model: tuning.model ?? null,
+    worktreeName: tuning.worktreeName ?? null,
   };
 };
 
@@ -88,36 +79,35 @@ export const buildPlanRunConfigSnapshotFromJobData = (
   jobData: RunPlanJobData,
   workspaceIds?: ResolvedWorkspaceIds,
 ): PlanRunConfigSnapshot => {
-  const executionBackend = jobData.executionBackend ?? 'cursor';
+  const driver = jobData.driver ?? DEFAULT_PLAN_RUN_DRIVER;
   const workingDirectory = jobData.workingDirectory ?? null;
   const checkoutId = workspaceIds?.checkoutId ?? null;
   const repositoryId = workspaceIds?.repositoryId ?? null;
   const jobRunHooks = jobData.jobRunHooks ?? null;
-  const ralphSnapshot = toRalphSnapshot(jobData.ralph ?? null);
+  const tuningSnapshot = toSnapshotTuning(jobData.tuning ?? null);
 
   if (isRunPlanOrchestratorJobData(jobData)) {
     const mode = jobData.mode === 'task' ? 'task' : 'plan';
     return buildPlanRunConfigSnapshot({
       checkoutId,
-      executionBackend,
+      driver,
       jobRunHooks,
       mode,
       otLoop: jobData.otLoop ?? null,
-      ralph: ralphSnapshot,
       repositoryId,
-      runner: jobData.runner ?? null,
       taskId: jobData.taskId ?? null,
+      tuning: tuningSnapshot,
       workingDirectory,
     });
   }
 
   return buildPlanRunConfigSnapshot({
     checkoutId,
-    executionBackend,
+    driver,
     jobRunHooks,
     mode: 'plan',
-    ralph: ralphSnapshot,
     repositoryId,
+    tuning: tuningSnapshot,
     workingDirectory,
   });
 };
@@ -132,11 +122,10 @@ export const buildPlanRunConfigSnapshotFromJobData = (
  * Faithful by construction: the snapshot already holds the merged lifecycle hooks (fed back as the
  * stored hooks, with no materialized entries, so nothing is merged in twice), the resolved
  * workspace, and the tuning after programmatic defaults (`applyPlanRunProgrammaticDefaults`), which
- * always set `debug` and, unless the caller opted out, `worktree`. So an absent `worktree` maps back
- * to `disableWorktree`, and an absent `debug` — the snapshot drops `'omit'` — maps back to the
- * caller's `'omit'` instead of letting the verbose default return. The backend is passed only when it
+ * always set `debug` and, unless the caller opted out, `worktreeName`. So an absent `debug` — the snapshot drops `'omit'` — maps back to the
+ * caller's `'omit'` instead of letting the verbose default return. The driver is passed only when it
  * is not the default runner: the snapshot always records one, and the original payload carried a
- * `ralph.backend` only when the caller chose one (an explicit default-runner choice rebuilds without
+ * `tuning.driver` only when the caller chose one (an explicit default-runner choice rebuilds without
  * the key — the same run). A plan-mode snapshot maps back to the unset `mode` an orchestrator
  * enqueue uses. The job priority is not in the snapshot and is not returned; callers use the default.
  */
@@ -144,33 +133,25 @@ export const orchestratorJobInputFromSnapshot = (
   planId: string,
   snapshot: PlanRunConfigSnapshot,
 ): OrchestratorJobInputFromSnapshot => {
-  const { ralph, target, workspace } = snapshot;
+  const { run, target, workspace } = snapshot;
   const isTaskMode = target.mode === 'task';
 
   return {
     jobRunHooksJson: null,
     materializedHookEntries: [],
     mode: isTaskMode ? 'task' : null,
-    otLoop: snapshot.otLoop ?? null,
+    otLoop: pickPlanRunConfigOtLoop(run) ?? null,
     planId,
     planJobRunHooks: snapshot.jobRunHooks ?? null,
-    ralph: {
-      backend: nonDefaultBackend(ralph.executionBackend),
-      disableWorktree: ralph.worktree === undefined,
-      effort: ralph.effort ?? null,
-      iterationTimeoutSeconds: ralph.iterationTimeoutSeconds ?? null,
-      iterations: ralph.iterations ?? null,
-      model: ralph.model ?? null,
-      project: ralph.project ?? null,
-      prompt: ralph.prompt ?? null,
-      promptFile: ralph.promptFile ?? null,
-      ralphDebugCli: ralph.debug ?? 'omit',
-      skipWorktreeSetup: ralph.skipWorktreeSetup ?? null,
-      worktree: ralph.worktree ?? null,
-      worktreeBase: ralph.worktreeBase ?? null,
-    },
-    runner: snapshot.runner ?? null,
     taskId: isTaskMode ? target.taskId : null,
+    tuning: {
+      debugCli: run.debug ?? 'omit',
+      driver: nonDefaultDriver(run.driver),
+      effort: run.effort ?? null,
+      iterationTimeoutSeconds: run.iterationTimeoutSeconds ?? null,
+      model: run.model ?? null,
+      worktreeName: run.worktreeName ?? null,
+    },
     workingDirectory: workingDirectoryOrNull(workspace.workingDirectory),
   };
 };

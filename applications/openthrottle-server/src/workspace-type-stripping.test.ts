@@ -31,7 +31,7 @@ describe('stripWorkspaceTypes', () => {
   });
 
   it('maps CommonJS TypeScript to commonjs', () => {
-    const url = 'file:///app/node_modules/@tools/workflows/src/index.cts';
+    const url = `file:///app/node_modules/@openthrottle/nodejs-utils/src/index.cts`;
 
     expect(
       stripWorkspaceTypes(url, {

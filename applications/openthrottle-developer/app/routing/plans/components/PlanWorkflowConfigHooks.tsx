@@ -61,9 +61,8 @@ export const PlanWorkflowConfigHooks = (
       >
         <div className="mb-4 flex flex-row flex-wrap items-center justify-between gap-4 pb-2">
           <p className="text-muted-foreground text-xs font-normal">
-            Run a prompt profile or repo skill before or after the main Ralph
-            job (server-side; not CLI flags). Saved on the plan and sent on
-            enqueue.
+            Run a prompt profile or repo skill before or after the main plan
+            run. Saved on the plan and sent on enqueue.
           </p>
           <div className="flex shrink-0 flex-wrap items-center gap-2">
             <Button

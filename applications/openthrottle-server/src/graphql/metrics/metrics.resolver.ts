@@ -84,7 +84,7 @@ export class MetricsResolver {
     return dtos.map((dto) => {
       const entry = new PlanRunMetricsEntryObject();
 
-      entry.executionBackend = dto.executionBackend;
+      entry.driver = dto.driver;
       entry.jobId = dto.id;
       entry.finishedOn = dto.finishedOn;
       entry.taskRunMetrics = parseTaskRunMetricsFromReturnvalue(

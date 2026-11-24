@@ -431,7 +431,7 @@ export const coerceNumber = <TSchema extends z.ZodTypeAny>(
  * @description Wrap a schema so a JSON form string is `JSON.parse`d before
  * validation, then fed to the wrapped (typically nested, generated) schema —
  * for inputs whose value is an object encoded as JSON in a hidden field
- * (`ralphTuning`, a rollout `variations` blob). A blank or absent value becomes
+ * (`runTuning`, a rollout `variations` blob). A blank or absent value becomes
  * `undefined`; malformed JSON passes the raw string through so the wrapped
  * schema rejects it.
  *

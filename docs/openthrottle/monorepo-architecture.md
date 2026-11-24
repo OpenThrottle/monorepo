@@ -6,7 +6,7 @@ The two summary tables below are **not exhaustive**: `packages/` holds ~60 packa
 
 ## High-level architecture
 
-OpenThrottle consists of **applications** (deployable apps) and **packages** (shared libraries). The backend is **openthrottle-server** (NestJS + GraphQL); it talks to **OpenThrottle** (Postgres with pgvector) via **@openthrottle/nestjs-repositories-server**. The **openthrottle-mcp** MCP and the **openthrottle-developer** UI both call the server’s GraphQL API; the MCP uses **@openthrottle/nodejs-graphql** as a typed GraphQL client. **Ralph** and other workflows in **@tools/workflows** drive the agentic loop and optionally stream output to OpenThrottle.
+OpenThrottle consists of **applications** (deployable apps) and **packages** (shared libraries). The backend is **openthrottle-server** (NestJS + GraphQL); it talks to **OpenThrottle** (Postgres with pgvector) via **@openthrottle/nestjs-repositories-server**. The **openthrottle-mcp** MCP and the **openthrottle-developer** UI both call the server’s GraphQL API; the MCP uses **@openthrottle/nodejs-graphql** as a typed GraphQL client. The **OT Loop** job inside openthrottle-server (the `openthrottle-agentic-loop` package) runs plans and streams output to OpenThrottle.
 
 ```mermaid
 flowchart TB
@@ -28,10 +28,9 @@ flowchart TB
     ReactRouterUI["react-router-ui"]
   end
 
-  subgraph Data["Data & workflows"]
+  subgraph Data["Data"]
     OpenThrottle["OpenThrottle (Postgres + pgvector)"]
     Redis["Redis"]
-    Workflows["@tools/workflows<br/>(Ralph, link-merge)"]
   end
 
   Developer -->|HTTP/WS| Server
@@ -40,8 +39,6 @@ flowchart TB
   Server --> NestRepos
   NestRepos --> OpenThrottle
   Server --> Redis
-  Workflows -->|GraphQL or link-merge| Server
-  Workflows -.->|optional append_plan_output| OpenThrottle
 ```
 
 ---
@@ -51,7 +48,7 @@ flowchart TB
 - **openthrottle-developer**: Browser app; calls `API_URL` (openthrottle-server) for GraphQL and optional WebSocket (e.g. realtime, notifications).
 - **openthrottle-mcp**: MCP server used by Cursor/other hosts; uses `@openthrottle/nodejs-graphql` to talk to openthrottle-server GraphQL (plans, tasks, search, commit links, plan output stream, etc.). No direct Postgres access.
 - **openthrottle-server**: NestJS app; GraphQL API, auth (JWT), queues (BullMQ/Redis), and **NestjsRepositoriesServerModule** (`@openthrottle/nestjs-repositories-server`, which also supplies the default DataSource options) for OpenThrottle (plans, tasks, embeddings, commit_links, plan_output_stream, docs, users, RBAC). Optional OpenAI or Ollama for embeddings.
-- **Ralph** (`workflow-ralph`): Loads plan/tasks from OpenThrottle (via server or env), runs the agent loop, updates task status from agent output; can append iteration output to OpenThrottle `plan_output_stream`. Commit linking happens server-side when the run settles (`settle_plan_run` with `headSha` / `prNumber`), with an hourly `Plan-Id:` trailer harvest as the backstop.
+- **OT Loop** (the plan runner inside openthrottle-server): loads plan/tasks from OpenThrottle over GraphQL, runs the agent per task, updates task status, and appends output to OpenThrottle `plan_output_stream`. Commit linking happens server-side when the run settles (`settle_plan_run` with `headSha` / `prNumber`), with an hourly `Plan-Id:` trailer harvest as the backstop.
 
 ```mermaid
 sequenceDiagram
@@ -61,15 +58,12 @@ sequenceDiagram
   participant Server as openthrottle-server
   participant Repos as @openthrottle/nestjs-repositories-server
   participant OpenThrottle as OpenThrottle (Postgres)
-  participant Ralph as workflow-ralph
 
   Dev->>Server: GraphQL / WebSocket
   MCP->>Client: GraphQL operations
   Client->>Server: HTTP GraphQL
   Server->>Repos: TypeORM / services
   Repos->>OpenThrottle: SQL
-  Ralph->>Server: get plan/tasks, append_plan_output (optional)
-  Ralph->>OpenThrottle: (via server or config) task status updates
 ```
 
 ---
@@ -100,7 +94,7 @@ Shared infra used by the server: **Postgres** (OpenThrottle schema in `databases
 | **@openthrottle/openthrottle-notifications** | Notifications (e.g. used by server/developer).                                                                                                                                              |
 | **@openthrottle/react-router-\***            | Shared React Router libs (auth, GraphQL, UI, utils, editor, profiling, chat, …) for the developer and other OT UIs. Source-first — no `build` target; see [MONOREPO.md](../../MONOREPO.md). |
 | **@openthrottle/openthrottle-drivers**       | Dep-free descriptors for each agent CLI (`claude`, `cursor-agent`, `antigravity`, …) — argv shapes and capabilities, no filesystem access.                                                  |
-| **@openthrottle/openthrottle-agentic-\***    | The agentic layer: `-ralph` (the loop + its codegen GraphQL documents), `-utils` (workspace paths, skill injection), `-workflow`.                                                           |
+| **@openthrottle/openthrottle-agentic-\***    | The agentic layer: `-loop` (the OT Loop runner), `-utils` (workspace paths, skill injection).                                                                                               |
 
 ---
 
@@ -109,5 +103,5 @@ Shared infra used by the server: **Postgres** (OpenThrottle schema in `databases
 - **OpenThrottle schema and usage:** `databases/openthrottle/README.md`
 - **Run locally (OSS/Ollama embeddings):** `docs/monorepo/Ollama.md` § Embeddings for OpenThrottle
 - **Docker Compose stack:** `applications/openthrottle/README.md`
-- **Ralph and workflows:** `tools/workflows/README.md`, `AGENTS.md`
+- **Plan runs:** `docs/workflows/ot-loop-job.md`, `AGENTS.md` § Plan runs
 - **MCP developer setup:** `packages/openthrottle-mcp/README.md`

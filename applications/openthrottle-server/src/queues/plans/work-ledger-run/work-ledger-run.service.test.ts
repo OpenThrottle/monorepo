@@ -31,7 +31,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { WorkLedgerRunService } from './work-ledger-run.service.ts';
 
-const RALPH_SA_ID = 'ralph-sa-1';
+const PLAN_RUNNER_SA_ID = 'plan-runner-sa-1';
 const PLAN_ID = 'plan-1';
 const JOB_ID = 'job-1';
 const QUEUE = 'plans';
@@ -61,7 +61,7 @@ describe('WorkLedgerRunService', () => {
     credentials = createServiceAccountCredentialsRepositoryMock();
     serviceAccounts = createServiceAccountsRepositoryMock();
     serviceAccounts.findByName.mockResolvedValue(
-      serviceAccountsFactory.build({ id: RALPH_SA_ID }),
+      serviceAccountsFactory.build({ id: PLAN_RUNNER_SA_ID }),
     );
 
     service = new WorkLedgerRunService(
@@ -78,12 +78,12 @@ describe('WorkLedgerRunService', () => {
     vi.unstubAllEnvs();
   });
 
-  it('opens a session with the ralph SA actor and verified on_behalf from the plan run', async () => {
+  it('opens a session with the plan-runner service-account actor and verified on_behalf from the plan run', async () => {
     planRunsRepository.findByQueueNameAndBullmqJobId.mockResolvedValue(
       createMock<PlanRun>({ actorUserId: 'user-9', id: 'run-1' }),
     );
 
-    const sessionId = await service.openRalphSession({
+    const sessionId = await service.openPlanRunSession({
       bullmqJobId: JOB_ID,
       planId: PLAN_ID,
       queueName: QUEUE,
@@ -92,13 +92,13 @@ describe('WorkLedgerRunService', () => {
     expect(sessionId).toBe('session-1');
     expect(sessionRepo.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        actorServiceAccountId: RALPH_SA_ID,
+        actorServiceAccountId: PLAN_RUNNER_SA_ID,
         actorUserId: null,
         externalRef: JOB_ID,
         onBehalfOfUserId: 'user-9',
         onBehalfOfVerified: true,
         planRunId: 'run-1',
-        toolName: 'workflow-ralph',
+        toolName: 'plan-runner',
       }),
     );
     expect(subjectRepo.create).toHaveBeenCalledWith(
@@ -120,7 +120,7 @@ describe('WorkLedgerRunService', () => {
       serviceAccountId: 'principal-sa',
     });
 
-    await service.openRalphSession({
+    await service.openPlanRunSession({
       bullmqJobId: JOB_ID,
       planId: PLAN_ID,
       queueName: QUEUE,
@@ -136,22 +136,22 @@ describe('WorkLedgerRunService', () => {
     );
   });
 
-  it('falls back to the workflow-ralph SA by name when the worker token does not verify', async () => {
+  it('falls back to the plan-runner SA by name when the worker token does not verify', async () => {
     vi.stubEnv('OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN', 'ot_sa_bad_token');
     planRunsRepository.findByQueueNameAndBullmqJobId.mockResolvedValue(
       createMock<PlanRun>({ actorUserId: null, id: 'run-3' }),
     );
     credentials.verifyBearerToken.mockResolvedValue(null);
 
-    await service.openRalphSession({
+    await service.openPlanRunSession({
       bullmqJobId: JOB_ID,
       planId: PLAN_ID,
       queueName: QUEUE,
     });
 
-    expect(serviceAccounts.findByName).toHaveBeenCalledWith('workflow-ralph');
+    expect(serviceAccounts.findByName).toHaveBeenCalledWith('plan-runner');
     expect(sessionRepo.create).toHaveBeenCalledWith(
-      expect.objectContaining({ actorServiceAccountId: RALPH_SA_ID }),
+      expect.objectContaining({ actorServiceAccountId: PLAN_RUNNER_SA_ID }),
     );
   });
 
@@ -160,7 +160,7 @@ describe('WorkLedgerRunService', () => {
       createMock<PlanRun>({ actorUserId: null, id: 'run-2' }),
     );
 
-    await service.openRalphSession({
+    await service.openPlanRunSession({
       bullmqJobId: JOB_ID,
       planId: PLAN_ID,
       queueName: QUEUE,
@@ -174,10 +174,10 @@ describe('WorkLedgerRunService', () => {
     );
   });
 
-  it('returns null (best-effort) when the ralph service account is missing', async () => {
+  it('returns null (best-effort) when the plan-runner service account is missing', async () => {
     serviceAccounts.findByName.mockResolvedValue(null);
 
-    const sessionId = await service.openRalphSession({
+    const sessionId = await service.openPlanRunSession({
       bullmqJobId: JOB_ID,
       planId: PLAN_ID,
       queueName: QUEUE,
@@ -194,7 +194,7 @@ describe('WorkLedgerRunService', () => {
     sessionRepo.create.mockRejectedValue(new Error('db down'));
 
     await expect(
-      service.openRalphSession({
+      service.openPlanRunSession({
         bullmqJobId: JOB_ID,
         planId: PLAN_ID,
         queueName: QUEUE,
@@ -202,13 +202,13 @@ describe('WorkLedgerRunService', () => {
     ).resolves.toBeNull();
   });
 
-  it('closeRalphSession is a no-op for a null id', async () => {
-    await service.closeRalphSession(null, 'summary');
+  it('closePlanRunSession is a no-op for a null id', async () => {
+    await service.closePlanRunSession(null, 'summary');
     expect(sessionRepo.close).not.toHaveBeenCalled();
   });
 
-  it('closeRalphSession closes the session explicitly with its summary', async () => {
-    await service.closeRalphSession('session-1', 'done');
+  it('closePlanRunSession closes the session explicitly with its summary', async () => {
+    await service.closePlanRunSession('session-1', 'done');
 
     expect(sessionRepo.close).toHaveBeenCalledWith(
       'session-1',

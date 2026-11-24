@@ -62,7 +62,7 @@ export class PlanRunsRepository extends BaseRepository<
   }
 
   /**
-   * @description Records a queued Ralph run (status QUEUED, or SCHEDULED with `scheduledFor` for a
+   * @description Records a queued plan run (status QUEUED, or SCHEDULED with `scheduledFor` for a
    * delayed scheduled run), idempotent per (queueName, bullmqJobId) so repeated enqueue calls
    * round-trip the same audit row (refreshing the mutable enqueue fields).
    *
@@ -85,7 +85,7 @@ export class PlanRunsRepository extends BaseRepository<
       branch: input.branch ?? null,
       bullmqJobId: input.bullmqJobId,
       checkoutId: input.checkoutId ?? null,
-      executionBackend: input.executionBackend,
+      driver: input.driver,
       model: input.model ?? null,
       planId: input.planId,
       queueName: input.queueName,
@@ -113,7 +113,7 @@ export class PlanRunsRepository extends BaseRepository<
   }
 
   /**
-   * @description Registers a detached workflow-ralph CLI run as a first-class plan_runs row so
+   * @description Registers a detached plan run as a first-class plan_runs row so
    * {@link PlanRunsRepository.stampCancelRequested} (via PlanStatusService.cancelRun) has a row to
    * stamp the durable cancel marker on. Inserts with bullmqJobId NULL (permitted by the partial
    * unique index from migration 076 — see the entity note), runKind 'orchestrator' (the CLI drives
@@ -139,7 +139,7 @@ export class PlanRunsRepository extends BaseRepository<
         actorUserId: input.actorUserId ?? null,
         branch: input.branch ?? null,
         bullmqJobId: null,
-        executionBackend: input.executionBackend,
+        driver: input.driver,
         heartbeatExpected: input.heartbeatExpected ?? true,
         hostname: input.hostname,
         // Stamp the initial heartbeat at creation so the run is immediately alive
@@ -1081,7 +1081,7 @@ export class PlanRunsRepository extends BaseRepository<
   /**
    * @description Of the given plans, returns the ids whose NEWEST run is a live detached run: no
    * BullMQ job, still IN_PROGRESS, and not stale. These are the interactive /ot-loop rows
-   * (`heartbeat_expected = false`) and the detached workflow-ralph CLI rows — both drive their own
+   * (`heartbeat_expected = false`) and any other detached rows — both drive their own
    * loop outside the server, so a server restart neither interrupts them nor leaves a job behind to
    * find. Their owner settles them (or the sweeps do); a caller looking for "IN_PROGRESS with no
    * active job" must leave these plans alone.
@@ -1170,7 +1170,7 @@ export class PlanRunsRepository extends BaseRepository<
    * Guarded on BOTH `status = IN_PROGRESS` and `NOT heartbeat_expected`, so it can never touch a
    * heartbeating run (which has a sweeper of its own and may be genuinely live) nor re-settle a
    * terminal row. STALE, not COMPLETED/CANCELLED/FAILED: a human clicking this knows contact was
-   * lost, not how the work ended, and `settleCliPlanRun`'s honest-report statuses must stay the
+   * lost, not how the work ended, and `settlePlanRun`'s honest-report statuses must stay the
    * agent's to claim. Deliberately does NOT touch plan or task status — same invariant as the sweep.
    *
    * `settledReason` names who settled it; a caller that knows more than "a human clicked it" (the

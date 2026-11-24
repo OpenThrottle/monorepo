@@ -13,7 +13,7 @@ import {
 } from '@openthrottle/react-router-chat-state';
 
 import { parsePlanRunEffort } from '~/routing/plans/utils/plan-run-model-effort';
-import { DEFAULT_RALPH_MODEL } from '~/routing/plans/utils/workflow-ralph-config';
+import { DEFAULT_RUN_MODEL } from '~/routing/plans/utils/plan-run-options';
 
 /**
  * @description `userPreferences.defaultAgent` from the home loader. `effort` is
@@ -35,7 +35,7 @@ const toDefaultAgentOptionId = (
   models: readonly ChatModelOption[],
 ): string | undefined => {
   const model = agent.model.trim();
-  const isDefaultModel = model === '' || model === DEFAULT_RALPH_MODEL;
+  const isDefaultModel = model === '' || model === DEFAULT_RUN_MODEL;
   const candidate = isDefaultModel
     ? encodeCliOptionId(agent.backend)
     : encodeCliOptionId(agent.backend, model);

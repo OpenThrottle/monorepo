@@ -35,8 +35,8 @@ const baseInput = (
   overrides: Partial<WorkstreamTimelineInput> = {},
 ): WorkstreamTimelineInput => {
   return {
-    backend: null,
     checkoutId: null,
+    driver: null,
     from: new Date('2026-09-01T00:00:00Z'),
     gitBranch: null,
     grouping: null,
@@ -205,10 +205,10 @@ describe('TimelineResolver.workstreamTimeline', () => {
     it('always flags a plan run end as derived, even when the row is closed', async () => {
       query.mockResolvedValue([
         {
-          backend: 'claude',
           branch: 'feat/x',
           checkout_id: null,
           conversation_id: null,
+          driver: 'claude',
           ends_at: '2026-09-02T01:00:00Z',
           id: 'run-1',
           model: 'claude-opus-5',
@@ -231,10 +231,10 @@ describe('TimelineResolver.workstreamTimeline', () => {
     it('treats a closed work session as measured', async () => {
       query.mockResolvedValue([
         {
-          backend: 'claude-code',
           branch: null,
           checkout_id: null,
           conversation_id: null,
+          driver: 'claude-code',
           ends_at: '2026-09-02T02:00:00Z',
           id: 'session-1',
           model: null,
@@ -256,10 +256,10 @@ describe('TimelineResolver.workstreamTimeline', () => {
     it('clamps an open session to now and flags it derived', async () => {
       query.mockResolvedValue([
         {
-          backend: 'claude-code',
           branch: null,
           checkout_id: null,
           conversation_id: null,
+          driver: 'claude-code',
           ends_at: null,
           id: 'session-open',
           model: null,
@@ -287,11 +287,11 @@ describe('TimelineResolver.workstreamTimeline', () => {
   });
 
   describe('filters', () => {
-    it('passes plan, backend, checkout and branch filters to the plan-run leg', async () => {
+    it('passes plan, driver, checkout and branch filters to the plan-run leg', async () => {
       await resolver.workstreamTimeline(
         baseInput({
-          backend: 'claude',
           checkoutId: 'checkout-1',
+          driver: 'claude',
           gitBranch: 'main',
           planId: 'plan-1',
           spanKinds: [TimelineSpanKind.PLAN_RUN],
@@ -344,13 +344,13 @@ describe('TimelineResolver.workstreamTimeline', () => {
   });
 
   describe('lane grouping', () => {
-    it('keys plan-run lanes by backend under BY_BACKEND', async () => {
+    it('keys plan-run lanes by driver under BY_DRIVER', async () => {
       query.mockResolvedValue([
         {
-          backend: 'cursor',
           branch: 'feat/x',
           checkout_id: 'checkout-1',
           conversation_id: null,
+          driver: 'cursor',
           ends_at: '2026-09-02T01:00:00Z',
           id: 'run-1',
           model: null,
@@ -364,12 +364,12 @@ describe('TimelineResolver.workstreamTimeline', () => {
 
       const result = await resolver.workstreamTimeline(
         baseInput({
-          grouping: TimelineLaneGrouping.BY_BACKEND,
+          grouping: TimelineLaneGrouping.BY_DRIVER,
           spanKinds: [TimelineSpanKind.PLAN_RUN],
         }),
       );
 
-      expect(result.spans[0]?.laneKey).toBe('backend:cursor');
+      expect(result.spans[0]?.laneKey).toBe('driver:cursor');
       expect(result.spans[0]?.laneLabel).toBe('cursor');
     });
 
@@ -460,10 +460,10 @@ describe('TimelineResolver.workstreamTimeline', () => {
     it('returns spans oldest first regardless of leg order', async () => {
       const planRunRows = [
         {
-          backend: null,
           branch: null,
           checkout_id: null,
           conversation_id: null,
+          driver: null,
           ends_at: '2026-09-05T00:00:00Z',
           id: 'later',
           model: null,
@@ -476,10 +476,10 @@ describe('TimelineResolver.workstreamTimeline', () => {
       ];
       const otherRows = [
         {
-          backend: null,
           branch: null,
           checkout_id: null,
           conversation_id: null,
+          driver: null,
           ends_at: '2026-09-02T00:00:00Z',
           id: 'earlier',
           model: null,

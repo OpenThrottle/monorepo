@@ -31,7 +31,7 @@ export const SettingsKeysTableEmpty = (
       </EmptyMedia>
       <EmptyTitle>No credentials yet</EmptyTitle>
       <EmptyDescription>
-        Create a credential to get a one-time bearer token for MCP, Ralph
+        Create a credential to get a one-time bearer token for MCP, queue
         workers, or CI. Existing secrets are never shown again after creation.
       </EmptyDescription>
     </Empty>

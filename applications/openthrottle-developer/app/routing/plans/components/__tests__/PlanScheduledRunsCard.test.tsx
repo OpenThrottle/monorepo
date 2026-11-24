@@ -14,7 +14,7 @@ const run = (id: string, status: string): Row => {
   return {
     __typename: 'PlanRunObject',
     createdAt: '2026-11-01T00:00:00.000Z',
-    executionBackend: 'claude',
+    driver: 'claude',
     heartbeatExpected: true,
     id,
     isStale: false,

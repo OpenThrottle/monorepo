@@ -80,12 +80,12 @@ describe('TimelineControls Component', () => {
 
   test('should mark the active grouping as selected', () => {
     const component = renderControls(
-      baseProps({ grouping: TimelineLaneGrouping.ByBackend }),
+      baseProps({ grouping: TimelineLaneGrouping.ByDriver }),
     );
 
     expect(
       component.getByRole('radio', {
-        name: TIMELINE_GROUPING_LABELS.BY_BACKEND,
+        name: TIMELINE_GROUPING_LABELS.BY_DRIVER,
       }),
     ).toHaveAttribute('aria-checked', 'true');
   });

@@ -83,7 +83,7 @@ describe('QueueJobLogsService', () => {
       },
       {
         data: 'building project',
-        source: 'workflow-ralph',
+        source: 'plan-run',
         timestamp: '2026-05-04T23:00:01.000Z',
         type: 'stdout',
       },
@@ -109,7 +109,7 @@ describe('QueueJobLogsService', () => {
     ]);
     // source falls back to the queue name when the record carries none
     expect(page.events[0]?.source).toBe(QUEUE);
-    expect(page.events[1]?.source).toBe('workflow-ralph');
+    expect(page.events[1]?.source).toBe('plan-run');
     expect(page.events[3]?.message).toBe('boom');
     // first event's cursor resumes AFTER line 0 → line index 1
     expect(decodeQueueJobLogCursor(page.events[0]!.cursor)).toBe(1);

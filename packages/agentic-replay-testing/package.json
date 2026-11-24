@@ -5,11 +5,10 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@openthrottle/openthrottle-agentic-ralph": "workspace:^",
     "@openthrottle/openthrottle-agentic-utils": "workspace:^",
     "@openthrottle/openthrottle-drivers": "workspace:^"
   },
-  "description": "Record and replay real agent-CLI transcripts (NDJSON) so backend parsers, the conversation-stream service and the Ralph runner are tested against what the CLIs actually emit.",
+  "description": "Record and replay real agent-CLI transcripts (NDJSON) so backend parsers, and the conversation-stream service are tested against what the CLIs actually emit.",
   "devDependencies": {
     "vitest": "catalog:"
   },

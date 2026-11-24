@@ -58,7 +58,7 @@ export function rethrowAsTimeoutIfAborted(
   ) {
     // Preserve the original abort as the cause via Object.assign rather than
     // the ES2022 two-arg `Error(message, { cause })` constructor: this package
-    // is consumed source-first by ES2020 targets (e.g. @tools/workflows), whose
+    // is consumed source-first by ES2020 targets (e.g. a CLI package), whose
     // lib lacks the es2022.error overload.
     throw Object.assign(
       new Error(`${GRAPHQL_TIMEOUT_ERROR_PREFIX} after ${ms}ms`),

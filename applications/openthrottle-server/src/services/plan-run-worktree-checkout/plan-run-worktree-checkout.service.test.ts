@@ -35,7 +35,7 @@ const buildRun = (overrides: Partial<PlanRun> = {}): PlanRun => {
     cancelRequestedBy: null,
     checkoutId: null,
     createdAt: new Date('2026-08-02T00:00:00Z'),
-    executionBackend: 'claude',
+    driver: 'claude',
     hostname: null,
     id: PLAN_RUN_ID,
     lastHeartbeatAt: null,
@@ -223,7 +223,7 @@ describe('PlanRunWorktreeCheckoutService', () => {
     it('soft-fails and leaves checkout_id unchanged', async () => {
       const run = buildRun({
         runConfigSnapshot: {
-          ralph: { executionBackend: 'claude' },
+          run: { driver: 'claude' },
           target: { mode: 'plan', taskId: '' },
           version: 1 as const,
           workspace: { workingDirectory: WORKTREE_PATH },
@@ -251,7 +251,7 @@ describe('PlanRunWorktreeCheckoutService', () => {
     it('upserts a worktree checkout from snapshot repositoryId and records checkout_id + branch', async () => {
       const run = buildRun({
         runConfigSnapshot: {
-          ralph: { executionBackend: 'claude' },
+          run: { driver: 'claude' },
           target: { mode: 'plan', taskId: '' },
           version: 1 as const,
           workspace: {

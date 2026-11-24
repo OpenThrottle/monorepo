@@ -9,7 +9,7 @@ import type {
   JobRunHookPhase,
   JobRunHookTaskContext,
   JobRunHookTaskOutcome,
-} from '@tools/workflows';
+} from '@openthrottle/openthrottle-agentic-utils';
 import type { Job } from 'bullmq';
 
 import type { RunPlanJobData } from '../plans/plans.types.ts';

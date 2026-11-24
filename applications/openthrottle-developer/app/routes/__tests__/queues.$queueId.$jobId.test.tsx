@@ -60,12 +60,12 @@ describe('routes/queues.$queueId.$jobId.tsx', () => {
       const args: Route.LoaderArgs = {
         context: createTestRouterContext(),
         params: {
-          jobId: 'ralph-orch:abc',
+          jobId: 'orch:abc',
           queueId: 'Plans',
         },
-        pattern: '/queues/Plans/ralph-orch%3Aabc',
-        request: new Request('http://localhost/queues/Plans/ralph-orch%3Aabc'),
-        url: new URL('http://localhost/queues/Plans/ralph-orch%3Aabc'),
+        pattern: '/queues/Plans/orch%3Aabc',
+        request: new Request('http://localhost/queues/Plans/orch%3Aabc'),
+        url: new URL('http://localhost/queues/Plans/orch%3Aabc'),
       };
 
       const result = await loader(args);
@@ -76,7 +76,7 @@ describe('routes/queues.$queueId.$jobId.tsx', () => {
         args.request,
         expect.any(Object),
         {
-          jobId: 'ralph-orch:abc',
+          jobId: 'orch:abc',
           queueName: 'Plans',
         },
       );
@@ -190,15 +190,15 @@ describe('routes/queues.$queueId.$jobId.tsx', () => {
       const args: Route.ActionArgs = {
         context: createTestRouterContext(),
         params: {
-          jobId: 'ralph-orch:abc',
+          jobId: 'orch:abc',
           queueId: 'Plans',
         },
-        pattern: '/queues/Plans/ralph-orch%3Aabc',
-        request: new Request('http://localhost/queues/Plans/ralph-orch%3Aabc', {
+        pattern: '/queues/Plans/orch%3Aabc',
+        request: new Request('http://localhost/queues/Plans/orch%3Aabc', {
           body: formData,
           method: 'POST',
         }),
-        url: new URL('http://localhost/queues/Plans/ralph-orch%3Aabc'),
+        url: new URL('http://localhost/queues/Plans/orch%3Aabc'),
       };
 
       const result = await action(args);
@@ -207,7 +207,7 @@ describe('routes/queues.$queueId.$jobId.tsx', () => {
         args.request,
         expect.any(Object),
         {
-          input: { jobId: 'ralph-orch:abc', queueName: 'Plans' },
+          input: { jobId: 'orch:abc', queueName: 'Plans' },
         },
       );
       expect(result).toEqual({ retryJob: retryPayload });

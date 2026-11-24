@@ -27,7 +27,7 @@ import { ProfileResponseTime } from '@openthrottle/nestjs-profiling';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import type {
   PlanRun,
-  PlanRunExecutionBackend,
+  PlanRunDriver,
   PlanStatus,
   Project,
   Task,
@@ -96,20 +96,19 @@ import {
   CreatePlanInput,
   CreatePlansInput,
   DeletePlanInput,
-  EnqueuePlanRalphOrchestratorInput,
   EnqueuePlanRunInput,
   ForceSettlePlanRunInput,
   ListPlansByStatusInput,
-  PlanRalphWorkflowModeGraphQL,
+  PlanRunModeGraphQL,
   PlanRunsByPlanIdInput,
   RecordPlanRunHeartbeatInput,
-  RegisterCliPlanRunInput,
+  RegisterPlanRunInput,
   RegisterPlanRunWorktreeCheckoutInput,
   ReschedulePlanRunInput,
   SchedulePlanRunInput,
   SearchPlansInput,
   SetPlanStatusInput,
-  SettleCliPlanRunInput,
+  SettlePlanRunInput,
   UpdatePlanInput,
 } from './plan.input.ts';
 import {
@@ -233,16 +232,14 @@ function isCancelPlanRunResult(
 }
 
 /**
- * @description Every backend `plan_runs.execution_backend` accepts, kept in lockstep with
- * the {@link PlanRunExecutionBackend} union and the `plan_runs_execution_backend_check`
+ * @description Every backend `plan_runs.driver` accepts, kept in lockstep with
+ * the {@link PlanRunDriver} union and the `plan_runs_driver_check`
  * constraint. Written as an exhaustive Record rather than a chain of `===` comparisons so
  * a new member of the union is a COMPILE error here, not a runtime rejection discovered in
- * production — which is exactly how `antigravity` (migration 106) came to be a valid backend
+ * production — which is exactly how `antigravity` (migration 106) came to be a valid driver
  * that this guard rejected and its error message did not mention.
  */
-const PLAN_RUN_EXECUTION_BACKENDS: Readonly<
-  Record<PlanRunExecutionBackend, true>
-> = {
+const PLAN_RUN_DRIVERS: Readonly<Record<PlanRunDriver, true>> = {
   antigravity: true,
   claude: true,
   codex: true,
@@ -251,22 +248,15 @@ const PLAN_RUN_EXECUTION_BACKENDS: Readonly<
   opencode: true,
 };
 
-/** Human-readable backend list for error messages; derived so it can never drift. */
-const PLAN_RUN_EXECUTION_BACKEND_LIST = Object.keys(
-  PLAN_RUN_EXECUTION_BACKENDS,
-).join(', ');
+/** Human-readable driver list for error messages; derived so it can never drift. */
+const PLAN_RUN_DRIVER_LIST = Object.keys(PLAN_RUN_DRIVERS).join(', ');
 
-/** @description Narrows a client-supplied backend string to a {@link PlanRunExecutionBackend}. */
-function isPlanRunExecutionBackend(
-  value: string,
-): value is PlanRunExecutionBackend {
-  return Object.prototype.hasOwnProperty.call(
-    PLAN_RUN_EXECUTION_BACKENDS,
-    value,
-  );
+/** @description Narrows a client-supplied driver string to a {@link PlanRunDriver}. */
+function isPlanRunDriver(value: string): value is PlanRunDriver {
+  return Object.prototype.hasOwnProperty.call(PLAN_RUN_DRIVERS, value);
 }
 
-/** @description Terminal statuses a detached-CLI run may be settled to. */
+/** @description Terminal statuses a run owned outside the queue may be settled to. */
 function isTerminalCliRunStatus(value: string): boolean {
   return (
     value === 'CANCELLED' ||
@@ -340,23 +330,23 @@ export class PlansResolver {
   ) {}
 
   /**
-   * @description Rejects starting a plan run against an agent backend — or a specific model of that
-   * backend — the actor disabled on /settings/agents. A null actor (service-account/system principal)
-   * has no per-user preferences, so the guard is skipped. Backends that are not agent-CLI driver ids
+   * @description Rejects starting a plan run against an agent driver — or a specific model of that
+   * driver — the actor disabled on /settings/agents. A null actor (service-account/system principal)
+   * has no per-user preferences, so the guard is skipped. Drivers that are not agent-CLI driver ids
    * (unknown strings) are left to the caller's own validation — this only blocks a KNOWN-but-disabled
    * agent, and (when a model is given and non-empty) a KNOWN-but-disabled model.
    */
-  private async assertBackendEnabled(
+  private async assertDriverEnabled(
     actorUserId: string | null,
-    backend: string,
+    driver: string,
     model?: string | null,
   ): Promise<void> {
     if (actorUserId === null) {
       return;
     }
-    if (!(await this.disabledAgentClis.isEnabled(actorUserId, backend))) {
+    if (!(await this.disabledAgentClis.isEnabled(actorUserId, driver))) {
       throw new BadRequestException(
-        `The ${backend} agent is disabled. Re-enable it on Settings › Setup to run it.`,
+        `The ${driver} agent is disabled. Re-enable it on Settings › Setup to run it.`,
       );
     }
     const trimmedModel = model?.trim() ?? '';
@@ -364,7 +354,7 @@ export class PlansResolver {
       trimmedModel !== '' &&
       !(await this.disabledAgentClis.isModelEnabled(
         actorUserId,
-        backend,
+        driver,
         trimmedModel,
       ))
     ) {
@@ -377,7 +367,7 @@ export class PlansResolver {
   private toEnqueueResult(outcome: EnqueueOutcome): EnqueuePlanRunResultObject {
     const result = new EnqueuePlanRunResultObject();
 
-    result.executionBackend = outcome.executionBackend;
+    result.driver = outcome.driver;
     result.jobId = outcome.jobId;
     result.planId = outcome.planId;
     result.queuePosition = outcome.queuePosition;
@@ -391,7 +381,7 @@ export class PlansResolver {
   ): SchedulePlanRunResultObject {
     const result = new SchedulePlanRunResultObject();
 
-    result.executionBackend = outcome.executionBackend;
+    result.driver = outcome.driver;
     result.jobId = outcome.jobId;
     result.planId = outcome.planId;
     result.planRunId = outcome.planRunId;
@@ -426,7 +416,7 @@ export class PlansResolver {
   }
 
   @ResolveField(() => String, {
-    description: `Workflow-ralph run configuration stored on the plan (PlanRunConfigStorage v1).`,
+    description: `Run configuration stored on the plan (PlanRunConfigStorage v1).`,
   })
   runConfigJson(
     @Parent()
@@ -511,7 +501,7 @@ export class PlansResolver {
     out.cancelRequestedAt = planRun.cancelRequestedAt;
     out.checkoutId = planRun.checkoutId;
     out.createdAt = planRun.createdAt;
-    out.executionBackend = planRun.executionBackend;
+    out.driver = planRun.driver;
     out.heartbeatExpected = planRun.heartbeatExpected;
     out.hostname = planRun.hostname;
     out.id = planRun.id;
@@ -538,7 +528,7 @@ export class PlansResolver {
   }
 
   @Query(() => [PlanRunObject], {
-    description: `Recent persisted Ralph plan runs for a plan, newest first. Each row stores exactly one execution backend.`,
+    description: `Recent persisted plan runs for a plan, newest first. Each row stores exactly one driver.`,
   })
   async planRunsByPlanId(
     @Args('input', { type: () => PlanRunsByPlanIdInput })
@@ -567,29 +557,28 @@ export class PlansResolver {
   }
 
   @Mutation(() => PlanRunObject, {
-    description: `Register a detached workflow-ralph CLI run as a first-class plan_runs row (bullmqJobId NULL, runKind 'orchestrator', status IN_PROGRESS) so cancelPlanRun has a row to stamp the durable cancel marker on. Creates NO BullMQ job. The CLI calls this on start, polls the marker each iteration boundary, and settles the row via settleCliPlanRun on exit.`,
+    description: `Register a run whose owner is outside the queue, such as an interactive /ot-loop, as a first-class plan_runs row (bullmqJobId NULL, runKind 'orchestrator', status IN_PROGRESS) so cancelPlanRun has a row to stamp the durable cancel marker on. Creates NO BullMQ job. The owner calls this on start, polls the marker between tasks, and settles the row via settlePlanRun on exit.`,
   })
-  async registerCliPlanRun(
-    @Args('input', { type: () => RegisterCliPlanRunInput })
-    input: RegisterCliPlanRunInput,
+  async registerPlanRun(
+    @Args('input', { type: () => RegisterPlanRunInput })
+    input: RegisterPlanRunInput,
     @CurrentUser('sub') actorSub?: string,
     @CurrentUser('kind') actorKind?: string,
   ): Promise<PlanRunObject> {
-    if (!isPlanRunExecutionBackend(input.executionBackend)) {
+    if (!isPlanRunDriver(input.driver)) {
       throw new BadRequestException(
-        `Invalid executionBackend: ${input.executionBackend} (expected one of: ${PLAN_RUN_EXECUTION_BACKEND_LIST})`,
+        `Invalid driver: ${input.driver} (expected one of: ${PLAN_RUN_DRIVER_LIST})`,
       );
     }
 
     const actorUserId = resolveActorUserId(actorSub, actorKind);
-    await this.assertBackendEnabled(actorUserId, input.executionBackend);
+    await this.assertDriverEnabled(actorUserId, input.driver);
 
     const run = await this.planRunsRepository.registerCliRun({
       actorUserId,
       branch: input.branch ?? null,
-      executionBackend: input.executionBackend,
-      // Defaults to true so every existing caller — the detached CLI above all, which
-      // does heartbeat on a ~15s timer — keeps today's behaviour untouched. Only an
+      driver: input.driver,
+      // Defaults to true so a caller that does not say keeps heartbeat-based liveness. Only an
       // explicit false opts a run out of heartbeat-based liveness.
       heartbeatExpected: input.heartbeatExpected ?? true,
       hostname: input.hostname ?? null,
@@ -603,12 +592,12 @@ export class PlansResolver {
   }
 
   @Mutation(() => PlanRunObject, {
-    description: `Settle a detached-CLI run row (from registerCliPlanRun) on exit: set the terminal status (COMPLETED, CANCELLED, FAILED, or USAGE_LIMITED) and clear the run-location columns. USAGE_LIMITED also records usageLimitResetsAt / usageLimitType. Settling USAGE_LIMITED schedules no resume: a detached CLI run has no queued job to continue, so it is re-run by hand after the reset. Keyed on the run id. Returns null when the row no longer exists.`,
+    description: `Settle a run row whose owner is outside the queue, such as an interactive /ot-loop (from registerPlanRun), on exit: set the terminal status (COMPLETED, CANCELLED, FAILED, or USAGE_LIMITED) and clear the run-location columns. USAGE_LIMITED also records usageLimitResetsAt / usageLimitType. Settling USAGE_LIMITED schedules no resume: such a run has no queued job to continue, so it is re-run by hand after the reset. Keyed on the run id. Returns null when the row no longer exists.`,
     nullable: true,
   })
-  async settleCliPlanRun(
-    @Args('input', { type: () => SettleCliPlanRunInput })
-    input: SettleCliPlanRunInput,
+  async settlePlanRun(
+    @Args('input', { type: () => SettlePlanRunInput })
+    input: SettlePlanRunInput,
   ): Promise<PlanRunObject | null> {
     const status = input.status.trim().toUpperCase();
 
@@ -662,7 +651,7 @@ export class PlansResolver {
   }
 
   @Mutation(() => PlanRunObject, {
-    description: `Bump the liveness heartbeat on a detached-CLI run row (from registerCliPlanRun). The CLI calls this on a ~15s timer so a hard crash (SIGKILL/power-loss) leaves a stale heartbeat the reader/sweeper can detect. Keyed on the run id. Returns null when the row no longer exists.`,
+    description: `Bump the liveness heartbeat on a run row whose owner is outside the queue (from registerPlanRun). The owner calls this on a timer so a hard crash (SIGKILL/power-loss) leaves a stale heartbeat the reader/sweeper can detect. Keyed on the run id. Returns null when the row no longer exists.`,
     nullable: true,
   })
   async recordPlanRunHeartbeat(
@@ -1388,7 +1377,7 @@ export class PlansResolver {
 
   @ProfileResponseTime('PlansResolver.enqueuePlanRun')
   @Mutation(() => EnqueuePlanRunResultObject, {
-    description: `Canonical mutation to enqueue a spawn plan-run job (nested workflow-ralph in the worker). Used by the Developer app "Run plan" action and external clients. Returns job id, plan id, and queue position. For in-process orchestrator runs use enqueuePlanRalphOrchestrator instead.`,
+    description: `The single mutation to enqueue a plan run on the OT Loop runner, optionally scoped to one task (mode task). Used by the Developer app "Run plan" action and external clients. Returns job id, plan id, and queue position.`,
   })
   @EmitNotification([
     {
@@ -1423,98 +1412,12 @@ export class PlansResolver {
     @CurrentUser('sub') actorSub?: string,
     @CurrentUser('kind') actorKind?: string,
   ): Promise<EnqueuePlanRunResultObject> {
-    const actorUserId = resolveActorUserId(actorSub, actorKind);
-    // Guard only an explicitly-chosen agent backend; when omitted the backend is
-    // resolved later from worktree defaults, so there is nothing to gate here.
-    const requestedBackend = input.ralph?.backend ?? null;
-    if (
-      requestedBackend != null &&
-      isPlanRunExecutionBackend(requestedBackend)
-    ) {
-      await this.assertBackendEnabled(
-        actorUserId,
-        requestedBackend,
-        input.ralph?.model,
-      );
-    }
-
-    const outcome = await this.planEnqueueService.enqueueSpawn({
-      actorKind,
-      actorSub,
-      actorUserId,
-      branch: input.branch,
-      cancelScheduled: input.cancelScheduled ?? null,
-      checkoutId: input.checkoutId,
-      idempotencyKey: input.idempotencyKey ?? null,
-      jobRunHooksJson: input.jobRunHooksJson,
-      planId: input.planId,
-      priority: input.priority,
-      ralph: input.ralph,
-      repositoryId: input.repositoryId,
-      runner: input.runner,
-      workingDirectory: input.workingDirectory,
-    });
-
-    return this.toEnqueueResult(outcome);
-  }
-
-  /** Timing is captured by {@link PlansResolver.enqueuePlanRun} (this alias delegates there). */
-  @Mutation(() => EnqueuePlanRunResultObject, {
-    deprecationReason: `Use enqueuePlanRun. Identical spawn enqueue behavior; retained for backward-compatible clients only.`,
-    description: `Deprecated alias for enqueuePlanRun. Enqueues a spawn plan-run job with the same input and result shape.`,
-  })
-  async workflowPlanRun(
-    @Args('input', { type: () => EnqueuePlanRunInput })
-    input: EnqueuePlanRunInput,
-    @CurrentUser('sub') actorSub?: string,
-    @CurrentUser('kind') actorKind?: string,
-  ): Promise<EnqueuePlanRunResultObject> {
-    return this.enqueuePlanRun(input, actorSub, actorKind);
-  }
-
-  @ProfileResponseTime('PlansResolver.enqueuePlanRalphOrchestrator')
-  @Mutation(() => EnqueuePlanRunResultObject, {
-    description: `Enqueue an in-process Ralph orchestrator job (GraphQL-backed pipeline, no nested workflow-ralph process). Same queue position and plan/task status updates as enqueuePlanRun.`,
-  })
-  @EmitNotification([
-    {
-      event: NOTIFICATION_EVENT_NAMES.PLAN_UPDATED,
-      payload: (ret) => {
-        if (isEnqueuePlanRunResult(ret)) {
-          return {
-            message: 'Plan queued for run (orchestrator)',
-            planId: ret.planId,
-            severity: 'info' as const,
-          };
-        }
-        return null;
-      },
-    },
-    {
-      event: NOTIFICATION_EVENT_NAMES.PLAN_STATUS_CHANGED,
-      payload: (ret) => {
-        if (isEnqueuePlanRunResult(ret)) {
-          return {
-            planId: ret.planId,
-            status: 'QUEUED',
-          };
-        }
-        return null;
-      },
-    },
-  ])
-  async enqueuePlanRalphOrchestrator(
-    @Args('input', { type: () => EnqueuePlanRalphOrchestratorInput })
-    input: EnqueuePlanRalphOrchestratorInput,
-    @CurrentUser('sub') actorSub?: string,
-    @CurrentUser('kind') actorKind?: string,
-  ): Promise<EnqueuePlanRunResultObject> {
     const { planId, taskId } = input;
 
     let mode: 'plan' | 'task' | null = null;
-    if (input.mode === PlanRalphWorkflowModeGraphQL.task) {
+    if (input.mode === PlanRunModeGraphQL.task) {
       mode = 'task';
-    } else if (input.mode === PlanRalphWorkflowModeGraphQL.plan) {
+    } else if (input.mode === PlanRunModeGraphQL.plan) {
       mode = 'plan';
     }
 
@@ -1534,15 +1437,14 @@ export class PlansResolver {
     }
 
     const actorUserId = resolveActorUserId(actorSub, actorKind);
-    const requestedBackend = input.ralph?.backend ?? null;
-    if (
-      requestedBackend != null &&
-      isPlanRunExecutionBackend(requestedBackend)
-    ) {
-      await this.assertBackendEnabled(
+    // Guard only an explicitly-chosen driver; when omitted the driver is
+    // resolved later from worktree defaults, so there is nothing to gate here.
+    const requestedBackend = input.tuning?.driver ?? null;
+    if (requestedBackend != null && isPlanRunDriver(requestedBackend)) {
+      await this.assertDriverEnabled(
         actorUserId,
         requestedBackend,
-        input.ralph?.model,
+        input.tuning?.model,
       );
     }
 
@@ -1558,10 +1460,9 @@ export class PlansResolver {
       mode,
       planId,
       priority: input.priority,
-      ralph: input.ralph,
       repositoryId: input.repositoryId,
-      runner: input.runner,
-      taskId,
+      taskId: taskId ?? null,
+      tuning: input.tuning,
       workingDirectory: input.workingDirectory,
     });
 
@@ -1594,15 +1495,12 @@ export class PlansResolver {
     @CurrentUser('kind') actorKind?: string,
   ): Promise<SchedulePlanRunResultObject> {
     const actorUserId = resolveActorUserId(actorSub, actorKind);
-    const requestedBackend = input.ralph?.backend ?? null;
-    if (
-      requestedBackend != null &&
-      isPlanRunExecutionBackend(requestedBackend)
-    ) {
-      await this.assertBackendEnabled(
+    const requestedBackend = input.tuning?.driver ?? null;
+    if (requestedBackend != null && isPlanRunDriver(requestedBackend)) {
+      await this.assertDriverEnabled(
         actorUserId,
         requestedBackend,
-        input.ralph?.model,
+        input.tuning?.model,
       );
     }
 
@@ -1616,11 +1514,10 @@ export class PlansResolver {
       jobRunHooksJson: input.jobRunHooksJson,
       planId: input.planId,
       priority: input.priority,
-      ralph: input.ralph,
       replaceScheduled: input.replaceScheduled ?? null,
       repositoryId: input.repositoryId,
-      runner: input.runner,
       scheduledFor: input.scheduledFor,
+      tuning: input.tuning,
       workingDirectory: input.workingDirectory,
     });
 
@@ -1661,7 +1558,7 @@ export class PlansResolver {
 
   // @ProfileResponseTime('PlansResolver.cancelPlanRun')
   @Mutation(() => CancelPlanRunResultObject, {
-    description: `Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the Ralph child when a job is active (cannot be removed from Redis without the lock token). Also cancels the plan's SCHEDULED runs (delayed job removed, run settled CANCELLED). With planRunId naming a SCHEDULED run of the plan, cancels ONLY that run (its delayed job and row), leaving any other active run, the plan status and the tasks alone; a planRunId that is already settled is a no-op, and one that is QUEUED or IN_PROGRESS is rejected (omit planRunId to stop a live run). Idempotent: once a scheduled run has fired or settled there is nothing left to cancel.`,
+    description: `Cancel BullMQ plan-run jobs for a plan: removes waiting or delayed jobs, and signals the worker to stop the run when a job is active (cannot be removed from Redis without the lock token). Also cancels the plan's SCHEDULED runs (delayed job removed, run settled CANCELLED). With planRunId naming a SCHEDULED run of the plan, cancels ONLY that run (its delayed job and row), leaving any other active run, the plan status and the tasks alone; a planRunId that is already settled is a no-op, and one that is QUEUED or IN_PROGRESS is rejected (omit planRunId to stop a live run). Idempotent: once a scheduled run has fired or settled there is nothing left to cancel.`,
   })
   @EmitNotification([
     {
@@ -1677,7 +1574,7 @@ export class PlansResolver {
         }
         if (ret.signaledActiveRunToStop) {
           return {
-            message: 'Plan run stop requested (Ralph process)',
+            message: 'Plan run stop requested',
             planId: ret.planId,
             severity: 'info' as const,
           };

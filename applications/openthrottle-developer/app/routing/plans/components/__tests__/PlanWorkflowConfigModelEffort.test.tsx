@@ -6,16 +6,16 @@ import * as React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { MOCK_PLAN_RUN_MODELS } from '~/routing/plans/data/mock.plan-run-models';
-import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
-import { getDefaultWorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
+import type { PlanRunOptions } from '~/routing/plans/utils/plan-run-options';
+import { getDefaultPlanRunOptions } from '~/routing/plans/utils/plan-run-options';
 
 import type { PlanWorkflowConfigModelEffortProps } from '../PlanWorkflowConfigModelEffort';
 import { PlanWorkflowConfigModelEffort } from '../PlanWorkflowConfigModelEffort';
 
 const applyUpdater = (
   setInput: ReturnType<typeof vi.fn>,
-  prev: WorkflowRalphRunOptionsInput,
-): WorkflowRalphRunOptionsInput | undefined => {
+  prev: PlanRunOptions,
+): PlanRunOptions | undefined => {
   const updater: unknown = setInput.mock.calls[0]?.[0];
 
   return typeof updater === 'function' ? updater(prev) : undefined;
@@ -36,7 +36,7 @@ describe('PlanWorkflowConfigModelEffort Component', () => {
   beforeEach(() => {
     setInput.mockReset();
     props = {
-      input: getDefaultWorkflowRalphRunOptionsInput(),
+      input: getDefaultPlanRunOptions(),
       models: Promise.resolve(MOCK_PLAN_RUN_MODELS),
       setInput,
     };
@@ -59,14 +59,14 @@ describe('PlanWorkflowConfigModelEffort Component', () => {
     ).toBeInTheDocument();
   });
 
-  test('writes model and backend together, and drops an effort the new runner lacks', async () => {
+  test('writes model and driver together, and drops an effort the new runner lacks', async () => {
     const user = userEvent.setup();
     props = {
       ...props,
       input: {
-        ...getDefaultWorkflowRalphRunOptionsInput(),
+        ...getDefaultPlanRunOptions(),
+        driver: 'claude',
         effort: 'max',
-        executionBackend: 'claude',
         model: 'opus',
       },
     };
@@ -79,8 +79,8 @@ describe('PlanWorkflowConfigModelEffort Component', () => {
     );
 
     expect(applyUpdater(setInput, props.input)).toMatchObject({
+      driver: 'cursor',
       effort: '',
-      executionBackend: 'cursor',
       model: 'gpt-5.2',
     });
   });
@@ -90,9 +90,9 @@ describe('PlanWorkflowConfigModelEffort Component', () => {
     props = {
       ...props,
       input: {
-        ...getDefaultWorkflowRalphRunOptionsInput(),
+        ...getDefaultPlanRunOptions(),
+        driver: 'claude',
         effort: 'high',
-        executionBackend: 'claude',
         model: 'opus',
       },
     };
@@ -104,8 +104,8 @@ describe('PlanWorkflowConfigModelEffort Component', () => {
     );
 
     expect(applyUpdater(setInput, props.input)).toMatchObject({
+      driver: 'claude',
       effort: 'high',
-      executionBackend: 'claude',
     });
   });
 
@@ -114,8 +114,8 @@ describe('PlanWorkflowConfigModelEffort Component', () => {
     props = {
       ...props,
       input: {
-        ...getDefaultWorkflowRalphRunOptionsInput(),
-        executionBackend: 'claude',
+        ...getDefaultPlanRunOptions(),
+        driver: 'claude',
         model: 'opus',
       },
     };

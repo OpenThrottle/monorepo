@@ -3,7 +3,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 
 import { captureStdioAgentEnvironment } from './config/agent-environment.ts';
 import { captureClientIdentityProvider } from './config/client-identity.ts';
-import { captureStdioExecutionBackend } from './config/execution-backend.ts';
+import { captureStdioDriver } from './config/driver.ts';
 import {
   buildServerInstructions,
   getServerName,
@@ -71,8 +71,8 @@ export async function runServerLocal(): Promise<void> {
   // Stdio ONLY, for the same reason: on the HTTP surface the environment describes the
   // SERVER, not the caller, so detecting there would report the same wrong backend for
   // every request — worse than an agent's declared guess, because it cannot be overridden.
-  captureStdioExecutionBackend();
-  // Same: the agent environment (ci | interactive | ralph) sent on mutations as X-OT-Environment.
+  captureStdioDriver();
+  // Same: the agent environment (ci | headless | interactive) sent on mutations as X-OT-Environment.
   captureStdioAgentEnvironment();
 
   const server = new McpServer(

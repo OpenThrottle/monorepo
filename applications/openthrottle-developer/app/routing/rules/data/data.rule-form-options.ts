@@ -8,7 +8,7 @@ import { RULES_COPY } from '~/routing/rules/data/data.copy';
 /** Sentinel select value meaning "match any" (serialized as '' on submit). */
 export const ANY = 'any';
 
-export const ENVIRONMENTS = ['ci', 'interactive', 'ralph'];
+export const ENVIRONMENTS = ['ci', 'headless', 'interactive'];
 
 export const PLAN_STATUSES = [
   'BACKLOG',

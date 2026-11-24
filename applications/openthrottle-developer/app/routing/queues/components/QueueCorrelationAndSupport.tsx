@@ -8,7 +8,7 @@ import * as React from 'react';
 import { Link } from 'react-router';
 
 import type { JobDetailsCardFragment } from '~/__generated__/graphql';
-import { formatWorkflowRalphExecutionBackendLabel } from '~/routing/plans/utils/build-workflow-ralph-argv';
+import { formatPlanRunDriverLabel } from '~/routing/plans/utils/plan-run-options';
 import { parseQueueJobDataString } from '~/routing/queues/utils/parseQueueJobDataString';
 import { queueJobDetailPath } from '~/routing/queues/utils/queueJobDetailPath';
 
@@ -43,15 +43,15 @@ export const QueueCorrelationAndSupport = (
     }
 
     if (job.name) lines.push(`name: ${job.name}`);
-    if (job.executionBackend != null && job.executionBackend !== '') {
-      lines.push(`executionBackend: ${job.executionBackend}`);
+    if (job.driver != null && job.driver !== '') {
+      lines.push(`driver: ${job.driver}`);
     }
 
     lines.push(`urlPath: ${queueJobDetailPath(queueName, job.id)}`);
 
     return `${lines.join('\n')}\n`;
   }, [
-    job.executionBackend,
+    job.driver,
     job.id,
     job.name,
     job.state,
@@ -83,13 +83,13 @@ export const QueueCorrelationAndSupport = (
             {queueName}
           </code>
         </p>
-        {job.executionBackend != null && job.executionBackend !== '' && (
+        {job.driver != null && job.driver !== '' && (
           <p>
             <span className="text-muted-foreground">Runner</span>{' '}
             <span className="text-foreground text-xs">
-              {formatWorkflowRalphExecutionBackendLabel(job.executionBackend)}{' '}
+              {formatPlanRunDriverLabel(job.driver)}{' '}
               <code className="bg-muted rounded px-1 py-0.5 font-mono text-[0.65rem]">
-                {job.executionBackend}
+                {job.driver}
               </code>
             </span>
           </p>

@@ -7,7 +7,6 @@
  */
 import type * as React from 'react';
 
-import { DEFAULT_RALPH_PROMPT } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import {
   moveRowWithinPhase,
   updateRow,
@@ -16,7 +15,10 @@ import type {
   JobRunHookDraftRow,
   JobRunHookOnFailure,
 } from '~/routing/plans/utils/job-run-hooks-ui';
-import { isJobRunHookPhase } from '~/routing/plans/utils/job-run-hooks-ui';
+import {
+  BLANK_JOB_RUN_HOOK_PROMPT,
+  isJobRunHookPhase,
+} from '~/routing/plans/utils/job-run-hooks-ui';
 import {
   isJobRunHookKind,
   isJobRunHookOnFailureValue,
@@ -106,7 +108,7 @@ export const usePlanWorkflowConfigHookRow = (
           return {
             ...shared,
             kind: 'skill' as const,
-            skillPath: '.agents/skills/workflow-ralph/SKILL.md',
+            skillPath: '',
           };
         }),
       );
@@ -120,7 +122,7 @@ export const usePlanWorkflowConfigHookRow = (
         return {
           ...shared,
           kind: 'prompt_profile' as const,
-          prompt: DEFAULT_RALPH_PROMPT,
+          prompt: BLANK_JOB_RUN_HOOK_PROMPT,
           promptDelivery: 'named' as const,
         };
       }),
@@ -208,7 +210,7 @@ export const usePlanWorkflowConfigHookRow = (
           onFailure: r.onFailure,
           order: r.order,
           phase: r.phase,
-          prompt: DEFAULT_RALPH_PROMPT,
+          prompt: BLANK_JOB_RUN_HOOK_PROMPT,
           promptDelivery: 'named' as const,
           timeoutSeconds: r.timeoutSeconds,
         };

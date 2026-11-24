@@ -8,6 +8,8 @@ import type {
   LoopOutcome,
   LoopTask,
   ModelRoutingPolicy,
+  WorkflowFailedReason,
+  WorkflowRunResult,
 } from '@openthrottle/openthrottle-agentic-loop';
 import {
   createCommandValidator,
@@ -21,7 +23,9 @@ import {
   LOOP_OUTPUT_KIND,
   LOOP_PLAN_STATUS,
   LOOP_TASK_STATUS,
+  mergePlanRunTuningWithConfig,
   nodeResolverFs,
+  preparePlanRunPrDraftDir,
   prepareResultDir,
   readModelRoutingPolicyFromRoot,
   resolveOtLoopCommands,
@@ -30,16 +34,9 @@ import {
   spawnShellCommand,
   systemScheduleClock,
 } from '@openthrottle/openthrottle-agentic-loop';
-import type {
-  WorkflowFailedReason,
-  WorkflowRunResult,
-} from '@openthrottle/openthrottle-agentic-ralph';
+import type { PlanRunCommandRunner } from '@openthrottle/openthrottle-agentic-utils';
 import {
-  createDefaultWorkflowRalphCommandRunner,
-  CreateTaskDocument,
-  preparePlanRunPrDraftDir,
-} from '@openthrottle/openthrottle-agentic-ralph';
-import {
+  createPlanRunCommandRunner,
   discoverAgentClis,
   getOpenThrottleRoot,
   resolveHookPluginDirs,
@@ -55,8 +52,8 @@ import {
   parseDriverId,
   runDriverAsync,
 } from '@openthrottle/openthrottle-drivers';
-import { mergePlanRunTuningWithWorkflowRalphConfig } from '@tools/workflows';
 
+import { CreateTaskDocument } from '../../../__generated__/graphql.ts';
 import { PlanRunWorkspaceService } from '../../../services/plan-run-workspace/plan-run-workspace.service.ts';
 import {
   OT_LOOP_DEFAULT_BASE_BRANCH,
@@ -77,6 +74,7 @@ import {
   toTimeoutMs,
 } from '../ot-loop.utils.ts';
 import { createOtLoopClient } from '../ot-loop-client.factory.ts';
+import { createOtLoopFinalizePort } from '../ot-loop-finalize-port.factory.ts';
 import { createOtLoopWorkerRunner } from '../ot-loop-worker-runner.factory.ts';
 import { createPlanOutputWriter } from '../plan-output-writer.factory.ts';
 import type { RunOtLoopJobParams } from './orchestrator.types.ts';
@@ -123,7 +121,7 @@ const compareByOrder = (a: LoopTask, b: LoopTask): number => {
  * {@link PlanRunWorkspaceService} (worktree, checkout registration, config; no MCP preflight or skill
  * injection), `runDriverAsync` and the shell, runs the pure state machine, then closes: it writes the
  * final plan status itself, runs the whole-plan validation, and hands push and the draft PR to
- * `finalizeOtLoopRun`. It returns the same `WorkflowRunResult` Ralph does, so `PlansProcessor` settles
+ * `finalizeOtLoopRun`. It returns a `WorkflowRunResult`, so `PlansProcessor` settles
  * every exit through its existing branches. A failure at start (no commands, red setup) is a
  * `failed` result; the processor restores the plan's pre-run status.
  */
@@ -138,8 +136,7 @@ export class OtLoopOrchestratorService {
   ) {}
 
   /**
-   * @description Runs one OT Loop job. Workspace preparation errors propagate (BullMQ retries, as
-   * for Ralph); every later failure becomes a `failed` result.
+   * @description Runs one OT Loop job. Workspace preparation errors propagate (BullMQ retries); every later failure becomes a `failed` result.
    */
   async runPlanOrchestratorJob(
     params: RunOtLoopJobParams,
@@ -178,10 +175,7 @@ export class OtLoopOrchestratorService {
         run: workspace.run,
         say,
         signal,
-        tuning: mergePlanRunTuningWithWorkflowRalphConfig(
-          jobData.ralph,
-          workspace.config,
-        ),
+        tuning: mergePlanRunTuningWithConfig(jobData.tuning, workspace.config),
         workSessionId,
       });
     } catch (error) {
@@ -205,15 +199,13 @@ export class OtLoopOrchestratorService {
     readonly run: { readonly id: string } | null;
     readonly say: (message: string) => void;
     readonly signal: AbortSignal;
-    readonly tuning: ReturnType<
-      typeof mergePlanRunTuningWithWorkflowRalphConfig
-    >;
+    readonly tuning: ReturnType<typeof mergePlanRunTuningWithConfig>;
     readonly workSessionId: string | null | undefined;
   }): Promise<WorkflowRunResult> {
     const { cwd, output, params, run, say, signal, tuning } = input;
     const { correlation, jobData } = params;
     const { planId } = jobData;
-    const runCommand = createDefaultWorkflowRalphCommandRunner();
+    const runCommand = createPlanRunCommandRunner();
 
     // The worktree is authoritative: the same file the enqueue check read from the base checkout.
     const commands = await resolveOtLoopCommands({
@@ -234,9 +226,7 @@ export class OtLoopOrchestratorService {
       jobData.otLoop?.finalValidationCommands,
       commands.finalValidation,
     );
-    const backend = parseDriverId(
-      tuning.backend ?? jobData.executionBackend ?? 'cursor',
-    );
+    const backend = parseDriverId(tuning.driver ?? jobData.driver ?? 'cursor');
     const runModel = toModel(tuning.model);
     const client = createOtLoopClient({
       executeGraphqlV2: this.executeGraphqlV2,
@@ -248,7 +238,7 @@ export class OtLoopOrchestratorService {
     });
 
     say(
-      `starting: backend=${backend}, validation from ${commands.source}; per-iteration lifecycle events are not emitted by this runner (known gap)`,
+      `starting: driver=${backend}, validation from ${commands.source}; per-iteration lifecycle events are not emitted by this runner (known gap)`,
     );
     await prepareResultDir(cwd);
 
@@ -361,9 +351,7 @@ export class OtLoopOrchestratorService {
     readonly output: PlanOutputWriter;
     readonly planId: string;
     readonly planRunId: string | undefined;
-    readonly runCommand: ReturnType<
-      typeof createDefaultWorkflowRalphCommandRunner
-    >;
+    readonly runCommand: PlanRunCommandRunner;
     readonly runModel: string | undefined;
     readonly say: (message: string) => void;
     readonly signal: AbortSignal;
@@ -387,7 +375,7 @@ export class OtLoopOrchestratorService {
               null
             );
           } catch {
-            // A transient read failure is "not cancelled" (as in Ralph's marker poll).
+            // A transient read failure is "not cancelled".
             return false;
           }
         },
@@ -427,7 +415,7 @@ export class OtLoopOrchestratorService {
         output,
         planId,
         planRunId: input.planRunId,
-        // OT's hook payloads, as Ralph loads them: without them the in-worker plan-inbox claim
+        // OT's hook payloads: without them the in-worker plan-inbox claim
         // never runs, so a STEER cannot reach the worker mid-attempt.
         pluginDirs: resolveHookPluginDirs(
           driver.pluginDirRels === undefined
@@ -504,9 +492,7 @@ export class OtLoopOrchestratorService {
     readonly outcome: LoopOutcome;
     readonly output: PlanOutputWriter;
     readonly planId: string;
-    readonly runCommand: ReturnType<
-      typeof createDefaultWorkflowRalphCommandRunner
-    >;
+    readonly runCommand: PlanRunCommandRunner;
     readonly say: (message: string) => void;
     readonly signal: AbortSignal;
     readonly usage: UsageLimit | undefined;
@@ -565,7 +551,6 @@ export class OtLoopOrchestratorService {
       baseBranch: input.baseBranch,
       cwd: input.cwd,
       draftDir,
-      executeGraphqlV2: this.executeGraphqlV2,
       onChunk: (chunk) => {
         input.output.write({
           attempt: undefined,
@@ -576,6 +561,9 @@ export class OtLoopOrchestratorService {
       },
       outcome: blocked ? 'tasks_blocked' : 'complete',
       planId,
+      port: createOtLoopFinalizePort({
+        executeGraphqlV2: this.executeGraphqlV2,
+      }),
       runCommand: input.runCommand,
       squashSubject: undefined,
       taskIds,
@@ -647,7 +635,7 @@ export class OtLoopOrchestratorService {
   }
 
   /**
-   * @description Writes the plan's final status through the same path Ralph uses (`updatePlan` over
+   * @description Writes the plan's final status through the worker GraphQL path (`updatePlan` over
    * the worker GraphQL): BLOCKED when any task is, else COMPLETED. Best effort: the processor's
    * `settlePlanLeftOpenByRun` is the backstop, so a rejected write is reported, not fatal.
    */

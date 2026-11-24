@@ -375,11 +375,6 @@
     "tools/dotfiles": {
       "project": ["src/**/*.ts"],
     },
-    "packages/nestjs-agentic-workflow": {
-      "entry": ["src/index.ts", "src/testing/index.ts"],
-      "project": ["src/**/*.ts"],
-      "ignoreDependencies": ["@golevelup/ts-vitest", "@nestjs/testing"],
-    },
     "packages/nestjs-graphql": {
       "entry": [
         "src/index.ts",
@@ -465,14 +460,6 @@
         "graphql-codegen-typescript-validation-schema",
       ],
     },
-    "packages/openthrottle-agentic-ralph": {
-      "entry": ["src/index.ts", "codegen.ts"],
-      "project": ["src/**/*.ts", "graphql/**/*.graphql"],
-    },
-    "packages/openthrottle-agentic-workflow": {
-      "entry": ["src/index.ts"],
-      "project": ["src/**/*.ts"],
-    },
     "packages/openthrottle-developer-codegen": {
       "entry": ["src/index.ts", "codegen.ts"],
       "project": ["src/**/*.ts", "graphql/**/*.graphql"],
@@ -480,18 +467,6 @@
     "packages/openthrottle-notifications": {
       "entry": ["src/index.ts"],
       "project": ["src/**/*.ts"],
-    },
-    "tools/workflows": {
-      "entry": [
-        "src/index.ts",
-        "src/bin/ralph.ts",
-        "src/bin/link-merge.ts",
-        "src/bin/lighthouse.ts",
-        "src/bin/runIteration.ts",
-        "src/utils/ralphDebugLogger.ts",
-        "scripts/*.{ts,js}",
-      ],
-      "project": ["src/**/*.{ts,tsx}", "scripts/**/*.{ts,js}"],
     },
   },
   "ignoreIssues": {

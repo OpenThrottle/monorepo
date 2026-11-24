@@ -3,7 +3,7 @@ import { AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { PlanRunsRepository } from '@openthrottle/nestjs-repositories-server';
 import { PlansRepository } from '@openthrottle/nestjs-repositories-server';
-import type { WorkflowRalphUsageLimit } from '@openthrottle/openthrottle-agentic-ralph';
+import type { UsageLimit } from '@openthrottle/openthrottle-drivers';
 import { DataSource } from 'typeorm';
 
 import { PlanEnqueueService } from '../../../graphql/plans/plan-enqueue/plan-enqueue.service.ts';
@@ -61,7 +61,7 @@ export class UsageLimitResumeService {
   async handle(params: {
     readonly jobData: RunPlanOrchestratorJobData;
     readonly jobId: string;
-    readonly limit: WorkflowRalphUsageLimit;
+    readonly limit: UsageLimit;
     readonly now?: Date;
     readonly planId: string;
   }): Promise<UsageLimitHandling> {

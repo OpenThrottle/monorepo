@@ -47,26 +47,26 @@ describe('PlanToolbar Component', () => {
     ).not.toBeInTheDocument();
   });
 
-  test('submits empty ralphTuning when ralphTuningJson is omitted', () => {
-    const el = component.container.querySelector('input[name="ralphTuning"]');
+  test('submits empty runTuning when runTuningJson is omitted', () => {
+    const el = component.container.querySelector('input[name="runTuning"]');
     if (!(el instanceof HTMLInputElement)) {
-      throw new Error('expected ralphTuning input');
+      throw new Error('expected runTuning input');
     }
     expect(el.value).toBe('');
   });
 
-  test('passes ralphTuningJson to hidden ralphTuning field for enqueue', () => {
+  test('passes runTuningJson to hidden runTuning field for enqueue', () => {
     const payload = JSON.stringify({
-      iterations: 3,
-      project: 'applications/openthrottle-server',
+      driver: 'claude',
+      model: 'opus',
     });
     const withTuning = renderToolbar({
       planId: 'test-plan-id',
-      ralphTuningJson: payload,
+      runTuningJson: payload,
     });
-    const el = withTuning.container.querySelector('input[name="ralphTuning"]');
+    const el = withTuning.container.querySelector('input[name="runTuning"]');
     if (!(el instanceof HTMLInputElement)) {
-      throw new Error('expected ralphTuning input');
+      throw new Error('expected runTuning input');
     }
     expect(el.value).toBe(payload);
   });

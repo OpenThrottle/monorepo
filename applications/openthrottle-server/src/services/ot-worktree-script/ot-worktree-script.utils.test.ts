@@ -33,7 +33,7 @@ describe('resolveOtWorktreeScript', () => {
   };
 
   const resolveCreate = (
-    env: NodeJS.ProcessEnv = { WORKFLOW_RALPH_OT_ROOT: otRoot },
+    env: NodeJS.ProcessEnv = { OPENTHROTTLE_PLAN_RUN_OT_ROOT: otRoot },
   ): ReturnType<typeof resolveOtWorktreeScript> => {
     return resolveOtWorktreeScript({
       action: OT_WORKTREE_ACTION.CREATE,

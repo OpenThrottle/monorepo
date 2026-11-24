@@ -1,6 +1,5 @@
 /**
  * @description Formats task-run metrics for human-readable output (e.g. plan_output_stream chunk).
- * See tools/workflows/docs/server-and-task-metrics.md.
  */
 
 import type {

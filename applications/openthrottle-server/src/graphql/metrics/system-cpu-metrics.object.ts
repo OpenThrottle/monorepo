@@ -1,6 +1,6 @@
 /**
  * @description GraphQL object types for system-level CPU pressure metrics.
- * Aligns with tools/workflows SystemCpuMetrics type. Captures load average
+ * Captures load average
  * and Linux PSI metrics at job start/end.
  */
 

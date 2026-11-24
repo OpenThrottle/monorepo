@@ -69,10 +69,10 @@ export const TimelineSpanDetail = (
           value={span.status}
         />
       )}
-      {span.backend != null && (
+      {span.driver != null && (
         <TimelineDetailRow
-          label={TIMELINE_DETAIL_COPY.backendLabel}
-          value={span.backend}
+          label={TIMELINE_DETAIL_COPY.driverLabel}
+          value={span.driver}
         />
       )}
       {span.model != null && (

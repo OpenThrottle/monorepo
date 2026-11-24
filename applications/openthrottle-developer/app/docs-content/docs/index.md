@@ -12,7 +12,7 @@ Welcome to the OpenThrottle developer documentation. OpenThrottle is an Nx + pnp
 Use the cards below (or the sidebar) to browse, press **⌘K / Ctrl-K** to search, or jump to the [FAQ](/faq) for quick answers.
 
 - **Getting Started** — prerequisites and the commands to run the stack locally.
-- **Concepts** — how the monorepo is laid out, where plans and tasks live, and how the agentic (Ralph) workflows run.
+- **Concepts** — how the monorepo is laid out, where plans and tasks live, and how the agentic (OT Loop) workflows run.
 - **Development** — Docker Compose and image-build guidance.
 - **Operations** — troubleshooting common local-dev issues.
 

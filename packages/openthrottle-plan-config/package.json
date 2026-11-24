@@ -5,7 +5,7 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
-    "@openthrottle/openthrottle-agentic-workflow": "workspace:^",
+    "@openthrottle/openthrottle-drivers": "workspace:^",
     "zod": "catalog:"
   },
   "description": "Isomorphic plan-run-config helpers shared by the OpenThrottle server (via nestjs-repositories-server) and the developer app: storage defaults, plan/workflow-UI conversion, and GraphQL serialization.",

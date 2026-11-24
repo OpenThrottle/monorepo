@@ -64,7 +64,7 @@ const PLAN_RUNS_DIR_BASENAME = 'plan-runs';
 export const PLAN_RUN_ABANDONED_MS = 6 * 60 * 60 * 1000;
 
 /**
- * STALE via `forceSettlePlanRun`, never FAILED via `settleCliPlanRun`: the janitor knows
+ * STALE via `forceSettlePlanRun`, never FAILED via `settlePlanRun`: the janitor knows
  * contact was lost, not how the work ended, and the agent's honest-report statuses stay
  * the agent's to claim. The mutation is also guarded server-side to unsupervised
  * IN_PROGRESS rows, so it cannot clobber a run that settled itself in the meantime.

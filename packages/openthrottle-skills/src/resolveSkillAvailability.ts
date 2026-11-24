@@ -1,15 +1,15 @@
 /**
  * The environments a caller can resolve skill availability for. Callers declare
- * their own — the server cannot sniff a caller's process env (Ralph passes
- * `ralph`, the developer app `interactive`, CI `ci`). `interactive` is the
+ * their own — the server cannot sniff a caller's process env (a plan run passes
+ * `headless`, the developer app `interactive`, CI `ci`). `interactive` is the
  * default when a context omits `environment`. See
  * docs/monorepo/skill-availability-design.md ("Attribute model").
  * @public
  */
 export const SKILL_AVAILABILITY_ENVIRONMENTS = [
   'ci',
+  'headless',
   'interactive',
-  'ralph',
 ] as const;
 
 /** @public */

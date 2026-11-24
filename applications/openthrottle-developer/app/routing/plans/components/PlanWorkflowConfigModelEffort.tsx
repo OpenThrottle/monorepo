@@ -8,21 +8,19 @@ import { PlanRunModelPicker } from '~/routing/plans/components/PlanRunModelPicke
 import { PLAN_RUN_MODEL_EFFORT_COPY } from '~/routing/plans/data/data.copy';
 import type { PlanRunModelSelection } from '~/routing/plans/utils/plan-run-model-effort';
 import { reconcilePlanRunEffort } from '~/routing/plans/utils/plan-run-model-effort';
-import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/workflow-ralph-config';
+import type { PlanRunOptions } from '~/routing/plans/utils/plan-run-options';
 
 export interface PlanWorkflowConfigModelEffortProps {
-  input: WorkflowRalphRunOptionsInput;
+  input: PlanRunOptions;
 
   /** @description The loader's deferred model discovery (cold-slow), so it only holds up the picker. */
   models: Promise<readonly ChatModelOption[]>;
-  setInput: (
-    updater: React.SetStateAction<WorkflowRalphRunOptionsInput>,
-  ) => void;
+  setInput: (updater: React.SetStateAction<PlanRunOptions>) => void;
 }
 
 /**
  * @description The Configuration tab's Model + Effort field pair. Writes the same
- * `ralph.model`, `ralph.executionBackend` and `ralph.effort` the Run dialog edits,
+ * model, driver and effort the Run dialog edits,
  * through the shared {@link PlanRunModelPicker} / {@link PlanRunEffortControl}.
  * Picking a model sets its runner too, and drops an effort the new runner
  * does not support.
@@ -41,8 +39,8 @@ export const PlanWorkflowConfigModelEffort = (
   const handleModelChange = (selection: PlanRunModelSelection): void => {
     setInput((prev) => ({
       ...prev,
-      effort: reconcilePlanRunEffort(selection.backend, prev.effort),
-      executionBackend: selection.backend,
+      driver: selection.driver,
+      effort: reconcilePlanRunEffort(selection.driver, prev.effort),
       model: selection.model,
     }));
   };
@@ -68,7 +66,7 @@ export const PlanWorkflowConfigModelEffort = (
         >
           {(resolvedModels) => (
             <PlanRunModelPicker
-              backend={input.executionBackend}
+              driver={input.driver}
               model={input.model}
               models={resolvedModels}
               onChange={handleModelChange}
@@ -81,7 +79,7 @@ export const PlanWorkflowConfigModelEffort = (
         <Label>{copy.effortLabel}</Label>
         <div>
           <PlanRunEffortControl
-            backend={input.executionBackend}
+            driver={input.driver}
             effort={input.effort}
             onEffortChange={handleEffortChange}
           />

@@ -2,8 +2,8 @@ export interface PlanToolbarRunFieldsInput {
   readonly branch: string | undefined;
   readonly checkoutId: string | undefined;
   readonly jobRunHooksJson: string;
-  readonly ralphTuningJson: string;
   readonly repositoryId: string | undefined;
+  readonly runTuningJson: string;
   readonly workingDirectory: string | undefined;
 }
 
@@ -26,7 +26,7 @@ export const buildPlanToolbarRunFields = (
 
   return {
     intent: 'runPlan',
-    ralphTuning: input.ralphTuningJson,
+    runTuning: input.runTuningJson,
     ...Object.fromEntries(
       optional.filter(
         (entry): entry is readonly [string, string] =>

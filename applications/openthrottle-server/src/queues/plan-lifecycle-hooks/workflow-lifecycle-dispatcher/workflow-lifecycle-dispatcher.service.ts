@@ -9,23 +9,24 @@ import {
 } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
+  JobRunHookPhase,
+  JobRunHookRunKind,
   WorkflowLifecycleDispatcher,
   WorkflowLifecycleTaskContext,
   WorkflowLifecycleTaskOutcome,
   WorkflowPlanLifecyclePhase,
   WorkflowTaskLifecyclePhase,
-} from '@openthrottle/openthrottle-agentic-workflow';
-import type { JobRunHookPhase, JobRunHookRunKind } from '@tools/workflows';
+} from '@openthrottle/openthrottle-agentic-utils';
 import {
   isPlanScopedJobRunHookPhase,
   isTaskScopedJobRunHookPhase,
   shouldRunJobRunHook,
   sortJobRunHookEntries,
-} from '@tools/workflows';
+} from '@openthrottle/openthrottle-agentic-utils';
 import { Queue, QueueEvents } from 'bullmq';
 
-import { isRunPlanOrchestratorJobData } from '../../agentic-ralph/agentic-ralph.utils.ts';
 import type { RunPlanJobData } from '../../plans/plans.types.ts';
+import { isRunPlanOrchestratorJobData } from '../../plans/plans.utils.ts';
 import {
   PLAN_LIFECYCLE_HOOK_JOB_NAME,
   PLAN_LIFECYCLE_HOOKS_QUEUE_NAME,

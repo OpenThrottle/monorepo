@@ -28,7 +28,7 @@ export class MetricsController {
 
   /**
    * @description Returns system-level metrics: load average, CPU pressure (PSI on Linux),
-   * and count of active Ralph child processes. Useful for real-time monitoring during parallel job runs.
+   * and count of active plan-run child processes. Useful for real-time monitoring during parallel job runs.
    */
   @Get('system')
   async getSystemMetrics(): Promise<SystemMetricsSnapshot> {

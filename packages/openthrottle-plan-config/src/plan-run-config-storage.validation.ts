@@ -4,27 +4,20 @@
 
 import { z } from 'zod';
 
+import { planRunConfigOtLoopShape } from './plan-run-config-ot-loop.validation.ts';
 import {
-  planRunConfigOtLoopSchema,
-  planRunConfigRunnerSchema,
-} from './plan-run-config-ot-loop.validation.ts';
-import {
-  DEFAULT_PLAN_RUN_RALPH_DEBUG_CLI,
-  DEFAULT_PLAN_RUN_RALPH_EFFORT,
-  DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLEANUP,
-  DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLI,
+  DEFAULT_PLAN_RUN_DEBUG_CLI,
+  DEFAULT_PLAN_RUN_EFFORT,
+  DEFAULT_PLAN_RUN_WORKTREE_CLEANUP,
   MAX_PLAN_RUN_CONFIG_JSON_LEN,
-  MAX_PLAN_RUN_ITERATIONS,
-  MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN,
+  MAX_PLAN_RUN_STRING_FIELD_LEN,
   MAX_PLAN_RUN_WORKING_DIRECTORY_LEN,
   PLAN_RUN_CONFIG_TARGET_MODES,
   PLAN_RUN_CONFIG_UUID_REGEX,
   PLAN_RUN_CONFIG_VERSION,
   PLAN_RUN_DEBUG_CLI,
-  PLAN_RUN_KNOWN_BACKENDS,
-  PLAN_RUN_PROMPT_LAYERS,
+  PLAN_RUN_KNOWN_DRIVERS,
   PLAN_RUN_WORKTREE_CLEANUP,
-  PLAN_RUN_WORKTREE_CLI,
 } from './plan-run-config-storage.constants.ts';
 import { getDefaultPlanRunConfigStorage } from './plan-run-config-storage.defaults.ts';
 import type { PlanRunConfigStorage } from './plan-run-config-storage.types.ts';
@@ -36,74 +29,46 @@ const trimToMax = (max: number) => {
     .transform((s) => s.trim());
 };
 
-const planRunConfigRalphV1Schema = z
+const planRunConfigRunV1Schema = z
   .object({
-    // Absent keys resolve to the CURRENT defaults, so a config written before these fields existed
-    // reads as worktree + verbose. A persisted value — including `'omit'` — is a choice and is kept.
-    debugCli: z
-      .enum(PLAN_RUN_DEBUG_CLI)
-      .default(DEFAULT_PLAN_RUN_RALPH_DEBUG_CLI),
-    // Absent on configs written before effort existed; those read as "unset".
-    effort: trimToMax(MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN).default(
-      DEFAULT_PLAN_RUN_RALPH_EFFORT,
+    ...planRunConfigOtLoopShape,
+    // Absent keys resolve to the CURRENT defaults. A persisted value — including `'omit'` — is a
+    // choice and is kept.
+    debugCli: z.enum(PLAN_RUN_DEBUG_CLI).default(DEFAULT_PLAN_RUN_DEBUG_CLI),
+    driver: z.enum(PLAN_RUN_KNOWN_DRIVERS),
+    // Absent means "unset".
+    effort: trimToMax(MAX_PLAN_RUN_STRING_FIELD_LEN).default(
+      DEFAULT_PLAN_RUN_EFFORT,
     ),
-    executionBackend: z.enum(PLAN_RUN_KNOWN_BACKENDS),
-    iterationTimeoutText: trimToMax(MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN),
-    iterations: z.number().int().min(1).max(MAX_PLAN_RUN_ITERATIONS),
-    model: trimToMax(MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN),
-    project: trimToMax(MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN),
-    prompt: trimToMax(MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN),
-    promptFile: trimToMax(MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN),
-    promptLayer: z.enum(PLAN_RUN_PROMPT_LAYERS),
-    skipWorktreeSetup: z.boolean(),
-    worktreeBase: trimToMax(MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN),
-    // Absent on configs written before teardown existed; those read as the current default.
+    iterationTimeoutSeconds: z.number().int().min(1).optional(),
+    model: trimToMax(MAX_PLAN_RUN_STRING_FIELD_LEN),
     worktreeCleanup: z
       .enum(PLAN_RUN_WORKTREE_CLEANUP)
-      .default(DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLEANUP),
-    worktreeCli: z
-      .enum(PLAN_RUN_WORKTREE_CLI)
-      .default(DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLI),
-    worktreeName: trimToMax(MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN),
+      .default(DEFAULT_PLAN_RUN_WORKTREE_CLEANUP),
+    worktreeName: trimToMax(MAX_PLAN_RUN_STRING_FIELD_LEN),
   })
   .strict();
 
 const planRunConfigStorageV1Schema = z
   .object({
-    otLoop: planRunConfigOtLoopSchema.optional(),
-    ralph: planRunConfigRalphV1Schema,
-    runner: planRunConfigRunnerSchema.optional(),
+    run: planRunConfigRunV1Schema,
     target: z
       .object({
         mode: z.enum(PLAN_RUN_CONFIG_TARGET_MODES),
-        taskId: trimToMax(MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN),
+        taskId: trimToMax(MAX_PLAN_RUN_STRING_FIELD_LEN),
       })
       .strict(),
     version: z.literal(PLAN_RUN_CONFIG_VERSION),
     workspace: z
       .object({
-        checkoutId: trimToMax(MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN).default(''),
-        repositoryId: trimToMax(MAX_PLAN_RUN_RALPH_STRING_FIELD_LEN).default(
-          '',
-        ),
+        checkoutId: trimToMax(MAX_PLAN_RUN_STRING_FIELD_LEN).default(''),
+        repositoryId: trimToMax(MAX_PLAN_RUN_STRING_FIELD_LEN).default(''),
         workingDirectory: trimToMax(MAX_PLAN_RUN_WORKING_DIRECTORY_LEN),
       })
       .strict(),
   })
   .strict()
   .superRefine((value, ctx) => {
-    const timeoutRaw = value.ralph.iterationTimeoutText;
-    if (timeoutRaw !== '') {
-      const n = Number.parseInt(timeoutRaw, 10);
-      if (Number.isNaN(n) || n < 1) {
-        ctx.addIssue({
-          code: 'custom',
-          message: `ralph.iterationTimeoutText must be empty or a positive integer (seconds)`,
-          path: ['ralph', 'iterationTimeoutText'],
-        });
-      }
-    }
-
     if (value.target.mode === 'task') {
       const taskId = value.target.taskId;
       if (!PLAN_RUN_CONFIG_UUID_REGEX.test(taskId)) {

@@ -197,7 +197,7 @@ describe('recoverStructuredText', () => {
     });
   });
 
-  describe('Ralph markers', () => {
+  describe('plan-run markers', () => {
     it('survive inside the recovered text', () => {
       const raw = fixture('codex.synthetic').replace(
         '"text":"DONE"',

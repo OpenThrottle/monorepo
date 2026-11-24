@@ -3,10 +3,7 @@ import { createTestRouterContext } from '@openthrottle/react-router-testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/plans.temp';
-import {
-  RalphNestedDebugCli,
-  TestWorkflowDocument,
-} from '~/__generated__/graphql';
+import { TestWorkflowDocument } from '~/__generated__/graphql';
 
 vi.mock('@openthrottle/react-router-graphql', async (importOriginal) => {
   const actual =
@@ -70,7 +67,6 @@ describe('routes/plans.temp action', () => {
         input: {
           branch: 'main',
           planId: 'plan-1',
-          ralph: { ralphDebugCli: RalphNestedDebugCli.Verbose },
         },
       },
     );
@@ -90,7 +86,6 @@ describe('routes/plans.temp action', () => {
         input: {
           branch: 'feature/foo',
           planId: 'plan-2',
-          ralph: { ralphDebugCli: RalphNestedDebugCli.Verbose },
         },
       },
     );

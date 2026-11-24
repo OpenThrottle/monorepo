@@ -66,7 +66,7 @@ export const RULES_COPY = {
   emptyBody: `Rules map tag combinations on plans to actions — for example, injecting a /grilling task into every breakdown-tagged plan.`,
   emptyTitle: `No tag→action rules yet`,
   enableAction: `Enable`,
-  environmentDescription: `Applies only to agents working in this environment (a Ralph run, CI or an interactive session): when one reads its plan context, or when one of its edits, status changes or tags triggers an evaluation. Edits made here in the app carry no environment and skip an environment-scoped rule, so leave this blank for a rule that should also fire on your own edits.`,
+  environmentDescription: `Applies only to agents working in this environment (a headless run, CI or an interactive session): when one reads its plan context, or when one of its edits, status changes or tags triggers an evaluation. Edits made here in the app carry no environment and skip an environment-scoped rule, so leave this blank for a rule that should also fire on your own edits.`,
   environmentLabel: `Environment`,
   filterAllLabel: `All`,
   filterDisabledLabel: `Disabled`,

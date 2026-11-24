@@ -38,7 +38,7 @@ describe('createBranchInWorktree — git option-injection hardening', () => {
 
     const result = createBranchInWorktree(
       '/tmp/worktree-1',
-      'ralph/feature-a1b2c3',
+      'plan-run/feature-a1b2c3',
       'main',
     );
 
@@ -51,7 +51,7 @@ describe('createBranchInWorktree — git option-injection hardening', () => {
       '/tmp/worktree-1',
       'checkout',
       '-b',
-      'ralph/feature-a1b2c3',
+      'plan-run/feature-a1b2c3',
       'main',
     ]);
     expect(options?.shell).toBeUndefined();
@@ -71,7 +71,7 @@ describe('createBranchInWorktree — git option-injection hardening', () => {
 
     const result = createBranchInWorktree(
       '/tmp/worktree-1',
-      'ralph/feature',
+      'plan-run/feature',
       '-f',
     );
 
@@ -84,7 +84,7 @@ describe('createBranchInWorktree — git option-injection hardening', () => {
 
     const result = createBranchInWorktree(
       '--upload-pack=touch /tmp/pwned',
-      'ralph/feature',
+      'plan-run/feature',
       'main',
     );
 
@@ -96,10 +96,12 @@ describe('createBranchInWorktree — git option-injection hardening', () => {
     const { createBranchInWorktree } = await import('./parent-job.utils.ts');
 
     expect(createBranchInWorktree('/tmp/wt', '', 'main').ok).toBe(false);
-    expect(createBranchInWorktree('/tmp/wt', 'ralph/feature', '').ok).toBe(
+    expect(createBranchInWorktree('/tmp/wt', 'plan-run/feature', '').ok).toBe(
       false,
     );
-    expect(createBranchInWorktree('', 'ralph/feature', 'main').ok).toBe(false);
+    expect(createBranchInWorktree('', 'plan-run/feature', 'main').ok).toBe(
+      false,
+    );
     expect(spawnSyncMock).not.toHaveBeenCalled();
   });
 });

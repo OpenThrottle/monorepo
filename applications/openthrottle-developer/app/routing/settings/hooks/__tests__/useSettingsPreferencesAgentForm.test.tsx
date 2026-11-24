@@ -55,7 +55,7 @@ describe('useSettingsPreferencesAgentForm', () => {
     const { result } = renderAgentForm();
 
     expect(result.current.draft).toEqual({
-      backend: 'claude',
+      driver: 'claude',
       effort: 'high',
       model: 'opus',
     });
@@ -75,7 +75,7 @@ describe('useSettingsPreferencesAgentForm', () => {
     });
 
     expect(result.current.draft).toEqual({
-      backend: 'cursor',
+      driver: 'cursor',
       effort: '',
       model: 'gpt-5.2',
     });

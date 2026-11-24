@@ -5,7 +5,7 @@
 
 import type {
   PlanRunConfigOtLoop,
-  PlanRunConfigRunner,
+  PlanWorkflowRunOptions,
 } from '@openthrottle/openthrottle-plan-config';
 import {
   getDefaultPlanRunConfigStorage,
@@ -15,7 +15,7 @@ import {
   workflowUiStateFromPlanRunConfig,
 } from '@openthrottle/openthrottle-plan-config';
 
-import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
+import type { PlanRunOptions } from '~/routing/plans/utils/plan-run-options';
 
 export interface PlanRunConfigUiState {
   readonly checkoutId: string;
@@ -23,11 +23,48 @@ export interface PlanRunConfigUiState {
   /** @description Carried through hydrate and serialize so a UI save keeps it. */
   readonly otLoop?: PlanRunConfigOtLoop;
   readonly repositoryId: string;
-  /** @description Carried through hydrate and serialize so a UI save keeps it. */
-  readonly runner?: PlanRunConfigRunner;
-  readonly workflowInput: WorkflowRalphRunOptionsInput;
+  readonly workflowInput: PlanRunOptions;
   readonly workingDirectory: string;
 }
+
+/**
+ * @description The Configuration tab does not edit the debug level, so a save writes the shared
+ * default for it.
+ */
+const toStoredWorkflowInput = (
+  input: PlanRunOptions,
+): PlanWorkflowRunOptions => {
+  const { run: defaults } = getDefaultPlanRunConfigStorage({
+    planId: input.planId,
+    taskId: input.taskId,
+  });
+
+  return {
+    debugCli: defaults.debugCli,
+    driver: input.driver,
+    effort: input.effort,
+    model: input.model,
+    planId: input.planId,
+    targetMode: input.targetMode,
+    taskId: input.taskId,
+    worktreeCleanup: input.worktreeCleanup,
+    worktreeName: input.worktreeName,
+  };
+};
+
+const toPlanRunOptions = (stored: PlanWorkflowRunOptions): PlanRunOptions => {
+  return {
+    driver: stored.driver,
+    effort: stored.effort,
+    iterationTimeoutSeconds: undefined,
+    model: stored.model,
+    planId: stored.planId,
+    targetMode: stored.targetMode,
+    taskId: stored.taskId,
+    worktreeCleanup: stored.worktreeCleanup,
+    worktreeName: stored.worktreeName,
+  };
+};
 
 const parseSavedOrDefaultRunConfig = (
   runConfigJson: string | null | undefined,
@@ -63,11 +100,7 @@ export const hydratePlanRunConfigUiState = (
       iterationTimeoutText: ui.iterationTimeoutText,
       ...(ui.otLoop !== undefined ? { otLoop: ui.otLoop } : {}),
       repositoryId: ui.repositoryId ?? '',
-      ...(ui.runner !== undefined ? { runner: ui.runner } : {}),
-      workflowInput: {
-        ...ui.workflowInput,
-        iterationTimeoutSeconds: undefined,
-      },
+      workflowInput: toPlanRunOptions(ui.workflowInput),
       workingDirectory: ui.workingDirectory,
     };
   } catch {
@@ -78,10 +111,7 @@ export const hydratePlanRunConfigUiState = (
       checkoutId: ui.checkoutId ?? '',
       iterationTimeoutText: ui.iterationTimeoutText,
       repositoryId: ui.repositoryId ?? '',
-      workflowInput: {
-        ...ui.workflowInput,
-        iterationTimeoutSeconds: undefined,
-      },
+      workflowInput: toPlanRunOptions(ui.workflowInput),
       workingDirectory: ui.workingDirectory,
     };
   }
@@ -99,7 +129,6 @@ export const serializePlanRunConfigUiState = (
     iterationTimeoutText,
     otLoop,
     repositoryId,
-    runner,
     workflowInput,
     workingDirectory,
   } = state;
@@ -109,26 +138,7 @@ export const serializePlanRunConfigUiState = (
     iterationTimeoutText,
     ...(otLoop !== undefined ? { otLoop } : {}),
     repositoryId,
-    ...(runner !== undefined ? { runner } : {}),
-    workflowInput: {
-      debugCli: workflowInput.debugCli,
-      effort: workflowInput.effort,
-      executionBackend: workflowInput.executionBackend,
-      iterations: workflowInput.iterations,
-      model: workflowInput.model,
-      planId: workflowInput.planId,
-      project: workflowInput.project,
-      prompt: workflowInput.prompt,
-      promptFile: workflowInput.promptFile,
-      promptLayer: workflowInput.promptLayer,
-      skipWorktreeSetup: workflowInput.skipWorktreeSetup,
-      targetMode: workflowInput.targetMode,
-      taskId: workflowInput.taskId,
-      worktreeBase: workflowInput.worktreeBase,
-      worktreeCleanup: workflowInput.worktreeCleanup,
-      worktreeCli: workflowInput.worktreeCli,
-      worktreeName: workflowInput.worktreeName,
-    },
+    workflowInput: toStoredWorkflowInput(workflowInput),
     workingDirectory,
   });
 

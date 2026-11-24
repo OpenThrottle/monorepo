@@ -1,6 +1,6 @@
 # @openthrottle/react-router-profiling
 
-React components and hooks for displaying **server process metrics** (current snapshot) and **task-run metrics** (atStart/atEnd from plan jobs) for openthrottle-server. Uses `@openthrottle/react-router-shadcn` for UI. No host/system metrics—process-only per [server-and-task-metrics.md](../../tools/workflows/docs/server-and-task-metrics.md).
+React components and hooks for displaying **server process metrics** (current snapshot) and **task-run metrics** (atStart/atEnd from plan jobs) for openthrottle-server. Uses `@openthrottle/react-router-shadcn` for UI. No host/system metrics—process-only.
 
 ## Installation
 
@@ -93,7 +93,7 @@ Config helpers: `getMetricsApiBaseUrl()`, `setMetricsApiBaseUrl(url)`.
 
 ## Interpreting the stats
 
-Summary of how to read the numbers (full detail: [server-and-task-metrics.md §6.4](../../tools/workflows/docs/server-and-task-metrics.md#64-how-to-interpret-the-stats)).
+Summary of how to read the numbers.
 
 | Metric                        | Meaning                                                                                                        |
 | ----------------------------- | -------------------------------------------------------------------------------------------------------------- |
@@ -103,7 +103,3 @@ Summary of how to read the numbers (full detail: [server-and-task-metrics.md §6
 
 - **Typical use:** Compare deltas across runs or plans to find heavy runs; correlate with plan size or iteration count.
 - **Units:** Memory in MB; CPU in milliseconds. For an approximate “CPU % during run”: `(cpuDeltaMs / durationMs) * 100` (single-threaded).
-
-## Design doc reference
-
-- [Server and task run performance metrics (CPU and memory)](../../tools/workflows/docs/server-and-task-metrics.md) — definitions, endpoints (§5), task-run exposure (§6), and **§6.4 How to interpret the stats**.

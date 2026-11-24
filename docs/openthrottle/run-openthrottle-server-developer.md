@@ -79,7 +79,7 @@ GraphQL URL for tools and MCP: **`http://localhost:6021/graphql`** when using th
 
 ## Multi-workspace plans
 
-Plans can target arbitrary local project directories instead of the monorepo root. This is useful when you want Ralph to work against a different checkout (e.g. `~/Development/openthrottle`).
+Plans can target arbitrary local project directories instead of the monorepo root. This is useful when you want a plan run to work against a different checkout (e.g. `~/Development/openthrottle`).
 
 ### Quick start
 
@@ -88,7 +88,7 @@ Plans can target arbitrary local project directories instead of the monorepo roo
 3. In the **Workspace directory** fieldset, enter the absolute path to the target project folder. Leave empty for the default monorepo root.
 4. Click **Run** (enqueue). The server validates the path exists and is a directory before accepting the job.
 
-The workspace path is passed through the BullMQ job payload and used as the `cwd` when spawning `workflow-ralph`. The worker falls back to `WORKSPACE_ROOT` / `process.cwd()` when no custom path is set.
+The workspace path is passed through the BullMQ job payload and used as the base checkout the run's worktree is created from. The worker falls back to `WORKSPACE_ROOT` / `process.cwd()` when no custom path is set.
 
 ### Path restrictions
 
@@ -108,10 +108,10 @@ The Developer app stores up to 10 recently used workspace paths in `localStorage
 ### Limitations
 
 - **Local-only:** The path is resolved on the machine running `openthrottle-server`. Containerized deployments need bind mounts or volume mapping to expose host directories (tracked under plan `677b6849-1912-4fa8-a5f6-d8233f2cdf97`).
-- **Spawn path only (no worktrees):** When `WORKTREE_TARGETS` is configured, the worktree workflow manages its own cwd; `workingDirectory` applies to the legacy spawn path (`processInProcessCwd`) and the orchestrator path.
+- **Base checkout:** `workingDirectory` names the checkout a run's worktree is created from; the run itself executes inside that worktree ([plan-run-worktrees.md](./plan-run-worktrees.md)).
 - **OpenThrottle required:** Plans and tasks still live in the OpenThrottle database regardless of which directory the agent operates in.
 
-For implementation details, validation rules, and GraphQL examples, see [Multi-workspace plans (`workingDirectory`)](../../tools/workflows/README.md#multi-workspace-plans-workingdirectory) in the workflows README.
+For validation rules, see `validateWorkingDirectory` in `applications/openthrottle-server/src/graphql/plans/enqueue-plan-run-tuning/enqueue-plan-run-tuning.utils.ts`.
 
 ---
 
@@ -123,7 +123,7 @@ For implementation details, validation rules, and GraphQL examples, see [Multi-w
 | **DB / Redis**                 | **`pnpm run database:start`** (Compose **only** for Postgres + Redis) | Same Compose file; often all services together                                                      |
 | **POSTGRES_HOST / REDIS_HOST** | **`localhost`** when apps run on host                                 | **`openthrottle-postgres`** / **`openthrottle-redis`** or bridge networking docs in app README      |
 
-**Open questions** for a containerized “everything in Compose” workflow—bind mounts for Ralph/repo paths (including multi-workspace `workingDirectory` paths), Redis hostname from workers, Ollama reachability from containers vs host, developer SSR/HMR—are tracked in OpenThrottle plan **`677b6849-1912-4fa8-a5f6-d8233f2cdf97`** (investigation). Prefer the **native host + DB-in-Docker** split above until that plan closes gaps.
+**Open questions** for a containerized “everything in Compose” workflow—bind mounts for repo paths (including multi-workspace `workingDirectory` paths), Redis hostname from workers, Ollama reachability from containers vs host, developer SSR/HMR—are tracked in OpenThrottle plan **`677b6849-1912-4fa8-a5f6-d8233f2cdf97`** (investigation). Prefer the **native host + DB-in-Docker** split above until that plan closes gaps.
 
 ### First-time provisioning (fully in Compose)
 

@@ -90,10 +90,7 @@ describe('resolveCustomPromptWritePath', () => {
     });
 
     expect(
-      resolveCustomPromptWritePath(
-        workspaceRoot,
-        'skills/agents-ralph/SKILL.md',
-      ),
+      resolveCustomPromptWritePath(workspaceRoot, 'skills/ot-loop/SKILL.md'),
     ).toEqual({
       ok: false,
       reason: CUSTOM_PROMPT_WRITE_REFUSAL.skillContent,

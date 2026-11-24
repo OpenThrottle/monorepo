@@ -3,8 +3,8 @@
 Shared NestJS foundations: `GlobalClsModule` (request-scoped context via nestjs-cls) and
 `LoggerModule`/`LoggerService` (Winston structured logging).
 
-**Consumed by:** the most-depended-on `nestjs-*` package — `openthrottle-server` plus 7
-workspace packages (`nestjs-agentic-workflow`, `nestjs-bullmq`, `nestjs-logging`,
+**Consumed by:** the most-depended-on `nestjs-*` package — `openthrottle-server` plus 6
+workspace packages (`nestjs-bullmq`, `nestjs-logging`,
 `nestjs-model-discovery`, `nestjs-typeorm`, `nestjs-vector-search`, `openthrottle-mcp`).
 Changes here ripple across the entire server stack.
 

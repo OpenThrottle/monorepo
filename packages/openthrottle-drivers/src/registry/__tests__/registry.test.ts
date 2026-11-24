@@ -84,13 +84,13 @@ describe('parseDriverId', () => {
   it('throws UnknownDriverError with a legacy-compatible message for unknown ids', () => {
     expect(() => parseDriverId('copilot', 'cli')).toThrow(UnknownDriverError);
     expect(() => parseDriverId('copilot', 'cli')).toThrow(
-      /Unknown execution backend "copilot"\. Supported: antigravity, claude, codex, cursor, grok, opencode/,
+      /Unknown driver "copilot"\. Supported: antigravity, claude, codex, cursor, grok, opencode/,
     );
   });
 
   it('throws for empty input with the non-empty-string message', () => {
     expect(() => parseDriverId('   ', 'file')).toThrow(
-      /Execution backend \(file\) must be a non-empty string/,
+      /Driver \(file\) must be a non-empty string/,
     );
   });
 });

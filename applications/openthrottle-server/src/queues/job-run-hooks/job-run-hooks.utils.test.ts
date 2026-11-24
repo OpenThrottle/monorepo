@@ -15,22 +15,34 @@ import {
   createTasksRepositoryMock,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
-import type { JobRunHooksConfig } from '@tools/workflows';
+import type { JobRunHooksConfig } from '@openthrottle/openthrottle-agentic-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { PlanStatusService } from '../../graphql/plans/plan-status/plan-status.service.ts';
 import type { StatusChangeSystemAccountService } from '../../graphql/work-ledger/status-change-system-account/status-change-system-account.service.ts';
 
 const mockExecuteJobRunHooksPhase = vi.fn();
-const mockCreateCursorWorkflowRalphIterationRunner = vi.fn();
+const mockRunDriverAsync = vi.fn();
 
-vi.mock('@tools/workflows', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@tools/workflows')>();
+vi.mock('@openthrottle/openthrottle-drivers', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@openthrottle/openthrottle-drivers')>();
 
   return {
     ...actual,
-    createCursorWorkflowRalphIterationRunner: () =>
-      mockCreateCursorWorkflowRalphIterationRunner(),
+    runDriverAsync: (...args: Parameters<typeof mockRunDriverAsync>) =>
+      mockRunDriverAsync(...args),
+  };
+});
+
+vi.mock('@openthrottle/openthrottle-agentic-utils', async (importOriginal) => {
+  const actual =
+    await importOriginal<
+      typeof import('@openthrottle/openthrottle-agentic-utils')
+    >();
+
+  return {
+    ...actual,
     executeJobRunHooksPhase: (
       ...args: Parameters<typeof mockExecuteJobRunHooksPhase>
     ) => mockExecuteJobRunHooksPhase(...args),
@@ -51,7 +63,7 @@ const namedBeforeHook: JobRunHooksConfig = {
       kind: 'prompt_profile',
       onFailure: 'block',
       phase: 'beforeAll',
-      prompt: '/agents/ralph',
+      prompt: '/agents/plan-run',
       promptDelivery: 'named',
     },
   ],
@@ -105,9 +117,6 @@ describe('executePlanJobRunHooks', () => {
     mockExecuteJobRunHooksPhase.mockResolvedValue({
       blocked: false,
       results: [],
-    });
-    mockCreateCursorWorkflowRalphIterationRunner.mockReturnValue({
-      run: vi.fn(),
     });
     mockPlanFindOne.mockResolvedValue({
       id: planId,
@@ -163,8 +172,8 @@ describe('executePlanJobRunHooks', () => {
       hooks: namedBeforeHook,
       jobData: {
         ...baseJobData,
-        executionBackend: 'claude',
-        ralph: { model: 'gpt-4' },
+        driver: 'claude',
+        tuning: { model: 'gpt-4' },
       },
       logLabel: 'PlansProcessor',
       logger: mockLogger,
@@ -188,7 +197,74 @@ describe('executePlanJobRunHooks', () => {
     expect(call?.hooks).toEqual(namedBeforeHook);
     expect(call?.planContextBlock).toContain('Test plan');
     expect(call?.layer1Suffix).toContain('preflight');
-    expect(call?.deps.runHookIteration).toEqual(expect.any(Function));
+    expect(call?.deps.runHookAgent).toEqual(expect.any(Function));
+  });
+
+  it('runs each hook agent through runDriverAsync with the plan backend, model, signal and timeout', async () => {
+    const controller = new AbortController();
+    mockRunDriverAsync.mockImplementation(async (_driver, _config, options) => {
+      options.onExit(0);
+
+      return 'hook output';
+    });
+
+    await executePlanJobRunHooks({
+      hooks: namedBeforeHook,
+      jobData: {
+        ...baseJobData,
+        driver: 'claude',
+        tuning: { model: 'sonnet' },
+      },
+      logLabel: 'PlansProcessor',
+      logger: mockLogger,
+      phase: 'beforeAll',
+      planOutputStreamRepository: mockPlanOutputStreamRepository,
+      plansRepository: mockPlansRepository,
+      tasksRepository: mockTasksRepository,
+    });
+
+    const deps = mockExecuteJobRunHooksPhase.mock.calls[0]?.[0]?.deps;
+    const result = await deps.runHookAgent({
+      agentPrompt: 'do the hook',
+      hookIndex: 2,
+      signal: controller.signal,
+      timeoutMs: 5000,
+    });
+
+    expect(result).toEqual({ ok: true, output: 'hook output' });
+    expect(mockRunDriverAsync).toHaveBeenCalledTimes(1);
+
+    const [driver, config] = mockRunDriverAsync.mock.calls[0] ?? [];
+    expect(driver.id).toBe('claude');
+    expect(config).toMatchObject({
+      iteration: 2,
+      model: 'sonnet',
+      prompt: 'do the hook',
+      signal: controller.signal,
+      timeoutMs: 5000,
+    });
+  });
+
+  it('appends phase-runner output lines to plan output without a task or iteration tag', async () => {
+    await executePlanJobRunHooks({
+      hooks: namedBeforeHook,
+      jobData: baseJobData,
+      logLabel: 'test',
+      logger: mockLogger,
+      phase: 'beforeAll',
+      planOutputStreamRepository: mockPlanOutputStreamRepository,
+      plansRepository: mockPlansRepository,
+      tasksRepository: mockTasksRepository,
+    });
+
+    const deps = mockExecuteJobRunHooksPhase.mock.calls[0]?.[0]?.deps;
+    await deps.appendPlanOutput('hook line\n', null);
+
+    expect(mockPlanOutputCreate).toHaveBeenCalledWith({
+      content: 'hook line\n',
+      iteration: null,
+      planId,
+    });
   });
 
   it('uses orchestrator runKind when job data is orchestrator', async () => {
@@ -221,9 +297,6 @@ describe('runBeforeRunHooksAndHandleBlock', () => {
       id: planId,
       status: 'IN_PROGRESS',
       title: 'Test plan',
-    });
-    mockCreateCursorWorkflowRalphIterationRunner.mockReturnValue({
-      run: vi.fn(),
     });
     mockWriteGuardedStatus.mockReset().mockResolvedValue(true);
     mockResolveStatusChangeSystemAccountId
@@ -322,9 +395,6 @@ describe('runAfterRunHooksThenNotify', () => {
       id: planId,
       status: 'COMPLETED',
       title: 'Test plan',
-    });
-    mockCreateCursorWorkflowRalphIterationRunner.mockReturnValue({
-      run: vi.fn(),
     });
   });
 

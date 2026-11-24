@@ -10,7 +10,7 @@ const NX_PROJECT_NAME_PATTERNS = [
   'applications/openthrottle',
   'packages/core',
   'packages/shared-ui',
-  'tools/workflows',
+  'tools/generators',
 ] as const;
 
 function createMockProject(

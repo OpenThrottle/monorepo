@@ -108,17 +108,17 @@ description: We author this one.
     test('preserves disable-model-invocation false as a distinct value', () => {
       const entry: AgentAssetFileEntry = {
         content: `---
-name: agents-ralph
-description: Ralph loop.
+name: ot-loop
+description: OT Loop.
 disable-model-invocation: false
 tags: []
 ---
 
-# Ralph
+# OT Loop
 `,
         kind: 'skill',
-        path: '.agents/skills/agents-ralph/SKILL.md',
-        slug: 'agents-ralph',
+        path: '.agents/skills/ot-loop/SKILL.md',
+        slug: 'ot-loop',
       };
 
       const record = mapAgentAssetFileToIngestRecord(entry);
@@ -318,7 +318,7 @@ describe('toProjectSkillInputs', () => {
 
   test('preserves an explicit false flag distinct from unset', () => {
     const [input] = toProjectSkillInputs([
-      skillRecord({ disableModelInvocation: false, labels: ['ralph'] }),
+      skillRecord({ disableModelInvocation: false, labels: ['headless'] }),
     ]);
 
     expect(input?.disableModelInvocation).toBe(false);

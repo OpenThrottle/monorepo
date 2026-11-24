@@ -93,8 +93,8 @@ export const RuleForm = (props: RuleFormProps): React.ReactElement => {
           Plans are OpenThrottle&apos;s record of intended work—what you decided
           to build, broken into tasks with status, assignee, and optional
           summaries. Browse and filter here, open a plan for tasks and iteration
-          output, queue a run for agentic execution (Ralph), and follow linked
-          commits that tie shipped work on main back to each plan.
+          output, queue a run for agentic execution, and follow linked commits
+          that tie shipped work on main back to each plan.
         </p>
       </div>
       <Card className="max-w-2xl-- w-full gap-8" data-testid="RuleForm">

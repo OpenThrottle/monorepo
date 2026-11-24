@@ -167,7 +167,7 @@ describe('PlanDetailRoute Component', () => {
     // for the settled tree rather than the first match.
     await waitFor(() =>
       expect(
-        component.getByLabelText('Execution backend for this plan run'),
+        component.getByLabelText('Driver for this plan run'),
       ).toBeInTheDocument(),
     );
   });
@@ -268,19 +268,10 @@ describe('PlanDetailRoute editor deep links', () => {
   ]);
 
   const runConfigJson = JSON.stringify({
-    ralph: {
+    run: {
       debugCli: 'verbose',
-      executionBackend: 'cursor',
-      iterationTimeoutText: '',
-      iterations: 10,
+      driver: 'cursor',
       model: 'auto',
-      project: '',
-      prompt: '/agents-ralph',
-      promptFile: '',
-      promptLayer: 'named',
-      skipWorktreeSetup: false,
-      worktreeBase: '',
-      worktreeCli: 'named',
       worktreeName: '',
     },
     target: { mode: 'plan', taskId: '' },

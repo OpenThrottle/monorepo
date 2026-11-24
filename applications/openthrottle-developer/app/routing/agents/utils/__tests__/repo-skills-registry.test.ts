@@ -13,7 +13,6 @@ describe('REQUIRED_AGENTS_SKILL_SLUGS', () => {
       'ot-generators',
       'ot-plans',
       'ot-stack',
-      'workflow-ralph',
     ]);
   });
 });

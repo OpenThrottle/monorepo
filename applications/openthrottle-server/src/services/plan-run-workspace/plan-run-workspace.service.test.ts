@@ -1,7 +1,7 @@
 /**
  * @description Unit tests for the shared run-start workspace setup: the two skip flags the OT Loop
  * runner sets (no MCP preflight, no foreign-skill injection) and the worktree handoff both runners
- * share. Ralph's own suite covers the unskipped path end to end.
+ * share. The orchestrator suite covers the unskipped path end to end.
  */
 
 import { createMock } from '@golevelup/ts-vitest';
@@ -44,10 +44,18 @@ vi.mock('@openthrottle/openthrottle-agentic-utils', async (importOriginal) => {
   };
 });
 
-vi.mock('@tools/workflows', () => ({
-  applyWorkflowRalphOtRootFromConfig: vi.fn(),
-  loadWorkflowRalphConfig: vi.fn(() => ({ model: 'from-config' })),
-}));
+vi.mock('@openthrottle/openthrottle-agentic-loop', async (importOriginal) => {
+  const actual =
+    await importOriginal<
+      typeof import('@openthrottle/openthrottle-agentic-loop')
+    >();
+
+  return {
+    ...actual,
+    applyPlanRunOtRootFromConfig: vi.fn(),
+    loadPlanRunConfig: vi.fn(() => ({ model: 'from-config' })),
+  };
+});
 
 const PLAN_ID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const USER_ID = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
@@ -118,10 +126,10 @@ describe('PlanRunWorkspaceService', () => {
         queueName: 'Plans',
       },
       jobData: {
-        executionBackend: 'claude',
+        driver: 'claude',
         planId: PLAN_ID,
-        ralph: { worktree: 'plan-aaaaaaaa' },
         runKind: 'orchestrator',
+        tuning: { worktreeName: 'plan-aaaaaaaa' },
         workingDirectory: BASE,
       },
       onWorktreeProvisioned: mockOnProvisioned,

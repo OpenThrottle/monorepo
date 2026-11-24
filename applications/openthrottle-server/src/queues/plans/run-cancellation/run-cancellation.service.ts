@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 
 /**
  * @description In-memory registry of AbortControllers for in-flight plan-run jobs so GraphQL
- * `cancelPlanRun` can signal the worker to terminate the Ralph child (SIGTERM/SIGKILL) while the
+ * `cancelPlanRun` can signal the worker to terminate the plan-run child (SIGTERM/SIGKILL) while the
  * BullMQ job remains active until `process()` finishes.
  */
 @Injectable()
@@ -32,7 +32,7 @@ export class PlanRunCancellationService {
   }
 
   /**
-   * @description Invoked from `cancelPlanRun` to stop an active Ralph run. Returns true when a
+   * @description Invoked from `cancelPlanRun` to stop an active plan run. Returns true when a
    * worker had registered a controller for this plan and abort was called.
    */
   abort(planId: string): boolean {

@@ -108,9 +108,9 @@ describe('useSkillAvailabilityRuleForm', () => {
   test('handleEnvironmentChange updates the environment choice for a valid value', () => {
     const { result } = renderRuleForm({ vocabulary: [] });
 
-    act(() => result().handleEnvironmentChange('ralph'));
+    act(() => result().handleEnvironmentChange('headless'));
 
-    expect(result().environmentChoice).toBe('ralph');
+    expect(result().environmentChoice).toBe('headless');
   });
 
   test('handleEnvironmentChange ignores an invalid value', () => {

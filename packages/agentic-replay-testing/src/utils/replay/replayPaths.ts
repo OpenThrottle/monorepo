@@ -18,7 +18,7 @@ import { fileURLToPath } from 'node:url';
 import type { SanitizerPath } from '../sanitizer/sanitizer.ts';
 
 /**
- * The OpenThrottle checkout this package lives in. Plan-run prompts name it
+ * The OpenThrottle checkout this package lives in. Recorded prompts may name it
  * (the foreign-workspace layer says where the OT monorepo is), and it differs
  * per machine and per worktree. Derived from this file's own location —
  * `packages/agentic-replay-testing/src/utils/replay/` — so recorder and replay

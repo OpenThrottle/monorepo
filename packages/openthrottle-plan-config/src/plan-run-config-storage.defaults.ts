@@ -1,48 +1,36 @@
 import {
-  DEFAULT_PLAN_RUN_RALPH_DEBUG_CLI,
-  DEFAULT_PLAN_RUN_RALPH_EFFORT,
-  DEFAULT_PLAN_RUN_RALPH_ITERATIONS,
-  DEFAULT_PLAN_RUN_RALPH_MODEL,
-  DEFAULT_PLAN_RUN_RALPH_PROMPT,
-  DEFAULT_PLAN_RUN_RALPH_RUNNER,
-  DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLEANUP,
-  DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLI,
+  DEFAULT_PLAN_RUN_DEBUG_CLI,
+  DEFAULT_PLAN_RUN_DRIVER,
+  DEFAULT_PLAN_RUN_EFFORT,
+  DEFAULT_PLAN_RUN_MODEL,
+  DEFAULT_PLAN_RUN_WORKTREE_CLEANUP,
   PLAN_RUN_CONFIG_VERSION,
 } from './plan-run-config-storage.constants.ts';
 import type {
-  PlanRunConfigRalphV1,
+  PlanRunConfigRunV1,
   PlanRunConfigStorage,
   PlanRunConfigTargetMode,
-  PlanWorkflowRalphRunOptions,
+  PlanWorkflowRunOptions,
   PlanWorkflowUiState,
 } from './plan-run-config-storage.types.ts';
 
 /**
- * @description Default Ralph subsection for v1 `run_config` (matches Configuration tab defaults).
+ * @description Default run block for v1 `run_config` (matches Configuration tab defaults).
  */
-export const getDefaultPlanRunConfigRalphV1 = (): PlanRunConfigRalphV1 => {
+export const getDefaultPlanRunConfigRunV1 = (): PlanRunConfigRunV1 => {
   return {
-    debugCli: DEFAULT_PLAN_RUN_RALPH_DEBUG_CLI,
-    effort: DEFAULT_PLAN_RUN_RALPH_EFFORT,
-    executionBackend: DEFAULT_PLAN_RUN_RALPH_RUNNER,
-    iterationTimeoutText: '',
-    iterations: DEFAULT_PLAN_RUN_RALPH_ITERATIONS,
-    model: DEFAULT_PLAN_RUN_RALPH_MODEL,
-    project: '',
-    prompt: DEFAULT_PLAN_RUN_RALPH_PROMPT,
-    promptFile: '',
-    promptLayer: 'named',
-    skipWorktreeSetup: false,
-    worktreeBase: '',
-    worktreeCleanup: DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLEANUP,
-    worktreeCli: DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLI,
+    debugCli: DEFAULT_PLAN_RUN_DEBUG_CLI,
+    driver: DEFAULT_PLAN_RUN_DRIVER,
+    effort: DEFAULT_PLAN_RUN_EFFORT,
+    model: DEFAULT_PLAN_RUN_MODEL,
+    worktreeCleanup: DEFAULT_PLAN_RUN_WORKTREE_CLEANUP,
     // Blank name means "derive it at enqueue", not "no worktree".
     worktreeName: '',
   };
 };
 
 /**
- * @description Resolves target mode the same way as `getDefaultWorkflowRalphRunOptionsInput`.
+ * @description Resolves target mode from the route's plan and task ids.
  */
 const resolveDefaultTargetMode = (options?: {
   readonly planId?: string;
@@ -61,7 +49,7 @@ export const getDefaultPlanRunConfigStorage = (options?: {
   readonly taskId?: string;
 }): PlanRunConfigStorage => {
   return {
-    ralph: getDefaultPlanRunConfigRalphV1(),
+    run: getDefaultPlanRunConfigRunV1(),
     target: {
       mode: resolveDefaultTargetMode(options),
       taskId: options?.taskId?.trim() ?? '',
@@ -86,23 +74,15 @@ export const getDefaultPlanWorkflowUiState = (options?: {
   const taskId = options?.taskId?.trim() ?? '';
   const targetMode = resolveDefaultTargetMode({ planId, taskId });
 
-  const workflowInput: PlanWorkflowRalphRunOptions = {
-    debugCli: DEFAULT_PLAN_RUN_RALPH_DEBUG_CLI,
-    effort: DEFAULT_PLAN_RUN_RALPH_EFFORT,
-    executionBackend: DEFAULT_PLAN_RUN_RALPH_RUNNER,
-    iterations: DEFAULT_PLAN_RUN_RALPH_ITERATIONS,
-    model: DEFAULT_PLAN_RUN_RALPH_MODEL,
+  const workflowInput: PlanWorkflowRunOptions = {
+    debugCli: DEFAULT_PLAN_RUN_DEBUG_CLI,
+    driver: DEFAULT_PLAN_RUN_DRIVER,
+    effort: DEFAULT_PLAN_RUN_EFFORT,
+    model: DEFAULT_PLAN_RUN_MODEL,
     planId,
-    project: '',
-    prompt: DEFAULT_PLAN_RUN_RALPH_PROMPT,
-    promptFile: '',
-    promptLayer: 'named',
-    skipWorktreeSetup: false,
     targetMode,
     taskId,
-    worktreeBase: '',
-    worktreeCleanup: DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLEANUP,
-    worktreeCli: DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLI,
+    worktreeCleanup: DEFAULT_PLAN_RUN_WORKTREE_CLEANUP,
     worktreeName: '',
   };
 

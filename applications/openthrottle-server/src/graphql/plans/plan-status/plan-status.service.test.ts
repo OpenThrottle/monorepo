@@ -20,8 +20,8 @@ import type { DataSource, EntityManager } from 'typeorm';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { NotificationsService } from '../../../notifications/notifications.service.ts';
-import { RUN_PLAN_ORCHESTRATOR_JOB_NAME } from '../../../queues/agentic-ralph/agentic-ralph.constants.ts';
 import type { PlanCancelChannelService } from '../../../queues/plans/cancel-channel/cancel-channel.service.ts';
+import { RUN_PLAN_ORCHESTRATOR_JOB_NAME } from '../../../queues/plans/plans.constants.ts';
 import { PLANS_QUEUE_NAME } from '../../../queues/plans/plans.constants.ts';
 import type { RunPlanJobData } from '../../../queues/plans/plans.types.ts';
 import type { PlanRunCancellationService } from '../../../queues/plans/run-cancellation/run-cancellation.service.ts';
@@ -1347,7 +1347,7 @@ describe('PlanStatusService', () => {
           data: { planId: mockPlan.id },
           getState: vi.fn(),
           id: 'job-99',
-          name: 'run-plan',
+          name: RUN_PLAN_ORCHESTRATOR_JOB_NAME,
           remove,
         },
       ]);
@@ -1403,7 +1403,7 @@ describe('PlanStatusService', () => {
           data: { planId: mockPlan.id },
           getState: vi.fn().mockResolvedValue('active'),
           id: 'job-active',
-          name: 'run-plan',
+          name: RUN_PLAN_ORCHESTRATOR_JOB_NAME,
           remove: vi.fn().mockRejectedValue(new Error('locked')),
         },
       ]);
@@ -1837,7 +1837,7 @@ describe('PlanStatusService', () => {
           data: { planId: mockPlan.id },
           getState: vi.fn().mockResolvedValue('active'),
           id: 'job-a',
-          name: 'run-plan',
+          name: RUN_PLAN_ORCHESTRATOR_JOB_NAME,
           remove,
         },
       ]);
@@ -1864,7 +1864,7 @@ describe('PlanStatusService', () => {
           data: { planId: mockPlan.id },
           getState: vi.fn().mockResolvedValue('active'),
           id: 'job-a',
-          name: 'run-plan',
+          name: RUN_PLAN_ORCHESTRATOR_JOB_NAME,
           remove,
         },
       ]);

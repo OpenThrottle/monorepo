@@ -20,7 +20,7 @@ import {
 
 /**
  * @description Runs the full worktree workflow: acquire target and create branch, run the provided
- * loop (e.g. Ralph child job), ensure working tree is committed and (optionally) lint/test/typecheck
+ * loop (e.g. a plan-run child job), ensure working tree is committed and (optionally) lint/test/typecheck
  * pass, then release the target. The target is always released if acquire succeeded, so locks are
  * not leaked on loop or ensure-commit failure.
  * Supports both sync and async tracker implementations (mutex-protected or Redis-backed).

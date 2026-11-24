@@ -27,7 +27,7 @@ const mockState: {
 } = {
   acquireResult: {
     handoff: {
-      branchName: 'ralph/feature-a1b2c3',
+      branchName: 'plan-run/feature-a1b2c3',
       targetId: 'target-1',
       worktreePath: '/tmp/worktree-1',
     },
@@ -48,7 +48,7 @@ vi.mock('../parent-job/parent-job.utils', () => ({
 }));
 
 const HANDOFF: ParentJobHandoff = {
-  branchName: 'ralph/feature-a1b2c3',
+  branchName: 'plan-run/feature-a1b2c3',
   targetId: 'target-1',
   worktreePath: '/tmp/worktree-1',
 };
@@ -150,7 +150,7 @@ describe('runWorktreeWorkflow', () => {
     const tracker = createFakeTracker();
     const runLoop = vi.fn(async (): Promise<WorkflowLoopResult> => ({
       ok: false,
-      reason: 'ralph iteration failed',
+      reason: 'plan-run iteration failed',
     }));
     const { runWorktreeWorkflow } = await import('./workflow.utils.ts');
     const options: WorktreeWorkflowOptions = {
@@ -163,7 +163,7 @@ describe('runWorktreeWorkflow', () => {
 
     expect(result.loop).toEqual({
       ok: false,
-      reason: 'ralph iteration failed',
+      reason: 'plan-run iteration failed',
     });
     expect(result.ensureCommit).toBeUndefined();
     expect(result.pushResult).toBeUndefined();

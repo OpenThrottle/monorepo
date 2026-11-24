@@ -8,7 +8,6 @@ import type {
   PlanRunConfigSnapshot,
   PlanRunConfigSnapshotDebugCli,
 } from './plan-run-config-snapshot.types.ts';
-import { DEFAULT_PLAN_RUN_RALPH_RUNNER } from './plan-run-config-storage.constants.ts';
 
 const trimOptionalString = (
   value: string | null | undefined,
@@ -37,42 +36,25 @@ export const buildPlanRunConfigSnapshot = (
   const workingDirectory = trimOptionalString(input.workingDirectory) ?? '';
   const checkoutId = trimOptionalString(input.checkoutId);
   const repositoryId = trimOptionalString(input.repositoryId);
-  const ralphInput = input.ralph ?? null;
+  const tuningInput = input.tuning ?? null;
 
-  const ralph = {
-    executionBackend: input.executionBackend ?? DEFAULT_PLAN_RUN_RALPH_RUNNER,
-    ...(normalizeDebugCli(ralphInput?.debug) !== undefined
-      ? { debug: normalizeDebugCli(ralphInput?.debug) }
+  const run = {
+    ...(input.otLoop ?? {}),
+    ...(normalizeDebugCli(tuningInput?.debug) !== undefined
+      ? { debug: normalizeDebugCli(tuningInput?.debug) }
       : {}),
-    ...(trimOptionalString(ralphInput?.effort) !== undefined
-      ? { effort: trimOptionalString(ralphInput?.effort) }
+    driver: input.driver,
+    ...(trimOptionalString(tuningInput?.effort) !== undefined
+      ? { effort: trimOptionalString(tuningInput?.effort) }
       : {}),
-    ...(ralphInput?.iterationTimeoutSeconds != null
-      ? { iterationTimeoutSeconds: ralphInput.iterationTimeoutSeconds }
+    ...(tuningInput?.iterationTimeoutSeconds != null
+      ? { iterationTimeoutSeconds: tuningInput.iterationTimeoutSeconds }
       : {}),
-    ...(ralphInput?.iterations != null
-      ? { iterations: ralphInput.iterations }
+    ...(trimOptionalString(tuningInput?.model) !== undefined
+      ? { model: trimOptionalString(tuningInput?.model) }
       : {}),
-    ...(trimOptionalString(ralphInput?.model) !== undefined
-      ? { model: trimOptionalString(ralphInput?.model) }
-      : {}),
-    ...(trimOptionalString(ralphInput?.project) !== undefined
-      ? { project: trimOptionalString(ralphInput?.project) }
-      : {}),
-    ...(trimOptionalString(ralphInput?.prompt) !== undefined
-      ? { prompt: trimOptionalString(ralphInput?.prompt) }
-      : {}),
-    ...(trimOptionalString(ralphInput?.promptFile) !== undefined
-      ? { promptFile: trimOptionalString(ralphInput?.promptFile) }
-      : {}),
-    ...(ralphInput?.skipWorktreeSetup === true
-      ? { skipWorktreeSetup: true }
-      : {}),
-    ...(trimOptionalString(ralphInput?.worktree) !== undefined
-      ? { worktree: trimOptionalString(ralphInput?.worktree) }
-      : {}),
-    ...(trimOptionalString(ralphInput?.worktreeBase) !== undefined
-      ? { worktreeBase: trimOptionalString(ralphInput?.worktreeBase) }
+    ...(trimOptionalString(tuningInput?.worktreeName) !== undefined
+      ? { worktreeName: trimOptionalString(tuningInput?.worktreeName) }
       : {}),
   };
 
@@ -82,9 +64,7 @@ export const buildPlanRunConfigSnapshot = (
 
   return {
     ...(hasHooks ? { jobRunHooks: hooks } : {}),
-    ...(input.otLoop != null ? { otLoop: input.otLoop } : {}),
-    ralph,
-    ...(input.runner != null ? { runner: input.runner } : {}),
+    run,
     target: { mode, taskId },
     version: PLAN_RUN_CONFIG_SNAPSHOT_VERSION,
     workspace: {

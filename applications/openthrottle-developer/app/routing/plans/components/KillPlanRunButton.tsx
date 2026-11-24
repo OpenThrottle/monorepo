@@ -30,7 +30,7 @@ export interface KillPlanRunButtonProps {
 }
 
 /**
- * @description Confirms and submits `cancelPlanRun` for a plan (stops queued Ralph job or signals an active run to stop).
+ * @description Confirms and submits `cancelPlanRun` for a plan (stops a queued job or signals an active run to stop).
  */
 export const KillPlanRunButton = (
   props: KillPlanRunButtonProps,
@@ -46,7 +46,7 @@ export const KillPlanRunButton = (
   // Setup
   const CancelForm = fetcher.Form;
   const isSubmitting = fetcher.state !== 'idle';
-  const triggerTitle = `Cancel the queued worker job or signal an active Ralph run to stop for this plan.`;
+  const triggerTitle = `Cancel the queued worker job or signal an active run to stop for this plan.`;
 
   // Handlers
 

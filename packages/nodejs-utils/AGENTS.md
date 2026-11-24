@@ -21,7 +21,7 @@ universal **type guards** — starting with `isRecord`. Consumers span
 - **Source-first, no `build` target.** `main`, `module`, `types` and the single
   `exports["."]` entry all name `./src/index.ts`; `nx.targets` parks `__build`
   (#540). Vite consumers transpile the source, and Node consumers (including
-  `tools/workflows` through CommonJS `require()`) load it with Node's native
+  CommonJS `require()` callers) load it with Node's native
   type stripping. That rests on the root `engines.node` floor, not on the
   consumer graph.
 - **Keep it strip-only.** Node's loader rejects `enum`, `namespace`, constructor

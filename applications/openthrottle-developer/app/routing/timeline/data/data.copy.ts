@@ -30,8 +30,8 @@ export const TIMELINE_WINDOW_LABELS = {
 
 /** Human labels for the lane grouping modes. */
 export const TIMELINE_GROUPING_LABELS = {
-  BY_BACKEND: `By backend`,
   BY_CHECKOUT: `By checkout`,
+  BY_DRIVER: `By driver`,
   BY_PLAN: `By plan`,
 } as const;
 
@@ -74,8 +74,8 @@ export const TIMELINE_LEGEND_COPY = {
 } as const;
 
 export const TIMELINE_DETAIL_COPY = {
-  backendLabel: `Backend`,
   closeLabel: `Close details`,
+  driverLabel: `Driver`,
   durationLabel: `Duration`,
   endedLabel: `Ended`,
   modelLabel: `Model`,

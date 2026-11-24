@@ -12,8 +12,8 @@ import { PlanRunTransparencySkeleton } from '~/routing/plans/components/PlanRunT
 import { PlanScheduledRunsCard } from '~/routing/plans/components/PlanScheduledRunsCard';
 import { PlanWorkflowRunTransparency } from '~/routing/plans/components/PlanWorkflowRunTransparency';
 import {
-  workflowRalphRunOptionsAtom,
   workflowRunIterationTimeoutTextAtom,
+  workflowRunOptionsAtom,
   workflowWorkingDirectoryAtom,
 } from '~/routing/plans/data/data.atom-plan';
 import { PLAN_LIFECYCLE_HOOKS_COPY } from '~/routing/plans/data/data.copy';
@@ -35,7 +35,7 @@ export const PlanTabDetails = (
 
   // Hooks
   const { plan, runHistory, tasks } = usePlanDetailRouteData();
-  const workflowInput = useAtomValue(workflowRalphRunOptionsAtom);
+  const workflowInput = useAtomValue(workflowRunOptionsAtom);
   const workflowTimeout = useAtomValue(workflowRunIterationTimeoutTextAtom);
   const workingDirectory = useAtomValue(workflowWorkingDirectoryAtom);
 

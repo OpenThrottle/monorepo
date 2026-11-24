@@ -21,15 +21,15 @@ import {
   PLAN_RUN_HISTORY_FETCH_LIMIT,
   PLAN_RUN_HISTORY_INITIAL_ROWS,
 } from '~/routing/plans/data/data.plan-run-history';
-import type { WorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
 import { joinPlanRunJobMetrics } from '~/routing/plans/utils/joinPlanRunJobMetrics';
+import type { PlanRunOptions } from '~/routing/plans/utils/plan-run-options';
 import { selectHistoryRuns } from '~/routing/plans/utils/plan-run-sections';
 
 export interface PlanWorkflowRunTransparencyAuditTableProps {
   readonly planRunAuditRows: readonly PlanRunHistoryEntryFragment[];
   /** Completed-job metrics (`metrics.recentPlanRunsMetrics`), joined onto rows by job id. */
   readonly planRunMetrics: readonly PlanRunJobMetricsEntryFragment[];
-  readonly workflowInput: WorkflowRalphRunOptionsInput;
+  readonly workflowInput: PlanRunOptions;
   readonly workingDirectory: string;
 }
 
@@ -88,7 +88,7 @@ export const PlanWorkflowRunTransparencyAuditTable = (
               <TableHead>{copy.columns.when}</TableHead>
               <TableHead>{copy.columns.status}</TableHead>
               <TableHead className="hidden sm:table-cell">
-                {copy.columns.modelBackend}
+                {copy.columns.modelDriver}
               </TableHead>
               <TableHead className="hidden sm:table-cell">
                 {copy.columns.branch}

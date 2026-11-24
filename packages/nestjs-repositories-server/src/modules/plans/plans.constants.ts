@@ -22,7 +22,7 @@ export const LIST_PLANS_FILTERED_DEFAULT_LIMIT = 20;
 
 /**
  * @description `listFiltered` has never been capped, and a client depends on that:
- * tools/workflows `listAllPlansGraphql` reads every plan (limit 2000 today, ~1.4k plans) to
+ * a plan-id resolver reads every plan (limit 2000 today, ~1.4k plans) to
  * resolve plan ids. Capping it is its own decision, made together with that caller.
  */
 export const LIST_PLANS_FILTERED_MAX_LIMIT = Number.MAX_SAFE_INTEGER;

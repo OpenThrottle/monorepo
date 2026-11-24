@@ -18,7 +18,7 @@ import { isAbsolute, join } from 'node:path';
 
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
+import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-utils';
 
 import type { PlanRunWorkspacePreflightParams } from './plan-run-workspace-preflight.types.ts';
 import { findWorktreeProvisioner } from './plan-run-workspace-preflight.utils.ts';

@@ -181,7 +181,7 @@
       "dependsOn": ["^build"],
       "executor": "@nx/js:tsc",
       "metadata": {
-        "description": "Shared @nx/js:tsc compile defaults: emit the package to {projectRoot}/dist from src/index.ts using tsconfig.lib.json, after upstream build. Deliberately NO codegen-graphql / codegen-react-router edges: every tsc-built package that compiles generated GraphQL code (openthrottle-mcp, and openthrottle-agentic-ralph's source via nestjs-agentic-workflow and @tools/workflows) commits its __generated__ output, so the build reads it from git. That is what keeps client codegen out of openthrottle-server:build, and so out of graphql-schema(-write): with the edges, a new field plus a client document selecting it failed codegen against the old schema.gql before anything could write the new one (OT plan 74ecccb1). Codegen is its own step; drift is gated by codegen-graphql in CI and check:local."
+        "description": "Shared @nx/js:tsc compile defaults: emit the package to {projectRoot}/dist from src/index.ts using tsconfig.lib.json, after upstream build. Deliberately NO codegen-graphql / codegen-react-router edges: every tsc-built package that compiles generated GraphQL code (openthrottle-mcp and openthrottle-agentic-loop) commits its __generated__ output, so the build reads it from git. That is what keeps client codegen out of openthrottle-server:build, and so out of graphql-schema(-write): with the edges, a new field plus a client document selecting it failed codegen against the old schema.gql before anything could write the new one (OT plan 74ecccb1). Codegen is its own step; drift is gated by codegen-graphql in CI and check:local."
       },
       "options": {
         "generateExportsField": false,

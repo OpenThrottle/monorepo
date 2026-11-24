@@ -1,7 +1,6 @@
 /**
  * @description GraphQL object type for task-run metrics including process snapshots,
  * child process metrics, wall-clock metrics, and system CPU metrics.
- * Aligns with tools/workflows TaskRunMetrics and process-metrics-format types.
  * Used by JobObject.taskRunMetrics for plans-queue job returnvalue visualization.
  */
 

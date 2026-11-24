@@ -1,5 +1,5 @@
 # MCP-only GraphQL documents: project discovery (list/get) and editing (create/update).
-# The shared agentic-ralph Project fragment selects scalars only; these documents
+# The shared Project fragment (operations/fragments.graphql) selects scalars only; these documents
 # add linked repositories and plan ids (counted client-side) so an agent can
 # resolve "the CMS project" to an id. Selection sets are alphabetized.
 

@@ -32,7 +32,7 @@ describe('SkillAvailabilityResolutionResolver', () => {
     {
       description: undefined,
       orphanedAt: undefined,
-      slug: 'agents-ralph',
+      slug: 'ot-loop',
       source: 'openthrottle',
       sourceUrl: undefined,
       staticDisableModelInvocation: false,
@@ -115,7 +115,7 @@ describe('SkillAvailabilityResolutionResolver', () => {
         matchedPlanTags: [],
         planRelevant: false,
         provenance: 'frontmatter:false',
-        slug: 'agents-ralph',
+        slug: 'ot-loop',
         staticDisableModelInvocation: false,
       },
       {
@@ -175,8 +175,8 @@ describe('SkillAvailabilityResolutionResolver', () => {
       posture: 'allow',
       rules: [
         {
-          environment: 'ralph',
-          id: 'rule-ralph',
+          environment: 'headless',
+          id: 'rule-headless',
           slugAllow: ['github-deep-review'],
           slugDeny: [],
           tagAllow: [],
@@ -194,26 +194,26 @@ describe('SkillAvailabilityResolutionResolver', () => {
       projectId,
       'interactive',
     );
-    const ralph = await resolver.skillAvailability(
+    const headless = await resolver.skillAvailability(
       userId,
       'user',
       projectId,
-      'ralph',
+      'headless',
     );
 
-    // interactive: the ralph-scoped rule does not apply → frontmatter true stays.
+    // interactive: the headless-scoped rule does not apply → frontmatter true stays.
     expect(
       interactive.skills.find((s) => s.slug === 'github-deep-review'),
     ).toMatchObject({
       effectiveDisableModelInvocation: true,
       provenance: 'frontmatter:true',
     });
-    // ralph: the slug-allow rule re-enables the skill.
+    // headless: the slug-allow rule re-enables the skill.
     expect(
-      ralph.skills.find((s) => s.slug === 'github-deep-review'),
+      headless.skills.find((s) => s.slug === 'github-deep-review'),
     ).toMatchObject({
       effectiveDisableModelInvocation: false,
-      provenance: 'slug-allow:github-deep-review@rule-ralph',
+      provenance: 'slug-allow:github-deep-review@rule-headless',
     });
   });
 

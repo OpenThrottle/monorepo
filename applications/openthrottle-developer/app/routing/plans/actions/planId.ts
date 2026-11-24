@@ -47,12 +47,12 @@ import {
 import { toErrorMessage } from '~/global/utils/utils.error-message';
 import { parseJobRunHooksJsonFromPlan } from '~/routing/plans/utils/job-run-hooks-ui';
 import type {
+  PlanRunOtLoopSelection,
   PlanRunPersistedSelection,
-  PlanRunRunnerSelection,
 } from '~/routing/plans/utils/plan-run-form';
 import {
+  mergeOtLoopSelectionIntoRunConfig,
   mergePersistedSelectionIntoRunConfig,
-  mergeRunnerSelectionIntoRunConfig,
   parsePlanRunForm,
   parseScheduledFor,
 } from '~/routing/plans/utils/plan-run-form';
@@ -544,21 +544,21 @@ export const saveJobRunHooks = async (
 };
 
 /**
- * Writes the dialog's runner and model/backend/effort to the plan's saved run config
- * through the same `updatePlan.runConfigJson` mutation the Configuration tab's
- * save uses. Read-merge-write so nothing else in the saved config changes (and
- * `iterations`, a per-run override, never lands there). Skips the write when the
- * saved config already holds the selection. Returns an error message on failure.
+ * Writes the dialog's model/driver/effort and OT Loop settings to the plan's saved run
+ * config through the same `updatePlan.runConfigJson` mutation the Configuration tab's
+ * save uses. Read-merge-write so nothing else in the saved config changes. Skips the
+ * write when the saved config already holds the selection. Returns an error message on
+ * failure.
  */
 const persistPlanRunSelection = async (
   args: Route.ActionArgs,
   planId: string,
   selection: {
+    readonly otLoopSelection: PlanRunOtLoopSelection | undefined;
     readonly persisted: PlanRunPersistedSelection | undefined;
-    readonly runnerSelection: PlanRunRunnerSelection | undefined;
   },
 ): Promise<string | undefined> => {
-  const { persisted, runnerSelection } = selection;
+  const { otLoopSelection, persisted } = selection;
 
   try {
     const current = await executeGraphqlWithAuth(
@@ -579,11 +579,11 @@ const persistPlanRunSelection = async (
       changed = merged.changed;
     }
 
-    if (runnerSelection !== undefined) {
-      const merged = mergeRunnerSelectionIntoRunConfig({
+    if (otLoopSelection !== undefined) {
+      const merged = mergeOtLoopSelectionIntoRunConfig({
         planId,
         runConfigJson,
-        selection: runnerSelection,
+        selection: otLoopSelection,
       });
       runConfigJson = merged.runConfigJson;
       changed = changed || merged.changed;
@@ -613,8 +613,8 @@ export const runPlan = async (
   formData: FormData,
 ) => {
   // The kickoff form is read once by `parsePlanRunForm` (see its header): enqueue
-  // fields, the per-run `iterations` override (overlaid onto `ralphTuning`,
-  // never saved), and the model/backend/effort selection to persist.
+  // fields (the run tuning the toolbar built), and the model/driver/effort and
+  // OT Loop selection to persist.
   const parsed = parsePlanRunForm(formData);
   if (!parsed.success) {
     return { runPlanError: parsed.error };
@@ -622,7 +622,7 @@ export const runPlan = async (
 
   // Persist BEFORE enqueuing so the run and the saved config agree. A failed
   // save stops here: enqueuing anyway would run a model the plan does not show.
-  if (parsed.persisted !== undefined || parsed.runnerSelection !== undefined) {
+  if (parsed.persisted !== undefined || parsed.otLoopSelection !== undefined) {
     const persistError = await persistPlanRunSelection(args, planId, parsed);
     if (persistError !== undefined) {
       return { runPlanError: persistError };
@@ -693,7 +693,7 @@ export const schedulePlanRun = async (
     return { schedulePlanRunError: parsed.error };
   }
 
-  if (parsed.persisted !== undefined || parsed.runnerSelection !== undefined) {
+  if (parsed.persisted !== undefined || parsed.otLoopSelection !== undefined) {
     const persistError = await persistPlanRunSelection(args, planId, parsed);
     if (persistError !== undefined) {
       return { schedulePlanRunError: persistError };

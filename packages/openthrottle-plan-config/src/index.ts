@@ -4,7 +4,7 @@ export { PLAN_RUN_CONFIG_SNAPSHOT_VERSION } from './plan-run-config-snapshot.con
 export type {
   BuildPlanRunConfigSnapshotInput,
   PlanRunConfigSnapshot,
-  PlanRunConfigSnapshotRalphV1,
+  PlanRunConfigSnapshotRunV1,
   PlanRunConfigSnapshotV1,
 } from './plan-run-config-snapshot.types.ts';
 export {
@@ -13,16 +13,12 @@ export {
 } from './plan-run-config-snapshot.validation.ts';
 export { planHasCustomRunConfig } from './plan-run-config-storage.compare.ts';
 export {
-  DEFAULT_PLAN_RUN_RALPH_DEBUG_CLI,
-  DEFAULT_PLAN_RUN_RALPH_EFFORT,
-  DEFAULT_PLAN_RUN_RALPH_ITERATIONS,
-  DEFAULT_PLAN_RUN_RALPH_MODEL,
-  DEFAULT_PLAN_RUN_RALPH_PROMPT,
-  DEFAULT_PLAN_RUN_RALPH_RUNNER,
-  DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLEANUP,
-  DEFAULT_PLAN_RUN_RALPH_WORKTREE_CLI,
+  DEFAULT_PLAN_RUN_DEBUG_CLI,
+  DEFAULT_PLAN_RUN_DRIVER,
+  DEFAULT_PLAN_RUN_EFFORT,
+  DEFAULT_PLAN_RUN_MODEL,
+  DEFAULT_PLAN_RUN_WORKTREE_CLEANUP,
   MAX_PLAN_RUN_OT_LOOP_RETRIES,
-  PLAN_RUN_CONFIG_RUNNERS,
   PLAN_RUN_CONFIG_UUID_REGEX,
   PLAN_RUN_CONFIG_VERSION,
   PLAN_RUN_WORKTREE_CLEANUP,
@@ -30,30 +26,27 @@ export {
   PLAN_RUN_WORKTREE_NAME_PREFIX,
 } from './plan-run-config-storage.constants.ts';
 export {
-  getDefaultPlanRunConfigRalphV1,
+  getDefaultPlanRunConfigRunV1,
   getDefaultPlanRunConfigStorage,
   getDefaultPlanWorkflowUiState,
 } from './plan-run-config-storage.defaults.ts';
 export {
-  buildRalphPlanRunTuningFromPlanRunConfig,
   parsePlanRunIterationTimeoutSeconds,
+  pickPlanRunConfigOtLoop,
   planRunConfigFromWorkflowUiState,
   workflowUiStateFromPlanRunConfig,
 } from './plan-run-config-storage.round-trip.ts';
 export type {
   PlanJobRunHooksStorage,
   PlanRunConfigDebugCli,
-  PlanRunConfigExecutionBackend,
+  PlanRunConfigDriver,
   PlanRunConfigOtLoop,
-  PlanRunConfigPromptLayer,
-  PlanRunConfigRalphV1,
-  PlanRunConfigRunner,
+  PlanRunConfigRunV1,
   PlanRunConfigStorage,
   PlanRunConfigStorageV1,
   PlanRunConfigTargetMode,
   PlanRunConfigWorktreeCleanup,
-  PlanRunConfigWorktreeCli,
-  PlanWorkflowRalphRunOptions,
+  PlanWorkflowRunOptions,
   PlanWorkflowUiState,
 } from './plan-run-config-storage.types.ts';
 export {

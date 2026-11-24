@@ -6,7 +6,6 @@ const REQUIRED_AGENTS_SKILL_SLUGS = [
   'ot-generators',
   'ot-plans',
   'ot-stack',
-  'workflow-ralph',
 ] as const;
 
 describe('OPENTHROTTLE_REPO_SKILL_PATHS', () => {

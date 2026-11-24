@@ -90,7 +90,7 @@ describe('SettingsKeysToolbar Component', () => {
         selectedServiceAccountId: 'sa-1',
         serviceAccounts: [
           account({ id: 'sa-1', name: 'openthrottle-mcp' }),
-          account({ id: 'sa-2', name: 'workflow-ralph' }),
+          account({ id: 'sa-2', name: 'queue-worker' }),
         ],
       });
 
@@ -107,7 +107,7 @@ describe('SettingsKeysToolbar Component', () => {
         selectedServiceAccountId: 'sa-1',
         serviceAccounts: [
           account({ id: 'sa-1', name: 'openthrottle-mcp' }),
-          account({ id: 'sa-2', name: 'workflow-ralph' }),
+          account({ id: 'sa-2', name: 'queue-worker' }),
         ],
       });
 
@@ -115,9 +115,7 @@ describe('SettingsKeysToolbar Component', () => {
       await user.click(
         component.getByTestId('SettingsKeysToolbar-account-select'),
       );
-      await user.click(
-        component.getByRole('option', { name: 'workflow-ralph' }),
-      );
+      await user.click(component.getByRole('option', { name: 'queue-worker' }));
 
       expect(onServiceAccountChange).toHaveBeenCalledWith('sa-2');
     });
@@ -130,7 +128,7 @@ describe('SettingsKeysToolbar Component', () => {
         selectedServiceAccountId: 'sa-1',
         serviceAccounts: [
           account({ id: 'sa-1', name: 'openthrottle-mcp' }),
-          account({ id: 'sa-2', name: 'workflow-ralph' }),
+          account({ id: 'sa-2', name: 'queue-worker' }),
         ],
       });
 

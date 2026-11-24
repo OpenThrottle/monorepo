@@ -1,6 +1,6 @@
 /**
  * @description GraphQL object type for child process CPU/memory metrics.
- * Aligns with tools/workflows ChildProcessMetrics type. Captures aggregated
+ * Captures aggregated
  * resource usage of spawned child processes during task execution.
  */
 

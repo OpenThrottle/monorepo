@@ -10,7 +10,7 @@ import { QueueJobTimestamps } from '../QueueJobTimestamps';
 const baseJob = (): JobDetailsCardFragment => {
   return {
     data: null,
-    executionBackend: null,
+    driver: null,
     failedReason: null,
     finishedOn: null,
     id: 'bull-job-1',

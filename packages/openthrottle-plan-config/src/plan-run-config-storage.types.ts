@@ -3,28 +3,21 @@
  * `planId` is implicit (`plans.id`); omit from stored JSON.
  */
 
-import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-workflow';
+import type { DriverId } from '@openthrottle/openthrottle-drivers';
 
 import type { PLAN_RUN_CONFIG_VERSION } from './plan-run-config-storage.constants.ts';
 
 export type PlanRunConfigTargetMode = 'plan' | 'task';
 
-export type PlanRunConfigPromptLayer = 'named' | 'file';
-
 export type PlanRunConfigDebugCli = 'omit' | 'debug' | 'verbose';
-
-export type PlanRunConfigWorktreeCli = 'flag-only' | 'named' | 'omit';
 
 /** @description `'on-pr'` tears the worktree down after a clean run with a PR; `'keep'` never does. */
 export type PlanRunConfigWorktreeCleanup = 'keep' | 'on-pr';
 
-export type PlanRunConfigExecutionBackend = 'claude' | 'cursor';
-
-/** @description Runner that executes the plan run; an absent `runner` means `'ralph'`. */
-export type PlanRunConfigRunner = 'ot-loop' | 'ralph';
+export type PlanRunConfigDriver = 'claude' | 'cursor';
 
 /**
- * @description OT Loop run tuning (`runConfigJson.otLoop`). Structurally compatible with
+ * @description OT Loop validation fields of the run block. Structurally compatible with
  * `OtLoopRunTuning` in docs/workflows/ot-loop-job.md § 1. `maxRetries` is clamped 0..5 at run time.
  */
 export interface PlanRunConfigOtLoop {
@@ -40,38 +33,27 @@ export interface PlanJobRunHooksStorage {
 }
 
 /**
- * @description UI-native Ralph tuning persisted on the plan (not GraphQL `RalphPlanRunTuningInput`).
- * Maps to {@link PlanWorkflowRalphRunOptions} / developer `WorkflowRalphRunOptionsInput`.
+ * @description The plan's saved run tuning (`runConfigJson.run`): the shared tuning fields plus the
+ * OT Loop validation fields. Maps to {@link PlanWorkflowRunOptions} in the developer app.
  */
-export interface PlanRunConfigRalphV1 {
+export interface PlanRunConfigRunV1 extends PlanRunConfigOtLoop {
   readonly debugCli: PlanRunConfigDebugCli;
+  readonly driver: DriverId;
   /**
    * @description Reasoning-effort level (chat vocabulary: low|medium|high|extraHigh|max|ultra);
-   * empty = unset. Validated against the backend at enqueue.
+   * empty = unset. Validated against the driver at enqueue.
    */
   readonly effort: string;
-  readonly executionBackend: WorkflowConfigRunner;
-  /** @description Raw Configuration tab timeout field; empty omits `--iteration-timeout`. */
-  readonly iterationTimeoutText: string;
-  readonly iterations: number;
+  /** @description Per-attempt agent timeout in seconds; absent means no timeout. */
+  readonly iterationTimeoutSeconds?: number;
   readonly model: string;
-  readonly project: string;
-  readonly prompt: string;
-  readonly promptFile: string;
-  readonly promptLayer: PlanRunConfigPromptLayer;
-  readonly skipWorktreeSetup: boolean;
-  readonly worktreeBase: string;
   readonly worktreeCleanup: PlanRunConfigWorktreeCleanup;
-  readonly worktreeCli: PlanRunConfigWorktreeCli;
+  /** @description Worktree name override; empty means "derive `plan-<short plan id>` at enqueue". */
   readonly worktreeName: string;
 }
 
 export interface PlanRunConfigStorageV1 {
-  /** @description OT Loop tuning; ignored unless `runner` is `'ot-loop'`. */
-  readonly otLoop?: PlanRunConfigOtLoop;
-  readonly ralph: PlanRunConfigRalphV1;
-  /** @description Absent means `'ralph'`. */
-  readonly runner?: PlanRunConfigRunner;
+  readonly run: PlanRunConfigRunV1;
   readonly target: {
     readonly mode: PlanRunConfigTargetMode;
     readonly taskId: string;
@@ -95,26 +77,18 @@ export interface PlanRunConfigStorageV1 {
 export type PlanRunConfigStorage = PlanRunConfigStorageV1;
 
 /**
- * @description Workflow Ralph options for Plan Configuration (includes route `planId`).
- * Structurally aligned with developer `WorkflowRalphRunOptionsInput`.
+ * @description Run options for Plan Configuration (includes route `planId`).
+ * Structurally aligned with the developer app's `PlanRunOptions`.
  */
-export interface PlanWorkflowRalphRunOptions {
+export interface PlanWorkflowRunOptions {
   readonly debugCli: PlanRunConfigDebugCli;
+  readonly driver: DriverId;
   readonly effort: string;
-  readonly executionBackend: WorkflowConfigRunner;
-  readonly iterations: number;
   readonly model: string;
   readonly planId: string;
-  readonly project: string;
-  readonly prompt: string;
-  readonly promptFile: string;
-  readonly promptLayer: PlanRunConfigPromptLayer;
-  readonly skipWorktreeSetup: boolean;
   readonly targetMode: PlanRunConfigTargetMode;
   readonly taskId: string;
-  readonly worktreeBase: string;
   readonly worktreeCleanup: PlanRunConfigWorktreeCleanup;
-  readonly worktreeCli: PlanRunConfigWorktreeCli;
   readonly worktreeName: string;
 }
 
@@ -124,13 +98,12 @@ export interface PlanWorkflowRalphRunOptions {
 export interface PlanWorkflowUiState {
   /** @description Registered checkout id selected in the UI (optional; empty/absent = unset). */
   readonly checkoutId?: string;
+  /** @description Raw timeout field (seconds); empty = no timeout. */
   readonly iterationTimeoutText: string;
   /** @description Carried through so a UI save does not drop it. */
   readonly otLoop?: PlanRunConfigOtLoop;
   /** @description Registered repository id selected in the UI (optional; empty/absent = unset). */
   readonly repositoryId?: string;
-  /** @description Carried through so a UI save does not drop it. */
-  readonly runner?: PlanRunConfigRunner;
-  readonly workflowInput: PlanWorkflowRalphRunOptions;
+  readonly workflowInput: PlanWorkflowRunOptions;
   readonly workingDirectory: string;
 }

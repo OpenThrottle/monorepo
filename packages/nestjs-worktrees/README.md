@@ -1,8 +1,8 @@
 # @openthrottle/nestjs-worktrees
 
-NestJS module for worktree-based BullMQ workflows: acquire target → run loop → ensure commit → release. Ships **local aligned copies** of the worktree workflow (`runWorktreeWorkflow`, `runChildJob`, parent-job helpers, types) under this package — not thin re-exports from `@tools/workflows`. The module provides a **mutex-wrapped** `IWorktreeTargetsTracker` from the `WORKTREE_TARGETS` env var so queue processors can inject a shared tracker without wiring `@tools/workflows` for the workflow shell.
+NestJS module for worktree-based BullMQ workflows: acquire target → run loop → ensure commit → release. Ships the worktree workflow (`runWorktreeWorkflow`, parent-job helpers) and its types (`ChildJobInput`, `ChildJobResult`, `ChildJobStreamChunk`, …) in this package. The module provides a **mutex-wrapped** `IWorktreeTargetsTracker` from the `WORKTREE_TARGETS` env var so queue processors can inject a shared tracker.
 
-**Scope:** This package applies to the **worktree + BullMQ spawn** surface (when `WORKTREE_TARGETS` is set and jobs run nested `workflow-ralph` in a worktree). The default OpenThrottle plans queue path is the **in-process orchestrator** (`AgenticRalphOrchestratorService`), which does not use `runWorktreeWorkflow` or the tracker. See [tools/workflows/README.md → Which path runs when](../../tools/workflows/README.md#which-path-runs-when-canonical-decision-table).
+**Scope:** This package applies to the **worktree + BullMQ spawn** surface (when `WORKTREE_TARGETS` is set and a processor runs a loop inside an acquired worktree). The plans queue runs the in-process OT Loop job, which provisions its worktree through `PlanRunWorkspaceService` and does not use `runWorktreeWorkflow` or the tracker.
 
 ## Installation
 
@@ -34,7 +34,7 @@ The module factory:
 3. Wraps it with `MutexWorktreeTargetsTracker` (`async-mutex`) for safe concurrent acquire/release when worker `concurrency > 1`
 4. Registers the result under `WORKTREE_TRACKER_TOKEN`
 
-Workflow functions (`runWorktreeWorkflow`, `runChildJob`, etc.) are **not** Nest providers — import them from the package barrel.
+Workflow functions (`runWorktreeWorkflow`, the parent-job helpers) are **not** Nest providers — import them from the package barrel.
 
 ```ts
 import { Module } from '@nestjs/common';
@@ -48,14 +48,9 @@ export class PlansQueueModule {}
 
 ### 2. Inject the tracker and call the workflow
 
-Inject the mutex-wrapped tracker with `@Inject(WORKTREE_TRACKER_TOKEN)` and type it as `IWorktreeTargetsTracker`. Call `runWorktreeWorkflow` from this package; pass a `runLoop` that runs your child job (typically Ralph via `workflow-ralph`).
+Inject the mutex-wrapped tracker with `@Inject(WORKTREE_TRACKER_TOKEN)` and type it as `IWorktreeTargetsTracker`. Call `runWorktreeWorkflow` from this package; pass a `runLoop` that runs your child job and returns a `ChildJobResult` (branch name and commit SHA, or a failure reason).
 
-**Import split:** Use this package for the workflow shell and tracker. For production spawn parity with OpenThrottle (nested spawn env, streaming, abort/timeout), import `runChildJob` and spawn helpers from `@tools/workflows` directly — the copy exported here is a simplified `spawnSync` variant without `buildNestedWorkflowRalphSpawnEnv`.
-
-| Import from                      | Use for                                                                                                                                                                     |
-| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@openthrottle/nestjs-worktrees` | `NestjsWorktreesModule`, `WORKTREE_TRACKER_TOKEN`, `runWorktreeWorkflow`, types (`IWorktreeTargetsTracker`, `WorktreeWorkflowResult`, …), optional simplified `runChildJob` |
-| `@tools/workflows`               | `runChildJob` (streaming spawn + nested env), `buildNestedWorkflowRalphSpawnEnv`, `loadWorkflowRalphConfig`, Ralph tuning argv helpers                                      |
+**Scope:** this package owns the worktree shell, the tracker and the child-job types. It does not spawn the child process: the processor supplies `runLoop`, which receives the `ParentJobHandoff` (branch, target id, worktree path) and spawns whatever runs in that worktree.
 
 ```ts
 import { Inject } from '@nestjs/common';
@@ -64,8 +59,17 @@ import {
   runWorktreeWorkflow,
   WORKTREE_TRACKER_TOKEN,
 } from '@openthrottle/nestjs-worktrees';
-import type { IWorktreeTargetsTracker } from '@openthrottle/nestjs-worktrees';
-import { runChildJob } from '@tools/workflows';
+import type {
+  ChildJobResult,
+  IWorktreeTargetsTracker,
+  ParentJobHandoff,
+} from '@openthrottle/nestjs-worktrees';
+
+/** Your own child runner: spawn the agent in `handoff.worktreePath` and report the outcome. */
+declare const runChild: (input: {
+  readonly handoff: ParentJobHandoff;
+  readonly planId: string;
+}) => Promise<ChildJobResult>;
 
 @Processor('plans', { concurrency: 1 })
 export class PlansProcessor extends WorkerHost {
@@ -83,7 +87,7 @@ export class PlansProcessor extends WorkerHost {
     const result = await runWorktreeWorkflow({
       tracker: this.tracker,
       acquire: { lockedBy: jobId, baseBranch: 'main' },
-      runLoop: (handoff) => runChildJob({ handoff, planId, iterations: 10 }),
+      runLoop: (handoff) => runChild({ handoff, planId }),
       ensureCommit: {},
     });
 
@@ -120,9 +124,6 @@ You can also call `getWorktreeTargetsFromEnv()` directly when building a custom 
 
 ## Examples and references
 
-- **Worktree spawn processor (legacy reference):** [`plans.processor.backup.ts`](../../applications/openthrottle-server/src/queues/plans/plans.processor.backup.ts) — uses `runWorktreeWorkflow` from this package and `runChildJob` + spawn env from `@tools/workflows`.
-- **Live plans processor:** [`plans.processor.ts`](../../applications/openthrottle-server/src/queues/plans/plans.processor.ts) — orchestrator-only; does not use the worktree workflow.
+- **Plans processor:** [`plans.processor.ts`](../../applications/openthrottle-server/src/queues/plans/plans.processor.ts) — runs the OT Loop job; does not use the worktree workflow.
 - **Module wiring:** [`plans-queue.module.ts`](../../applications/openthrottle-server/src/queues/plans/plans.module.ts) imports `NestjsWorktreesModule`.
 - **Metrics consumer:** [`system-metrics.service.ts`](../../applications/openthrottle-server/src/metrics/system-metrics/system-metrics.service.ts) injects `WORKTREE_TRACKER_TOKEN` for active lock reporting.
-- **Registration / allocation:** [tools/workflows/docs/worktree-registration-and-allocation.md](../../tools/workflows/docs/worktree-registration-and-allocation.md).
-- **Which path runs when:** [tools/workflows/README.md → Which path runs when](../../tools/workflows/README.md#which-path-runs-when-canonical-decision-table).

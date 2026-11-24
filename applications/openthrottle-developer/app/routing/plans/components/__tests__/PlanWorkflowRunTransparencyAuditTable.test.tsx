@@ -15,12 +15,12 @@ import {
   PLAN_RUN_HISTORY_FETCH_LIMIT,
   PLAN_RUN_HISTORY_INITIAL_ROWS,
 } from '~/routing/plans/data/data.plan-run-history';
-import { getDefaultWorkflowRalphRunOptionsInput } from '~/routing/plans/utils/build-workflow-ralph-argv';
+import { getDefaultPlanRunOptions } from '~/routing/plans/utils/plan-run-options';
 
 import { PlanWorkflowRunTransparencyAuditTable } from '../PlanWorkflowRunTransparencyAuditTable';
 
 const planId = '0c2720a9-920f-4b16-865a-f803eb444e18';
-const workflowInput = getDefaultWorkflowRalphRunOptionsInput({ planId });
+const workflowInput = getDefaultPlanRunOptions({ planId });
 const copy = PLAN_RUN_TRANSPARENCY_COPY.history;
 
 const auditRow = (
@@ -30,7 +30,7 @@ const auditRow = (
     __typename: 'PlanRunObject',
     bullmqJobId: 'job-1',
     createdAt: '2026-11-02T03:04:05.000Z',
-    executionBackend: 'claude',
+    driver: 'claude',
     heartbeatExpected: true,
     id: 'run-1',
     isStale: false,
@@ -239,10 +239,9 @@ describe('PlanWorkflowRunTransparencyAuditTable', () => {
           bullmqJobId: null,
           id: 'r-cli',
           runConfigSnapshotJson: JSON.stringify({
-            ralph: {
+            run: {
+              driver: 'claude',
               effort: 'high',
-              executionBackend: 'claude',
-              iterations: 25,
             },
             target: { mode: 'plan', taskId: '' },
             version: 1,
@@ -264,7 +263,9 @@ describe('PlanWorkflowRunTransparencyAuditTable', () => {
       ).toBeInTheDocument();
       expect(within(detail).getByText('high')).toBeInTheDocument();
       expect(
-        within(detail).getByText(/Iterations: 25 → 10 \(current\)/),
+        within(detail).getByText(
+          /Driver: Claude Code CLI → Cursor \(cursor-agent\) \(current\)/,
+        ),
       ).toBeInTheDocument();
     });
   });
@@ -277,13 +278,13 @@ describe('PlanWorkflowRunTransparencyAuditTable', () => {
         [auditRow({ id: 'r-metrics' })],
         [
           {
-            executionBackend: 'claude',
+            driver: 'claude',
             finishedOn,
             jobId: 'job-1',
             taskRunMetrics: { atEnd: { rssMb: 512.34 } },
           },
           {
-            executionBackend: 'claude',
+            driver: 'claude',
             finishedOn,
             jobId: 'job-orphan',
             taskRunMetrics: { atEnd: { rssMb: 1 } },
@@ -329,7 +330,7 @@ describe('PlanWorkflowRunTransparencyAuditTable', () => {
   });
 
   describe('when the detail is open at a narrow width', () => {
-    test('repeats model / backend and provenance in narrow-only entries', async () => {
+    test('repeats model / driver and provenance in narrow-only entries', async () => {
       const user = userEvent.setup();
       const component = renderTable([auditRow({ id: 'r-narrow' })]);
 
@@ -340,7 +341,7 @@ describe('PlanWorkflowRunTransparencyAuditTable', () => {
       const detail = component.getByTestId(
         'PlanWorkflowRunHistoryDetail-r-narrow',
       );
-      const modelEntry = detail.querySelector('[data-field="modelBackend"]');
+      const modelEntry = detail.querySelector('[data-field="modelDriver"]');
       const branchEntry = detail.querySelector('[data-field="branch"]');
       expect(modelEntry).toHaveClass('sm:hidden');
       expect(branchEntry).toHaveClass('sm:hidden');

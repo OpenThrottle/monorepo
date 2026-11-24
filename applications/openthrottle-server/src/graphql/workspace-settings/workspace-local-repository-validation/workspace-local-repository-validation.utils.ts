@@ -4,7 +4,7 @@
 
 import { resolve } from 'path';
 
-import { validateWorkingDirectory } from '../../plans/enqueue-plan-ralph-tuning/enqueue-plan-ralph-tuning.utils.ts';
+import { validateWorkingDirectory } from '../../plans/enqueue-plan-run-tuning/enqueue-plan-run-tuning.utils.ts';
 
 const MAX_DISPLAY_NAME_LEN = 256;
 const MAX_GIT_REMOTE_URL_LEN = 2048;

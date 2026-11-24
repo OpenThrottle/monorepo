@@ -51,7 +51,7 @@ describe('describeCancelPlanRunResult', () => {
         }),
       ),
     ).toBe(
-      'Run stopping — signaled the worker to terminate the active run (Ralph may take a moment to shut down).',
+      'Run stopping — signaled the worker to terminate the active run (it may take a moment to shut down).',
     );
   });
 

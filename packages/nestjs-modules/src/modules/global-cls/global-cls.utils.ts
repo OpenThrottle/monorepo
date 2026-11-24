@@ -46,7 +46,7 @@ export const globalClsUserFromJwtLike = (
 const HEADER_OT_SESSION_ID = 'x-ot-session-id';
 
 /**
- * Request header naming the agent environment a caller runs in (`ci | interactive | ralph`), set by
+ * Request header naming the agent environment a caller runs in (`ci | headless | interactive`), set by
  * the openthrottle-mcp stdio server from its launch environment. Stored raw: the consumer owns the
  * vocabulary and must validate it, treating an unknown value as "no environment".
  */

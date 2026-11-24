@@ -63,7 +63,7 @@ export interface KeyedJsonlWriterOptions {
 
 /**
  * @description One JSONL line for structured run output (`lineFormat: 'jsonl'`).
- * `source` is an optional originating-layer tag (e.g. `workflow-ralph`, `cursor-agent`, `spawn`)
+ * `source` is an optional originating-layer tag (e.g. `plan-run`, `cursor-agent`, `spawn`)
  * for run-output attribution; omitted from the serialized line when not provided.
  */
 export interface KeyedJsonlRunRecord {

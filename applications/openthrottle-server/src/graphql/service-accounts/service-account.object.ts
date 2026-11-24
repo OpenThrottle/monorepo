@@ -29,7 +29,7 @@ export class ServiceAccountObject implements ServiceAccountData {
   id!: string;
 
   @Field(() => String, {
-    description: `Stable identifier (e.g. openthrottle-mcp, workflow-ralph).`,
+    description: `Stable identifier (e.g. openthrottle-mcp).`,
   })
   name!: string;
 }

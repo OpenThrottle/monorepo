@@ -9,10 +9,8 @@ import {
   buildPlanRunDialogFields,
   createPlanRunDialogDraft,
   getPlanConfigurationTabHref,
-  getPlanConfiguredIterations,
   getPlanRunDialogBlockedReason,
   isPlanRunBranchMissing,
-  parsePlanRunDialogIterations,
 } from '../plan-run-dialog';
 
 const NOW = new Date('2026-11-02T20:00:00.000Z');
@@ -46,7 +44,7 @@ describe('plan-run-dialog utils', () => {
     });
   });
 
-  describe('createPlanRunDialogDraft runner', () => {
+  describe('createPlanRunDialogDraft OT Loop settings', () => {
     const draftFor = (runConfigJson: string) => {
       return createPlanRunDialogDraft({
         defaultAgent: null,
@@ -58,67 +56,67 @@ describe('plan-run-dialog utils', () => {
       });
     };
 
-    test('defaults to Ralph with empty OT Loop fields when the plan names no runner', () => {
+    test('starts with empty OT Loop fields when the plan has none', () => {
       expect(draftFor(buildPlanRunConfigJson())).toMatchObject({
         otLoopMaxRetriesText: '',
         otLoopValidationText: '',
-        runner: 'ralph',
       });
     });
 
-    test('hydrates OT Loop, its commands one per line, and its retries', () => {
+    test('hydrates the OT Loop commands one per line, and its retries', () => {
       const stored = JSON.parse(buildPlanRunConfigJson());
       const draft = draftFor(
         JSON.stringify({
           ...stored,
-          otLoop: { maxRetries: 1, validationCommands: ['a', 'b'] },
-          runner: 'ot-loop',
+          run: {
+            ...stored.run,
+            maxRetries: 1,
+            validationCommands: ['a', 'b'],
+          },
         }),
       );
 
       expect(draft).toMatchObject({
         otLoopMaxRetriesText: '1',
         otLoopValidationText: 'a\nb',
-        runner: 'ot-loop',
       });
+      expect(draft).not.toHaveProperty('otLoopSettings');
     });
   });
 
   describe('createPlanRunDialogDraft', () => {
-    test('reads backend, model, effort and iterations from the plan', () => {
+    test('reads driver, model and effort from the plan', () => {
       const draft = createPlanRunDialogDraft({
         defaultAgent: null,
         mode: 'schedule',
         now: NOW,
         planId: 'plan-1',
         runConfigJson: buildPlanRunConfigJson({
+          driver: 'claude',
           effort: 'high',
-          executionBackend: 'claude',
-          iterations: 7,
           model: 'opus',
         }),
         scheduledRunAt: null,
       });
 
       expect(draft).toMatchObject({
-        backend: 'claude',
+        driver: 'claude',
         effort: 'high',
-        iterationsText: '7',
         mode: 'schedule',
         model: 'opus',
         scheduleTime: '13:00',
       });
     });
 
-    test('drops an effort the backend has no knob for', () => {
+    test('drops an effort the driver has no knob for', () => {
       const draft = createPlanRunDialogDraft({
         defaultAgent: null,
         mode: 'run',
         now: NOW,
         planId: 'plan-1',
         runConfigJson: buildPlanRunConfigJson({
+          driver: 'cursor',
           effort: 'high',
-          executionBackend: 'cursor',
         }),
         scheduledRunAt: null,
       });
@@ -154,13 +152,9 @@ describe('plan-run-dialog utils', () => {
       expect(draft.scheduleTime).toBe('13:00');
     });
 
-    test('falls back to the defaults when the plan has no run config', () => {
-      expect(getPlanConfiguredIterations('plan-1', null)).toBeGreaterThan(0);
-    });
-
     describe('with a default agent', () => {
       const defaultAgent: DefaultAgentDraft = {
-        backend: 'claude',
+        driver: 'claude',
         effort: 'high',
         model: 'opus',
       };
@@ -175,7 +169,11 @@ describe('plan-run-dialog utils', () => {
           scheduledRunAt: null,
         });
 
-        expect(draft).toMatchObject(defaultAgent);
+        expect(draft).toMatchObject({
+          driver: defaultAgent.driver,
+          effort: defaultAgent.effort,
+          model: defaultAgent.model,
+        });
       });
 
       test('seeds a plan still on the system default agent', () => {
@@ -184,11 +182,15 @@ describe('plan-run-dialog utils', () => {
           mode: 'run',
           now: NOW,
           planId: 'plan-1',
-          runConfigJson: buildPlanRunConfigJson({ iterations: 4 }),
+          runConfigJson: buildPlanRunConfigJson(),
           scheduledRunAt: null,
         });
 
-        expect(draft).toMatchObject({ ...defaultAgent, iterationsText: '4' });
+        expect(draft).toMatchObject({
+          driver: defaultAgent.driver,
+          effort: defaultAgent.effort,
+          model: defaultAgent.model,
+        });
       });
 
       test("keeps the plan's own explicit agent", () => {
@@ -198,28 +200,14 @@ describe('plan-run-dialog utils', () => {
           now: NOW,
           planId: 'plan-1',
           runConfigJson: buildPlanRunConfigJson({
-            executionBackend: 'cursor',
+            driver: 'cursor',
             model: 'gpt-5.2',
           }),
           scheduledRunAt: null,
         });
 
-        expect(draft).toMatchObject({ backend: 'cursor', model: 'gpt-5.2' });
+        expect(draft).toMatchObject({ driver: 'cursor', model: 'gpt-5.2' });
       });
-    });
-  });
-
-  describe('parsePlanRunDialogIterations', () => {
-    test.each([
-      ['', undefined],
-      ['  ', undefined],
-      ['3', 3],
-      ['0', null],
-      ['-2', null],
-      ['1.5', null],
-      ['abc', null],
-    ])('%j parses to %j', (text, expected) => {
-      expect(parsePlanRunDialogIterations(text)).toBe(expected);
     });
   });
 
@@ -276,10 +264,10 @@ describe('plan-run-dialog utils', () => {
         getPlanRunDialogBlockedReason(
           gating({
             workflowRunBlocked: true,
-            workflowRunBlockedReason: 'Iterations out of range',
+            workflowRunBlockedReason: 'Agent timeout out of range',
           }),
         ),
-      ).toBe('Iterations out of range');
+      ).toBe('Agent timeout out of range');
     });
   });
 
@@ -290,8 +278,8 @@ describe('plan-run-dialog utils', () => {
       now: NOW,
       planId: 'plan-1',
       runConfigJson: buildPlanRunConfigJson({
+        driver: 'claude',
         effort: 'high',
-        executionBackend: 'claude',
         model: 'opus',
       }),
       scheduledRunAt: null,
@@ -300,25 +288,23 @@ describe('plan-run-dialog utils', () => {
       branch: 'feat/x',
       checkoutId: 'checkout-1',
       draft,
-      iterations: 4,
       jobRunHooksJson: '',
-      ralphTuningJson: '{"iterations":2}',
       repositoryId: '',
+      runTuningJson: '{"effort":"low"}',
       scheduledFor: new Date('2026-11-02T23:00:00.000Z'),
       workingDirectory: '',
     };
 
     test('carries the run fields and leaves blanks out', () => {
       expect(buildPlanRunDialogFields(base)).toEqual({
-        backend: 'claude',
         branch: 'feat/x',
         checkoutId: 'checkout-1',
+        driver: 'claude',
         effort: 'high',
         intent: 'runPlan',
-        iterations: '4',
         model: 'opus',
-        ralphTuning: '{"iterations":2}',
-        runner: 'ralph',
+        otLoopSettings: 'true',
+        runTuning: '{"effort":"low"}',
       });
     });
 
@@ -334,55 +320,39 @@ describe('plan-run-dialog utils', () => {
       });
     });
 
-    test('OT Loop sends the runner and its fields and drops iterations', () => {
+    test('sends the OT Loop fields, commands one per line', () => {
       const fields = buildPlanRunDialogFields({
         ...base,
         draft: {
           ...draft,
           otLoopMaxRetriesText: '3',
           otLoopValidationText: `  pnpm nx run a:test \n\n pnpm nx run a:lint\n`,
-          runner: 'ot-loop',
         },
       });
 
       expect(fields).toMatchObject({
         otLoopMaxRetries: '3',
+        otLoopSettings: 'true',
         otLoopValidationCommands: 'pnpm nx run a:test\npnpm nx run a:lint',
-        runner: 'ot-loop',
       });
       expect(fields).not.toHaveProperty('iterations');
     });
 
-    test('OT Loop leaves blank retries and an empty validation list out', () => {
-      const fields = buildPlanRunDialogFields({
-        ...base,
-        draft: { ...draft, runner: 'ot-loop' },
-      });
+    test('leaves blank retries and an empty validation list out', () => {
+      const fields = buildPlanRunDialogFields(base);
 
       expect(fields).not.toHaveProperty('otLoopMaxRetries');
       expect(fields).not.toHaveProperty('otLoopValidationCommands');
     });
 
-    test('Ralph never sends the OT Loop fields', () => {
-      const fields = buildPlanRunDialogFields({
-        ...base,
-        draft: { ...draft, otLoopMaxRetriesText: '3', runner: 'ralph' },
-      });
-
-      expect(fields).not.toHaveProperty('otLoopMaxRetries');
-      expect(fields).toHaveProperty('iterations', '4');
-    });
-
-    test('omits iterations when blank and effort when unset', () => {
+    test('omits effort when unset', () => {
       const fields = buildPlanRunDialogFields({
         ...base,
         draft: { ...draft, effort: '' },
-        iterations: undefined,
       });
 
-      expect(fields).not.toHaveProperty('iterations');
       expect(fields).not.toHaveProperty('effort');
-      expect(fields).toHaveProperty('backend', 'claude');
+      expect(fields).toHaveProperty('driver', 'claude');
       expect(fields).toHaveProperty('model', 'opus');
     });
   });

@@ -11,7 +11,7 @@ Developers need **browser-side** log lines and a **paste-safe JSON bundle** for 
 
 **Primary users:** Local developers, internal support, on-call triage.
 
-**Out of scope until APIs exist:** Live tail of server workflow-ralph stderr, queue workers, or hosted agent logs inside this tab (see §7 for future contract notes). Plan detail and CLI remain the source for OpenThrottle plan output today.
+**Out of scope until APIs exist:** Live tail of server plan-run stderr, queue workers, or hosted agent logs inside this tab (see §7 for future contract notes). Plan detail and CLI remain the source for OpenThrottle plan output today.
 
 ## 2. Goals
 
@@ -63,7 +63,7 @@ Developers need **browser-side** log lines and a **paste-safe JSON bundle** for 
 
 ## 5. Workflow and agent logs (server) — current vs future
 
-**Current (UI):** Card explains that stderr / queue / plan-output streams are **not** exposed in-app; links to `tools/workflows` README and Plan detail for OpenThrottle output; `workflowLogs.apiStatus` is `not_available` with a **hint** string for CLI-oriented debugging.
+**Current (UI):** Card explains that stderr / queue / plan-output streams are **not** exposed in-app; links to Plan detail for OpenThrottle output; `workflowLogs.apiStatus` is `not_available` with a **hint** string for CLI-oriented debugging.
 
 **Future API contract (sketch — not blocking ship)**
 

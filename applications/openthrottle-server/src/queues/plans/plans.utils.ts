@@ -1,28 +1,30 @@
 import {
-  isRunnableRalphTask,
-  isWorkableRalphTask,
-} from '@openthrottle/openthrottle-agentic-ralph';
+  isRunnablePlanTask,
+  isWorkablePlanTask,
+} from '@openthrottle/openthrottle-agentic-loop';
 
-import { RUN_PLAN_ORCHESTRATOR_JOB_NAME } from '../agentic-ralph/agentic-ralph.constants.ts';
-import { RUN_PLAN_SPAWN_JOB_NAME } from './plans.constants.ts';
-import { PLAN_RUN_LIMIT_LABEL_BY_REASON } from './plans.constants.ts';
+import {
+  PLAN_RUN_LIMIT_LABEL_BY_REASON,
+  RUN_PLAN_ORCHESTRATOR_JOB_NAME,
+} from './plans.constants.ts';
 import type {
   FinishedRunNotification,
   FinishedRunNotificationInput,
   PlanSettleStatus,
   PlanTaskCounts,
   PlanTaskOutcomeFields,
+  RunPlanOrchestratorJobData,
 } from './plans.types.ts';
 
 /**
  * @description Counts a plan's tasks by what an agent run can still do with them, using the same
- * workable/remaining split as the orchestrator (`isWorkableRalphTask` / `isRunnableRalphTask`).
+ * workable/remaining split as the orchestrator (`isWorkablePlanTask` / `isRunnablePlanTask`).
  */
 export const countPlanTasks = (
   tasks: readonly PlanTaskOutcomeFields[],
 ): PlanTaskCounts => {
-  const remaining = tasks.filter((task) => isRunnableRalphTask(task));
-  const workable = remaining.filter((task) => isWorkableRalphTask(task));
+  const remaining = tasks.filter((task) => isRunnablePlanTask(task));
+  const workable = remaining.filter((task) => isWorkablePlanTask(task));
 
   return {
     blocked: remaining.length - workable.length,
@@ -103,22 +105,29 @@ export const buildFinishedRunNotification = (
   };
 };
 /**
- * @description Job names on the plans queue that represent a Ralph/plan run (spawn or orchestrator).
- * Used for cancellation and observability filters.
+ * @description Job names on the plans queue that represent a plan run. Used for cancellation and
+ * observability filters.
  */
-const PLAN_RALPH_BULL_JOB_NAMES = [
-  RUN_PLAN_SPAWN_JOB_NAME,
-  RUN_PLAN_ORCHESTRATOR_JOB_NAME,
-] as const;
+const PLAN_RUN_BULL_JOB_NAMES = [RUN_PLAN_ORCHESTRATOR_JOB_NAME] as const;
 
 /**
- * @description True when `name` is a plan Ralph job type on the plans queue.
+ * @description True when `name` is a plan-run job type on the plans queue.
  */
-export const isPlanRalphBullJobName = (
+export const isPlanRunBullJobName = (
   name: string | null | undefined,
 ): boolean => {
   return (
-    name != null &&
-    PLAN_RALPH_BULL_JOB_NAMES.some((jobName) => jobName === name)
+    name != null && PLAN_RUN_BULL_JOB_NAMES.some((jobName) => jobName === name)
   );
+};
+
+/**
+ * @description Narrows to the in-process orchestrator payload. Safe for any object with optional `runKind`
+ * and `planId` (including legacy spawn payloads on the same queue).
+ */
+export const isRunPlanOrchestratorJobData = (data: {
+  readonly planId: string;
+  readonly runKind?: string;
+}): data is RunPlanOrchestratorJobData => {
+  return data.runKind === 'orchestrator';
 };

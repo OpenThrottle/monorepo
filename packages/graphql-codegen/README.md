@@ -94,7 +94,7 @@ per GraphQL **input type**. Two knobs are intentional:
 - **`notAllowEmptyString: true`** — required (non-null) string inputs are
   emitted as `z.string().min(1)`, so an empty value fails validation. Nullable
   and optional fields are unaffected. Changing this regenerates every consumer
-  (`developer`, `admin`, `email`, `openthrottle-mcp`, `agentic-ralph`), so treat
+  (`developer`, `admin`, `email`, `openthrottle-mcp`), so treat
   it as a compatibility change, not a silent flip. (The `codegen-graphql` cache
   key does not include this package's source — pass `--skip-nx-cache` when a
   `defineCodegen` change must re-emit `schemas.ts`.)

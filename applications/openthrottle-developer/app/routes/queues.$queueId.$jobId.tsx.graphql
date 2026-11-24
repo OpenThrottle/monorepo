@@ -1,6 +1,6 @@
 fragment JobDetailsCard on JobObject {
   data
-  executionBackend
+  driver
   failedReason
   finishedOn
   id

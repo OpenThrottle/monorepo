@@ -513,7 +513,7 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
         action: 'keep',
         reason: 'structural (timestamp with time zone)',
       },
-      execution_backend: { action: 'keep', reason: 'structural (text)' },
+      driver: { action: 'keep', reason: 'structural (text)' },
       heartbeat_expected: { action: 'keep', reason: `structural (boolean)` },
       hostname: {
         action: 'scrub',

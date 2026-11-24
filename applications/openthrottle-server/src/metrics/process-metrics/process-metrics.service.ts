@@ -1,6 +1,5 @@
 /**
  * @description Collects Node process memory and CPU snapshots for server and task-run metrics.
- * See tools/workflows/docs/server-and-task-metrics.md.
  */
 
 import { Injectable } from '@nestjs/common';

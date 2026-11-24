@@ -1,10 +1,10 @@
 /**
- * @description Which agent environment (`ci | interactive | ralph`) this MCP server runs in,
+ * @description Which agent environment (`ci | headless | interactive`) this MCP server runs in,
  * detected ONCE at stdio startup and sent on every mutating tool call as `X-OT-Environment`, so
  * the plan-rules evaluation a mutation triggers carries the environment and an
  * environment-qualified tag→action rule can fire from it.
  *
- * Same surface split as `./execution-backend.ts`: only {@link runServerLocal} captures. On the
+ * Same surface split as `./driver.ts`: only {@link runServerLocal} captures. On the
  * Nest/HTTP surface this code runs inside the OpenThrottle server, whose environment describes the
  * server and not the caller, so it captures nothing and sends no header.
  *
@@ -15,12 +15,12 @@
  */
 
 /** The environments plan rules accept, mirroring `SKILL_AVAILABILITY_ENVIRONMENTS`. */
-export type AgentEnvironment = 'ci' | 'interactive' | 'ralph';
+export type AgentEnvironment = 'ci' | 'headless' | 'interactive';
 
 const AGENT_ENVIRONMENTS: readonly AgentEnvironment[] = [
   'ci',
+  'headless',
   'interactive',
-  'ralph',
 ];
 
 /** Request header the server's global CLS setup reads (`x-ot-environment`). */
@@ -33,7 +33,7 @@ export const AGENT_ENVIRONMENT_HEADER = 'X-OT-Environment';
  */
 const RUN_IDENTITY_PLAN_ID_ENV = 'OPENTHROTTLE_PLAN_ID';
 
-/** Harness markers, the same set `./execution-backend.ts` detects a backend from. */
+/** Harness markers, the same set `./driver.ts` detects a backend from. */
 const AGENT_HARNESS_ENV_MARKERS: readonly string[] = [
   'ANTIGRAVITY_AGENT',
   'CLAUDECODE',
@@ -73,8 +73,8 @@ const parseAgentEnvironment = (
  * 1. `OPENTHROTTLE_MCP_ENVIRONMENT` — an explicit declaration by whatever launched the server.
  *    An unrecognised value is ignored, not trusted.
  * 2. `CI` truthy → `ci`.
- * 3. `OPENTHROTTLE_PLAN_ID` set → `ralph`: an orchestrator (workflow-ralph, or the OT Loop job,
- *    the headless runner the `ralph` environment covers) spawned this agent.
+ * 3. `OPENTHROTTLE_PLAN_ID` set → `headless`: the OT Loop job
+ *    (the headless runner) spawned this agent.
  * 4. A known agent-harness marker → `interactive`: an agent launched the server and no
  *    orchestrator or CI did.
  * 5. Otherwise null, and no header is sent.
@@ -89,7 +89,7 @@ export const detectAgentEnvironmentFromEnv = (
 
   if (isTruthy(env['CI'])) return 'ci';
 
-  if (isSet(env[RUN_IDENTITY_PLAN_ID_ENV])) return 'ralph';
+  if (isSet(env[RUN_IDENTITY_PLAN_ID_ENV])) return 'headless';
 
   if (AGENT_HARNESS_ENV_MARKERS.some((marker) => isSet(env[marker]))) {
     return 'interactive';

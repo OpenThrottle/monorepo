@@ -1,4 +1,4 @@
-import type { JobRunHooksConfig } from '@tools/workflows';
+import type { JobRunHooksConfig } from '@openthrottle/openthrottle-agentic-utils';
 
 import type { RunPlanJobData } from '../../plans/plans.types.ts';
 

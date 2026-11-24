@@ -43,7 +43,7 @@ describe('groupChunksIntoEntries', () => {
   test('leaves kindless and plan-scoped chunks plain and splits groups around them', () => {
     const entries = groupChunksIntoEntries([
       chunk('a', {}),
-      chunk('ralph', { kind: null }),
+      chunk('plain', { kind: null }),
       chunk('b', {}),
       chunk('plan', { taskId: null }),
     ]);

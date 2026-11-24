@@ -1,8 +1,7 @@
 /**
  * @description Shared SIGTERM→SIGKILL escalation for spawned children, used by the async execution
  * engine (including when an abort signal cancels an in-flight agent child). Centralizing the grace
- * period and escalation keeps a fix to one spawn/kill path from silently missing another. Ported
- * from tools/workflows/src/utils/child-kill.ts (which now re-exports this).
+ * period and escalation keeps a fix to one spawn/kill path from silently missing another.
  */
 
 import type { ChildProcess } from 'child_process';

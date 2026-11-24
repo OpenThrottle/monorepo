@@ -18,7 +18,7 @@ import type { ScheduledAgentJobsRepository } from './scheduled-agent-jobs.reposi
 /**
  * Agent-CLI driver id for a scheduled job. Kept in lockstep with the `openthrottle-drivers`
  * `DRIVER_IDS` set but declared standalone so the repositories layer stays decoupled from the
- * CLI-invocation package (same pattern as `PlanRunExecutionBackend`). Stored as text and validated
+ * CLI-invocation package (same pattern as `PlanRunDriver`). Stored as text and validated
  * app-side via `parseDriverId`, not CHECK-constrained, because the driver set grows.
  * @public
  */

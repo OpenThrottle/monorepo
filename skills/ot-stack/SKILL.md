@@ -21,7 +21,7 @@ metadata:
 - You touch **`applications/openthrottle-developer`** (routes, loaders, GraphQL client).
 - You extend or debug **`packages/openthrottle-mcp`** (tools, env, smoke checks).
 
-Use `ot-generators` for scaffolding, `nx-workspace` for graph and targets, `ot-plans` for OpenThrottle plans/tasks and MCP traceability, `ot-postgres` for SQL migrations and table comments, `ot-loop` for executing a plan. Ralph CLI and BullMQ: [tools/workflows/README.md](https://github.com/openthrottle/monorepo/blob/main/tools/workflows/README.md).
+Use `ot-generators` for scaffolding, `nx-workspace` for graph and targets, `ot-plans` for OpenThrottle plans/tasks and MCP traceability, `ot-postgres` for SQL migrations and table comments, `ot-loop` for executing a plan. The OT Loop job and its BullMQ wiring: [docs/workflows/ot-loop-job.md](https://github.com/openthrottle/monorepo/blob/main/docs/workflows/ot-loop-job.md).
 
 ---
 

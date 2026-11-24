@@ -1,12 +1,12 @@
 /**
- * @description Error types for the driver contract. Replace the legacy
- * `Unsupported execution backend: <id>` string thrown in three places across tools/workflows.
+ * @description Error types for the driver contract. One typed error replaces ad-hoc
+ * `Unsupported driver: <id>` strings.
  */
 
 /**
  * @description Thrown when an id cannot be resolved to a registered driver — either because it is
  * not a known {@link DriverId} (from `parseDriverId`) or because no driver is registered for it yet
- * (from `getDriver`). The message wording preserves the legacy "Unknown execution backend" /
+ * (from `getDriver`). The message wording keeps the "Unknown driver" /
  * "Supported:" substrings so downstream re-exports (agentic-utils `parseWorkflowRunnerId`) stay
  * behavior-compatible.
  * @public

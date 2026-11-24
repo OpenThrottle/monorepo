@@ -17,7 +17,7 @@ import {
 } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
-  PlanRunExecutionBackend,
+  PlanRunDriver,
   PlanRunStatus,
   ScheduledRunRef,
 } from '@openthrottle/nestjs-repositories-server';
@@ -34,9 +34,15 @@ import {
   nodeResolverFs,
   resolveOtLoopCommands,
 } from '@openthrottle/openthrottle-agentic-loop';
-import { getWorkflowConfigCwd } from '@openthrottle/openthrottle-agentic-utils';
-import type { JobRunHookEntry } from '@tools/workflows';
-import { projectHookTasksToJobRunHookEntries } from '@tools/workflows';
+import type { JobRunHookEntry } from '@openthrottle/openthrottle-agentic-utils';
+import {
+  getWorkflowConfigCwd,
+  projectHookTasksToJobRunHookEntries,
+} from '@openthrottle/openthrottle-agentic-utils';
+import {
+  pickPlanRunConfigOtLoop,
+  planRunConfigFromPlanStorage,
+} from '@openthrottle/openthrottle-plan-config';
 import type { Queue } from 'bullmq';
 import type { EntityManager } from 'typeorm';
 import { DataSource } from 'typeorm';
@@ -61,12 +67,12 @@ import { CheckoutPathService } from '../../../services/checkout-path/checkout-pa
 import { QueuesService } from '../../queues/queues-service/queues-service.service.ts';
 import { normalizeIdempotencyKey } from '../../queues/queues-service/queues-service.utils.ts';
 import { WorkLedgerCaptureService } from '../../work-ledger/work-ledger-capture/work-ledger-capture.service.ts';
-import { buildRunPlanOrchestratorJobData } from '../enqueue-plan-ralph-tuning/enqueue-plan-ralph-tuning.utils.ts';
 import {
   buildPlanRunConfigSnapshotFromJobData,
   orchestratorJobInputFromSnapshot,
 } from '../enqueue-plan-run-config-snapshot/enqueue-plan-run-config-snapshot.utils.ts';
-import type { RalphPlanRunTuningInput } from '../plan.input.ts';
+import { buildRunPlanOrchestratorJobData } from '../enqueue-plan-run-tuning/enqueue-plan-run-tuning.utils.ts';
+import type { PlanRunTuningInput } from '../plan.input.ts';
 import { PlanStatusService } from '../plan-status/plan-status.service.ts';
 import type { StatusChangeActor } from '../plan-status/plan-status.types.ts';
 import { PLAN_SCHEDULE_CONFLICT_CODE } from './plan-enqueue.constants.ts';
@@ -79,7 +85,6 @@ import {
   createPlanScheduleConflictError,
   decidePlanSchedulability,
   isOneScheduledRunViolation,
-  resolveRequestedRunner,
 } from './plan-enqueue.utils.ts';
 import { ENQUEUE_TASK_STATUSES_TO_RESET } from './runnable-tasks/runnable-tasks.constants.ts';
 import { countRunnablePlanTasks } from './runnable-tasks/runnable-tasks.utils.ts';
@@ -89,8 +94,6 @@ const USAGE_LIMIT_RESUME_TASK_STATUSES_TO_RESET = [
   'PENDING',
   'IN_PROGRESS',
 ] as const;
-
-type ExecutionBackend = PlanRunExecutionBackend;
 
 /**
  * @description The plan_runs status each fire-time decision moves a SCHEDULED run to: QUEUED claims it
@@ -108,32 +111,6 @@ const SCHEDULED_RUN_STATUS_BY_DECISION = {
   ScheduledPlanRunFireDecision['kind'],
   PlanRunStatus
 >;
-
-/** @description Validated parameters for a spawn (nested workflow-ralph) plan-run enqueue. */
-interface EnqueueSpawnParams {
-  /** Request-principal actor kind, for the plans.status write's status_change attribution. */
-  readonly actorKind?: string | undefined;
-  /** Request-principal actor sub, for the plans.status write's status_change attribution. */
-  readonly actorSub?: string | undefined;
-  /** User who triggered the enqueue (null for service-account/system); persisted on the run record. */
-  readonly actorUserId?: string | null;
-  /** REQUIRED git branch the run operates on; persisted on plan_runs.branch. Rejected when blank. */
-  readonly branch: string;
-  /** True to cancel the plan's scheduled run and run now (D6); otherwise a schedule rejects. */
-  readonly cancelScheduled?: boolean | null;
-  /** Explicit registered checkout id; resolved to a filesystem path (highest precedence). */
-  readonly checkoutId?: string | null;
-  readonly idempotencyKey?: string | null;
-  readonly jobRunHooksJson?: string | null;
-  readonly planId: string;
-  readonly priority?: number | null;
-  readonly ralph?: RalphPlanRunTuningInput | null;
-  /** Portable repository id; resolved to the user's single checkout when checkoutId is omitted. */
-  readonly repositoryId?: string | null;
-  /** Requested runner (`ralph` | `ot-loop`); absent falls back to the plan's stored runner, else Ralph. */
-  readonly runner?: string | null;
-  readonly workingDirectory?: string | null;
-}
 
 /** @description Validated parameters for an in-process orchestrator plan-run enqueue. */
 interface EnqueueOrchestratorParams {
@@ -154,12 +131,10 @@ interface EnqueueOrchestratorParams {
   readonly mode?: 'plan' | 'task' | null;
   readonly planId: string;
   readonly priority?: number | null;
-  readonly ralph?: RalphPlanRunTuningInput | null;
   /** Portable repository id; resolved to the user's single checkout when checkoutId is omitted. */
   readonly repositoryId?: string | null;
-  /** Requested runner (`ralph` | `ot-loop`); absent falls back to the plan's stored runner, else Ralph. */
-  readonly runner?: string | null;
   readonly taskId?: string | null;
+  readonly tuning?: PlanRunTuningInput | null;
   readonly workingDirectory?: string | null;
 }
 
@@ -183,15 +158,13 @@ interface SchedulePlanRunParams {
   readonly jobRunHooksJson?: string | null;
   readonly planId: string;
   readonly priority?: number | null;
-  readonly ralph?: RalphPlanRunTuningInput | null;
   /** True to cancel the plan's current scheduled run and schedule this one in its place (D5). */
   readonly replaceScheduled?: boolean | null;
   /** Portable repository id; resolved to the user's single checkout when checkoutId is omitted. */
   readonly repositoryId?: string | null;
-  /** Requested runner (`ralph` | `ot-loop`); absent falls back to the plan's stored runner, else Ralph. */
-  readonly runner?: string | null;
   /** The absolute instant the run fires at. Must be in the future and within the 30-day horizon. */
   readonly scheduledFor: Date;
+  readonly tuning?: PlanRunTuningInput | null;
   readonly workingDirectory?: string | null;
 }
 
@@ -226,7 +199,7 @@ interface ResolvedWorkspace {
 }
 
 /**
- * @description Service owning the spawn and orchestrator plan-run enqueue pipelines. Extracted from
+ * @description Service owning the plan-run enqueue pipeline (OT Loop, the only runner). Extracted from
  * PlansResolver so the resolver only validates GraphQL input and maps results. App-internal; not
  * exported from a package boundary, so no @public tag is required.
  */
@@ -250,7 +223,7 @@ export class PlanEnqueueService {
   /**
    * @description Projects the plan's materialized lifecycle hook-tasks into runner hook entries so a
    * queued run executes them alongside any jobRunHooksJson config. Only plan-level SKILL hooks project
-   * (per the design bridge); template + task-level hooks run as materialized tasks in the Ralph loop.
+   * (per the design bridge); template + task-level hooks run as materialized tasks in the loop.
    */
   private async resolveMaterializedHookEntries(
     planId: string,
@@ -260,56 +233,10 @@ export class PlanEnqueueService {
   }
 
   /**
-   * @description Enqueue a plan-run for the `enqueuePlanRun` mutation. The nested-`workflow-ralph`
-   * spawn worker path was removed (OT plan 2ab62876): `PlansProcessor` only runs the in-process
-   * GraphQL orchestrator, so every queued run is enqueued as an orchestrator run. Kept as a named
-   * method (delegating to {@link PlanEnqueueService.enqueueOrchestrator}) so the resolver's
-   * `enqueuePlanRun`/`workflowPlanRun` entry points stay stable; the old
-   * `OPENTHROTTLE_DEFAULT_RUN_KIND=spawn` rollback knob is gone because there is no spawn worker to
-   * roll back to.
-   */
-  async enqueueSpawn(params: EnqueueSpawnParams): Promise<EnqueueOutcome> {
-    const {
-      actorKind,
-      actorSub,
-      actorUserId,
-      branch,
-      cancelScheduled,
-      checkoutId,
-      idempotencyKey,
-      jobRunHooksJson,
-      planId,
-      priority,
-      ralph,
-      repositoryId,
-      runner,
-      workingDirectory,
-    } = params;
-
-    return this.enqueueOrchestrator({
-      actorKind,
-      actorSub,
-      actorUserId,
-      branch,
-      cancelScheduled,
-      checkoutId,
-      idempotencyKey: idempotencyKey ?? null,
-      jobRunHooksJson,
-      mode: null,
-      planId,
-      priority,
-      ralph,
-      repositoryId,
-      runner,
-      taskId: null,
-      workingDirectory,
-    });
-  }
-
-  /**
-   * @description Enqueue an in-process Ralph orchestrator plan-run. Callers must pre-validate the
-   * GraphQL `mode`/`taskId` constraints (the resolver does this); this method assumes a resolved
-   * `mode` and an existing `taskId` when `mode === 'task'`.
+   * @description Enqueue an OT Loop plan-run: the one enqueue behind `enqueuePlanRun`,
+   * and the task-scoped mode. Callers must pre-validate the GraphQL
+   * `mode`/`taskId` constraints (the resolver does this); this method assumes a resolved `mode` and
+   * an existing `taskId` when `mode === 'task'`.
    *
    * A plan with a SCHEDULED run is rejected with `PLAN_ALREADY_SCHEDULED` (D6) unless
    * `cancelScheduled` is set: then the scheduled run is cancelled in the same transaction that
@@ -330,10 +257,9 @@ export class PlanEnqueueService {
       mode,
       planId,
       priority,
-      ralph,
       repositoryId,
-      runner,
       taskId,
+      tuning,
       workingDirectory,
     } = params;
 
@@ -345,10 +271,9 @@ export class PlanEnqueueService {
         jobRunHooksJson,
         mode,
         planId,
-        ralph,
         repositoryId,
-        runner,
         taskId,
+        tuning,
         workingDirectory,
       });
 
@@ -370,12 +295,12 @@ export class PlanEnqueueService {
       actorUserId,
       // Provenance projection captured at kickoff: branch from the required
       // kickoff input, checkoutId (on-disk home for deep-links) from the resolved
-      // workspace, model from the run snapshot's ralph tuning.
+      // workspace, model from the run snapshot's run tuning.
       branch: resolvedBranch,
       bullmqJobId: effectiveJobId,
       checkoutId: resolvedWorkspace.checkoutId,
-      executionBackend: jobData.executionBackend ?? 'cursor',
-      model: runConfigSnapshot.ralph.model ?? null,
+      driver: jobData.driver ?? 'cursor',
+      model: runConfigSnapshot.run.model ?? null,
       planId,
       runConfigSnapshot,
       runKind: 'orchestrator',
@@ -384,13 +309,11 @@ export class PlanEnqueueService {
 
     await this.removeCancelledScheduledJobs(cancelledScheduledRuns);
 
-    const enqueueResult = await this.queuesService.enqueuePlanRalphOrchestrator(
-      {
-        idempotencyKey: effectiveJobId,
-        jobData,
-        priority: jobPriority,
-      },
-    );
+    const enqueueResult = await this.queuesService.enqueuePlanRun({
+      idempotencyKey: effectiveJobId,
+      jobData,
+      priority: jobPriority,
+    });
 
     if ('error' in enqueueResult) {
       throw new BadRequestException(enqueueResult.error);
@@ -402,7 +325,7 @@ export class PlanEnqueueService {
     );
 
     return {
-      executionBackend: jobData.executionBackend ?? 'cursor',
+      driver: jobData.driver ?? 'cursor',
       jobId: enqueueResult.jobId,
       planId,
       queuePosition,
@@ -414,7 +337,7 @@ export class PlanEnqueueService {
    * @description Schedules a plan run for a later instant. Goes through the same two steps as every
    * other orchestrator enqueue and as {@link enqueueUsageLimitResume} — {@link commitEnqueueTransaction}
    * (run row SCHEDULED with `scheduled_for`; plan -> SCHEDULED, tasks untouched) then
-   * `QueuesService.enqueuePlanRalphOrchestrator` (BullMQ add after commit, delayed by the time left) —
+   * `QueuesService.enqueuePlanRun` (BullMQ add after commit, delayed by the time left) —
    * differing only in that the run is freshly resolved from the request, like
    * {@link enqueueOrchestrator}, and the status/delay come from `scheduledFor`. Unlike every other
    * enqueue it moves the plan to SCHEDULED rather than QUEUED and leaves the tasks alone (the
@@ -451,11 +374,10 @@ export class PlanEnqueueService {
       jobRunHooksJson,
       planId,
       priority,
-      ralph,
       replaceScheduled,
       repositoryId,
-      runner,
       scheduledFor,
+      tuning,
       workingDirectory,
     } = params;
 
@@ -484,10 +406,9 @@ export class PlanEnqueueService {
         jobRunHooksJson,
         mode: null,
         planId,
-        ralph,
         repositoryId,
-        runner,
         taskId: null,
+        tuning,
         workingDirectory,
       });
 
@@ -501,7 +422,7 @@ export class PlanEnqueueService {
       existing.scheduledFor !== null
     ) {
       return {
-        executionBackend: existing.executionBackend,
+        driver: existing.driver,
         jobId,
         planId,
         planRunId: existing.id,
@@ -513,7 +434,7 @@ export class PlanEnqueueService {
       checkoutId: resolvedWorkspace.checkoutId,
       repositoryId: resolvedWorkspace.repositoryId,
     });
-    const executionBackend = jobData.executionBackend ?? 'cursor';
+    const driver = jobData.driver ?? 'cursor';
 
     const { cancelledScheduledRuns, planRun } =
       await this.commitEnqueueTransaction({
@@ -523,8 +444,8 @@ export class PlanEnqueueService {
         branch: resolvedBranch,
         bullmqJobId: jobId,
         checkoutId: resolvedWorkspace.checkoutId,
-        executionBackend,
-        model: runConfigSnapshot.ralph.model ?? null,
+        driver,
+        model: runConfigSnapshot.run.model ?? null,
         planId,
         runConfigSnapshot,
         runKind: 'orchestrator',
@@ -543,21 +464,19 @@ export class PlanEnqueueService {
     // re-adds the new run's missing job.
     await this.removeCancelledScheduledJobs(cancelledScheduledRuns);
 
-    const enqueueResult = await this.queuesService.enqueuePlanRalphOrchestrator(
-      {
-        delayMs,
-        idempotencyKey: jobId,
-        jobData,
-        priority: priority ?? PLAN_JOB_PRIORITY_DEFAULT,
-      },
-    );
+    const enqueueResult = await this.queuesService.enqueuePlanRun({
+      delayMs,
+      idempotencyKey: jobId,
+      jobData,
+      priority: priority ?? PLAN_JOB_PRIORITY_DEFAULT,
+    });
 
     if ('error' in enqueueResult) {
       throw new BadRequestException(enqueueResult.error);
     }
 
     return {
-      executionBackend,
+      driver,
       jobId: enqueueResult.jobId,
       planId,
       planRunId: planRun.id,
@@ -571,8 +490,7 @@ export class PlanEnqueueService {
    * is written. Shared by {@link enqueueOrchestrator} and {@link schedulePlanRun} so the two cannot
    * drift on what a valid run is. Throws BadRequestException / NotFoundException.
    *
-   * Refuses a whole-plan run (`mode` 'plan' or null — "Run now", `enqueuePlanRun`/`enqueueSpawn`
-   * and `schedulePlanRun`) when the plan has no runnable tasks ({@link countRunnablePlanTasks}, the
+   * Refuses a whole-plan run (`mode` 'plan' or null — "Run now", `enqueuePlanRun` and `schedulePlanRun`) when the plan has no runnable tasks ({@link countRunnablePlanTasks}, the
    * same count {@link fireScheduledRun} uses), so the user hears it up front. A task-targeted run
    * (`mode` 'task') is exempt: it addresses one task the resolver already verified belongs to the
    * plan, which may be COMPLETED on purpose (re-run it). The fire-time `nothing_to_run` check stays,
@@ -586,10 +504,9 @@ export class PlanEnqueueService {
     readonly jobRunHooksJson?: string | null;
     readonly mode?: 'plan' | 'task' | null;
     readonly planId: string;
-    readonly ralph?: RalphPlanRunTuningInput | null;
     readonly repositoryId?: string | null;
-    readonly runner?: string | null;
     readonly taskId?: string | null;
+    readonly tuning?: PlanRunTuningInput | null;
     readonly workingDirectory?: string | null;
   }): Promise<{
     readonly jobData: ReturnType<typeof buildRunPlanOrchestratorJobData>;
@@ -603,10 +520,9 @@ export class PlanEnqueueService {
       jobRunHooksJson,
       mode,
       planId,
-      ralph,
       repositoryId,
-      runner,
       taskId,
+      tuning,
       workingDirectory,
     } = input;
 
@@ -650,13 +566,9 @@ export class PlanEnqueueService {
 
     const materializedHookEntries =
       await this.resolveMaterializedHookEntries(planId);
-    // The request wins over the plan's stored runConfig; absent on both means Ralph.
-    const effectiveRunner = resolveRequestedRunner(
-      runner,
-      plan.runConfig?.runner,
-    );
-    const otLoop =
-      effectiveRunner === 'ot-loop' ? plan.runConfig?.otLoop : undefined;
+    const storedRun = planRunConfigFromPlanStorage(plan.runConfig, {
+      planId,
+    }).run;
 
     let jobData: ReturnType<typeof buildRunPlanOrchestratorJobData>;
     try {
@@ -664,12 +576,11 @@ export class PlanEnqueueService {
         jobRunHooksJson,
         materializedHookEntries,
         mode: mode ?? null,
-        otLoop,
+        otLoop: pickPlanRunConfigOtLoop(storedRun),
         planId,
         planJobRunHooks: plan.jobRunHooks,
-        ralph,
-        runner: effectiveRunner,
         taskId,
+        tuning,
         workingDirectory: resolvedWorkspace.workingDirectory,
       });
     } catch (error) {
@@ -678,9 +589,7 @@ export class PlanEnqueueService {
       );
     }
 
-    if (effectiveRunner === 'ot-loop') {
-      await this.assertOtLoopRunnable(jobData);
-    }
+    await this.assertOtLoopRunnable(jobData);
 
     return { jobData, resolvedBranch, resolvedWorkspace };
   }
@@ -688,7 +597,7 @@ export class PlanEnqueueService {
   /**
    * @description Rejects an OT Loop run that could not start, at enqueue (docs/workflows/ot-loop-job.md
    * § 5, § 6): by the time the job runs the plan is already IN_PROGRESS. Two checks. The run must have
-   * a worktree (`ralph.worktree` present; the `disableWorktree` opt-out strips it), because the loop
+   * a worktree (`tuning.worktreeName` present; the programmatic defaults always set it), because the loop
    * resets and cleans its working tree and must never do that to a human's checkout. And a
    * validation command must resolve against the base checkout, which holds the same committed
    * `.openthrottle/ot-loop.json` the worktree will: the loop never marks a task done unvalidated.
@@ -696,9 +605,9 @@ export class PlanEnqueueService {
   private async assertOtLoopRunnable(
     jobData: ReturnType<typeof buildRunPlanOrchestratorJobData>,
   ): Promise<void> {
-    if ((jobData.ralph?.worktree?.trim() ?? '') === '') {
+    if ((jobData.tuning?.worktreeName?.trim() ?? '') === '') {
       throw new BadRequestException(
-        `OT Loop needs a worktree: it resets and cleans the working tree, so it never runs in your checkout. Remove disableWorktree to run it.`,
+        `OT Loop needs a worktree: it resets and cleans the working tree, so it never runs in your checkout.`,
       );
     }
 
@@ -716,7 +625,7 @@ export class PlanEnqueueService {
   /**
    * @description Enqueues the DELAYED continuation of a run that stopped on a usage limit. It goes
    * through the same two steps as every other orchestrator enqueue — {@link commitEnqueueTransaction}
-   * (run row QUEUED + plan QUEUED, one transaction) then `QueuesService.enqueuePlanRalphOrchestrator`
+   * (run row QUEUED + plan QUEUED, one transaction) then `QueuesService.enqueuePlanRun`
    * (BullMQ add, after commit) — differing only in what it feeds them: the limited run's own job
    * payload, snapshot, backend, model, branch and checkout rather than a freshly resolved request,
    * `resume_of_run_id` set on the new row, and a BullMQ `delay`.
@@ -740,7 +649,7 @@ export class PlanEnqueueService {
       branch: limitedRun.branch,
       bullmqJobId: jobId,
       checkoutId: limitedRun.checkoutId,
-      executionBackend: limitedRun.executionBackend,
+      driver: limitedRun.driver,
       model: limitedRun.model,
       planId: limitedRun.planId,
       resumeOfRunId: limitedRun.id,
@@ -749,14 +658,12 @@ export class PlanEnqueueService {
       taskStatusesToReset: USAGE_LIMIT_RESUME_TASK_STATUSES_TO_RESET,
     });
 
-    const enqueueResult = await this.queuesService.enqueuePlanRalphOrchestrator(
-      {
-        delayMs,
-        idempotencyKey: jobId,
-        jobData,
-        priority: PLAN_JOB_PRIORITY_DEFAULT,
-      },
-    );
+    const enqueueResult = await this.queuesService.enqueuePlanRun({
+      delayMs,
+      idempotencyKey: jobId,
+      jobData,
+      priority: PLAN_JOB_PRIORITY_DEFAULT,
+    });
 
     if ('error' in enqueueResult) {
       throw new Error(enqueueResult.error);
@@ -825,7 +732,7 @@ export class PlanEnqueueService {
     branch?: string | null;
     bullmqJobId: string;
     checkoutId?: string | null;
-    executionBackend: ExecutionBackend;
+    driver: PlanRunDriver;
     model?: string | null;
     planId: string;
     resumeOfRunId?: string | null;
@@ -852,7 +759,7 @@ export class PlanEnqueueService {
       branch,
       bullmqJobId,
       checkoutId,
-      executionBackend,
+      driver,
       model,
       planId,
       resumeOfRunId,
@@ -882,7 +789,7 @@ export class PlanEnqueueService {
           branch: branch ?? null,
           bullmqJobId,
           checkoutId: checkoutId ?? null,
-          executionBackend,
+          driver,
           model: model ?? null,
           planId,
           queueName: PLANS_QUEUE_NAME,
@@ -1201,7 +1108,7 @@ export class PlanEnqueueService {
     }
 
     return {
-      executionBackend: run.executionBackend,
+      driver: run.driver,
       jobId,
       planId,
       planRunId,
@@ -1353,14 +1260,12 @@ export class PlanEnqueueService {
     const jobData = buildRunPlanOrchestratorJobData(
       orchestratorJobInputFromSnapshot(run.planId, run.runConfigSnapshot),
     );
-    const enqueueResult = await this.queuesService.enqueuePlanRalphOrchestrator(
-      {
-        delayMs,
-        idempotencyKey: run.bullmqJobId,
-        jobData,
-        priority: PLAN_JOB_PRIORITY_DEFAULT,
-      },
-    );
+    const enqueueResult = await this.queuesService.enqueuePlanRun({
+      delayMs,
+      idempotencyKey: run.bullmqJobId,
+      jobData,
+      priority: PLAN_JOB_PRIORITY_DEFAULT,
+    });
 
     if ('error' in enqueueResult) {
       throw new Error(enqueueResult.error);

@@ -51,7 +51,7 @@ describe('roles', () => {
         ROLES.USER,
         ROLES.VIEWER,
         ROLES.MCP,
-        ROLES.WORKFLOW_RALPH,
+        ROLES.PLAN_RUNNER,
       ] as const) {
         expect(ROLE_PERMISSIONS[role]).not.toContain(PERMISSIONS.BLOG_WRITE);
       }
@@ -63,7 +63,7 @@ describe('roles', () => {
         ROLES.USER,
         ROLES.VIEWER,
         ROLES.MCP,
-        ROLES.WORKFLOW_RALPH,
+        ROLES.PLAN_RUNNER,
       ] as const) {
         expect(ROLE_PERMISSIONS[role]).not.toContain(PERMISSIONS.CMS_WRITE);
       }
@@ -75,7 +75,7 @@ describe('roles', () => {
       for (const role of [
         ROLES.USER,
         ROLES.VIEWER,
-        ROLES.WORKFLOW_RALPH,
+        ROLES.PLAN_RUNNER,
       ] as const) {
         expect(ROLE_PERMISSIONS[role]).not.toContain(PERMISSIONS.BLOG_DRAFT);
       }
@@ -91,8 +91,8 @@ describe('roles', () => {
       expect(perms).not.toContain(PERMISSIONS.USERS_WRITE);
     });
 
-    it('workflow-ralph has plans read/write only', () => {
-      const perms = ROLE_PERMISSIONS[ROLES.WORKFLOW_RALPH];
+    it('plan-runner has plans read/write only', () => {
+      const perms = ROLE_PERMISSIONS[ROLES.PLAN_RUNNER];
       expect(perms).toEqual([PERMISSIONS.PLANS_READ, PERMISSIONS.PLANS_WRITE]);
       expect(perms).not.toContain(PERMISSIONS.USERS_WRITE);
     });
@@ -137,7 +137,7 @@ describe('roles', () => {
         [ROLES.MCP]: [] as const,
         [ROLES.USER]: [PERMISSIONS.USERS_READ] as const,
         [ROLES.VIEWER]: [] as const,
-        [ROLES.WORKFLOW_RALPH]: [] as const,
+        [ROLES.PLAN_RUNNER]: [] as const,
       };
       expect(
         roleHasPermission(ROLES.ADMIN, PERMISSIONS.USERS_WRITE, customMapping),

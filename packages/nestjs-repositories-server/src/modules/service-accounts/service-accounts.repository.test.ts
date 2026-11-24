@@ -49,24 +49,27 @@ describe('ServiceAccountsRepository', () => {
 
   describe('create', () => {
     it('spells the omitted nullable columns out as null', async () => {
-      await repository.create({ name: 'workflow-ralph' });
+      await repository.create({ name: 'plan-runner' });
 
       expect(save).toHaveBeenCalledWith(
         {
           actingUserId: null,
           description: null,
           disabledAt: null,
-          name: 'workflow-ralph',
+          name: 'plan-runner',
         },
         undefined,
       );
     });
 
     it('keeps a supplied description', async () => {
-      await repository.create({ description: 'runs plans', name: 'ralph' });
+      await repository.create({ description: 'runs plans', name: 'headless' });
 
       expect(save).toHaveBeenCalledWith(
-        expect.objectContaining({ description: 'runs plans', name: 'ralph' }),
+        expect.objectContaining({
+          description: 'runs plans',
+          name: 'headless',
+        }),
         undefined,
       );
     });
@@ -90,11 +93,11 @@ describe('ServiceAccountsRepository', () => {
 
   describe('findByName', () => {
     it('looks an account up by name', async () => {
-      const account = serviceAccountsFactory.build({ name: 'ralph' });
+      const account = serviceAccountsFactory.build({ name: 'headless' });
       findOne.mockResolvedValue(account);
 
-      await expect(repository.findByName('ralph')).resolves.toBe(account);
-      expect(findOne).toHaveBeenCalledWith({ where: { name: 'ralph' } });
+      await expect(repository.findByName('headless')).resolves.toBe(account);
+      expect(findOne).toHaveBeenCalledWith({ where: { name: 'headless' } });
     });
 
     it('returns null when no account has that name', async () => {
