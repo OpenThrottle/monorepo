@@ -63,6 +63,7 @@ export const buildPlanRunConfigSnapshot = (
     hooks != null && Array.isArray(hooks.hooks) && hooks.hooks.length > 0;
 
   return {
+    ...(input.containment != null ? { containment: input.containment } : {}),
     ...(hasHooks ? { jobRunHooks: hooks } : {}),
     run,
     target: { mode, taskId },

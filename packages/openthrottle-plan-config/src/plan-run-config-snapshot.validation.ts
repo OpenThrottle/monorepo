@@ -4,6 +4,7 @@
 
 import { z } from 'zod';
 
+import { planRunConfigContainmentSchema } from './plan-run-config-containment.validation.ts';
 import { planRunConfigOtLoopShape } from './plan-run-config-ot-loop.validation.ts';
 import { PLAN_RUN_CONFIG_SNAPSHOT_VERSION } from './plan-run-config-snapshot.constants.ts';
 import type { PlanRunConfigSnapshot } from './plan-run-config-snapshot.types.ts';
@@ -35,6 +36,7 @@ const planRunConfigSnapshotRunV1Schema = z
 
 const planRunConfigSnapshotV1Schema = z
   .object({
+    containment: planRunConfigContainmentSchema.optional(),
     jobRunHooks: z
       .object({
         hooks: z.array(z.unknown()),

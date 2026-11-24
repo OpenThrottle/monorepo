@@ -96,6 +96,11 @@ describe('codex driver', () => {
     expect(codexDriver.capabilities).toEqual({
       attachesWorkspaceMcp: false,
       chatStreaming: true,
+      containment: {
+        filesystem: true,
+        networkAllowlist: false,
+        networkDeny: true,
+      },
       isolatesRepoAgentConfig: false,
       mcpAutoApprove: false,
       permissionMode: true,
@@ -196,6 +201,11 @@ describe('grok driver', () => {
     expect(grokDriver.capabilities).toEqual({
       attachesWorkspaceMcp: true,
       chatStreaming: true,
+      containment: {
+        filesystem: false,
+        networkAllowlist: false,
+        networkDeny: false,
+      },
       isolatesRepoAgentConfig: false,
       mcpAutoApprove: false,
       permissionMode: true,

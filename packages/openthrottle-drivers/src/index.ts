@@ -15,6 +15,7 @@ export * from './utils/binary.ts';
 export * from './utils/child-env.ts';
 export * from './utils/child-kill.ts';
 export * from './utils/claude-output.ts';
+export * from './utils/containment.ts';
 export * from './utils/cursor-config.ts';
 export * from './utils/formatToolLine.ts';
 export * from './utils/logger.ts';

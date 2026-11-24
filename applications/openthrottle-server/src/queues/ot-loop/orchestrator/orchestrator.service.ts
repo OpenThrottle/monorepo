@@ -43,6 +43,7 @@ import {
   resolveHookPluginDirs,
 } from '@openthrottle/openthrottle-agentic-utils';
 import type {
+  DriverContainment,
   DriverId,
   DriverReasoningEffort,
   DriverRepoAgentConfig,
@@ -57,6 +58,10 @@ import {
 
 import { CreateTaskDocument } from '../../../__generated__/graphql.ts';
 import { PlanRunWorkspaceService } from '../../../services/plan-run-workspace/plan-run-workspace.service.ts';
+import {
+  buildRunContainment,
+  describeRunContainmentWarning,
+} from '../../../services/run-containment/run-containment.utils.ts';
 import {
   OT_LOOP_DEFAULT_BASE_BRANCH,
   OT_LOOP_EXECUTE_GRAPHQL,
@@ -240,6 +245,14 @@ export class OtLoopOrchestratorService {
       planId,
       repoAgentConfig,
     });
+    const containment = await buildRunContainment({
+      cwd,
+      profile: jobData.containment,
+    });
+    const containmentWarning = describeRunContainmentWarning(
+      getDriver(driver),
+      containment,
+    );
     const runModel = toModel(tuning.model);
     const client = createOtLoopClient({
       executeGraphqlV2: this.executeGraphqlV2,
@@ -253,6 +266,9 @@ export class OtLoopOrchestratorService {
     say(
       `starting: driver=${driver}, validation from ${commands.source}; per-iteration lifecycle events are not emitted by this runner (known gap)`,
     );
+    if (containmentWarning !== undefined) {
+      say(containmentWarning);
+    }
     await prepareResultDir(cwd);
 
     const setupResult = await this.runCommands({
@@ -279,6 +295,7 @@ export class OtLoopOrchestratorService {
     const deps = await this.buildDeps({
       client,
       commands: commands.validation,
+      containment,
       cwd,
       driver,
       effort: toEffort(tuning.effort),
@@ -360,6 +377,7 @@ export class OtLoopOrchestratorService {
     readonly driver: DriverId;
     readonly client: LoopClient;
     readonly commands: readonly string[];
+    readonly containment: DriverContainment;
     readonly cwd: string;
     readonly effort: DriverReasoningEffort | undefined;
     readonly output: PlanOutputWriter;
@@ -420,6 +438,7 @@ export class OtLoopOrchestratorService {
         timeoutMs: DEFAULT_COMMAND_TIMEOUT_MS,
       }),
       worker: createOtLoopWorkerRunner({
+        containment: input.containment,
         cwd,
         driver,
         effort: input.effort,

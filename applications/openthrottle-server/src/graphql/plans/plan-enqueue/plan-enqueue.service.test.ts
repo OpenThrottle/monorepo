@@ -28,7 +28,10 @@ import {
 } from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import { isRecord } from '@openthrottle/nodejs-utils';
-import { getDefaultPlanRunConfigStorage } from '@openthrottle/openthrottle-plan-config';
+import {
+  getDefaultPlanRunConfigStorage,
+  getDefaultPlanRunContainmentProfile,
+} from '@openthrottle/openthrottle-plan-config';
 import type { Queue } from 'bullmq';
 import { GraphQLError } from 'graphql';
 import type { DataSource } from 'typeorm';
@@ -715,6 +718,7 @@ describe('PlanEnqueueService', () => {
       expect(mockEnqueuePlanRun).toHaveBeenCalledWith({
         idempotencyKey,
         jobData: {
+          containment: getDefaultPlanRunContainmentProfile(),
           driver: 'cursor',
           planId: mockPlan.id,
           // Server-side defaults: a worktree OpenThrottle names itself, plus verbose logging,
@@ -1106,6 +1110,37 @@ describe('PlanEnqueueService', () => {
         planRunsRepository.recordQueuedRun.mock.calls[0]?.[0],
       ).toMatchObject({
         runConfigSnapshot: { run: otLoop },
+      });
+    });
+
+    test('resolves the plan containment profile onto the job and the snapshot', async () => {
+      await writeConfig(
+        JSON.stringify({ validation: { commands: ['pnpm test'] } }),
+      );
+      const containment = {
+        filesystem: 'worktree-write',
+        network: { mode: 'deny' },
+      };
+      repo.findOne.mockResolvedValue(otLoopPlan({ containment }));
+
+      await enqueue();
+
+      expect(enqueuedJobData()).toMatchObject({ containment });
+      expect(
+        planRunsRepository.recordQueuedRun.mock.calls[0]?.[0],
+      ).toMatchObject({ runConfigSnapshot: { containment } });
+    });
+
+    test('gives a plan with no containment the default profile', async () => {
+      await writeConfig(
+        JSON.stringify({ validation: { commands: ['pnpm test'] } }),
+      );
+      repo.findOne.mockResolvedValue(otLoopPlan({}));
+
+      await enqueue();
+
+      expect(enqueuedJobData()).toMatchObject({
+        containment: getDefaultPlanRunContainmentProfile(),
       });
     });
 

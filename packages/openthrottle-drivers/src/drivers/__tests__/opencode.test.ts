@@ -107,6 +107,11 @@ describe('opencode driver', () => {
     expect(opencodeDriver.capabilities).toEqual({
       attachesWorkspaceMcp: true,
       chatStreaming: true,
+      containment: {
+        filesystem: false,
+        networkAllowlist: false,
+        networkDeny: false,
+      },
       isolatesRepoAgentConfig: false,
       mcpAutoApprove: false,
       permissionMode: true,

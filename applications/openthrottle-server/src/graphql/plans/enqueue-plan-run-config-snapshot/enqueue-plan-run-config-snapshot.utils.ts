@@ -90,6 +90,7 @@ export const buildPlanRunConfigSnapshotFromJobData = (
     const mode = jobData.mode === 'task' ? 'task' : 'plan';
     return buildPlanRunConfigSnapshot({
       checkoutId,
+      containment: jobData.containment ?? null,
       driver,
       jobRunHooks,
       mode,

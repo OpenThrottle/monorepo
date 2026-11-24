@@ -7,7 +7,10 @@ import type {
   WallClockMetrics,
   WorkflowConfigRunner,
 } from '@openthrottle/openthrottle-agentic-utils';
-import type { PlanRunConfigOtLoop } from '@openthrottle/openthrottle-plan-config';
+import type {
+  PlanRunConfigOtLoop,
+  PlanRunContainmentProfile,
+} from '@openthrottle/openthrottle-plan-config';
 import type { Job } from 'bullmq';
 
 import type { TaskRunMetrics } from '../../metrics/process-metrics/process-metrics.types.ts';
@@ -22,6 +25,11 @@ export type RunPlanJobWorkflowMode = 'plan' | 'task';
  * `orchestrator`: the run executes in-process through OT Loop, never as a spawned child.
  */
 export interface RunPlanOrchestratorJobData {
+  /**
+   * Containment profile resolved from the plan's run config at enqueue. Optional only for previously
+   * persisted BullMQ jobs, which run under the default profile.
+   */
+  readonly containment?: PlanRunContainmentProfile;
   /**
    * Driver selected once for this run. Optional only for previously persisted BullMQ jobs.
    */

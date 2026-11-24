@@ -4,6 +4,7 @@
 
 import { z } from 'zod';
 
+import { planRunConfigContainmentSchema } from './plan-run-config-containment.validation.ts';
 import { planRunConfigOtLoopShape } from './plan-run-config-ot-loop.validation.ts';
 import {
   DEFAULT_PLAN_RUN_DEBUG_CLI,
@@ -51,6 +52,7 @@ const planRunConfigRunV1Schema = z
 
 const planRunConfigStorageV1Schema = z
   .object({
+    containment: planRunConfigContainmentSchema.optional(),
     run: planRunConfigRunV1Schema,
     target: z
       .object({

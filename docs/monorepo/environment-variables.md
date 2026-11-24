@@ -173,6 +173,9 @@ env. If your agent runs relied on something outside the lists above, name it exp
   `SSL_CERT_FILE`) for drivers other than cursor, which already admits the proxy trio.
 - `SSH_AUTH_SOCK` — an agent that pushes over SSH.
 
+What the agent can then do with those variables is capped separately, by the run's filesystem and
+network containment: [run-containment.md](../workflows/run-containment.md).
+
 Every name you add is a variable a prompt-injected agent can read; webhook-triggered jobs run
 attacker-authored text ([webhook-triggered-agent-jobs.md](../openthrottle/webhook-triggered-agent-jobs.md), T4).
 

@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import type { LoopTask } from '@openthrottle/openthrottle-agentic-loop';
 import { prepareResultDir } from '@openthrottle/openthrottle-agentic-loop';
 import type {
+  DriverContainment,
   DriverInvocationConfig,
   RunDriverOptions,
 } from '@openthrottle/openthrottle-drivers';
@@ -38,6 +39,12 @@ const GOOD_RESULT = JSON.stringify({
   version: 1,
 });
 
+const CONTAINMENT: DriverContainment = {
+  extraWritableRoots: ['/repo/.git/worktrees/plan-1'],
+  filesystem: 'worktree-write',
+  network: { hosts: ['registry.npmjs.org'], mode: 'allowlist' },
+};
+
 describe('createOtLoopWorkerRunner', () => {
   let cwd: string;
   const written: PlanOutputChunk[] = [];
@@ -52,6 +59,7 @@ describe('createOtLoopWorkerRunner', () => {
 
   const build = (runDriver: OtLoopRunDriver) => {
     return createOtLoopWorkerRunner({
+      containment: CONTAINMENT,
       cwd,
       driver: getDriver('claude'),
       effort: 'high',
@@ -116,6 +124,7 @@ describe('createOtLoopWorkerRunner', () => {
     await runner.run(input(controller.signal));
 
     expect(seen).toMatchObject({
+      containment: CONTAINMENT,
       cwd,
       effort: 'high',
       model: 'sonnet',

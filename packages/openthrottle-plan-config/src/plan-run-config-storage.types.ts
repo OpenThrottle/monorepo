@@ -27,6 +27,25 @@ export interface PlanRunConfigOtLoop {
   readonly validationCommands?: readonly string[];
 }
 
+/** @description Filesystem boundary for an unattended run. */
+export type PlanRunContainmentFilesystem = 'unrestricted' | 'worktree-write';
+
+/** @description Network boundary for an unattended run; `hosts` exists only on an allowlist. */
+export type PlanRunContainmentNetwork =
+  | { readonly hosts: readonly string[]; readonly mode: 'allowlist' }
+  | { readonly mode: 'deny' }
+  | { readonly mode: 'unrestricted' };
+
+/**
+ * @description OT-owned containment for an unattended run (`runConfigJson.containment`), enforced
+ * through each agent CLI's native sandbox. A driver that cannot honour an axis warns at run start;
+ * it never fails the run. Absent on a stored config means the default profile.
+ */
+export interface PlanRunContainmentProfile {
+  readonly filesystem: PlanRunContainmentFilesystem;
+  readonly network: PlanRunContainmentNetwork;
+}
+
 /** @description Stored shape for `plans.job_run_hooks` (validated in openthrottle-server). */
 export interface PlanJobRunHooksStorage {
   readonly hooks: readonly unknown[];
@@ -53,6 +72,8 @@ export interface PlanRunConfigRunV1 extends PlanRunConfigOtLoop {
 }
 
 export interface PlanRunConfigStorageV1 {
+  /** @description Containment profile; absent means the default (see `resolvePlanRunContainmentProfile`). */
+  readonly containment?: PlanRunContainmentProfile;
   readonly run: PlanRunConfigRunV1;
   readonly target: {
     readonly mode: PlanRunConfigTargetMode;
@@ -98,6 +119,8 @@ export interface PlanWorkflowRunOptions {
 export interface PlanWorkflowUiState {
   /** @description Registered checkout id selected in the UI (optional; empty/absent = unset). */
   readonly checkoutId?: string;
+  /** @description Carried through so a UI save does not drop it. */
+  readonly containment?: PlanRunContainmentProfile;
   /** @description Raw timeout field (seconds); empty = no timeout. */
   readonly iterationTimeoutText: string;
   /** @description Carried through so a UI save does not drop it. */

@@ -46,6 +46,7 @@ export const planRunConfigFromWorkflowUiState = (
 
   const config: PlanRunConfigStorage = {
     ...defaults,
+    ...(ui.containment !== undefined ? { containment: ui.containment } : {}),
     run: {
       ...ui.otLoop,
       debugCli: workflowInput.debugCli,
@@ -129,6 +130,9 @@ export const workflowUiStateFromPlanRunConfig = (
 
   return {
     checkoutId: parsed.workspace.checkoutId,
+    ...(parsed.containment !== undefined
+      ? { containment: parsed.containment }
+      : {}),
     iterationTimeoutText,
     ...(otLoop !== undefined ? { otLoop } : {}),
     repositoryId: parsed.workspace.repositoryId,

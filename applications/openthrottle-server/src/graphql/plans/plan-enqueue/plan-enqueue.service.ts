@@ -42,6 +42,7 @@ import {
 import {
   pickPlanRunConfigOtLoop,
   planRunConfigFromPlanStorage,
+  resolvePlanRunContainmentProfile,
 } from '@openthrottle/openthrottle-plan-config';
 import type { Queue } from 'bullmq';
 import type { EntityManager } from 'typeorm';
@@ -566,23 +567,28 @@ export class PlanEnqueueService {
 
     const materializedHookEntries =
       await this.resolveMaterializedHookEntries(planId);
-    const storedRun = planRunConfigFromPlanStorage(plan.runConfig, {
+    const storedConfig = planRunConfigFromPlanStorage(plan.runConfig, {
       planId,
-    }).run;
+    });
+    const storedRun = storedConfig.run;
 
     let jobData: ReturnType<typeof buildRunPlanOrchestratorJobData>;
     try {
-      jobData = buildRunPlanOrchestratorJobData({
-        jobRunHooksJson,
-        materializedHookEntries,
-        mode: mode ?? null,
-        otLoop: pickPlanRunConfigOtLoop(storedRun),
-        planId,
-        planJobRunHooks: plan.jobRunHooks,
-        taskId,
-        tuning,
-        workingDirectory: resolvedWorkspace.workingDirectory,
-      });
+      jobData = {
+        ...buildRunPlanOrchestratorJobData({
+          jobRunHooksJson,
+          materializedHookEntries,
+          mode: mode ?? null,
+          otLoop: pickPlanRunConfigOtLoop(storedRun),
+          planId,
+          planJobRunHooks: plan.jobRunHooks,
+          taskId,
+          tuning,
+          workingDirectory: resolvedWorkspace.workingDirectory,
+        }),
+        // Resolved once here, so a later edit to the plan cannot change a queued run's boundary.
+        containment: resolvePlanRunContainmentProfile(storedConfig),
+      };
     } catch (error) {
       throw new BadRequestException(
         error instanceof Error ? error.message : String(error),

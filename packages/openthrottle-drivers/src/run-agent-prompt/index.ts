@@ -17,6 +17,7 @@ import type { DriverId } from '../registry/index.ts';
 import { parseDriverId } from '../registry/index.ts';
 import type {
   DriverChunk,
+  DriverContainment,
   DriverEndpointConfig,
   DriverInvocationConfig,
   DriverWorktreeOptions,
@@ -44,6 +45,8 @@ export interface AgentPromptSettings {
  * @public
  */
 export interface RunAgentPromptConfig {
+  /** OS-level containment; honored per the driver's `containment` capability, omitted ⇒ none. */
+  readonly containment?: DriverContainment;
   /** Process cwd for the subprocess; inherits `process.cwd()` when omitted. */
   readonly cwd?: string;
   /** Raw driver id; validated via `parseDriverId` (throws `UnknownDriverError` when unknown). */
@@ -151,6 +154,9 @@ export const runAgentPrompt = async (
 
   const buffered: string[] = [];
   const invocationConfig: DriverInvocationConfig = {
+    ...(config.containment !== undefined
+      ? { containment: config.containment }
+      : {}),
     cwd: config.cwd,
     endpoint,
     iteration: 0,

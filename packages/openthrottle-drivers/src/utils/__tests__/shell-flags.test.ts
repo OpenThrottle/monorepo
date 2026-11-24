@@ -24,6 +24,11 @@ const mcpCapabilities = (mcpAutoApprove: boolean): DriverCapabilities => {
   return {
     attachesWorkspaceMcp: false,
     chatStreaming: false,
+    containment: {
+      filesystem: false,
+      networkAllowlist: false,
+      networkDeny: false,
+    },
     isolatesRepoAgentConfig: false,
     mcpAutoApprove,
     permissionMode: false,
@@ -62,6 +67,11 @@ describe('appendMcpShellFlags', () => {
 const BASE_CAPABILITIES: DriverCapabilities = {
   attachesWorkspaceMcp: false,
   chatStreaming: false,
+  containment: {
+    filesystem: false,
+    networkAllowlist: false,
+    networkDeny: false,
+  },
   isolatesRepoAgentConfig: false,
   mcpAutoApprove: false,
   permissionMode: false,
