@@ -1,7 +1,6 @@
 /**
- * @description Badge styling per rule-application state for
- * {@link PlanRuleApplications}. Hoisted out of the component per
- * component-primitive-shape R4.
+ * @description Badge styling per rule-application state, used by
+ * `RuleApplicationsSection`.
  */
 
 export const PLAN_RULE_APPLICATION_STATE_STYLES: Record<string, string> = {

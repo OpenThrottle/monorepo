@@ -214,7 +214,7 @@ describe('root loader: token gate + protected-prefix redirect', () => {
       expect.anything(),
       GetMyUserDocument,
     );
-    // `myPermissions` is loaded once here and read by useHasPermission.
+    // `myPermissions` is loaded once here and read through `hasPermission`.
     expect(data.permissions).toEqual(['blog:draft']);
     // The default editor is loaded once here and provided to editor links.
     expect(data.defaultEditor).toBe(WorkspaceEditorId.Cursor);

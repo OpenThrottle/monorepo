@@ -20,7 +20,7 @@ export type PermissionGatedNavigation = Record<
 
 /**
  * @description True when `permissions` (the current user's permission names)
- * contains `permission`. Pure counterpart of the `useHasPermission` hook.
+ * contains `permission`.
  */
 export const hasPermission = (
   permissions: readonly string[],

@@ -1,5 +1,3 @@
-// FIXME: Swap out eventually
-
 /**
  * @description Resolver for activity-by-date-range. Uses the DataSource for raw SQL across the work ledger (work_artifacts git_commit), plan_output_stream, tasks.
  */

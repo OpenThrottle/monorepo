@@ -336,6 +336,7 @@
     "nx:validate-projects": "tsx ./scripts/nx-validate-projects.ts",
     "nx:validate-tags": "tsx ./scripts/nx-validate-tags.ts",
     "ollama-proxy": "nx run @tools/ollama-proxy:serve",
+    "ollama:pull": "tsx ./scripts/ollama.ts",
     "preinstall": "node ./scripts/check-node-engine.mjs && npx only-allow pnpm",
     "prepare": "husky",
     "release:applications": "tsx ./scripts/release-applications.ts",

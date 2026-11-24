@@ -155,12 +155,7 @@ PromptsTable.buildTable = (): DataTableColumnDef<
     },
     {
       cell: (_data) => {
-        return (
-          <div className="flex items-center justify-center">
-            {/* <PlansTableRowActions plan={row.original} /> */}
-            ...
-          </div>
-        );
+        return <div className="flex items-center justify-center">...</div>;
       },
       header: () => <GlobalPopoverActionsHeader />,
       id: 'actions',

@@ -1,4 +1,3 @@
-// import { Analytics } from '@vercel/analytics/react';
 import {
   GlobalErrorBoundary,
   GlobalLayout,
@@ -189,8 +188,6 @@ export function Layout({
         </GlobalProviders>
 
         <ScrollRestoration nonce={nonce} />
-        {/* FIXME: Uncomment this when we have a production environment */}
-        {/* <Analytics /> */}
 
         {/* 🚨 Any env added here is 100% visible to the world 🚨 */}
         <script

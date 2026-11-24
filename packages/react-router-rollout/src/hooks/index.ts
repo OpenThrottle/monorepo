@@ -5,4 +5,3 @@ export type { UseRolloutContextOptions } from './useRolloutContext';
 export { useRolloutContext } from './useRolloutContext';
 export { useRolloutFlag } from './useRolloutFlag';
 export type { UseRolloutProviderOptions } from './useRolloutProvider';
-export { useRolloutProvider } from './useRolloutProvider';

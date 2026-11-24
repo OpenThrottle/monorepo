@@ -186,7 +186,7 @@ export const PLAN_RUN_OT_LOOP_COPY = {
  * @description Section headings and empty-state hints for the plan detail Output
  * tab, which reads as a history: agent output, then the rule-applications change
  * log, then linked artifacts. Headings mirror the reused panel components
- * (PlanRuleApplications, LinkedArtifactsPanel) so populated and empty states read
+ * (RuleApplicationsSection, LinkedArtifactsPanel) so populated and empty states read
  * the same.
  */
 /**

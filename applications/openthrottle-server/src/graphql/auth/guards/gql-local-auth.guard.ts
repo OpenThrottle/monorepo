@@ -13,8 +13,6 @@ import { LOCAL_STRATEGY_NAME } from '../strategies/local.strategy.ts';
 @Injectable()
 export class GqlLocalAuthGuard extends AuthGuard(LOCAL_STRATEGY_NAME) {
   override getRequest(context: ExecutionContext): unknown {
-    // FIXME: Swap out eventually
-
     if (context.getType<string>() === 'graphql') {
       const ctx = GqlExecutionContext.create(context);
       const req = ctx.getContext<{ req: unknown }>().req;

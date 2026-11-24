@@ -19,10 +19,8 @@ const memoryStore = new Map<string, RolloutEvaluationCacheEntry>();
 
 /**
  * Build a stable cache key for an application + optional actor identity.
- *
- * @public
  */
-export const rolloutEvaluationCacheKey = (
+const rolloutEvaluationCacheKey = (
   applicationKey: string,
   identityKey?: string | null,
 ): string => {
