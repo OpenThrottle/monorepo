@@ -1,7 +1,7 @@
 # openthrottle-website — agent notes
 
 Marketing and landing site (React Router v8, flat routes): home page, markdown docs, FAQ,
-component demos, and a `sitemap.xml` resource route. Public and unauthenticated; the smallest
+and a `sitemap.xml` resource route. Public and unauthenticated; the smallest
 app in the family.
 
 **Consumed by:** nothing — deployable app (Vercel; `vercel.json`, Vercel preset in
@@ -13,7 +13,6 @@ app in the family.
 - `app/routes/docs.$.tsx` + `app/docs-content/` — docs catch-all rendered via
   `@openthrottle/react-router-docs`.
 - `app/routes/sitemap[.]xml.tsx` — resource route (mind the escaped-dot filename).
-- `app/routing/demos/` — component demos behind the `demos.layout` route.
 - `app/global/config/csp.ts` — this app's CSP options, consumed by `entry.server.tsx`.
 - `app/services/graphql.server.ts` — the loader-only public GraphQL helper (`fetchPublicGraphql`).
 - `app/routes/blog._index.tsx`, `blog.$blogSlug.tsx`, `blog.tags.$tagSlug.tsx` — public blog routes; each
