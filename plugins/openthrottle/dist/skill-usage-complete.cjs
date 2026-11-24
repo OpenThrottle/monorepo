@@ -2303,6 +2303,18 @@ var CONVERSATION_DENIED_ACTIONS_KEY = "deniedActions";
 var CONVERSATION_TOOL_NOT_RUN_KEY = "notRun";
 var CONVERSATION_TOOL_DENIED_ERROR = `Permission denied: the tool call was refused.`;
 
+// packages/openthrottle-agentic-utils/src/utils/conversation-backend/host-env.ts
+var CHAT_BASE_ENV_KEYS = [
+  "HOME",
+  "LANG",
+  "LC_ALL",
+  "LOGNAME",
+  "PATH",
+  "TERM",
+  "TMPDIR",
+  "USER"
+];
+
 // packages/openthrottle-agentic-utils/src/utils/conversation-backend/cursor-agent/events.ts
 var asString = (value) => {
   const isString = typeof value === "string";
@@ -2495,16 +2507,7 @@ var import_node_child_process2 = require("node:child_process");
 // packages/openthrottle-agentic-utils/src/utils/conversation-backend/claude/config-dir.ts
 var CLAUDE_CONFIG_DIR_ENV = "OPENTHROTTLE_CLAUDE_CONFIG_DIR";
 var CLAUDE_CONFIG_DIR_KEY = "CLAUDE_CONFIG_DIR";
-var CLAUDE_HOST_ENV_KEYS = [
-  "HOME",
-  "LANG",
-  "LC_ALL",
-  "LOGNAME",
-  "PATH",
-  "TERM",
-  "TMPDIR",
-  "USER"
-];
+var CLAUDE_HOST_ENV_KEYS = CHAT_BASE_ENV_KEYS;
 function resolveClaudeConfigDirOverride(env = process.env) {
   const override = env[CLAUDE_CONFIG_DIR_ENV]?.trim();
   return override !== void 0 && override !== "" ? override : void 0;
