@@ -94,22 +94,28 @@ export async function ensureWorkSession(
   if (currentSessionId != null) return currentSessionId;
   if (openingPromise != null) return openingPromise;
 
-  openingPromise = executeGraphqlWithAuth(token, StartWorkSessionDocument, {
-    input: {
-      externalRef: resolveExternalRef(),
-      model: resolveSessionModel(options?.model),
-      toolName: resolveSessionToolName(),
-      toolVersion: resolveSessionToolVersion(SERVER_VERSION),
-    },
-  })
-    .then((result) => {
+  openingPromise = (async (): Promise<string | null> => {
+    try {
+      const result = await executeGraphqlWithAuth(
+        token,
+        StartWorkSessionDocument,
+        {
+          input: {
+            externalRef: resolveExternalRef(),
+            model: resolveSessionModel(options?.model),
+            toolName: resolveSessionToolName(),
+            toolVersion: resolveSessionToolVersion(SERVER_VERSION),
+          },
+        },
+      );
       currentSessionId = result?.startWorkSession?.id ?? null;
       return currentSessionId;
-    })
-    .catch(() => null)
-    .finally(() => {
+    } catch {
+      return null;
+    } finally {
       openingPromise = null;
-    });
+    }
+  })();
 
   return openingPromise;
 }
@@ -165,16 +171,24 @@ async function startSession(
   token: string,
   model?: string | null,
 ): Promise<string | null> {
-  return executeGraphqlWithAuth(token, StartWorkSessionDocument, {
-    input: {
-      externalRef: resolveExternalRef(),
-      model: resolveSessionModel(model),
-      toolName: resolveSessionToolName(),
-      toolVersion: resolveSessionToolVersion(SERVER_VERSION),
-    },
-  })
-    .then((result) => result?.startWorkSession?.id ?? null)
-    .catch(() => null);
+  try {
+    const result = await executeGraphqlWithAuth(
+      token,
+      StartWorkSessionDocument,
+      {
+        input: {
+          externalRef: resolveExternalRef(),
+          model: resolveSessionModel(model),
+          toolName: resolveSessionToolName(),
+          toolVersion: resolveSessionToolVersion(SERVER_VERSION),
+        },
+      },
+    );
+
+    return result?.startWorkSession?.id ?? null;
+  } catch {
+    return null;
+  }
 }
 
 /** @description Options for rotating to a session scoped to one unit of work. */

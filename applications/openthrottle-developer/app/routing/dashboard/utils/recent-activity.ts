@@ -142,3 +142,18 @@ export function outputLinkAriaLabel(row: ActivityRow): string {
 
   return `View plan ${plan}${preview}`;
 }
+
+/**
+ * @description Accessible label for a row's detail link, dispatched on the
+ * row's type to the matching label builder.
+ */
+export function linkAriaLabelFor(row: ActivityRow): string {
+  switch (row.type) {
+    case 'commit':
+      return commitLinkAriaLabel(row);
+    case 'output':
+      return outputLinkAriaLabel(row);
+    case 'task':
+      return taskLinkAriaLabel(row);
+  }
+}

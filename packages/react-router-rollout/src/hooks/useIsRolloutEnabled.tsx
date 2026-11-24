@@ -18,9 +18,14 @@ export const useIsRolloutEnabled = <TCatalog extends RolloutFlagCatalog>(
   key: RolloutBooleanFlagKey<TCatalog>,
 ): boolean => {
   // Hooks
-  const { values } = useRequiredRolloutContext<TCatalog>('useIsRolloutEnabled');
+  const { catalog, values } = useRequiredRolloutContext<TCatalog>(
+    'useIsRolloutEnabled',
+  );
 
   // Setup
+  const value = values[key];
+  const isEnabled =
+    typeof value === 'boolean' ? value : catalog[key]?.defaultValue === true;
 
   // Handlers
 
@@ -30,6 +35,5 @@ export const useIsRolloutEnabled = <TCatalog extends RolloutFlagCatalog>(
 
   // 🔌 Short Circuit
 
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- RolloutBooleanFlagKey limits K; generic indexed access widens to the catalog value union
-  return values[key] as boolean;
+  return isEnabled;
 };

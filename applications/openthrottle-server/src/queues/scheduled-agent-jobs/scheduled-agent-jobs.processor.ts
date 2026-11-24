@@ -1,5 +1,3 @@
-import { stat } from 'node:fs/promises';
-
 import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import type { OnApplicationShutdown } from '@nestjs/common';
 import { Inject, Optional } from '@nestjs/common';
@@ -49,7 +47,11 @@ import type {
   ScheduledAgentJobBullJob,
   ScheduledAgentJobPayload,
 } from './scheduled-agent-jobs.types.ts';
-import { foldRunUsage, parseRunOutcome } from './scheduled-agent-jobs.utils.ts';
+import {
+  foldRunUsage,
+  isDirectory,
+  parseRunOutcome,
+} from './scheduled-agent-jobs.utils.ts';
 import {
   resolveScheduledAgentJobConcurrencyKey,
   resolveScheduledAgentJobRunCwd,
@@ -765,9 +767,7 @@ export class ScheduledAgentJobsProcessor
     },
     requestedCheckoutId: string | null | undefined,
   ): Promise<void> {
-    const usable = await stat(target.cwd)
-      .then((entry) => entry.isDirectory())
-      .catch(() => false);
+    const usable = await isDirectory(target.cwd);
     if (usable) return;
 
     throw new Error(

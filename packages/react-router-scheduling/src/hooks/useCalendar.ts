@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import * as React from 'react';
 
 import { DEFAULT_VIEW } from '../config/defaults';
 import type { CalendarView } from '../types';
@@ -58,16 +58,18 @@ export function useCalendar(
   const { defaultDate, defaultView } = options;
 
   // Hooks
-  const [view, setViewState] = useState<CalendarView>(
+  const [view, setViewState] = React.useState<CalendarView>(
     defaultView ?? DEFAULT_VIEW,
   );
-  const [date, setDateState] = useState<Date>(() => normalizeDate(defaultDate));
+  const [date, setDateState] = React.useState<Date>(() =>
+    normalizeDate(defaultDate),
+  );
 
   // Setup
   const controls = schedule.plugins.calendarControls;
 
   // Handlers
-  const setView = useCallback(
+  const setView = React.useCallback(
     (next: CalendarView) => {
       setViewState(next);
       controls?.setView(toEngineViewName(next));
@@ -75,7 +77,7 @@ export function useCalendar(
     [controls],
   );
 
-  const setDate = useCallback(
+  const setDate = React.useCallback(
     (next: Date | string) => {
       const normalized = normalizeDate(next);
       setDateState(normalized);
@@ -84,11 +86,11 @@ export function useCalendar(
     [controls],
   );
 
-  const today = useCallback(() => {
+  const today = React.useCallback(() => {
     setDate(new Date());
   }, [setDate]);
 
-  const step = useCallback(
+  const step = React.useCallback(
     (direction: 1 | -1) => {
       setDateState((current) => {
         const shifted = shiftDate(toPlainDate(current), view, direction);
@@ -99,10 +101,10 @@ export function useCalendar(
     [controls, view],
   );
 
-  const next = useCallback(() => {
+  const next = React.useCallback(() => {
     step(1);
   }, [step]);
-  const prev = useCallback(() => {
+  const prev = React.useCallback(() => {
     step(-1);
   }, [step]);
 
@@ -117,7 +119,7 @@ export function useCalendar(
   // which push back into the engine and would loop). The first emission is the
   // signal's current value, fired synchronously on subscribe — skip it so the
   // engine's seed (e.g. "today") never clobbers this hook's `defaultDate`.
-  useEffect(() => {
+  React.useEffect(() => {
     const app = controls?.$app;
     if (app === undefined) {
       return;

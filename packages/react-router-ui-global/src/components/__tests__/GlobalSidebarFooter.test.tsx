@@ -98,7 +98,10 @@ describe('GlobalSidebarFooter Component', () => {
     const link = component.getByRole('link', {
       name: GLOBAL_SIDEBAR_FOOTER_COPY.systemStatus,
     });
-    expect(link).toHaveAttribute('href', 'http://localhost/api/health');
+    expect(link).toHaveAttribute(
+      'href',
+      `${window.env.API_URL_EXTERNAL}/health`,
+    );
     expect(link).toHaveAttribute('target', '_blank');
     expect(link).toHaveAttribute('rel', 'noopener noreferrer');
   });
@@ -112,7 +115,7 @@ describe('GlobalSidebarFooter Component', () => {
       });
       expect(badge).toHaveAttribute(
         'href',
-        buildAppReleaseHref('test-app', '3.2.1'),
+        buildAppReleaseHref(window.env.APP_NAME, '3.2.1'),
       );
       expect(badge).toHaveAttribute('target', '_blank');
       expect(badge).toHaveAttribute('rel', 'noopener noreferrer');
@@ -206,7 +209,10 @@ describe('GlobalSidebarFooter Component', () => {
 
       const bar = component.getByTestId('GlobalBackgroundActivityBar');
 
-      expect(bar).toHaveAttribute('href', 'http://localhost/api/health');
+      expect(bar).toHaveAttribute(
+        'href',
+        `${window.env.API_URL_EXTERNAL}/health`,
+      );
       expect(bar).toHaveAttribute('target', '_blank');
       expect(component.getAllByRole('progressbar')).toHaveLength(1);
       expect(component.getByRole('progressbar')).toHaveAttribute(

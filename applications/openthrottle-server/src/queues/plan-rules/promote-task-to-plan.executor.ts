@@ -72,18 +72,18 @@ export class PromoteTaskToPlanExecutor implements ActionExecutor, OnModuleInit {
     }
 
     const outcomes = await Promise.all(
-      candidateTaskIds.map((taskId) =>
-        this.taskPromotionService
-          .promote({
-            actorServiceAccountId: null,
-            actorUserId: ownerUserId,
-            // Background tag-rule automation on the plan-rules queue, not a direct request —
-            // a ledger hiccup must not fail the whole evaluation pass over one capture.
-            captureFailureIsFatal: false,
-            taskId,
-          })
-          .then((outcome) => ({ outcome, taskId })),
-      ),
+      candidateTaskIds.map(async (taskId) => {
+        const outcome = await this.taskPromotionService.promote({
+          actorServiceAccountId: null,
+          actorUserId: ownerUserId,
+          // Background tag-rule automation on the plan-rules queue, not a direct request —
+          // a ledger hiccup must not fail the whole evaluation pass over one capture.
+          captureFailureIsFatal: false,
+          taskId,
+        });
+
+        return { outcome, taskId };
+      }),
     );
     const promotedTaskIds = outcomes
       .filter(({ outcome }) => outcome.newPlanId != null)
@@ -122,12 +122,11 @@ export class PromoteTaskToPlanExecutor implements ActionExecutor, OnModuleInit {
       );
 
     const checked = await Promise.all(
-      taggedTaskIds.map((taskId) =>
-        this.isAlreadyPromoted(taskId).then((alreadyPromoted) => ({
-          alreadyPromoted,
-          taskId,
-        })),
-      ),
+      taggedTaskIds.map(async (taskId) => {
+        const alreadyPromoted = await this.isAlreadyPromoted(taskId);
+
+        return { alreadyPromoted, taskId };
+      }),
     );
     return checked
       .filter(({ alreadyPromoted }) => !alreadyPromoted)

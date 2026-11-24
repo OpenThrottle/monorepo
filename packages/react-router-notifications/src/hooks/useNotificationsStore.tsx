@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import * as React from 'react';
 
 import type { NotificationsStoreContextValue } from '../data/index';
 import { NotificationsStoreContext } from '../data/index';
@@ -20,7 +20,7 @@ export const useNotificationsStore = (
   // const {} = _options;
 
   // Hooks
-  const ctx = useContext(NotificationsStoreContext);
+  const ctx = React.useContext(NotificationsStoreContext);
 
   // Setup
 

@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import * as React from 'react';
 import { useFetcher } from 'react-router';
 
 import type {
@@ -39,7 +39,7 @@ export const useSymbolDetails = (
   // Setup
 
   // Handlers
-  const selectSymbol = useCallback(
+  const selectSymbol = React.useCallback(
     (symbol: ExportedSymbol): void => {
       const params = new URLSearchParams({
         line: String(symbol.line),

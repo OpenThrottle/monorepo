@@ -14,6 +14,7 @@ import { SearchIcon } from 'lucide-react';
 import * as React from 'react';
 import { useNavigate } from 'react-router';
 
+import { DOCS_SECTION_HEADINGS } from '../data/data.copy';
 import type { DocEntry } from '../utils/buildDocsManifest';
 import { docEntryKey } from '../utils/docEntryKey';
 import { docEntryHref, searchDocEntries } from '../utils/searchDocs';
@@ -26,11 +27,6 @@ export interface DocsSearchProps {
   /** Label on the visible trigger button. */
   readonly triggerLabel?: string;
 }
-
-const SECTION_HEADINGS = {
-  docs: 'Docs',
-  faq: 'FAQ',
-} as const;
 
 /**
  * Client-side command-palette search across the docs + FAQ manifest. Opens on
@@ -71,7 +67,7 @@ export const DocsSearch = (props: DocsSearchProps): React.ReactElement => {
 
   // Markup
   const renderGroup = (
-    section: keyof typeof SECTION_HEADINGS,
+    section: keyof typeof DOCS_SECTION_HEADINGS,
     groupEntries: readonly DocEntry[],
   ): React.ReactElement | null => {
     if (groupEntries.length === 0) {
@@ -79,7 +75,7 @@ export const DocsSearch = (props: DocsSearchProps): React.ReactElement => {
     }
 
     return (
-      <CommandGroup heading={SECTION_HEADINGS[section]}>
+      <CommandGroup heading={DOCS_SECTION_HEADINGS[section]}>
         {groupEntries.map((entry) => {
           const description = (
             <span className="text-muted-foreground truncate text-xs">

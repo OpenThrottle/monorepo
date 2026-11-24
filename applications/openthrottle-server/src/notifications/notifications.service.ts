@@ -56,7 +56,9 @@ function safeJson(value: unknown): string | undefined {
 /**
  * A notification event object carrying its discriminator for interface resolution.
  */
-type NotificationEventObject = Record<string, unknown> & { event: string };
+interface NotificationEventObject extends Record<string, unknown> {
+  readonly event: string;
+}
 
 @Injectable()
 export class NotificationsService {

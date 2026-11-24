@@ -12,7 +12,10 @@ import {
 import * as React from 'react';
 import { Link } from 'react-router';
 
-import { RULES_COPY } from '~/routing/rules/data/data.copy';
+import {
+  RULES_ATTACH_PROMPT_LABELS,
+  RULES_COPY,
+} from '~/routing/rules/data/data.copy';
 import { ATTACH_PROMPT_PLACEMENTS } from '~/routing/rules/data/data.rule-form-options';
 import type { RuleFormAttachPromptState } from '~/routing/rules/types';
 import type { RuleFormPromptOption } from '~/routing/rules/utils/rule-prompt-options';
@@ -21,21 +24,6 @@ export interface RuleFormAttachPromptFieldsProps {
   readonly attachPrompt: RuleFormAttachPromptState;
   readonly promptOptions: readonly RuleFormPromptOption[];
 }
-
-const PLACEMENT_LABELS = {
-  end: RULES_COPY.attachPromptPlacementEnd,
-  start: RULES_COPY.attachPromptPlacementStart,
-} as const;
-
-const OWNER_LABELS = {
-  system: RULES_COPY.promptOwnerSystem,
-  yours: RULES_COPY.promptOwnerYours,
-} as const;
-
-const TYPE_LABELS = {
-  personas: RULES_COPY.promptTypePersonas,
-  prompts: RULES_COPY.promptTypePrompts,
-} as const;
 
 /**
  * @description The attach-prompt payload fields of the rule action section: a
@@ -61,13 +49,15 @@ export const RuleFormAttachPromptFields = (
   );
   const isFilePathReference = filePath !== '' && promptId === '';
   const isNotAvailable = hasReference && !isReferenceVisible;
-  const placementLabel =
-    placement === 'start' ? PLACEMENT_LABELS.start : PLACEMENT_LABELS.end;
+  const isStart = placement === 'start';
+  const placementLabel = isStart
+    ? RULES_ATTACH_PROMPT_LABELS.placement.start
+    : RULES_ATTACH_PROMPT_LABELS.placement.end;
   const pickerOptions: ComboboxOption[] = promptOptions.map((option) => {
-    const owner = OWNER_LABELS[option.owner];
+    const owner = RULES_ATTACH_PROMPT_LABELS.owner[option.owner];
 
     return {
-      hint: TYPE_LABELS[option.promptType],
+      hint: RULES_ATTACH_PROMPT_LABELS.type[option.promptType],
       label: `${option.title} (${owner})`,
       value: option.id,
     };
@@ -143,7 +133,7 @@ export const RuleFormAttachPromptFields = (
           <SelectContent>
             {ATTACH_PROMPT_PLACEMENTS.map((value) => (
               <SelectItem key={value} value={value}>
-                {PLACEMENT_LABELS[value]}
+                {RULES_ATTACH_PROMPT_LABELS.placement[value]}
               </SelectItem>
             ))}
           </SelectContent>

@@ -26,7 +26,7 @@ export const OpenThrottleClipboard = (
     const method = hasClipboard ? onCopyModern : onCopyFallback;
 
     try {
-      method(text);
+      void method(text);
       setCopied(true);
     } catch (error) {
       console.error(`🚨 Failed to copy text to clipboard`, error);
@@ -52,11 +52,13 @@ export const OpenThrottleClipboard = (
     textArea.remove();
   };
 
-  const onCopyModern = (text: string) => {
-    navigator.clipboard.writeText(text).then(
-      () => setCopied(true),
-      () => setCopied(false),
-    );
+  const onCopyModern = async (text: string): Promise<void> => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+    } catch {
+      setCopied(false);
+    }
   };
 
   // Markup

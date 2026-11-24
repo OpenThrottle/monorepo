@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import * as React from 'react';
 
 import { PREFERS_DARK_QUERY } from '../config/color-scheme';
 import { prefersColorSchemeDark } from '../utils/prefersColorSchemeDark';
@@ -27,7 +27,7 @@ export const useResolvedThemeMode = (theme: ThemeMode): ResolvedThemeMode => {
   // Hooks
   // Lazily read the OS preference on the client so the very first client render
   // resolves `system` correctly (SSR has no OS knowledge → false).
-  const [prefersDark, setPrefersDark] = useState<boolean>(
+  const [prefersDark, setPrefersDark] = React.useState<boolean>(
     prefersColorSchemeDark,
   );
 
@@ -42,7 +42,7 @@ export const useResolvedThemeMode = (theme: ThemeMode): ResolvedThemeMode => {
   // Keep `prefersDark` in sync with the OS. The change listener is attached
   // only while in system mode — the one mode where the OS preference changes
   // the resolved theme — and removed when leaving system mode or on unmount.
-  useEffect(() => {
+  React.useEffect(() => {
     if (
       typeof window === 'undefined' ||
       typeof window.matchMedia !== 'function'
@@ -64,7 +64,7 @@ export const useResolvedThemeMode = (theme: ThemeMode): ResolvedThemeMode => {
   }, [theme]);
 
   // Apply the resolved mode as the `.dark` class on the document element.
-  useEffect(() => {
+  React.useEffect(() => {
     if (typeof document === 'undefined') {
       return;
     }

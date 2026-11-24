@@ -1,9 +1,8 @@
 import { OpenThrottleClientEnv } from '@openthrottle/react-router-utils';
 
 /**
- * @description We store a global instance of "amplitude" and our "socket"
- * which are added to the "globalThis". We 👀 "have to" use a "var" below to
- * appease the types.
+ * Ambient globals for this app: the build-time version constant and the
+ * client environment on `window`.
  */
 declare global {
   /**
@@ -11,9 +10,6 @@ declare global {
    * `@tools/dotfiles/app-version`) from this app's package.json `version`.
    */
   const __APP_VERSION__: string;
-
-  // eslint-disable-next-line no-var, @typescript-eslint/no-explicit-any
-  var deferredPrompt: any | undefined;
 
   /**
    * @description Define the environment variables that are available to this app.

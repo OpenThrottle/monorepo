@@ -1,6 +1,5 @@
 import { render } from '@testing-library/react';
 import * as React from 'react';
-import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { useElapsedTicker } from '~/routing/schedule/hooks/useElapsedTicker';
@@ -27,7 +26,7 @@ describe('useElapsedTicker', () => {
       '2026-08-21T12:00:00.000Z',
     );
 
-    act(() => {
+    React.act(() => {
       vi.advanceTimersByTime(2000);
     });
 
@@ -39,7 +38,7 @@ describe('useElapsedTicker', () => {
   test('never starts an interval while disabled', () => {
     const component = render(<Probe enabled={false} />);
 
-    act(() => {
+    React.act(() => {
       vi.advanceTimersByTime(5000);
     });
 
@@ -53,7 +52,7 @@ describe('useElapsedTicker', () => {
     const component = render(<Probe enabled={true} />);
 
     component.unmount();
-    act(() => {
+    React.act(() => {
       vi.advanceTimersByTime(5000);
     });
 

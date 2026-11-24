@@ -5,19 +5,11 @@ import { Link } from 'react-router';
 import type { ActivityRow } from '~/routing/dashboard/utils/recent-activity';
 import {
   activityDetailHref,
-  commitLinkAriaLabel,
-  outputLinkAriaLabel,
+  linkAriaLabelFor,
   planCellContent,
-  taskLinkAriaLabel,
 } from '~/routing/dashboard/utils/recent-activity';
 import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
 import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';
-
-const LINK_ARIA_LABEL_BY_TYPE = {
-  commit: commitLinkAriaLabel,
-  output: outputLinkAriaLabel,
-  task: taskLinkAriaLabel,
-} as const;
 
 export interface DashboardRecentActivityRowProps {
   row: ActivityRow;
@@ -45,7 +37,7 @@ export const DashboardRecentActivityRow = (
     }
     return (
       <Link
-        aria-label={LINK_ARIA_LABEL_BY_TYPE[row.type](row)}
+        aria-label={linkAriaLabelFor(row)}
         className="line-clamp-2"
         to={href}
       >

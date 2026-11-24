@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import * as React from 'react';
 
 import { DEFAULT_DEBOUNCE_MS } from '../config/debounce';
 
@@ -21,7 +21,7 @@ export const useDebouncedValue = <T,>(
   const { delayMs = DEFAULT_DEBOUNCE_MS, value } = options;
 
   // Hooks
-  const [debounced, setDebounced] = useState<T>(value);
+  const [debounced, setDebounced] = React.useState<T>(value);
 
   // Setup
 
@@ -30,7 +30,7 @@ export const useDebouncedValue = <T,>(
   // Markup
 
   // Life Cycle
-  useEffect(() => {
+  React.useEffect(() => {
     const handle = setTimeout(() => setDebounced(value), delayMs);
 
     return () => clearTimeout(handle);

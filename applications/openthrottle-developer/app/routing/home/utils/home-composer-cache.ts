@@ -138,18 +138,24 @@ function trackHomeComposerLoad(
   load: () => Promise<HomeComposerData>,
 ): Promise<HomeComposerData> {
   const startedAt = generation;
-  const tracked = load()
-    .then((data) => {
+  // Started outside the async body so a synchronous throw from `load` still
+  // propagates to the caller.
+  const pending = load();
+  const settle = async (): Promise<HomeComposerData> => {
+    try {
+      const data = await pending;
       if (startedAt === generation) {
         writeHomeComposerCache(data);
       }
       return data;
-    })
-    .finally(() => {
+    } finally {
+      // Runs only after the await above, by which time `tracked` is assigned.
       if (inFlight === tracked) {
         inFlight = null;
       }
-    });
+    }
+  };
+  const tracked = settle();
 
   inFlight = tracked;
   return tracked;

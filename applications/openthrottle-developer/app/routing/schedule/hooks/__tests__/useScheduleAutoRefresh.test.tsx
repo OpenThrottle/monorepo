@@ -1,6 +1,5 @@
 import { render } from '@testing-library/react';
 import * as React from 'react';
-import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { useScheduleAutoRefresh } from '~/routing/schedule/hooks/useScheduleAutoRefresh';
@@ -63,7 +62,7 @@ describe('useScheduleAutoRefresh', () => {
   test('never polls while nothing is in flight', () => {
     renderProbe(0);
 
-    act(() => {
+    React.act(() => {
       vi.advanceTimersByTime(30_000);
     });
 
@@ -74,12 +73,12 @@ describe('useScheduleAutoRefresh', () => {
   test('revalidates on the interval while work is in flight', () => {
     renderProbe(1);
 
-    act(() => {
+    React.act(() => {
       vi.advanceTimersByTime(5000);
     });
     expect(revalidate).toHaveBeenCalledTimes(1);
 
-    act(() => {
+    React.act(() => {
       vi.advanceTimersByTime(5000);
     });
     expect(revalidate).toHaveBeenCalledTimes(2);
@@ -89,7 +88,7 @@ describe('useScheduleAutoRefresh', () => {
     revalidatorState = 'loading';
     renderProbe(1);
 
-    act(() => {
+    React.act(() => {
       vi.advanceTimersByTime(15_000);
     });
 
@@ -100,12 +99,12 @@ describe('useScheduleAutoRefresh', () => {
     renderProbe(1);
 
     setVisibility('hidden');
-    act(() => {
+    React.act(() => {
       vi.advanceTimersByTime(15_000);
     });
     expect(revalidate).not.toHaveBeenCalled();
 
-    act(() => {
+    React.act(() => {
       setVisibility('visible');
     });
     expect(revalidate).toHaveBeenCalledTimes(1);
@@ -114,13 +113,13 @@ describe('useScheduleAutoRefresh', () => {
   test('takes one final reading when the last run finishes, then stops', () => {
     const probe = renderProbe(1);
 
-    act(() => {
+    React.act(() => {
       probe.rerenderWith(0);
     });
 
     expect(revalidate).toHaveBeenCalledTimes(1);
 
-    act(() => {
+    React.act(() => {
       vi.advanceTimersByTime(30_000);
     });
     expect(revalidate).toHaveBeenCalledTimes(1);
@@ -131,7 +130,7 @@ describe('useScheduleAutoRefresh', () => {
     const probe = renderProbe(1);
 
     probe.unmount();
-    act(() => {
+    React.act(() => {
       vi.advanceTimersByTime(30_000);
     });
 

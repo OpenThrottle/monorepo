@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import * as React from 'react';
 
 import type {
   CalendarEvent,
@@ -62,9 +62,9 @@ export function useCalendarSelection(
   options: UseCalendarSelectionOptions = {},
 ): UseCalendarSelectionResult {
   // Hooks
-  const [selection, setSelection] = useState<CalendarSelection>({});
-  const optionsRef = useRef<UseCalendarSelectionOptions>(options);
-  const callbacksRef = useRef<ScheduleCallbacks | null>(null);
+  const [selection, setSelection] = React.useState<CalendarSelection>({});
+  const optionsRef = React.useRef<UseCalendarSelectionOptions>(options);
+  const callbacksRef = React.useRef<ScheduleCallbacks | null>(null);
 
   // Setup
   // Keep the latest handlers reachable from the stable callbacks created below
@@ -89,7 +89,7 @@ export function useCalendarSelection(
     };
   }
 
-  const clear = useCallback((): void => {
+  const clear = React.useCallback((): void => {
     setSelection({});
   }, []);
 

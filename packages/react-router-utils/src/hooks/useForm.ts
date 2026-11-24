@@ -1,7 +1,7 @@
 import type { FormikConfig, FormikValues } from 'formik';
 import { useFormik } from 'formik';
 import type { FormEvent } from 'react';
-import { useEffect, useState } from 'react';
+import * as React from 'react';
 import { useNavigation } from 'react-router';
 
 /** @public */
@@ -22,7 +22,7 @@ export const useForm = <T extends FormikValues = FormikValues>(
   // Hooks
   const formik = useFormik(config);
   const { state } = useNavigation();
-  const [loading, setLoading] = useState(state === 'submitting');
+  const [loading, setLoading] = React.useState(state === 'submitting');
 
   // Setup
 
@@ -58,7 +58,7 @@ export const useForm = <T extends FormikValues = FormikValues>(
   // Markup
 
   // Life Cycle
-  useEffect(() => {
+  React.useEffect(() => {
     setLoading(state === 'submitting');
   }, [state]);
 

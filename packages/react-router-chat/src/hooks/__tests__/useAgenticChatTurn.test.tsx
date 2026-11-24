@@ -1,7 +1,6 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import type { RenderResult } from '@testing-library/react';
-// eslint-disable-next-line openthrottle/no-fire-event -- the watchdog tests run under vi.useFakeTimers(); RTL's asyncWrapper (which every userEvent call goes through) drains on a setTimeout(0) it only auto-advances under jest fake timers, so an awaited userEvent call never resolves there
-import { act, fireEvent, render, waitFor } from '@testing-library/react';
+import { act, render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { parse } from 'graphql';
 import * as React from 'react';
@@ -380,15 +379,19 @@ describe('useAgenticChatTurn recovery', () => {
   });
 
   test('stall watchdog trips once then surfaces manual retry without looping', async () => {
-    vi.useFakeTimers();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
     const component = renderRecovery();
 
-    // fireEvent (not userEvent) is deterministic under fake timers — the repo
-    // pattern for timer-driven tests (see useDebouncedSearchParam.test).
-    await act(async () => {
-      fireEvent.click(component.getByRole('button', { name: 'Submit' }));
-      await vi.advanceTimersByTimeAsync(0);
-    });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    await user.click(component.getByRole('button', { name: 'Submit' }));
+    // The watchdog arms only once the start action has returned the assistant
+    // id, which lands with the conversation id. Wait for it, or the 180s
+    // advance can begin before the timer exists and end just short of it.
+    await waitFor(() =>
+      expect(component.getByTestId('conversation-id')).toHaveTextContent(
+        'conv-1',
+      ),
+    );
     expect(startCalls).toBe(1);
 
     // No activity for the stall window → watchdog replays once (cancel + start).
@@ -406,16 +409,14 @@ describe('useAgenticChatTurn recovery', () => {
   });
 
   test('mutation-in-flight watchdog recovers a stalled start mutation before any chunk', async () => {
-    vi.useFakeTimers();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
     const component = renderStalledMutation();
 
     // Submit → the start mutation is in flight and never returns an assistant id
     // (no chunk, no pending turn), so the chunk-based stall watchdog can never
     // see it. Only the mutation-in-flight watchdog covers this window.
-    await act(async () => {
-      fireEvent.click(component.getByRole('button', { name: 'Submit' }));
-      await vi.advanceTimersByTimeAsync(0);
-    });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    await user.click(component.getByRole('button', { name: 'Submit' }));
     expect(stalledStartCalls).toBe(1);
 
     // Before the watchdog window, nothing recovers — the mutation is simply

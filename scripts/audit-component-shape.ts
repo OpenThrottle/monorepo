@@ -76,6 +76,28 @@ const isPascalCase = (name: string): boolean => {
   return /^[A-Z]/.test(name);
 };
 
+/**
+ * @description Peels `as const`, `satisfies`, type assertions and parentheses
+ * so `[...] as const` is recognised as the array literal it wraps.
+ */
+const unwrapInitializer = (
+  init: ts.Expression | undefined,
+): ts.Expression | undefined => {
+  let current = init;
+
+  while (
+    current &&
+    (ts.isAsExpression(current) ||
+      ts.isSatisfiesExpression(current) ||
+      ts.isTypeAssertionExpression(current) ||
+      ts.isParenthesizedExpression(current))
+  ) {
+    current = current.expression;
+  }
+
+  return current;
+};
+
 const initFunction = (
   init: ts.Expression | undefined,
 ): ts.ArrowFunction | ts.FunctionExpression | undefined => {
@@ -189,10 +211,12 @@ export const analyzeComponentSource = (
         continue;
       }
 
+      const unwrapped = unwrapInitializer(decl.initializer);
+
       if (
-        decl.initializer &&
-        (ts.isArrayLiteralExpression(decl.initializer) ||
-          ts.isObjectLiteralExpression(decl.initializer))
+        unwrapped &&
+        (ts.isArrayLiteralExpression(unwrapped) ||
+          ts.isObjectLiteralExpression(unwrapped))
       ) {
         dataDecls += 1;
       }

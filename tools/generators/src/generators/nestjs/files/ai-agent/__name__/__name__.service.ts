@@ -6,12 +6,10 @@ import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { tool } from 'langchain';
 import { z } from 'zod';
-// import { LanguageModelLike } from '@langchain/core/language_models/base';
 
 @Injectable()
 export class <%= namePascal %>Service {
-  // private llm: LanguageModelLike;
-  private llm: any;
+  private readonly llm: ReturnType<typeof getChatModel>;
   private name = '<%= name %>';
 
   // Inject and initialize as needed

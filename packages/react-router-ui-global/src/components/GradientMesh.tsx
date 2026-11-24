@@ -2,25 +2,8 @@ import { cn } from '@openthrottle/react-router-shadcn';
 import { MeshGradient } from '@paper-design/shaders-react';
 import * as React from 'react';
 
+import { DEFAULT_GRADIENT_MESH_COLORS } from '../data/data.gradient-mesh';
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
-
-/**
- * Default color spots for the mesh. WebGL cannot read CSS variables, so these
- * are concrete values tuned to read well behind dark UI. Override via `colors`
- * to match a brand palette.
- */
-const DEFAULT_COLORS = [
-  '#0a0a23',
-  '#1e3a8a',
-  '#7c3aed',
-  '#db2777',
-  '#0ea5e9',
-  // '#000',
-  // '#111',
-  // '#333',
-  // '#444',
-  // '#555',
-] as const;
 
 export interface GradientMeshProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Up to 10 color spots blended into the mesh (hex/rgb/hsl strings). */
@@ -49,7 +32,7 @@ export interface GradientMeshProps extends React.HTMLAttributes<HTMLDivElement> 
 export const GradientMesh = (props: GradientMeshProps): React.ReactElement => {
   const {
     className,
-    colors = [...DEFAULT_COLORS],
+    colors = [...DEFAULT_GRADIENT_MESH_COLORS],
     distortion = 0.8,
     grainMixer = 0,
     grainOverlay = 0,

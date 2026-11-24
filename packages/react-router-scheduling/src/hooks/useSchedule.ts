@@ -1,6 +1,6 @@
 import '../utils/temporal-bootstrap';
 
-import { useRef } from 'react';
+import * as React from 'react';
 
 import type { CalendarEvent, ScheduleConfig, ScheduleInstance } from '../types';
 import { createSchedule } from '../utils/createSchedule';
@@ -49,7 +49,7 @@ export interface UseScheduleResult {
  */
 export function useSchedule(config: ScheduleConfig = {}): UseScheduleResult {
   // Hooks
-  const ref = useRef<UseScheduleResult | null>(null);
+  const ref = React.useRef<UseScheduleResult | null>(null);
 
   // Setup
 

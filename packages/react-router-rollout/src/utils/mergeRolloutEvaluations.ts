@@ -89,5 +89,5 @@ export const mergeRolloutEvaluations = <TCatalog extends RolloutFlagCatalog>(
     }
   }
 
-  return freezeResolvedValues(values);
+  return freezeResolvedValues(catalog, values);
 };

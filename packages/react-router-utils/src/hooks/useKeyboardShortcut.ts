@@ -10,7 +10,7 @@
  * plain-key shortcuts that should pause while the user is typing.
  */
 
-import { useEffect } from 'react';
+import * as React from 'react';
 
 import { isEditableTarget } from '../utils/isEditableTarget';
 
@@ -64,7 +64,7 @@ export function useKeyboardShortcut(options: UseKeyboardShortcutOptions): void {
   // Markup
 
   // Life Cycle
-  useEffect(() => {
+  React.useEffect(() => {
     if (typeof window === 'undefined') return;
     if (!enabled) return;
 
