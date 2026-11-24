@@ -810,6 +810,25 @@ var claimLatestStart = ({
     return null;
   }
 };
+var pickReporterSession = ({
+  candidates,
+  skillName,
+  startsDir
+}) => {
+  const withStart = candidates.find((candidate) => {
+    return listStartsForSession({
+      sessionId: candidate.sessionId,
+      startsDir
+    }).some((entry) => {
+      return entry.skill_name === skillName;
+    });
+  });
+  if (withStart) {
+    return { candidate: withStart, holdsStart: true };
+  }
+  const [first] = candidates;
+  return first ? { candidate: first, holdsStart: false } : null;
+};
 
 // packages/agentic-hooks/src/data/persist.ts
 var forLog = (graphqlUrl) => {
@@ -899,6 +918,42 @@ var persistOutcomeEvent = async ({
   }
 };
 
+// packages/agentic-hooks/src/adapters/codex/payload.ts
+var CODEX_SOURCE = "codex";
+var readCodexShellSessionId = (env) => {
+  return env.CODEX_SESSION_ID || env.CODEX_THREAD_ID || null;
+};
+
+// packages/agentic-hooks/src/adapters/cursor/payload.ts
+var CURSOR_SOURCE = "cursor";
+var readCursorShellSessionId = (env) => {
+  if (!env.CURSOR_AGENT) {
+    return null;
+  }
+  return env.CURSOR_CONVERSATION_ID || null;
+};
+var CURSOR_INVOCATION_PATHS = Object.freeze({
+  SKILL_READ: "skill_read",
+  SLASH: "slash"
+});
+
+// packages/agentic-hooks/src/adapters/claude/payload.ts
+var CLAUDE_SOURCE = "claude-code";
+var readClaudeShellSessionId = (env) => {
+  return env.CLAUDE_CODE_SESSION_ID || env.CLAUDE_SESSION_ID || null;
+};
+
+// packages/agentic-hooks/src/adapters/claude/bundle-host.ts
+var resolveBundleHostProjectDir = (host, env = process.env) => {
+  if (host === CLAUDE_SOURCE) {
+    return env.CLAUDE_PROJECT_DIR || env.OPEN_THROTTLE_REPO_ROOT || process.cwd();
+  }
+  if (host === CURSOR_SOURCE && env.CURSOR_PROJECT_DIR) {
+    return env.CURSOR_PROJECT_DIR;
+  }
+  return env.OPEN_THROTTLE_REPO_ROOT || process.cwd();
+};
+
 // packages/agentic-hooks/src/adapters/claude/parseOutcomeArgs.ts
 var parseOutcomeArgs = (argv) => {
   const out = {};
@@ -919,23 +974,95 @@ var parseOutcomeArgs = (argv) => {
   return out;
 };
 
-// packages/agentic-hooks/src/adapters/claude/payload.ts
-var CLAUDE_SOURCE = "claude-code";
+// packages/agentic-hooks/src/adapters/claude/reporter-host.ts
+var UNATTRIBUTABLE_HOST_MARKERS = [
+  ["gemini-cli", "GEMINI_CLI"],
+  ["opencode", "OPENCODE"]
+];
+var detectUnattributableHost = (env) => {
+  const found = UNATTRIBUTABLE_HOST_MARKERS.find(([, envVar]) => {
+    return env[envVar] === "1";
+  });
+  return found?.[0] ?? null;
+};
+var isReporterHost = (value) => {
+  return value === CLAUDE_SOURCE || value === CODEX_SOURCE || value === CURSOR_SOURCE;
+};
+var listReporterSessionCandidates = (env) => {
+  const readers = [
+    [CODEX_SOURCE, readCodexShellSessionId],
+    [CURSOR_SOURCE, readCursorShellSessionId],
+    [CLAUDE_SOURCE, readClaudeShellSessionId]
+  ];
+  const out = [];
+  for (const [source, read] of readers) {
+    const sessionId = read(env);
+    if (sessionId) {
+      out.push({ sessionId, source });
+    }
+  }
+  return out;
+};
+var resolveReporterSession = ({
+  env,
+  explicitSessionId,
+  explicitSource,
+  skillName,
+  startsDir
+}) => {
+  const candidates = listReporterSessionCandidates(env);
+  const named = explicitSource && isReporterHost(explicitSource) ? explicitSource : null;
+  if (explicitSessionId) {
+    const source = named ?? candidates[0]?.source ?? CLAUDE_SOURCE;
+    return { kind: "attributed", sessionId: explicitSessionId, source };
+  }
+  const scoped = named ? candidates.filter((candidate) => candidate.source === named) : candidates;
+  const picked = pickReporterSession({
+    candidates: scoped,
+    skillName,
+    startsDir
+  });
+  const unattributable = named ? null : detectUnattributableHost(env);
+  if (unattributable && !picked?.holdsStart) {
+    return { host: unattributable, kind: "unattributable" };
+  }
+  if (!picked) {
+    return {
+      kind: "attributed",
+      sessionId: null,
+      source: named ?? CLAUDE_SOURCE
+    };
+  }
+  return {
+    kind: "attributed",
+    sessionId: picked.candidate.sessionId,
+    source: picked.candidate.source
+  };
+};
 
 // packages/agentic-hooks/src/adapters/claude/outcome.ts
 var main = async () => {
   try {
     const args = parseOutcomeArgs(process.argv.slice(2));
-    const repoRoot = resolveHookRepoRoot({
-      payloadCwd: process.cwd(),
-      projectDir: process.env.CLAUDE_PROJECT_DIR || process.env.OPEN_THROTTLE_REPO_ROOT || process.cwd()
-    });
     const skillName = args.skill || process.env.OPENTHROTTLE_TELEMETRY_SKILL_NAME || "";
     const outcome = args.outcome || process.env.OPENTHROTTLE_TELEMETRY_OUTCOME || "";
-    const sessionId = args.session || process.env.OPENTHROTTLE_TELEMETRY_SESSION_ID || // What Claude Code actually exports to the Bash tool; the older
-    // CLAUDE_SESSION_ID is unset there, which left every reporter row
-    // uncorrelated.
-    process.env.CLAUDE_CODE_SESSION_ID || process.env.CLAUDE_SESSION_ID || null;
+    const session = resolveReporterSession({
+      env: process.env,
+      explicitSessionId: args.session || process.env.OPENTHROTTLE_TELEMETRY_SESSION_ID || null,
+      explicitSource: args.source || process.env.OPENTHROTTLE_TELEMETRY_SOURCE || null,
+      skillName
+    });
+    if (session.kind === "unattributable") {
+      logHookError(
+        `outcome not recorded: ${session.host} has no session id for its shell yet`
+      );
+      return;
+    }
+    const { sessionId, source } = session;
+    const repoRoot = resolveHookRepoRoot({
+      payloadCwd: process.cwd(),
+      projectDir: resolveBundleHostProjectDir(source)
+    });
     const toolUseId = args["tool-use-id"] || process.env.OPENTHROTTLE_TELEMETRY_TOOL_USE_ID || null;
     const durationRaw = args["duration-ms"] || process.env.OPENTHROTTLE_TELEMETRY_DURATION_MS || "";
     const explicitDurationMs = durationRaw === "" ? null : Number(durationRaw);
@@ -958,7 +1085,7 @@ var main = async () => {
       repoRoot,
       sessionId,
       skillName,
-      source: CLAUDE_SOURCE,
+      source,
       toolUseId
     });
     if (!event) {
