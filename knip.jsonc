@@ -56,9 +56,16 @@
     "**/vitest.setup.ts",
     "**/codegen.{ts,js}",
     "tools/generators/src/generators/*/files/**",
-    // Task-3 recorder spike: committed as evidence for the decision, deliberately not
-    // imported by the pipeline. See tests/demo/spike/README.md.
-    "applications/openthrottle-developer/tests/demo/spike/**",
+    // Committed GraphQL codegen output (server, website). The barrel files are emitted
+    // whether or not anything imports them; the gitignored copies are skipped already.
+    "**/__generated__/**",
+    // Test-only support modules: imported solely by __tests__ / *.test.ts files, which
+    // the globs above hide from the import graph.
+    "applications/*/app/routing/*/testing/**",
+    "applications/openthrottle-cms/app/routing/fragments/data/mock.fragment-editor.ts",
+    "applications/openthrottle-server/src/graphql/agents/mcp-router/golden-prompts/**",
+    "packages/agentic-replay-testing/tests/support/**",
+    "tools/ot-telemetry/tests/**",
     // openthrottle-developer: kept for commented JSX / intentional rollback (see @deprecated)
     "applications/openthrottle-developer/app/routing/agents/components/AgentsSectionQuickLinks.tsx",
     "applications/openthrottle-developer/app/routing/dashboard/components/DashboardQueueStats.tsx",
@@ -138,11 +145,6 @@
   // files are ignored by glob below instead. (Revisit if configs become static objects.)
   "vitest": false,
   "workspaces": {
-    // Screencast pipeline (docs/marketing/pipeline.md). Four CLI entrypoints plus the
-    // demo-database scripts: each is invoked by an Nx `video-*` target rather than
-    // imported by anything, so without this every module they pull in reads as unused.
-    // The flows are entries too, because run.ts resolves them by slug through a
-    // dynamic import that knip cannot follow.
     "applications/openthrottle-developer": {
       "entry": [
         "app/entry.client.tsx",
@@ -150,13 +152,99 @@
         "app/root.tsx",
         "app/routes/**/*.{ts,tsx}",
         "app/testing/**/*.{ts,tsx}",
-        "tests/demo/assemble/assemble.ts",
-        "tests/demo/flows/*.flow.ts",
-        "tests/demo/narrate/narrate.ts",
-        "tests/demo/runner/run.ts",
-        "tests/demo/scan/leak-scan.ts",
-        "tests/demo/scripts/*.ts",
       ],
+      "ignoreDependencies": [
+        // Read by apollo.config.mjs, which the root ignore hides.
+        "dotenv",
+        // Plugin named in codegen.ts (root-ignored); its output is gitignored.
+        "graphql-codegen-typescript-validation-schema",
+        // A runtime dependency, not dead: the SSR build externalizes it from
+        // react-router-shadcn's Sonner.tsx, so the image must ship it (the
+        // boot check fails otherwise), and 14 specs `vi.mock('sonner')`.
+        "sonner",
+      ],
+    },
+    "applications/openthrottle-admin": {
+      "ignoreDependencies": [
+        // Imported only by the gitignored app/__generated__ codegen output.
+        "@graphql-typed-document-node/core",
+        "zod",
+        // Read by apollo.config.mjs, which the root ignore hides.
+        "dotenv",
+        // Plugin named in codegen.ts (root-ignored).
+        "graphql-codegen-typescript-validation-schema",
+      ],
+    },
+    "applications/openthrottle-cms": {
+      "ignoreDependencies": [
+        // Read by apollo.config.mjs, which the root ignore hides.
+        "dotenv",
+        // Imported only by the gitignored app/__generated__ codegen output.
+        "zod",
+      ],
+    },
+    "applications/openthrottle-website": {
+      // Read by apollo.config.mjs, which the root ignore hides.
+      "ignoreDependencies": ["dotenv"],
+    },
+    // Screencast pipeline (PIPELINE.md). The CLI entrypoints and demo-database scripts
+    // are each run by an Nx `video-*` / `snapshot-refresh` target rather than imported,
+    // so without this every module they pull in reads as unused. The episode flows and
+    // surfaces are entries too: run.ts resolves them by slug through a dynamic import
+    // that knip cannot follow.
+    "packages/openthrottle-showroom": {
+      "entry": [
+        "src/index.ts",
+        "src/assemble/assemble.ts",
+        "src/episodes/*/{flow,surface}.ts",
+        "src/episodes/flows.ts",
+        "src/narrate/narrate.ts",
+        "src/runner/run.ts",
+        "src/scan/leak-scan.ts",
+        "src/scripts/*.ts",
+        "src/validate/validate.ts",
+      ],
+      "ignore": [
+        // Recorder spike: committed as evidence for the decision, deliberately not
+        // imported by the pipeline. See spike/README.md.
+        "spike/**",
+        // Leak scanner for the committed snapshot; exercised only by snapshot-data.test.ts.
+        "src/snapshot/scanSnapshotText.ts",
+      ],
+    },
+    // Hook bundles. Nothing imports an adapter: scripts/bundle-hooks.ts hands each one
+    // to esbuild as an entrypoint by path (its BUNDLES array), and the scripts are run
+    // through tsx by this package's Nx targets.
+    "packages/agentic-hooks": {
+      "entry": [
+        "src/index.ts",
+        "scripts/*.ts",
+        "src/adapters/{antigravity,claude,codex,cursor}/*.ts",
+      ],
+    },
+    // check-drift.ts and record.ts are run through tsx by this package's Nx targets.
+    "packages/agentic-replay-testing": {
+      "entry": ["src/index.ts", "scripts/*.ts"],
+    },
+    // check-surfaces.ts and generate-surfaces.ts are run by this package's Nx targets.
+    "packages/openthrottle-product": {
+      "entry": ["src/index.ts", "src/scripts/*.ts"],
+    },
+    "packages/react-router-markdown": {
+      // Test-only: specs import react-dom/server and resolve tailwindcss/theme.css.
+      "ignoreDependencies": ["react-dom", "tailwindcss"],
+    },
+    "packages/react-router-shadcn": {
+      "ignoreDependencies": [
+        // Test-only: specs use createRoutesStub (knip ignores __tests__).
+        "react-router",
+        // CSS `@import` in src/theme.css, which is not in the import graph.
+        "tw-animate-css",
+      ],
+    },
+    "tools/ot-telemetry": {
+      // Runs this package's Nx target command (`tsx ... src/index.ts`).
+      "ignoreDependencies": ["tsx"],
     },
     // Electron shell. None of these are imported: electron-vite's config names the main,
     // child-server and preload entries as strings, the renderer is reached from
@@ -208,6 +296,41 @@
         "scripts/nx-dependency-graph.ts",
         "scripts/nx-circular-dependencies.ts",
         "scripts/audit-templates-compliance.ts",
+        // Run by nx.json targets.
+        "scripts/check-claude-config-json.ts",
+        "scripts/check-folder-vocabulary.ts",
+        "scripts/check-generated-attributes.ts",
+        "scripts/check-local-ci-parity.ts",
+        "scripts/check-migration-hygiene.ts",
+        "scripts/check-nodenext-references.ts",
+        "scripts/check-package-entrypoints.ts",
+        "scripts/check-side-effects.ts",
+        "scripts/check-test-file-filter-docs.ts",
+        "scripts/check-test-file-names.ts",
+        "scripts/sync-agent-config.ts",
+        // Run by root package.json scripts.
+        "scripts/ensure-embedding-model.ts",
+        "scripts/ensure-migrations.ts",
+        "scripts/ollama.ts",
+        // Run by CI (and the codegen packages' verify targets).
+        "scripts/generate-shard-weights.ts",
+        "scripts/verify-graphql-codegen.ts",
+        // Run by scripts/setup.sh, the worktree hooks (skills/ot-worktree,
+        // .worktree/teardown.sh) and scripts/run-openthrottle-mcp.sh.
+        "scripts/heal_worktree.ts",
+        "scripts/run-openthrottle-mcp.ts",
+        "scripts/setup.ts",
+        "scripts/setup_worktree.ts",
+        "scripts/teardown_worktree.ts",
+        // Run by .agents/plugins/openthrottle/hooks.json.
+        "scripts/antigravity-deny-hook.ts",
+        // Documented manual CLIs with no in-repo invoker.
+        "scripts/audit-docs-index.ts",
+        "scripts/ci-timings.ts",
+        "scripts/codemod-import-extensions.ts",
+        "scripts/docker-smoke-test.ts",
+        "scripts/gcs-docker-upload.ts",
+        "scripts/verify-openthrottle-mcp-env.ts",
         ".agents/skills/monitor-ci/scripts/*.mjs",
         ".cursor/skills/monitor-ci/scripts/*.mjs",
         ".opencode/skills/monitor-ci/scripts/*.mjs",
@@ -232,6 +355,8 @@
         "@commitlint/config-conventional",
         "@commitlint/config-nx-scopes",
         "@golevelup/ts-vitest",
+        // Provides the `graphql-codegen` binary the nx.json codegen-graphql target runs.
+        "@graphql-codegen/cli",
         "@headlessui/react",
         "@keyv/redis",
         "@langchain/classic",
@@ -251,6 +376,8 @@
         "@nestjs/throttler",
         "@parcel/watcher",
         "@radix-ui/react-slot",
+        // Hoisted for the React Router apps, which each declare and import it themselves.
+        "@react-router/dev",
         "@react-router/express",
         "@rollbar/react",
         "@tanstack/query-sync-storage-persister",
@@ -324,6 +451,8 @@
         "tmp",
         "tslab",
         "tsup",
+        // Named in tools/nx-plugins/typecheck-compiler.ts `externalDependencies`, not imported.
+        "typescript7",
         "typescript-json-schema",
         "use-latest-callback",
         "usehooks-ts",
@@ -383,6 +512,8 @@
         // (or schema/graphql-schema-command.ts, which it imports) via the import graph.
         "src/bin.ts",
       ],
+      // Runtime driver behind @nestjs/apollo's `subscriptions['graphql-ws']`; never imported.
+      "ignoreDependencies": ["graphql-ws"],
       "project": ["src/**/*.ts"],
     },
     // Every file Node runs directly in the production image: the server, the one-shot
@@ -395,6 +526,12 @@
       ],
       // macOS Spotlight CLI spawned by editor presence; a system binary, not a dependency.
       "ignoreBinaries": ["mdfind"],
+      "ignoreDependencies": [
+        // nest-cli.json `collection`; knip reports it as unlisted otherwise.
+        "@nestjs/schematics",
+        // Used by vitest.config.ts, which the root ignore hides.
+        "unplugin-swc",
+      ],
     },
     // Test support (fixtures, factories, the TestRecord entity) is imported only by
     // *.test.ts files, which the root ignore hides from the import graph.
@@ -446,6 +583,8 @@
         // accounted for.
         "esbuild.http.mjs",
       ],
+      // Plugin named in codegen.ts (root-ignored).
+      "ignoreDependencies": ["graphql-codegen-typescript-validation-schema"],
       "project": ["src/**/*.ts"],
     },
     "packages/nodejs-graphql": {
@@ -462,6 +601,12 @@
     },
     "packages/openthrottle-developer-codegen": {
       "entry": ["src/index.ts", "codegen.ts"],
+      "ignoreDependencies": [
+        // Imported only by the gitignored __generated__ output.
+        "@graphql-typed-document-node/core",
+        // Plugin named in codegen.ts.
+        "graphql-codegen-typescript-validation-schema",
+      ],
       "project": ["src/**/*.ts", "graphql/**/*.graphql"],
     },
     "packages/openthrottle-notifications": {

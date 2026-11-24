@@ -24,12 +24,6 @@ import { SettingsWorkspaceProfileForm } from '~/routing/settings/components/Sett
 import { buildWorkspaceApplyResults } from '~/routing/settings/utils/buildWorkspaceApplyResults';
 import { buildWorkspaceEditorTargetGroups } from '~/routing/settings/utils/buildWorkspaceEditorTargetGroups';
 import { buildEditorPresenceIndex } from '~/routing/settings/utils/workspace-editor-presence-status';
-// import { FolderGit2Icon } from 'lucide-react';
-// import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
-// import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/data.copy';
-// import { SettingsWorkspaceApplyEditors } from '~/routing/settings/components/SettingsWorkspaceApplyEditors';
-// import { SettingsWorkspaceApplyResults } from '~/routing/settings/components/SettingsWorkspaceApplyResults';
-// import { SettingsWorkspaceEditorTargets } from '~/routing/settings/components/SettingsWorkspaceEditorTargets';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -121,30 +115,6 @@ export default function Component(
             editorPresenceIndex={editorPresenceIndex}
             profile={profile}
           />
-          {/*
-          <OpenThrottleFieldset
-            icon={FolderGit2Icon}
-            id="settings-workspace-editor-targets"
-            legend={WORKSPACE_SETTINGS_COPY.targetsHeading}
-          >
-            <SettingsWorkspaceEditorTargets
-              hasRepositories={localRepositories.length > 0}
-              presence={editorPresenceIndex}
-              targets={targets}
-            />
-            <SettingsWorkspaceApplyEditors
-              actionError={actionError}
-              disabled={!canApplyEditors}
-            />
-            {applyResults ? (
-              <SettingsWorkspaceApplyResults
-                className="border-t pt-4"
-                results={applyResults}
-                summary={actionMessage}
-              />
-            ) : null}
-          </OpenThrottleFieldset>
-          */}
         </div>
 
         {/* Workspace preferences, independent of the apply flow above. */}

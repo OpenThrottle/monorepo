@@ -13,7 +13,6 @@ import type {
   UserWorkspaceProfileFieldsFragment,
   WorkspaceEditorId as WorkspaceEditorIdType,
 } from '~/__generated__/graphql';
-// import { WorkspaceEditorAffiliateLinks } from '~/routing/settings/components/WorkspaceEditorAffiliateLinks';
 import { WorkspaceEditorMultiSelect } from '~/routing/settings/components/WorkspaceEditorMultiSelect';
 import { WorkspaceEditorPresenceHints } from '~/routing/settings/components/WorkspaceEditorPresenceHints';
 import {
@@ -134,8 +133,6 @@ export const SettingsWorkspaceEditorsForm = (
         <Button disabled={isSubmitting} type="submit" variant="outline">
           {isSubmitting ? saveBusyLabel : saveEditorsButton}
         </Button>
-
-        {/* <WorkspaceEditorAffiliateLinks className="border-t pt-3" /> */}
       </Form>
     </OpenThrottleFieldset>
   );

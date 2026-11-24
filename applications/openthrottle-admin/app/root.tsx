@@ -18,7 +18,6 @@ import {
   GlobalProviders,
   GlobalRouteViewTransition,
 } from '@openthrottle/react-router-ui-global';
-// import { Analytics } from '@vercel/analytics/react';
 import {
   APP_URL,
   artwork,
@@ -204,9 +203,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         <Toaster />
         <ScrollRestoration nonce={nonce} />
-
-        {/* FIXME: Uncomment this when we have a production environment */}
-        {/* <Analytics /> */}
 
         {/* 🚨 Any env added here is 100% visible to the world 🚨 */}
         <script

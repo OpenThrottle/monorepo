@@ -8,7 +8,6 @@
     "url": "https://developer.openthrottle.ai"
   },
   "dependencies": {
-    "@faker-js/faker": "catalog:",
     "@graphql-typed-document-node/core": "catalog:",
     "@openthrottle/graphql-codegen": "workspace:^",
     "@openthrottle/nodejs-utils": "workspace:*",
@@ -70,7 +69,6 @@
     "@testing-library/react": "catalog:",
     "@testing-library/user-event": "catalog:",
     "graphql-codegen-typescript-validation-schema": "catalog:",
-    "playwright": "catalog:",
     "react-router-devtools": "catalog:",
     "vite": "catalog:",
     "vite-bundle-analyzer": "catalog:",
@@ -131,8 +129,7 @@
   "repository": "git://github.com/OpenThrottle/developer.git",
   "sideEffects": [
     "**/*.css",
-    "./app/entry.client.tsx",
-    "./app/routing/projects/data/mock.projects.ts"
+    "./app/entry.client.tsx"
   ],
   "scripts": {
     "start:docker": "react-router-serve ./build/server/index.js"

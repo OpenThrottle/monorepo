@@ -40,7 +40,7 @@ export const fetchMyPermissions = async (
  *
  * Fetches `myPermissions` itself because a child loader cannot read the root
  * loader's data on the server. This is the authoritative check for loaders; the
- * client-side `useHasPermission` only decides what to render, and the server
+ * client-side `hasPermission` only decides what to render, and the server
  * resolvers still enforce their own `Permissions` guards.
  *
  * @example
