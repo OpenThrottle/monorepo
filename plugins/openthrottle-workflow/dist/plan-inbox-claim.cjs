@@ -130,21 +130,48 @@ var readRepoEnvFile = (repoRoot) => {
 var readUserEnvFile = () => {
   return readEnvFile(import_node_path.default.join(userConfigDir(), ".env"));
 };
+var GRAPHQL_ENDPOINT_ENV_KEYS = [
+  "OPENTHROTTLE_GRAPHQL_URL",
+  "OPENTHROTTLE_WORKER_GRAPHQL_URL",
+  "OPENTHROTTLE_SERVER_APP_URL"
+];
+var AUTH_TOKEN_ENV_KEYS = [
+  "OPENTHROTTLE_MCP_AUTH_TOKEN",
+  "OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN"
+];
 var envLayers = (repoRoot, options) => {
+  const excludeProcessEnv = options?.includeProcessEnv === false;
+  const processLayer = excludeProcessEnv ? [] : [{ blankIsTerminal: true, values: process.env }];
   return [
-    repoRoot ? readRepoEnvFile(repoRoot) : {},
-    ...options?.includeProcessEnv === false ? [] : [process.env],
-    readUserEnvFile()
+    {
+      blankIsTerminal: false,
+      values: repoRoot ? readRepoEnvFile(repoRoot) : {}
+    },
+    ...processLayer,
+    { blankIsTerminal: false, values: readUserEnvFile() }
   ];
 };
-var resolveOtEnv = (repoRoot, key, options) => {
+var isExplicitlyBlank = (layer, keys) => {
+  return layer.blankIsTerminal && keys.some((key) => {
+    const value = layer.values[key];
+    return value !== void 0 && value.trim() === "";
+  });
+};
+var resolveConcern = (repoRoot, options, keys, pick) => {
   for (const layer of envLayers(repoRoot, options)) {
-    const value = layer[key];
-    if (value && value.trim()) {
-      return value.trim();
+    const answer = pick(layer.values);
+    if (answer !== null) {
+      return answer;
+    }
+    if (isExplicitlyBlank(layer, keys)) {
+      return null;
     }
   }
-  return "";
+  return null;
+};
+var pickTrimmed = (values, key) => {
+  const value = values[key]?.trim();
+  return value ? value : null;
 };
 var LOOPBACK_AUTHORITY = /^([a-z][a-z0-9+.-]*:\/\/(?:[^/?#@]*@)?)localhost(?=[:/?#]|$)/i;
 var normalizeLoopbackHost = (url) => {
@@ -162,16 +189,23 @@ var graphqlUrlFromEnvMap = (env) => {
   return null;
 };
 var resolveGraphqlUrl = (repoRoot, options) => {
-  for (const layer of envLayers(repoRoot, options)) {
-    const url = graphqlUrlFromEnvMap(layer);
-    if (url) {
-      return url;
-    }
-  }
-  return null;
+  return resolveConcern(
+    repoRoot,
+    options,
+    GRAPHQL_ENDPOINT_ENV_KEYS,
+    graphqlUrlFromEnvMap
+  );
 };
 var resolveAuthToken = (repoRoot, options) => {
-  return resolveOtEnv(repoRoot, "OPENTHROTTLE_MCP_AUTH_TOKEN", options) || resolveOtEnv(repoRoot, "OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN", options) || "";
+  return resolveConcern(repoRoot, options, AUTH_TOKEN_ENV_KEYS, (values) => {
+    for (const key of AUTH_TOKEN_ENV_KEYS) {
+      const value = pickTrimmed(values, key);
+      if (value !== null) {
+        return value;
+      }
+    }
+    return null;
+  }) ?? "";
 };
 
 // packages/agentic-hooks/src/data/jsonl.ts
