@@ -63,6 +63,25 @@ tags:
       expect(record.disableModelInvocation).toBe(true);
     });
 
+    test('carries a metadata.outcome-telemetry opt-out', () => {
+      const entry: AgentAssetFileEntry = {
+        content: `---
+name: ot-stack
+description: Conventions.
+metadata:
+  outcome-telemetry: 'none'
+---
+`,
+        kind: 'skill',
+        path: '.agents/skills/ot-stack/SKILL.md',
+        slug: 'ot-stack',
+      };
+
+      const record = mapAgentAssetFileToIngestRecord(entry);
+
+      expect(record.outcomeTelemetry).toBe('none');
+    });
+
     test('leaves tags and flag undefined when frontmatter omits them', () => {
       const entry: AgentAssetFileEntry = {
         content: `---
@@ -201,6 +220,7 @@ const skillRecord = (
     disableModelInvocation: undefined,
     filePath: '.agents/skills/example/SKILL.md',
     labels: ['example'],
+    outcomeTelemetry: undefined,
     promptType: 'skills',
     tags: undefined,
     title: 'example',
@@ -209,6 +229,14 @@ const skillRecord = (
 };
 
 describe('toProjectSkillInputs', () => {
+  test('carries the outcome-telemetry opt-out', () => {
+    const [input] = toProjectSkillInputs([
+      skillRecord({ outcomeTelemetry: 'none' }),
+    ]);
+
+    expect(input?.outcomeTelemetry).toBe('none');
+  });
+
   test('projects a tagged skill with its flag and source path', () => {
     const inputs = toProjectSkillInputs([
       skillRecord({
@@ -223,6 +251,7 @@ describe('toProjectSkillInputs', () => {
       {
         description: 'A skill.',
         disableModelInvocation: true,
+        outcomeTelemetry: undefined,
         slug: 'github-commit',
         source: 'external',
         sourcePath: '.agents/skills/github-commit/SKILL.md',
@@ -335,6 +364,7 @@ describe('toProjectSkillInputs', () => {
         disableModelInvocation: undefined,
         filePath: '.agents/personas/architect.md',
         labels: ['persona', 'architect'],
+        outcomeTelemetry: undefined,
         promptType: 'personas',
         tags: undefined,
         title: 'architect',

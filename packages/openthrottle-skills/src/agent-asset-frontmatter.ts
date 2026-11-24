@@ -1,19 +1,28 @@
 import type { ZodError } from 'zod';
 
-import { parseYamlFrontmatter } from './frontmatter/frontmatter.ts';
+import {
+  parseYamlFrontmatter,
+  parseYamlFrontmatterMetadata,
+} from './frontmatter/frontmatter.ts';
 import type {
   AgentAssetKind,
   AgentAssetValidationIssue,
+  SkillOutcomeTelemetry,
 } from './schemas/agent-asset-frontmatter.schemas.ts';
 import {
   personaFrontmatterSchema,
+  SKILL_OUTCOME_TELEMETRY,
   skillFrontmatterSchema,
 } from './schemas/agent-asset-frontmatter.schemas.ts';
+
+const OUTCOME_TELEMETRY_KEY = 'outcome-telemetry';
 
 export interface ParsedSkillFrontmatter {
   readonly description: string | undefined;
   readonly disableModelInvocation: boolean | undefined;
   readonly name: string | undefined;
+  /** `metadata.outcome-telemetry`; `undefined` when absent or unrecognized. */
+  readonly outcomeTelemetry: SkillOutcomeTelemetry | undefined;
   readonly tags: readonly string[] | undefined;
 }
 
@@ -32,8 +41,20 @@ const toOptionalStringArray = (
   return Array.isArray(value) ? value : undefined;
 };
 
+const isSkillOutcomeTelemetry = (
+  value: unknown,
+): value is SkillOutcomeTelemetry => {
+  return SKILL_OUTCOME_TELEMETRY.some((known) => known === value);
+};
+
+const readOutcomeTelemetry = (fileContent: string): unknown => {
+  return parseYamlFrontmatterMetadata(fileContent).fields[
+    OUTCOME_TELEMETRY_KEY
+  ];
+};
+
 /**
- * @description Parses `name`, `description`, optional `disable-model-invocation`, and optional `tags` from SKILL.md frontmatter. Provenance is NOT frontmatter — it is derived from the ot-skill-sync layout (see `agent-assets-disk.ts` and `parse-skills-lock.ts`).
+ * @description Parses `name`, `description`, optional `disable-model-invocation`, optional `tags`, and the optional nested `metadata.outcome-telemetry` from SKILL.md frontmatter. Provenance is NOT frontmatter — it is derived from the ot-skill-sync layout (see `agent-assets-disk.ts` and `parse-skills-lock.ts`).
  * @public
  */
 export const parseSkillFrontmatter = (
@@ -43,11 +64,17 @@ export const parseSkillFrontmatter = (
   const rawFlag = fields['disable-model-invocation'];
   const isBoolean = typeof rawFlag === 'boolean';
   const disableModelInvocation = isBoolean ? rawFlag : undefined;
+  const rawOutcomeTelemetry = readOutcomeTelemetry(fileContent);
+  const isKnownOutcomeTelemetry = isSkillOutcomeTelemetry(rawOutcomeTelemetry);
+  const outcomeTelemetry = isKnownOutcomeTelemetry
+    ? rawOutcomeTelemetry
+    : undefined;
 
   return {
     description: toOptionalString(fields.description),
     disableModelInvocation,
     name: toOptionalString(fields.name),
+    outcomeTelemetry,
     tags: toOptionalStringArray(fields.tags),
   };
 };
@@ -134,8 +161,22 @@ const zodIssuesToValidationIssues = (
 const validateSkillFrontmatterWarnings = (
   path: string,
   parsed: Record<string, unknown>,
+  content: string,
 ): AgentAssetValidationIssue[] => {
   const warnings: AgentAssetValidationIssue[] = [];
+
+  const outcomeTelemetry = readOutcomeTelemetry(content);
+  if (
+    outcomeTelemetry !== undefined &&
+    !isSkillOutcomeTelemetry(outcomeTelemetry)
+  ) {
+    warnings.push({
+      field: `metadata.${OUTCOME_TELEMETRY_KEY}`,
+      message: `metadata.${OUTCOME_TELEMETRY_KEY} must be one of ${SKILL_OUTCOME_TELEMETRY.map((value) => `'${value}'`).join(', ')}; any other value is ignored and the skill reads as unmeasured`,
+      path,
+      severity: 'warning',
+    });
+  }
 
   const disableModelInvocation = parsed['disable-model-invocation'];
   if (
@@ -180,7 +221,7 @@ export const validateAgentAssetFrontmatter = (
 
   if (kind === 'skill') {
     const parsed = parseSkillFrontmatterForValidation(content);
-    const warnings = validateSkillFrontmatterWarnings(path, parsed);
+    const warnings = validateSkillFrontmatterWarnings(path, parsed, content);
     const result = skillFrontmatterSchema.safeParse(parsed);
     if (!result.success) {
       return {

@@ -10,7 +10,7 @@ description: >-
 metadata:
   author: openthrottle
   last-reviewed: '2026-11-22'
-  version: '2.0.0'
+  version: '2.1.0'
 ---
 
 # Client/Node boundary
@@ -38,6 +38,13 @@ to a package that browser code imports:
 
 ```bash
 pnpm nx run openthrottle-developer:check-client-boundary
+```
+
+**Report the outcome when that build passes** ([why](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/skill-usage-telemetry-scope.md#reporting-an-outcome-from-a-skill)): `success`; `error` if it still names a
+builtin when you stop; `abandoned` if nothing you touched is reachable from browser code.
+
+```bash
+r="$(command -v skill-usage-outcome.cjs || echo "$(git rev-parse --show-toplevel 2>/dev/null)/plugins/openthrottle/bin/skill-usage-outcome.cjs")"; if [ -f "$r" ]; then node "$r" --skill ot-client-node-boundary --outcome success; fi
 ```
 
 The `react-router` application generator adds both the plugin and the empty

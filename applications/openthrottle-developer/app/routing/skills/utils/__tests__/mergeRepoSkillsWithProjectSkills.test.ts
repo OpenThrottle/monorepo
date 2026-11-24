@@ -56,6 +56,44 @@ describe('mergeRepoSkillsWithProjectSkills', () => {
     expect(merged.layout).toBe('agents');
   });
 
+  describe('outcomeTelemetry', () => {
+    test('overlays an ingested opt-out onto the disk entry', () => {
+      const [merged] = mergeRepoSkillsWithProjectSkills(
+        [diskEntry('ot-stack')],
+        [{ slug: 'ot-stack', staticOutcomeTelemetry: 'none', tags: [] }],
+      );
+
+      expect(merged?.outcomeTelemetry).toBe('none');
+    });
+
+    test('reads a null or unrecognized ingested value as not opted out', () => {
+      const merged = mergeRepoSkillsWithProjectSkills(
+        [diskEntry('ot-loop', { outcomeTelemetry: 'none' }), diskEntry('odd')],
+        [
+          { slug: 'ot-loop', staticOutcomeTelemetry: null, tags: [] },
+          { slug: 'odd', staticOutcomeTelemetry: 'sometimes', tags: [] },
+        ],
+      );
+
+      expect(merged.map((entry) => entry.outcomeTelemetry)).toEqual([
+        undefined,
+        undefined,
+      ]);
+    });
+
+    test('carries the opt-out onto a DB-only orphan row', () => {
+      const merged = mergeRepoSkillsWithProjectSkills(
+        [diskEntry('alpha')],
+        [
+          { slug: 'alpha', tags: [] },
+          { slug: 'gone', staticOutcomeTelemetry: 'none', tags: [] },
+        ],
+      );
+
+      expect(merged[1]?.outcomeTelemetry).toBe('none');
+    });
+  });
+
   test('maps a null GraphQL flag to undefined (tri-state preserved)', () => {
     const entries = [diskEntry('planner', { disableModelInvocation: true })];
     const rows: ProjectSkillFlagRow[] = [

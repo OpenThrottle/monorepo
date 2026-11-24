@@ -5,7 +5,7 @@ compatibility: 'git, gh (authenticated), jq; the github-pull-request resolver is
 metadata:
   author: openthrottle
   last-reviewed: '2026-11-22'
-  version: '1.2.0'
+  version: '1.3.0'
 ---
 
 # github-cleanup
@@ -84,7 +84,9 @@ removal must be named in the question; a plain "yes" does not cover a `--force` 
 2. **Branches** — one `git branch -D <b1> <b2> …` (`-D`, because squash-merged branches fail
    `-d`). Keep the printed `(was <sha>)` lines: they are the undo
    (`git branch <name> <sha>`) until the objects are pruned.
-3. Re-run the classifier with `--no-fetch` and confirm none of the deleted branches remain.
+3. Re-run the classifier with `--no-fetch` and confirm none of the deleted branches remain. That
+   confirmation is the finish line: report the outcome now ([§ In OpenThrottle repos](#in-openthrottle-repos)). A user who declines at
+   step 2 ends the run too: report `abandoned` there.
 
 ## 4. Housekeeping (offer, separate yes)
 
@@ -105,7 +107,7 @@ undo), and anything that pushes.
 
 ## In OpenThrottle repos
 
-Report the outcome once, at the end — `error` if a deletion the user approved failed, `abandoned` if called off ([why](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/skill-usage-telemetry-scope.md#reporting-an-outcome-from-a-skill)):
+Report the outcome once per invocation, on every exit path (§ 3 step 3, or a declined § 2) — `error` if a deletion the user approved failed, `abandoned` if called off ([why](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/skill-usage-telemetry-scope.md#reporting-an-outcome-from-a-skill)):
 
 ```bash
 r="$(command -v skill-usage-outcome.cjs || echo "$(git rev-parse --show-toplevel 2>/dev/null)/plugins/openthrottle/bin/skill-usage-outcome.cjs")"; if [ -f "$r" ]; then node "$r" --skill github-cleanup --outcome success; fi

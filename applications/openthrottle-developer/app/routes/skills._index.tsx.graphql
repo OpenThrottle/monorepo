@@ -8,6 +8,7 @@ query ProjectSkills($projectId: ID) {
       source
       sourceUrl
       staticDisableModelInvocation
+      staticOutcomeTelemetry
       tags
     }
     totalCount

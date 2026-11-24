@@ -18,15 +18,23 @@ import {
   ProjectSkillsRepository,
   SkillTagsRepository,
 } from '@openthrottle/nestjs-repositories-server';
+import type { SkillOutcomeTelemetry } from '@openthrottle/openthrottle-skills';
 import {
   AGENT_ASSET_SLUG_PATTERN,
   DEFAULT_TAG_VOCABULARY_SEED,
+  SKILL_OUTCOME_TELEMETRY,
 } from '@openthrottle/openthrottle-skills';
 
 import type { TagCaller } from '../tags/tags.types.ts';
 import type { ProjectSkillView } from './project-skills.types.ts';
 
 const PHASE_DIMENSION = 'phase';
+
+const toOutcomeTelemetry = (
+  value: string | null,
+): SkillOutcomeTelemetry | undefined => {
+  return SKILL_OUTCOME_TELEMETRY.find((known) => known === value);
+};
 
 const toView = (row: ProjectSkill): ProjectSkillView => {
   return {
@@ -36,6 +44,7 @@ const toView = (row: ProjectSkill): ProjectSkillView => {
     source: row.source === 'openthrottle' ? 'openthrottle' : 'external',
     sourceUrl: row.sourceUrl ?? undefined,
     staticDisableModelInvocation: row.disableModelInvocation ?? undefined,
+    staticOutcomeTelemetry: toOutcomeTelemetry(row.outcomeTelemetry),
     tags: row.tags,
   };
 };

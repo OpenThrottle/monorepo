@@ -246,7 +246,28 @@ describe('discoverRepoSkills', () => {
     const [entry] = discoverRepoSkills(root);
 
     expect(entry?.disableModelInvocation).toBeUndefined();
+    expect(entry?.outcomeTelemetry).toBeUndefined();
     expect(entry?.tags).toBeUndefined();
+  });
+
+  test('threads a metadata.outcome-telemetry opt-out into the entry', () => {
+    const root = makeTempDir();
+
+    writeSkill(
+      root,
+      '.agents/skills',
+      'ot-stack',
+      [
+        'name: ot-stack',
+        'description: A convention reference.',
+        'metadata:',
+        "  outcome-telemetry: 'none'",
+      ].join('\n'),
+    );
+
+    const [entry] = discoverRepoSkills(root);
+
+    expect(entry?.outcomeTelemetry).toBe('none');
   });
 
   test('derives openthrottle for an authored skill symlinked from skills/', () => {

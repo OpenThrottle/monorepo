@@ -5,7 +5,7 @@ compatibility: Requires git, a POSIX sh and bash; curl is optional (OpenThrottle
 metadata:
   author: openthrottle
   last-reviewed: '2026-11-22'
-  version: '1.4.0'
+  version: '1.5.0'
 ---
 
 # ot-worktree
@@ -17,7 +17,9 @@ every repo that has it creates, heals and destroys worktrees the same way.
 
 ## Three composable actions
 
-Each verb is usable standalone and callable from the others. All three accept `-h`/`--help`.
+Each verb is usable standalone and callable from the others. All three accept `-h`/`--help`. The
+script's exit is the finish line: in OpenThrottle repos report the outcome as soon as it returns
+([§ In OpenThrottle repos](#in-openthrottle-repos)).
 
 | Action      | Script               | Job                                                   |
 | ----------- | -------------------- | ----------------------------------------------------- |
@@ -128,7 +130,7 @@ Only relevant where the OpenThrottle server and its `package.json` scripts exist
 - **Agent registrations:** teardown also undoes per-checkout agent state (Claude's local-scope plugins) via `scripts/utils/agent-checkout-registrations.ts`; `pnpm worktree:prune-agents` sweeps leftovers. [Rule](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/agent-editor-folders.md#per-checkout-registrations-ship-with-their-removal).
 - **Checkout record:** after a successful removal `scripts/deregister.sh` calls `deregisterWorktreeCheckout` with the path, resolving endpoint and token from the _primary_ checkout's `.env`, then the ambient environment, then `~/.openthrottle/.env`. Strictly fail-open: no `curl`, no endpoint or token, a server that is down, or a refused request each log one line and removal still succeeds. The server keeps the record while an unsettled plan run points at it, so settle a run before tearing down its worktree. `OPENTHROTTLE_WORKTREE_DEREGISTER=0` skips it.
 - **Active-run guard:** _before_ teardown, `destroy.sh` sends the same call while the worktree still exists; the server checks runs before liveness, so it never prunes here. `SKIPPED_ACTIVE_RUN` refuses the removal. Fail-open; `OPENTHROTTLE_WORKTREE_ACTIVE_RUN_GUARD=0` skips it.
-- **Outcome telemetry:** once, at the end — `error` if the action exited non-zero, `abandoned` if called off ([why](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/skill-usage-telemetry-scope.md#reporting-an-outcome-from-a-skill)):
+- **Outcome telemetry:** once per action, as soon as the script returns, on every exit path — `error` if it exited non-zero, `abandoned` if called off ([why](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/skill-usage-telemetry-scope.md#reporting-an-outcome-from-a-skill)):
 
   ```bash
   r="$(command -v skill-usage-outcome.cjs || echo "$(git rev-parse --show-toplevel 2>/dev/null)/plugins/openthrottle/bin/skill-usage-outcome.cjs")"; if [ -f "$r" ]; then node "$r" --skill ot-worktree --outcome success; fi

@@ -25,6 +25,7 @@ export const projectSkillsFactory = Factory.define<
     id: faker.string.uuid(),
     ingestedAt: createdAt,
     orphanedAt: null,
+    outcomeTelemetry: null,
     projectId: faker.string.uuid(),
     slug: faker.helpers.slugify(faker.word.words(2)).toLowerCase(),
     source: 'external',

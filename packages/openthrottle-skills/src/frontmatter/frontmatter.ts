@@ -113,6 +113,39 @@ const toFrontmatterScalar = (value: unknown): FrontmatterScalar => {
   return UNSUPPORTED_CONSTRUCT_PLACEHOLDER;
 };
 
+const toFrontmatterFields = (
+  document: Readonly<Record<string, unknown>>,
+): Record<string, FrontmatterScalar> => {
+  const fields: Record<string, FrontmatterScalar> = {};
+  for (const [key, value] of Object.entries(document)) {
+    if (value === null || value === undefined) {
+      continue;
+    }
+
+    fields[key] = toFrontmatterScalar(value);
+  }
+
+  return fields;
+};
+
+const parseFrontmatterDocument = (
+  fileContent: string,
+): Readonly<Record<string, unknown>> | null => {
+  const body = extractFrontmatterBody(fileContent);
+  if (body === null) {
+    return null;
+  }
+
+  let document: unknown;
+  try {
+    document = parseYamlDocument(body, { uniqueKeys: false });
+  } catch {
+    return null;
+  }
+
+  return isRecord(document) ? document : null;
+};
+
 /**
  * @description Parses supported YAML frontmatter keys from markdown/mdc content.
  *
@@ -149,32 +182,31 @@ const toFrontmatterScalar = (value: unknown): FrontmatterScalar => {
 export const parseYamlFrontmatter = (
   fileContent: string,
 ): ParsedYamlFrontmatter => {
-  const body = extractFrontmatterBody(fileContent);
-  if (body === null) {
+  const document = parseFrontmatterDocument(fileContent);
+  if (document === null) {
     return { fields: {} };
   }
 
-  let document: unknown;
-  try {
-    document = parseYamlDocument(body, { uniqueKeys: false });
-  } catch {
+  return { fields: toFrontmatterFields(document) };
+};
+
+/**
+ * @description Parses the entries of the nested `metadata:` map in YAML
+ * frontmatter, which {@link parseYamlFrontmatter} deliberately flattens to an
+ * empty-string placeholder. Values follow the same scalar coercions; a nested
+ * map inside `metadata` is again an unsupported construct. Returns `{}` when
+ * there is no frontmatter, no `metadata` key, or `metadata` is not a map.
+ */
+export const parseYamlFrontmatterMetadata = (
+  fileContent: string,
+): ParsedYamlFrontmatter => {
+  const document = parseFrontmatterDocument(fileContent);
+  const metadata = document?.metadata;
+  if (!isRecord(metadata)) {
     return { fields: {} };
   }
 
-  if (!isRecord(document)) {
-    return { fields: {} };
-  }
-
-  const fields: Record<string, FrontmatterScalar> = {};
-  for (const [key, value] of Object.entries(document)) {
-    if (value === null || value === undefined) {
-      continue;
-    }
-
-    fields[key] = toFrontmatterScalar(value);
-  }
-
-  return { fields };
+  return { fields: toFrontmatterFields(metadata) };
 };
 
 export interface SplitFrontmatterResult {

@@ -15,6 +15,18 @@ export const SKILL_SOURCES = ['external', 'openthrottle'] as const;
 /** @public */
 export type SkillSource = (typeof SKILL_SOURCES)[number];
 
+/**
+ * @description Values a skill may declare under `metadata.outcome-telemetry` in
+ * its SKILL.md frontmatter. `none` means the skill deliberately reports no
+ * outcome or duration (a convention reference with no finish line), so usage
+ * views show "Not reported by design" instead of a measurement gap.
+ * @public
+ */
+export const SKILL_OUTCOME_TELEMETRY = ['none'] as const;
+
+/** @public */
+export type SkillOutcomeTelemetry = (typeof SKILL_OUTCOME_TELEMETRY)[number];
+
 const nonEmptyTrimmedString = z.string().trim().min(1);
 
 /**

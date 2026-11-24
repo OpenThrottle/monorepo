@@ -126,6 +126,7 @@
       "check-nodenext-references": {},
       "check-package-entrypoints": {},
       "check-side-effects": {},
+      "check-skill-outcome-reporting": {},
       "check-test-file-filter-docs": {},
       "check-test-file-names": {},
       "ensure-embedding-model": {
@@ -258,7 +259,7 @@
     "check:local:affected-lint": "pnpm nx affected --target=lint --parallel",
     "check:local:affected-test": "pnpm nx affected --target=test --parallel --nxBail",
     "check:local:affected-typecheck": "pnpm nx affected --target=typecheck --parallel",
-    "check:local:agent-assets": "pnpm nx run monorepo:check-agent-assets-ssot && pnpm nx run monorepo:validate-agent-assets-frontmatter",
+    "check:local:agent-assets": "pnpm nx run monorepo:check-agent-assets-ssot && pnpm nx run monorepo:validate-agent-assets-frontmatter && pnpm nx run monorepo:check-skill-outcome-reporting",
     "check:local:agent-config-parity": "pnpm nx run monorepo:check-agent-config-parity",
     "check:local:audit": "pnpm run \"/^audit:(?!test-coverage).*:strict$/\"",
     "check:local:ci-parity": "pnpm nx run monorepo:check-local-ci-parity",

@@ -9,7 +9,7 @@ description: >-
 metadata:
   author: openthrottle
   last-reviewed: '2026-11-22'
-  version: '1.2.0'
+  version: '1.3.0'
 ---
 
 # 🚪 OpenThrottle onboarding — start here
@@ -182,7 +182,13 @@ Reading about plans is not the same as watching one appear. Do this once, now.
 
 4. **What success looks like.** The agent calls `create_plan` and `create_tasks` — **tool calls, not
    file writes**. A plan appears in OT with tasks under it, and you can open it in the Developer UI
-   and see the same rows. Nothing new shows up in `git status`.
+   and see the same rows. Nothing new shows up in `git status`. That plan is this skill's finish
+   line: report the outcome now ([why](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/skill-usage-telemetry-scope.md#reporting-an-outcome-from-a-skill)) — `success` once the plan exists; `error` if the health
+   gate in section 1 never went green; `abandoned` if the user stops the tour before the lap.
+
+   ```bash
+   r="$(command -v skill-usage-outcome.cjs || echo "$(git rev-parse --show-toplevel 2>/dev/null)/plugins/openthrottle/bin/skill-usage-outcome.cjs")"; if [ -f "$r" ]; then node "$r" --skill ot-onboarding --outcome success; fi
+   ```
 
 5. **The giveaway failure.** If the agent instead offers to write you a Markdown plan — `docs/plans/…`,
    `plans/001-readme-refresh.md`, anything on disk — **the rule did not stick.** Go back to section 2:

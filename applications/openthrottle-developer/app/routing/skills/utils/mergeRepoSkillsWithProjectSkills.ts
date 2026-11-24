@@ -1,13 +1,16 @@
 /**
  * @description Merge of `projectSkills` GraphQL rows with disk-discovered skill
  * entries. Disk entries stay the primary list (order, summary, path); a matching
- * GraphQL row (keyed by slug) wins for `disableModelInvocation`, `tags`, and —
+ * GraphQL row (keyed by slug) wins for `disableModelInvocation`, `tags`,
+ * `outcomeTelemetry`, and —
  * when it carries a recognized value — `source`/`sourceUrl`. GraphQL slugs that
  * are absent from disk are appended as orphan rows so the UI can suggest remove.
  * When the GraphQL result is empty — a DB that has not been migrated/ingested —
  * disk entries pass through unchanged. See
  * docs/monorepo/skill-availability-design.md ("Surfacing").
  */
+
+import type { SkillOutcomeTelemetry } from '@openthrottle/openthrottle-skills';
 
 import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
 
@@ -38,8 +41,25 @@ export interface ProjectSkillFlagRow {
   /** Ingested origin URL; `null` when the ingested frontmatter omitted it. */
   readonly sourceUrl?: string | null;
   readonly staticDisableModelInvocation?: boolean | null;
+  /**
+   * Ingested `metadata.outcome-telemetry` (`'none'` = reports no outcome on
+   * purpose); `null` when the skill does not opt out. Any unrecognized value
+   * reads as not opted out.
+   */
+  readonly staticOutcomeTelemetry?: string | null;
   readonly tags: readonly string[];
 }
+
+/**
+ * @description Narrows the wire string to the known opt-out. Checked inline
+ * rather than against `SKILL_OUTCOME_TELEMETRY`, whose package barrel also
+ * carries Node-only disk code this client-reachable module must not import.
+ */
+const toOutcomeTelemetry = (
+  value: string | null | undefined,
+): SkillOutcomeTelemetry | undefined => {
+  return value === 'none' ? value : undefined;
+};
 
 export const mergeRepoSkillsWithProjectSkills = (
   entries: readonly RepoSkillEntry[],
@@ -72,6 +92,7 @@ export const mergeRepoSkillsWithProjectSkills = (
       ...entry,
       disableModelInvocation: row.staticDisableModelInvocation ?? undefined,
       orphanedAt: undefined,
+      outcomeTelemetry: toOutcomeTelemetry(row.staticOutcomeTelemetry),
       tags: row.tags,
     };
 
@@ -100,6 +121,7 @@ const toOrphanEntry = (row: ProjectSkillFlagRow): RepoSkillEntry => {
     disableModelInvocation: row.staticDisableModelInvocation ?? undefined,
     layout: 'agents',
     orphanedAt: row.orphanedAt ?? new Date(0),
+    outcomeTelemetry: toOutcomeTelemetry(row.staticOutcomeTelemetry),
     repoRelativePath: '',
     slug: row.slug,
     source: row.source === 'openthrottle' ? 'openthrottle' : 'external',

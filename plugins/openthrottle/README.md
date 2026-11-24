@@ -125,6 +125,7 @@ terminal and is ignored with `--json`.
 | `UserPromptExpansion` | `hooks/skill-usage-capture.cjs` |
 | `SessionStart` | `hooks/skill-usage-heartbeat.cjs` |
 | `Stop` | `hooks/skill-usage-complete.cjs` |
+| `SessionEnd` | `hooks/skill-usage-complete.cjs` |
 
 The two capture events are complementary, not redundant: a skill invoked as a tool
 raises `PreToolUse`, a skill invoked as a slash command raises `UserPromptExpansion`.

@@ -12,6 +12,17 @@
         "matcher": "Skill"
       }
     ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/skill-usage-complete.cjs\"",
+            "statusMessage": "Skill usage complete (SessionEnd)",
+            "type": "command"
+          }
+        ]
+      }
+    ],
     "SessionStart": [
       {
         "hooks": [

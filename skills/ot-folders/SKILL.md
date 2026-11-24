@@ -10,7 +10,7 @@ description: >-
 metadata:
   author: openthrottle
   last-reviewed: '2026-11-22'
-  version: '2.3.0'
+  version: '2.4.0'
 ---
 
 # OpenThrottle Folders
@@ -195,6 +195,13 @@ not optional.
 
 Read [references/verification.md](references/verification.md) when you need the exact
 commands per tier or what each audit gates.
+
+**Report the outcome when the tier you stopped at passes** ([why](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/skill-usage-telemetry-scope.md#reporting-an-outcome-from-a-skill)): `success`; `error` if you
+end with a gate still failing; `abandoned` if the change turned out to need no placement call.
+
+```bash
+r="$(command -v skill-usage-outcome.cjs || echo "$(git rev-parse --show-toplevel 2>/dev/null)/plugins/openthrottle/bin/skill-usage-outcome.cjs")"; if [ -f "$r" ]; then node "$r" --skill ot-folders --outcome success; fi
+```
 
 ## Gotchas
 

@@ -4078,6 +4078,11 @@ type ProjectSkillObject {
   Static frontmatter `disable-model-invocation`. Tri-state: null = unset (frontmatter omits the key), true = auto-invocation suppressed, false = auto-invocation explicitly enabled.
   """
   staticDisableModelInvocation: Boolean
+
+  """
+  Static frontmatter `metadata.outcome-telemetry`: 'none' when the skill deliberately reports no outcome or duration (usage views show "Not reported by design"); null when the skill does not opt out.
+  """
+  staticOutcomeTelemetry: String
 }
 
 """A project's ingested skill universe, alphabetically by slug."""

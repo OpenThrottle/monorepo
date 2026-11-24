@@ -350,6 +350,7 @@ const PLUGIN_PAYLOADS: readonly PluginPayload[] = [
       ['`UserPromptExpansion`', '`hooks/skill-usage-capture.cjs`'],
       ['`SessionStart`', '`hooks/skill-usage-heartbeat.cjs`'],
       ['`Stop`', '`hooks/skill-usage-complete.cjs`'],
+      ['`SessionEnd`', '`hooks/skill-usage-complete.cjs`'],
     ],
     installLines: [
       '```bash',
@@ -372,6 +373,17 @@ const PLUGIN_PAYLOADS: readonly PluginPayload[] = [
               },
             ],
             matcher: 'Skill',
+          },
+        ],
+        SessionEnd: [
+          {
+            hooks: [
+              {
+                command: command('skill-usage-complete.cjs'),
+                statusMessage: 'Skill usage complete (SessionEnd)',
+                type: 'command',
+              },
+            ],
           },
         ],
         SessionStart: [

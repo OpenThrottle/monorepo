@@ -8,7 +8,10 @@
  * `packages/nestjs-repositories-server/.../workspace-settings.constants.ts` aligned
  * when adding skills that workspace editor apply should write.
  */
-import type { SkillSource } from '@openthrottle/openthrottle-skills';
+import type {
+  SkillOutcomeTelemetry,
+  SkillSource,
+} from '@openthrottle/openthrottle-skills';
 
 export type SkillRegistryLayout =
   'agents' | 'claude' | 'codex' | 'cursor' | 'grok' | 'opencode';
@@ -89,6 +92,14 @@ export interface RepoSkillEntry {
    * (ingest stamped `orphanedAt`). Absent for on-disk skills.
    */
   readonly orphanedAt?: Date | string;
+  /**
+   * Static frontmatter `metadata.outcome-telemetry`: `'none'` when the skill
+   * deliberately reports no outcome or duration, so the usage leaderboard says
+   * "Not reported by design" instead of "Not measured". Absent for the many
+   * skills that do not opt out. Sourced from disk frontmatter, overridden by
+   * the `projectSkills` GraphQL value when present.
+   */
+  readonly outcomeTelemetry?: SkillOutcomeTelemetry;
   /**
    * Decisive rung's provenance string from `skillAvailability` (closed grammar,
    * e.g. `frontmatter:true`, `posture:deny`, `tag-deny:<tag>@<ruleId>`).

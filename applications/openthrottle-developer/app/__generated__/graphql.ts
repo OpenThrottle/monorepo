@@ -4808,6 +4808,8 @@ export type ProjectSkillObject = {
   sourceUrl?: Maybe<Scalars['String']['output']>;
   /** Static frontmatter `disable-model-invocation`. Tri-state: null = unset (frontmatter omits the key), true = auto-invocation suppressed, false = auto-invocation explicitly enabled. */
   staticDisableModelInvocation?: Maybe<Scalars['Boolean']['output']>;
+  /** Static frontmatter `metadata.outcome-telemetry`: 'none' when the skill deliberately reports no outcome or duration (usage views show "Not reported by design"); null when the skill does not opt out. */
+  staticOutcomeTelemetry?: Maybe<Scalars['String']['output']>;
   /** Static record tags for this skill (empty when none). */
   tags: Array<Scalars['String']['output']>;
 };
@@ -17247,6 +17249,7 @@ export type ProjectSkillsQuery = {
       source: string;
       sourceUrl?: string | null;
       staticDisableModelInvocation?: boolean | null;
+      staticOutcomeTelemetry?: string | null;
       tags: Array<string>;
     }>;
   };
@@ -44874,6 +44877,10 @@ export const ProjectSkillsDocument = {
                           kind: 'Name',
                           value: 'staticDisableModelInvocation',
                         },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'staticOutcomeTelemetry' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'tags' } },
                     ],

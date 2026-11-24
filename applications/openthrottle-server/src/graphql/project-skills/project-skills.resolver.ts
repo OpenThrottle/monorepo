@@ -46,6 +46,7 @@ function toObject(view: ProjectSkillView): ProjectSkillObject {
     source: view.source,
     sourceUrl: view.sourceUrl ?? null,
     staticDisableModelInvocation: view.staticDisableModelInvocation ?? null,
+    staticOutcomeTelemetry: view.staticOutcomeTelemetry ?? null,
     tags: [...view.tags],
   };
 }

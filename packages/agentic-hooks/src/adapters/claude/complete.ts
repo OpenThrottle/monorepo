@@ -1,7 +1,10 @@
 /**
- * Claude Code AUTOMATIC completion entrypoint (Stop / SubagentStop hook).
- * Resolves the open skill-starts recorded for this session into `session_ended`
- * outcomes, drains them (deduped), sweeps abandoned starts from long-dead
+ * Claude Code AUTOMATIC completion entrypoint (Stop / SubagentStop /
+ * SessionEnd hook). At `SessionEnd` only, resolves the open skill-starts
+ * recorded for this session into `session_ended` outcomes and drains them
+ * (deduped): `Stop` ends a turn, not the session, and a start drained there
+ * could no longer be claimed by a skill that reports in a later turn (see
+ * `resolvesSkillStarts`). On every event it sweeps abandoned starts from long-dead
  * sessions, folds the session transcript(s) into per-request token usage rows
  * (see `transcript-usage.ts`), uploads closed OpenThrottle task trajectories
  * (see `session-trajectory.ts`), then does a small time-boxed JSONL drain.
@@ -25,7 +28,11 @@ import {
 } from '../../index.ts';
 import { resolveClaudeTokenUsageAccount } from './account.ts';
 import { detectClaudeBundleHost } from './bundle-host.ts';
-import { CLAUDE_SOURCE, normalizeClaudeStopPayload } from './payload.ts';
+import {
+  CLAUDE_SOURCE,
+  normalizeClaudeStopPayload,
+  resolvesSkillStarts,
+} from './payload.ts';
 import { captureSessionTrajectories } from './session-trajectory.ts';
 import { isShadowedByRepoHooks } from './shadow.ts';
 import { captureTranscriptUsage } from './transcript-usage.ts';
@@ -71,11 +78,13 @@ const main = async (): Promise<void> => {
       return;
     }
 
-    await completeOpenStartsForSession({
-      repoRoot,
-      sessionId: normalized.session_id,
-      source: CLAUDE_SOURCE,
-    });
+    if (resolvesSkillStarts(normalized.hook_event_name)) {
+      await completeOpenStartsForSession({
+        repoRoot,
+        sessionId: normalized.session_id,
+        source: CLAUDE_SOURCE,
+      });
+    }
 
     // Best-effort: reap starts stranded by earlier sessions that never Stopped.
     await sweepAbandonedStarts({

@@ -45,6 +45,7 @@ const buildLoaderData = (
 ): Route.ComponentProps['loaderData'] => {
   return {
     entries: loaderEntries,
+    optedOutSlugs: [],
     presentSlugs: loaderEntries.map((entry) => entry.slug),
     tagVocabulary: [],
     usage: Promise.resolve(usage),

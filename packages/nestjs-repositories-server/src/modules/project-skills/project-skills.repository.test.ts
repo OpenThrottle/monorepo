@@ -17,6 +17,7 @@ const input = (
   return {
     description: null,
     disableModelInvocation: undefined,
+    outcomeTelemetry: undefined,
     source: 'external',
     sourcePath: `.agents/skills/${overrides.slug}/SKILL.md`,
     sourceUrl: undefined,
@@ -188,10 +189,21 @@ describe('ProjectSkillsRepository', () => {
         expect.objectContaining({ projectId, slug: 'owned' }),
         expect.objectContaining({
           disableModelInvocation: null,
+          outcomeTelemetry: null,
           source: 'openthrottle',
           sourceUrl: null,
         }),
       );
+    });
+
+    it('carries an outcome-telemetry opt-out into the insert', async () => {
+      await repository.reconcile(projectId, [
+        input({ outcomeTelemetry: 'none', slug: 'quiet' }),
+      ]);
+
+      expect(insertMany).toHaveBeenCalledWith([
+        expect.objectContaining({ outcomeTelemetry: 'none', slug: 'quiet' }),
+      ]);
     });
 
     it('orphans every live row and inserts nothing when the input set is empty', async () => {

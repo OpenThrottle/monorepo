@@ -37,6 +37,7 @@ describe('partitionSkillUsageByPresence', () => {
     const { active, missing } = partitionSkillUsageByPresence(
       bySkill,
       new Set(['ot-plans', 'ot-stack']),
+      new Set(),
     );
 
     expect(active.map((entry) => entry.skillName)).toEqual([
@@ -50,6 +51,7 @@ describe('partitionSkillUsageByPresence', () => {
   test('keeps external rows in active, since they are out of scan scope rather than missing', () => {
     const { active, missing } = partitionSkillUsageByPresence(
       [row('vercel:deploy', SKILL_USAGE_SCOPES.THIRD_PARTY, 10)],
+      new Set(),
       new Set(),
     );
 
@@ -65,6 +67,7 @@ describe('partitionSkillUsageByPresence', () => {
         row('gone', SKILL_USAGE_SCOPES.OURS, 1),
       ],
       new Set(['ot-plans']),
+      new Set(),
     );
 
     expect(active[0]?.presence).toBe(SKILL_PRESENCE.INSTALLED);
@@ -78,7 +81,11 @@ describe('partitionSkillUsageByPresence', () => {
       row('gone-c', SKILL_USAGE_SCOPES.OURS, 70),
     ];
 
-    const { missing } = partitionSkillUsageByPresence(bySkill, new Set());
+    const { missing } = partitionSkillUsageByPresence(
+      bySkill,
+      new Set(),
+      new Set(),
+    );
 
     expect(missing.map((entry) => entry.skillName)).toEqual([
       'gone-b',
@@ -88,7 +95,7 @@ describe('partitionSkillUsageByPresence', () => {
   });
 
   test('returns two empty buckets for empty input', () => {
-    expect(partitionSkillUsageByPresence([], new Set())).toEqual({
+    expect(partitionSkillUsageByPresence([], new Set(), new Set())).toEqual({
       active: [],
       missing: [],
     });
@@ -101,6 +108,7 @@ describe('partitionSkillUsageByPresence', () => {
         row('gone-b', SKILL_USAGE_SCOPES.OURS, 3),
       ],
       new Set(['unrelated']),
+      new Set(),
     );
 
     expect(active).toEqual([]);
@@ -110,8 +118,29 @@ describe('partitionSkillUsageByPresence', () => {
   test('does not mutate the input rows', () => {
     const original = row('ot-plans', SKILL_USAGE_SCOPES.OURS, 1);
 
-    partitionSkillUsageByPresence([original], new Set(['ot-plans']));
+    partitionSkillUsageByPresence([original], new Set(['ot-plans']), new Set());
 
     expect(original).not.toHaveProperty('presence');
+  });
+
+  test('stamps the outcome-telemetry opt-out by skill name', () => {
+    const { active } = partitionSkillUsageByPresence(
+      [
+        row('ot-stack', SKILL_USAGE_SCOPES.OURS, 2),
+        row('ot-plans', SKILL_USAGE_SCOPES.OURS, 1),
+      ],
+      new Set(['ot-plans', 'ot-stack']),
+      new Set(['ot-stack']),
+    );
+
+    expect(
+      active.map((entry) => [
+        entry.skillName,
+        entry.isOutcomeTelemetryOptedOut,
+      ]),
+    ).toEqual([
+      ['ot-stack', true],
+      ['ot-plans', false],
+    ]);
   });
 });

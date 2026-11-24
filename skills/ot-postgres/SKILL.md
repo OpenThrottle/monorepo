@@ -9,7 +9,7 @@ description: >-
 metadata:
   author: openthrottle
   last-reviewed: '2026-11-22'
-  version: '1.2.0'
+  version: '1.3.0'
 ---
 
 # OpenThrottle Postgres (migrations and table comments)
@@ -43,6 +43,14 @@ Canonical commands and schema overview: **`databases/openthrottle/README.md`**.
 **Enforcement:** the local CI gate above fails a changed migration that creates a table without its `COMMENT ON TABLE` in the same file. Base ref: `main` (override with `MIGRATION_COMMENT_LINT_BASE`).
 
 **Naming:** `snake_case` tables and columns; migration prefix `NNN_` zero-padded.
+
+**Report the outcome once the migration has applied** (`pnpm run database:migrate`, or the
+server's boot gate) and the CI gate above passes ([why](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/skill-usage-telemetry-scope.md#reporting-an-outcome-from-a-skill)): `success`; `error` if it would not
+apply; `abandoned` if the change turned out not to need SQL.
+
+```bash
+r="$(command -v skill-usage-outcome.cjs || echo "$(git rev-parse --show-toplevel 2>/dev/null)/plugins/openthrottle/bin/skill-usage-outcome.cjs")"; if [ -f "$r" ]; then node "$r" --skill ot-postgres --outcome success; fi
+```
 
 ## Gotchas
 

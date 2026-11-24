@@ -44,6 +44,7 @@ const renderComponent = (props: SkillsIndexUsageProps): RenderResult => {
 describe('SkillsIndexUsage Component', () => {
   test('renders the unavailable notice without any leaderboard', () => {
     const component = renderComponent({
+      optedOutSlugs: [],
       presentSlugs: [],
       rangeDays: 30,
       usage: { available: false },
@@ -62,6 +63,7 @@ describe('SkillsIndexUsage Component', () => {
 
   test('renders the empty message and no missing section when there are no rows', () => {
     const component = renderComponent({
+      optedOutSlugs: [],
       presentSlugs: ['ot-plans'],
       rangeDays: 30,
       usage: { available: true, byDay: [], bySkill: [] },
@@ -77,6 +79,7 @@ describe('SkillsIndexUsage Component', () => {
 
   test('omits the missing section entirely when every row is present on disk', () => {
     const component = renderComponent({
+      optedOutSlugs: [],
       presentSlugs: ['ot-plans', 'ot-stack'],
       rangeDays: 30,
       usage: {
@@ -104,6 +107,7 @@ describe('SkillsIndexUsage Component', () => {
 
   test('splits missing rows out of Top skills into their own section', () => {
     const component = renderComponent({
+      optedOutSlugs: [],
       presentSlugs: ['ot-plans'],
       rangeDays: 30,
       usage: {
@@ -132,6 +136,7 @@ describe('SkillsIndexUsage Component', () => {
 
   test('never links a missing row through to a detail page', () => {
     const component = renderComponent({
+      optedOutSlugs: [],
       presentSlugs: [],
       rangeDays: 30,
       usage: {
@@ -148,6 +153,7 @@ describe('SkillsIndexUsage Component', () => {
 
   test('explains an all-missing window instead of rendering an empty Top skills table', () => {
     const component = renderComponent({
+      optedOutSlugs: [],
       presentSlugs: [],
       rangeDays: 30,
       usage: {
@@ -167,6 +173,7 @@ describe('SkillsIndexUsage Component', () => {
 
   test('acknowledges the split in the section intro', () => {
     const component = renderComponent({
+      optedOutSlugs: [],
       presentSlugs: [],
       rangeDays: 30,
       usage: { available: true, byDay: [], bySkill: [] },

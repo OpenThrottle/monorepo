@@ -30,6 +30,11 @@ export interface UsageSkillUsageProps {
   end: string;
   filterOptions: UsageSkillUsageFilterOptionsFragment;
   /**
+   * Slugs whose SKILL.md declares `metadata.outcome-telemetry: 'none'`. Their
+   * empty Outcomes and Avg duration cells read "Not reported by design".
+   */
+  optedOutSlugs: readonly string[];
+  /**
    * Slugs discovered on disk by the loader. Rows are classified against this
    * set, which decides both whether a row links through to its detail page and
    * which table it lands in.
@@ -56,6 +61,7 @@ export const UsageSkillUsage = (
     className,
     end,
     filterOptions,
+    optedOutSlugs,
     presentSlugs,
     selectedCwd,
     selectedGitBranch,
@@ -69,8 +75,13 @@ export const UsageSkillUsage = (
 
   // Setup
   const partitioned = React.useMemo(
-    () => partitionSkillUsageByPresence(bySkill, new Set(presentSlugs)),
-    [bySkill, presentSlugs],
+    () =>
+      partitionSkillUsageByPresence(
+        bySkill,
+        new Set(presentSlugs),
+        new Set(optedOutSlugs),
+      ),
+    [bySkill, optedOutSlugs, presentSlugs],
   );
   const hasFilters =
     selectedScope != null ||

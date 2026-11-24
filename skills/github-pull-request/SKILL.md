@@ -5,7 +5,7 @@ compatibility: 'git, gh (authenticated), jq; the Traceability step reads github-
 metadata:
   author: openthrottle
   last-reviewed: '2026-11-22'
-  version: '1.3.0'
+  version: '1.4.0'
 ---
 
 Your job is to look at all commits on the current branch and summarize them into a great Pull Request. Start the Pull Request in `draft` mode.
@@ -146,6 +146,7 @@ gh api "repos/<owner>/<repo>/pulls" -f title="$(cat "$title_file")" -f head="<br
 ```
 
 `gh pr create` has `--body-file` but no title-file flag, hence the `$(cat …)`. Print the PR URL it returns.
+That URL is the finish line: report the outcome in the same step ([§ In OpenThrottle repos](#in-openthrottle-repos)).
 
 ## PR title
 
@@ -165,7 +166,7 @@ set is in the `github-commit` skill, and the repo's commitlint decides the scope
 
 ## In OpenThrottle repos
 
-Report the outcome once, at the end — `error` if no PR URL came back, `abandoned` if called off ([why](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/skill-usage-telemetry-scope.md#reporting-an-outcome-from-a-skill)):
+Report the outcome once per invocation, on every exit path, as soon as the PR URL prints — `error` if no PR URL came back, `abandoned` if called off ([why](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/skill-usage-telemetry-scope.md#reporting-an-outcome-from-a-skill)):
 
 ```bash
 r="$(command -v skill-usage-outcome.cjs || echo "$(git rev-parse --show-toplevel 2>/dev/null)/plugins/openthrottle/bin/skill-usage-outcome.cjs")"; if [ -f "$r" ]; then node "$r" --skill github-pull-request --outcome success; fi

@@ -72,6 +72,8 @@ export const SKILL_USAGE_COPY = {
   notMeasured: 'Not measured',
   notMeasuredDurationTitle: `Not measured: no harness hook brackets a skill's own work, so duration exists only when a skill reports it. Click for the telemetry scope.`,
   notMeasuredOutcomesTitle: `Not measured: this skill never reported a success or error. Click for the telemetry scope.`,
+  notReportedByDesign: 'Not reported by design',
+  notReportedByDesignTitle: `Not reported by design: this skill has no finish line of its own (it declares outcome-telemetry: 'none' in its SKILL.md), so it deliberately reports no outcome or duration.`,
   outcomesColumn: 'Outcomes',
   outcomesHint: `Outcomes count only what a skill reports about its own work (success / error). A session ending cleanly is not an outcome — it says the process finished, not that the skill helped — so it is tracked separately and never counted here. "Not measured" means nothing was reported, which is the normal state for any skill that does not report.`,
   overTimeHeading: 'Usage over time',

@@ -14,6 +14,7 @@ import {
   CLAUDE_SOURCE,
   normalizeClaudePayload,
   normalizeClaudeStopPayload,
+  resolvesSkillStarts,
 } from '../payload.ts';
 
 describe('normalizeClaudePayload', () => {
@@ -154,5 +155,16 @@ describe('adapter seam → source-stamped event', () => {
     expect(event.skill_name).toBe('ot-plans');
     expect(event.scope).toBe('ours');
     expect(event.invocation_path).toBe('skill_tool');
+  });
+});
+
+describe('resolvesSkillStarts', () => {
+  it('resolves starts at SessionEnd', () => {
+    expect(resolvesSkillStarts('SessionEnd')).toBe(true);
+  });
+
+  it('keeps starts open at a turn end, so a later turn can still claim one', () => {
+    expect(resolvesSkillStarts('Stop')).toBe(false);
+    expect(resolvesSkillStarts('SubagentStop')).toBe(false);
   });
 });

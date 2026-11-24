@@ -68,6 +68,7 @@ export class ProjectSkillsRepository extends BaseRepository<
         disableModelInvocation: input.disableModelInvocation ?? null,
         ingestedAt,
         orphanedAt: null,
+        outcomeTelemetry: input.outcomeTelemetry ?? null,
         source: input.source,
         sourcePath: input.sourcePath,
         sourceUrl: input.sourceUrl ?? null,

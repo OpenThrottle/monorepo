@@ -12,6 +12,11 @@ import { partitionSkillUsageByPresence } from '~/routing/usage/utils/partitionSk
 export interface SkillsIndexUsageProps {
   className?: string;
   /**
+   * Slugs whose SKILL.md declares `metadata.outcome-telemetry: 'none'`. Their
+   * empty Outcomes and Avg duration cells read "Not reported by design".
+   */
+  optedOutSlugs: readonly string[];
+  /**
    * Slugs discovered on disk by the loader. Rows are classified against this
    * set, which decides both whether a row links through to its detail page and
    * which table it lands in.
@@ -38,7 +43,7 @@ export interface SkillsIndexUsageProps {
 export const SkillsIndexUsage = (
   props: SkillsIndexUsageProps,
 ): React.ReactElement => {
-  const { className, presentSlugs, rangeDays, usage } = props;
+  const { className, optedOutSlugs, presentSlugs, rangeDays, usage } = props;
 
   // Hooks
 
@@ -48,8 +53,9 @@ export const SkillsIndexUsage = (
       partitionSkillUsageByPresence(
         usage.available ? usage.bySkill : [],
         new Set(presentSlugs),
+        new Set(optedOutSlugs),
       ),
-    [presentSlugs, usage],
+    [optedOutSlugs, presentSlugs, usage],
   );
 
   // Handlers

@@ -112,8 +112,25 @@ const nonEmptyString = (value: unknown): string | null => {
 };
 
 /**
- * Parse a Claude Code `Stop`/`SubagentStop` payload into the fields the
- * completion emitter needs (session-scoped correlation, transcript paths).
+ * @description Whether a completion payload ends the session, and so may
+ * resolve the session's open skill starts.
+ *
+ * Claude's `Stop` fires at the end of every turn, not of the session. Resolving
+ * starts there drained a skill's start before a later turn could report on it,
+ * so a skill that finished in turn 3 reported an outcome with no duration (see
+ * `claimLatestStart`). Starts now stay open across turns and resolve at
+ * `SessionEnd`, the same point the Cursor and Codex adapters already use.
+ *
+ * @public
+ */
+export const resolvesSkillStarts = (hookEventName: string): boolean => {
+  return hookEventName === 'SessionEnd';
+};
+
+/**
+ * Parse a Claude Code `Stop`/`SubagentStop`/`SessionEnd` payload into the
+ * fields the completion emitter needs (session-scoped correlation, transcript
+ * paths).
  * Returns null when there is no usable session id.
  *
  * @public

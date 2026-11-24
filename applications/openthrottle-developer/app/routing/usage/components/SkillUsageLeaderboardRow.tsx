@@ -41,6 +41,7 @@ export const SkillUsageLeaderboardRow = (
   const hasOutcomes = row.outcomeCount > 0;
   const outcomeTitle = `${row.successCount} success · ${row.errorCount} error — plus ${row.sessionEndedCount} session ended · ${row.abandonedCount} abandoned, which are not outcomes`;
   const hasDuration = row.avgDurationMs != null;
+  const isOptedOut = row.isOutcomeTelemetryOptedOut;
 
   // Handlers
 
@@ -66,10 +67,23 @@ export const SkillUsageLeaderboardRow = (
       title={SKILL_USAGE_COPY.notMeasuredDurationTitle}
     />
   );
+  // Muted plain text, not a link: nothing is missing, so there is no telemetry
+  // gap to explain.
+  const notReportedByDesign = (
+    <span
+      className="text-muted-foreground cursor-help text-xs font-normal"
+      data-testid="skill-usage-not-reported-by-design"
+      title={SKILL_USAGE_COPY.notReportedByDesignTitle}
+    >
+      {SKILL_USAGE_COPY.notReportedByDesign}
+    </span>
+  );
+  const outcomesEmpty = isOptedOut ? notReportedByDesign : outcomesNotMeasured;
+  const durationEmpty = isOptedOut ? notReportedByDesign : durationNotMeasured;
   const outcomesLabel = skillUsageOutcomesLabel(row.outcomeCount, row.count);
   const durationLabel = skillUsageAvgDurationLabel(row.avgDurationMs);
-  const outcomesMarkup = hasOutcomes ? outcomesLabel : outcomesNotMeasured;
-  const durationMarkup = hasDuration ? durationLabel : durationNotMeasured;
+  const outcomesMarkup = hasOutcomes ? outcomesLabel : outcomesEmpty;
+  const durationMarkup = hasDuration ? durationLabel : durationEmpty;
   const presenceBadge = (
     <Badge
       color="yellow"

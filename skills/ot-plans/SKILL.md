@@ -9,7 +9,7 @@ description: >-
 metadata:
   author: openthrottle
   last-reviewed: '2026-11-22'
-  version: '1.2.0'
+  version: '1.3.0'
 ---
 
 # OpenThrottle plans and MCP traceability
@@ -84,6 +84,14 @@ anything, and nothing executes tasks in parallel from it today — see
 
 Infer `author` and `category` from context when absent, and confirm a provided `category` actually
 fits. Report created ids so the user can act on them.
+
+**Report the outcome in the same step** ([why](https://github.com/openthrottle/monorepo/blob/main/docs/monorepo/skill-usage-telemetry-scope.md#reporting-an-outcome-from-a-skill)): once the write lands or the question is answered,
+send `success`; `error` if the MCP refused or failed it; `abandoned` if the request turned out not
+to be OT work. Once per request, not per tool call.
+
+```bash
+r="$(command -v skill-usage-outcome.cjs || echo "$(git rev-parse --show-toplevel 2>/dev/null)/plugins/openthrottle/bin/skill-usage-outcome.cjs")"; if [ -f "$r" ]; then node "$r" --skill ot-plans --outcome success; fi
+```
 
 **Never start executing a plan or task unless explicitly told to** — authoring and running are
 separate requests. The per-task discipline, when you are told to run one, is canonical in
