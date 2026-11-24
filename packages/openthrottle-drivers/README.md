@@ -51,13 +51,14 @@ const output = await runDriverAsync(
 
 ## Capability matrix
 
-| Driver   | id / label              | model flag               | permission flag                 | worktree `-w` | worktree base     | skip setup              |
-| -------- | ----------------------- | ------------------------ | ------------------------------- | ------------- | ----------------- | ----------------------- |
-| Claude   | `claude` / claude-code  | `--model` (omits `auto`) | `--permission-mode acceptEdits` | yes           | no                | no                      |
-| Codex    | `codex` / codex         | `--model` (omits `auto`) | `--sandbox workspace-write`     | no            | no                | no                      |
-| Cursor   | `cursor` / cursor-agent | `--model` (any value)    | `--force`                       | yes           | `--worktree-base` | `--skip-worktree-setup` |
-| Grok     | `grok` / grok           | `--model` (omits `auto`) | `--permission-mode acceptEdits` | yes           | no¹               | no                      |
-| OpenCode | `opencode` / opencode   | `--model` (omits `auto`) | `--auto`                        | no            | no                | no                      |
+| Driver      | id / label                  | model flag               | permission flag                  | worktree `-w` | worktree base     | skip setup              |
+| ----------- | --------------------------- | ------------------------ | -------------------------------- | ------------- | ----------------- | ----------------------- |
+| Claude      | `claude` / claude-code      | `--model` (omits `auto`) | `--permission-mode acceptEdits`  | yes           | no                | no                      |
+| Codex       | `codex` / codex             | `--model` (omits `auto`) | `--sandbox workspace-write`      | no            | no                | no                      |
+| Cursor      | `cursor` / cursor-agent     | `--model` (any value)    | `--force`                        | yes           | `--worktree-base` | `--skip-worktree-setup` |
+| Antigravity | `antigravity` / antigravity | `--model` (omits `auto`) | `--dangerously-skip-permissions` | no            | no                | no                      |
+| Grok        | `grok` / grok               | `--model` (omits `auto`) | `--permission-mode acceptEdits`  | yes           | no¹               | no                      |
+| OpenCode    | `opencode` / opencode       | `--model` (omits `auto`) | `--auto`                         | no            | no                | no                      |
 
 ¹ Grok's worktree-base flag is `--worktree-ref` (not Cursor's `--worktree-base`), so it
 advertises `worktreeBase: false` for now — wiring it through the shared formatter (a
@@ -68,6 +69,7 @@ Command shapes (legacy-identical for cursor; claude adds stream-json output flag
 - `claude -p --permission-mode acceptEdits "<prompt>" --output-format stream-json --verbose [--model M] [-w [name]]` (the driver's `parseOutput` recovers the text-mode stdout from the terminal `result` event and reports usage limits)
 - `codex exec --sandbox workspace-write --skip-git-repo-check [--model M] "<prompt>"`
 - `cursor-agent --force -p "<prompt>" [--model M] [-w [name] [--worktree-base B] [--skip-worktree-setup]]`
+- `agy -p "<prompt>" [--output-format stream-json] --dangerously-skip-permissions --add-dir "$PWD" [--model M] < /dev/null`
 - `grok -p "<prompt>" --permission-mode acceptEdits [--model M] [-w [name]]`
 - `opencode run --auto "<prompt>" [--model M]`
 
