@@ -30,9 +30,9 @@ describe('discoverAgentClisToolHandler', () => {
           {
             auth: null,
             authState: AUTH_STATE,
-            backend: 'cursor',
             capabilities: CAPABILITIES,
             chatCapable: true,
+            driver: 'cursor',
             label: 'cursor-agent',
             models: ['auto', 'gpt-5.2'],
             version: '2026.07.23',
@@ -40,9 +40,9 @@ describe('discoverAgentClisToolHandler', () => {
           {
             auth: null,
             authState: AUTH_STATE,
-            backend: 'codex',
             capabilities: CAPABILITIES,
             chatCapable: false,
+            driver: 'codex',
             label: 'codex',
             models: [],
             version: 'codex-cli 0.145.0',
@@ -65,13 +65,13 @@ describe('discoverAgentClisToolHandler', () => {
       structuredContent: {
         agents: [
           {
-            backend: 'cursor',
             capabilities: CAPABILITIES,
             chatCapable: true,
+            driver: 'cursor',
             models: ['auto', 'gpt-5.2'],
             version: '2026.07.23',
           },
-          { backend: 'codex', chatCapable: false, models: [] },
+          { chatCapable: false, driver: 'codex', models: [] },
         ],
         totalCount: 2,
       },
@@ -101,9 +101,9 @@ describe('discoverAgentClisToolHandler', () => {
           {
             auth,
             authState: AUTH_STATE,
-            backend: 'claude',
             capabilities: CAPABILITIES,
             chatCapable: true,
+            driver: 'claude',
             label: 'Claude Code',
             models: ['opus'],
             version: '2.1.270',
@@ -117,7 +117,7 @@ describe('discoverAgentClisToolHandler', () => {
     const result = await discoverAgentClisToolHandler({});
 
     expect(result).toMatchObject({
-      structuredContent: { agents: [{ auth, backend: 'claude' }] },
+      structuredContent: { agents: [{ auth, driver: 'claude' }] },
     });
     const [content] = result.content;
     if (content === undefined) {
@@ -148,9 +148,9 @@ describe('discoverAgentClisToolHandler', () => {
           {
             auth: null,
             authState,
-            backend: 'cursor',
             capabilities,
             chatCapable: true,
+            driver: 'cursor',
             label: 'cursor-agent',
             models: [],
             version: '1',

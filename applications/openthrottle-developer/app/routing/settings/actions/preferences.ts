@@ -56,7 +56,7 @@ export const saveDefaultEditor = async (
 };
 
 /**
- * @description Saves the default agent. Backend and model are required together;
+ * @description Saves the default agent. Driver and model are required together;
  * a blank effort is stored as null (the agent's own default).
  */
 export const saveDefaultAgent = async (
@@ -71,7 +71,7 @@ export const saveDefaultAgent = async (
 
   return submitPatch(args, intent, {
     defaultAgent: {
-      backend: parsed.data.backend,
+      driver: parsed.data.driver,
       effort: parsed.data.effort ?? null,
       model: parsed.data.model,
     },

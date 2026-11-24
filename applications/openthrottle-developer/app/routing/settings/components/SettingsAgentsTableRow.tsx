@@ -33,7 +33,7 @@ export const SettingsAgentsTableRow = (
   const [expanded, setExpanded] = React.useState(false);
 
   // Setup
-  const { backend, enabled, installed, label, modelOptions, models, version } =
+  const { driver, enabled, installed, label, modelOptions, models, version } =
     status;
   const hasModels = installed && modelOptions.length > 0;
   const enabledCount = modelOptions.filter((model) => model.enabled).length;
@@ -63,7 +63,7 @@ export const SettingsAgentsTableRow = (
     <button
       aria-expanded={expanded}
       className="flex items-center gap-1.5 text-sm underline-offset-4 hover:underline"
-      data-testid={`SettingsAgentsTableRow-${backend}-expand`}
+      data-testid={`SettingsAgentsTableRow-${driver}-expand`}
       onClick={handleToggleExpanded}
       type="button"
     >
@@ -91,7 +91,7 @@ export const SettingsAgentsTableRow = (
   const modelsRow = (
     <TableRow
       className={enabled ? undefined : 'opacity-60'}
-      data-testid={`SettingsAgentsTableRow-${backend}-models`}
+      data-testid={`SettingsAgentsTableRow-${driver}-models`}
     >
       <TableCell colSpan={SETTINGS_AGENTS_COLUMN_COUNT}>
         <div className="bg-muted/30 rounded-md px-3 py-1">
@@ -101,8 +101,8 @@ export const SettingsAgentsTableRow = (
             </span>
             <SettingsAgentsModelBulkToggle
               agentDisabled={!enabled}
-              backend={backend}
               canManage={canManage}
+              driver={driver}
               enabledCount={enabledCount}
               models={models}
             />
@@ -110,8 +110,8 @@ export const SettingsAgentsTableRow = (
           {modelOptions.map((model) => (
             <SettingsAgentsModelRow
               agentDisabled={!enabled}
-              backend={backend}
               canManage={canManage}
+              driver={driver}
               key={model.model}
               model={model}
             />
@@ -130,11 +130,11 @@ export const SettingsAgentsTableRow = (
       <TableRow
         // A disabled agent is dimmed but still fully actionable (re-enable, install).
         className={enabled ? undefined : 'opacity-60'}
-        data-testid={`SettingsAgentsTableRow-${backend}`}
+        data-testid={`SettingsAgentsTableRow-${driver}`}
       >
         <TableCell>
           <div className="font-medium">{label}</div>
-          <code className="text-muted-foreground text-xs">{backend}</code>
+          <code className="text-muted-foreground text-xs">{driver}</code>
         </TableCell>
 
         <TableCell>{installed ? installedStatus : notInstalledBadge}</TableCell>
@@ -143,8 +143,8 @@ export const SettingsAgentsTableRow = (
 
         <TableCell>
           <SettingsAgentsAgentToggle
-            backend={backend}
             canManage={canManage}
+            driver={driver}
             enabled={enabled}
           />
         </TableCell>

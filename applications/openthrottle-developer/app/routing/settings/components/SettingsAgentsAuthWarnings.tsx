@@ -44,8 +44,8 @@ export const SettingsAgentsAuthWarnings = (
     >
       {warnings.map((entry) => (
         <Alert
-          data-testid={`SettingsAgentsAuthWarning-${entry.backend}`}
-          key={entry.backend}
+          data-testid={`SettingsAgentsAuthWarning-${entry.driver}`}
+          key={entry.driver}
           variant="destructive"
         >
           <AlertTitle>{settingsAgentsAuthWarningTitle(entry.label)}</AlertTitle>

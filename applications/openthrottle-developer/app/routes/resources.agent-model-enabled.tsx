@@ -5,7 +5,7 @@ import { SetAgentModelEnabledDocument } from '~/__generated__/graphql';
 
 /** JSON shape returned by the toggle (mirrors SetAgentModelEnabledResult + a client error slot). */
 export interface AgentModelEnabledActionResult {
-  readonly backend: string;
+  readonly driver: string;
   readonly enabled: boolean;
   readonly errorMessage: string | null;
   readonly model: string;
@@ -13,8 +13,8 @@ export interface AgentModelEnabledActionResult {
 
 /**
  * Resource route action backing the /settings/agents per-MODEL enable/disable toggle —
- * `POST /resources/agent-model-enabled` with `backend` + `model` + `enabled` fields. The server
- * re-validates the backend against the drivers registry and enforces the SETTINGS_WRITE permission,
+ * `POST /resources/agent-model-enabled` with `driver` + `model` + `enabled` fields. The server
+ * re-validates the driver against the drivers registry and enforces the SETTINGS_WRITE permission,
  * so a forged post from a user without permission is rejected server-side. On failure the caller
  * reverts optimistically and surfaces `errorMessage`.
  */
@@ -22,7 +22,7 @@ export const action = async (
   args: Route.ActionArgs,
 ): Promise<AgentModelEnabledActionResult> => {
   const formData = await args.request.formData();
-  const backend = String(formData.get('backend') ?? '');
+  const driver = String(formData.get('driver') ?? '');
   const model = String(formData.get('model') ?? '');
   const enabled = formData.get('enabled') === 'true';
 
@@ -30,10 +30,10 @@ export const action = async (
     const data = await executeGraphqlWithAuth(
       args.request,
       SetAgentModelEnabledDocument,
-      { backend, enabled, model },
+      { driver, enabled, model },
     );
     return {
-      backend: data.setAgentModelEnabled.backend,
+      driver: data.setAgentModelEnabled.driver,
       enabled: data.setAgentModelEnabled.enabled,
       errorMessage: null,
       model: data.setAgentModelEnabled.model,
@@ -41,7 +41,7 @@ export const action = async (
   } catch (error) {
     // Report the pre-toggle state so the optimistic UI can revert.
     return {
-      backend,
+      driver,
       enabled: !enabled,
       errorMessage:
         error instanceof Error ? error.message : 'Failed to update the model.',

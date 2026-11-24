@@ -27,7 +27,7 @@ describe('UserPreferencesResolver', () => {
   };
 
   const savedPreferences: UserPreferencesData = {
-    defaultAgent: { backend: 'claude', effort: 'high', model: 'opus' },
+    defaultAgent: { driver: 'claude', effort: 'high', model: 'opus' },
     defaultEditor: 'cursor',
     userId,
   };
@@ -71,7 +71,7 @@ describe('UserPreferencesResolver', () => {
         userId,
       );
       expect(result).toEqual({
-        defaultAgent: { backend: 'claude', effort: 'high', model: 'opus' },
+        defaultAgent: { driver: 'claude', effort: 'high', model: 'opus' },
         defaultEditor: WorkspaceEditorIdEnum.CURSOR,
       });
     });
@@ -115,22 +115,22 @@ describe('UserPreferencesResolver', () => {
         ok: true,
         preferences: {
           ...emptyPreferences,
-          defaultAgent: { backend: 'claude', effort: null, model: 'opus' },
+          defaultAgent: { driver: 'claude', effort: null, model: 'opus' },
         },
       });
 
       const result = await resolver.updateUserPreferences(userId, {
-        defaultAgent: { backend: 'claude', model: 'opus' },
+        defaultAgent: { driver: 'claude', model: 'opus' },
       });
 
       expect(mockUserPreferencesRepository.update).toHaveBeenCalledWith(
         userId,
         {
-          defaultAgent: { backend: 'claude', effort: null, model: 'opus' },
+          defaultAgent: { driver: 'claude', effort: null, model: 'opus' },
         },
       );
       expect(result.defaultAgent).toEqual({
-        backend: 'claude',
+        driver: 'claude',
         effort: null,
         model: 'opus',
       });
@@ -173,19 +173,19 @@ describe('UserPreferencesResolver', () => {
 
     test('a rejected patch becomes a BAD_USER_INPUT GraphQL error with its reason', async () => {
       vi.mocked(mockUserPreferencesRepository.update).mockResolvedValue({
-        message: 'Unknown agent backend: nope',
+        message: 'Unknown agent driver: nope',
         ok: false,
-        reason: USER_PREFERENCES_ERROR_REASONS.invalidAgentBackend,
+        reason: USER_PREFERENCES_ERROR_REASONS.invalidAgentDriver,
       });
 
       const pending = resolver.updateUserPreferences(userId, {
-        defaultAgent: { backend: 'nope', model: 'x' },
+        defaultAgent: { driver: 'nope', model: 'x' },
       });
 
       await expect(pending).rejects.toBeInstanceOf(GraphQLError);
       await expect(pending).rejects.toMatchObject({
-        extensions: { code: 'BAD_USER_INPUT', reason: 'INVALID_AGENT_BACKEND' },
-        message: 'Unknown agent backend: nope',
+        extensions: { code: 'BAD_USER_INPUT', reason: 'INVALID_AGENT_DRIVER' },
+        message: 'Unknown agent driver: nope',
       });
     });
   });

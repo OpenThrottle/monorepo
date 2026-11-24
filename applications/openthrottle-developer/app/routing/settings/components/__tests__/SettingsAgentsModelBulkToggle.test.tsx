@@ -18,7 +18,7 @@ const renderBulk = (
     {
       action: async ({ request }) => {
         action(await request.formData());
-        return { backend: props.backend, enabled: true, errorMessage: null };
+        return { driver: props.driver, enabled: true, errorMessage: null };
       },
       path: '/resources/agent-models-enabled',
     },
@@ -33,8 +33,8 @@ describe('SettingsAgentsModelBulkToggle', () => {
     const component = renderBulk(
       {
         agentDisabled: false,
-        backend: 'cursor',
         canManage: true,
+        driver: 'cursor',
         enabledCount: 1,
         models: ['a', 'b', 'c'],
       },
@@ -46,7 +46,7 @@ describe('SettingsAgentsModelBulkToggle', () => {
     );
 
     expect(submitted).toHaveLength(1);
-    expect(submitted[0]?.get('backend')).toBe('cursor');
+    expect(submitted[0]?.get('driver')).toBe('cursor');
     expect(submitted[0]?.get('enabled')).toBe('true');
     expect(submitted[0]?.get('models')).toBe(JSON.stringify(['a', 'b', 'c']));
   });
@@ -57,8 +57,8 @@ describe('SettingsAgentsModelBulkToggle', () => {
     const component = renderBulk(
       {
         agentDisabled: false,
-        backend: 'cursor',
         canManage: true,
+        driver: 'cursor',
         enabledCount: 3,
         models: ['a', 'b', 'c'],
       },
@@ -76,8 +76,8 @@ describe('SettingsAgentsModelBulkToggle', () => {
   test('enable-all is disabled when every model is already enabled', () => {
     const component = renderBulk({
       agentDisabled: false,
-      backend: 'cursor',
       canManage: true,
+      driver: 'cursor',
       enabledCount: 3,
       models: ['a', 'b', 'c'],
     });
@@ -89,8 +89,8 @@ describe('SettingsAgentsModelBulkToggle', () => {
   test('both controls are inert when the agent is disabled', () => {
     const component = renderBulk({
       agentDisabled: true,
-      backend: 'cursor',
       canManage: true,
+      driver: 'cursor',
       enabledCount: 1,
       models: ['a', 'b'],
     });
@@ -105,8 +105,8 @@ describe('SettingsAgentsModelBulkToggle', () => {
   test('both controls are inert without manage permission', () => {
     const component = renderBulk({
       agentDisabled: false,
-      backend: 'cursor',
       canManage: false,
+      driver: 'cursor',
       enabledCount: 1,
       models: ['a', 'b'],
     });

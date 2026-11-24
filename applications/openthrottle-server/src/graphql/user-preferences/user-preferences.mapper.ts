@@ -28,7 +28,7 @@ const toUserPreferencesAgentObject = (
   if (agent === null) {
     return null;
   }
-  return { backend: agent.backend, effort: agent.effort, model: agent.model };
+  return { driver: agent.driver, effort: agent.effort, model: agent.model };
 };
 
 const toUserPreferencesAgentPatch = (
@@ -38,7 +38,7 @@ const toUserPreferencesAgentPatch = (
     return null;
   }
   return {
-    backend: agent.backend,
+    driver: agent.driver,
     effort: agent.effort ?? null,
     model: agent.model,
   };

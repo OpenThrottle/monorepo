@@ -494,9 +494,9 @@ function renderFavoriteModels(envelope: ReportEnvelope): string {
     `Total favorites: ${formatInt(favorites.totalFavorites)}`,
     '',
     renderTable(
-      ['Backend', 'Model', 'Count'],
-      favorites.byBackendModel.map((row) => [
-        row.backend,
+      ['Driver', 'Model', 'Count'],
+      favorites.byDriverModel.map((row) => [
+        row.driver,
         row.model,
         formatInt(row.count),
       ]),
@@ -509,7 +509,7 @@ function renderDisabledAgentClis(envelope: ReportEnvelope): string {
   const disabled = envelope.metrics.disabled_agent_clis;
   if (!isDisabledAgentClisMetrics(disabled)) return '';
 
-  const { shown, total } = takeTopByCount(disabled.byBackendModel);
+  const { shown, total } = takeTopByCount(disabled.byDriverModel);
 
   return [
     '## Disabled agent CLIs',
@@ -517,9 +517,9 @@ function renderDisabledAgentClis(envelope: ReportEnvelope): string {
     `Total disables: ${formatInt(disabled.totalDisables)}`,
     '',
     renderTable(
-      ['Backend', 'Model', 'Count'],
+      ['Driver', 'Model', 'Count'],
       shown.map((row) => [
-        row.backend,
+        row.driver,
         row.model ?? '_(whole agent)_',
         formatInt(row.count),
       ]),

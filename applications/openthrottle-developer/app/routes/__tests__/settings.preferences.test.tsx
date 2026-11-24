@@ -50,7 +50,7 @@ describe('routes/settings.preferences.tsx', () => {
       enabledEditors: [WorkspaceEditorId.Vscode],
       models: [...MOCK_PLAN_RUN_MODELS],
       preferences: {
-        defaultAgent: { backend: 'claude', effort: null, model: 'opus' },
+        defaultAgent: { driver: 'claude', effort: null, model: 'opus' },
         defaultEditor: WorkspaceEditorId.Cursor,
       },
     };

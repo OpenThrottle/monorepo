@@ -58,7 +58,7 @@ export class UserPreferencesRepository {
     const row =
       existing ??
       this.repository.create({
-        defaultAgentBackend: null,
+        defaultAgentDriver: null,
         defaultAgentEffort: null,
         defaultAgentModel: null,
         defaultEditor: null,
@@ -69,7 +69,7 @@ export class UserPreferencesRepository {
       row.defaultEditor = defaultEditor;
     }
     if (defaultAgent !== undefined) {
-      row.defaultAgentBackend = defaultAgent?.backend ?? null;
+      row.defaultAgentDriver = defaultAgent?.driver ?? null;
       row.defaultAgentEffort = defaultAgent?.effort ?? null;
       row.defaultAgentModel = defaultAgent?.model ?? null;
     }

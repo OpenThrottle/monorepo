@@ -49,21 +49,21 @@ const toEditorOrNull = (value: string | null): WorkspaceEditorId | null => {
  * @description Validates a non-null default-agent input.
  */
 const validateAgent = (input: UserPreferencesAgentInput): AgentValidation => {
-  if (!isDriverId(input.backend)) {
+  if (!isDriverId(input.driver)) {
     return fail(
-      USER_PREFERENCES_ERROR_REASONS.invalidAgentBackend,
-      `Unknown agent backend "${input.backend}".`,
+      USER_PREFERENCES_ERROR_REASONS.invalidAgentDriver,
+      `Unknown agent driver "${input.driver}".`,
     );
   }
   if (input.model.trim().length === 0) {
     return fail(
       USER_PREFERENCES_ERROR_REASONS.agentModelRequired,
-      `A default agent needs both a backend and a model.`,
+      `A default agent needs both a driver and a model.`,
     );
   }
   if (input.effort === null) {
     return {
-      agent: { backend: input.backend, effort: null, model: input.model },
+      agent: { driver: input.driver, effort: null, model: input.model },
       ok: true,
     };
   }
@@ -75,7 +75,7 @@ const validateAgent = (input: UserPreferencesAgentInput): AgentValidation => {
     );
   }
   return {
-    agent: { backend: input.backend, effort, model: input.model },
+    agent: { driver: input.driver, effort, model: input.model },
     ok: true,
   };
 };
@@ -129,13 +129,13 @@ export const emptyUserPreferences = (userId: string): UserPreferencesData => {
 export const toUserPreferencesData = (
   row: UserPreferences,
 ): UserPreferencesData => {
-  const { defaultAgentBackend, defaultAgentModel, userId } = row;
+  const { defaultAgentDriver, defaultAgentModel, userId } = row;
   const defaultEditor = toEditorOrNull(row.defaultEditor);
 
   if (
-    defaultAgentBackend === null ||
+    defaultAgentDriver === null ||
     defaultAgentModel === null ||
-    !isDriverId(defaultAgentBackend)
+    !isDriverId(defaultAgentDriver)
   ) {
     return { defaultAgent: null, defaultEditor, userId };
   }
@@ -143,7 +143,7 @@ export const toUserPreferencesData = (
   const effort = toConversationReasoningEffort(row.defaultAgentEffort) ?? null;
   return {
     defaultAgent: {
-      backend: defaultAgentBackend,
+      driver: defaultAgentDriver,
       effort,
       model: defaultAgentModel,
     },

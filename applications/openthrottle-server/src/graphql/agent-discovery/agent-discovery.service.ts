@@ -167,7 +167,7 @@ export class AgentDiscoveryService implements OnApplicationBootstrap {
    * gone" — yet it reports the CLI unavailable (or model-less), and the
    * resolver hides unavailable agents. Cached for the whole TTL, one slow sweep
    * on a loaded host emptied every agent CLI out of the composer. So a timed-out
-   * entry is replaced by the same backend's entry from the previous sweep when
+   * entry is replaced by the same driver's entry from the previous sweep when
    * there is one; only a probe that actually answered can change an agent.
    */
   private carryForwardTimedOut(
@@ -182,14 +182,14 @@ export class AgentDiscoveryService implements OnApplicationBootstrap {
     const carried: string[] = [];
     const agents = fresh.agents.map((agent) => {
       const prior = agent.timedOut
-        ? previous.agents.find((entry) => entry.backend === agent.backend)
+        ? previous.agents.find((entry) => entry.driver === agent.driver)
         : undefined;
 
       if (prior === undefined) {
         return agent;
       }
 
-      carried.push(agent.backend);
+      carried.push(agent.driver);
 
       return prior;
     });

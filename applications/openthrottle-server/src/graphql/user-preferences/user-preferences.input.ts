@@ -8,14 +8,14 @@ import { Field, InputType } from '@nestjs/graphql';
 import { WorkspaceEditorIdEnum } from '../workspace-settings/workspace-editor-id.enum.ts';
 
 @InputType({
-  description: `A default agent. Backend and model are required together; effort may be null.`,
+  description: `A default agent. Driver and model are required together; effort may be null.`,
 })
 export class UserPreferencesAgentInput {
   @Field(() => String, { description: `Agent CLI driver id.` })
-  backend!: string;
+  driver!: string;
 
   @Field(() => String, {
-    description: `Reasoning effort level, or null for the backend's own default.`,
+    description: `Reasoning effort level, or null for the driver's own default.`,
     nullable: true,
   })
   effort?: string | null;

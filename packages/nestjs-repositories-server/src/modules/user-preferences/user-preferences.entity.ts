@@ -31,8 +31,8 @@ export class UserPreferences {
   @Column({ name: 'default_editor', nullable: true, type: 'text' })
   defaultEditor!: string | null;
 
-  @Column({ name: 'default_agent_backend', nullable: true, type: 'text' })
-  defaultAgentBackend!: string | null;
+  @Column({ name: 'default_agent_driver', nullable: true, type: 'text' })
+  defaultAgentDriver!: string | null;
 
   @Column({ name: 'default_agent_model', nullable: true, type: 'text' })
   defaultAgentModel!: string | null;

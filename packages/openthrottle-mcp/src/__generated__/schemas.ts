@@ -2442,7 +2442,7 @@ export function UserPreferencesAgentInputSchema(): z.ZodObject<
   Properties<UserPreferencesAgentInput>
 > {
   return z.object({
-    backend: z.string().min(1),
+    driver: z.string().min(1),
     effort: z.string().nullish(),
     model: z.string().min(1),
   });

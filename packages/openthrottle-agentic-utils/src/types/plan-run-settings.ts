@@ -33,7 +33,7 @@ export interface PlanRunTuningSettings {
  * @public
  */
 export interface PlanRunRuntimeSeed {
-  readonly backend: WorkflowConfigRunner;
+  readonly driver: WorkflowConfigRunner;
   readonly iterationTimeoutMs: number | undefined;
   readonly iterations: number;
   readonly model: string | undefined;

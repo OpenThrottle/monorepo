@@ -97,14 +97,14 @@ export function isModelTokenUsageMetrics(
 export function isFavoriteModelsMetrics(
   value: unknown,
 ): value is FavoriteModelsMetrics {
-  return hasFields(value, ['byBackendModel', 'totalFavorites']);
+  return hasFields(value, ['byDriverModel', 'totalFavorites']);
 }
 
 /** Narrows `metrics.disabled_agent_clis` back to {@link DisabledAgentClisMetrics}. */
 export function isDisabledAgentClisMetrics(
   value: unknown,
 ): value is DisabledAgentClisMetrics {
-  return hasFields(value, ['byBackendModel', 'totalDisables']);
+  return hasFields(value, ['byDriverModel', 'totalDisables']);
 }
 
 /** Narrows `metrics.plan_runs` back to {@link PlanRunsMetrics}. */

@@ -34,7 +34,7 @@ describe('resolvePlanRunDefaultAgent', () => {
   it('returns the draft for an offered agent and model', () => {
     expect(
       resolvePlanRunDefaultAgent(
-        { backend: 'claude', effort: 'high', model: 'opus' },
+        { driver: 'claude', effort: 'high', model: 'opus' },
         models,
       ),
     ).toEqual(defaultAgent);
@@ -43,7 +43,7 @@ describe('resolvePlanRunDefaultAgent', () => {
   it('returns null for a model that is no longer offered (disabled or gone)', () => {
     expect(
       resolvePlanRunDefaultAgent(
-        { backend: 'claude', effort: null, model: 'retired' },
+        { driver: 'claude', effort: null, model: 'retired' },
         models,
       ),
     ).toBeNull();
@@ -52,7 +52,7 @@ describe('resolvePlanRunDefaultAgent', () => {
   it('returns null for a backend a plan cannot run', () => {
     expect(
       resolvePlanRunDefaultAgent(
-        { backend: 'not-a-runner', effort: null, model: 'opus' },
+        { driver: 'not-a-runner', effort: null, model: 'opus' },
         models,
       ),
     ).toBeNull();

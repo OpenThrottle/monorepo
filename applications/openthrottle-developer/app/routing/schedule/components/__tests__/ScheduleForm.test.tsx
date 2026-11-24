@@ -205,8 +205,8 @@ describe('ScheduleForm Component', () => {
 
   describe('workspace-MCP advisory', () => {
     const AGENTS = [
-      { attachesWorkspaceMcp: true, backend: 'cursor' },
-      { attachesWorkspaceMcp: false, backend: 'codex' },
+      { attachesWorkspaceMcp: true, driver: 'cursor' },
+      { attachesWorkspaceMcp: false, driver: 'codex' },
     ];
 
     test('reacts to the provider select, so the advisory tracks the real choice', async () => {

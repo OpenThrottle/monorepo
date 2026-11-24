@@ -23,14 +23,14 @@ const exitsWith = (output: string, code: number): JobRunHookRunDriver => {
 
 const baseParams = {
   agentPrompt: 'run the hook',
-  backend: 'claude',
+  driver: 'claude',
   hookIndex: 0,
   model: undefined,
   timeoutMs: 1000,
 } as const;
 
 describe('runJobRunHookAgent', () => {
-  it('runs the agent through the injected driver engine with the plan backend, model and timeout', async () => {
+  it('runs the agent through the injected driver engine with the plan driver, model and timeout', async () => {
     const runDriver = exitsWith('all good', 0);
     const controller = new AbortController();
 
@@ -182,7 +182,7 @@ describe('executeJobRunHooksPhase with the driver-backed hook agent', () => {
         runHookAgent: ({ agentPrompt, hookIndex, signal, timeoutMs }) => {
           return runJobRunHookAgent({
             agentPrompt,
-            backend: 'claude',
+            driver: 'claude',
             hookIndex,
             model: undefined,
             runDriver: params.runDriver,

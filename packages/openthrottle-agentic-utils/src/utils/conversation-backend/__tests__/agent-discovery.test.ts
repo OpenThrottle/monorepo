@@ -95,7 +95,7 @@ afterAll(() => {
 
 describe('AGENT_CLI_ALLOWLIST', () => {
   it('is derived from the drivers registry (all six, incl. antigravity)', () => {
-    expect(AGENT_CLI_ALLOWLIST.map((entry) => entry.backend).sort()).toEqual([
+    expect(AGENT_CLI_ALLOWLIST.map((entry) => entry.driver).sort()).toEqual([
       'antigravity',
       'claude',
       'codex',
@@ -106,7 +106,7 @@ describe('AGENT_CLI_ALLOWLIST', () => {
   });
 
   it('marks every backend chat-capable (all six have streaming adapters)', () => {
-    const byId = new Map(AGENT_CLI_ALLOWLIST.map((e) => [e.backend, e]));
+    const byId = new Map(AGENT_CLI_ALLOWLIST.map((e) => [e.driver, e]));
     expect(byId.get('antigravity')?.chatCapable).toBe(true);
     expect(byId.get('claude')?.chatCapable).toBe(true);
     expect(byId.get('cursor')?.chatCapable).toBe(true);
@@ -116,7 +116,7 @@ describe('AGENT_CLI_ALLOWLIST', () => {
   });
 
   it('projects supportsCustomBaseUrl from the driver capability (opencode/codex/grok yes; claude/cursor no)', () => {
-    const byId = new Map(AGENT_CLI_ALLOWLIST.map((e) => [e.backend, e]));
+    const byId = new Map(AGENT_CLI_ALLOWLIST.map((e) => [e.driver, e]));
     expect(byId.get('opencode')?.supportsCustomBaseUrl).toBe(true);
     expect(byId.get('codex')?.supportsCustomBaseUrl).toBe(true);
     expect(byId.get('grok')?.supportsCustomBaseUrl).toBe(true);
@@ -129,7 +129,7 @@ describe('discoverAgentClis', () => {
   it('probes every allowlisted backend, hiding unavailable ones', async () => {
     const result = await discoverAgentClis({ env: hermeticEnv({}) });
 
-    expect(result.agents.map((agent) => agent.backend).sort()).toEqual([
+    expect(result.agents.map((agent) => agent.driver).sort()).toEqual([
       'antigravity',
       'claude',
       'codex',
@@ -155,7 +155,7 @@ describe('discoverAgentClis', () => {
       scannedAt: '2026-06-19T00:00:00.000Z',
     });
 
-    const cursor = result.agents.find((agent) => agent.backend === 'cursor');
+    const cursor = result.agents.find((agent) => agent.driver === 'cursor');
     expect(cursor).toMatchObject({
       available: true,
       chatCapable: true,
@@ -173,7 +173,7 @@ describe('discoverAgentClis', () => {
     });
 
     expect(
-      result.agents.find((agent) => agent.backend === 'claude'),
+      result.agents.find((agent) => agent.driver === 'claude'),
     ).toMatchObject({
       available: true,
       models: ['opus', 'sonnet', 'haiku', 'fable'],
@@ -197,7 +197,7 @@ describe('discoverAgentClis', () => {
       }),
     });
 
-    const claude = result.agents.find((agent) => agent.backend === 'claude');
+    const claude = result.agents.find((agent) => agent.driver === 'claude');
     expect(claude?.auth).toMatchObject({
       accountEmail: 'dev@example.com',
       activeCredential: 'apiKey',
@@ -224,7 +224,7 @@ describe('discoverAgentClis', () => {
     // The stub reports the env it received via the (otherwise unused) email field.
     // USER matters: without it macOS claude cannot read its Keychain login.
     expect(
-      result.agents.find((agent) => agent.backend === 'claude')?.auth
+      result.agents.find((agent) => agent.driver === 'claude')?.auth
         ?.accountEmail,
     ).toBe('key=absent;dir=/override;user=probe-user');
   });
@@ -238,10 +238,10 @@ describe('discoverAgentClis', () => {
     });
 
     expect(
-      result.agents.find((agent) => agent.backend === 'claude'),
+      result.agents.find((agent) => agent.driver === 'claude'),
     ).toMatchObject({ auth: null, available: true });
     expect(
-      result.agents.find((agent) => agent.backend === 'codex')?.auth,
+      result.agents.find((agent) => agent.driver === 'codex')?.auth,
     ).toBeNull();
   });
 
@@ -253,7 +253,7 @@ describe('discoverAgentClis', () => {
     });
 
     expect(
-      result.agents.find((agent) => agent.backend === 'codex'),
+      result.agents.find((agent) => agent.driver === 'codex'),
     ).toMatchObject({
       available: true,
       chatCapable: true,
@@ -282,7 +282,7 @@ describe('discoverAgentClis', () => {
     });
 
     expect(
-      result.agents.find((agent) => agent.backend === 'grok'),
+      result.agents.find((agent) => agent.driver === 'grok'),
     ).toMatchObject({ available: true, models: [], version: 'grok 0.2.112' });
   });
 
@@ -298,14 +298,14 @@ describe('discoverAgentClis', () => {
     });
 
     expect(
-      result.agents.find((agent) => agent.backend === 'grok')?.models,
+      result.agents.find((agent) => agent.driver === 'grok')?.models,
     ).toEqual(['grok-4.5', 'grok-4-fast']);
   });
 
   it('reports unavailable (and empty models) when the binary is missing', async () => {
     const result = await discoverAgentClis({ env: hermeticEnv({}) });
     expect(
-      result.agents.find((agent) => agent.backend === 'opencode'),
+      result.agents.find((agent) => agent.driver === 'opencode'),
     ).toMatchObject({ available: false, models: [], version: null });
   });
 
@@ -319,7 +319,7 @@ describe('discoverAgentClis', () => {
     });
 
     expect(
-      result.agents.find((agent) => agent.backend === 'opencode')?.available,
+      result.agents.find((agent) => agent.driver === 'opencode')?.available,
     ).toBe(false);
   });
 });
@@ -347,7 +347,7 @@ describe('discoverAgentClis timeouts', () => {
       });
 
       expect(
-        result.agents.find((agent) => agent.backend === 'grok'),
+        result.agents.find((agent) => agent.driver === 'grok'),
       ).toMatchObject({ available: true, timedOut: false });
     });
 
@@ -355,7 +355,7 @@ describe('discoverAgentClis timeouts', () => {
       const result = await discoverAgentClis({ env: hermeticEnv({}) });
 
       expect(
-        result.agents.find((agent) => agent.backend === 'grok'),
+        result.agents.find((agent) => agent.driver === 'grok'),
       ).toMatchObject({ available: false, timedOut: false });
     });
   });
@@ -369,7 +369,7 @@ describe('discoverAgentClis timeouts', () => {
       });
 
       expect(
-        result.agents.find((agent) => agent.backend === 'grok'),
+        result.agents.find((agent) => agent.driver === 'grok'),
       ).toMatchObject({ available: false, models: [], timedOut: true });
     });
   });
@@ -383,7 +383,7 @@ describe('discoverAgentClis timeouts', () => {
       });
 
       expect(
-        result.agents.find((agent) => agent.backend === 'grok'),
+        result.agents.find((agent) => agent.driver === 'grok'),
       ).toMatchObject({ available: true, models: [], timedOut: true });
     });
   });
@@ -416,7 +416,7 @@ describe('discoverAgentClis authState and capabilities', () => {
     });
 
     const pick = (result: typeof base) => {
-      return result.agents.find((agent) => agent.backend === 'cursor')
+      return result.agents.find((agent) => agent.driver === 'cursor')
         ?.capabilities;
     };
 
@@ -435,7 +435,7 @@ describe('discoverAgentClis authState and capabilities', () => {
     });
 
     expect(
-      result.agents.find((agent) => agent.backend === 'cursor')?.authState,
+      result.agents.find((agent) => agent.driver === 'cursor')?.authState,
     ).toEqual({
       detail: 'Logged in as dev@example.com',
       status: 'authenticated',
@@ -449,7 +449,7 @@ describe('discoverAgentClis authState and capabilities', () => {
     });
 
     expect(
-      result.agents.find((agent) => agent.backend === 'cursor')?.authState
+      result.agents.find((agent) => agent.driver === 'cursor')?.authState
         .status,
     ).toBe('unauthenticated');
   });
@@ -461,7 +461,7 @@ describe('discoverAgentClis authState and capabilities', () => {
     });
 
     expect(
-      result.agents.find((agent) => agent.backend === 'cursor')?.authState
+      result.agents.find((agent) => agent.driver === 'cursor')?.authState
         .status,
     ).toBe('unauthenticated');
   });
@@ -476,7 +476,7 @@ describe('discoverAgentClis authState and capabilities', () => {
     });
 
     expect(
-      result.agents.find((agent) => agent.backend === 'claude')?.authState,
+      result.agents.find((agent) => agent.driver === 'claude')?.authState,
     ).toEqual({ detail: 'dev@example.com', status: 'authenticated' });
   });
 
@@ -487,7 +487,7 @@ describe('discoverAgentClis authState and capabilities', () => {
     });
 
     expect(
-      result.agents.find((agent) => agent.backend === 'opencode')?.authState,
+      result.agents.find((agent) => agent.driver === 'opencode')?.authState,
     ).toEqual({ detail: null, status: 'unknown' });
   });
 });

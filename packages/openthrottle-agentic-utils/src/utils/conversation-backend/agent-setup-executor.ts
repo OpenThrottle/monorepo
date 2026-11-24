@@ -1,12 +1,12 @@
 /**
  * Non-interactive install/update executor for the allowlisted agent CLIs. The ONLY caller input is a
- * `backend` id (validated against the `@openthrottle/openthrottle-drivers` registry) and a `mode`
+ * `driver` id (validated against the `@openthrottle/openthrottle-drivers` registry) and a `mode`
  * (`install` | `update`); the command is built entirely from the driver's registry-defined
  * `install`/`update` descriptors — never from a URL or command supplied by the caller. This is the
  * single place a `curl | shell` installer is spawned, so it stays deliberately small and auditable.
  *
  * Safety invariants:
- * - Unknown / non-installable backends resolve a typed failure — they never spawn.
+ * - Unknown / non-installable drivers resolve a typed failure — they never spawn.
  * - Every run is bounded by a timeout (SIGTERM→SIGKILL) and honors an AbortSignal.
  * - Failures always resolve a typed result; the executor never rejects or leaves a dangling child.
  * - The child PATH is augmented with the common per-user install target dirs so a subsequent
@@ -117,7 +117,7 @@ export type AgentSetupFailureReason =
   | 'not-installable'
   | 'spawn-error'
   | 'timeout'
-  | 'unknown-backend';
+  | 'unknown-driver';
 
 /** One chunk of subprocess output streamed while a run is in flight. */
 export interface AgentSetupChunk {
@@ -127,8 +127,8 @@ export interface AgentSetupChunk {
 
 /** Terminal outcome of an install/update run. */
 export interface AgentSetupResult {
-  /** The (validated) backend id this run targeted. */
-  readonly backend: string;
+  /** The (validated) driver id this run targeted. */
+  readonly driver: string;
   /** Wall-clock duration in ms. */
   readonly durationMs: number;
   /** Child exit code, or null when killed by signal / never spawned. */
@@ -170,8 +170,8 @@ export type AgentSetupSpawn = (
 
 /** Options for {@link runAgentSetup}. */
 export interface RunAgentSetupOptions {
-  /** Backend id — validated against the drivers registry; anything else fails closed. */
-  readonly backend: string;
+  /** Driver id — validated against the drivers registry; anything else fails closed. */
+  readonly driver: string;
   /** Environment used for binary/PATH resolution (defaults to process.env). */
   readonly env?: NodeJS.ProcessEnv;
   /** Install a missing CLI or update an existing one. */
@@ -240,7 +240,7 @@ function buildAgentSetupEnv(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
  * Build the fixed command for a run from the driver's registry descriptors. A `curl-shell` install
  * (and `update` that falls back to re-running the installer) becomes `sh -c 'curl -fsSL <url> |
  * <shell>'`; an `npm` install becomes `npm install --global <packageName>`; a `command`-method
- * update becomes `<binary> <argv...>`. Returns null when the backend cannot be installed (no
+ * update becomes `<binary> <argv...>`. Returns null when the driver cannot be installed (no
  * `install` descriptor).
  */
 export function buildAgentSetupCommand(
@@ -278,14 +278,14 @@ const defaultSpawn: AgentSetupSpawn = (file, args, options) => {
 
 /**
  * Run an install/update for an allowlisted agent CLI, streaming output via `onChunk`. Fails closed
- * on unknown/non-installable backends and always resolves a typed {@link AgentSetupResult}.
+ * on unknown/non-installable drivers and always resolves a typed {@link AgentSetupResult}.
  *
  * @public
  */
 export function runAgentSetup(
   options: RunAgentSetupOptions,
 ): Promise<AgentSetupResult> {
-  const { backend, mode, onChunk } = options;
+  const { driver: driverId, mode, onChunk } = options;
   const env = options.env ?? process.env;
   const timeoutMs = options.timeoutMs ?? DEFAULT_AGENT_SETUP_TIMEOUT_MS;
   const spawnFn = options.spawnFn ?? defaultSpawn;
@@ -296,7 +296,7 @@ export function runAgentSetup(
     exitCode: number | null = null,
   ): AgentSetupResult => {
     return {
-      backend,
+      driver: driverId,
       durationMs: Date.now() - startedAt,
       exitCode,
       mode,
@@ -305,10 +305,10 @@ export function runAgentSetup(
     };
   };
 
-  if (!isDriverId(backend)) {
-    return Promise.resolve(fail('unknown-backend'));
+  if (!isDriverId(driverId)) {
+    return Promise.resolve(fail('unknown-driver'));
   }
-  const driver = getDriver(backend);
+  const driver = getDriver(driverId);
   const command = buildAgentSetupCommand(driver, mode, env);
   if (command === null) {
     return Promise.resolve(fail('not-installable'));
@@ -372,7 +372,7 @@ export function runAgentSetup(
     child.on('close', (code) => {
       if (code === 0) {
         settle({
-          backend,
+          driver: driverId,
           durationMs: Date.now() - startedAt,
           exitCode: 0,
           mode,

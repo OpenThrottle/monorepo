@@ -7,16 +7,16 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import { WorkspaceEditorIdEnum } from '../workspace-settings/workspace-editor-id.enum.ts';
 
 @ObjectType({
-  description: `The user's default agent. Backend and model always travel together, so a half-set agent cannot be represented.`,
+  description: `The user's default agent. Driver and model always travel together, so a half-set agent cannot be represented.`,
 })
 export class UserPreferencesAgentObject {
   @Field(() => String, {
     description: `Agent CLI driver id (e.g. claude, cursor, codex).`,
   })
-  backend!: string;
+  driver!: string;
 
   @Field(() => String, {
-    description: `Reasoning effort level, or null for the backend's own default.`,
+    description: `Reasoning effort level, or null for the driver's own default.`,
     nullable: true,
   })
   effort!: string | null;
@@ -32,7 +32,7 @@ export class UserPreferencesAgentObject {
 })
 export class UserPreferencesObject {
   @Field(() => UserPreferencesAgentObject, {
-    description: `Default agent (backend + model + effort), or null for the system default.`,
+    description: `Default agent (driver + model + effort), or null for the system default.`,
     nullable: true,
   })
   defaultAgent!: UserPreferencesAgentObject | null;

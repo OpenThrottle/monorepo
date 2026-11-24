@@ -18,7 +18,7 @@ const makeRow = (overrides: Partial<UserPreferences>): UserPreferences => {
   const row = new UserPreferences();
   row.userId = userId;
   row.defaultEditor = null;
-  row.defaultAgentBackend = null;
+  row.defaultAgentDriver = null;
   row.defaultAgentModel = null;
   row.defaultAgentEffort = null;
   return Object.assign(row, overrides);
@@ -65,14 +65,14 @@ describe('UserPreferencesRepository', () => {
       it('returns the narrowed row', async () => {
         repository.findOne.mockResolvedValue(
           makeRow({
-            defaultAgentBackend: 'claude',
+            defaultAgentDriver: 'claude',
             defaultAgentEffort: 'high',
             defaultAgentModel: 'opus',
             defaultEditor: 'cursor',
           }),
         );
         await expect(service.getForUser(userId)).resolves.toEqual({
-          defaultAgent: { backend: 'claude', effort: 'high', model: 'opus' },
+          defaultAgent: { driver: 'claude', effort: 'high', model: 'opus' },
           defaultEditor: 'cursor',
           userId,
         });
@@ -102,7 +102,7 @@ describe('UserPreferencesRepository', () => {
         expect(repository.create).toHaveBeenCalledOnce();
         expect(repository.save).toHaveBeenCalledWith(
           expect.objectContaining({
-            defaultAgentBackend: null,
+            defaultAgentDriver: null,
             defaultAgentModel: null,
             defaultEditor: 'cursor',
             userId,
@@ -119,7 +119,7 @@ describe('UserPreferencesRepository', () => {
       it('updates the patched key and leaves undefined keys unchanged', async () => {
         repository.findOne.mockResolvedValue(
           makeRow({
-            defaultAgentBackend: 'claude',
+            defaultAgentDriver: 'claude',
             defaultAgentEffort: 'high',
             defaultAgentModel: 'opus',
             defaultEditor: 'vscode',
@@ -132,23 +132,23 @@ describe('UserPreferencesRepository', () => {
         expect(result).toEqual({
           ok: true,
           preferences: {
-            defaultAgent: { backend: 'claude', effort: 'high', model: 'opus' },
+            defaultAgent: { driver: 'claude', effort: 'high', model: 'opus' },
             defaultEditor: 'cursor',
             userId,
           },
         });
       });
 
-      it('sets backend, model and effort together', async () => {
+      it('sets driver, model and effort together', async () => {
         repository.findOne.mockResolvedValue(
           makeRow({ defaultEditor: 'vscode' }),
         );
         await service.update(userId, {
-          defaultAgent: { backend: 'codex', effort: 'low', model: 'gpt-5.2' },
+          defaultAgent: { driver: 'codex', effort: 'low', model: 'gpt-5.2' },
         });
         expect(repository.save).toHaveBeenCalledWith(
           expect.objectContaining({
-            defaultAgentBackend: 'codex',
+            defaultAgentDriver: 'codex',
             defaultAgentEffort: 'low',
             defaultAgentModel: 'gpt-5.2',
             defaultEditor: 'vscode',
@@ -167,10 +167,10 @@ describe('UserPreferencesRepository', () => {
         });
       });
 
-      it('clears backend, model and effort on a null agent', async () => {
+      it('clears driver, model and effort on a null agent', async () => {
         repository.findOne.mockResolvedValue(
           makeRow({
-            defaultAgentBackend: 'claude',
+            defaultAgentDriver: 'claude',
             defaultAgentEffort: 'high',
             defaultAgentModel: 'opus',
             defaultEditor: 'cursor',
@@ -179,7 +179,7 @@ describe('UserPreferencesRepository', () => {
         await service.update(userId, { defaultAgent: null });
         expect(repository.save).toHaveBeenCalledWith(
           expect.objectContaining({
-            defaultAgentBackend: null,
+            defaultAgentDriver: null,
             defaultAgentEffort: null,
             defaultAgentModel: null,
             defaultEditor: 'cursor',

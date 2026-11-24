@@ -18,7 +18,7 @@ export function createUserDisabledAgentClisRepositoryMock(): UserDisabledAgentCl
       UserDisabledAgentCli,
       CreateModelInput<UserDisabledAgentCli>
     >('user_disabled_agent_clis'),
-    getDisabledBackends: vi.fn(async () => {
+    getDisabledDrivers: vi.fn(async () => {
       return new Set<string>();
     }),
     getDisabledModels: vi.fn(async () => {

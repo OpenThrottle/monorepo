@@ -627,7 +627,7 @@ export class PlanEnqueueService {
    * through the same two steps as every other orchestrator enqueue — {@link commitEnqueueTransaction}
    * (run row QUEUED + plan QUEUED, one transaction) then `QueuesService.enqueuePlanRun`
    * (BullMQ add, after commit) — differing only in what it feeds them: the limited run's own job
-   * payload, snapshot, backend, model, branch and checkout rather than a freshly resolved request,
+   * payload, snapshot, driver, model, branch and checkout rather than a freshly resolved request,
    * `resume_of_run_id` set on the new row, and a BullMQ `delay`.
    *
    * The BullMQ `jobId` is deterministic (`usage-limit-resume-<limitedRunId>`): a retry of the same

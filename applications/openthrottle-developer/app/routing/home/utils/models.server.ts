@@ -196,7 +196,7 @@ export async function loadDefaultAgent(
     }
 
     return {
-      backend: agent.backend,
+      driver: agent.driver,
       effort: agent.effort ?? null,
       model: agent.model,
     };

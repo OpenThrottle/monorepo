@@ -8,8 +8,8 @@ import {
 
 /** JSON shape returned by the install/update intents (mirrors StartAgentSetupResult). */
 export interface AgentSetupActionResult {
-  readonly backend: string;
   readonly disabled: boolean;
+  readonly driver: string;
   readonly errorMessage: string | null;
   readonly mode: string;
   readonly runId: string | null;
@@ -18,7 +18,7 @@ export interface AgentSetupActionResult {
 /**
  * Resource route action backing the /settings/agents install/update controls —
  * `POST /resources/agent-setup`. `intent=update` runs updateAgentCli; anything else runs
- * installAgentCli. Takes only a `backend` id; the server re-validates it against the drivers
+ * installAgentCli. Takes only a `driver` id; the server re-validates it against the drivers
  * registry and enforces the SETTINGS_WRITE permission + the OT_AGENT_CLI_INSTALL_ENABLED flag, so a
  * forged post from a user without permission (or with the flag off) is rejected server-side.
  */
@@ -26,7 +26,7 @@ export const action = async (
   args: Route.ActionArgs,
 ): Promise<AgentSetupActionResult> => {
   const formData = await args.request.formData();
-  const backend = String(formData.get('backend') ?? '');
+  const driver = String(formData.get('driver') ?? '');
   const isUpdate = formData.get('intent') === 'update';
 
   try {
@@ -34,12 +34,12 @@ export const action = async (
       const data = await executeGraphqlWithAuth(
         args.request,
         UpdateAgentCliDocument,
-        { backend },
+        { driver },
       );
       const result = data.updateAgentCli;
       return {
-        backend: result.backend,
         disabled: result.disabled,
+        driver: result.driver,
         errorMessage: result.errorMessage ?? null,
         mode: result.mode,
         runId: result.runId ?? null,
@@ -49,20 +49,20 @@ export const action = async (
     const data = await executeGraphqlWithAuth(
       args.request,
       InstallAgentCliDocument,
-      { backend },
+      { driver },
     );
     const result = data.installAgentCli;
     return {
-      backend: result.backend,
       disabled: result.disabled,
+      driver: result.driver,
       errorMessage: result.errorMessage ?? null,
       mode: result.mode,
       runId: result.runId ?? null,
     };
   } catch (error) {
     return {
-      backend,
       disabled: false,
+      driver,
       errorMessage:
         error instanceof Error ? error.message : 'Failed to start the run.',
       mode: isUpdate ? 'update' : 'install',

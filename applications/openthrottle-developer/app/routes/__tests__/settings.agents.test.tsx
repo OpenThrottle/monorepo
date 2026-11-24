@@ -16,7 +16,7 @@ vi.mock('~/services/getGraphqlWsClient', () => ({
 type LoaderData = {
   agents: Array<{
     auth?: { warning: string | null } | null;
-    backend: string;
+    driver: string;
     enabled: boolean;
     label: string;
     models: string[];
@@ -48,7 +48,7 @@ describe('routes/settings.agents.tsx', () => {
     const component = renderRoute({
       agents: [
         {
-          backend: 'claude',
+          driver: 'claude',
           enabled: true,
           label: 'claude-code',
           models: ['opus'],
@@ -98,7 +98,7 @@ describe('routes/settings.agents.tsx', () => {
     const component = renderRoute({
       agents: [
         {
-          backend: 'claude',
+          driver: 'claude',
           enabled: true,
           label: 'claude-code',
           models: ['opus'],
@@ -130,7 +130,7 @@ describe('routes/settings.agents.tsx', () => {
           auth: {
             warning: `ANTHROPIC_API_KEY is set, so Claude runs bill the API key.`,
           },
-          backend: 'claude',
+          driver: 'claude',
           enabled: true,
           label: 'claude-code',
           models: ['opus'],
@@ -154,7 +154,7 @@ describe('routes/settings.agents.tsx', () => {
       {
         agents: [
           {
-            backend: 'claude',
+            driver: 'claude',
             enabled: true,
             label: 'claude-code',
             models: ['opus'],
@@ -166,8 +166,8 @@ describe('routes/settings.agents.tsx', () => {
         scannedAt: '2026-08-12T00:00:00.000Z',
       },
       {
-        backend: 'claude',
         disabled: false,
+        driver: 'claude',
         errorMessage: null,
         mode: 'update',
         runId: 'run-1',

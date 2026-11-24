@@ -14,7 +14,7 @@ const makeRow = (overrides: Partial<UserPreferences>): UserPreferences => {
   const row = new UserPreferences();
   row.userId = userId;
   row.defaultEditor = null;
-  row.defaultAgentBackend = null;
+  row.defaultAgentDriver = null;
   row.defaultAgentModel = null;
   row.defaultAgentEffort = null;
   return Object.assign(row, overrides);
@@ -63,22 +63,22 @@ describe('validateUserPreferencesPatch', () => {
   });
 
   describe('defaultAgent', () => {
-    it('accepts a known backend with a model and effort', () => {
+    it('accepts a known driver with a model and effort', () => {
       const result = validateUserPreferencesPatch({
-        defaultAgent: { backend: 'claude', effort: 'high', model: 'opus' },
+        defaultAgent: { driver: 'claude', effort: 'high', model: 'opus' },
       });
       expect(result).toEqual({
         ok: true,
         patch: {
-          defaultAgent: { backend: 'claude', effort: 'high', model: 'opus' },
+          defaultAgent: { driver: 'claude', effort: 'high', model: 'opus' },
           defaultEditor: undefined,
         },
       });
     });
 
-    it('accepts a null effort (backend default)', () => {
+    it('accepts a null effort (driver default)', () => {
       const result = validateUserPreferencesPatch({
-        defaultAgent: { backend: 'cursor', effort: null, model: 'auto' },
+        defaultAgent: { driver: 'cursor', effort: null, model: 'auto' },
       });
       expect(result).toMatchObject({
         ok: true,
@@ -86,19 +86,19 @@ describe('validateUserPreferencesPatch', () => {
       });
     });
 
-    it('rejects an unknown backend', () => {
+    it('rejects an unknown driver', () => {
       const result = validateUserPreferencesPatch({
-        defaultAgent: { backend: 'copilot', effort: null, model: 'gpt' },
+        defaultAgent: { driver: 'copilot', effort: null, model: 'gpt' },
       });
       expect(result).toMatchObject({
         ok: false,
-        reason: USER_PREFERENCES_ERROR_REASONS.invalidAgentBackend,
+        reason: USER_PREFERENCES_ERROR_REASONS.invalidAgentDriver,
       });
     });
 
-    it('rejects a backend without a model', () => {
+    it('rejects a driver without a model', () => {
       const result = validateUserPreferencesPatch({
-        defaultAgent: { backend: 'claude', effort: null, model: '  ' },
+        defaultAgent: { driver: 'claude', effort: null, model: '  ' },
       });
       expect(result).toMatchObject({
         ok: false,
@@ -108,7 +108,7 @@ describe('validateUserPreferencesPatch', () => {
 
     it('rejects an unknown effort', () => {
       const result = validateUserPreferencesPatch({
-        defaultAgent: { backend: 'claude', effort: 'insane', model: 'opus' },
+        defaultAgent: { driver: 'claude', effort: 'insane', model: 'opus' },
       });
       expect(result).toMatchObject({
         ok: false,
@@ -120,7 +120,7 @@ describe('validateUserPreferencesPatch', () => {
   describe('when the editor is invalid and the agent is valid', () => {
     it('rejects the whole patch', () => {
       const result = validateUserPreferencesPatch({
-        defaultAgent: { backend: 'claude', effort: null, model: 'opus' },
+        defaultAgent: { driver: 'claude', effort: null, model: 'opus' },
         defaultEditor: 'emacs',
       });
       expect(result.ok).toBe(false);
@@ -142,13 +142,13 @@ describe('toUserPreferencesData', () => {
   describe('when every column is set and valid', () => {
     it('maps the row', () => {
       const row = makeRow({
-        defaultAgentBackend: 'codex',
+        defaultAgentDriver: 'codex',
         defaultAgentEffort: 'medium',
         defaultAgentModel: 'gpt-5.2',
         defaultEditor: 'vscode',
       });
       expect(toUserPreferencesData(row)).toEqual({
-        defaultAgent: { backend: 'codex', effort: 'medium', model: 'gpt-5.2' },
+        defaultAgent: { driver: 'codex', effort: 'medium', model: 'gpt-5.2' },
         defaultEditor: 'vscode',
         userId,
       });
@@ -167,9 +167,9 @@ describe('toUserPreferencesData', () => {
       expect(toUserPreferencesData(row).defaultEditor).toBeNull();
     });
 
-    it('ignores an unknown backend', () => {
+    it('ignores an unknown driver', () => {
       const row = makeRow({
-        defaultAgentBackend: 'retired-cli',
+        defaultAgentDriver: 'retired-cli',
         defaultAgentModel: 'm',
       });
       expect(toUserPreferencesData(row).defaultAgent).toBeNull();
@@ -177,12 +177,12 @@ describe('toUserPreferencesData', () => {
 
     it('keeps the agent but drops an unknown effort', () => {
       const row = makeRow({
-        defaultAgentBackend: 'claude',
+        defaultAgentDriver: 'claude',
         defaultAgentEffort: 'insane',
         defaultAgentModel: 'opus',
       });
       expect(toUserPreferencesData(row).defaultAgent).toEqual({
-        backend: 'claude',
+        driver: 'claude',
         effort: null,
         model: 'opus',
       });

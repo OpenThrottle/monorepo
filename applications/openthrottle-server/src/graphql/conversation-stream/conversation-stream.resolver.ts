@@ -142,7 +142,7 @@ const CURSOR_BACKEND = 'cursor';
 const CLAUDE_BACKEND = 'claude';
 const CLI_BACKENDS = new Set<string>(
   AGENT_CLI_ALLOWLIST.filter((descriptor) => descriptor.chatCapable).map(
-    (descriptor) => descriptor.backend,
+    (descriptor) => descriptor.driver,
   ),
 );
 
@@ -154,7 +154,7 @@ const CLI_BACKENDS = new Set<string>(
 const BASE_URL_CAPABLE_BACKENDS = new Set<string>(
   AGENT_CLI_ALLOWLIST.filter(
     (descriptor) => descriptor.supportsCustomBaseUrl,
-  ).map((descriptor) => descriptor.backend),
+  ).map((descriptor) => descriptor.driver),
 );
 
 /** Conversation-metadata key holding a backend's persisted session id. */

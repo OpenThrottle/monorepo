@@ -40,8 +40,8 @@ const AGENT_PAYLOAD = {
   discoverAgentClis: {
     agents: [
       {
-        backend: 'cursor',
         chatCapable: true,
+        driver: 'cursor',
         enabled: true,
         label: 'Cursor Agent',
         models: ['gpt-5.2'],
@@ -278,12 +278,12 @@ describe('loadDefaultAgent', () => {
   test('returns the saved default agent', async () => {
     mockExecute.mockResolvedValue({
       userPreferences: {
-        defaultAgent: { backend: 'claude', effort: 'high', model: 'opus' },
+        defaultAgent: { driver: 'claude', effort: 'high', model: 'opus' },
       },
     });
 
     expect(await loadDefaultAgent(request())).toEqual({
-      backend: 'claude',
+      driver: 'claude',
       effort: 'high',
       model: 'opus',
     });

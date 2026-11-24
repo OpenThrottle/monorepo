@@ -27,7 +27,7 @@ export type DriverMcpReachability =
 /** Minimal shape this module needs from the `ScheduleFormAgentClis` query. */
 export interface DriverMcpOption {
   readonly attachesWorkspaceMcp: boolean;
-  readonly backend: string;
+  readonly driver: string;
 }
 
 /**

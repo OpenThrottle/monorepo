@@ -14,10 +14,10 @@ import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/data.copy';
 const AGENT_ENABLED_ACTION = '/resources/agent-enabled';
 
 export interface SettingsAgentsAgentToggleProps {
-  /** Driver id this toggle controls. */
-  backend: string;
   /** Server-computed: current user holds SETTINGS_WRITE. */
   canManage: boolean;
+  /** Driver id this toggle controls. */
+  driver: string;
   /** Per-user enablement from the loader (server truth). */
   enabled: boolean;
 }
@@ -25,7 +25,7 @@ export interface SettingsAgentsAgentToggleProps {
 export const SettingsAgentsAgentToggle = (
   props: SettingsAgentsAgentToggleProps,
 ): React.ReactElement => {
-  const { backend, canManage, enabled } = props;
+  const { driver, canManage, enabled } = props;
 
   // Hooks
   const fetcher = useFetcher<typeof agentEnabledAction>();
@@ -44,7 +44,7 @@ export const SettingsAgentsAgentToggle = (
   // Handlers
   const handleCheckedChange = (next: boolean): void => {
     fetcher.submit(
-      { backend, enabled: String(next) },
+      { driver, enabled: String(next) },
       { action: AGENT_ENABLED_ACTION, method: 'post' },
     );
   };
@@ -54,7 +54,7 @@ export const SettingsAgentsAgentToggle = (
     <Switch
       aria-label={SETTINGS_AGENTS_COPY.enabledToggleLabel}
       checked={optimisticEnabled}
-      data-testid={`SettingsAgentsAgentToggle-${backend}`}
+      data-testid={`SettingsAgentsAgentToggle-${driver}`}
       disabled={disabled}
       onCheckedChange={handleCheckedChange}
     />

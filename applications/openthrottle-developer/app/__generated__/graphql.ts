@@ -302,12 +302,12 @@ export type AgentCliOptionObject = {
   auth?: Maybe<AgentCliAuthStatusObject>;
   /** Generic login state for this backend: probed for claude and cursor (no credential contents are read); "unknown" for the rest. */
   authState: AgentCliAuthStateObject;
-  /** Backend discriminator (e.g. "cursor") used in StartConversationStreamInput. */
-  backend: Scalars['String']['output'];
   /** Behavioral capabilities of this backend's chat path (resume, approvals, steering, image input, MCP injection, full-history replay). Reflects OPENTHROTTLE_CHAT_ACP_BACKENDS. Read these instead of branching on the backend name. */
   capabilities: ChatBackendCapabilitiesObject;
   /** True when this driver has a wired streaming chat backend and can be offered as a chat composer backend (false for plan-run-only drivers like codex/grok). */
   chatCapable: Scalars['Boolean']['output'];
+  /** Driver id (e.g. "cursor"); also the value StartConversationStreamInput.backend takes to chat with this agent. */
+  driver: Scalars['String']['output'];
   /** Per-user enablement: true unless the current user has disabled this agent on /settings/agents. A disabled agent is hidden from chat/model pickers and rejected when starting new runs. Defaults to true for an unauthenticated request. */
   enabled: Scalars['Boolean']['output'];
   /** Human-readable label for the selector. */
@@ -3280,13 +3280,13 @@ export type Mutation = {
   schedulePlanRun: SchedulePlanRunResultObject;
   /** Relay one ~250ms chunk of base64-encoded 16kHz mono Int16 PCM to the session's WhisperLive connection. Executed over the same authenticated graphql-ws socket as the subscription. Returns false (no throw) for unauthenticated, unknown, foreign, or already-stopping sessions. */
   sendTranscriptionAudioChunk: Scalars['Boolean']['output'];
-  /** Enable or disable an agent CLI backend for the current user. A disabled agent is hidden from chat/model pickers and rejected when starting new runs. Presence-as-disabled: enabled=false records the preference, enabled=true clears it (default is enabled). Gated by SETTINGS_WRITE, in parity with install/update; rejects unknown backends. */
+  /** Enable or disable an agent CLI driver for the current user. A disabled agent is hidden from chat/model pickers and rejected when starting new runs. Presence-as-disabled: enabled=false records the preference, enabled=true clears it (default is enabled). Gated by SETTINGS_WRITE, in parity with install/update; rejects unknown drivers. */
   setAgentEnabled: SetAgentEnabledResult;
-  /** Enable or disable a single MODEL of an agent CLI backend for the current user. A disabled model is hidden from chat/model pickers and rejected when starting new runs, even while the agent itself stays enabled (an agent-level OFF hard-overrides all its models). Presence-as-disabled: enabled=false records the preference, enabled=true clears it (default is enabled). Gated by SETTINGS_WRITE; rejects unknown backends. */
+  /** Enable or disable a single MODEL of an agent CLI driver for the current user. A disabled model is hidden from chat/model pickers and rejected when starting new runs, even while the agent itself stays enabled (an agent-level OFF hard-overrides all its models). Presence-as-disabled: enabled=false records the preference, enabled=true clears it (default is enabled). Gated by SETTINGS_WRITE; rejects unknown drivers. */
   setAgentModelEnabled: SetAgentModelEnabledResult;
-  /** Star or unstar a single MODEL of an agent CLI backend for the current user. Favorited models float to the top of / are highlighted in chat/model pickers and run selection. Favoriting is orthogonal to enablement — it never enables a disabled model. Presence-as-favorite: favorite=true records the star, favorite=false clears it. Gated by SETTINGS_WRITE; rejects unknown backends. */
+  /** Star or unstar a single MODEL of an agent CLI driver for the current user. Favorited models float to the top of / are highlighted in chat/model pickers and run selection. Favoriting is orthogonal to enablement — it never enables a disabled model. Presence-as-favorite: favorite=true records the star, favorite=false clears it. Gated by SETTINGS_WRITE; rejects unknown drivers. */
   setAgentModelFavorite: SetAgentModelFavoriteResult;
-  /** Bulk enable or disable EVERY model of an agent CLI backend for the current user (the select-all / deselect-all affordance). enabled=true clears all per-model disables for the backend; enabled=false records each supplied model id as disabled. An agent-level OFF still hard-overrides all its models. Gated by SETTINGS_WRITE; rejects unknown backends. */
+  /** Bulk enable or disable EVERY model of an agent CLI driver for the current user (the select-all / deselect-all affordance). enabled=true clears all per-model disables for the driver; enabled=false records each supplied model id as disabled. An agent-level OFF still hard-overrides all its models. Gated by SETTINGS_WRITE; rejects unknown drivers. */
   setAgentModelsEnabled: SetAgentModelsEnabledResult;
   /** Replace the full set of tags on a blog post by tag slug. A caller holding only blog:draft may tag DRAFT posts; for any other post it gets BlogPostPublishPermissionRequiredError. Also returns BlogPostNotFoundError and BlogReferenceNotFoundError (unknown tag slug). */
   setBlogPostTags: SetBlogPostTagsResult;
@@ -3739,7 +3739,7 @@ export type MutationIndexCodeRepositoryArgs = {
 };
 
 export type MutationInstallAgentCliArgs = {
-  backend: Scalars['String']['input'];
+  driver: Scalars['String']['input'];
 };
 
 export type MutationLabelAgentTrajectoryArgs = {
@@ -3979,24 +3979,24 @@ export type MutationSendTranscriptionAudioChunkArgs = {
 };
 
 export type MutationSetAgentEnabledArgs = {
-  backend: Scalars['String']['input'];
+  driver: Scalars['String']['input'];
   enabled: Scalars['Boolean']['input'];
 };
 
 export type MutationSetAgentModelEnabledArgs = {
-  backend: Scalars['String']['input'];
+  driver: Scalars['String']['input'];
   enabled: Scalars['Boolean']['input'];
   model: Scalars['String']['input'];
 };
 
 export type MutationSetAgentModelFavoriteArgs = {
-  backend: Scalars['String']['input'];
+  driver: Scalars['String']['input'];
   favorite: Scalars['Boolean']['input'];
   model: Scalars['String']['input'];
 };
 
 export type MutationSetAgentModelsEnabledArgs = {
-  backend: Scalars['String']['input'];
+  driver: Scalars['String']['input'];
   enabled: Scalars['Boolean']['input'];
   models: Array<Scalars['String']['input']>;
 };
@@ -4046,7 +4046,7 @@ export type MutationUnpublishBlogPostArgs = {
 };
 
 export type MutationUpdateAgentCliArgs = {
-  backend: Scalars['String']['input'];
+  driver: Scalars['String']['input'];
 };
 
 export type MutationUpdateAgentConversationTitleArgs = {
@@ -7229,16 +7229,16 @@ export type ServiceAccountObject = {
 
 export type SetAgentEnabledResult = {
   __typename?: 'SetAgentEnabledResult';
-  /** The backend (driver id) whose enablement was toggled. */
-  backend: Scalars['String']['output'];
+  /** The driver whose enablement was toggled. */
+  driver: Scalars['String']['output'];
   /** The per-user enablement state after the toggle: true = enabled, false = disabled (hidden from pickers + blocked from new runs). */
   enabled: Scalars['Boolean']['output'];
 };
 
 export type SetAgentModelEnabledResult = {
   __typename?: 'SetAgentModelEnabledResult';
-  /** The backend (driver id) the toggled model belongs to. */
-  backend: Scalars['String']['output'];
+  /** The driver the toggled model belongs to. */
+  driver: Scalars['String']['output'];
   /** The per-model enablement state after the toggle: true = enabled, false = disabled (this model hidden from pickers + blocked from new runs, even while the agent stays enabled). */
   enabled: Scalars['Boolean']['output'];
   /** The model id whose enablement was toggled. */
@@ -7247,8 +7247,8 @@ export type SetAgentModelEnabledResult = {
 
 export type SetAgentModelFavoriteResult = {
   __typename?: 'SetAgentModelFavoriteResult';
-  /** The backend (driver id) the favorited model belongs to. */
-  backend: Scalars['String']['output'];
+  /** The driver the favorited model belongs to. */
+  driver: Scalars['String']['output'];
   /** The favorite state after the toggle: true = favorited (floated/highlighted in pickers), false = not favorited. */
   favorite: Scalars['Boolean']['output'];
   /** The model id whose favorite state was toggled. */
@@ -7257,9 +7257,9 @@ export type SetAgentModelFavoriteResult = {
 
 export type SetAgentModelsEnabledResult = {
   __typename?: 'SetAgentModelsEnabledResult';
-  /** The backend (driver id) whose models were bulk-toggled. */
-  backend: Scalars['String']['output'];
-  /** The per-model enablement state applied to every model of the backend: true = all enabled, false = all disabled. */
+  /** The driver whose models were bulk-toggled. */
+  driver: Scalars['String']['output'];
+  /** The per-model enablement state applied to every model of the driver: true = all enabled, false = all disabled. */
   enabled: Scalars['Boolean']['output'];
 };
 
@@ -7583,10 +7583,10 @@ export type SkillUsageResultObject = {
 
 export type StartAgentSetupResult = {
   __typename?: 'StartAgentSetupResult';
-  /** The backend (driver id) this run targeted. */
-  backend: Scalars['String']['output'];
   /** True when the request was rejected because server-side install/update is disabled by env flag (OT_AGENT_CLI_INSTALL_ENABLED). */
   disabled: Scalars['Boolean']['output'];
+  /** The driver this run targeted. */
+  driver: Scalars['String']['output'];
   /** Validation or policy error (no throw). Null on success. */
   errorMessage?: Maybe<Scalars['String']['output']>;
   /** install | update — the mode that was started. */
@@ -8709,22 +8709,22 @@ export type UserObject = {
   updatedAt: Scalars['DateTime']['output'];
 };
 
-/** A default agent. Backend and model are required together; effort may be null. */
+/** A default agent. Driver and model are required together; effort may be null. */
 export type UserPreferencesAgentInput = {
   /** Agent CLI driver id. */
-  backend: Scalars['String']['input'];
-  /** Reasoning effort level, or null for the backend's own default. */
+  driver: Scalars['String']['input'];
+  /** Reasoning effort level, or null for the driver's own default. */
   effort?: InputMaybe<Scalars['String']['input']>;
   /** Driver-specific model id. */
   model: Scalars['String']['input'];
 };
 
-/** The user's default agent. Backend and model always travel together, so a half-set agent cannot be represented. */
+/** The user's default agent. Driver and model always travel together, so a half-set agent cannot be represented. */
 export type UserPreferencesAgentObject = {
   __typename?: 'UserPreferencesAgentObject';
   /** Agent CLI driver id (e.g. claude, cursor, codex). */
-  backend: Scalars['String']['output'];
-  /** Reasoning effort level, or null for the backend's own default. */
+  driver: Scalars['String']['output'];
+  /** Reasoning effort level, or null for the driver's own default. */
   effort?: Maybe<Scalars['String']['output']>;
   /** Driver-specific model id, opaque to the server. */
   model: Scalars['String']['output'];
@@ -8733,7 +8733,7 @@ export type UserPreferencesAgentObject = {
 /** Per-user preferences. A null field means "use the system default". */
 export type UserPreferencesObject = {
   __typename?: 'UserPreferencesObject';
-  /** Default agent (backend + model + effort), or null for the system default. */
+  /** Default agent (driver + model + effort), or null for the system default. */
   defaultAgent?: Maybe<UserPreferencesAgentObject>;
   /** Default editor for open-in-editor links, or null for the system default (VS Code). */
   defaultEditor?: Maybe<WorkspaceEditorId>;
@@ -9615,8 +9615,8 @@ export type AgentClisDiscoveryFragment = {
   totalCount: number;
   agents: Array<{
     __typename?: 'AgentCliOptionObject';
-    backend: string;
     chatCapable: boolean;
+    driver: string;
     enabled: boolean;
     label: string;
     supportsCustomBaseUrl: boolean;
@@ -9645,8 +9645,8 @@ export type DiscoverAgentClisQuery = {
     totalCount: number;
     agents: Array<{
       __typename?: 'AgentCliOptionObject';
-      backend: string;
       chatCapable: boolean;
+      driver: string;
       enabled: boolean;
       label: string;
       supportsCustomBaseUrl: boolean;
@@ -9848,7 +9848,7 @@ export type HomeDefaultAgentQuery = {
     __typename?: 'UserPreferencesObject';
     defaultAgent?: {
       __typename?: 'UserPreferencesAgentObject';
-      backend: string;
+      driver: string;
       effort?: string | null;
       model: string;
     } | null;
@@ -13718,15 +13718,15 @@ export type CreateQueueMutation = {
 };
 
 export type InstallAgentCliMutationVariables = Exact<{
-  backend: Scalars['String']['input'];
+  driver: Scalars['String']['input'];
 }>;
 
 export type InstallAgentCliMutation = {
   __typename?: 'Mutation';
   installAgentCli: {
     __typename?: 'StartAgentSetupResult';
-    backend: string;
     disabled: boolean;
+    driver: string;
     errorMessage?: string | null;
     mode: string;
     runId?: string | null;
@@ -13734,15 +13734,15 @@ export type InstallAgentCliMutation = {
 };
 
 export type UpdateAgentCliMutationVariables = Exact<{
-  backend: Scalars['String']['input'];
+  driver: Scalars['String']['input'];
 }>;
 
 export type UpdateAgentCliMutation = {
   __typename?: 'Mutation';
   updateAgentCli: {
     __typename?: 'StartAgentSetupResult';
-    backend: string;
     disabled: boolean;
+    driver: string;
     errorMessage?: string | null;
     mode: string;
     runId?: string | null;
@@ -15043,7 +15043,7 @@ export type SettingsAgentsAgentClisQuery = {
     totalCount: number;
     agents: Array<{
       __typename?: 'AgentCliOptionObject';
-      backend: string;
+      driver: string;
       enabled: boolean;
       label: string;
       version?: string | null;
@@ -15073,7 +15073,7 @@ export type AgentCliSetupConfigQuery = {
 };
 
 export type SetAgentEnabledMutationVariables = Exact<{
-  backend: Scalars['String']['input'];
+  driver: Scalars['String']['input'];
   enabled: Scalars['Boolean']['input'];
 }>;
 
@@ -15081,13 +15081,13 @@ export type SetAgentEnabledMutation = {
   __typename?: 'Mutation';
   setAgentEnabled: {
     __typename?: 'SetAgentEnabledResult';
-    backend: string;
+    driver: string;
     enabled: boolean;
   };
 };
 
 export type SetAgentModelEnabledMutationVariables = Exact<{
-  backend: Scalars['String']['input'];
+  driver: Scalars['String']['input'];
   model: Scalars['String']['input'];
   enabled: Scalars['Boolean']['input'];
 }>;
@@ -15096,14 +15096,14 @@ export type SetAgentModelEnabledMutation = {
   __typename?: 'Mutation';
   setAgentModelEnabled: {
     __typename?: 'SetAgentModelEnabledResult';
-    backend: string;
+    driver: string;
     enabled: boolean;
     model: string;
   };
 };
 
 export type SetAgentModelsEnabledMutationVariables = Exact<{
-  backend: Scalars['String']['input'];
+  driver: Scalars['String']['input'];
   models: Array<Scalars['String']['input']> | Scalars['String']['input'];
   enabled: Scalars['Boolean']['input'];
 }>;
@@ -15112,13 +15112,13 @@ export type SetAgentModelsEnabledMutation = {
   __typename?: 'Mutation';
   setAgentModelsEnabled: {
     __typename?: 'SetAgentModelsEnabledResult';
-    backend: string;
+    driver: string;
     enabled: boolean;
   };
 };
 
 export type SetAgentModelFavoriteMutationVariables = Exact<{
-  backend: Scalars['String']['input'];
+  driver: Scalars['String']['input'];
   model: Scalars['String']['input'];
   favorite: Scalars['Boolean']['input'];
 }>;
@@ -15127,7 +15127,7 @@ export type SetAgentModelFavoriteMutation = {
   __typename?: 'Mutation';
   setAgentModelFavorite: {
     __typename?: 'SetAgentModelFavoriteResult';
-    backend: string;
+    driver: string;
     favorite: boolean;
     model: string;
   };
@@ -15393,7 +15393,7 @@ export type GetSettingsMcpQuery = {
 
 export type UserPreferencesDefaultAgentFragment = {
   __typename?: 'UserPreferencesAgentObject';
-  backend: string;
+  driver: string;
   effort?: string | null;
   model: string;
 };
@@ -15403,7 +15403,7 @@ export type UserPreferencesFieldsFragment = {
   defaultEditor?: WorkspaceEditorId | null;
   defaultAgent?: {
     __typename?: 'UserPreferencesAgentObject';
-    backend: string;
+    driver: string;
     effort?: string | null;
     model: string;
   } | null;
@@ -15420,7 +15420,7 @@ export type SettingsUserPreferencesQuery = {
     defaultEditor?: WorkspaceEditorId | null;
     defaultAgent?: {
       __typename?: 'UserPreferencesAgentObject';
-      backend: string;
+      driver: string;
       effort?: string | null;
       model: string;
     } | null;
@@ -15453,7 +15453,7 @@ export type UpdateUserPreferencesMutation = {
     defaultEditor?: WorkspaceEditorId | null;
     defaultAgent?: {
       __typename?: 'UserPreferencesAgentObject';
-      backend: string;
+      driver: string;
       effort?: string | null;
       model: string;
     } | null;
@@ -17877,7 +17877,7 @@ export type ScheduleFormAgentClisQuery = {
     agents: Array<{
       __typename?: 'AgentCliOptionObject';
       attachesWorkspaceMcp: boolean;
-      backend: string;
+      driver: string;
       label: string;
     }>;
   };
@@ -18217,7 +18217,6 @@ export const AgentClisDiscoveryFragmentDoc = {
                     ],
                   },
                 },
-                { kind: 'Field', name: { kind: 'Name', value: 'backend' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'capabilities' },
@@ -18236,6 +18235,7 @@ export const AgentClisDiscoveryFragmentDoc = {
                   },
                 },
                 { kind: 'Field', name: { kind: 'Name', value: 'chatCapable' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'driver' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'label' } },
                 {
@@ -22238,7 +22238,7 @@ export const UserPreferencesDefaultAgentFragmentDoc = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'backend' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'driver' } },
           { kind: 'Field', name: { kind: 'Name', value: 'effort' } },
           { kind: 'Field', name: { kind: 'Name', value: 'model' } },
         ],
@@ -22286,7 +22286,7 @@ export const UserPreferencesFieldsFragmentDoc = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'backend' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'driver' } },
           { kind: 'Field', name: { kind: 'Name', value: 'effort' } },
           { kind: 'Field', name: { kind: 'Name', value: 'model' } },
         ],
@@ -25692,7 +25692,6 @@ export const DiscoverAgentClisDocument = {
                     ],
                   },
                 },
-                { kind: 'Field', name: { kind: 'Name', value: 'backend' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'capabilities' },
@@ -25711,6 +25710,7 @@ export const DiscoverAgentClisDocument = {
                   },
                 },
                 { kind: 'Field', name: { kind: 'Name', value: 'chatCapable' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'driver' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'label' } },
                 {
@@ -26426,7 +26426,7 @@ export const HomeDefaultAgentDocument = {
                     selections: [
                       {
                         kind: 'Field',
-                        name: { kind: 'Name', value: 'backend' },
+                        name: { kind: 'Name', value: 'driver' },
                       },
                       {
                         kind: 'Field',
@@ -36192,7 +36192,7 @@ export const InstallAgentCliDocument = {
           kind: 'VariableDefinition',
           variable: {
             kind: 'Variable',
-            name: { kind: 'Name', value: 'backend' },
+            name: { kind: 'Name', value: 'driver' },
           },
           type: {
             kind: 'NonNullType',
@@ -36212,18 +36212,18 @@ export const InstallAgentCliDocument = {
             arguments: [
               {
                 kind: 'Argument',
-                name: { kind: 'Name', value: 'backend' },
+                name: { kind: 'Name', value: 'driver' },
                 value: {
                   kind: 'Variable',
-                  name: { kind: 'Name', value: 'backend' },
+                  name: { kind: 'Name', value: 'driver' },
                 },
               },
             ],
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'backend' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'disabled' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'driver' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'errorMessage' },
@@ -36253,7 +36253,7 @@ export const UpdateAgentCliDocument = {
           kind: 'VariableDefinition',
           variable: {
             kind: 'Variable',
-            name: { kind: 'Name', value: 'backend' },
+            name: { kind: 'Name', value: 'driver' },
           },
           type: {
             kind: 'NonNullType',
@@ -36273,18 +36273,18 @@ export const UpdateAgentCliDocument = {
             arguments: [
               {
                 kind: 'Argument',
-                name: { kind: 'Name', value: 'backend' },
+                name: { kind: 'Name', value: 'driver' },
                 value: {
                   kind: 'Variable',
-                  name: { kind: 'Name', value: 'backend' },
+                  name: { kind: 'Name', value: 'driver' },
                 },
               },
             ],
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'backend' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'disabled' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'driver' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'errorMessage' },
@@ -39666,7 +39666,7 @@ export const SettingsAgentsAgentClisDocument = {
                       },
                       {
                         kind: 'Field',
-                        name: { kind: 'Name', value: 'backend' },
+                        name: { kind: 'Name', value: 'driver' },
                       },
                       {
                         kind: 'Field',
@@ -39758,7 +39758,7 @@ export const SetAgentEnabledDocument = {
           kind: 'VariableDefinition',
           variable: {
             kind: 'Variable',
-            name: { kind: 'Name', value: 'backend' },
+            name: { kind: 'Name', value: 'driver' },
           },
           type: {
             kind: 'NonNullType',
@@ -39792,10 +39792,10 @@ export const SetAgentEnabledDocument = {
             arguments: [
               {
                 kind: 'Argument',
-                name: { kind: 'Name', value: 'backend' },
+                name: { kind: 'Name', value: 'driver' },
                 value: {
                   kind: 'Variable',
-                  name: { kind: 'Name', value: 'backend' },
+                  name: { kind: 'Name', value: 'driver' },
                 },
               },
               {
@@ -39810,7 +39810,7 @@ export const SetAgentEnabledDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'backend' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'driver' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
               ],
             },
@@ -39835,7 +39835,7 @@ export const SetAgentModelEnabledDocument = {
           kind: 'VariableDefinition',
           variable: {
             kind: 'Variable',
-            name: { kind: 'Name', value: 'backend' },
+            name: { kind: 'Name', value: 'driver' },
           },
           type: {
             kind: 'NonNullType',
@@ -39883,10 +39883,10 @@ export const SetAgentModelEnabledDocument = {
             arguments: [
               {
                 kind: 'Argument',
-                name: { kind: 'Name', value: 'backend' },
+                name: { kind: 'Name', value: 'driver' },
                 value: {
                   kind: 'Variable',
-                  name: { kind: 'Name', value: 'backend' },
+                  name: { kind: 'Name', value: 'driver' },
                 },
               },
               {
@@ -39909,7 +39909,7 @@ export const SetAgentModelEnabledDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'backend' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'driver' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'model' } },
               ],
@@ -39935,7 +39935,7 @@ export const SetAgentModelsEnabledDocument = {
           kind: 'VariableDefinition',
           variable: {
             kind: 'Variable',
-            name: { kind: 'Name', value: 'backend' },
+            name: { kind: 'Name', value: 'driver' },
           },
           type: {
             kind: 'NonNullType',
@@ -39989,10 +39989,10 @@ export const SetAgentModelsEnabledDocument = {
             arguments: [
               {
                 kind: 'Argument',
-                name: { kind: 'Name', value: 'backend' },
+                name: { kind: 'Name', value: 'driver' },
                 value: {
                   kind: 'Variable',
-                  name: { kind: 'Name', value: 'backend' },
+                  name: { kind: 'Name', value: 'driver' },
                 },
               },
               {
@@ -40015,7 +40015,7 @@ export const SetAgentModelsEnabledDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'backend' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'driver' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'enabled' } },
               ],
             },
@@ -40040,7 +40040,7 @@ export const SetAgentModelFavoriteDocument = {
           kind: 'VariableDefinition',
           variable: {
             kind: 'Variable',
-            name: { kind: 'Name', value: 'backend' },
+            name: { kind: 'Name', value: 'driver' },
           },
           type: {
             kind: 'NonNullType',
@@ -40088,10 +40088,10 @@ export const SetAgentModelFavoriteDocument = {
             arguments: [
               {
                 kind: 'Argument',
-                name: { kind: 'Name', value: 'backend' },
+                name: { kind: 'Name', value: 'driver' },
                 value: {
                   kind: 'Variable',
-                  name: { kind: 'Name', value: 'backend' },
+                  name: { kind: 'Name', value: 'driver' },
                 },
               },
               {
@@ -40114,7 +40114,7 @@ export const SetAgentModelFavoriteDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'backend' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'driver' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'favorite' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'model' } },
               ],
@@ -40894,7 +40894,7 @@ export const SettingsUserPreferencesDocument = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'backend' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'driver' } },
           { kind: 'Field', name: { kind: 'Name', value: 'effort' } },
           { kind: 'Field', name: { kind: 'Name', value: 'model' } },
         ],
@@ -41034,7 +41034,7 @@ export const UpdateUserPreferencesDocument = {
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'backend' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'driver' } },
           { kind: 'Field', name: { kind: 'Name', value: 'effort' } },
           { kind: 'Field', name: { kind: 'Name', value: 'model' } },
         ],
@@ -46509,7 +46509,7 @@ export const ScheduleFormAgentClisDocument = {
                       },
                       {
                         kind: 'Field',
-                        name: { kind: 'Name', value: 'backend' },
+                        name: { kind: 'Name', value: 'driver' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'label' } },
                     ],

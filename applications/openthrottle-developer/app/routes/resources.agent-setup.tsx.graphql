@@ -1,17 +1,17 @@
-mutation InstallAgentCli($backend: String!) {
-  installAgentCli(backend: $backend) {
-    backend
+mutation InstallAgentCli($driver: String!) {
+  installAgentCli(driver: $driver) {
     disabled
+    driver
     errorMessage
     mode
     runId
   }
 }
 
-mutation UpdateAgentCli($backend: String!) {
-  updateAgentCli(backend: $backend) {
-    backend
+mutation UpdateAgentCli($driver: String!) {
+  updateAgentCli(driver: $driver) {
     disabled
+    driver
     errorMessage
     mode
     runId

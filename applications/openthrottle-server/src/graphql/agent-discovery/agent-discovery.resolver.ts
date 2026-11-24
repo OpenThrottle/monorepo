@@ -47,16 +47,16 @@ export class AgentDiscoveryResolver {
     const agents = result.agents
       .filter((agent) => agent.available)
       .map((agent) => {
-        const agentDisabled = disabled.has(agent.backend);
-        const disabledForAgent = disabledModels?.get(agent.backend);
-        const favoritesForAgent = favoriteModels?.get(agent.backend);
+        const agentDisabled = disabled.has(agent.driver);
+        const disabledForAgent = disabledModels?.get(agent.driver);
+        const favoritesForAgent = favoriteModels?.get(agent.driver);
         return {
           attachesWorkspaceMcp: agent.attachesWorkspaceMcp,
           auth: agent.auth,
           authState: agent.authState,
-          backend: agent.backend,
           capabilities: agent.capabilities,
           chatCapable: agent.chatCapable,
+          driver: agent.driver,
           enabled: !agentDisabled,
           label: agent.label,
           modelOptions: agent.models.map((model) => ({
@@ -86,7 +86,7 @@ export class AgentDiscoveryResolver {
       };
     }
     const [disabled, disabledModels, favoriteModels] = await Promise.all([
-      this.disabledAgentClis.getDisabledBackends(principal.sub),
+      this.disabledAgentClis.getDisabledDrivers(principal.sub),
       this.disabledAgentClis.getDisabledModels(principal.sub),
       this.favoriteAgentModels.getFavoriteModels(principal.sub),
     ]);

@@ -1,8 +1,8 @@
 query DiscoverAgentClis {
   discoverAgentClis {
     agents {
-      backend
       chatCapable
+      driver
       enabled
       label
       modelOptions {

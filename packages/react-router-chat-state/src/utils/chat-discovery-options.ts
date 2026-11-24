@@ -74,7 +74,6 @@ export interface DiscoveredAgentCli {
    * query does not select it; a missing value is treated as `unknown`.
    */
   readonly authState?: { readonly status: string };
-  readonly backend: string;
   /**
    * Chat-runtime capabilities. Optional because the admin app's discovery query
    * does not select it; a missing value is treated as `approvals: false`.
@@ -84,6 +83,7 @@ export interface DiscoveredAgentCli {
     readonly editApprovals: boolean;
   };
   readonly chatCapable: boolean;
+  readonly driver: string;
   /**
    * Whether the current user has left this agent enabled. Optional because the
    * admin app's discovery query does not select it; a missing value is treated
@@ -215,7 +215,7 @@ export function toAgentRuntimes(
 ): Readonly<Record<string, ChatAgentRuntime>> {
   return Object.fromEntries(
     discovery.agents.map((agent) => [
-      agent.backend,
+      agent.driver,
       {
         approvals: agent.capabilities?.approvals ?? false,
         authStatus: agent.authState?.status ?? 'unknown',
@@ -299,8 +299,8 @@ export function toAgentChatOptions(
         return [
           {
             description: agent.label,
-            groupId: cliGroupId(agent.backend),
-            id: agent.backend,
+            groupId: cliGroupId(agent.driver),
+            id: agent.driver,
             label: agent.label,
             subLabel,
           },
@@ -310,8 +310,8 @@ export function toAgentChatOptions(
       return models.map(({ favorite, model }) => ({
         description: agent.label,
         favorite,
-        groupId: cliGroupId(agent.backend),
-        id: encodeCliOptionId(agent.backend, model),
+        groupId: cliGroupId(agent.driver),
+        id: encodeCliOptionId(agent.driver, model),
         label: model,
         subLabel,
       }));
@@ -364,8 +364,8 @@ export function toDriverEndpointChatOptions(
 
       return chatModelsOf(endpoint).map((model) => ({
         description,
-        groupId: cliGroupId(agent.backend),
-        id: encodeCliEndpointOptionId(agent.backend, endpoint.baseUrl, model),
+        groupId: cliGroupId(agent.driver),
+        id: encodeCliEndpointOptionId(agent.driver, endpoint.baseUrl, model),
         label: model,
         subLabel: agent.label,
       }));

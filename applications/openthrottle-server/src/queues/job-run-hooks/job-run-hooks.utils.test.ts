@@ -200,7 +200,7 @@ describe('executePlanJobRunHooks', () => {
     expect(call?.deps.runHookAgent).toEqual(expect.any(Function));
   });
 
-  it('runs each hook agent through runDriverAsync with the plan backend, model, signal and timeout', async () => {
+  it('runs each hook agent through runDriverAsync with the plan driver, model, signal and timeout', async () => {
     const controller = new AbortController();
     mockRunDriverAsync.mockImplementation(async (_driver, _config, options) => {
       options.onExit(0);

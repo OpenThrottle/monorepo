@@ -390,7 +390,7 @@ describe('routes/plans.$planId._index loader', () => {
       mockDocuments();
       mockLoadComposerModels.mockResolvedValue(claudeModels);
       mockLoadDefaultAgent.mockResolvedValue({
-        backend: 'claude',
+        driver: 'claude',
         effort: 'high',
         model: 'opus',
       });
@@ -407,7 +407,7 @@ describe('routes/plans.$planId._index loader', () => {
     test('resolves null when the saved agent is disabled or gone', async () => {
       mockDocuments();
       mockLoadDefaultAgent.mockResolvedValue({
-        backend: 'claude',
+        driver: 'claude',
         effort: null,
         model: 'opus',
       });

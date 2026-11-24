@@ -21,7 +21,7 @@ describe('resolveDefaultAgent', () => {
 
   test('is valid when the stored agent maps onto an offered option', () => {
     const resolved = resolveDefaultAgent(
-      { backend: 'claude', effort: 'high', model: 'opus' },
+      { driver: 'claude', effort: 'high', model: 'opus' },
       MOCK_PLAN_RUN_MODELS,
     );
 
@@ -32,9 +32,9 @@ describe('resolveDefaultAgent', () => {
     });
   });
 
-  test('drops an effort the backend cannot take', () => {
+  test('drops an effort the driver cannot take', () => {
     const resolved = resolveDefaultAgent(
-      { backend: 'cursor', effort: 'high', model: 'gpt-5.2' },
+      { driver: 'cursor', effort: 'high', model: 'gpt-5.2' },
       MOCK_PLAN_RUN_MODELS,
     );
 
@@ -42,7 +42,7 @@ describe('resolveDefaultAgent', () => {
   });
 
   test('is stale when the model is no longer offered', () => {
-    const stored = { backend: 'claude', effort: null, model: 'gone' };
+    const stored = { driver: 'claude', effort: null, model: 'gone' };
 
     expect(resolveDefaultAgent(stored, MOCK_PLAN_RUN_MODELS)).toEqual({
       kind: 'stale',
@@ -50,8 +50,8 @@ describe('resolveDefaultAgent', () => {
     });
   });
 
-  test('is stale when the backend cannot run a plan', () => {
-    const stored = { backend: 'grok', effort: null, model: 'grok-4' };
+  test('is stale when the driver cannot run a plan', () => {
+    const stored = { driver: 'grok', effort: null, model: 'grok-4' };
 
     expect(resolveDefaultAgent(stored, MOCK_PLAN_RUN_MODELS).kind).toBe(
       'stale',

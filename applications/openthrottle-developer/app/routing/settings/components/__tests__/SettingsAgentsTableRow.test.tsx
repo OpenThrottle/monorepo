@@ -18,7 +18,7 @@ vi.mock('~/services/getGraphqlWsClient', () => ({
 }));
 
 const notInstalled: AgentCliStatus = {
-  backend: 'grok',
+  driver: 'grok',
   enabled: true,
   installUrl: 'https://x.ai/cli/install.sh',
   installed: false,
@@ -29,7 +29,7 @@ const notInstalled: AgentCliStatus = {
 };
 
 const installed: AgentCliStatus = {
-  backend: 'cursor',
+  driver: 'cursor',
   enabled: true,
   installUrl: 'https://cursor.com/install',
   installed: true,
@@ -44,7 +44,7 @@ const installed: AgentCliStatus = {
 
 const disabledAgent: AgentCliStatus = {
   ...installed,
-  backend: 'claude',
+  driver: 'claude',
   enabled: false,
   label: 'Claude Code',
 };
@@ -76,7 +76,7 @@ const renderRow = (status: AgentCliStatus) => {
 };
 
 describe('SettingsAgentsTableRow', () => {
-  test('shows the label, backend code, and a Not installed badge for an absent CLI', () => {
+  test('shows the label, driver code, and a Not installed badge for an absent CLI', () => {
     const component = renderRow(notInstalled);
     expect(component.getByText('Grok')).toBeInTheDocument();
     expect(component.getByText('grok')).toBeInTheDocument();

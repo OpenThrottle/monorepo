@@ -45,15 +45,15 @@ describe('UserDisabledAgentClisRepository', () => {
 
   // ── Agent-level enablement (model IS NULL) ──────────────────────────────
 
-  describe('getDisabledBackends', () => {
-    it('reads only agent-level rows into a set of backends', async () => {
+  describe('getDisabledDrivers', () => {
+    it('reads only agent-level rows into a set of drivers', async () => {
       find.mockResolvedValue(
         userDisabledAgentClisFactory.buildList(2, { userId }).map((row, i) => {
-          return { ...row, backend: i === 0 ? 'claude' : 'grok' };
+          return { ...row, driver: i === 0 ? 'claude' : 'grok' };
         }),
       );
 
-      await expect(repository.getDisabledBackends(userId)).resolves.toEqual(
+      await expect(repository.getDisabledDrivers(userId)).resolves.toEqual(
         new Set(['claude', 'grok']),
       );
       expect(find).toHaveBeenCalledWith({
@@ -69,7 +69,7 @@ describe('UserDisabledAgentClisRepository', () => {
           true,
         );
         expect(findOne).toHaveBeenCalledWith({
-          where: { backend: 'claude', model: IsNull(), userId },
+          where: { driver: 'claude', model: IsNull(), userId },
         });
       });
     });
@@ -77,7 +77,7 @@ describe('UserDisabledAgentClisRepository', () => {
     describe('when an agent-level disable row exists', () => {
       it('is disabled', async () => {
         findOne.mockResolvedValue(
-          userDisabledAgentClisFactory.build({ backend: 'claude', userId }),
+          userDisabledAgentClisFactory.build({ driver: 'claude', userId }),
         );
 
         await expect(repository.isEnabled(userId, 'claude')).resolves.toBe(
@@ -93,7 +93,7 @@ describe('UserDisabledAgentClisRepository', () => {
         await repository.setEnabled(userId, 'claude', true);
 
         expect(remove).toHaveBeenCalledWith({
-          backend: 'claude',
+          driver: 'claude',
           model: IsNull(),
           userId,
         });
@@ -109,7 +109,7 @@ describe('UserDisabledAgentClisRepository', () => {
         await repository.setEnabled(userId, 'claude', false);
 
         expect(create).toHaveBeenCalledWith({
-          backend: 'claude',
+          driver: 'claude',
           model: null,
           userId,
         });
@@ -129,12 +129,12 @@ describe('UserDisabledAgentClisRepository', () => {
   // ── Per-model enablement (non-null model) ───────────────────────────────
 
   describe('getDisabledModels', () => {
-    it('projects model rows into a backend → set map, ignoring agent-level rows', async () => {
+    it('projects model rows into a driver → set map, ignoring agent-level rows', async () => {
       find.mockResolvedValue([
-        { backend: 'claude', model: null, userId },
-        { backend: 'claude', model: 'opus', userId },
-        { backend: 'claude', model: 'haiku', userId },
-        { backend: 'cursor', model: 'gpt-5', userId },
+        { driver: 'claude', model: null, userId },
+        { driver: 'claude', model: 'opus', userId },
+        { driver: 'claude', model: 'haiku', userId },
+        { driver: 'cursor', model: 'gpt-5', userId },
       ]);
 
       const map = await repository.getDisabledModels(userId);
@@ -151,7 +151,7 @@ describe('UserDisabledAgentClisRepository', () => {
           repository.isModelEnabled(userId, 'claude', 'opus'),
         ).resolves.toBe(true);
         expect(findOne).toHaveBeenCalledWith({
-          where: { backend: 'claude', model: 'opus', userId },
+          where: { driver: 'claude', model: 'opus', userId },
         });
       });
     });
@@ -175,7 +175,7 @@ describe('UserDisabledAgentClisRepository', () => {
         await repository.setModelEnabled(userId, 'claude', 'opus', true);
 
         expect(remove).toHaveBeenCalledWith({
-          backend: 'claude',
+          driver: 'claude',
           model: 'opus',
           userId,
         });
@@ -191,7 +191,7 @@ describe('UserDisabledAgentClisRepository', () => {
         await repository.setModelEnabled(userId, 'claude', 'opus', false);
 
         expect(create).toHaveBeenCalledWith({
-          backend: 'claude',
+          driver: 'claude',
           model: 'opus',
           userId,
         });
@@ -212,11 +212,11 @@ describe('UserDisabledAgentClisRepository', () => {
 
   describe('setModelsEnabled', () => {
     describe('when enabling', () => {
-      it('clears every per-model row for the backend', async () => {
+      it('clears every per-model row for the driver', async () => {
         await repository.setModelsEnabled(userId, 'cursor', ['a', 'b'], true);
 
         expect(remove).toHaveBeenCalledWith({
-          backend: 'cursor',
+          driver: 'cursor',
           model: Not(IsNull()),
           userId,
         });
@@ -225,7 +225,7 @@ describe('UserDisabledAgentClisRepository', () => {
 
     describe('when disabling', () => {
       it('inserts a row for each not-yet-disabled model', async () => {
-        find.mockResolvedValue([{ backend: 'cursor', model: 'a', userId }]);
+        find.mockResolvedValue([{ driver: 'cursor', model: 'a', userId }]);
         const createMany = vi
           .spyOn(repository, 'createMany')
           .mockResolvedValue([]);
@@ -238,15 +238,15 @@ describe('UserDisabledAgentClisRepository', () => {
         );
 
         expect(createMany).toHaveBeenCalledWith([
-          { backend: 'cursor', model: 'b', userId },
-          { backend: 'cursor', model: 'c', userId },
+          { driver: 'cursor', model: 'b', userId },
+          { driver: 'cursor', model: 'c', userId },
         ]);
       });
 
       it('inserts nothing when every model is already disabled', async () => {
         find.mockResolvedValue([
-          { backend: 'cursor', model: 'a', userId },
-          { backend: 'cursor', model: 'b', userId },
+          { driver: 'cursor', model: 'a', userId },
+          { driver: 'cursor', model: 'b', userId },
         ]);
         const createMany = vi.spyOn(repository, 'createMany');
 

@@ -156,16 +156,16 @@ export class PlanCreationService {
       }
 
       const [agentEnabled, modelEnabled] = await Promise.all([
-        this.disabledAgentClis.isEnabled(effectiveUserId, defaultAgent.backend),
+        this.disabledAgentClis.isEnabled(effectiveUserId, defaultAgent.driver),
         this.disabledAgentClis.isModelEnabled(
           effectiveUserId,
-          defaultAgent.backend,
+          defaultAgent.driver,
           defaultAgent.model,
         ),
       ]);
       if (!agentEnabled || !modelEnabled) {
         this.logger.debug(
-          `${this.name}: default agent ${defaultAgent.backend}/${defaultAgent.model} is disabled; using system default`,
+          `${this.name}: default agent ${defaultAgent.driver}/${defaultAgent.model} is disabled; using system default`,
         );
         return defaults;
       }

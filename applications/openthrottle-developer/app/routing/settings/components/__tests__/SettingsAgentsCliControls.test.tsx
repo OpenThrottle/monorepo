@@ -32,7 +32,7 @@ vi.mock('~/routing/settings/hooks/useAgentSetupStream', () => ({
 }));
 
 const notInstalled: AgentCliStatus = {
-  backend: 'grok',
+  driver: 'grok',
   enabled: true,
   installUrl: 'https://x.ai/cli/install.sh',
   installed: false,
@@ -43,7 +43,7 @@ const notInstalled: AgentCliStatus = {
 };
 
 const installed: AgentCliStatus = {
-  backend: 'claude',
+  driver: 'claude',
   enabled: true,
   installUrl: 'https://claude.ai/install.sh',
   installed: true,
@@ -54,8 +54,8 @@ const installed: AgentCliStatus = {
 };
 
 const startedRun: AgentSetupActionResult = {
-  backend: 'claude',
   disabled: false,
+  driver: 'claude',
   errorMessage: null,
   mode: 'update',
   runId: 'run-1',
@@ -277,11 +277,11 @@ describe('SettingsAgentsCliControls', () => {
       const user = userEvent.setup();
       const component = renderControls(
         { canManage: true, installEnabled: true, status: installed },
-        { ...startedRun, errorMessage: 'Unknown backend', runId: null },
+        { ...startedRun, errorMessage: 'Unknown driver', runId: null },
       );
       await user.click(component.getByRole('button', { name: 'Update' }));
 
-      expect(await component.findByText('Unknown backend')).toBeInTheDocument();
+      expect(await component.findByText('Unknown driver')).toBeInTheDocument();
       expect(
         component.queryByTestId('SettingsAgentsSetupLogDialog'),
       ).not.toBeInTheDocument();

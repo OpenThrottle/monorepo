@@ -48,7 +48,7 @@ describe('AgentSetupService', () => {
         options.onChunk?.({ data: 'installing...', stream: 'stdout' });
         options.onChunk?.({ data: 'a note', stream: 'stderr' });
         return {
-          backend: options.backend,
+          driver: options.driver,
           durationMs: 5,
           exitCode: 0,
           mode: options.mode,
@@ -58,7 +58,7 @@ describe('AgentSetupService', () => {
     );
 
     const { invalidate, publish, service } = build();
-    const runId = service.start({ backend: 'claude', mode: 'install' });
+    const runId = service.start({ driver: 'claude', mode: 'install' });
     expect(runId).toEqual(expect.any(String));
 
     await vi.waitFor(() => expect(invalidate).toHaveBeenCalledTimes(1));
@@ -80,7 +80,7 @@ describe('AgentSetupService', () => {
 
   it('emits a terminal error chunk and does NOT invalidate on failure', async () => {
     runAgentSetupMock.mockResolvedValue({
-      backend: 'grok',
+      driver: 'grok',
       durationMs: 1,
       exitCode: 7,
       mode: 'install',
@@ -89,7 +89,7 @@ describe('AgentSetupService', () => {
     } satisfies AgentSetupResult);
 
     const { invalidate, publish, service } = build();
-    service.start({ backend: 'grok', mode: 'install' });
+    service.start({ driver: 'grok', mode: 'install' });
 
     await vi.waitFor(() => expect(publish).toHaveBeenCalled());
     const terminal = publish.mock.calls.at(-1)?.[1][AGENT_SETUP_CHUNK_FIELD];

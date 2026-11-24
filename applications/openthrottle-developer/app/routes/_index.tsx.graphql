@@ -3,12 +3,12 @@ fragment AgentClisDiscovery on DiscoverAgentClisResult {
     authState {
       status
     }
-    backend
     capabilities {
       approvals
       editApprovals
     }
     chatCapable
+    driver
     enabled
     label
     modelOptions {
@@ -146,7 +146,7 @@ subscription TranscriptionStreamChunkAdded($sessionId: ID!) {
 query HomeDefaultAgent {
   userPreferences {
     defaultAgent {
-      backend
+      driver
       effort
       model
     }

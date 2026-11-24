@@ -12,7 +12,7 @@ export const applyDefaultAgentToRunConfig = (
   runConfig: PlanRunConfigStorage,
   agent: UserPreferencesAgent,
 ): PlanRunConfigStorage => {
-  if (!isDriverId(agent.backend) || agent.model.trim() === '') {
+  if (!isDriverId(agent.driver) || agent.model.trim() === '') {
     return runConfig;
   }
 
@@ -20,7 +20,7 @@ export const applyDefaultAgentToRunConfig = (
     ...runConfig,
     run: {
       ...runConfig.run,
-      driver: agent.backend,
+      driver: agent.driver,
       effort: agent.effort ?? '',
       model: agent.model,
     },

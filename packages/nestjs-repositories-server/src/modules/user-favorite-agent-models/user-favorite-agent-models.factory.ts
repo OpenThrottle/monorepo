@@ -14,7 +14,7 @@ import type { UserFavoriteAgentModel } from './user-favorite-agent-model.entity.
  */
 export type UserFavoriteAgentModelFactoryData = Pick<
   UserFavoriteAgentModel,
-  'backend' | 'createdAt' | 'id' | 'model' | 'userId'
+  'driver' | 'createdAt' | 'id' | 'model' | 'userId'
 >;
 
 /**
@@ -24,8 +24,8 @@ export type UserFavoriteAgentModelFactoryData = Pick<
  */
 export const userFavoriteAgentModelsFactory =
   Factory.define<UserFavoriteAgentModelFactoryData>(() => ({
-    backend: faker.helpers.arrayElement(['claude', 'codex', 'cursor']),
     createdAt: faker.date.past(),
+    driver: faker.helpers.arrayElement(['claude', 'codex', 'cursor']),
     id: faker.string.uuid(),
     model: faker.helpers.arrayElement(['opus', 'sonnet', 'gpt-5']),
     userId: faker.string.uuid(),

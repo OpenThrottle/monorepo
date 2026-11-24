@@ -1,6 +1,6 @@
 /**
  * @description GraphQL resolver for server-side agent-CLI install/update. `installAgentCli` /
- * `updateAgentCli` take ONLY a `backend` id (validated against the drivers registry — never a URL or
+ * `updateAgentCli` take ONLY a `driver` id (validated against the drivers registry — never a URL or
  * command from the client), are gated behind the SETTINGS_WRITE permission AND the default-off
  * `OT_AGENT_CLI_INSTALL_ENABLED` env flag, and return a runId to correlate the streamed output.
  * `agentSetupChunkAdded` streams that output over graphql-ws (topic agent-setup:<runId>:stream).
@@ -91,109 +91,109 @@ export class AgentSetupResolver {
   }
 
   @Mutation(() => SetAgentEnabledResult, {
-    description: `Enable or disable an agent CLI backend for the current user. A disabled agent is hidden from chat/model pickers and rejected when starting new runs. Presence-as-disabled: enabled=false records the preference, enabled=true clears it (default is enabled). Gated by SETTINGS_WRITE, in parity with install/update; rejects unknown backends.`,
+    description: `Enable or disable an agent CLI driver for the current user. A disabled agent is hidden from chat/model pickers and rejected when starting new runs. Presence-as-disabled: enabled=false records the preference, enabled=true clears it (default is enabled). Gated by SETTINGS_WRITE, in parity with install/update; rejects unknown drivers.`,
     name: 'setAgentEnabled',
   })
   @UseGuards(GqlPermissionsGuard)
   @Permissions(PERMISSIONS.SETTINGS_WRITE)
   async setAgentEnabled(
     @CurrentUser() principal: AuthPrincipal | undefined,
-    @Args('backend', { type: () => String }) backend: string,
+    @Args('driver', { type: () => String }) driver: string,
     @Args('enabled', { type: () => Boolean }) enabled: boolean,
   ): Promise<SetAgentEnabledResult> {
     if (principal == null) {
       throw new ForbiddenException('An authenticated user is required.');
     }
-    if (!isDriverId(backend)) {
-      throw new BadRequestException(`Unknown agent CLI backend: ${backend}.`);
+    if (!isDriverId(driver)) {
+      throw new BadRequestException(`Unknown agent CLI driver: ${driver}.`);
     }
 
-    await this.disabledAgentClis.setEnabled(principal.sub, backend, enabled);
-    return { backend, enabled };
+    await this.disabledAgentClis.setEnabled(principal.sub, driver, enabled);
+    return { driver, enabled };
   }
 
   @Mutation(() => SetAgentModelEnabledResult, {
-    description: `Enable or disable a single MODEL of an agent CLI backend for the current user. A disabled model is hidden from chat/model pickers and rejected when starting new runs, even while the agent itself stays enabled (an agent-level OFF hard-overrides all its models). Presence-as-disabled: enabled=false records the preference, enabled=true clears it (default is enabled). Gated by SETTINGS_WRITE; rejects unknown backends.`,
+    description: `Enable or disable a single MODEL of an agent CLI driver for the current user. A disabled model is hidden from chat/model pickers and rejected when starting new runs, even while the agent itself stays enabled (an agent-level OFF hard-overrides all its models). Presence-as-disabled: enabled=false records the preference, enabled=true clears it (default is enabled). Gated by SETTINGS_WRITE; rejects unknown drivers.`,
     name: 'setAgentModelEnabled',
   })
   @UseGuards(GqlPermissionsGuard)
   @Permissions(PERMISSIONS.SETTINGS_WRITE)
   async setAgentModelEnabled(
     @CurrentUser() principal: AuthPrincipal | undefined,
-    @Args('backend', { type: () => String }) backend: string,
+    @Args('driver', { type: () => String }) driver: string,
     @Args('model', { type: () => String }) model: string,
     @Args('enabled', { type: () => Boolean }) enabled: boolean,
   ): Promise<SetAgentModelEnabledResult> {
     if (principal == null) {
       throw new ForbiddenException('An authenticated user is required.');
     }
-    if (!isDriverId(backend)) {
-      throw new BadRequestException(`Unknown agent CLI backend: ${backend}.`);
+    if (!isDriverId(driver)) {
+      throw new BadRequestException(`Unknown agent CLI driver: ${driver}.`);
     }
 
     await this.disabledAgentClis.setModelEnabled(
       principal.sub,
-      backend,
+      driver,
       model,
       enabled,
     );
-    return { backend, enabled, model };
+    return { driver, enabled, model };
   }
 
   @Mutation(() => SetAgentModelsEnabledResult, {
-    description: `Bulk enable or disable EVERY model of an agent CLI backend for the current user (the select-all / deselect-all affordance). enabled=true clears all per-model disables for the backend; enabled=false records each supplied model id as disabled. An agent-level OFF still hard-overrides all its models. Gated by SETTINGS_WRITE; rejects unknown backends.`,
+    description: `Bulk enable or disable EVERY model of an agent CLI driver for the current user (the select-all / deselect-all affordance). enabled=true clears all per-model disables for the driver; enabled=false records each supplied model id as disabled. An agent-level OFF still hard-overrides all its models. Gated by SETTINGS_WRITE; rejects unknown drivers.`,
     name: 'setAgentModelsEnabled',
   })
   @UseGuards(GqlPermissionsGuard)
   @Permissions(PERMISSIONS.SETTINGS_WRITE)
   async setAgentModelsEnabled(
     @CurrentUser() principal: AuthPrincipal | undefined,
-    @Args('backend', { type: () => String }) backend: string,
+    @Args('driver', { type: () => String }) driver: string,
     @Args('models', { type: () => [String] }) models: string[],
     @Args('enabled', { type: () => Boolean }) enabled: boolean,
   ): Promise<SetAgentModelsEnabledResult> {
     if (principal == null) {
       throw new ForbiddenException('An authenticated user is required.');
     }
-    if (!isDriverId(backend)) {
-      throw new BadRequestException(`Unknown agent CLI backend: ${backend}.`);
+    if (!isDriverId(driver)) {
+      throw new BadRequestException(`Unknown agent CLI driver: ${driver}.`);
     }
 
     await this.disabledAgentClis.setModelsEnabled(
       principal.sub,
-      backend,
+      driver,
       models,
       enabled,
     );
-    return { backend, enabled };
+    return { driver, enabled };
   }
 
   @Mutation(() => SetAgentModelFavoriteResult, {
-    description: `Star or unstar a single MODEL of an agent CLI backend for the current user. Favorited models float to the top of / are highlighted in chat/model pickers and run selection. Favoriting is orthogonal to enablement — it never enables a disabled model. Presence-as-favorite: favorite=true records the star, favorite=false clears it. Gated by SETTINGS_WRITE; rejects unknown backends.`,
+    description: `Star or unstar a single MODEL of an agent CLI driver for the current user. Favorited models float to the top of / are highlighted in chat/model pickers and run selection. Favoriting is orthogonal to enablement — it never enables a disabled model. Presence-as-favorite: favorite=true records the star, favorite=false clears it. Gated by SETTINGS_WRITE; rejects unknown drivers.`,
     name: 'setAgentModelFavorite',
   })
   @UseGuards(GqlPermissionsGuard)
   @Permissions(PERMISSIONS.SETTINGS_WRITE)
   async setAgentModelFavorite(
     @CurrentUser() principal: AuthPrincipal | undefined,
-    @Args('backend', { type: () => String }) backend: string,
+    @Args('driver', { type: () => String }) driver: string,
     @Args('model', { type: () => String }) model: string,
     @Args('favorite', { type: () => Boolean }) favorite: boolean,
   ): Promise<SetAgentModelFavoriteResult> {
     if (principal == null) {
       throw new ForbiddenException('An authenticated user is required.');
     }
-    if (!isDriverId(backend)) {
-      throw new BadRequestException(`Unknown agent CLI backend: ${backend}.`);
+    if (!isDriverId(driver)) {
+      throw new BadRequestException(`Unknown agent CLI driver: ${driver}.`);
     }
 
     await this.favoriteAgentModels.setModelFavorite(
       principal.sub,
-      backend,
+      driver,
       model,
       favorite,
     );
-    return { backend, favorite, model };
+    return { driver, favorite, model };
   }
 
   // 🔌 graphql-ws only: connection auth (onConnect) validated the token and
@@ -223,9 +223,9 @@ export class AgentSetupResolver {
   @UseGuards(GqlPermissionsGuard)
   @Permissions(PERMISSIONS.SETTINGS_WRITE)
   installAgentCli(
-    @Args('backend', { type: () => String }) backend: string,
+    @Args('driver', { type: () => String }) driver: string,
   ): StartAgentSetupResult {
-    return this.startRun(backend, 'install');
+    return this.startRun(driver, 'install');
   }
 
   @Mutation(() => StartAgentSetupResult, {
@@ -235,21 +235,21 @@ export class AgentSetupResolver {
   @UseGuards(GqlPermissionsGuard)
   @Permissions(PERMISSIONS.SETTINGS_WRITE)
   updateAgentCli(
-    @Args('backend', { type: () => String }) backend: string,
+    @Args('driver', { type: () => String }) driver: string,
   ): StartAgentSetupResult {
-    return this.startRun(backend, 'update');
+    return this.startRun(driver, 'update');
   }
 
   /**
-   * Validate the flag + backend, then start the run. Never spawns when the feature is disabled or the
-   * backend is unknown; both resolve a typed rejection result instead.
+   * Validate the flag + driver, then start the run. Never spawns when the feature is disabled or the
+   * driver is unknown; both resolve a typed rejection result instead.
    */
   private startRun(
-    backend: string,
+    driver: string,
     mode: AgentSetupMode,
   ): StartAgentSetupResult {
     const result = new StartAgentSetupResult();
-    result.backend = backend;
+    result.driver = driver;
     result.mode = mode;
     result.disabled = false;
     result.errorMessage = null;
@@ -262,12 +262,12 @@ export class AgentSetupResolver {
       return result;
     }
 
-    if (!isDriverId(backend)) {
-      result.errorMessage = `Unknown agent CLI backend: ${backend}.`;
+    if (!isDriverId(driver)) {
+      result.errorMessage = `Unknown agent CLI driver: ${driver}.`;
       return result;
     }
 
-    result.runId = this.setupService.start({ backend, mode });
+    result.runId = this.setupService.start({ driver, mode });
     return result;
   }
 }

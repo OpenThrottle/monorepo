@@ -214,7 +214,7 @@ describe('useHomeComposer', () => {
   });
 
   describe('default agent seed', () => {
-    const defaultAgent = { backend: 'claude', effort: 'high', model: 'sonnet' };
+    const defaultAgent = { driver: 'claude', effort: 'high', model: 'sonnet' };
 
     test('a remembered atom pick wins over the preference', async () => {
       store.set(chatToolbarStateAtom, {
@@ -237,7 +237,7 @@ describe('useHomeComposer', () => {
 
     test('discovery seeds the model when the preference is not offered', async () => {
       await renderComposer({
-        defaultAgent: { ...defaultAgent, backend: 'codex' },
+        defaultAgent: { ...defaultAgent, driver: 'codex' },
         models: [openaiModel, cliModel],
       });
 

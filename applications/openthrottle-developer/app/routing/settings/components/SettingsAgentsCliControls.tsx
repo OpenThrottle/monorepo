@@ -144,7 +144,7 @@ export const SettingsAgentsCliControls = (
           className="shrink-0"
           method="post"
         >
-          <input name="backend" type="hidden" value={status.backend} />
+          <input name="driver" type="hidden" value={status.driver} />
           <input name="intent" type="hidden" value={intent} />
           <Button disabled={disabled} size="sm" type="submit" variant="outline">
             {running ? <Spinner className="mr-2" /> : null}

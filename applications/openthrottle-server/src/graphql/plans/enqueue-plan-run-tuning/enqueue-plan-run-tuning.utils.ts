@@ -195,7 +195,7 @@ const normalizeNestedDebugPreservingOmit = (
 
 /**
  * Maps GraphQL {@link PlanRunTuningInput} to worker job tuning, or `undefined` when nothing effective was provided.
- * @throws Error when values are out of range or backend is unknown.
+ * @throws Error when values are out of range or driver is unknown.
  */
 export const parseEnqueuePlanRunTuning = (
   input: PlanRunTuningInput | null | undefined,

@@ -110,7 +110,7 @@ export const executeSinglePlanLifecycleHook = async (
 
   const planContextBlock = formatPlanAndTasksForPrompt(plan, tasks);
   const cwd = getWorkspaceRoot(jobData);
-  const backend = driverFromJobData(jobData);
+  const driver = driverFromJobData(jobData);
   const tuning: PlanRunTuningSettings | undefined = jobData.tuning;
   const model = tuning?.model ?? undefined;
   const onFailure = resolveJobRunHookOnFailure(entry);
@@ -145,7 +145,7 @@ export const executeSinglePlanLifecycleHook = async (
   const timeoutMs = resolveJobRunHookTimeoutSeconds(entry) * 1000;
   const agentResult = await runJobRunHookAgent({
     agentPrompt,
-    backend,
+    driver,
     hookIndex: params.hookIndex,
     model,
     signal: params.signal,

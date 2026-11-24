@@ -26,9 +26,9 @@ export class AgentCliSetupConfigObject {
 @ObjectType()
 export class SetAgentEnabledResult {
   @Field(() => String, {
-    description: `The backend (driver id) whose enablement was toggled.`,
+    description: `The driver whose enablement was toggled.`,
   })
-  backend!: string;
+  driver!: string;
 
   @Field(() => Boolean, {
     description: `The per-user enablement state after the toggle: true = enabled, false = disabled (hidden from pickers + blocked from new runs).`,
@@ -44,9 +44,9 @@ export class SetAgentEnabledResult {
 @ObjectType()
 export class SetAgentModelEnabledResult {
   @Field(() => String, {
-    description: `The backend (driver id) the toggled model belongs to.`,
+    description: `The driver the toggled model belongs to.`,
   })
-  backend!: string;
+  driver!: string;
 
   @Field(() => String, {
     description: `The model id whose enablement was toggled.`,
@@ -61,18 +61,18 @@ export class SetAgentModelEnabledResult {
 
 /**
  * @description Result of `setAgentModelsEnabled`: the bulk select-all / deselect-all outcome for a
- * backend. `enabled` echoes the state applied to EVERY model of the backend (true = all cleared to
+ * driver. `enabled` echoes the state applied to EVERY model of the driver (true = all cleared to
  * enabled; false = all recorded disabled). An agent-level OFF still hard-overrides downstream.
  */
 @ObjectType()
 export class SetAgentModelsEnabledResult {
   @Field(() => String, {
-    description: `The backend (driver id) whose models were bulk-toggled.`,
+    description: `The driver whose models were bulk-toggled.`,
   })
-  backend!: string;
+  driver!: string;
 
   @Field(() => Boolean, {
-    description: `The per-model enablement state applied to every model of the backend: true = all enabled, false = all disabled.`,
+    description: `The per-model enablement state applied to every model of the driver: true = all enabled, false = all disabled.`,
   })
   enabled!: boolean;
 }
@@ -84,9 +84,9 @@ export class SetAgentModelsEnabledResult {
 @ObjectType()
 export class SetAgentModelFavoriteResult {
   @Field(() => String, {
-    description: `The backend (driver id) the favorited model belongs to.`,
+    description: `The driver the favorited model belongs to.`,
   })
-  backend!: string;
+  driver!: string;
 
   @Field(() => String, {
     description: `The model id whose favorite state was toggled.`,
@@ -150,9 +150,9 @@ export class AgentSetupStreamChunkObject {
 @ObjectType()
 export class StartAgentSetupResult {
   @Field(() => String, {
-    description: `The backend (driver id) this run targeted.`,
+    description: `The driver this run targeted.`,
   })
-  backend!: string;
+  driver!: string;
 
   @Field(() => Boolean, {
     description: `True when the request was rejected because server-side install/update is disabled by env flag (OT_AGENT_CLI_INSTALL_ENABLED).`,

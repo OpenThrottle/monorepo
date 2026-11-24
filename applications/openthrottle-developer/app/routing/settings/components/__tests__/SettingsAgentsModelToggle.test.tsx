@@ -24,7 +24,7 @@ const renderToggle = (
       action: async ({ request }) => {
         action(await request.formData());
         return {
-          backend: props.backend,
+          driver: props.driver,
           enabled: false,
           errorMessage: null,
           model: props.model,
@@ -43,8 +43,8 @@ describe('SettingsAgentsModelToggle', () => {
     const component = renderToggle(
       {
         agentDisabled: false,
-        backend: 'cursor',
         canManage: true,
+        driver: 'cursor',
         enabled: true,
         model: 'gpt-5.2',
       },
@@ -56,7 +56,7 @@ describe('SettingsAgentsModelToggle', () => {
     );
 
     expect(submitted).toHaveLength(1);
-    expect(submitted[0]?.get('backend')).toBe('cursor');
+    expect(submitted[0]?.get('driver')).toBe('cursor');
     expect(submitted[0]?.get('model')).toBe('gpt-5.2');
     // An enabled model toggles OFF.
     expect(submitted[0]?.get('enabled')).toBe('false');
@@ -68,8 +68,8 @@ describe('SettingsAgentsModelToggle', () => {
     const component = renderToggle(
       {
         agentDisabled: true,
-        backend: 'claude',
         canManage: true,
+        driver: 'claude',
         enabled: true,
         model: 'opus',
       },

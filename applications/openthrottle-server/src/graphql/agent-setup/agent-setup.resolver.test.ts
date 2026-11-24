@@ -88,12 +88,12 @@ describe('AgentSetupResolver', () => {
     expect(start).not.toHaveBeenCalled();
   });
 
-  it('rejects an unknown backend without spawning', () => {
+  it('rejects an unknown driver without spawning', () => {
     const { resolver, start } = build(true);
     const result = resolver.installAgentCli('totally-not-a-cli');
     expect(result.disabled).toBe(false);
     expect(result.runId).toBeNull();
-    expect(result.errorMessage).toMatch(/Unknown agent CLI backend/);
+    expect(result.errorMessage).toMatch(/Unknown agent CLI driver/);
     expect(start).not.toHaveBeenCalled();
   });
 
@@ -104,7 +104,7 @@ describe('AgentSetupResolver', () => {
     expect(result.errorMessage).toBeNull();
     expect(result.runId).toBe('run-123');
     expect(result.mode).toBe('install');
-    expect(start).toHaveBeenCalledWith({ backend: 'claude', mode: 'install' });
+    expect(start).toHaveBeenCalledWith({ driver: 'claude', mode: 'install' });
   });
 
   it('starts an update run with mode=update', () => {
@@ -112,7 +112,7 @@ describe('AgentSetupResolver', () => {
     const result = resolver.updateAgentCli('opencode');
     expect(result.runId).toBe('run-123');
     expect(result.mode).toBe('update');
-    expect(start).toHaveBeenCalledWith({ backend: 'opencode', mode: 'update' });
+    expect(start).toHaveBeenCalledWith({ driver: 'opencode', mode: 'update' });
   });
 
   it('reports config: installEnabled + canManage (has settings:write)', async () => {
@@ -137,7 +137,7 @@ describe('AgentSetupResolver', () => {
     it('persists a disable and echoes the state', async () => {
       const { resolver, setPreferenceEnabled } = build(true);
       const result = await resolver.setAgentEnabled(human, 'claude', false);
-      expect(result).toEqual({ backend: 'claude', enabled: false });
+      expect(result).toEqual({ driver: 'claude', enabled: false });
       expect(setPreferenceEnabled).toHaveBeenCalledWith(
         'user-1',
         'claude',
@@ -148,7 +148,7 @@ describe('AgentSetupResolver', () => {
     it('persists a re-enable and echoes the state', async () => {
       const { resolver, setPreferenceEnabled } = build(true);
       const result = await resolver.setAgentEnabled(human, 'cursor', true);
-      expect(result).toEqual({ backend: 'cursor', enabled: true });
+      expect(result).toEqual({ driver: 'cursor', enabled: true });
       expect(setPreferenceEnabled).toHaveBeenCalledWith(
         'user-1',
         'cursor',
@@ -156,11 +156,11 @@ describe('AgentSetupResolver', () => {
       );
     });
 
-    it('rejects an unknown backend without persisting', async () => {
+    it('rejects an unknown driver without persisting', async () => {
       const { resolver, setPreferenceEnabled } = build(true);
       await expect(
         resolver.setAgentEnabled(human, 'totally-not-a-cli', false),
-      ).rejects.toThrow(/Unknown agent CLI backend/);
+      ).rejects.toThrow(/Unknown agent CLI driver/);
       expect(setPreferenceEnabled).not.toHaveBeenCalled();
     });
 
@@ -183,7 +183,7 @@ describe('AgentSetupResolver', () => {
         false,
       );
       expect(result).toEqual({
-        backend: 'claude',
+        driver: 'claude',
         enabled: false,
         model: 'opus',
       });
@@ -195,11 +195,11 @@ describe('AgentSetupResolver', () => {
       );
     });
 
-    it('rejects an unknown backend without persisting', async () => {
+    it('rejects an unknown driver without persisting', async () => {
       const { resolver, setModelEnabled } = build(true);
       await expect(
         resolver.setAgentModelEnabled(human, 'nope', 'm', true),
-      ).rejects.toThrow(/Unknown agent CLI backend/);
+      ).rejects.toThrow(/Unknown agent CLI driver/);
       expect(setModelEnabled).not.toHaveBeenCalled();
     });
 
@@ -221,7 +221,7 @@ describe('AgentSetupResolver', () => {
         ['a', 'b'],
         false,
       );
-      expect(result).toEqual({ backend: 'cursor', enabled: false });
+      expect(result).toEqual({ driver: 'cursor', enabled: false });
       expect(setModelsEnabled).toHaveBeenCalledWith(
         'user-1',
         'cursor',
@@ -230,11 +230,11 @@ describe('AgentSetupResolver', () => {
       );
     });
 
-    it('rejects an unknown backend without persisting', async () => {
+    it('rejects an unknown driver without persisting', async () => {
       const { resolver, setModelsEnabled } = build(true);
       await expect(
         resolver.setAgentModelsEnabled(human, 'nope', ['a'], true),
-      ).rejects.toThrow(/Unknown agent CLI backend/);
+      ).rejects.toThrow(/Unknown agent CLI driver/);
       expect(setModelsEnabled).not.toHaveBeenCalled();
     });
 
@@ -257,7 +257,7 @@ describe('AgentSetupResolver', () => {
         true,
       );
       expect(result).toEqual({
-        backend: 'cursor',
+        driver: 'cursor',
         favorite: true,
         model: 'gpt-5.2',
       });
@@ -269,11 +269,11 @@ describe('AgentSetupResolver', () => {
       );
     });
 
-    it('rejects an unknown backend without persisting', async () => {
+    it('rejects an unknown driver without persisting', async () => {
       const { resolver, setModelFavorite } = build(true);
       await expect(
         resolver.setAgentModelFavorite(human, 'nope', 'm', true),
-      ).rejects.toThrow(/Unknown agent CLI backend/);
+      ).rejects.toThrow(/Unknown agent CLI driver/);
       expect(setModelFavorite).not.toHaveBeenCalled();
     });
 

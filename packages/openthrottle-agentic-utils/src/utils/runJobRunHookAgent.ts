@@ -28,9 +28,9 @@ export type JobRunHookRunDriver = (
 
 export interface RunJobRunHookAgentParams {
   readonly agentPrompt: string;
-  readonly backend: WorkflowConfigRunner;
   /** Subprocess cwd; inherits `process.cwd()` when omitted. */
   readonly cwd?: string;
+  readonly driver: WorkflowConfigRunner;
   readonly effort?: DriverReasoningEffort;
   /** Extra env merged over `process.env`. */
   readonly env?: Readonly<Record<string, string>>;
@@ -66,7 +66,7 @@ export const runJobRunHookAgent = async (
   params: RunJobRunHookAgentParams,
 ): Promise<JobRunHookAgentResult> => {
   const runDriver = params.runDriver ?? runDriverAsync;
-  const driver = withStructuredOutput(getDriver(params.backend));
+  const driver = withStructuredOutput(getDriver(params.driver));
   const seen: {
     accountError: AgentAccountError | undefined;
     exitCode: number | null | undefined;

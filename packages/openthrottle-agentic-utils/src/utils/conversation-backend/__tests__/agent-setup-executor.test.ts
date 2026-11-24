@@ -1,5 +1,5 @@
 /**
- * Unit tests for the install/update executor. Backend allowlisting and command construction are
+ * Unit tests for the install/update executor. Driver allowlisting and command construction are
  * asserted directly; the streaming/timeout/abort paths are exercised through an injected fake spawn
  * (an EventEmitter with stdout/stderr) so NO network installer ever runs.
  */
@@ -121,16 +121,16 @@ describe('augmentPathForInstall', () => {
   });
 });
 
-describe('runAgentSetup backend allowlisting', () => {
-  it('rejects an unknown backend without spawning', async () => {
+describe('runAgentSetup driver allowlisting', () => {
+  it('rejects an unknown driver without spawning', async () => {
     const spawnFn: AgentSetupSpawn = vi.fn(() => new FakeChild());
     const result = await runAgentSetup({
-      backend: 'totally-not-a-cli',
+      driver: 'totally-not-a-cli',
       mode: 'install',
       spawnFn,
     });
     expect(result.ok).toBe(false);
-    expect(result.reason).toBe('unknown-backend');
+    expect(result.reason).toBe('unknown-driver');
     expect(spawnFn).not.toHaveBeenCalled();
   });
 
@@ -139,7 +139,7 @@ describe('runAgentSetup backend allowlisting', () => {
     const controller = new AbortController();
     controller.abort();
     const result = await runAgentSetup({
-      backend: 'claude',
+      driver: 'claude',
       env: HERMETIC_ENV,
       mode: 'install',
       signal: controller.signal,
@@ -169,7 +169,7 @@ describe('runAgentSetup execution', () => {
 
     const chunks: string[] = [];
     const run = runAgentSetup({
-      backend: 'claude',
+      driver: 'claude',
       env: HERMETIC_ENV,
       mode: 'install',
       onChunk: (c) => chunks.push(`${c.stream}:${c.data}`),
@@ -195,7 +195,7 @@ describe('runAgentSetup execution', () => {
     };
 
     const run = runAgentSetup({
-      backend: 'claude',
+      driver: 'claude',
       env: {
         ...HERMETIC_ENV,
         DATABASE_URL: 'postgres://user:pw@db/ot',
@@ -230,7 +230,7 @@ describe('runAgentSetup execution', () => {
   it('resolves a non-zero-exit failure with the exit code', async () => {
     const child = new FakeChild();
     const run = runAgentSetup({
-      backend: 'grok',
+      driver: 'grok',
       env: HERMETIC_ENV,
       mode: 'install',
       spawnFn: () => child,
@@ -245,7 +245,7 @@ describe('runAgentSetup execution', () => {
   it('resolves spawn-error when the child errors', async () => {
     const child = new FakeChild();
     const run = runAgentSetup({
-      backend: 'grok',
+      driver: 'grok',
       env: HERMETIC_ENV,
       mode: 'install',
       spawnFn: () => child,
@@ -259,7 +259,7 @@ describe('runAgentSetup execution', () => {
     vi.useFakeTimers();
     const child = new FakeChild();
     const run = runAgentSetup({
-      backend: 'opencode',
+      driver: 'opencode',
       env: HERMETIC_ENV,
       mode: 'update',
       spawnFn: () => child,
@@ -276,7 +276,7 @@ describe('runAgentSetup execution', () => {
     const child = new FakeChild();
     const controller = new AbortController();
     const run = runAgentSetup({
-      backend: 'opencode',
+      driver: 'opencode',
       env: HERMETIC_ENV,
       mode: 'update',
       signal: controller.signal,

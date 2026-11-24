@@ -9,7 +9,7 @@ describe('createUserDisabledAgentClisRepositoryMock', () => {
   it('starts as an empty table, so everything reads as enabled', async () => {
     const repository = createUserDisabledAgentClisRepositoryMock();
 
-    await expect(repository.getDisabledBackends(userId)).resolves.toEqual(
+    await expect(repository.getDisabledDrivers(userId)).resolves.toEqual(
       new Set(),
     );
     await expect(repository.getDisabledModels(userId)).resolves.toEqual(

@@ -39,7 +39,7 @@ export interface UseSettingsPreferencesAgentFormOptions {
 export interface UseSettingsPreferencesAgentFormResult {
   /** The unsaved pick, or null while nothing is picked. */
   readonly draft: DefaultAgentDraft | null;
-  /** Whether the picked backend has a separate reasoning-effort knob. */
+  /** Whether the picked driver has a separate reasoning-effort knob. */
   readonly effortSupported: boolean;
   readonly fetcher: FetcherWithComponents<PreferencesActionResult>;
   readonly groups: readonly ChatModelGroup[];

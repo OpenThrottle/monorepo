@@ -20,7 +20,7 @@ import { DEFAULT_RUN_MODEL } from '~/routing/plans/utils/plan-run-options';
  * the raw stored string; `null` means the backend's own default.
  */
 export interface ComposerDefaultAgent {
-  readonly backend: string;
+  readonly driver: string;
   readonly effort: string | null;
   readonly model: string;
 }
@@ -37,8 +37,8 @@ const toDefaultAgentOptionId = (
   const model = agent.model.trim();
   const isDefaultModel = model === '' || model === DEFAULT_RUN_MODEL;
   const candidate = isDefaultModel
-    ? encodeCliOptionId(agent.backend)
-    : encodeCliOptionId(agent.backend, model);
+    ? encodeCliOptionId(agent.driver)
+    : encodeCliOptionId(agent.driver, model);
 
   return models.some((option) => option.id === candidate)
     ? candidate
@@ -73,7 +73,7 @@ export const seedComposerDefaultAgent = (
     persisted.modelId ?? toDefaultAgentOptionId(defaultAgent, models);
   const effectiveBackend =
     modelId === undefined ? undefined : decodeChatOption(modelId)?.backend;
-  const isDefaultBackend = effectiveBackend === defaultAgent.backend;
+  const isDefaultBackend = effectiveBackend === defaultAgent.driver;
   const effort = parsePlanRunEffort(defaultAgent.effort ?? '');
   const reasoning =
     persisted.reasoning ?? (isDefaultBackend ? effort : undefined);
