@@ -16,7 +16,7 @@
  * Plain ESM parses on any Node, which is the point.
  */
 
-import { readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -82,6 +82,44 @@ export const satisfies = (version, range) => {
   return false;
 };
 
+/**
+ * The bin dir of an installed nvm Node that satisfies `range`, for the error
+ * message: the `.nvmrc` pin when it is installed and fits, else the newest
+ * install that fits; null when none does. Same order as
+ * skills/ot-worktree/scripts/resolve-node.sh, which provisions worktrees.
+ * Reads directory names only; never spawns a node.
+ */
+export const findSatisfyingNvmBin = (range, { nvmDir, pinned }) => {
+  const root = join(nvmDir, 'versions', 'node');
+  const binFor = (name) => {
+    return join(root, name, 'bin');
+  };
+  const fits = (name) => {
+    const parsed = parseVersion(name);
+    return (
+      parsed !== null &&
+      satisfies(parsed, range) === true &&
+      existsSync(join(binFor(name), 'node'))
+    );
+  };
+
+  const pinnedName = `v${pinned.trim().replace(/^v/, '')}`;
+  if (/^v\d+\.\d+\.\d+$/.test(pinnedName) && fits(pinnedName)) {
+    return binFor(pinnedName);
+  }
+
+  let names = [];
+  try {
+    names = readdirSync(root);
+  } catch {
+    return null;
+  }
+  const candidates = names
+    .filter(fits)
+    .sort((a, b) => compare(parseVersion(b), parseVersion(a)));
+  return candidates.length > 0 ? binFor(candidates[0]) : null;
+};
+
 /** Only enforce when run as the preinstall script, so tests can import the range logic. */
 if (
   process.argv[1] !== undefined &&
@@ -125,9 +163,23 @@ if (
     );
     console.error('  that cannot run there.');
     console.error('');
-    console.error(
-      `  This repo pins ${readPinned()} in .nvmrc — run \`nvm use\` (or \`fnm use\`) and install again.`,
-    );
+    const bin = findSatisfyingNvmBin(range, {
+      nvmDir: process.env.NVM_DIR || join(process.env.HOME || '', '.nvm'),
+      pinned: readPinned(),
+    });
+    if (bin === null) {
+      console.error(
+        `  This repo pins ${readPinned()} in .nvmrc — run \`nvm install\` (or \`fnm use\`) and install again.`,
+      );
+    } else {
+      console.error(
+        '  A Node that fits is installed. Run this in the same shell, then install again:',
+      );
+      console.error(`    export PATH="${bin}:$PATH"`);
+      console.error(
+        '  (In a worktree, `pnpm run worktree:heal` then finishes provisioning it.)',
+      );
+    }
     console.error('');
     process.exit(1);
   }

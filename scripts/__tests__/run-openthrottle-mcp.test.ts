@@ -243,7 +243,13 @@ describe('probe', () => {
 const SCRIPTS_DIR = join(import.meta.dirname, '..');
 const REPO_DIR = join(SCRIPTS_DIR, '..');
 const SHIM = join(SCRIPTS_DIR, 'run-openthrottle-mcp.sh');
-const RESOLVER = join(SCRIPTS_DIR, 'utils', 'resolve-node.sh');
+const RESOLVER = join(
+  REPO_DIR,
+  'skills',
+  'ot-worktree',
+  'scripts',
+  'resolve-node.sh',
+);
 const BASH = spawnSync('bash', ['-c', 'printf %s "$BASH"'], { encoding: 'utf8' }).stdout; // prettier-ignore
 const LIVE_NVMRC = readFileSync(join(REPO_DIR, '.nvmrc'), 'utf8').trim().replace(/^v/, ''); // prettier-ignore
 const LIVE_RANGE = readEnginesNodeRange(join(REPO_DIR, 'package.json')) ?? '';
@@ -406,6 +412,35 @@ describe('ot_resolve_node', () => {
       });
 
       expect(outcome.kind === 'resolved' && outcome.version).toBe('v24.18.0');
+    });
+  });
+
+  describe('when OT_NODE is set', () => {
+    it('wins over OT_MCP_NODE', () => {
+      const nvm = makeTempDir();
+      const generic = installStubNode(join(makeTempDir(), 'bin'), '26.1.0');
+      const legacy = installStubNode(join(makeTempDir(), 'bin'), '24.18.0');
+
+      const outcome = resolveNode({
+        checkout: makeCheckout({ nvmrc: undefined, range: RANGE }),
+        env: { NVM_DIR: nvm, OT_MCP_NODE: legacy, OT_NODE: generic, PATH: EMPTY_PATH }, // prettier-ignore
+        primary: '',
+      });
+
+      expect(outcome).toEqual({ bin: join(generic, '..'), kind: 'resolved', version: 'v26.1.0' }); // prettier-ignore
+    });
+
+    it('names OT_NODE when it is too old', () => {
+      const nvm = makeTempDir();
+      const generic = installStubNode(join(makeTempDir(), 'bin'), '16.17.1');
+
+      const outcome = resolveNode({
+        checkout: makeCheckout({ nvmrc: undefined, range: RANGE }),
+        env: { NVM_DIR: nvm, OT_NODE: generic, PATH: EMPTY_PATH },
+        primary: '',
+      });
+
+      expect(outcome).toEqual({ kind: 'failed', tried: `OT_NODE=${generic} v16.17.1` }); // prettier-ignore
     });
   });
 

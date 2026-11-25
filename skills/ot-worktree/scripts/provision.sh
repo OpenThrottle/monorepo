@@ -54,6 +54,51 @@ _ot_run_hook() {
   )
 }
 
+# Put the Node that checkout $1 asks for (its .nvmrc / engines.node; $2, the
+# primary checkout, supplies a .nvmrc the worktree lacks) first on PATH, and
+# export it, so the provisioner and everything it spawns — `pnpm install` and
+# its `preinstall` engine check, a `.ts` hook run by bare `node` — use it
+# instead of whatever the caller's shell had (an agent's Bash tool gets nvm's
+# default alias, not the repo's pin). See resolve-node.sh.
+#
+# No-op when the checkout declares no engines.node, when bash is missing, or
+# when $OPENTHROTTLE_WORKTREE_NODE=0. Returns 1, after logging what was tried,
+# when engines.node is declared and nothing installed satisfies it: provisioning
+# on the wrong Node fails later and leaves a half-built tree.
+ot_worktree_use_repo_node() {
+  _un_checkout="$1"
+  _un_primary="${2:-}"
+
+  [ "${OPENTHROTTLE_WORKTREE_NODE:-1}" = "0" ] && return 0
+  command -v bash >/dev/null 2>&1 || return 0
+
+  _un_tab=$(printf '\t')
+  if ! _un_line=$(bash "$OPENTHROTTLE_WORKTREE_SCRIPT_DIR/node-path.sh" "$_un_checkout" "$_un_primary"); then
+    _un_rest=${_un_line#fail"$_un_tab"}
+    log "🔴 no installed Node satisfies engines.node \"${_un_rest%%"$_un_tab"*}\" for $_un_checkout"
+    log "    tried: ${_un_rest#*"$_un_tab"}"
+    log "    install it (e.g. \`nvm install\` in the checkout), or set OT_NODE=/path/to/node"
+    return 1
+  fi
+
+  case "$_un_line" in
+    ok"$_un_tab"*)
+      _un_rest=${_un_line#ok"$_un_tab"}
+      _un_bin=${_un_rest%%"$_un_tab"*}
+      case "$PATH" in
+        "$_un_bin" | "$_un_bin":*) ;;
+        *)
+          PATH="$_un_bin${PATH:+:$PATH}"
+          export PATH
+          ;;
+      esac
+      log "    node:   ${_un_rest#*"$_un_tab"} ($_un_bin)"
+      ;;
+  esac
+
+  return 0
+}
+
 # True (0) when provisioning has been switched off for this invocation.
 _ot_setup_disabled() {
   [ "${OPENTHROTTLE_WORKTREE_SETUP:-1}" = "0" ] || [ "${CLAUDE_WORKTREE_SETUP:-1}" = "0" ]
@@ -77,6 +122,8 @@ provision_worktree() {
     log "⏭️  OPENTHROTTLE_WORKTREE_SETUP=0 — skipping provisioning"
     return 0
   fi
+
+  ot_worktree_use_repo_node "$_pw_wt" "$_pw_src" || return 1
 
   for _pw_candidate in \
     "${OPENTHROTTLE_WORKTREE_PROVISION:-}" \
@@ -109,6 +156,10 @@ heal_worktree_hook() {
   if _ot_setup_disabled; then
     return 0
   fi
+
+  # A heal hook is a backfill, never worth wedging `dev` over: on no usable
+  # Node, it still runs (on the caller's) after the logged error.
+  ot_worktree_use_repo_node "$_hw_wt" "$_hw_src" || true
 
   for _hw_candidate in \
     "${OPENTHROTTLE_WORKTREE_HEAL:-}" \

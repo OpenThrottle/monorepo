@@ -1,9 +1,20 @@
-import { readFileSync } from 'node:fs';
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
-import { parseVersion, satisfies } from '../check-node-engine.mjs';
+import {
+  findSatisfyingNvmBin,
+  parseVersion,
+  satisfies,
+} from '../check-node-engine.mjs';
 
 /** The live range, so these cases fail if the declared floor drifts. */
 const ENGINES_NODE: string = JSON.parse(
@@ -68,5 +79,47 @@ describe('the declared engines.node range', () => {
       'utf8',
     ).trim();
     expect(accepts(pinned)).toBe(true);
+  });
+});
+
+describe('findSatisfyingNvmBin', () => {
+  const roots: string[] = [];
+
+  afterEach(() => {
+    for (const root of roots.splice(0)) {
+      rmSync(root, { force: true, recursive: true });
+    }
+  });
+
+  const makeNvm = (versions: readonly string[]): string => {
+    const nvmDir = mkdtempSync(join(tmpdir(), 'ot-check-node-'));
+    roots.push(nvmDir);
+    for (const version of versions) {
+      const bin = join(nvmDir, 'versions', 'node', `v${version}`, 'bin');
+      mkdirSync(bin, { recursive: true });
+      writeFileSync(join(bin, 'node'), '');
+    }
+
+    return nvmDir;
+  };
+
+  it('prefers the installed .nvmrc pin', () => {
+    const nvmDir = makeNvm(['26.1.0', '26.13.1', '27.0.0']);
+
+    expect(findSatisfyingNvmBin('>=26', { nvmDir, pinned: 'v26.13.1\n' })).toBe(join(nvmDir, 'versions', 'node', 'v26.13.1', 'bin')); // prettier-ignore
+  });
+
+  it('falls back to the newest install that fits', () => {
+    const nvmDir = makeNvm(['24.15.0', '26.1.0', '26.10.0']);
+
+    expect(findSatisfyingNvmBin('>=26', { nvmDir, pinned: '26.13.1' })).toBe(join(nvmDir, 'versions', 'node', 'v26.10.0', 'bin')); // prettier-ignore
+  });
+
+  it('returns null when nothing installed fits', () => {
+    const nvmDir = makeNvm(['24.15.0']);
+
+    expect(
+      findSatisfyingNvmBin('>=26', { nvmDir, pinned: '26.13.1' }),
+    ).toBeNull();
   });
 });

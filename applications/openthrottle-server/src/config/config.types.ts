@@ -8,3 +8,8 @@ export interface BullMqRunOutputRetentionConfig {
   readonly maxTotalBytes?: number;
   readonly minIntervalMs: number;
 }
+
+/** @description The outcome of {@link checkNodeVersion}. */
+export type NodeVersionCheck =
+  | { readonly kind: 'supported' }
+  | { readonly kind: 'unsupported'; readonly message: string };

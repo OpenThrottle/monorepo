@@ -206,6 +206,14 @@ log "    path:   $WTREE"
 log "    branch: $BRANCH"
 log "    base:   $BASE_REF"
 
+# Fail on an unusable Node BEFORE creating anything: provisioning on the wrong
+# one (an agent shell's nvm default, say) dies at the repo's install step and
+# leaves a half-built worktree behind. provision_worktree re-resolves against
+# the new worktree, whose .nvmrc comes from the base ref.
+if ! _ot_setup_disabled; then
+  ot_worktree_use_repo_node "$REPO_ROOT" || exit 1
+fi
+
 mkdir -p "$BASE_DIR"
 
 # Create the worktree. New branch by default; if the branch already exists,

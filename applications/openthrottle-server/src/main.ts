@@ -1,3 +1,4 @@
+import './assert-node-version.ts';
 import './load-env.ts';
 
 import { existsSync } from 'node:fs';

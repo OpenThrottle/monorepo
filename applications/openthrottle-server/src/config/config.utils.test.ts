@@ -1,6 +1,11 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+import { isRecord } from '@openthrottle/nodejs-utils';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { resolveProcessRole } from './config.utils.ts';
+import { MINIMUM_NODE_MAJOR } from './config.constants.ts';
+import { checkNodeVersion, resolveProcessRole } from './config.utils.ts';
 
 describe('resolveProcessRole', () => {
   const originalRole = process.env.PROCESS_ROLE;
@@ -42,5 +47,38 @@ describe('resolveProcessRole', () => {
     process.env.PROCESS_ROLE = 'apii';
 
     expect(() => resolveProcessRole()).toThrow('Invalid PROCESS_ROLE "apii"');
+  });
+});
+
+describe('checkNodeVersion', () => {
+  it('accepts the minimum major and newer', () => {
+    expect(checkNodeVersion(`${MINIMUM_NODE_MAJOR}.0.0`)).toEqual({
+      kind: 'supported',
+    });
+    expect(checkNodeVersion(`v${MINIMUM_NODE_MAJOR + 1}.2.3`)).toEqual({
+      kind: 'supported',
+    });
+  });
+
+  it('rejects an older major and names the fix', () => {
+    const check = checkNodeVersion('24.15.0');
+
+    expect(check.kind).toBe('unsupported');
+    expect(check.kind === 'unsupported' && check.message).toContain(
+      'monorepo:ensure-node',
+    );
+  });
+
+  it('rejects a version it cannot parse', () => {
+    expect(checkNodeVersion('garbage').kind).toBe('unsupported');
+  });
+
+  it('matches the lowest major the root engines.node allows', () => {
+    const rootManifest = join(import.meta.dirname, '../../../../package.json');
+    const manifest: unknown = JSON.parse(readFileSync(rootManifest, 'utf8'));
+    const engines = isRecord(manifest) ? manifest.engines : undefined;
+    const range = isRecord(engines) ? engines.node : undefined;
+
+    expect(range).toBe(`>=${MINIMUM_NODE_MAJOR}`);
   });
 });
