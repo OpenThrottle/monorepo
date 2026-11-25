@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-
 /**
  * @description `pnpm run user-env:write` — point `~/.openthrottle/.env` at an
  * OpenThrottle server by hand. Use it for a hosted or remote server, which
@@ -18,6 +17,7 @@ import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 
 import { ensureUserEnvEntries } from '@openthrottle/agentic-hooks';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 
 import { isLinkedWorktree } from './utils/git.ts';
 import { createLogger } from './utils/logger.ts';
@@ -74,7 +74,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   try {
     process.exit(runUserEnvWrite(process.argv.slice(2), process.env));
   } catch (err) {
-    logger.fail(err instanceof Error ? err.message : String(err));
+    logger.fail(toErrorMessage(err));
     logger.detail(USAGE);
     process.exit(1);
   }

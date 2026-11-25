@@ -5,6 +5,8 @@
  * @see https://github.com/ollama/ollama/blob/main/docs/api.md#generate-embeddings
  */
 
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
+
 import type { EmbeddingBackendResult } from './embedding.ts';
 
 export interface OllamaEmbeddingTarget {
@@ -71,7 +73,7 @@ export async function embedWithOllama(
 
     return { ok: true, vectors: embeddings };
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = toErrorMessage(error);
 
     return {
       detail: `Ollama ${url} is unreachable: ${message}`,

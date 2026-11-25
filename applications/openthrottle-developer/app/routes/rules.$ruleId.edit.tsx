@@ -1,3 +1,4 @@
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import {
   coerceBoolean,
   executeGraphqlWithAuth,
@@ -202,8 +203,7 @@ export const action = async (args: Route.ActionArgs) => {
 
     return redirect('/rules');
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return { error: message };
+    return { error: toErrorMessage(error) };
   }
 };
 

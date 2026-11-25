@@ -13,9 +13,9 @@
  * - The stable prefix (tools + system) carries a cache breakpoint, so only the first request of a run pays
  *   full price for the ~60 KB surface.
  */
-
 import Anthropic, { APIError } from '@anthropic-ai/sdk';
 import type { Tool } from '@modelcontextprotocol/sdk/types.js';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import type { ToolSurface } from '@openthrottle/openthrottle-mcp/tool-surface';
 
 import type {
@@ -220,7 +220,7 @@ export function createAnthropicToolSelector(
 
         return {
           kind: 'error',
-          message: error instanceof Error ? error.message : String(error),
+          message: toErrorMessage(error),
         };
       }
     },

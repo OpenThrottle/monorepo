@@ -1,6 +1,8 @@
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
+import { isRecord, toErrorMessage } from '@openthrottle/nodejs-utils';
+
 import type {
   LoopFollowUp,
   WorkerResult,
@@ -20,10 +22,6 @@ import {
 type Parsed<T> =
   | { readonly error: string; readonly ok: false }
   | { readonly ok: true; readonly value: T };
-
-const isRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-};
 
 const fail = (error: string): { error: string; ok: false } => {
   return { error, ok: false };
@@ -136,7 +134,7 @@ export const parseWorkerResult = (
   try {
     json = JSON.parse(raw);
   } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
+    const detail = toErrorMessage(error);
 
     return {
       error: `result file is not valid JSON: ${detail}`,

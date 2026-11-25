@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
+import { isRecord } from '@openthrottle/nodejs-utils';
 import { DataSource } from 'typeorm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
@@ -69,12 +70,6 @@ const resolveUrl = (): string => {
   const password = encodeURIComponent(POSTGRES_PASSWORD ?? '');
 
   return `postgres://${user}:${password}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}`;
-};
-
-const isRecord = (
-  value: unknown,
-): value is Readonly<Record<string, unknown>> => {
-  return typeof value === 'object' && value !== null;
 };
 
 /** @description The object rows of an untyped raw query result. */

@@ -1,5 +1,7 @@
 import { dirname } from 'node:path';
 
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 import { WINDOW_STATE_VERSION } from '../data/data.window-state.ts';
 import type { Rectangle } from './isBoundsVisible.ts';
 
@@ -29,10 +31,6 @@ export interface CreateWindowStateStoreOptions {
   /** Suffix keeping the temp file unique per process. */
   readonly tempSuffix: string;
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null;
-};
 
 const isPositive = (value: unknown): value is number => {
   return typeof value === 'number' && Number.isFinite(value) && value > 0;

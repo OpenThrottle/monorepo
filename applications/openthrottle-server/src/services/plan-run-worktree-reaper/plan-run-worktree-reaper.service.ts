@@ -13,13 +13,13 @@
  * Dry-run by default: `assess()` only, nothing removed, and the candidate list is logged and
  * raised as a system alert so it can be checked against the real worktree set first.
  */
-
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { Plan } from '@openthrottle/nestjs-repositories-server';
 import { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories-server';
 import { PlanRunsRepository } from '@openthrottle/nestjs-repositories-server';
 import { PlansRepository } from '@openthrottle/nestjs-repositories-server';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import { Raw } from 'typeorm';
 
 import { NotificationsService } from '../../notifications/notifications.service.ts';
@@ -180,7 +180,7 @@ export class PlanRunWorktreeReaperService {
     try {
       return await this.evaluateNomination(candidate, now);
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = toErrorMessage(error);
       return {
         detail: `could not evaluate: ${message}`,
         kind: 'not-nominated',

@@ -48,6 +48,8 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 import { hasFlag } from './utils/args.ts';
 import { createLogger } from './utils/logger.ts';
 
@@ -104,10 +106,6 @@ interface Violation {
   readonly extensionlessCount: number;
   readonly samples: readonly string[];
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-};
 
 /**
  * @description Strips `//` and comment blocks, then trailing commas, so a tsconfig

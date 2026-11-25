@@ -1,8 +1,8 @@
 # @openthrottle/nodejs-utils — agent notes
 
 Zero-dependency, runtime-agnostic TypeScript utilities shared by both server
-(NestJS) and client (React Router) code. Today this is the home for small,
-universal **type guards** — starting with `isRecord`. Consumers span
+(NestJS) and client (React Router) code: small universal **type guards**, the
+caught-error-to-message helper and `sleep`. Consumers span
 `openthrottle-server`, `openthrottle-developer`, the `nestjs-*` and
 `react-router-*` packages, the agentic packages, `node-client`, and
 `nodejs-graphql`.
@@ -11,10 +11,17 @@ universal **type guards** — starting with `isRecord`. Consumers span
 
 - [src/index.ts](src/index.ts) — public entry point. Export the package's public
   API here and tag exported public API with `@public` so Knip keeps it.
-- [src/utils/isRecord.ts](src/utils/isRecord.ts) — `isRecord` type guard
-  (plain-object predicate). Canonical name for what used to be inlined as
-  `isPlainRecord` / `isPlainObject` / `isObjectRecord` / `isJsonObject` /
-  `isObjectValue` across the workspace.
+- [src/utils/guards.ts](src/utils/guards.ts) — `isRecord` (plain-object
+  predicate: non-null, not an array; the canonical name for what used to be
+  inlined as `isPlainRecord` / `isPlainObject` / `isObject` / `isJsonObject`
+  across the workspace), `isStringArray`, and `isErrorWithCode` (an `Error`
+  with a string `code`, typed structurally so the package needs no
+  `@types/node`).
+- [src/utils/errors.ts](src/utils/errors.ts) — `toErrorMessage(error,
+fallback?)`, the one spelling of `error instanceof Error ? error.message :
+String(error)`; a fallback replaces a blank message.
+- [src/utils/async.ts](src/utils/async.ts) — `sleep(ms)`. Tests use fake
+  timers instead.
 
 ## Invariants & gotchas
 
@@ -37,6 +44,8 @@ universal **type guards** — starting with `isRecord`. Consumers span
   and the like). Anything NestJS-specific belongs in `@openthrottle/nestjs-utils`;
   anything React Router / Vite specific belongs in
   `@openthrottle/react-router-utils`.
+- **An object guard that must let arrays through is not `isRecord`.** Keep it
+  local, under a name that says so, with a `@description` explaining why.
 - Leave domain-specific guards that _compose_ on top of `isRecord` (e.g.
   `isWallClockMetrics`) in their own packages — they call `isRecord`, they don't
   live here.

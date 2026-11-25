@@ -8,6 +8,7 @@ import {
   PlanRunsRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import { PlanOutputStreamRepository } from '@openthrottle/nestjs-repositories-server';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import type { Queue } from 'bullmq';
 
 import { validateWorkingDirectory } from '../../../graphql/plans/enqueue-plan-run-tuning/enqueue-plan-run-tuning.utils.ts';
@@ -31,10 +32,6 @@ type ScheduledRunReconcileResult =
   | 'settled_elsewhere'
   | 'skipped';
 
-const describeError = (error: unknown): string => {
-  return error instanceof Error ? error.message : String(error);
-};
-
 /**
  * @description Re-runs the schedule-time working-directory validation at fire time and returns why
  * the directory is unusable, or null when it is usable or unset (the worker's default cwd). A
@@ -48,7 +45,7 @@ const describeWorkspaceError = (
 
     return null;
   } catch (error) {
-    return describeError(error);
+    return toErrorMessage(error);
   }
 };
 
@@ -178,7 +175,7 @@ export class ScheduledPlanRunService {
       );
     } catch (error) {
       this.logger.warn(
-        `Scheduled plan run reconciliation skipped: could not read SCHEDULED runs: ${describeError(error)}`,
+        `Scheduled plan run reconciliation skipped: could not read SCHEDULED runs: ${toErrorMessage(error)}`,
         ScheduledPlanRunService.name,
       );
 
@@ -249,7 +246,7 @@ export class ScheduledPlanRunService {
       return 'reprojected';
     } catch (error) {
       this.logger.warn(
-        `Scheduled plan run reconciliation failed for run ${run.id} (job ${bullmqJobId}); leaving it SCHEDULED for the next boot: ${describeError(error)}`,
+        `Scheduled plan run reconciliation failed for run ${run.id} (job ${bullmqJobId}); leaving it SCHEDULED for the next boot: ${toErrorMessage(error)}`,
         ScheduledPlanRunService.name,
       );
 
@@ -286,7 +283,7 @@ export class ScheduledPlanRunService {
       });
     } catch (error) {
       this.logger.warn(
-        `Could not append the not-started note for scheduled run ${run.id} to plan ${run.planId} output: ${describeError(error)}`,
+        `Could not append the not-started note for scheduled run ${run.id} to plan ${run.planId} output: ${toErrorMessage(error)}`,
         ScheduledPlanRunService.name,
       );
     }

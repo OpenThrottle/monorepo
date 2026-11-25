@@ -2,6 +2,7 @@ import type { OnApplicationBootstrap } from '@nestjs/common';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import type { DiscoveryResult } from '@openthrottle/openthrottle-agentic-utils';
 import {
   discoverModels,
@@ -92,7 +93,7 @@ export class NestjsModelDiscoveryService implements OnApplicationBootstrap {
 
       await this.discover();
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = toErrorMessage(error);
 
       this.logger.warn(`🔭 model-discovery: boot warm-up failed: ${message}`);
     }

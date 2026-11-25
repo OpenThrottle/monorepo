@@ -6,6 +6,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
+
 import { resolveAuthToken, resolveGraphqlUrl } from '../config/env.ts';
 import type {
   DrainFileResult,
@@ -220,7 +222,7 @@ export const persistUsageEvent = async ({
       logHookError('jsonl append failed', appendErr);
     }
     return {
-      detail: err instanceof Error ? err.message : String(err),
+      detail: toErrorMessage(err),
       sink: 'jsonl',
     };
   }
@@ -304,7 +306,7 @@ export const persistOutcomeEvent = async ({
       logHookError('outcome jsonl append failed', appendErr);
     }
     return {
-      detail: err instanceof Error ? err.message : String(err),
+      detail: toErrorMessage(err),
       sink: 'jsonl',
     };
   }
@@ -435,7 +437,7 @@ export const persistTokenUsage = async ({
     logHookError('persistTokenUsage failed', err);
     return {
       ...tally,
-      detail: err instanceof Error ? err.message : String(err),
+      detail: toErrorMessage(err),
     };
   }
 };

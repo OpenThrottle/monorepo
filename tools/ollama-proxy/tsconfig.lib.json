@@ -15,6 +15,9 @@
   ],
   "references": [
     {
+      "path": "../../packages/nodejs-utils/tsconfig.lib.json"
+    },
+    {
       "path": "../dotfiles/tsconfig.lib.json"
     }
   ]

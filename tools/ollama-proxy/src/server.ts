@@ -7,6 +7,8 @@
 import * as http from 'node:http';
 import { pathToFileURL } from 'node:url';
 
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 const PORT = Number(process.env.OLLAMA_PROXY_PORT ?? '11435');
 export const OLLAMA_BASE_URL = (
   process.env.OLLAMA_BASE_URL ?? 'https://ollama.local'
@@ -48,10 +50,6 @@ interface ChatCompletionsBody {
   messages?: unknown[];
   model?: string;
   stream?: boolean;
-}
-
-export function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 interface OllamaModelTag {

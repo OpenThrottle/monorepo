@@ -8,6 +8,8 @@
 
 import { spawn } from 'node:child_process';
 
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 import {
   CLAUDE_CONFIG_DIR_KEY,
   CLAUDE_HOST_ENV_KEYS,
@@ -89,10 +91,6 @@ export interface ProbeClaudeAuthStatusOptions {
 
 const API_KEY_ENV_NAME = 'ANTHROPIC_API_KEY';
 const CLAUDE_AI_AUTH_METHOD = 'claude.ai';
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
 
 function readRecord(stdout: string): Record<string, unknown> | null {
   try {

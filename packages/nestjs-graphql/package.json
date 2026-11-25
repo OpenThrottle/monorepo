@@ -18,6 +18,7 @@
     "@openthrottle/nestjs-modules": "workspace:^",
     "@openthrottle/nestjs-redis": "workspace:^",
     "@openthrottle/nestjs-utils": "workspace:^",
+    "@openthrottle/nodejs-utils": "workspace:^",
     "graphql": "catalog:",
     "graphql-subscriptions": "catalog:",
     "graphql-ws": "catalog:",

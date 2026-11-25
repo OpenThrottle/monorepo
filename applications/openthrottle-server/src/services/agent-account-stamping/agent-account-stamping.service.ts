@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { AgentAccountsRepository } from '@openthrottle/nestjs-repositories-server';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import type {
   AgentAccountIdentity,
   AgentAccountResolver,
@@ -77,7 +78,7 @@ export class AgentAccountStampingService {
   }
 
   private logFailure(error: unknown): void {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = toErrorMessage(error);
     this.logger.warn(`${this.name}: account not stamped: ${message}`);
   }
 }

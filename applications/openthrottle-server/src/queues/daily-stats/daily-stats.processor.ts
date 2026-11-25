@@ -7,6 +7,7 @@ import {
   PlansRepository,
   TasksRepository,
 } from '@openthrottle/nestjs-repositories-server';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import { And, LessThan, MoreThanOrEqual } from 'typeorm';
 
 import { NotificationsService } from '../../notifications/notifications.service.ts';
@@ -77,7 +78,7 @@ export class DailyStatsProcessor
     try {
       await this.runCatchUp();
     } catch (error) {
-      const detail = error instanceof Error ? error.message : String(error);
+      const detail = toErrorMessage(error);
       this.logger.error(
         `Daily stats on-boot catch-up failed: ${detail}`,
         DailyStatsProcessor.name,
@@ -100,7 +101,7 @@ export class DailyStatsProcessor
     try {
       await this.runCatchUp();
     } catch (error) {
-      const detail = error instanceof Error ? error.message : String(error);
+      const detail = toErrorMessage(error);
       this.logger.error(
         `♦️ Daily stats job failed: jobId=${job.id}, error=${detail}`,
         DailyStatsProcessor.name,

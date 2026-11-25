@@ -26,6 +26,7 @@ import {
   RepositoryCheckoutsRepository,
   WorktreeRemovalsRepository,
 } from '@openthrottle/nestjs-repositories-server';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 
 import { realPath } from '../paths/real-path/real-path.utils.ts';
 import { isLinkedWorktreeDirectory } from '../worktree-discovery/worktree-discovery.utils.ts';
@@ -159,7 +160,7 @@ export class WorktreeCheckoutPruneService {
         userId,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = toErrorMessage(error);
       this.logger.warn(
         `could not record the removal audit for ${result.path}: ${message}`,
       );

@@ -5,7 +5,7 @@
  * buffer later. Same failure classification and buffer mechanics as the other
  * telemetry streams (see `graphql.ts` and `jsonl.ts`). Nothing here throws.
  */
-import { isRecord } from '@openthrottle/nodejs-utils';
+import { isRecord, toErrorMessage } from '@openthrottle/nodejs-utils';
 
 import { resolveAuthToken, resolveGraphqlUrl } from '../config/env.ts';
 import type {
@@ -419,7 +419,7 @@ export const persistTrajectory = async (
   } catch (err) {
     logHookError('persistTrajectory failed', err);
     return {
-      reason: err instanceof Error ? err.message : String(err),
+      reason: toErrorMessage(err),
       sink: 'dropped',
     };
   }

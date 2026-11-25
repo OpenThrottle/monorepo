@@ -7,7 +7,6 @@
  * ledger-recorded paths that are still OT-owned. See
  * docs/monorepo/foreign-workspace-skill-injection.md.
  */
-
 import { createHash } from 'node:crypto';
 import {
   cpSync,
@@ -24,6 +23,7 @@ import {
 } from 'node:fs';
 import { isAbsolute, join, relative, sep } from 'node:path';
 
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import { resolveForeignSkillManifest } from '@openthrottle/openthrottle-skills';
 
 import { getWorkspacePathMapping } from '../workspace-paths.ts';
@@ -542,9 +542,7 @@ export const ensureMaterialized = (
         );
       } catch (error) {
         allWarnings.push(
-          `Failed to inject ${relPath}: ${
-            error instanceof Error ? error.message : String(error)
-          }`,
+          `Failed to inject ${relPath}: ${toErrorMessage(error)}`,
         );
       }
     }

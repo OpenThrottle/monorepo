@@ -17,6 +17,7 @@ import { createHash } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { REDIS_CLIENT } from '@openthrottle/nestjs-redis';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import type { Redis } from 'ioredis';
 
 import { SCHEDULED_AGENT_JOBS_LOCK_KEY_PREFIX } from '../scheduled-agent-jobs.constants.ts';
@@ -112,7 +113,7 @@ export class ScheduledAgentJobDirectoryLockService {
         );
       } catch (error) {
         this.logger.warn(
-          `Directory lock unavailable for ${key} (${error instanceof Error ? error.message : String(error)}); running without it`,
+          `Directory lock unavailable for ${key} (${toErrorMessage(error)}); running without it`,
           ScheduledAgentJobDirectoryLockService.name,
         );
 
@@ -165,7 +166,7 @@ export class ScheduledAgentJobDirectoryLockService {
       return (await this.redis.del(this.redisKeyFor(key))) > 0;
     } catch (error) {
       this.logger.warn(
-        `Failed to force-release the directory lock for ${key}: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to force-release the directory lock for ${key}: ${toErrorMessage(error)}`,
         ScheduledAgentJobDirectoryLockService.name,
       );
 
@@ -195,7 +196,7 @@ export class ScheduledAgentJobDirectoryLockService {
         )
         .catch((error: unknown): void => {
           this.logger.warn(
-            `Failed to renew the directory lock for ${key}: ${error instanceof Error ? error.message : String(error)}`,
+            `Failed to renew the directory lock for ${key}: ${toErrorMessage(error)}`,
             ScheduledAgentJobDirectoryLockService.name,
           );
         });
@@ -218,7 +219,7 @@ export class ScheduledAgentJobDirectoryLockService {
         } catch (error) {
           // Nothing to do but log: the TTL will free the directory shortly regardless.
           this.logger.warn(
-            `Failed to release the directory lock for ${key}: ${error instanceof Error ? error.message : String(error)}`,
+            `Failed to release the directory lock for ${key}: ${toErrorMessage(error)}`,
             ScheduledAgentJobDirectoryLockService.name,
           );
         }

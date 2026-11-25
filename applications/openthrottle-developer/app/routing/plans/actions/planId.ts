@@ -1,3 +1,4 @@
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import { PlanDetailCancelPlanRunDocument } from '@openthrottle/openthrottle-developer-codegen';
 import {
   executeGraphqlWithAuth,
@@ -44,7 +45,6 @@ import {
   UpdateTaskInputSchema,
   WithdrawPlanMessageInputSchema,
 } from '~/__generated__/schemas';
-import { toErrorMessage } from '~/global/utils/utils.error-message';
 import { parseJobRunHooksJsonFromPlan } from '~/routing/plans/utils/job-run-hooks-ui';
 import type {
   PlanRunOtLoopSelection,
@@ -245,7 +245,7 @@ export const addPlanTag = async (
     });
     return { planTagUpdated: true };
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = toErrorMessage(error);
     return { planTagError: message };
   }
 };
@@ -272,7 +272,7 @@ export const removePlanTag = async (
     );
     return { planTagUpdated: true };
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = toErrorMessage(error);
     return { planTagError: message };
   }
 };
@@ -308,7 +308,7 @@ export const addHook = async (
 
     return { addHook: result.addHook };
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = toErrorMessage(error);
     return { addHookError: message };
   }
 };
@@ -334,7 +334,7 @@ export const detachHook = async (request: Request, formData: FormData) => {
 
     return { detachHook: result.detachHook };
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = toErrorMessage(error);
     return { detachHookError: message };
   }
 };
@@ -356,7 +356,7 @@ export const evaluatePlanRules = async (
 
     return { evaluatePlanRulesTriggered: true };
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = toErrorMessage(error);
     return { evaluatePlanRulesError: message };
   }
 };
@@ -514,7 +514,7 @@ export const saveJobRunHooks = async (
   try {
     parseJobRunHooksJsonFromPlan(jobRunHooksJson);
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = toErrorMessage(error);
     return { saveJobRunHooksError: message };
   }
 

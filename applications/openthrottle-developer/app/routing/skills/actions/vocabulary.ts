@@ -1,3 +1,4 @@
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import {
   executeGraphqlWithAuth,
   parseFormData,
@@ -71,7 +72,7 @@ export const runVocabularyAction = async (
 
     return { error: `Unknown intent "${intent}".`, intent };
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = toErrorMessage(error);
     return { error: message, intent };
   }
 };

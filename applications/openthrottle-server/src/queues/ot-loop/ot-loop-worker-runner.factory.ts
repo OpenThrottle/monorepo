@@ -1,3 +1,4 @@
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import type {
   WorkerAttemptResult,
   WorkerRunner,
@@ -114,7 +115,7 @@ export const createOtLoopWorkerRunner = (
           return { kind: 'aborted' };
         }
 
-        const message = error instanceof Error ? error.message : String(error);
+        const message = toErrorMessage(error);
 
         return { kind: 'error', message };
       }

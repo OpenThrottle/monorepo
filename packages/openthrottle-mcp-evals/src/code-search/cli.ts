@@ -11,6 +11,8 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 
+import { isRecord, toErrorMessage } from '@openthrottle/nodejs-utils';
+
 import { CODE_SEARCH_CASES } from './data/data.cases.ts';
 import {
   CODE_SEARCH_DATASET_ID,
@@ -40,10 +42,6 @@ interface CodeSearchAnswer {
 interface Scope {
   readonly repositoryId: string | null;
   readonly workspacePath: string | null;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
 }
 
 function parseAnswer(body: unknown): CodeSearchAnswer | string {
@@ -196,7 +194,7 @@ main().then(
     process.exitCode = code;
   },
   (error: unknown) => {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = toErrorMessage(error);
     process.stderr.write(`${message}\n`);
     process.exitCode = 2;
   },

@@ -1,4 +1,4 @@
-import { createAgentSafetyRule } from './agent-safety-shared.ts';
+import { createAgentSafetyRule } from './createAgentSafetyRule.ts';
 
 /**
  * The disable-requires-reason rule: every `eslint-disable`,

@@ -35,6 +35,7 @@ import {
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import { build } from 'esbuild';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
@@ -1377,8 +1378,6 @@ const main = async (): Promise<void> => {
 };
 
 main().catch((err: unknown) => {
-  process.stderr.write(
-    `bundle-hooks failed: ${err instanceof Error ? err.message : String(err)}\n`,
-  );
+  process.stderr.write(`bundle-hooks failed: ${toErrorMessage(err)}\n`);
   process.exit(1);
 });

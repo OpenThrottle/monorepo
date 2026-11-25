@@ -1,9 +1,7 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 
-import {
-  createAgentSafetyRule,
-  matchesAnyPath,
-} from './agent-safety-shared.ts';
+import { createAgentSafetyRule } from './createAgentSafetyRule.ts';
+import { matchesAnyPath } from './matchesAnyPath.ts';
 
 /**
  * The agent-cli-spawn-chokepoint rule: an agent CLI (Claude Code, Codex,

@@ -1,3 +1,5 @@
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
+
 import type {
   GitHeadState,
   LoopInboxMessage,
@@ -58,7 +60,7 @@ const readRunDelivered = async (
   try {
     return await ctx.deps.client.listRunDeliveredMessages();
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = toErrorMessage(error);
 
     await narrate(
       ctx,

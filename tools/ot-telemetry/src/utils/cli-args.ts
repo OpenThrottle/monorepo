@@ -2,6 +2,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
+
 import {
   DEFAULT_OUT_DIR_NAME,
   DETAIL_LEVEL_VALUES,
@@ -60,7 +62,7 @@ export function parseCliArgs(
       strict: true,
     }));
   } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
+    const detail = toErrorMessage(error);
     throw new CliArgsError(`could not parse CLI flags: ${detail}`);
   }
 

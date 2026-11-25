@@ -7,10 +7,10 @@
  * the next trigger re-evaluates the full plan (evaluation is always a full
  * pass, and the ledger makes redelivery safe).
  */
-
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
 import { GlobalClsService, LoggerService } from '@openthrottle/nestjs-modules';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import { Queue } from 'bullmq';
 
 import {
@@ -99,9 +99,9 @@ export class PlanRulesEvaluationService {
       );
     } catch (error) {
       this.logger.error(
-        `Failed to enqueue plan-rules evaluation for plan ${planId} (${triggerKind}): ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        `Failed to enqueue plan-rules evaluation for plan ${planId} (${triggerKind}): ${toErrorMessage(
+          error,
+        )}`,
         PlanRulesEvaluationService.name,
       );
     }

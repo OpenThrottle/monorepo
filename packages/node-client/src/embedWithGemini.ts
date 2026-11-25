@@ -8,6 +8,8 @@
  * @see https://ai.google.dev/gemini-api/docs/embeddings
  */
 
+import { sleep } from '@openthrottle/nodejs-utils';
+
 import type {
   EmbeddingBackendResult,
   EmbeddingInputType,
@@ -17,7 +19,6 @@ import {
   isNumberArray,
   l2Normalize,
   postJsonWithRetry,
-  sleepMs,
 } from './hosted-embedding-request.ts';
 
 export interface EmbedWithGeminiOptions {
@@ -68,7 +69,7 @@ export async function embedWithGemini(
   texts: readonly string[],
   inputType: EmbeddingInputType,
   config: HostedEmbeddingConfig,
-  options: EmbedWithGeminiOptions = { sleep: sleepMs },
+  options: EmbedWithGeminiOptions = { sleep },
 ): Promise<EmbeddingBackendResult> {
   const label = `Gemini ${config.model}`;
   const modelName = `models/${config.model}`;

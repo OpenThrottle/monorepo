@@ -5,7 +5,7 @@
  */
 import fs from 'node:fs';
 
-import { isRecord } from '@openthrottle/nodejs-utils';
+import { isRecord, toErrorMessage } from '@openthrottle/nodejs-utils';
 
 import { logHookError } from '../utils/logging.ts';
 import {
@@ -57,7 +57,7 @@ export const recordSkillStart = ({
     logHookError('recordSkillStart failed', err);
     return {
       ok: false,
-      reason: err instanceof Error ? err.message : String(err),
+      reason: toErrorMessage(err),
     };
   }
 };

@@ -1,3 +1,5 @@
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
+
 import {
   buildPostgresProfilingDedupeKey,
   shouldExplainPostgresStatement,
@@ -52,10 +54,6 @@ export const resolveExplainOptions = (
     ? POSTGRES_EXPLAIN_ANALYZE_OPTIONS
     : POSTGRES_EXPLAIN_DEFAULT_OPTIONS;
 };
-const toErrorMessage = (error: unknown): string => {
-  return error instanceof Error ? error.message : String(error);
-};
-
 const toExplainStatement = (
   options: readonly PostgresExplainOption[],
   query: string,

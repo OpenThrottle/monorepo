@@ -9,6 +9,8 @@
  * is the key; the human text is carried along for diagnostics but never matched on.
  */
 
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 /**
  * @description The fatal account-error classes, as the Anthropic API names them. Claude Code also
  * reports `authentication_failed` for an invalid key; it is folded into `authenticationError`.
@@ -48,10 +50,6 @@ export interface AccountError {
 export interface AgentAccountError extends AccountError {
   readonly apiKeySource: string | null;
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-};
 
 /** Wire error names → kind. Anything absent (rate_limit, server_error, …) is not fatal. */
 const WIRE_ERROR_KINDS: Readonly<Record<string, AccountErrorKindsValue>> = {

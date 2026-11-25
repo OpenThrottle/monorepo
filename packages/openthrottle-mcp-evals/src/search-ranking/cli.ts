@@ -11,6 +11,8 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 
+import { isRecord, toErrorMessage } from '@openthrottle/nodejs-utils';
+
 import type { ModeComparison } from './compareSearchModes.ts';
 import {
   compareSearchModes,
@@ -32,10 +34,6 @@ const DEFAULT_URL = 'http://localhost:6021';
 const SEARCH_QUERY = `query searchRankingEval($input: SearchInput!) {
   search(input: $input) { chunks { planId source sourcePath taskId } mode }
 }`;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
 
 function nullableString(value: unknown): string | null {
   return typeof value === 'string' ? value : null;
@@ -212,9 +210,7 @@ main().then(
     process.exitCode = code;
   },
   (error: unknown) => {
-    process.stderr.write(
-      `${error instanceof Error ? error.message : String(error)}\n`,
-    );
+    process.stderr.write(`${toErrorMessage(error)}\n`);
     process.exitCode = 2;
   },
 );

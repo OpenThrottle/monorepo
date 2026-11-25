@@ -4,6 +4,8 @@
  * take the raw text/JSON so every branch is unit-testable with fixtures.
  */
 
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 import type { ClaudeAuthStatus } from '../claude/auth-status.ts';
 import { CLAUDE_ACTIVE_CREDENTIALS } from '../claude/auth-status.ts';
 import type {
@@ -21,10 +23,6 @@ const ANSI_PATTERN = /\u001b\[[0-9;]*m/g;
 const CURSOR_EMAIL_PATTERN = /logged in as\s+(\S+@\S+)/i;
 const CURSOR_TEAM_PATTERN = /team:\s*(.+?)\s*\(id\s*([^)\s]+)\)/i;
 const CODEX_API_KEY_MODES = new Set(['api_key', 'apikey']);
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
 
 function readJsonRecord(text: string): Record<string, unknown> | null {
   try {

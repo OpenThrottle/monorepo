@@ -1,3 +1,4 @@
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import {
   executeGraphqlWithAuth,
   parseFormData,
@@ -16,10 +17,7 @@ import {
   AddTaskTagInputSchema,
   RemoveTaskTagInputSchema,
 } from '~/__generated__/schemas';
-import {
-  messageOrFallback,
-  toErrorMessage,
-} from '~/global/utils/utils.error-message';
+import { messageOrFallback } from '~/global/utils/utils.error-message';
 
 export const promoteTask = async (args: Route.ActionArgs, taskId: string) => {
   try {
@@ -147,7 +145,7 @@ export const addTaskHook = async (
 
     return { addHook: result.addHook };
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = toErrorMessage(error);
     return { addHookError: message };
   }
 };

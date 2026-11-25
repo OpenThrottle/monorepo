@@ -1,6 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
 import type { TokenUsageBatchRow } from '@openthrottle/nestjs-repositories-server';
 import { normalizeRemoteUrl } from '@openthrottle/nestjs-repositories-server';
+import { isRecord } from '@openthrottle/nodejs-utils';
 import type {
   AgentAccountCredentialKindsValue,
   IdentifiedAgentAccount,
@@ -14,10 +15,6 @@ import type {
 
 /** Largest batch one recordTokenUsage call accepts. */
 export const MAX_TOKEN_USAGE_BATCH_SIZE = 500;
-
-const isPlainRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-};
 
 /** Trimmed value, or null when absent/blank. */
 const toOptionalTrimmed = (value: string | null | undefined): string | null => {
@@ -99,7 +96,7 @@ const toRawUsage = (
       `rows[${index}].rawUsageJson is not valid JSON`,
     );
   }
-  if (!isPlainRecord(parsed)) {
+  if (!isRecord(parsed)) {
     throw new BadRequestException(
       `rows[${index}].rawUsageJson must be a JSON object`,
     );

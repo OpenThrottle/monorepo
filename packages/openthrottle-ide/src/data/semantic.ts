@@ -1,5 +1,7 @@
 import { readFile } from 'node:fs/promises';
 
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
+
 import type {
   ResolvedWorkspaceConfig,
   WorkspaceConfig,
@@ -192,10 +194,6 @@ interface EmbedAndUpsertResult {
   readonly skipped: readonly SkippedChunk[];
 }
 
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
-}
-
 /**
  * Embed one batch and upsert it. Throws when the provider or the store fails, or the provider
  * returns a vector count that does not match the batch.
@@ -249,7 +247,7 @@ async function retryChunkByChunk(
       skipped.push({
         endLine: chunk.endLine,
         path: chunk.path,
-        reason: errorMessage(error),
+        reason: toErrorMessage(error),
         startLine: chunk.startLine,
       });
     }

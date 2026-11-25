@@ -10,6 +10,8 @@
  * (`executeGraphqlWithAuth`). Keep this module free of GraphQL imports.
  */
 
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 /**
  * A route action's failure envelope: `ok: false` with a human-readable error.
  */
@@ -30,10 +32,6 @@ export type ActionSuccess<TData = unknown> = { readonly ok: true } & TData;
  */
 export type ActionResult<TData = unknown> =
   ActionFailure | ActionSuccess<TData>;
-
-const isRecord = (value: unknown): value is Record<string, unknown> => {
-  return value != null && typeof value === 'object';
-};
 
 /**
  * @public

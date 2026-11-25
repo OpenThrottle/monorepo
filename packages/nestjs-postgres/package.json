@@ -15,6 +15,7 @@
     "@faker-js/faker": "catalog:",
     "@golevelup/ts-vitest": "catalog:",
     "@openthrottle/nestjs-testing": "workspace:^",
+    "@openthrottle/nodejs-utils": "workspace:^",
     "fishery": "catalog:",
     "pg": "catalog:",
     "reflect-metadata": "catalog:",

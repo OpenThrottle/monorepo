@@ -1,9 +1,7 @@
 import type { TSESTree } from '@typescript-eslint/utils';
 
-import {
-  createAgentSafetyRule,
-  matchesAnyPath,
-} from './agent-safety-shared.ts';
+import { createAgentSafetyRule } from './createAgentSafetyRule.ts';
+import { matchesAnyPath } from './matchesAnyPath.ts';
 
 /**
  * The mcp-tool-registration rule: an MCP tool is exposed only through the

@@ -11,6 +11,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import type {
   PlanRunCommandResult,
   PlanRunCommandRunner,
@@ -291,7 +292,7 @@ const realRunCommand: PlanRunCommandRunner = async ({ args, command, cwd }) => {
   } catch (error: unknown) {
     return {
       exitCode: 1,
-      stderr: error instanceof Error ? error.message : String(error),
+      stderr: toErrorMessage(error),
       stdout: '',
     };
   }

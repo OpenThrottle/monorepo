@@ -30,6 +30,7 @@ import {
   PlansRepository,
   TasksRepository,
 } from '@openthrottle/nestjs-repositories-server';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import { loadPlanRunConfig } from '@openthrottle/openthrottle-agentic-loop';
 import { getWorkflowConfigCwd } from '@openthrottle/openthrottle-agentic-utils';
 import {
@@ -530,7 +531,7 @@ export class PlansProcessor
       );
     } catch (error) {
       this.logger.warn(
-        `Failed to block plan after its job's final failure: planId=${planId}, error=${error instanceof Error ? error.message : String(error)}`,
+        `Failed to block plan after its job's final failure: planId=${planId}, error=${toErrorMessage(error)}`,
         PlansProcessor.name,
       );
     }
@@ -549,7 +550,7 @@ export class PlansProcessor
       });
     } catch (error) {
       this.logger.warn(
-        `Failed to append to plan output: planId=${planId}, error=${error instanceof Error ? error.message : String(error)}`,
+        `Failed to append to plan output: planId=${planId}, error=${toErrorMessage(error)}`,
         PlansProcessor.name,
       );
     }
@@ -564,7 +565,7 @@ export class PlansProcessor
       );
     } catch (error) {
       this.logger.warn(
-        `Failed to read plan_runs row for failed job ${jobId}: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to read plan_runs row for failed job ${jobId}: ${toErrorMessage(error)}`,
         PlansProcessor.name,
       );
 
@@ -581,7 +582,7 @@ export class PlansProcessor
       );
     } catch (error) {
       this.logger.warn(
-        `Failed to settle scheduled plan run ${planRunId} FAILED: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to settle scheduled plan run ${planRunId} FAILED: ${toErrorMessage(error)}`,
         PlansProcessor.name,
       );
     }
@@ -597,7 +598,7 @@ export class PlansProcessor
       );
     } catch (error) {
       this.logger.warn(
-        `Failed to settle plan_runs status: jobId=${jobId}, status=FAILED, error=${error instanceof Error ? error.message : String(error)}`,
+        `Failed to settle plan_runs status: jobId=${jobId}, status=FAILED, error=${toErrorMessage(error)}`,
         PlansProcessor.name,
       );
     }
@@ -782,7 +783,7 @@ export class PlansProcessor
       return { counts, planStatus: target };
     } catch (error) {
       this.logger.warn(
-        `Failed to settle a plan left open by a finished run: planId=${planId}, error=${error instanceof Error ? error.message : String(error)}`,
+        `Failed to settle a plan left open by a finished run: planId=${planId}, error=${toErrorMessage(error)}`,
         PlansProcessor.name,
       );
 
@@ -900,7 +901,7 @@ export class PlansProcessor
       );
     } catch (error) {
       this.logger.warn(
-        `Failed to reset plan status to QUEUED: planId=${planId}, reason=${reason}, error=${error instanceof Error ? error.message : String(error)}`,
+        `Failed to reset plan status to QUEUED: planId=${planId}, reason=${reason}, error=${toErrorMessage(error)}`,
         PlansProcessor.name,
       );
     }
@@ -915,7 +916,7 @@ export class PlansProcessor
     try {
       await this.bullMqRunOutputWriter?.closeAll();
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = toErrorMessage(error);
 
       this.logger.warn(
         `BullMQ run output: KeyedJsonlWriter.closeAll failed during shutdown: ${message}`,
@@ -1105,7 +1106,7 @@ export class PlansProcessor
         .recordHeartbeatByJob(queueName, bullmqJobId)
         .catch((error: unknown) => {
           this.logger.warn(
-            `Failed to bump plan_runs heartbeat: jobId=${bullmqJobId}, error=${error instanceof Error ? error.message : String(error)}`,
+            `Failed to bump plan_runs heartbeat: jobId=${bullmqJobId}, error=${toErrorMessage(error)}`,
             PlansProcessor.name,
           );
         });
@@ -1194,7 +1195,7 @@ export class PlansProcessor
       });
     } catch (error) {
       this.logger.warn(
-        `Failed to stamp plan_runs location: jobId=${bullmqJobId}, error=${error instanceof Error ? error.message : String(error)}`,
+        `Failed to stamp plan_runs location: jobId=${bullmqJobId}, error=${toErrorMessage(error)}`,
         PlansProcessor.name,
       );
 
@@ -1214,7 +1215,7 @@ export class PlansProcessor
       await this.planRunsRepository.clearRunLocation(queueName, bullmqJobId);
     } catch (error) {
       this.logger.warn(
-        `Failed to clear plan_runs location: jobId=${bullmqJobId}, error=${error instanceof Error ? error.message : String(error)}`,
+        `Failed to clear plan_runs location: jobId=${bullmqJobId}, error=${toErrorMessage(error)}`,
         PlansProcessor.name,
       );
     }
@@ -1287,7 +1288,7 @@ export class PlansProcessor
       }
     } catch (error) {
       this.logger.warn(
-        `Failed to settle plan_runs status: jobId=${bullmqJobId}, status=${status}, error=${error instanceof Error ? error.message : String(error)}`,
+        `Failed to settle plan_runs status: jobId=${bullmqJobId}, status=${status}, error=${toErrorMessage(error)}`,
         PlansProcessor.name,
       );
     }
@@ -1302,7 +1303,7 @@ export class PlansProcessor
       return await this.systemMetrics.getSystemSnapshot();
     } catch (error) {
       this.logger.warn(`Failed to capture system metrics for a plan run`, {
-        message: error instanceof Error ? error.message : String(error),
+        message: toErrorMessage(error),
       });
       return null;
     }
@@ -1481,7 +1482,7 @@ export class PlansProcessor
       );
     } catch (error) {
       this.logger.warn(
-        `Failed to restore plan status after a failed OT Loop start: planId=${planId}, error=${error instanceof Error ? error.message : String(error)}`,
+        `Failed to restore plan status after a failed OT Loop start: planId=${planId}, error=${toErrorMessage(error)}`,
         PlansProcessor.name,
       );
     }

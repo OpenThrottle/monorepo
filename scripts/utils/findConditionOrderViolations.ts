@@ -1,16 +1,15 @@
 /**
  * @description An `exports` condition object whose keys are out of order
  */
+
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 export interface ConditionOrderViolation {
   /** The condition keys as written, e.g. `['import', 'require', 'types']` */
   readonly keys: readonly string[];
   /** Where the object sits, e.g. `exports["./nest"]` */
   readonly location: string;
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-};
 
 const isOutOfOrder = (keys: readonly string[]): boolean => {
   const typesIndex = keys.indexOf('types');

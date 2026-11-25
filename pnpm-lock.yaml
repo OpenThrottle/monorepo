@@ -900,6 +900,9 @@ importers:
       '@openthrottle/node-client':
         specifier: workspace:^
         version: link:packages/node-client
+      '@openthrottle/nodejs-utils':
+        specifier: workspace:^
+        version: link:packages/nodejs-utils
       '@openthrottle/openthrottle-agentic-loop':
         specifier: workspace:^
         version: link:packages/openthrottle-agentic-loop
@@ -1217,6 +1220,9 @@ importers:
 
   applications/openthrottle-app:
     dependencies:
+      '@openthrottle/nodejs-utils':
+        specifier: workspace:^
+        version: link:../../packages/nodejs-utils
       '@react-router/express':
         specifier: 'catalog:'
         version: 8.5.1(express@5.3.0(supports-color@8.1.1))(react-router@8.5.1(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(typescript@6.0.3)
@@ -1314,6 +1320,9 @@ importers:
       '@openthrottle/graphql-codegen':
         specifier: workspace:^
         version: link:../../packages/graphql-codegen
+      '@openthrottle/nodejs-utils':
+        specifier: workspace:^
+        version: link:../../packages/nodejs-utils
       '@openthrottle/react-router-auth':
         specifier: workspace:^
         version: link:../../packages/react-router-auth
@@ -1987,6 +1996,9 @@ importers:
 
   packages/agentic-evals:
     dependencies:
+      '@openthrottle/nodejs-utils':
+        specifier: workspace:^
+        version: link:../nodejs-utils
       '@openthrottle/openthrottle-agentic-utils':
         specifier: workspace:^
         version: link:../openthrottle-agentic-utils
@@ -2019,6 +2031,9 @@ importers:
 
   packages/agentic-replay-testing:
     dependencies:
+      '@openthrottle/nodejs-utils':
+        specifier: workspace:^
+        version: link:../nodejs-utils
       '@openthrottle/openthrottle-agentic-utils':
         specifier: workspace:^
         version: link:../openthrottle-agentic-utils
@@ -2264,6 +2279,9 @@ importers:
       '@openthrottle/nestjs-utils':
         specifier: workspace:^
         version: link:../nestjs-utils
+      '@openthrottle/nodejs-utils':
+        specifier: workspace:^
+        version: link:../nodejs-utils
       graphql:
         specifier: 'catalog:'
         version: 16.14.2
@@ -2418,6 +2436,9 @@ importers:
       '@openthrottle/nestjs-modules':
         specifier: workspace:^
         version: link:../nestjs-modules
+      '@openthrottle/nodejs-utils':
+        specifier: workspace:^
+        version: link:../nodejs-utils
       '@openthrottle/openthrottle-agentic-utils':
         specifier: workspace:^
         version: link:../openthrottle-agentic-utils
@@ -2487,6 +2508,9 @@ importers:
       '@openthrottle/nestjs-testing':
         specifier: workspace:^
         version: link:../nestjs-testing
+      '@openthrottle/nodejs-utils':
+        specifier: workspace:^
+        version: link:../nodejs-utils
       fishery:
         specifier: 'catalog:'
         version: 2.4.0
@@ -2592,6 +2616,9 @@ importers:
       '@openthrottle/nestjs-postgres':
         specifier: workspace:^
         version: link:../nestjs-postgres
+      '@openthrottle/nodejs-utils':
+        specifier: workspace:^
+        version: link:../nodejs-utils
       '@openthrottle/openthrottle-agentic-utils':
         specifier: workspace:^
         version: link:../openthrottle-agentic-utils
@@ -2921,6 +2948,9 @@ importers:
       '@nestjs/common':
         specifier: 'catalog:'
         version: 12.4.2(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1)
+      '@openthrottle/nodejs-utils':
+        specifier: workspace:^
+        version: link:../nodejs-utils
       '@openthrottle/openthrottle-agentic-utils':
         specifier: workspace:^
         version: link:../openthrottle-agentic-utils
@@ -2984,6 +3014,9 @@ importers:
 
   packages/openthrottle-agentic-loop:
     dependencies:
+      '@openthrottle/nodejs-utils':
+        specifier: workspace:^
+        version: link:../nodejs-utils
       '@openthrottle/openthrottle-agentic-utils':
         specifier: workspace:^
         version: link:../openthrottle-agentic-utils
@@ -3046,6 +3079,10 @@ importers:
         version: 5.1.0(@opentelemetry/api@1.10.0)(@types/node@26.6.6)(@vitest/coverage-v8@5.1.0)(happy-dom@20.11.1)(jsdom@31.0.0(@noble/hashes@1.8.0))(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.49.0)(tsx@4.23.15)(yaml@2.9.1))
 
   packages/openthrottle-drivers:
+    dependencies:
+      '@openthrottle/nodejs-utils':
+        specifier: workspace:^
+        version: link:../nodejs-utils
     devDependencies:
       vitest:
         specifier: 'catalog:'
@@ -3053,6 +3090,9 @@ importers:
 
   packages/openthrottle-ide:
     dependencies:
+      '@openthrottle/nodejs-utils':
+        specifier: workspace:^
+        version: link:../nodejs-utils
       '@vscode/ripgrep':
         specifier: 'catalog:'
         version: 1.18.0
@@ -3099,6 +3139,9 @@ importers:
       '@openthrottle/nodejs-graphql':
         specifier: workspace:^
         version: link:../nodejs-graphql
+      '@openthrottle/nodejs-utils':
+        specifier: workspace:^
+        version: link:../nodejs-utils
       '@openthrottle/openthrottle-agentic-utils':
         specifier: workspace:^
         version: link:../openthrottle-agentic-utils
@@ -3139,6 +3182,9 @@ importers:
       '@openthrottle/agentic-evals':
         specifier: workspace:^
         version: link:../agentic-evals
+      '@openthrottle/nodejs-utils':
+        specifier: workspace:^
+        version: link:../nodejs-utils
       '@openthrottle/openthrottle-agentic-utils':
         specifier: workspace:^
         version: link:../openthrottle-agentic-utils
@@ -3176,6 +3222,10 @@ importers:
         version: 5.1.0(@opentelemetry/api@1.10.0)(@types/node@26.6.6)(@vitest/coverage-v8@5.1.0)(happy-dom@20.11.1)(jsdom@31.0.0(@noble/hashes@1.8.0))(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.49.0)(tsx@4.23.15)(yaml@2.9.1))
 
   packages/openthrottle-product:
+    dependencies:
+      '@openthrottle/nodejs-utils':
+        specifier: workspace:^
+        version: link:../nodejs-utils
     devDependencies:
       '@openthrottle/openthrottle-drivers':
         specifier: workspace:^
@@ -3192,6 +3242,9 @@ importers:
       '@openthrottle/nestjs-repositories-server':
         specifier: workspace:^
         version: link:../nestjs-repositories-server
+      '@openthrottle/nodejs-utils':
+        specifier: workspace:^
+        version: link:../nodejs-utils
       '@openthrottle/openthrottle-agentic-utils':
         specifier: workspace:*
         version: link:../openthrottle-agentic-utils
@@ -3338,6 +3391,9 @@ importers:
 
   packages/react-router-cms-core:
     dependencies:
+      '@openthrottle/nodejs-utils':
+        specifier: workspace:^
+        version: link:../nodejs-utils
       '@openthrottle/react-router-cms-ui':
         specifier: workspace:^
         version: link:../react-router-cms-ui
@@ -4013,6 +4069,9 @@ importers:
 
   packages/react-router-utils:
     dependencies:
+      '@openthrottle/nodejs-utils':
+        specifier: workspace:^
+        version: link:../nodejs-utils
       formik:
         specifier: 'catalog:'
         version: 2.4.9(@types/react@19.3.0)(react@19.3.1)
@@ -4110,6 +4169,9 @@ importers:
       '@nx/devkit':
         specifier: 'catalog:'
         version: 24.0.6(nx@24.0.6(@swc-node/register@1.11.1(@swc/core@1.15.47(@swc/helpers@0.5.23))(@swc/types@0.1.28)(@typescript/typescript6@6.0.2)(supports-color@8.1.1))(@swc/core@1.15.47(@swc/helpers@0.5.23)))
+      '@openthrottle/nodejs-utils':
+        specifier: workspace:^
+        version: link:../../packages/nodejs-utils
       lodash:
         specifier: 'catalog:'
         version: 4.18.1
@@ -4131,6 +4193,10 @@ importers:
         version: 5.1.0(@opentelemetry/api@1.10.0)(@types/node@26.6.6)(@vitest/coverage-v8@5.1.0)(happy-dom@20.11.1)(jsdom@31.0.0(@noble/hashes@1.8.0))(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.49.0)(tsx@4.23.15)(yaml@2.9.1))
 
   tools/ollama-proxy:
+    dependencies:
+      '@openthrottle/nodejs-utils':
+        specifier: workspace:^
+        version: link:../../packages/nodejs-utils
     devDependencies:
       vitest:
         specifier: 'catalog:'
@@ -4138,6 +4204,9 @@ importers:
 
   tools/ot-telemetry:
     dependencies:
+      '@openthrottle/nodejs-utils':
+        specifier: workspace:^
+        version: link:../../packages/nodejs-utils
       '@openthrottle/openthrottle-agentic-utils':
         specifier: workspace:^
         version: link:../../packages/openthrottle-agentic-utils

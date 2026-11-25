@@ -19,7 +19,7 @@
  * same bytes deliverable, so the line stays buffered: a stuck buffer raises
  * BUFFER_STALE / BUFFER_GROWING, where a dead letter used to drop it silently.
  */
-import { isRecord } from '@openthrottle/nodejs-utils';
+import { isRecord, toErrorMessage } from '@openthrottle/nodejs-utils';
 
 import type { HookFetch, PostFailure, PostResult } from '../types.ts';
 
@@ -226,9 +226,7 @@ const postMutationOnce = async ({
     return {
       ok: false,
       permanent: isPermanentHttpStatus(response.status),
-      reason: `invalid json (${response.status}): ${
-        err instanceof Error ? err.message : String(err)
-      }`,
+      reason: `invalid json (${response.status}): ${toErrorMessage(err)}`,
     };
   }
 

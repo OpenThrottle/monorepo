@@ -7,7 +7,13 @@
   "bin": {
     "ollama-proxy": "./dist/server.js"
   },
+  "dependencies": {
+    "@openthrottle/nodejs-utils": "workspace:^"
+  },
   "description": "Local OpenAI-compatible HTTP proxy for Cursor and other clients: rewrites chat model names and forwards requests to Ollama.",
+  "devDependencies": {
+    "vitest": "catalog:"
+  },
   "license": "Apache-2.0",
   "name": "@tools/ollama-proxy",
   "nx": {
@@ -92,8 +98,5 @@
     "./src/server.ts"
   ],
   "type": "module",
-  "version": "1.0.0",
-  "devDependencies": {
-    "vitest": "catalog:"
-  }
+  "version": "1.0.0"
 }

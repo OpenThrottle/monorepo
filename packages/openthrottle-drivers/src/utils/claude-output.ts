@@ -10,6 +10,8 @@
  * and a terminal `result` with `is_error: true` and `api_error_status: 429` (human text, never keyed on).
  */
 
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 import type { DriverParsedOutput } from '../types/index.ts';
 import type { AccountError } from './account-error.ts';
 import {
@@ -17,10 +19,6 @@ import {
   parseClaudeApiKeySource,
 } from './account-error.ts';
 import { formatToolLine } from './formatToolLine.ts';
-
-const isRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-};
 
 /** Parse one NDJSON line; non-JSON noise (plugin/hook output, blank lines) yields `undefined`. */
 const parseLine = (line: string): Record<string, unknown> | undefined => {

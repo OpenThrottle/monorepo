@@ -9,6 +9,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
+
 import {
   graphqlUrlFromEnvMap,
   readRepoEnvFile,
@@ -132,7 +134,7 @@ export const probeHealth = async ({
     }
     return {
       kind: 'error',
-      reason: err instanceof Error ? err.message : String(err),
+      reason: toErrorMessage(err),
     };
   }
 };

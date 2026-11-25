@@ -31,6 +31,7 @@ import {
   PlanRunsRepository,
   STALE_CUTOFF_MS,
 } from '@openthrottle/nestjs-repositories-server';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 
 import { WORKTREE_DISCOVERY_PROBLEM } from '../worktree-discovery/worktree-discovery.constants.ts';
 import { WorktreeDiscoveryService } from '../worktree-discovery/worktree-discovery.service.ts';
@@ -206,7 +207,7 @@ export class WorktreeActivityService {
         }
       }
     } catch (error) {
-      const detail = error instanceof Error ? error.message : String(error);
+      const detail = toErrorMessage(error);
       problems.push({
         detail: `live plan runs could not be read; worktrees are classified from git state only: ${detail}`,
         kind: WORKTREE_DISCOVERY_PROBLEM.PROBE_FAILED,

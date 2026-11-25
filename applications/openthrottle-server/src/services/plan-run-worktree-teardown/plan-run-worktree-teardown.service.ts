@@ -18,7 +18,6 @@
  * Never throws. A guard that cannot be evaluated reports FAILED and keeps the worktree: when in
  * doubt, the work stays on disk. See docs/openthrottle/plan-run-worktrees.md.
  */
-
 import { dirname } from 'node:path';
 
 import { Injectable } from '@nestjs/common';
@@ -28,6 +27,7 @@ import {
   PlanRunsRepository,
   RepositoryCheckoutsRepository,
 } from '@openthrottle/nestjs-repositories-server';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import { teardown as teardownForeignSkillLayer } from '@openthrottle/openthrottle-agentic-utils';
 import { In } from 'typeorm';
 
@@ -210,9 +210,9 @@ export class PlanRunWorktreeTeardownService {
       teardownForeignSkillLayer({ env: process.env, repoPath: worktreePath });
     } catch (error) {
       this.logger.warn(
-        `[${this.name}] ${worktreePath}: could not remove injected skills: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        `[${this.name}] ${worktreePath}: could not remove injected skills: ${toErrorMessage(
+          error,
+        )}`,
       );
     }
   }
@@ -417,9 +417,9 @@ export class PlanRunWorktreeTeardownService {
       );
     } catch (error) {
       this.logger.warn(
-        `[${this.name}] could not deregister checkout rows for ${worktreePath}: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        `[${this.name}] could not deregister checkout rows for ${worktreePath}: ${toErrorMessage(
+          error,
+        )}`,
       );
     }
   }
@@ -456,7 +456,7 @@ export class PlanRunWorktreeTeardownService {
     worktreePath: string,
     error: unknown,
   ): PlanRunWorktreeAssessment {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = toErrorMessage(error);
     return {
       detail: `could not evaluate the guards: ${message}`,
       outcome: PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME.FAILED,

@@ -5,6 +5,7 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
+    "@openthrottle/nodejs-utils": "workspace:^",
     "@openthrottle/openthrottle-agentic-utils": "workspace:^",
     "@openthrottle/openthrottle-drivers": "workspace:^"
   },
@@ -51,7 +52,7 @@
         "cache": false,
         "executor": "nx:run-commands",
         "metadata": {
-          "description": "Record replay transcripts against the locally installed agent CLI (spends real tokens). Pass --backend <id> and optionally --scenario <slug,\u2026>."
+          "description": "Record replay transcripts against the locally installed agent CLI (spends real tokens). Pass --backend <id> and optionally --scenario <slug,…>."
         },
         "options": {
           "command": "pnpm exec tsx packages/agentic-replay-testing/scripts/record.ts",

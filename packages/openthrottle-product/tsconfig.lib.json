@@ -15,6 +15,9 @@
   ],
   "references": [
     {
+      "path": "../nodejs-utils/tsconfig.lib.json"
+    },
+    {
       "path": "../react-router-utils/tsconfig.lib.json"
     },
     {

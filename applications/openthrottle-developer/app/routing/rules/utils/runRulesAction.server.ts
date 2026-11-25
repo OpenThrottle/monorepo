@@ -1,3 +1,4 @@
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 
 import {
@@ -44,7 +45,7 @@ export const runRulesAction = async (
     });
     return { ruleSaved: true };
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = toErrorMessage(error);
     return { ruleError: message };
   }
 };

@@ -6,6 +6,7 @@ import type {
   ScheduledAgentJobRunSettingsSnapshot,
 } from '@openthrottle/nestjs-repositories-server';
 import { ScheduledAgentJobRunsRepository } from '@openthrottle/nestjs-repositories-server';
+import { isRecord, toErrorMessage } from '@openthrottle/nodejs-utils';
 import { DRIVER_REGISTRY } from '@openthrottle/openthrottle-drivers';
 import { SCHEDULED_RUN_FAILURE_REASONS } from '@openthrottle/openthrottle-notifications';
 import type { Queue } from 'bullmq';
@@ -20,12 +21,6 @@ import { SCHEDULED_AGENT_JOB_SERVER_RESTARTED_MESSAGE } from './stuck-run-recove
 import type { ScheduledAgentJobStuckRunRecoverySummary } from './stuck-run-recovery.types.ts';
 /** Upper bound on runs examined per boot, so a corrupt table cannot stall startup. */
 const STUCK_RUN_RECOVERY_BATCH_SIZE = 200;
-const isRecord = (
-  value: unknown,
-): value is Readonly<Record<string, unknown>> => {
-  return typeof value === 'object' && value !== null;
-};
-
 /**
  * @description The `settings.worktree.worktree` value the processor keyed the run's directory lock
  * on, read back out of the run's settings snapshot. Undefined when the snapshot has none.
@@ -111,7 +106,7 @@ export class ScheduledAgentJobStuckRunRecoveryService implements OnApplicationBo
     } catch (error) {
       // Recovery is housekeeping: a failure here must never stop the server from booting.
       this.logger.warn(
-        `Scheduled-agent-jobs stuck-run recovery failed: ${error instanceof Error ? error.message : String(error)}`,
+        `Scheduled-agent-jobs stuck-run recovery failed: ${toErrorMessage(error)}`,
         ScheduledAgentJobStuckRunRecoveryService.name,
       );
     }
@@ -193,7 +188,7 @@ export class ScheduledAgentJobStuckRunRecoveryService implements OnApplicationBo
       return (await client.get(lockKey)) !== null;
     } catch (error) {
       this.logger.warn(
-        `Could not check the BullMQ lock for scheduled run ${run.id} (${error instanceof Error ? error.message : String(error)}); leaving it running`,
+        `Could not check the BullMQ lock for scheduled run ${run.id} (${toErrorMessage(error)}); leaving it running`,
         ScheduledAgentJobStuckRunRecoveryService.name,
       );
 

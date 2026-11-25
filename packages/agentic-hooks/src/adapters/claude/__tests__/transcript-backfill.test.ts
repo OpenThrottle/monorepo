@@ -8,6 +8,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { isRecord } from '@openthrottle/nodejs-utils';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import type { HookFetch } from '../../../index.ts';
@@ -28,12 +29,8 @@ const URL = 'http://example.test/graphql';
 const SINCE = '2026-09-23T00:00:00.000Z';
 const UNTIL = '2026-10-29T00:00:00.000Z';
 
-const isRecordValue = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null;
-};
-
 const asRows = (value: unknown): readonly Record<string, unknown>[] => {
-  return Array.isArray(value) ? value.filter(isRecordValue) : [];
+  return Array.isArray(value) ? value.filter(isRecord) : [];
 };
 
 interface FakeServer {
@@ -56,7 +53,7 @@ const skillKey = (input: Record<string, unknown>): string | null => {
 };
 
 const variablesOf = (body: unknown): Record<string, unknown> => {
-  if (isRecordValue(body) && isRecordValue(body.variables)) {
+  if (isRecord(body) && isRecord(body.variables)) {
     return body.variables;
   }
   return {};
@@ -70,12 +67,9 @@ const fakeServer = (): FakeServer => {
       server.requests += 1;
       const body: unknown = JSON.parse(init.body);
       const variables = variablesOf(body);
-      const input = isRecordValue(variables.input) ? variables.input : {};
+      const input = isRecord(variables.input) ? variables.input : {};
 
-      if (
-        isRecordValue(body) &&
-        String(body.query).includes('recordTokenUsage')
-      ) {
+      if (isRecord(body) && String(body.query).includes('recordTokenUsage')) {
         let inserted = 0;
         let skipped = 0;
         for (const row of asRows(input.rows)) {

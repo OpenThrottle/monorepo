@@ -5,6 +5,7 @@ import { pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
 
 import type { Type } from '@nestjs/common';
+import { isRecord, toErrorMessage } from '@openthrottle/nodejs-utils';
 
 import { GRAPHQL_SCHEMA_FILE_ENV } from '../auto-schema-file/auto-schema-file.constants.ts';
 import { emitCodeFirstSchema } from '../emit-code-first-schema/emit-code-first-schema.utils.ts';
@@ -125,10 +126,6 @@ const parseGraphqlSchemaArgs = (
   };
 };
 
-const isRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null;
-};
-
 const isModuleClass = (value: unknown): value is Type => {
   return typeof value === 'function';
 };
@@ -242,7 +239,7 @@ const describeInitializationFailure = (
   options: GraphqlSchemaOptions,
   error: unknown,
 ): Failure => {
-  const detail = error instanceof Error ? error.message : String(error);
+  const detail = toErrorMessage(error);
 
   return {
     error: [

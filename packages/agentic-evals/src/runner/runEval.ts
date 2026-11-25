@@ -1,3 +1,4 @@
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import type { TrajectoryRecord } from '@openthrottle/openthrottle-agentic-utils';
 import {
   buildTrajectoryRecord,
@@ -84,10 +85,6 @@ interface UnitOutcome {
   readonly tokens: number;
   readonly trial: EvalTrial;
 }
-
-const errorMessage = (error: unknown): string => {
-  return error instanceof Error ? error.message : String(error);
-};
 
 const buildUnits = (
   dataset: EvalDataset,
@@ -232,7 +229,7 @@ const gradeSafely = async (
   try {
     return await grader.grade(trial, evalCase);
   } catch (error) {
-    return { kind: 'error', reason: errorMessage(error) };
+    return { kind: 'error', reason: toErrorMessage(error) };
   }
 };
 
@@ -294,7 +291,7 @@ const runUnit = async (
   try {
     created = await workspace.create(evalCase, attempt);
   } catch (error) {
-    const trial = erroredTrial(unit, errorMessage(error), '');
+    const trial = erroredTrial(unit, toErrorMessage(error), '');
 
     return {
       grades: await gradeTrial(graders, trial, evalCase),
@@ -324,7 +321,7 @@ const runUnit = async (
         ...facts,
       };
     } catch (error) {
-      trial = erroredTrial(unit, errorMessage(error), created.cwd);
+      trial = erroredTrial(unit, toErrorMessage(error), created.cwd);
     }
 
     const grades = await gradeTrial(graders, trial, evalCase);

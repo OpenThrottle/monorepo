@@ -1,3 +1,5 @@
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 import type {
   ModelEndpoint,
   ModelProvider,
@@ -27,10 +29,6 @@ export type LimitedTask<T> = () => Promise<T>;
 
 /** A p-limit-style runner that caps concurrent tasks. */
 export type LimitFunction = <T>(task: LimitedTask<T>) => Promise<T>;
-
-function isObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
 
 /**
  * GET a URL and parse JSON, bounded by an AbortController timeout. Returns the
@@ -66,13 +64,13 @@ async function fetchJson(url: string, timeoutMs: number): Promise<unknown> {
  * `data[]` is a valid — if idle — endpoint and yields `[]`.
  */
 function extractModelIds(payload: unknown): string[] | null {
-  if (!isObject(payload) || !Array.isArray(payload.data)) {
+  if (!isRecord(payload) || !Array.isArray(payload.data)) {
     return null;
   }
 
   const ids = new Set<string>();
   for (const item of payload.data) {
-    if (isObject(item) && typeof item.id === `string` && item.id.length > 0) {
+    if (isRecord(item) && typeof item.id === `string` && item.id.length > 0) {
       ids.add(item.id);
     }
   }
@@ -82,12 +80,12 @@ function extractModelIds(payload: unknown): string[] | null {
 
 /** LM Studio's `/api/v1/models` items carry `key` + `architecture` metadata. */
 function isLmStudioShape(payload: unknown): boolean {
-  if (!isObject(payload) || !Array.isArray(payload.data)) {
+  if (!isRecord(payload) || !Array.isArray(payload.data)) {
     return false;
   }
 
   return payload.data.some(
-    (item) => isObject(item) && (`architecture` in item || `key` in item),
+    (item) => isRecord(item) && (`architecture` in item || `key` in item),
   );
 }
 
@@ -105,7 +103,7 @@ export async function fingerprintProvider(
     options.fingerprintTimeoutMs ?? DEFAULT_FINGERPRINT_TIMEOUT_MS;
 
   const ollama = await fetchJson(`${origin}/api/tags`, timeoutMs);
-  if (isObject(ollama) && Array.isArray(ollama.models)) {
+  if (isRecord(ollama) && Array.isArray(ollama.models)) {
     return `ollama`;
   }
 

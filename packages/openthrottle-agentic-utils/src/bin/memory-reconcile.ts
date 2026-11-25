@@ -1,14 +1,14 @@
 #!/usr/bin/env node
-
 /**
  * @description Reconciles a memory index (`MEMORY.md`) against the world: PR state via
  * `gh`, plan status via the OT GraphQL API. Reports ONLY disagreements, and states
  * explicitly what it did not check. See `packages/openthrottle-agentic-utils` (`workflow-memory-reconcile` bin).
  */
-
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
+
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 
 import {
   parseIndexClaims,
@@ -144,7 +144,7 @@ const fetchPlans = async (): Promise<readonly ObservedPlan[] | null> => {
     // every plan reference read as "not found" — a confident claim about plans
     // this run never actually looked at. Null lets the report say the plan half
     // was skipped, which is the true statement.
-    const detail = error instanceof Error ? error.message : String(error);
+    const detail = toErrorMessage(error);
     console.error(
       `workflow-memory-reconcile: OT GraphQL unreachable, SKIPPING the plan half (${detail})`,
     );
@@ -218,7 +218,7 @@ const main = async (): Promise<number> => {
   try {
     prs = fetchPrs(repo);
   } catch (error: unknown) {
-    const detail = error instanceof Error ? error.message : String(error);
+    const detail = toErrorMessage(error);
     console.error(`workflow-memory-reconcile: gh pr list failed: ${detail}`);
     return 1;
   }

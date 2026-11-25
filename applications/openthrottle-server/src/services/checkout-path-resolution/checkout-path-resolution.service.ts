@@ -16,6 +16,7 @@ import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { RepositoryCheckout } from '@openthrottle/nestjs-repositories-server';
 import { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories-server';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 
 import {
   isPathWithin,
@@ -89,7 +90,7 @@ export class CheckoutPathResolutionService {
         { max: CHECKOUT_LIST_LIMIT }, // above the 100 default cap
       );
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = toErrorMessage(error);
       this.logger.warn(
         `${this.name}: could not list checkouts for ${userId}: ${message}`,
       );

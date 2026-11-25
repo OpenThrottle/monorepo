@@ -1,3 +1,4 @@
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import {
   getPostgresUrl,
   sanitizePostgresUrlForLogs,
@@ -47,7 +48,7 @@ export async function connectReadOnly(
   try {
     connectionString = getPostgresUrl(env);
   } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
+    const detail = toErrorMessage(error);
     throw new Error(
       `${POSTGRES_CONNECTION_FAILURE_PREFIX} ${detail} ${describeEnvVarsTried()} Set one of these (see databases/openthrottle/README.md) and retry.`,
       { cause: error },
@@ -70,7 +71,7 @@ export async function connectReadOnly(
     const probeClient = await client.connect();
     probeClient.release();
   } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
+    const detail = toErrorMessage(error);
     // The pool may or may not have opened a connection; end() is safe either way.
     await client.end().catch(() => undefined);
     throw new Error(

@@ -4,7 +4,9 @@
     "name": "Matthew Scholta",
     "url": "https://mattscholta.com"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@openthrottle/nodejs-utils": "workspace:^"
+  },
   "description": "OpenThrottle positioning canon and feature registry: the typed, source-first source of truth every public surface is built from.",
   "devDependencies": {
     "@openthrottle/openthrottle-drivers": "workspace:^",

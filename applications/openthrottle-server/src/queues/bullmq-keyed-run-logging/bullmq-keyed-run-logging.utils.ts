@@ -1,6 +1,7 @@
 import type { KeyedJsonlWriter } from '@openthrottle/nestjs-logging';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type { ChildJobStreamChunk } from '@openthrottle/nestjs-worktrees';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 
 import { RUN_OUTPUT_SOURCE } from './bullmq-keyed-run-logging.constants.ts';
 import type { RunOutputSource } from './bullmq-keyed-run-logging.types.ts';
@@ -174,7 +175,7 @@ export const closeRunOutputForJob = async (params: {
   try {
     await params.writer.close(params.queueName, params.jobId);
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = toErrorMessage(error);
 
     params.logger.warn(
       `BullMQ run output: KeyedJsonlWriter.close failed for queue=${params.queueName} jobId=${params.jobId}: ${message}`,

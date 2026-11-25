@@ -12,6 +12,7 @@
     "@openthrottle/nestjs-auth": "workspace:^",
     "@openthrottle/nestjs-graphql": "workspace:^",
     "@openthrottle/nestjs-postgres": "workspace:^",
+    "@openthrottle/nodejs-utils": "workspace:^",
     "@openthrottle/openthrottle-agentic-utils": "workspace:^",
     "ajv": "catalog:",
     "fishery": "catalog:",

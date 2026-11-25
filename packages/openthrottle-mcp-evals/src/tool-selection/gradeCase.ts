@@ -4,6 +4,8 @@
  * needs no model and no network.
  */
 
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 import type {
   ArgMatcher,
   SelectedCall,
@@ -11,12 +13,6 @@ import type {
   ToolSelectionCase,
   TrialGrade,
 } from './eval-case.ts';
-
-const isRecord = (
-  value: unknown,
-): value is Readonly<Record<string, unknown>> => {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-};
 
 const containsText = (haystack: unknown, needle: string): boolean => {
   if (typeof haystack === 'string') {

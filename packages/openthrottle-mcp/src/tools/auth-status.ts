@@ -6,11 +6,11 @@
  * recovery guidance — it never throws on an auth failure (diagnosing IS its job).
  * Registered via the shared `developerMcpToolDefinitions` registry and the Nest surface.
  */
-
 import {
   executeGraphqlWithAuth,
   getGraphQLUrl,
 } from '@openthrottle/nodejs-graphql';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import { z } from 'zod';
 
 import { ListSourcesDocument } from '../__generated__/graphql.js';
@@ -119,7 +119,7 @@ export async function authStatusToolHandler(
       },
     };
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = toErrorMessage(error);
     if (isAuthError(message)) {
       const detail = [
         `STALE / UNAUTHENTICATED: ${server} rejected token ${tokenIdentity} — revoked, wrong server, or missing plans:* role.`,

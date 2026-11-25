@@ -4,7 +4,9 @@
     "name": "Matthew Scholta",
     "url": "https://mattscholta.com"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@openthrottle/nodejs-utils": "workspace:^"
+  },
   "description": "OT-central contract for invoking agent CLIs (Claude Code, Codex, Cursor, Grok, OpenCode). defineDriver + registry + shared execution engine.",
   "exports": {
     ".": {

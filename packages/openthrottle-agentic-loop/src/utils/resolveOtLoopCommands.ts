@@ -1,5 +1,7 @@
 import { join } from 'node:path';
 
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 import type {
   OtLoopTuning,
   ResolveOtLoopCommandsResult,
@@ -12,7 +14,6 @@ import {
   OT_LOOP_CONFIG_PATH,
   OT_LOOP_NEEDS_VALIDATION_MESSAGE,
 } from '../data/data.constants.ts';
-import { isRecord } from './isRecord.ts';
 
 export interface ResolveOtLoopCommandsInput {
   readonly fs: ResolverFs;

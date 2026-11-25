@@ -4,6 +4,7 @@ import * as path from 'node:path';
 
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 
 import type {
   JsonlRotationPolicy,
@@ -123,7 +124,7 @@ export class FileLogJsonlSink
     this.lastFailureReportAt = now;
     this.suppressedFailureCount = 0;
 
-    const message = error instanceof Error ? error.message : String(error);
+    const message = toErrorMessage(error);
 
     this.logger.error(
       `JSONL log sink ${operation} failed (${suppressed} failure(s) in the last ${FileLogJsonlSink.FAILURE_REPORT_INTERVAL_MS}ms; logs may be lost): ${message}`,

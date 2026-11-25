@@ -1,3 +1,5 @@
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 import {
   CREDENTIAL_KEY_PATTERN,
   CREDENTIAL_SHAPE_PATTERNS,
@@ -8,10 +10,6 @@ import {
 } from '../render-prompt.constants.ts';
 
 const DEFANG_PATTERN = /[$@]|(?<=^|\s)\/(?=\p{L})|<(?=[\p{L}/])/gmu;
-
-const isRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null;
-};
 
 /**
  * @description Replaces PEM key blocks in a single linear pass. A block with no END line is
@@ -58,7 +56,9 @@ export const isCredentialKey = (key: string): boolean => {
  * redaction marker. Branches deeper than the depth limit are dropped.
  */
 export const redactCredentialKeys = (value: unknown, depth = 0): unknown => {
-  if (!isRecord(value)) {
+  const isArray = Array.isArray(value);
+
+  if (!isArray && !isRecord(value)) {
     return value;
   }
 
@@ -66,7 +66,7 @@ export const redactCredentialKeys = (value: unknown, depth = 0): unknown => {
     return REDACTED_MARKER;
   }
 
-  if (Array.isArray(value)) {
+  if (isArray) {
     return value.map((item) => redactCredentialKeys(item, depth + 1));
   }
 

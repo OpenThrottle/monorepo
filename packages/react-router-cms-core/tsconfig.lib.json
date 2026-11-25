@@ -22,6 +22,9 @@
       "path": "../react-router-cms-ui/tsconfig.lib.json"
     },
     {
+      "path": "../nodejs-utils/tsconfig.lib.json"
+    },
+    {
       "path": "../react-router-testing/tsconfig.lib.json"
     },
     {

@@ -1,3 +1,5 @@
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 import type { TagCount } from '../../types/index.ts';
 import type {
   AgentConversationsMetrics,
@@ -26,10 +28,6 @@ import type { TasksMetrics } from './tasks.ts';
  * code style. Each predicate checks a handful of fields unique to its family; it does not
  * re-validate every field (the value only ever came from this same script's own metric queries).
  */
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
 
 function hasFields(
   value: unknown,

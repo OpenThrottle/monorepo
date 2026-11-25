@@ -1,11 +1,7 @@
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 import type { CmsJsonSchema, CmsParsedSchema } from '../types/cms-json-schema';
 import type { CmsSchema } from '../types/cms-records';
-
-const isRecord = (
-  value: unknown,
-): value is Readonly<Record<string, unknown>> => {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-};
 
 /**
  * @description Whether a stored value is shaped like a {@link CmsJsonSchema}: an object whose

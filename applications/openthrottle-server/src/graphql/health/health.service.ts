@@ -7,6 +7,7 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { REDIS_CLIENT } from '@openthrottle/nestjs-redis';
 import { CMS_CONNECTION } from '@openthrottle/nestjs-repositories-cms';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import {
   getCmsPostgresUrl,
   getPostgresUrl,
@@ -46,7 +47,7 @@ export class HealthService {
       return 'ok';
     } catch (error: unknown) {
       this.logger.warn(
-        `cms database health check failed: ${error instanceof Error ? error.message : String(error)}`,
+        `cms database health check failed: ${toErrorMessage(error)}`,
         HealthService.name,
       );
 
@@ -69,7 +70,7 @@ export class HealthService {
       return 'ok';
     } catch (error: unknown) {
       this.logger.warn(
-        `Database health check failed: ${error instanceof Error ? error.message : String(error)}`,
+        `Database health check failed: ${toErrorMessage(error)}`,
         HealthService.name,
       );
 
@@ -91,7 +92,7 @@ export class HealthService {
       return 'ok';
     } catch (error: unknown) {
       this.logger.warn(
-        `Redis health check failed: ${error instanceof Error ? error.message : String(error)}`,
+        `Redis health check failed: ${toErrorMessage(error)}`,
         HealthService.name,
       );
 

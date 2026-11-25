@@ -20,7 +20,6 @@
  * tagging service account's vocabulary is its own user_skill_tags rows when
  * present, else the committed default (slice-2 fallback).
  */
-
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Inject } from '@nestjs/common';
 import { OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
@@ -38,6 +37,7 @@ import {
   TasksRepository,
   TaskTagsRepository,
 } from '@openthrottle/nestjs-repositories-server';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import { DEFAULT_TAG_VOCABULARY_SEED } from '@openthrottle/openthrottle-skills';
 
 import { SourceControlService } from '../../services/source-control/source-control.service.ts';
@@ -141,9 +141,9 @@ export class TaggingProcessor
       );
     } catch (error) {
       this.logger.warn(
-        `predict-tagging skipped for ${data.entityType} ${data.entityId}: model call failed twice (${
-          error instanceof Error ? error.message : String(error)
-        })`,
+        `predict-tagging skipped for ${data.entityType} ${data.entityId}: model call failed twice (${toErrorMessage(
+          error,
+        )})`,
         TaggingProcessor.name,
       );
       return { added: 0, removed: 0, skipped: 'model-failed' };
@@ -219,9 +219,9 @@ export class TaggingProcessor
       );
     } catch (error) {
       this.logger.warn(
-        `refine-tagging skipped for plan ${data.planId}: model call failed twice (${
-          error instanceof Error ? error.message : String(error)
-        })`,
+        `refine-tagging skipped for plan ${data.planId}: model call failed twice (${toErrorMessage(
+          error,
+        )})`,
         TaggingProcessor.name,
       );
       return { added: 0, removed: 0, skipped: 'model-failed' };
@@ -327,9 +327,9 @@ export class TaggingProcessor
         }
       } catch (error) {
         this.logger.warn(
-          `tagging: could not apply "${prediction.tag}" to ${entityType} ${entityId}: ${
-            error instanceof Error ? error.message : String(error)
-          }`,
+          `tagging: could not apply "${prediction.tag}" to ${entityType} ${entityId}: ${toErrorMessage(
+            error,
+          )}`,
           TaggingProcessor.name,
         );
       }
@@ -359,9 +359,9 @@ export class TaggingProcessor
         if (deleted) removed += 1;
       } catch (error) {
         this.logger.warn(
-          `tagging: could not remove stale "${row.tag}" from ${entityType} ${entityId}: ${
-            error instanceof Error ? error.message : String(error)
-          }`,
+          `tagging: could not remove stale "${row.tag}" from ${entityType} ${entityId}: ${toErrorMessage(
+            error,
+          )}`,
           TaggingProcessor.name,
         );
       }

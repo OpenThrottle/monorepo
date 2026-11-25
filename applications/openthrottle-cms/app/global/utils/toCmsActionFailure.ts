@@ -1,3 +1,4 @@
+import { isRecord, toErrorMessage } from '@openthrottle/nodejs-utils';
 import {
   isAuthError,
   isGraphqlResponseError,
@@ -8,12 +9,6 @@ import type {
   CmsActionFailureCopy,
   CmsActionIssue,
 } from '~/global/types/cms-action';
-
-const isRecord = (
-  value: unknown,
-): value is Readonly<Record<string, unknown>> => {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-};
 
 const readIssues = (value: unknown): readonly CmsActionIssue[] => {
   if (!Array.isArray(value)) {
@@ -61,7 +56,7 @@ export const toCmsActionFailure = (
   }
 
   if (!isGraphqlResponseError(error)) {
-    return failure(error instanceof Error ? error.message : String(error));
+    return failure(toErrorMessage(error));
   }
 
   const { code, issues } = error.extensions;

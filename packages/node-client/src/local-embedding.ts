@@ -9,6 +9,8 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { Worker } from 'node:worker_threads';
 
+import { sleep, toErrorMessage } from '@openthrottle/nodejs-utils';
+
 import type {
   EmbeddingBackend,
   EmbeddingBackendResult,
@@ -104,7 +106,7 @@ parentPort.on('message', async (message) => {
     const pooled = meanPooling(outputs.last_hidden_state, inputs.attention_mask).normalize(2, -1);
     parentPort.postMessage({ id: message.id, ok: true, vectors: pooled.tolist() });
   } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
+    const detail = toErrorMessage(error);
     parentPort.postMessage({ detail, id: message.id, ok: false });
   }
 });
@@ -178,12 +180,6 @@ function isNumberMatrix(value: unknown): value is number[][] {
       return Array.isArray(row);
     })
   );
-}
-
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
 }
 
 function sliceTexts(
@@ -262,7 +258,7 @@ export function createLocalEmbeddingBackend(
 
     started.on('message', handleMessage);
     started.on('error', (error) => {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = toErrorMessage(error);
 
       failAll(started, `Local embedding worker crashed: ${message}`);
     });
@@ -353,7 +349,7 @@ export function createLocalEmbeddingBackend(
     for (const [index, slice] of slices.entries()) {
       if (index > 0 && tuning.slicePauseMs > 0) {
         // eslint-disable-next-line no-await-in-loop -- the pause between slices is the point
-        await delay(tuning.slicePauseMs);
+        await sleep(tuning.slicePauseMs);
       }
 
       // eslint-disable-next-line no-await-in-loop -- one slice at a time is the point: other callers interleave between them

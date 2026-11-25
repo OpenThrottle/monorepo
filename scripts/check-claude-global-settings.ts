@@ -18,6 +18,8 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { isRecord, toErrorMessage } from '@openthrottle/nodejs-utils';
+
 import { hasFlag } from './utils/args.ts';
 import type { Logger } from './utils/logger.ts';
 import { createLogger } from './utils/logger.ts';
@@ -60,10 +62,6 @@ export interface ClaudeGlobalSettingsCheckOptions {
   readonly homedir: string;
   readonly logger: Logger;
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-};
 
 const describeJsonType = (value: unknown): string => {
   if (value === null) return 'null';
@@ -108,7 +106,7 @@ export function evaluateAgentsMdSetting(
   } catch (error) {
     return {
       kind: 'invalid-json',
-      message: error instanceof Error ? error.message : String(error),
+      message: toErrorMessage(error),
     };
   }
 
@@ -188,7 +186,7 @@ export function readClaudeSettingsFile(path: string): SettingsReadResult {
 
     return {
       kind: 'unreadable',
-      message: error instanceof Error ? error.message : String(error),
+      message: toErrorMessage(error),
     };
   }
 }

@@ -2,6 +2,8 @@ import type { Dirent } from 'node:fs';
 import { readdirSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { basename, join, relative, sep } from 'node:path';
 
+import { isErrorWithCode, toErrorMessage } from '@openthrottle/nodejs-utils';
+
 import type { ValidateAgentAssetsResult } from './agent-asset-frontmatter.ts';
 import {
   mergeValidationResults,
@@ -44,14 +46,6 @@ const toRepoRelativePath = (
   return relative(monorepoRoot, absolutePath).split('\\').join('/');
 };
 
-const describeError = (error: unknown): string => {
-  return error instanceof Error ? error.message : String(error);
-};
-
-const isErrnoException = (error: unknown): error is NodeJS.ErrnoException => {
-  return error instanceof Error && 'code' in error;
-};
-
 /**
  * Reads a directory's entries, tolerating a missing directory (ENOENT) or a
  * path that has been replaced by a non-directory (e.g. a special file).
@@ -67,13 +61,13 @@ const readDirSafely = (
   try {
     return readdirSync(dir, { withFileTypes: true });
   } catch (error) {
-    if (isErrnoException(error) && error.code === 'ENOENT') {
+    if (isErrorWithCode(error) && error.code === 'ENOENT') {
       return undefined;
     }
 
     warnings.push({
       field: '(filesystem)',
-      message: `Failed to read directory: ${describeError(error)}`,
+      message: `Failed to read directory: ${toErrorMessage(error)}`,
       path: toRepoRelativePath(monorepoRoot, dir),
       severity: 'warning',
     });
@@ -96,7 +90,7 @@ const readFileSafely = (
   } catch (error) {
     warnings.push({
       field: '(filesystem)',
-      message: `Failed to read file: ${describeError(error)}`,
+      message: `Failed to read file: ${toErrorMessage(error)}`,
       path: toRepoRelativePath(monorepoRoot, absolutePath),
       severity: 'warning',
     });

@@ -8,7 +8,7 @@ import {
   RepositoryCheckoutsRepository,
   UserWorkspaceSettingsRepository,
 } from '@openthrottle/nestjs-repositories-server';
-import { isRecord } from '@openthrottle/nodejs-utils';
+import { isRecord, toErrorMessage } from '@openthrottle/nodejs-utils';
 import {
   GIT_EXCLUDE_OWNER,
   toContainerPath,
@@ -275,9 +275,9 @@ export class WorkspaceEditorConfigService {
       );
     } catch (error) {
       warnings.push(
-        `Wrote ${OPENTHROTTLE_MANIFEST_RELATIVE_PATH} but could not hide it from git: ${
-          error instanceof Error ? error.message : String(error)
-        }. It will show as an untracked file.`,
+        `Wrote ${OPENTHROTTLE_MANIFEST_RELATIVE_PATH} but could not hide it from git: ${toErrorMessage(
+          error,
+        )}. It will show as an untracked file.`,
       );
     }
   }

@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 
+import { isRecord } from '@openthrottle/nodejs-utils';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createStore, Provider } from 'jotai';
@@ -29,12 +30,6 @@ import { isCmsJsonSchema } from '../src/utils/parseCmsSchema';
  * whose field mounts when opened. `block-schemas.test.ts` proves the schemas are valid; this proves
  * the form can edit them.
  */
-
-const isRecord = (
-  value: unknown,
-): value is Readonly<Record<string, unknown>> => {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-};
 
 const readJson = (path: string): unknown => {
   return JSON.parse(readFileSync(path, 'utf8'));

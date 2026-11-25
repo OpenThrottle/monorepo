@@ -4,10 +4,10 @@
  * because a plan or task write must never fail on Redis — the reconciler re-finds anything
  * that was missed.
  */
-
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import { Queue } from 'bullmq';
 
 import {
@@ -69,7 +69,7 @@ export class EmbeddingsProducerService {
       return jobs.length;
     } catch (error: unknown) {
       this.logger.error(
-        `Failed to enqueue ${items.length} embedding job(s): ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to enqueue ${items.length} embedding job(s): ${toErrorMessage(error)}`,
         EmbeddingsProducerService.name,
       );
 
@@ -97,7 +97,7 @@ export class EmbeddingsProducerService {
       return 1;
     } catch (error: unknown) {
       this.logger.error(
-        `Failed to enqueue a code-chunk embedding job (${ids.length} chunks): ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to enqueue a code-chunk embedding job (${ids.length} chunks): ${toErrorMessage(error)}`,
         EmbeddingsProducerService.name,
       );
 

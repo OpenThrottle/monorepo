@@ -17,6 +17,7 @@ import {
   createAgentConversationsRepositoryMock,
   createAgentTokenUsageRepositoryMock,
 } from '@openthrottle/nestjs-repositories-server/testing';
+import { sleep } from '@openthrottle/nodejs-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { AgentAccountStampingService } from '../../services/agent-account-stamping/agent-account-stamping.service.ts';
@@ -663,12 +664,6 @@ describe('ConversationStreamService', () => {
   it('surfaces keepalive liveness chunks as live-only phase pings (published, never buffered/persisted, no sortOrder), and they hold off the idle timeout', async () => {
     vi.useFakeTimers();
     process.env.OPENTHROTTLE_CHAT_IDLE_TIMEOUT_MS = '5000';
-
-    const sleep = (ms: number): Promise<void> => {
-      return new Promise((resolve) => {
-        setTimeout(resolve, ms);
-      });
-    };
 
     // A backend that is ALIVE the whole time but only surfaces keepalive
     // liveness chunks for four idle-length stretches (4s < 5s each) before it

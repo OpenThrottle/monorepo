@@ -43,6 +43,7 @@
  */
 
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import { sleep } from '@openthrottle/nodejs-utils';
 import { print } from 'graphql';
 
 import { asGraphqlPayload, parseDateTimeInResponse } from './response.ts';
@@ -285,19 +286,6 @@ interface GraphqlV2AttemptOutcome<TData, TFailure extends GraphqlV2Failure> {
   readonly rawFailure: GraphqlV2Failure | null;
   readonly result: GraphqlV2Result<TData, TFailure>;
 }
-
-/**
- * @description Sleep for `ms` milliseconds (no-op when `ms <= 0`).
- */
-const delay = (ms: number): Promise<void> => {
-  const shouldWait = ms > 0;
-  if (!shouldWait) {
-    return Promise.resolve();
-  }
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-};
 
 /**
  * @description Resolve the returned failure to `TFailure`: apply the caller's
@@ -552,7 +540,7 @@ export const executeGraphql_v2: ExecuteGraphqlV2 = async <
     // Retries are intentionally sequential: each attempt waits for the prior failure and its
     // backoff, so awaiting inside the loop is required.
     // eslint-disable-next-line no-await-in-loop -- sequential backoff between dependent attempts
-    await delay(baseBackoffMs * 2 ** retryIndex);
+    await sleep(baseBackoffMs * 2 ** retryIndex);
 
     // eslint-disable-next-line no-await-in-loop -- next attempt depends on the previous outcome
     outcome = await executeGraphqlV2Once(document, variables, options);

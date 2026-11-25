@@ -1,3 +1,4 @@
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import { GlobalScreen } from '@openthrottle/react-router-ui-global';
@@ -38,7 +39,7 @@ export const loader = async (args: Route.LoaderArgs) => {
     };
   } catch (error) {
     const latencyMs = Math.round(performance.now() - started);
-    const message = error instanceof Error ? error.message : String(error);
+    const message = toErrorMessage(error);
     return {
       envSnapshot,
       graphQL: {

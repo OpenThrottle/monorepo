@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories-server';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import {
   ensureMaterialized,
   resolveForeignWorkspaceContext,
@@ -90,9 +91,9 @@ export class ForeignSkillMaterializationService {
       }
     } catch (error) {
       this.logger.warn(
-        `Foreign-skill ${enabled ? 'materialize' : 'teardown'} failed for ${repoPath}: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        `Foreign-skill ${enabled ? 'materialize' : 'teardown'} failed for ${repoPath}: ${toErrorMessage(
+          error,
+        )}`,
       );
     }
   }

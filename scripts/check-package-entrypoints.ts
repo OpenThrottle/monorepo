@@ -93,6 +93,8 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 import type { ConditionOrderViolation } from './utils/findConditionOrderViolations.ts';
 import { findConditionOrderViolations } from './utils/findConditionOrderViolations.ts';
 import { createLogger } from './utils/logger.ts';
@@ -211,10 +213,6 @@ interface PackageInfo {
   readonly tags: readonly string[];
   readonly targetNames: readonly string[];
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-};
 
 /**
  * @description Flattens an `exports` map into one entry per declared string target

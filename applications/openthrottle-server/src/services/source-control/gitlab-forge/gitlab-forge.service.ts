@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { isRecord } from '@openthrottle/nodejs-utils';
 
 import { FORGE_KIND } from '../source-control.constants.ts';
 import type {
@@ -15,10 +16,6 @@ const GITLAB_DEFAULT_BASE_URL = 'https://gitlab.com';
 const GITLAB_REQUEST_TIMEOUT_MS = 15000;
 const GITLAB_PAGE_SIZE = 100;
 const GITLAB_MAX_COMMIT_PAGES = 10;
-
-const isRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-};
 
 const readString = (record: Record<string, unknown>, key: string): string => {
   const value = record[key];

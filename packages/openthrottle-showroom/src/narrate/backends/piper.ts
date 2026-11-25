@@ -5,12 +5,13 @@
  * `uv tool install piper-tts`, voice model in `~/.local/share/piper/voices`.
  * Missing binary or model fails loudly; this never falls back to macOS `say`.
  */
-
 import { execFile } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { isAbsolute, join } from 'node:path';
 import { promisify } from 'node:util';
+
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 
 import type { RenderRequest, TtsBackend } from '../types.ts';
 
@@ -76,7 +77,7 @@ const execErrorDetail = (error: unknown): string => {
     }
   }
 
-  return error instanceof Error ? error.message : String(error);
+  return toErrorMessage(error);
 };
 
 export const piperModelPath = (voice: string, dataDir: string): string => {

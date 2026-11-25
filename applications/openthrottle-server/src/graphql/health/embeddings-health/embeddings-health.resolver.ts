@@ -3,10 +3,10 @@
  * run only when a client selects it (MCP `health` does; the plan-run preflight and REST /health
  * do not).
  */
-
 import { ResolveField, Resolver } from '@nestjs/graphql';
 import { Public } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 
 import { ServerHealthObject } from '../server-health.object.ts';
 import { EmbeddingsHealthObject } from './embeddings-health.object.ts';
@@ -29,7 +29,7 @@ export class EmbeddingsHealthResolver {
       return await this.embeddingsHealth.getEmbeddingsHealth();
     } catch (error: unknown) {
       this.logger.warn(
-        `Embeddings health unavailable: ${error instanceof Error ? error.message : String(error)}`,
+        `Embeddings health unavailable: ${toErrorMessage(error)}`,
         EmbeddingsHealthResolver.name,
       );
 

@@ -3,6 +3,7 @@ import { AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { PlanRunsRepository } from '@openthrottle/nestjs-repositories-server';
 import { PlansRepository } from '@openthrottle/nestjs-repositories-server';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import type { UsageLimit } from '@openthrottle/openthrottle-drivers';
 import { DataSource } from 'typeorm';
 
@@ -17,10 +18,6 @@ import { decideUsageLimitResume } from '../../usage-limit/usage-limit.utils.ts';
 import { PLANS_QUEUE_NAME } from '../plans.constants.ts';
 import type { RunPlanOrchestratorJobData } from '../plans.types.ts';
 import type { UsageLimitHandling } from './usage-limit-resume.types.ts';
-
-const describeError = (error: unknown): string => {
-  return error instanceof Error ? error.message : String(error);
-};
 
 const parseInstant = (iso: string | null): Date | null => {
   if (iso === null) {
@@ -124,7 +121,7 @@ export class UsageLimitResumeService {
           return this.hold(
             planId,
             resetLabel,
-            `scheduling the resume failed: ${describeError(error)}`,
+            `scheduling the resume failed: ${toErrorMessage(error)}`,
           );
         }
 
@@ -144,7 +141,7 @@ export class UsageLimitResumeService {
       return this.hold(planId, resetLabel, decision.reason);
     } catch (error) {
       this.logger.warn(
-        `Usage-limit handling failed for plan ${planId}, job ${jobId}: ${describeError(error)}`,
+        `Usage-limit handling failed for plan ${planId}, job ${jobId}: ${toErrorMessage(error)}`,
         UsageLimitResumeService.name,
       );
 
@@ -192,7 +189,7 @@ export class UsageLimitResumeService {
       this.notifications.emitPlanStatusChanged({ planId, status: 'PENDING' });
     } catch (error) {
       this.logger.warn(
-        `Failed to park plan ${planId} after a usage limit: ${describeError(error)}`,
+        `Failed to park plan ${planId} after a usage limit: ${toErrorMessage(error)}`,
         UsageLimitResumeService.name,
       );
     }

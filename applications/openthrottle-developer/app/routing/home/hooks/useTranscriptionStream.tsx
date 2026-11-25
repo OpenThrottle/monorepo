@@ -10,6 +10,8 @@
  * (executeWsMutation) — no second realtime transport, and no HTTP overhead per
  * ~250ms chunk. SSR-safe: with no browser ws client, start() reports an error.
  */
+
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import {
   executeWsMutation,
   useSubscription,
@@ -102,8 +104,7 @@ export function useTranscriptionStream(): UseTranscriptionStreamResult {
 
       return { errorMessage: null, sessionId: started.sessionId };
     } catch (startError: unknown) {
-      const errorMessage =
-        startError instanceof Error ? startError.message : String(startError);
+      const errorMessage = toErrorMessage(startError);
       setError(errorMessage);
 
       return { errorMessage, sessionId: null };
@@ -146,9 +147,7 @@ export function useTranscriptionStream(): UseTranscriptionStreamResult {
         sessionId,
       });
     } catch (stopError: unknown) {
-      setError(
-        stopError instanceof Error ? stopError.message : String(stopError),
-      );
+      setError(toErrorMessage(stopError));
     }
   }, [client, sessionId]);
 

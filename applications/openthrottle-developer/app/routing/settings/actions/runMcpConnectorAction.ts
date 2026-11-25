@@ -1,3 +1,4 @@
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import {
   coerceBoolean,
   executeGraphqlWithAuth,
@@ -12,7 +13,6 @@ import {
   SetMcpConnectorEnabledDocument,
 } from '~/__generated__/graphql';
 import { ConnectMcpConnectorInputSchema } from '~/__generated__/schemas';
-import { toErrorMessage } from '~/global/utils/utils.error-message';
 import type { SettingsMcpActionData } from '~/routing/settings/utils/settings-mcp-action';
 
 export const runMcpConnectorAction = async (

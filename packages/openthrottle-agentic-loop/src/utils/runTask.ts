@@ -1,3 +1,5 @@
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
+
 import type {
   AttemptFailure,
   GitHeadState,
@@ -321,7 +323,7 @@ const runWorker = async (
       task: scope.task,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = toErrorMessage(error);
 
     return { kind: 'error', message };
   }

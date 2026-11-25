@@ -30,6 +30,7 @@ import { noTestSleep } from './rules/noTestSleep.ts';
 import { noWallClockInTests } from './rules/noWallClockInTests.ts';
 import { planTaskStatusChokepoint } from './rules/planTaskStatusChokepoint.ts';
 import { preferGraphqlFragment } from './rules/preferGraphqlFragment.ts';
+import { preferNodejsUtils } from './rules/preferNodejsUtils.ts';
 import { preHooksUnpack } from './rules/preHooksUnpack.ts';
 import { routePrimitiveShape } from './rules/routePrimitiveShape.ts';
 import { selectValueChildren } from './rules/selectValueChildren.ts';
@@ -301,6 +302,7 @@ export const eslintConfig = tslint.config([
           'plan-task-status-chokepoint': planTaskStatusChokepoint,
           'pre-hooks-unpack': preHooksUnpack,
           'prefer-graphql-fragment': preferGraphqlFragment,
+          'prefer-nodejs-utils': preferNodejsUtils,
           'route-primitive-shape': routePrimitiveShape,
           'select-value-children': selectValueChildren,
           'skip-requires-issue': skipRequiresIssue,
@@ -570,6 +572,23 @@ export const eslintConfig = tslint.config([
     files: ['**/*.{cjs,js,jsx,mjs,ts,tsx}'],
     rules: {
       'openthrottle/disable-requires-reason': 'error',
+    },
+  },
+  /**
+   * The small universal helpers (isRecord, isStringArray, isErrorWithCode,
+   * toErrorMessage, sleep) are imported from @openthrottle/nodejs-utils, never
+   * re-declared. Exempt: the package itself; tools/dotfiles, which it depends
+   * on (the reverse edge is a cycle); and every `scripts/` folder, since some
+   * scripts run before `pnpm install` or as agent hooks and must stay
+   * dependency-free.
+   */
+  {
+    files: ['**/*.{ts,tsx}'],
+    rules: {
+      'openthrottle/prefer-nodejs-utils': [
+        'error',
+        { allow: ['packages/nodejs-utils/', 'tools/dotfiles/', 'scripts/'] },
+      ],
     },
   },
   /**

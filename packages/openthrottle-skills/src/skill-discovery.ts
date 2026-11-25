@@ -2,6 +2,8 @@ import type { Dirent } from 'node:fs';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
+import { isErrorWithCode, toErrorMessage } from '@openthrottle/nodejs-utils';
+
 import { parseSkillFrontmatterForValidation } from './agent-asset-frontmatter.ts';
 import { skillFrontmatterSchema } from './schemas/agent-asset-frontmatter.schemas.ts';
 
@@ -27,14 +29,6 @@ export interface DiscoverSkillDirsResult {
 }
 
 const SKILL_FILENAME = 'SKILL.md';
-
-const describeError = (error: unknown): string => {
-  return error instanceof Error ? error.message : String(error);
-};
-
-const isErrnoException = (error: unknown): error is NodeJS.ErrnoException => {
-  return error instanceof Error && 'code' in error;
-};
 
 /**
  * True when `dirent` is a directory, or a symlink whose target resolves to a
@@ -77,13 +71,13 @@ export const discoverSkillDirs = (rootDir: string): DiscoverSkillDirsResult => {
   try {
     entries = readdirSync(rootDir, { withFileTypes: true });
   } catch (error) {
-    if (isErrnoException(error) && error.code === 'ENOENT') {
+    if (isErrorWithCode(error) && error.code === 'ENOENT') {
       return { skills: [], warnings: [] };
     }
     return {
       skills: [],
       warnings: [
-        `Failed to read skills root ${rootDir}: ${describeError(error)}`,
+        `Failed to read skills root ${rootDir}: ${toErrorMessage(error)}`,
       ],
     };
   }
@@ -104,10 +98,10 @@ export const discoverSkillDirs = (rootDir: string): DiscoverSkillDirsResult => {
     } catch (error) {
       // No SKILL.md → not a skill directory; skip quietly. Any other read
       // failure (EACCES etc.) is surfaced as a warning.
-      if (isErrnoException(error) && error.code === 'ENOENT') {
+      if (isErrorWithCode(error) && error.code === 'ENOENT') {
         continue;
       }
-      warnings.push(`Failed to read ${skillFile}: ${describeError(error)}`);
+      warnings.push(`Failed to read ${skillFile}: ${toErrorMessage(error)}`);
       continue;
     }
 

@@ -1,3 +1,5 @@
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 import type { ServerHealth } from '../../bridge/types/shell-bridge.ts';
 import { SERVER_HEALTH_QUERY } from '../data/data.settings.ts';
 
@@ -9,10 +11,6 @@ export interface ProbeOtServerOptions {
   readonly fetch: (url: string, init: RequestInit) => Promise<Response>;
   readonly timeoutMs: number;
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null;
-};
 
 const readHealth = (body: unknown): ServerHealth | undefined => {
   if (!isRecord(body) || !isRecord(body['data'])) {

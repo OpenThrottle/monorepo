@@ -16,6 +16,8 @@ import {
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
+import { isErrorWithCode } from '@openthrottle/nodejs-utils';
+
 import type {
   ForeignSkillLedger,
   ForeignSkillMaterializationLayerValue,
@@ -29,10 +31,6 @@ import {
 const SUFFIXED_LAYERS: readonly ForeignSkillMaterializationLayerValue[] = [
   FOREIGN_SKILL_MATERIALIZATION_LAYER.WORKTREE_OVERLAY,
 ];
-
-const isErrnoException = (error: unknown): error is NodeJS.ErrnoException => {
-  return error instanceof Error && 'code' in error;
-};
 
 /** Structural guard so JSON.parse output can be narrowed without a cast. */
 const isForeignSkillLedger = (value: unknown): value is ForeignSkillLedger => {
@@ -173,7 +171,7 @@ export const listLedgerPaths = (
       .filter((name) => name.endsWith('.json'))
       .map((name) => join(dir, name));
   } catch (error) {
-    if (isErrnoException(error) && error.code === 'ENOENT') {
+    if (isErrorWithCode(error) && error.code === 'ENOENT') {
       return [];
     }
     throw error;

@@ -4,6 +4,7 @@ import {
   ServiceAccountsRepository,
   UsersRepository,
 } from '@openthrottle/nestjs-repositories-server';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 
 /**
  * @description Maps an auth principal's `sub` to the human user it acts as.
@@ -53,7 +54,7 @@ export class EffectiveUserResolutionService {
 
       return await this.serviceAccountsRepository.resolveActingUserId(trimmed);
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = toErrorMessage(error);
       this.logger.warn(
         `${this.name}: could not resolve effective user for sub: ${message}`,
       );

@@ -4,6 +4,8 @@
  */
 import fs from 'node:fs';
 
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 import {
   deadLetterPathFor,
   defaultJsonlPath,
@@ -111,10 +113,6 @@ const scanFile = (
   } catch {
     return { firstLine: null, lines: 0 };
   }
-};
-
-const isRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
 };
 
 /** First present timestamp field of a JSON line, normalized to ISO; else null. */

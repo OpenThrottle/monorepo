@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories-server';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import {
   ensureMaterialized,
   FOREIGN_SKILL_MATERIALIZATION_LAYER,
@@ -134,9 +135,9 @@ export class WorktreeSkillOverlayService {
       return checkout?.worktreeSkillOverlayEnabled === false;
     } catch (error) {
       this.logger.warn(
-        `[${this.name}] could not read the overlay flag for ${baseCheckoutPath}; treating it as on: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        `[${this.name}] could not read the overlay flag for ${baseCheckoutPath}; treating it as on: ${toErrorMessage(
+          error,
+        )}`,
       );
       return false;
     }
@@ -163,7 +164,7 @@ export class WorktreeSkillOverlayService {
         status: WORKTREE_SKILL_OVERLAY_STATUS.APPLIED,
       };
     } catch (error) {
-      const reason = error instanceof Error ? error.message : String(error);
+      const reason = toErrorMessage(error);
       this.logger.warn(
         `[${this.name}] overlay failed for ${repoPath}; provisioning falls back to the server's own ot-worktree scripts: ${reason}`,
       );
@@ -180,9 +181,9 @@ export class WorktreeSkillOverlayService {
       teardown({ env: process.env, layer: LAYER, repoPath });
     } catch (error) {
       this.logger.warn(
-        `[${this.name}] overlay teardown failed for ${repoPath}: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        `[${this.name}] overlay teardown failed for ${repoPath}: ${toErrorMessage(
+          error,
+        )}`,
       );
     }
   }

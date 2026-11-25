@@ -3,11 +3,11 @@
  * (`.claude/settings.json` hooks, `.mcp.json` servers), for launchers that spawn in a checkout
  * directly rather than through a plan run. See docs/monorepo/agent-config-trust.md.
  */
-
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { RepositoryCheckout } from '@openthrottle/nestjs-repositories-server';
 import { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories-server';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import type { AgentConfigTrust } from '@openthrottle/openthrottle-agentic-utils';
 import {
   AGENT_CONFIG_POSTURE,
@@ -54,7 +54,7 @@ export class AgentConfigTrustService {
         isOpenThrottleCheckout: false,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = toErrorMessage(error);
       this.logger.warn(
         `Could not read checkout trust for ${directory}; treating it as untrusted: ${message}`,
         AgentConfigTrustService.name,

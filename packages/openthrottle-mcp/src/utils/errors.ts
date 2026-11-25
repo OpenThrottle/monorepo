@@ -8,6 +8,8 @@
  * stderr (stdout is reserved for the MCP protocol on stdio transports).
  */
 
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
+
 function errorContent(message: string): {
   content: { text: string; type: 'text' }[];
   isError: true;
@@ -175,7 +177,7 @@ const validationHints = [
  * @public
  */
 export function classifyError(error: unknown): ErrorCategory {
-  const raw = error instanceof Error ? error.message : String(error);
+  const raw = toErrorMessage(error);
   const message = raw.toLowerCase();
 
   // The client's own request timeout (nodejs-graphql). Checked first: it is not a transport
@@ -273,7 +275,7 @@ export function toSanitizedClientMessage(
 
   // Application-level (resolver-authored) validation/business errors carry an
   // actionable, client-facing message — surface it instead of the generic string.
-  const raw = error instanceof Error ? error.message : String(error);
+  const raw = toErrorMessage(error);
   const appDetail = extractApplicationErrorDetail(raw);
   if (appDetail != null) {
     // stderr only; stdout is the MCP protocol channel on stdio transports.

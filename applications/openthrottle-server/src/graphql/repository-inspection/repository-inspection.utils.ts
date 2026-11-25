@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
 
+import { isRecord } from '@openthrottle/nodejs-utils';
 import { toContainerPath } from '@openthrottle/openthrottle-agentic-utils';
 /**
  * @description The ONE parser for `git worktree list --porcelain` output. Shared by the checkout
@@ -69,10 +70,6 @@ const MCP_CONFIG_FILES = ['.mcp.json', '.cursor/mcp.json'] as const;
 /** Cursor's project hook config. */
 const CURSOR_HOOKS_FILE = '.cursor/hooks.json';
 
-const isPlainObject = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-};
-
 /**
  * @description A checkout file parsed as JSON, or undefined when it is missing or malformed —
  * inspection reports what it can and never throws on a repo's bad config.
@@ -91,7 +88,7 @@ const readJsonFile = (root: string, relativePath: string): unknown => {
  * and a bare entry counts as one.
  */
 const countHookEntries = (hooks: unknown): number => {
-  if (!isPlainObject(hooks)) {
+  if (!isRecord(hooks)) {
     return 0;
   }
 
@@ -103,7 +100,7 @@ const countHookEntries = (hooks: unknown): number => {
     return (
       total +
       entries.reduce<number>((sum, entry) => {
-        if (isPlainObject(entry) && Array.isArray(entry.hooks)) {
+        if (isRecord(entry) && Array.isArray(entry.hooks)) {
           return sum + entry.hooks.length;
         }
 
@@ -125,19 +122,17 @@ export const countRepoAgentConfig = (
   const claudeHooks = CLAUDE_SETTINGS_FILES.reduce((total, file) => {
     const settings = readJsonFile(root, file);
 
-    return (
-      total + (isPlainObject(settings) ? countHookEntries(settings.hooks) : 0)
-    );
+    return total + (isRecord(settings) ? countHookEntries(settings.hooks) : 0);
   }, 0);
   const cursorConfig = readJsonFile(root, CURSOR_HOOKS_FILE);
-  const cursorHooks = isPlainObject(cursorConfig)
+  const cursorHooks = isRecord(cursorConfig)
     ? countHookEntries(cursorConfig.hooks)
     : 0;
   const mcpServerCount = MCP_CONFIG_FILES.reduce((total, file) => {
     const config = readJsonFile(root, file);
-    const servers = isPlainObject(config) ? config.mcpServers : undefined;
+    const servers = isRecord(config) ? config.mcpServers : undefined;
 
-    return total + (isPlainObject(servers) ? Object.keys(servers).length : 0);
+    return total + (isRecord(servers) ? Object.keys(servers).length : 0);
   }, 0);
 
   return { hookCount: claudeHooks + cursorHooks, mcpServerCount };

@@ -19,6 +19,7 @@ import { promisify } from 'node:util';
 
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import { UnrecoverableError } from 'bullmq';
 
 import { OT_WORKTREE_ACTION } from '../ot-worktree-script/ot-worktree-script.constants.ts';
@@ -130,9 +131,9 @@ export class PlanRunWorktreeProvisionService {
       );
     } catch (error) {
       this.logger.warn(
-        `[${this.name}] could not list worktrees in ${baseCheckoutPath}: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        `[${this.name}] could not list worktrees in ${baseCheckoutPath}: ${toErrorMessage(
+          error,
+        )}`,
       );
       return null;
     }
@@ -222,7 +223,7 @@ export class PlanRunWorktreeProvisionService {
       );
       return stdout;
     } catch (error) {
-      const detail = error instanceof Error ? error.message : String(error);
+      const detail = toErrorMessage(error);
       const stderr = readStderrTail(error);
       const message = `Failed to provision worktree "${worktreeName}" from ${baseCheckoutPath}: ${detail}${
         stderr === '' ? '' : `\n${stderr}`

@@ -80,8 +80,14 @@ const normalizeScalar = (value: FormDataEntryValue | null): string | null => {
   return trimmed === '' ? null : trimmed;
 };
 
-/** Narrow an `unknown` to a plain object so nested assignment needs no cast. */
-const isRecord = (value: unknown): value is Record<string, unknown> => {
+/**
+ * @description Narrow an `unknown` to an object, arrays included, so nested
+ * assignment needs no cast. Deliberately not `isRecord` from
+ * `@openthrottle/nodejs-utils`: a `lists` key already holds an array, and a
+ * later `key[0]` path must write into that array rather than replace it with
+ * an object.
+ */
+const isObjectLike = (value: unknown): value is Record<string, unknown> => {
   return typeof value === 'object' && value !== null;
 };
 
@@ -104,7 +110,7 @@ const assignPath = (
   for (let index = 0; index < segments.length - 1; index += 1) {
     const segment = segments[index] ?? '';
     const next = cursor[segment];
-    if (isRecord(next)) {
+    if (isObjectLike(next)) {
       cursor = next;
     } else {
       const created: Record<string, unknown> = {};

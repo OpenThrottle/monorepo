@@ -4,6 +4,8 @@
  * fixture bug, and the caller decides whether to fail a test or a record run.
  */
 
+import { isRecord, isStringArray } from '@openthrottle/nodejs-utils';
+
 import type {
   Transcript,
   TranscriptHeader,
@@ -17,16 +19,6 @@ import {
   TRANSCRIPT_SCHEMA_VERSION,
   TRANSCRIPT_SURFACES,
 } from '../../types/transcript.ts';
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function isStringArray(value: unknown): value is string[] {
-  return (
-    Array.isArray(value) && value.every((item) => typeof item === 'string')
-  );
-}
 
 function isSurface(value: unknown): value is TranscriptSurfacesValue {
   return Object.values(TRANSCRIPT_SURFACES).some(

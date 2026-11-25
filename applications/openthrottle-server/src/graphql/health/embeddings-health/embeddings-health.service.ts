@@ -4,7 +4,6 @@
  * reconciler does), and the embeddings queue backlog. Selected only on demand — it hashes every
  * source row, so the Docker-polled REST /health does not include it.
  */
-
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
@@ -13,6 +12,7 @@ import {
   EMBEDDING_MAX_INPUT_CHARS,
   resolveEmbeddingConfig,
 } from '@openthrottle/node-client';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import { Queue } from 'bullmq';
 import { DataSource } from 'typeorm';
 
@@ -167,7 +167,7 @@ export class EmbeddingsHealthService {
       }, 0);
     } catch (error: unknown) {
       this.logger.warn(
-        `Embeddings queue depth unavailable: ${error instanceof Error ? error.message : String(error)}`,
+        `Embeddings queue depth unavailable: ${toErrorMessage(error)}`,
         EmbeddingsHealthService.name,
       );
 

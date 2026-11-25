@@ -15,6 +15,8 @@
  *   audio is concatenated in arrival order and never split by `chunk_seq`.
  */
 
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 import { normalizeForMatch } from '../map-words.ts';
 import type { WordTiming } from '../types.ts';
 
@@ -47,10 +49,6 @@ export interface AssembledTake {
 }
 
 export const FISH_TAKE_SAMPLE_RATE = 44_100;
-
-const isRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-};
 
 const readField = (record: Record<string, unknown>, key: string): unknown => {
   return Object.hasOwn(record, key) ? record[key] : undefined;

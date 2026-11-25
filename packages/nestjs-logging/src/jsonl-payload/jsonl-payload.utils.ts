@@ -117,12 +117,7 @@ const isJsonValue = (
 const isJsonRecord = (
   value: unknown,
 ): value is Readonly<Record<string, JsonValue>> => {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    !Array.isArray(value) &&
-    isJsonValue(value)
-  );
+  return isRecord(value) && isJsonValue(value);
 };
 
 /**

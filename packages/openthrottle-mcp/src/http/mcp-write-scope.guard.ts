@@ -9,6 +9,7 @@
 import type { CanActivate, ExecutionContext } from '@nestjs/common';
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
+import { isRecord } from '@openthrottle/nodejs-utils';
 
 import { ViewerOAuthScopesDocument } from '../__generated__/graphql.js';
 import { isReadOnlyTool } from '../config/tool-access.ts';
@@ -26,10 +27,6 @@ import {
 
 const OAUTH_ACCESS_TOKEN_PREFIX = 'ot_oat_';
 const WRITE_SCOPE = 'mcp:write';
-
-const isRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-};
 
 /**
  * @description Names of the tools a JSON-RPC body calls (a single message or a batch).
