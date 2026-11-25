@@ -116,8 +116,8 @@ checks after fixing. Everything else stays a reported finding.
   `eslint --print-config` over the label.
 - **A dry-run with the real name prints only `SKIPPED`.** Generators never clobber, so use a probe
   name in the real folder, and read the template tree for contents: a dry-run lists paths only.
-- **OT `semantic_search` returns no code today.** It indexes plans, tasks and docs. Grep finds
-  copies; semantic search only finds the plan that discussed the work.
+- **Code is `code_search`, not `semantic_search`.** It finds only the plan that discussed
+  the work. Run `code_search` after the literal grep; open every hit.
 - **Names alike are not copies.** Grep by name is noisy (26 false positives in one measured case);
   a distinctive literal is the strongest signal.
 - **A first duplicate with no home is a suggestion.** Promote when the second consumer appears, not
