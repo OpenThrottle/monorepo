@@ -2,7 +2,7 @@
 #
 #   🧹 Delete Actions caches nothing can restore any more.
 #
-#   Two jobs, one per kind of dead weight. Left to GitHub's LRU, either one
+#   Four jobs, one per kind of dead weight. Left to GitHub's LRU, either one
 #   pushes the repo over its 10 GB quota, and the LRU then evicts the `main`
 #   entries every PR restores from (OT plans 80b62f5e and 820b4838,
 #   docs/monorepo/ci-cost.md).
@@ -34,7 +34,18 @@
 #   two. A red `warm-cache` saves nothing, so the entry kept is always the
 #   last good one.
 #
-#   💰 A few `gh` calls on a standard runner, with no checkout and no install.
+#   `prune-pnpm-store` — on every push to `main`. setup-node (`cache: 'pnpm'`
+#   in .github/actions/node-setup) saves a ~456 MiB
+#   `node-cache-<os>-x64-pnpm-<lockfile hash>` entry on `main` each time
+#   pnpm-lock.yaml changes, and nothing restores an old hash again; on
+#   2026-11-25 `main` held four (~1.8 GB), one of them live (OT plan
+#   88da480c). This job keeps the entry matching the pushed lockfile's
+#   `hashFiles`, plus the newest, and deletes the rest. When the push changed
+#   the lockfile, its own CI saves the new entry after this runs, so the newest
+#   (the previous lockfile's) is kept until the next push confirms it is dead.
+#
+#   💰 A few `gh` calls on a standard runner, with no install. Only
+#   `prune-pnpm-store` checks anything out, and only pnpm-lock.yaml.
 #
 ################################################################################
 name: '🧹 Cache cleanup'
@@ -118,4 +129,58 @@ jobs:
           printf '%s\n' "$ids" | sed '/^$/d' | tail -n +2 | while read -r id; do
             echo "🗑️ deleting cache $id"
             gh cache delete "$id"
+          done
+
+  prune-pnpm-store:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    # Job-scoped: the checkout below needs contents:read on top of the
+    # workflow's actions:write, and job permissions replace the workflow's.
+    permissions:
+      actions: write
+      contents: read
+    concurrency:
+      group: prune-pnpm-store
+      cancel-in-progress: true
+    steps:
+      # Only the lockfile: `hashFiles` needs it to name the entry this push's
+      # installs restore.
+      - name: '📦 Checkout pnpm-lock.yaml'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            pnpm-lock.yaml
+          sparse-checkout-cone-mode: false
+
+      - name: '🧹 Keep only the current and newest pnpm store caches on main'
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+          # The key setup-node writes (`node-cache-<os>-<arch>-pnpm-<lockfile
+          # hash>`), and that node-setup's restore-only step mirrors.
+          CURRENT: node-cache-${{ runner.os }}-x64-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          LOCK_HASH: ${{ hashFiles('pnpm-lock.yaml') }}
+          PREFIX: node-cache-
+          REF: refs/heads/main
+        run: |
+          set -euo pipefail
+          # An empty hash means no lockfile was found, so CURRENT names nothing
+          # real: stop rather than delete the entry every install restores.
+          if [ -z "$LOCK_HASH" ]; then
+            echo "::error::hashFiles('pnpm-lock.yaml') is empty; refusing to prune"
+            exit 1
+          fi
+          entries="$(gh cache list --ref "$REF" --key "$PREFIX" --sort created_at --order desc --limit 100 --json id,key \
+            --jq '.[] | select(.key | contains("-pnpm-")) | "\(.id) \(.key)"')"
+          echo "$(printf '%s\n' "$entries" | sed '/^$/d' | wc -l | tr -d ' ') ${PREFIX}*-pnpm-* entries on $REF; keeping $CURRENT and the newest."
+          newest="$(printf '%s\n' "$entries" | sed '/^$/d' | head -n 1 | cut -d' ' -f1)"
+          printf '%s\n' "$entries" | sed '/^$/d' | while read -r id key; do
+            if [ "$key" = "$CURRENT" ] || [ "$id" = "$newest" ]; then
+              echo "✅ keeping cache $id ($key)"
+              continue
+            fi
+            echo "🗑️ deleting cache $id ($key)"
+            gh cache delete "$id" || echo "⚠️ delete of $id refused; LRU eviction will reclaim it"
           done
