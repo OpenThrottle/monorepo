@@ -102,6 +102,7 @@ is a package, and that is the whole test.
 
 1. **Do not invent new folders.** Use the vocabulary above. If nothing fits, the
    code probably belongs in a different bucket, not a new directory.
+   _Enforced_ for packages' top-level `src/` folders by `check-folder-vocabulary`.
 2. **Bucket utils by theme**, per AGENTS.md § Code style ("prefer a bucket module").
 3. **Do not delete empty folders or their `.gitkeep`.** They are placeholders for
    functionality that is coming, and removing them makes the next generator run

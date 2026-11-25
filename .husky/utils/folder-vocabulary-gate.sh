@@ -7,7 +7,7 @@
 #   - .husky/pre-commit   (this gate: `--staged`, newly added/renamed-to paths)
 #   - check:local         (`pnpm run check:local:folder-vocabulary`, whole tree)
 #   - .github/workflows/continuous-integration.yml, step
-#     "🗂️ Folder vocabulary (no junk-drawer folders)" (CI gate, whole tree)
+#     "🗂️ Folder vocabulary (junk-drawer + per-bucket src/ folders)" (CI gate, whole tree)
 #
 # Deliberately NOT in pre-push: CI runs the whole-tree check, and pre-push is
 # already heavy. Calls tsx directly rather than through Nx or `pnpm exec`,

@@ -4,16 +4,24 @@ import { dirname, join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import type { BannedFolderHit } from '../check-folder-vocabulary.ts';
+import type {
+  BannedFolderHit,
+  ProjectBucket,
+} from '../check-folder-vocabulary.ts';
 import {
   ALLOWLIST,
   BANNED_FOLDER_NAMES,
   findBannedFolders,
+  findGrandfatherDrift,
+  findOffVocabularyFolders,
   formatHit,
+  formatOffVocabularyHit,
+  GRANDFATHERED_FOLDERS,
   isAllowlisted,
   listStagedPaths,
   listTrackedPaths,
   main,
+  resolveBucket,
 } from '../check-folder-vocabulary.ts';
 import { run } from '../utils/exec.ts';
 
@@ -130,6 +138,186 @@ describe('check-folder-vocabulary', () => {
     });
   });
 
+  describe('resolveBucket', () => {
+    it('picks react-router over react, nodejs and typescript', () => {
+      expect(
+        resolveBucket([
+          'technology:nodejs',
+          'technology:react',
+          'technology:react-router',
+          'technology:typescript',
+        ]),
+      ).toBe('react-router');
+    });
+
+    it('picks react when react-router is absent', () => {
+      expect(resolveBucket(['technology:react'])).toBe('react');
+    });
+
+    it('leaves the nestjs bucket unchecked, even with nodejs too', () => {
+      expect(
+        resolveBucket(['technology:nestjs', 'technology:nodejs']),
+      ).toBeUndefined();
+    });
+
+    it('maps nodejs and typescript-only projects to nodejs', () => {
+      expect(resolveBucket(['technology:nodejs'])).toBe('nodejs');
+      expect(resolveBucket(['technology:typescript'])).toBe('nodejs');
+    });
+
+    it('leaves a project with no matching tag unchecked', () => {
+      expect(resolveBucket(['type:package'])).toBeUndefined();
+    });
+  });
+
+  describe('findOffVocabularyFolders', () => {
+    const projects: readonly ProjectBucket[] = [
+      { bucket: 'nodejs', root: 'packages/node-pkg' },
+      { bucket: 'react-router', root: 'packages/rr-pkg' },
+    ];
+
+    it('flags a top-level src/ folder outside the bucket vocabulary', () => {
+      const hits = findOffVocabularyFolders(
+        [
+          'packages/node-pkg/src/post/a.ts',
+          'packages/node-pkg/src/post/b.ts',
+          'packages/rr-pkg/src/stores/c.ts',
+        ],
+        projects,
+      );
+
+      expect(hits.map((hit) => hit.path)).toEqual([
+        'packages/node-pkg/src/post',
+        'packages/rr-pkg/src/stores',
+      ]);
+    });
+
+    it('allows the vocabulary, tooling folders and files directly in src/', () => {
+      expect(
+        findOffVocabularyFolders(
+          [
+            'packages/node-pkg/src/index.ts',
+            'packages/node-pkg/src/utils/deep/x.ts',
+            'packages/node-pkg/src/__tests__/x.test.ts',
+            'packages/rr-pkg/src/components/Button/index.tsx',
+            'packages/rr-pkg/src/hooks/useX.ts',
+          ],
+          projects,
+        ),
+      ).toEqual([]);
+    });
+
+    it('applies each bucket its own words', () => {
+      const hits = findOffVocabularyFolders(
+        ['packages/node-pkg/src/components/x.tsx'],
+        projects,
+      );
+
+      expect(hits.map((hit) => hit.bucket)).toEqual(['nodejs']);
+    });
+
+    it('ignores paths outside every checked project', () => {
+      expect(
+        findOffVocabularyFolders(
+          [
+            'packages/nestjs-pkg/src/anything/x.ts',
+            'applications/app/src/whatever/x.ts',
+            'packages/node-pkg-two/src/post/x.ts',
+          ],
+          projects,
+        ),
+      ).toEqual([]);
+    });
+
+    it('skips a grandfathered folder', () => {
+      const [entry] = GRANDFATHERED_FOLDERS;
+      if (entry === undefined) {
+        throw new Error('expected at least one grandfathered folder');
+      }
+      const root = entry.path.split('/src/')[0] ?? '';
+
+      expect(
+        findOffVocabularyFolders(
+          [`${entry.path}/x.ts`],
+          [{ bucket: 'nodejs', root }],
+        ),
+      ).toEqual([]);
+    });
+  });
+
+  describe('formatOffVocabularyHit', () => {
+    it('names the folder, the bucket and every allowed word', () => {
+      const [hit] = findOffVocabularyFolders(
+        ['packages/p/src/post/x.ts'],
+        [{ bucket: 'nodejs', root: 'packages/p' }],
+      );
+      if (hit === undefined) {
+        throw new Error('expected a hit');
+      }
+
+      const line = formatOffVocabularyHit(hit);
+      expect(line).toContain('packages/p/src/post/');
+      expect(line).toContain('nodejs');
+      for (const word of hit.allowed) {
+        expect(line).toContain(word);
+      }
+    });
+  });
+
+  describe('findGrandfatherDrift', () => {
+    const projects: readonly ProjectBucket[] = [
+      { bucket: 'nodejs', root: 'packages/p' },
+    ];
+
+    it('reports an entry with no tracked file under it as stale', () => {
+      const drift = findGrandfatherDrift(
+        ['packages/p/src/kept/x.ts'],
+        projects,
+        [
+          { path: 'packages/p/src/gone', reason: 'r' },
+          { path: 'packages/p/src/kept', reason: 'r' },
+        ],
+      );
+
+      expect(drift.stale).toEqual(['packages/p/src/gone']);
+    });
+
+    it('reports an in-vocabulary or unchecked-project entry as redundant', () => {
+      const drift = findGrandfatherDrift(
+        ['packages/p/src/utils/x.ts', 'packages/nest/src/a/x.ts'],
+        projects,
+        [
+          { path: 'packages/nest/src/a', reason: 'r' },
+          { path: 'packages/p/src/utils', reason: 'r' },
+        ],
+      );
+
+      expect(drift.redundant).toEqual([
+        'packages/nest/src/a',
+        'packages/p/src/utils',
+      ]);
+    });
+
+    it('accepts a live off-vocabulary entry', () => {
+      expect(
+        findGrandfatherDrift(['packages/p/src/post/x.ts'], projects, [
+          { path: 'packages/p/src/post', reason: 'r' },
+        ]),
+      ).toEqual({ redundant: [], stale: [] });
+    });
+  });
+
+  describe('GRANDFATHERED_FOLDERS', () => {
+    it('gives every entry a reason and keeps the list sorted', () => {
+      const paths = GRANDFATHERED_FOLDERS.map((entry) => entry.path);
+
+      expect(paths).toEqual([...paths].sort((a, b) => a.localeCompare(b)));
+      for (const entry of GRANDFATHERED_FOLDERS) {
+        expect(entry.reason.trim()).not.toBe('');
+      }
+    });
+  });
+
   describe('against a real git repository', () => {
     let repoRoot: string;
 
@@ -153,7 +341,25 @@ describe('check-folder-vocabulary', () => {
       write('src/lib/untracked.ts');
       run('git', ['-C', repoRoot, 'add', 'src/utils/x.ts']);
 
-      expect(main(repoRoot, false)).toBe(0);
+      expect(main(repoRoot, false, [])).toBe(0);
+    });
+
+    it('fails the whole-tree run on a stale grandfather entry', () => {
+      write('src/utils/x.ts');
+      run('git', ['-C', repoRoot, 'add', 'src/utils/x.ts']);
+
+      expect(
+        main(repoRoot, false, [{ path: 'packages/p/src/gone', reason: 'r' }]),
+      ).toBe(1);
+    });
+
+    it('tolerates a malformed tracked manifest', () => {
+      mkdirSync(join(repoRoot, 'packages/p'), { recursive: true });
+      writeFileSync(join(repoRoot, 'packages/p/package.json'), '{ not json');
+      write('packages/p/src/post/x.ts');
+      run('git', ['-C', repoRoot, 'add', '--all']);
+
+      expect(main(repoRoot, false, [])).toBe(0);
     });
 
     it('fails on an intent-to-add path under a banned folder', () => {
@@ -161,7 +367,7 @@ describe('check-folder-vocabulary', () => {
       run('git', ['-C', repoRoot, 'add', '-N', 'src/lib/x.ts']);
 
       expect(listTrackedPaths(repoRoot)).toContain('src/lib/x.ts');
-      expect(main(repoRoot, false)).toBe(1);
+      expect(main(repoRoot, false, [])).toBe(1);
     });
 
     describe('--staged', () => {
@@ -207,6 +413,20 @@ describe('check-folder-vocabulary', () => {
 
         expect(listStagedPaths(repoRoot)).toEqual([]);
         expect(main(repoRoot, true)).toBe(0);
+      });
+
+      it('fails on a new off-vocabulary src/ folder in a tagged package', () => {
+        mkdirSync(join(repoRoot, 'packages/p'), { recursive: true });
+        writeFileSync(
+          join(repoRoot, 'packages/p/package.json'),
+          JSON.stringify({ name: 'p', nx: { tags: ['technology:nodejs'] } }),
+        );
+        write('packages/p/src/utils/x.ts');
+        commitAll();
+        write('packages/p/src/post/y.ts');
+        git('add', 'packages/p/src/post/y.ts');
+
+        expect(main(repoRoot, true)).toBe(1);
       });
 
       it('passes with nothing staged', () => {
