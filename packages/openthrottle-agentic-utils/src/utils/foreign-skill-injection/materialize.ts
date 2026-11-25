@@ -29,12 +29,15 @@ import { resolveForeignSkillManifest } from '@openthrottle/openthrottle-skills';
 import { getWorkspacePathMapping } from '../workspace-paths.ts';
 import {
   removeManagedExcludeBlock,
+  resolveGitExcludePath,
   writeManagedExcludeBlock,
 } from './git-exclude.ts';
 import {
   deleteLedger,
+  layerForLedgerPath,
   ledgerPathForRepo,
   ledgerPathsForRepo,
+  listLedgerPaths,
   readLedger,
   writeLedger,
 } from './ledger.ts';
@@ -76,6 +79,79 @@ const siblingLedgeredRelPaths = (
     }
   }
   return paths;
+};
+
+/** Real path when it exists, so two spellings of one exclude file compare equal. */
+const canonicalPath = (absPath: string): string => {
+  try {
+    return realpathSync(absPath);
+  } catch {
+    return absPath;
+  }
+};
+
+/**
+ * @description The paths this layer has ledgered in OTHER checkouts that share `repoPath`'s
+ * `info/exclude`. Every linked worktree of a repository reads its primary's exclude file, so one
+ * managed block serves them all: writing or removing it for one checkout must keep the others'
+ * paths, or tearing down a plan-run worktree would un-ignore the base checkout's injected skills.
+ * A ledger whose checkout is gone resolves no exclude file and is left out.
+ */
+const sharedExcludeRelPaths = (
+  repoPath: string,
+  env: NodeJS.ProcessEnv,
+  layer: ForeignSkillMaterializationLayer,
+): readonly string[] => {
+  const ownExclude = resolveGitExcludePath(repoPath);
+  if (ownExclude === undefined) {
+    return [];
+  }
+
+  const ownExcludeCanonical = canonicalPath(ownExclude);
+  const ownLedgerPath = ledgerPathForRepo(repoPath, env, layer);
+  const paths = new Set<string>();
+  for (const ledgerPath of listLedgerPaths(env)) {
+    if (ledgerPath === ownLedgerPath) continue;
+    if (layerForLedgerPath(ledgerPath) !== layer) continue;
+
+    const ledger = readLedger(ledgerPath);
+    if (ledger === undefined || !existsSync(ledger.repoPath)) continue;
+
+    const otherExclude = resolveGitExcludePath(ledger.repoPath);
+    if (otherExclude === undefined) continue;
+    if (canonicalPath(otherExclude) !== ownExcludeCanonical) continue;
+
+    for (const entry of ledger.entries) {
+      paths.add(entry.injectedRelativePath);
+    }
+  }
+  return [...paths];
+};
+
+/**
+ * @description Rewrites this layer's exclude block to cover `ownRelPaths` plus every path the same
+ * layer has ledgered in a checkout sharing the exclude file, removing the block only when none are
+ * left.
+ */
+const syncSharedExcludeBlock = (
+  repoPath: string,
+  env: NodeJS.ProcessEnv,
+  layer: ForeignSkillMaterializationLayer,
+  ownRelPaths: readonly string[],
+): void => {
+  const owner = EXCLUDE_OWNER_BY_LAYER[layer];
+  const relPaths = [
+    ...new Set([
+      ...ownRelPaths,
+      ...sharedExcludeRelPaths(repoPath, env, layer),
+    ]),
+  ];
+  if (relPaths.length > 0) {
+    writeManagedExcludeBlock(repoPath, relPaths, owner);
+    return;
+  }
+
+  removeManagedExcludeBlock(repoPath, owner);
 };
 
 /** @public */
@@ -377,7 +453,6 @@ export const ensureMaterialized = (
     options;
   const env = options.env ?? process.env;
   const layer = options.layer ?? FOREIGN_SKILL_MATERIALIZATION_LAYER.CURATED;
-  const excludeOwner = EXCLUDE_OWNER_BY_LAYER[layer];
 
   const ledgerPath = ledgerPathForRepo(repoPath, env, layer);
   const existing = readLedger(ledgerPath);
@@ -483,12 +558,11 @@ export const ensureMaterialized = (
   };
 
   const relPaths = ledgerEntries.map((entry) => entry.injectedRelativePath);
+  syncSharedExcludeBlock(repoPath, env, layer, relPaths);
   if (relPaths.length > 0) {
-    writeManagedExcludeBlock(repoPath, relPaths, excludeOwner);
     writeLedger(ledgerPath, ledger);
   } else {
     // Nothing injected (e.g. target owns everything) — leave no residue.
-    removeManagedExcludeBlock(repoPath, excludeOwner);
     deleteLedger(ledgerPath);
   }
 
@@ -525,7 +599,8 @@ export const teardown = (options: TeardownOptions): void => {
     }
   }
 
-  removeManagedExcludeBlock(repoPath, EXCLUDE_OWNER_BY_LAYER[layer]);
+  // Keeps the paths of any other checkout sharing this exclude file (a linked worktree's primary).
+  syncSharedExcludeBlock(repoPath, env, layer, []);
 
   // Remove OT-created dirs, deepest-first, only when now empty.
   for (const relDir of [...ledger.createdDirs].sort().reverse()) {

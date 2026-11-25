@@ -1,7 +1,7 @@
 /**
- * @description Unit tests for the shared run-start workspace setup: the two skip flags the OT Loop
- * runner sets (no MCP preflight, no foreign-skill injection) and the worktree handoff both runners
- * share. The orchestrator suite covers the unskipped path end to end.
+ * @description Unit tests for the shared run-start workspace setup: the MCP-preflight skip flag the
+ * OT Loop runner sets, foreign-skill injection into the run directory (gated on the base checkout),
+ * agent-config trust and the worktree handoff.
  */
 
 import { createMock } from '@golevelup/ts-vitest';
@@ -120,7 +120,6 @@ describe('PlanRunWorkspaceService', () => {
 
   const prepare = (flags: {
     readonly skipMcpPreflight: boolean;
-    readonly skipSkillInjection: boolean;
   }): ReturnType<PlanRunWorkspaceService['prepare']> => {
     return service.prepare({
       correlation: {
@@ -143,7 +142,6 @@ describe('PlanRunWorkspaceService', () => {
   it('provisions the worktree, reports it, registers it and returns it as the working directory', async () => {
     const prepared = await prepare({
       skipMcpPreflight: false,
-      skipSkillInjection: false,
     });
 
     expect(mockProvision).toHaveBeenCalledWith({
@@ -162,10 +160,9 @@ describe('PlanRunWorkspaceService', () => {
     expect(prepared.run?.id).toBe('run-1');
   });
 
-  it('preflights MCP and injects foreign skills when neither is skipped', async () => {
+  it('preflights MCP and injects foreign skills when the preflight is not skipped', async () => {
     const prepared = await prepare({
       skipMcpPreflight: false,
-      skipSkillInjection: false,
     });
 
     expect(mockCheck).toHaveBeenCalledTimes(1);
@@ -174,25 +171,105 @@ describe('PlanRunWorkspaceService', () => {
   });
 
   it('skips the MCP preflight when asked (OT Loop)', async () => {
-    await prepare({ skipMcpPreflight: true, skipSkillInjection: false });
+    await prepare({ skipMcpPreflight: true });
 
     expect(mockCheck).not.toHaveBeenCalled();
   });
 
-  it('skips foreign-skill injection when asked (OT Loop), without even looking up the checkout', async () => {
-    const prepared = await prepare({
-      skipMcpPreflight: false,
-      skipSkillInjection: true,
+  describe('foreign-skill injection', () => {
+    it('reads the opt-in from the base checkout and injects into the worktree', async () => {
+      const prepared = await prepare({ skipMcpPreflight: true });
+
+      expect(mockFindByUserAndPath).toHaveBeenCalledWith(USER_ID, BASE);
+      expect(mockFindByUserAndPath).not.toHaveBeenCalledWith(USER_ID, WORKTREE);
+      expect(mockEnsureMaterialized).toHaveBeenCalledWith(
+        expect.objectContaining({
+          otCuratedSkillsDir: '/ot-root/skills',
+          repoPath: WORKTREE,
+        }),
+      );
+      expect(prepared.injectedSkillNames).toEqual(['ot-plans']);
     });
 
-    expect(mockFindByUserAndPath).not.toHaveBeenCalledWith(USER_ID, WORKTREE);
-    expect(mockEnsureMaterialized).not.toHaveBeenCalled();
-    expect(prepared.injectedSkillNames).toEqual([]);
+    it('says how many skills it injected in plan output', async () => {
+      await prepare({ skipMcpPreflight: true });
+
+      expect(planOutputStream.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          content: `🧩 Injected 1 OpenThrottle skill into ${WORKTREE}`,
+          planId: PLAN_ID,
+        }),
+      );
+    });
+
+    it('says nothing when no skill was injected', async () => {
+      mockEnsureMaterialized.mockReturnValue({
+        injectedNames: [],
+        warnings: [],
+      });
+
+      await prepare({ skipMcpPreflight: true });
+
+      expect(planOutputStream.create).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          content: expect.stringContaining('Injected'),
+        }),
+      );
+    });
+
+    it('injects nothing when the base checkout is not opted in', async () => {
+      mockFindByUserAndPath.mockResolvedValue({
+        agentConfigTrusted: true,
+        filesystemPath: BASE,
+        foreignSkillInjectionEnabled: false,
+      });
+
+      const prepared = await prepare({ skipMcpPreflight: true });
+
+      expect(mockEnsureMaterialized).not.toHaveBeenCalled();
+      expect(prepared.injectedSkillNames).toEqual([]);
+    });
+
+    it('injects into an untrusted checkout that is opted in', async () => {
+      mockFindByUserAndPath.mockResolvedValue({
+        agentConfigTrusted: false,
+        filesystemPath: BASE,
+        foreignSkillInjectionEnabled: true,
+      });
+
+      const prepared = await prepare({ skipMcpPreflight: true });
+
+      expect(prepared.agentConfigTrust.posture).toBe('isolated');
+      expect(prepared.injectedSkillNames).toEqual(['ot-plans']);
+    });
+
+    it('injects nothing inside the OpenThrottle checkout', async () => {
+      mockResolveForeign.mockReturnValue({
+        isForeign: false,
+        openThrottleRoot: '/ot-root',
+      });
+
+      const prepared = await prepare({ skipMcpPreflight: true });
+
+      expect(mockEnsureMaterialized).not.toHaveBeenCalled();
+      expect(prepared.injectedSkillNames).toEqual([]);
+    });
+
+    it('soft-fails when materializing throws', async () => {
+      mockEnsureMaterialized.mockImplementation(() => {
+        throw new Error('EACCES');
+      });
+
+      const prepared = await prepare({ skipMcpPreflight: true });
+
+      expect(prepared.injectedSkillNames).toEqual([]);
+      expect(prepared.workingDirectory).toBe(WORKTREE);
+    });
   });
 
   describe('agent-config trust', () => {
     it('reads trust from the base checkout, not the provisioned worktree', async () => {
-      await prepare({ skipMcpPreflight: false, skipSkillInjection: true });
+      await prepare({ skipMcpPreflight: false });
 
       expect(mockFindByUserAndPath).toHaveBeenCalledWith(USER_ID, BASE);
     });
@@ -200,7 +277,6 @@ describe('PlanRunWorkspaceService', () => {
     it('runs a trusted foreign checkout as before, with its MCP preflight', async () => {
       const prepared = await prepare({
         skipMcpPreflight: false,
-        skipSkillInjection: true,
       });
 
       expect(prepared.agentConfigTrust).toEqual({
@@ -219,7 +295,6 @@ describe('PlanRunWorkspaceService', () => {
 
       const prepared = await prepare({
         skipMcpPreflight: false,
-        skipSkillInjection: true,
       });
 
       expect(prepared.agentConfigTrust).toEqual({
@@ -240,7 +315,6 @@ describe('PlanRunWorkspaceService', () => {
 
       const prepared = await prepare({
         skipMcpPreflight: true,
-        skipSkillInjection: true,
       });
 
       expect(prepared.agentConfigTrust.posture).toBe('isolated');
