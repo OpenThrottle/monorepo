@@ -249,6 +249,13 @@ One behavior **must change**. When an endpoint _is_ resolvable but unreachable, 
 so a single misconfigured endpoint produces a warning on every hook of every prompt. In `foreign` repos
 this is **rate-limited to one warning per session**; subsequent failures buffer silently.
 
+**Implemented** in `utils/warnEndpointUnreachable.ts` → `warnEndpointUnreachable`, called from the three
+failure paths in `data/persist.ts` (events, outcomes, token usage). "Foreign" is
+`!isOpenThrottleCheckout(repoRoot)` (ambiguous → foreign, the same seam as §6). Each hook is a fresh
+process, so the first warning claims a sentinel file at `<telemetry dir>/warned/<session id>`
+(user-global, never in the target repo; sentinels older than 24h are pruned). Home checkouts keep a
+warning per failure. The no-endpoint branch and the 750ms / `budgetMs` bounds are unchanged.
+
 The hook must never affect the exit status or the tool result. `capture.ts` already ends with
 `process.exit(0)` in a `finally`; that guarantee extends to every adapter in the payload.
 
@@ -323,7 +330,13 @@ foreign repo stays `name-only`. Each decision, and why:
 Three layers, each independently sufficient, in precedence order:
 
 1. `OPENTHROTTLE_TELEMETRY_OFFLINE=1` — already implemented: buffers locally, never posts.
-2. A total off switch that disables capture entirely (no post, no buffer, no start files).
+2. `OPENTHROTTLE_SKILL_USAGE_DISABLED=1` (or `true`) — the total off switch: capture does nothing (no
+   post, no buffer, no start files). Read from `process.env` and `~/.openthrottle/.env`
+   (`config/isTelemetryDisabled.ts` → `isTelemetryDisabled`), and checked first by every telemetry
+   entrypoint of every producer (capture, complete, outcome, drain, and the coverage heartbeat of
+   Claude, Cursor, Codex and Antigravity). It deliberately also silences the §8 heartbeat: a user who
+   said "record nothing" must not be counted as a machine either. Guard and workflow hooks are not
+   telemetry and are not affected; they have their own controls.
 3. Leg B's injection gate — the driver omits `--plugin-dir` altogether, so nothing loads. This is the
    only one that costs zero process time, and it is the right lever for repos the operator does not own.
 

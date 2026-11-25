@@ -159,11 +159,52 @@ describe('postSkillUsageEvent + persistUsageEvent', () => {
     vi.restoreAllMocks();
   });
 
+  describe('unreachable-endpoint warning rate limit (contract §5)', () => {
+    const failingFetch: HookFetch = async () => {
+      throw new Error('fetch failed');
+    };
+    const failTwice = async (repoRoot: string, sessionId: string) => {
+      const base = {
+        event: { ...sampleEvent, session_id: sessionId },
+        fetchImpl: failingFetch,
+        graphqlUrl: 'http://127.0.0.1:7451/graphql',
+        jsonlPath: path.join(tmpRoot, `rate-${sessionId}.jsonl`),
+        repoRoot,
+        timeoutMs: 50,
+      };
+      await persistUsageEvent(base);
+      const write = vi.spyOn(process.stderr, 'write').mockReturnValue(true);
+      await persistUsageEvent(base);
+      const logged = write.mock.calls.map(([line]) => String(line)).join('');
+      vi.restoreAllMocks();
+      return { buffered: fs.readFileSync(base.jsonlPath, 'utf8'), logged };
+    };
+
+    it('stays silent on the second failure in a foreign session, still buffering', async () => {
+      const { buffered, logged } = await failTwice(tmpRoot, 'sess-foreign');
+      expect(logged).toBe('');
+      expect(buffered.trim().split('\n')).toHaveLength(2);
+    });
+
+    it('still warns on every failure in an OpenThrottle checkout', async () => {
+      const home = path.join(tmpRoot, 'ot-home');
+      fs.mkdirSync(path.join(home, 'applications', 'openthrottle-server'), {
+        recursive: true,
+      });
+      fs.writeFileSync(
+        path.join(home, 'applications', 'openthrottle-server', 'package.json'),
+        JSON.stringify({ name: 'openthrottle-server' }),
+      );
+      const { logged } = await failTwice(home, 'sess-home');
+      expect(logged).toContain('server post failed');
+    });
+  });
+
   it('redacts userinfo from the endpoint it logs', async () => {
     const write = vi.spyOn(process.stderr, 'write').mockReturnValue(true);
 
     await persistUsageEvent({
-      event: sampleEvent,
+      event: { ...sampleEvent, session_id: 'sess-redact' },
       fetchImpl: async () => {
         throw new Error('fetch failed');
       },

@@ -12,6 +12,7 @@ import fs from 'node:fs';
 import {
   completeOpenStartsForSession,
   drainBufferedUsage,
+  isTelemetryDisabled,
   logHookError,
   SKILL_USAGE_OUTCOMES,
   sweepAbandonedStarts,
@@ -20,6 +21,10 @@ import { CODEX_SOURCE, normalizeCodexSessionEndPayload } from './payload.ts';
 
 const main = async (): Promise<void> => {
   try {
+    if (isTelemetryDisabled()) {
+      return;
+    }
+
     const repoRoot = process.env.OPEN_THROTTLE_REPO_ROOT || process.cwd();
 
     const stdinBuf = fs.readFileSync(0, 'utf8');

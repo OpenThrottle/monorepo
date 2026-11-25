@@ -22,6 +22,7 @@ import {
   completeOpenStartsForSession,
   drainBufferedTrajectories,
   drainBufferedUsage,
+  isTelemetryDisabled,
   logHookError,
   sweepAbandonedStarts,
   sweepTrajectoryUploadState,
@@ -39,6 +40,10 @@ import { captureTranscriptUsage } from './transcript-usage.ts';
 
 const main = async (): Promise<void> => {
   try {
+    if (isTelemetryDisabled()) {
+      return;
+    }
+
     // Another tool is running this bundle. Its payloads are not Claude's, and its own adapter is
     // the only correct producer (agent-cli-hook-capability-matrix.md § Which tool is running the
     // Claude bundles).

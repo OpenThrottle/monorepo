@@ -225,18 +225,18 @@ that start (the only source of `success` / `error` and of a duration); **session
 turns unclaimed starts into `session_ended`; the **heartbeat** says the agent is instrumented at
 all. Measurements, versions and payload shapes: [agent-cli-hook-capability-matrix.md](./agent-cli-hook-capability-matrix.md).
 
-| Agent           | Capture                                                  | Deliberate report (outcome + duration)                                                                                          | Session-end resolution | Heartbeat      |
-| --------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ---------------------- | -------------- |
-| **claude**      | `PreToolUse(Skill)` + `UserPromptExpansion`              | **yes**, via `CLAUDE_CODE_SESSION_ID`                                                                                           | `SessionEnd`           | `SessionStart` |
-| **codex**       | `UserPromptSubmit`, **slash commands only**              | **yes for slash-invoked skills**, via `CODEX_SESSION_ID`; a model-invoked skill has no start, so its report carries no duration | `SessionEnd`           | `SessionStart` |
-| **cursor**      | `preToolUse` `Read` of a `SKILL.md` (`skill_read`)       | **yes**, via `CURSOR_CONVERSATION_ID` (verified live on 2026.11.13)                                                             | `sessionEnd`           | `sessionStart` |
-| **antigravity** | none (unmeasured)                                        | none; no shell marker yet, so a report from its shell can still be stamped `claude-code`                                        | none                   | `SessionStart` |
-| **gemini-cli**  | none (`BeforeTool` `activate_skill` exists, not adapted) | **stands down**: no session id in its shell (`GEMINI_CLI=1` only)                                                               | none                   | none           |
-| **opencode**    | none (`skill` tool + plugin events exist, not adapted)   | **stands down**: no session id in its shell (`OPENCODE=1` only)                                                                 | none                   | none           |
-| **grok**        | none (no `Skill` tool)                                   | none                                                                                                                            | none                   | none           |
+| Agent           | Capture                                                                   | Deliberate report (outcome + duration)                                                                                            | Session-end resolution | Heartbeat      |
+| --------------- | ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------- | -------------- |
+| **claude**      | `PreToolUse(Skill)` + `UserPromptExpansion`                               | **yes**, via `CLAUDE_CODE_SESSION_ID`                                                                                             | `SessionEnd`           | `SessionStart` |
+| **codex**       | `PreToolUse` `Bash` `cat` of a `SKILL.md` (`skill_read`) + slash commands | **yes**, via `CODEX_SESSION_ID` (a skill loaded some other way than a bare `cat` has no start, so its report carries no duration) | `SessionEnd`           | `SessionStart` |
+| **cursor**      | `preToolUse` `Read` of a `SKILL.md` (`skill_read`)                        | **yes**, via `CURSOR_CONVERSATION_ID` (verified live on 2026.11.13)                                                               | `sessionEnd`           | `sessionStart` |
+| **antigravity** | none (unmeasured)                                                         | none; no shell marker yet, so a report from its shell can still be stamped `claude-code`                                          | none                   | `SessionStart` |
+| **gemini-cli**  | none (`BeforeTool` `activate_skill` exists, not adapted)                  | **stands down**: no session id in its shell (`GEMINI_CLI=1` only)                                                                 | none                   | none           |
+| **opencode**    | none (`skill` tool + plugin events exist, not adapted)                    | **stands down**: no session id in its shell (`OPENCODE=1` only)                                                                   | none                   | none           |
+| **grok**        | none (no `Skill` tool)                                                    | none                                                                                                                              | none                   | none           |
 
 **Which agents can show Outcomes and Avg duration on `/skills`:** Claude Code and Cursor, for every
-skill that reports; Codex, only for skills started with a slash command. Every other agent shows no
+skill that reports; Codex, for every skill it loads with a slash command or a bare `cat` of its `SKILL.md`. Every other agent shows no
 measured outcome, which is the honest reading. Two caveats: the reporter is found through the
 repo-relative fallback in each skill's one-liner, so outside this repo it depends on the plugin's
 `bin/` being on the shell PATH, which is verified for Claude Code only; and a Cursor start is the

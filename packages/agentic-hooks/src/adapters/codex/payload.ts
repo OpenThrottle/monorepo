@@ -2,7 +2,8 @@
  * Codex adapter — turns a Codex CLI hook payload into the tool-neutral
  * NormalizedInvocation.
  *
- * Written against payloads captured from `codex-cli 0.145.0`; see
+ * Written against payloads captured from `codex-cli 0.145.0` (session and
+ * prompt events) and `codex-cli 0.167.0` (`PreToolUse`); see
  * `docs/monorepo/codex-cli-hook-probe.md` and the committed fixtures in
  * `__tests__/fixtures/`.
  *
@@ -12,18 +13,24 @@
  * …). The config that wires them is TOML in `~/.codex/config.toml` rather than
  * JSON in the repo, which is a delivery difference, not a payload one.
  *
- * **Capture is the slash-command path only, deliberately.** Codex's
- * `PreToolUse` payload carries `tool_name` and `tool_input`, so a tool-shaped
- * skill invocation would be observable in principle — but which `tool_name` a
- * skill actually produces has NOT been captured, and a normalizer written
- * against a guessed tool name cannot tell "not a skill invocation" from "the
- * shape changed underneath us". That is the exact bug the Cursor adapter had.
- * The branch is omitted until a real payload can be captured rather than
- * shipped on a guess. See the probe doc for what is still open.
+ * Two capture branches, both measured:
+ *
+ * 1. **`PreToolUse` skill read.** Codex has no `Skill` tool. Measured on
+ *    0.167.0, a filesystem skill is loaded by its `Bash` tool running
+ *    `cat <path>/SKILL.md` (a 700-line `SKILL.md` was read the same way, not
+ *    paged), so the skill name is the file's parent directory — the same signal
+ *    Cursor gives, recorded under the same `skill_read` path. Only that exact
+ *    shape matches: one `cat` of one path, no pipes, chains or redirects.
+ *    Any other command returns null rather than guessing at what it read.
+ * 2. **`UserPromptSubmit` slash command**, parsed from the prompt.
  */
 import { isRecord } from '@openthrottle/nodejs-utils';
 
 import type { NormalizedInvocation } from '../../types.ts';
+import {
+  SKILL_READ_INVOCATION_PATH,
+  skillNameFromSkillFilePath,
+} from '../../utils/skill-file.ts';
 
 /** Producer id stamped onto every event this adapter emits. @public */
 export const CODEX_SOURCE = 'codex';
@@ -51,19 +58,55 @@ const readString = (value: unknown): string | null => {
 };
 
 /**
- * Parse a Codex hook payload into a NormalizedInvocation, or null when the
- * payload is not a skill invocation this adapter handles.
- *
- * @public
+ * `cat <path>` with exactly one path argument, optionally quoted, and nothing
+ * else on the line — the only command shape Codex was measured using to load a
+ * skill. Shell metacharacters anywhere mean a compound command, which this
+ * deliberately does not try to read.
  */
-export const normalizeCodexPayload = (
-  raw: unknown,
+const SKILL_CAT_PATTERN = /^\s*cat\s+(?:'([^']+)'|"([^"]+)"|([^\s'"]+))\s*$/;
+const SHELL_METACHARACTERS = /[;&|<>`$\n]/;
+
+/** The path a Codex `Bash` command reads with a bare `cat`, or null. */
+const catTargetPath = (command: string): string | null => {
+  if (SHELL_METACHARACTERS.test(command)) {
+    return null;
+  }
+  const match = SKILL_CAT_PATTERN.exec(command);
+  return match?.[1] ?? match?.[2] ?? match?.[3] ?? null;
+};
+
+const normalizeSkillRead = (
+  payload: Record<string, unknown>,
 ): NormalizedInvocation | null => {
-  if (!isRecord(raw) || raw.hook_event_name !== 'UserPromptSubmit') {
+  if (payload.tool_name !== 'Bash' || !isRecord(payload.tool_input)) {
+    return null;
+  }
+  const command = readString(payload.tool_input.command);
+  const filePath = command ? catTargetPath(command) : null;
+  const skillName = filePath ? skillNameFromSkillFilePath(filePath) : null;
+  if (!skillName) {
     return null;
   }
 
-  const prompt = readString(raw.prompt);
+  const normalized: NormalizedInvocation = {
+    args: '',
+    cwd: readString(payload.cwd),
+    hook_event_name: 'PreToolUse',
+    invocation_path: SKILL_READ_INVOCATION_PATH,
+    session_id: readString(payload.session_id),
+    skill_name: skillName,
+  };
+  const toolUseId = readString(payload.tool_use_id);
+  if (toolUseId) {
+    normalized.tool_use_id = toolUseId;
+  }
+  return normalized;
+};
+
+const normalizeSlashCommand = (
+  payload: Record<string, unknown>,
+): NormalizedInvocation | null => {
+  const prompt = readString(payload.prompt);
   if (!prompt) {
     return null;
   }
@@ -75,19 +118,42 @@ export const normalizeCodexPayload = (
 
   const normalized: NormalizedInvocation = {
     args: match?.[2] ?? '',
-    cwd: readString(raw.cwd),
+    cwd: readString(payload.cwd),
     hook_event_name: 'UserPromptSubmit',
     invocation_path: 'slash',
-    session_id: readString(raw.session_id),
+    session_id: readString(payload.session_id),
     skill_name: skillName,
   };
-  const turnId = readString(raw.turn_id);
+  const turnId = readString(payload.turn_id);
   if (turnId) {
     // Codex's per-turn id is the closest analogue to a tool_use_id and is what
     // makes a start correlatable with its outcome inside one session.
     normalized.tool_use_id = turnId;
   }
   return normalized;
+};
+
+/**
+ * Parse a Codex hook payload into a NormalizedInvocation, or null when the
+ * payload is not a skill invocation this adapter handles.
+ *
+ * @public
+ */
+export const normalizeCodexPayload = (
+  raw: unknown,
+): NormalizedInvocation | null => {
+  if (!isRecord(raw)) {
+    return null;
+  }
+
+  switch (raw.hook_event_name) {
+    case 'PreToolUse':
+      return normalizeSkillRead(raw);
+    case 'UserPromptSubmit':
+      return normalizeSlashCommand(raw);
+    default:
+      return null;
+  }
 };
 
 /**

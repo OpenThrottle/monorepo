@@ -2,7 +2,8 @@
  * Unit tests for the Codex adapter payload normalization + the seam contract.
  *
  * Positive cases run against payloads captured verbatim from `codex-cli 0.145.0`
- * (`./fixtures/`, paths scrubbed). See `docs/monorepo/codex-cli-hook-probe.md`.
+ * and, for `PreToolUse`, `codex-cli 0.167.0` (`./fixtures/`, paths scrubbed).
+ * See `docs/monorepo/codex-cli-hook-probe.md`.
  */
 import fs from 'node:fs';
 import os from 'node:os';
@@ -56,25 +57,67 @@ describe('normalizeCodexPayload', () => {
     expect(normalizeCodexPayload(fixture('session-end'))).toBeNull();
   });
 
-  it('returns null for a PreToolUse payload', () => {
-    // Codex's PreToolUse carries tool_name/tool_input, but which tool_name a
-    // skill produces has not been captured. Until it has, this adapter must
-    // report "not handled" rather than guess — see the probe doc.
-    expect(
-      normalizeCodexPayload({
-        cwd: '/tmp/probe-repo',
-        hook_event_name: 'PreToolUse',
-        session_id: 'sess-1',
-        tool_input: { command: 'ls' },
-        tool_name: 'shell',
-        tool_use_id: 'call-1',
-      }),
-    ).toBeNull();
-  });
-
   it('returns null for non-records and unknown events', () => {
     expect(normalizeCodexPayload(null)).toBeNull();
     expect(normalizeCodexPayload({ hook_event_name: 'PreCompact' })).toBeNull();
+  });
+});
+
+describe('normalizeCodexPayload — PreToolUse skill read', () => {
+  const withCommand = (command: unknown): unknown => {
+    const captured = fixture('pre-tool-use');
+    const isObject = typeof captured === 'object' && captured !== null;
+    return isObject ? { ...captured, tool_input: { command } } : {};
+  };
+
+  it('maps the captured `cat <skill>/SKILL.md` read', () => {
+    expect(normalizeCodexPayload(fixture('pre-tool-use'))).toEqual({
+      args: '',
+      cwd: '/tmp/probe-repo',
+      hook_event_name: 'PreToolUse',
+      invocation_path: 'skill_read',
+      session_id: '01a21067-d913-71c0-bad4-8d92a8f4c1d9',
+      skill_name: 'ot-probe-ping',
+      tool_use_id: 'exec-b8ed9ba6-768c-44e9-8e09-76df0dc86cfb',
+    });
+  });
+
+  it('maps an absolute or quoted skill path', () => {
+    expect(
+      normalizeCodexPayload(
+        withCommand('cat /home/probe/.codex/skills/ot-plans/SKILL.md'),
+      ),
+    ).toMatchObject({ skill_name: 'ot-plans' });
+    expect(
+      normalizeCodexPayload(withCommand("cat '/a b/skills/ot-loop/SKILL.md'")),
+    ).toMatchObject({ skill_name: 'ot-loop' });
+  });
+
+  it('returns null when the cat target is not a SKILL.md', () => {
+    expect(normalizeCodexPayload(withCommand('cat README.md'))).toBeNull();
+    expect(
+      normalizeCodexPayload(withCommand('cat skills/ot-plans/SKILL.md.bak')),
+    ).toBeNull();
+  });
+
+  it.each([
+    "sed -n '1,200p' skills/ot-plans/SKILL.md",
+    'cat skills/ot-plans/SKILL.md | head',
+    'cat skills/ot-plans/SKILL.md && ls',
+    'cat a/SKILL.md b/SKILL.md',
+    'cat $(echo skills/ot-plans/SKILL.md)',
+    'vim skills/ot-plans/SKILL.md',
+    'ls',
+  ])('returns null for the unmeasured command shape %s', (command) => {
+    expect(normalizeCodexPayload(withCommand(command))).toBeNull();
+  });
+
+  it('returns null for a non-Bash tool or a missing command', () => {
+    const captured = fixture('pre-tool-use');
+    const isObject = typeof captured === 'object' && captured !== null;
+    const otherTool = isObject ? { ...captured, tool_name: 'apply_patch' } : {};
+    expect(normalizeCodexPayload(otherTool)).toBeNull();
+    expect(normalizeCodexPayload(withCommand(42))).toBeNull();
   });
 });
 
@@ -142,5 +185,30 @@ describe('adapter seam → codex-sourced event', () => {
     expect(event.skill_name).toBe('ot-plans');
     expect(event.scope).toBe('ours');
     expect(event.invocation_path).toBe('slash');
+  });
+  it('builds a codex sourced skill_read event from a PreToolUse payload', () => {
+    const normalized = normalizeCodexPayload({
+      cwd: tmpRoot,
+      hook_event_name: 'PreToolUse',
+      session_id: 'sess-10',
+      tool_input: { command: 'cat skills/ot-plans/SKILL.md' },
+      tool_name: 'Bash',
+      tool_use_id: 'exec-10',
+    });
+    const event = buildUsageEvent({
+      gitBranch: 'example-usage-tracking',
+      normalized,
+      repoRoot: tmpRoot,
+      source: CODEX_SOURCE,
+      timestamp: '2026-08-01T00:00:00.000Z',
+    });
+
+    expect(event).toMatchObject({
+      invocation_path: 'skill_read',
+      scope: 'ours',
+      skill_name: 'ot-plans',
+      source: 'codex',
+      tool_use_id: 'exec-10',
+    });
   });
 });

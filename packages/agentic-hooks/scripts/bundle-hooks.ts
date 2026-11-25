@@ -497,7 +497,8 @@ const PLUGIN_PAYLOADS: readonly PluginPayload[] = [
     captureNote: [
       "Codex reads hooks from `~/.codex/config.toml` (or a trusted project's `.codex/`), never",
       'from a plugin directory, so this payload ships no `hooks/hooks.json` and no driver passes',
-      'it as `--plugin-dir`. Capture is slash-commands-only: Codex raises no tool event for a skill.',
+      'it as `--plugin-dir`. Codex has no `Skill` tool: capture records a skill when its `Bash`',
+      'tool runs `cat <path>/SKILL.md` (`PreToolUse`) and when a prompt opens with `/<name>`.',
     ].join('\n'),
     dependencies: [],
     description: TELEMETRY_DESCRIPTION('Codex'),
@@ -505,6 +506,7 @@ const PLUGIN_PAYLOADS: readonly PluginPayload[] = [
     disableRows: [['remove the `[[hooks.…]]` blocks', 'stops it entirely']],
     heartbeatCollects: [],
     hookTableRows: [
+      ['`PreToolUse`', '`hooks/skill-usage-capture.cjs`'],
       ['`UserPromptSubmit`', '`hooks/skill-usage-capture.cjs`'],
       ['`SessionStart`', '`hooks/skill-usage-heartbeat.cjs`'],
       ['`SessionEnd`', '`hooks/skill-usage-complete.cjs`'],
@@ -513,6 +515,11 @@ const PLUGIN_PAYLOADS: readonly PluginPayload[] = [
       'Add these to `~/.codex/config.toml` once, with the absolute path of this directory:',
       '',
       '```toml',
+      '[[hooks.PreToolUse]]',
+      '[[hooks.PreToolUse.hooks]]',
+      'type = "command"',
+      'command = "/absolute/path/to/plugins/openthrottle-codex/hooks/skill-usage-capture.cjs"',
+      '',
       '[[hooks.UserPromptSubmit]]',
       '[[hooks.UserPromptSubmit.hooks]]',
       'type = "command"',
@@ -991,6 +998,10 @@ const renderTelemetryReadme = (payload: TelemetryPayload): string => {
       ['how', 'effect'],
       [
         ['`OPENTHROTTLE_TELEMETRY_OFFLINE=1`', 'buffers locally, never sends'],
+        [
+          '`OPENTHROTTLE_SKILL_USAGE_DISABLED=1`',
+          'captures nothing: no send, no buffer, no start file, no heartbeat (env or `~/.openthrottle/.env`)',
+        ],
         ...payload.disableRows,
       ],
     ),

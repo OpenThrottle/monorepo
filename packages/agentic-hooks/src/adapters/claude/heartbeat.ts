@@ -5,6 +5,7 @@
  * always exits 0, silent when no endpoint resolves.
  */
 import {
+  isTelemetryDisabled,
   logHookError,
   readHookPayloadCwd,
   readHookStdin,
@@ -23,6 +24,10 @@ import { isShadowedByRepoHooks } from './shadow.ts';
 
 const main = async (): Promise<void> => {
   try {
+    if (isTelemetryDisabled()) {
+      return;
+    }
+
     const host = detectClaudeBundleHost();
     const projectDir = resolveBundleHostProjectDir(host);
 
