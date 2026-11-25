@@ -21,6 +21,7 @@ import {
 import { appendWorktreeShellFlags } from '../utils/shell-flags.ts';
 
 const capabilities: DriverCapabilities = {
+  allowedCommands: false,
   /**
    * Reads the workspace's `.mcp.json` — verified against grok 1.0.0 (3cd0d0cbcebe) via
    * `grok mcp doctor`, which lists `.mcp.json` as a first-class config source and handshakes

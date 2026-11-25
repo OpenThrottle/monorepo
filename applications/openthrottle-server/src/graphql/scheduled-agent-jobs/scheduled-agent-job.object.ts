@@ -112,6 +112,11 @@ export class ScheduledAgentJobObject {
   })
   approvalState!: string;
 
+  @Field(() => [String], {
+    description: `Shell command patterns the job's headless run may execute without a permission prompt (Claude Code Bash(<pattern>) syntax without the wrapper). Empty adds nothing.`,
+  })
+  allowedCommands!: string[];
+
   @Field(() => String, {
     deprecationReason: `Use repositoryCheckoutId to target a registered repository checkout; cwd is only consulted when no checkout is set.`,
     description: `Legacy explicit process cwd for the agent CLI, used only when repositoryCheckoutId is null; null then uses WORKSPACE_ROOT.`,

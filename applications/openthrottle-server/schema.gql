@@ -4446,6 +4446,11 @@ type ScheduledAgentJobObject {
   approvalState: String!
 
   """
+  Shell command patterns the job's headless run may execute without a permission prompt (Claude Code Bash(<pattern>) syntax without the wrapper). Empty adds nothing.
+  """
+  allowedCommands: [String!]!
+
+  """
   Legacy explicit process cwd for the agent CLI, used only when repositoryCheckoutId is null; null then uses WORKSPACE_ROOT.
   """
   cwd: String @deprecated(reason: "Use repositoryCheckoutId to target a registered repository checkout; cwd is only consulted when no checkout is set.")
@@ -10565,6 +10570,11 @@ input CreateScheduledAgentJobAsAgentInputType {
   """
   misfireThresholdMs: Int
 
+  """
+  Shell command patterns the run may execute without a permission prompt, in Claude Code Bash(<pattern>) syntax without the wrapper (e.g. "pnpm run social:x-post *"). At most 20, each 1-200 characters with no newline or parentheses. Needs a driver with a command allowlist (claude). An agent-created job with a non-empty list waits for human approval. Omit for none.
+  """
+  allowedCommands: [String!]
+
   """Whether the schedule starts enabled (default true)."""
   enabled: Boolean
 
@@ -10613,6 +10623,11 @@ input UpdateScheduledAgentJobAsAgentInputType {
   Registered repository checkout to run in; must belong to the caller. Takes precedence over cwd.
   """
   repositoryCheckoutId: ID
+
+  """
+  Shell command patterns the run may execute without a permission prompt, in Claude Code Bash(<pattern>) syntax without the wrapper (e.g. "pnpm run social:x-post *"). At most 20, each 1-200 characters with no newline or parentheses. Needs a driver with a command allowlist (claude). An agent-created job with a non-empty list waits for human approval. Replaces the whole list; [] clears it. Omit to keep it.
+  """
+  allowedCommands: [String!]
 
   """
   Enable or disable the job. Cannot enable a job that is still awaiting human approval.
@@ -10682,6 +10697,11 @@ input CreateScheduledAgentJobInputType {
   """
   repositoryCheckoutId: ID
 
+  """
+  Shell command patterns the run may execute without a permission prompt, in Claude Code Bash(<pattern>) syntax without the wrapper (e.g. "pnpm run social:x-post *"). At most 20, each 1-200 characters with no newline or parentheses. Needs a driver with a command allowlist (claude). An agent-created job with a non-empty list waits for human approval. Omit for none.
+  """
+  allowedCommands: [String!]
+
   """Whether the schedule starts enabled (default true)."""
   enabled: Boolean
 }
@@ -10726,6 +10746,11 @@ input UpdateScheduledAgentJobInputType {
   Registered repository checkout to run in; must belong to the caller. Takes precedence over cwd.
   """
   repositoryCheckoutId: ID
+
+  """
+  Shell command patterns the run may execute without a permission prompt, in Claude Code Bash(<pattern>) syntax without the wrapper (e.g. "pnpm run social:x-post *"). At most 20, each 1-200 characters with no newline or parentheses. Needs a driver with a command allowlist (claude). An agent-created job with a non-empty list waits for human approval. Replaces the whole list; [] clears it. Omit to keep it.
+  """
+  allowedCommands: [String!]
 }
 
 input SetScheduledAgentJobEnabledInputType {

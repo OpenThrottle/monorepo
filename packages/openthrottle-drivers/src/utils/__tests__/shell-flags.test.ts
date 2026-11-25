@@ -22,6 +22,7 @@ const FLAGS = ['--approve-mcps', '--trust'] as const;
 
 const mcpCapabilities = (mcpAutoApprove: boolean): DriverCapabilities => {
   return {
+    allowedCommands: false,
     attachesWorkspaceMcp: false,
     chatStreaming: false,
     isolatesRepoAgentConfig: false,
@@ -60,6 +61,7 @@ describe('appendMcpShellFlags', () => {
 });
 
 const BASE_CAPABILITIES: DriverCapabilities = {
+  allowedCommands: false,
   attachesWorkspaceMcp: false,
   chatStreaming: false,
   isolatesRepoAgentConfig: false,

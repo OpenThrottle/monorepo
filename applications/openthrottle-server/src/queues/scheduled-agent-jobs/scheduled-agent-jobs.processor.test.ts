@@ -548,7 +548,12 @@ describe('ScheduledAgentJobsProcessor', () => {
       'run-now-9',
       'bull-1',
       expect.objectContaining({
-        settingsSnapshot: { driverId: 'claude', model: null, settings: null },
+        settingsSnapshot: {
+          allowedCommands: [],
+          driverId: 'claude',
+          model: null,
+          settings: null,
+        },
       }),
     );
   });
@@ -993,6 +998,25 @@ describe('ScheduledAgentJobsProcessor', () => {
     });
   });
 
+  it('passes the job allowlist to the runner and records it in the settings snapshot', async () => {
+    await processor.process(
+      makeJob({ allowedCommands: ['pnpm run social:x-post *'] }),
+    );
+
+    expect(runner.run).toHaveBeenCalledWith(
+      expect.objectContaining({
+        allowedCommands: ['pnpm run social:x-post *'],
+      }),
+    );
+    expect(runsRepository.createRun).toHaveBeenCalledWith(
+      expect.objectContaining({
+        settingsSnapshot: expect.objectContaining({
+          allowedCommands: ['pnpm run social:x-post *'],
+        }),
+      }),
+    );
+  });
+
   it('captures the settings snapshot from job.data on the created run row', async () => {
     await processor.process(
       makeJob({
@@ -1005,6 +1029,7 @@ describe('ScheduledAgentJobsProcessor', () => {
     expect(runsRepository.createRun).toHaveBeenCalledWith(
       expect.objectContaining({
         settingsSnapshot: {
+          allowedCommands: [],
           driverId: 'codex',
           model: 'gpt-5',
           settings: { worktree: { worktree: 'wt-1' } },

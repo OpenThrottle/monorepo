@@ -23,6 +23,13 @@ import type {
 @Entity('scheduled_agent_jobs')
 export class ScheduledAgentJob extends BaseModel {
   /**
+   * Shell command patterns the job's headless run may execute without a prompt (migration 205),
+   * in Claude Code's `Bash(<pattern>)` syntax minus the wrapper. Empty adds nothing.
+   */
+  @Column({ array: true, default: [], name: 'allowed_commands', type: 'text' })
+  allowedCommands!: string[];
+
+  /**
    * Human-approval state (migration 183). `pending` rows are stored disabled and cannot be enabled
    * except by approving them; see {@link ScheduledAgentJobApprovalState}.
    */

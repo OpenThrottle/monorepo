@@ -331,6 +331,43 @@ describe('ScheduledAgentJobsGraphqlService', () => {
     ).rejects.toThrow(/custom endpoint/);
   });
 
+  describe('allowedCommands', () => {
+    it('rejects a non-empty list on a driver without a command allowlist', async () => {
+      await expect(
+        service.create({
+          allowedCommands: ['pnpm run social:x-post *'],
+          cronPattern: '0 9 * * *',
+          driverId: 'codex', // allowedCommands: false
+          name: 'x',
+          ownerUserId: null,
+          prompt: 'p',
+        }),
+      ).rejects.toThrow(/does not support a command allowlist/);
+      expect(jobsRepository.createJobWithinOwnerCaps).not.toHaveBeenCalled();
+    });
+
+    it('stores the list trimmed and de-duplicated for claude', async () => {
+      await service.create({
+        allowedCommands: [
+          ' pnpm run social:x-post * ',
+          'pnpm run social:x-post *',
+        ],
+        cronPattern: '0 9 * * *',
+        driverId: 'claude',
+        name: 'x',
+        ownerUserId: 'user-1',
+        prompt: 'p',
+      });
+
+      expect(jobsRepository.createJobWithinOwnerCaps).toHaveBeenCalledWith(
+        expect.objectContaining({
+          allowedCommands: ['pnpm run social:x-post *'],
+        }),
+        expect.anything(),
+      );
+    });
+  });
+
   it('rejects an unknown settings key', async () => {
     await expect(
       service.create({

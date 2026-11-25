@@ -125,6 +125,8 @@ export type ScheduledAgentJobData = Pick<
  * @public
  */
 export interface CreateScheduledAgentJobInput {
+  /** Command patterns the run may execute unprompted (migration 205); omitted stores none. */
+  readonly allowedCommands?: readonly string[];
   /** Omitted keeps the column default (`not_required`). */
   readonly approvalState?: ScheduledAgentJobApprovalState;
   /** Omitted keeps the column default (`ui`). */

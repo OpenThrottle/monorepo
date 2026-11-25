@@ -33,14 +33,17 @@ import { runTool } from '../utils/runTool.ts';
  * @description The guardrails every scheduling tool shares, stated once so each description carries
  * them in the same words.
  */
-const GUARDRAILS = `Acts as the calling user (a service-account token acts as its linked acting user; an unlinked one is refused); repositoryCheckoutId must be one of the user's own checkouts. Limits: at most 25 jobs per user (SCHEDULED_AGENT_JOBS_MAX_PER_OWNER) and at most 10 created through these tools. If the operator requires approval, a created job is stored disabled with approvalState "pending" until a person approves it in the Developer UI; it cannot be enabled or run-now'd before that.`;
+const GUARDRAILS = `Acts as the calling user (a service-account token acts as its linked acting user; an unlinked one is refused); repositoryCheckoutId must be one of the user's own checkouts. Limits: at most 25 jobs per user (SCHEDULED_AGENT_JOBS_MAX_PER_OWNER) and at most 10 created through these tools. If the operator requires approval, a created job is stored disabled with approvalState "pending" until a person approves it in the Developer UI; it cannot be enabled or run-now'd before that. allowedCommands (claude only) lists shell command patterns the headless run may execute without a permission prompt, in Claude Code Bash(<pattern>) syntax without the wrapper (e.g. "pnpm run social:x-post *"); a job with a non-empty list is always stored pending for human approval, whatever the operator setting.`;
 
 const describeJob = (job: ScheduledJobFragment): string => {
   const isCron = job.scheduleKind === 'cron';
   const when = isCron ? `cron "${job.cronPattern ?? ''}"` : job.scheduleKind;
   const state = job.enabled ? 'enabled' : 'disabled';
 
-  return `${job.id} "${job.name}" [${when}, ${state}, ${job.createdVia}, approval ${job.approvalState}]`;
+  const commands = job.allowedCommands.length;
+  const allowlist = commands === 0 ? '' : `, ${commands} allowed command(s)`;
+
+  return `${job.id} "${job.name}" [${when}, ${state}, ${job.createdVia}, approval ${job.approvalState}${allowlist}]`;
 };
 
 // ── create_scheduled_job ─────────────────────────────────────────────────────
@@ -114,7 +117,7 @@ export async function listScheduledJobsToolHandler(
 export const updateScheduledJobToolParameters =
   UpdateScheduledAgentJobAsAgentInputTypeSchema().strict();
 
-export const updateScheduledJobToolDescription = `Change a scheduled job by id; send only the fields to change (schedule fields follow create_scheduled_job). Works only on jobs created through these tools (createdVia "mcp") and owned by the user: a job a person made in the UI is refused. enabled pauses or resumes it, but cannot enable a job with approvalState "pending"; if the operator requires approval, changing an approved job's content sends it back to pending and disables it. ${GUARDRAILS}`;
+export const updateScheduledJobToolDescription = `Change a scheduled job by id; send only the fields to change (schedule fields follow create_scheduled_job). Works only on jobs created through these tools (createdVia "mcp") and owned by the user: a job a person made in the UI is refused. enabled pauses or resumes it, but cannot enable a job with approvalState "pending"; if the operator requires approval, or the job has allowedCommands, changing an approved job's content sends it back to pending and disables it. allowedCommands replaces the whole list; [] clears it. ${GUARDRAILS}`;
 
 export async function updateScheduledJobToolHandler(
   args: z.infer<typeof updateScheduledJobToolParameters>,

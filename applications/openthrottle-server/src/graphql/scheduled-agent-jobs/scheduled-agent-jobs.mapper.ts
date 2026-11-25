@@ -19,6 +19,7 @@ export const toScheduledAgentJobObject = (
   job: ScheduledAgentJob,
 ): ScheduledAgentJobObject => {
   return {
+    allowedCommands: [...job.allowedCommands],
     approvalState: job.approvalState,
     createdAt: job.createdAt,
     createdVia: job.createdVia,

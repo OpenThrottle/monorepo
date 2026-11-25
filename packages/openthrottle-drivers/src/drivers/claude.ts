@@ -28,6 +28,7 @@ import {
 } from '../utils/shell-flags.ts';
 
 const capabilities: DriverCapabilities = {
+  allowedCommands: true,
   /** Reads the workspace's `.mcp.json` automatically in headless `-p` mode (verified 2.1.232). */
   attachesWorkspaceMcp: true,
   chatStreaming: true,
@@ -89,6 +90,26 @@ const buildClaudeIsolationFlags = (
   return ` --setting-sources user --strict-mcp-config --mcp-config ${escapeShellArg(mcpConfig)}`;
 };
 
+/**
+ * @description `--allowedTools` with one quoted `Bash(<pattern>)` per entry, so a headless run may
+ * execute exactly those commands without a prompt. Empty when the list is empty or omitted, which
+ * keeps every existing command byte-identical. The flag is variadic, so it is only ever followed by
+ * another `--` flag or the end of the command.
+ */
+const buildClaudeAllowedToolsFlag = (
+  allowedCommands: readonly string[] | undefined,
+): string => {
+  if (allowedCommands === undefined || allowedCommands.length === 0) {
+    return '';
+  }
+
+  const tools = allowedCommands.map((pattern) => {
+    return escapeShellArg(`Bash(${pattern})`);
+  });
+
+  return ` --allowedTools ${tools.join(' ')}`;
+};
+
 /** `--verbose` is required by the CLI for `stream-json` under `--print`. */
 const STREAM_JSON_FLAGS = '--output-format stream-json --verbose';
 
@@ -119,7 +140,10 @@ export const claudeDriver = defineDriver({
     // `--output-format stream-json --verbose` sits right after the prompt (before `--model`): text
     // mode hides the `rate_limit_event` / 429 `result` that signal a usage limit. `parseOutput`
     // below recovers the text-mode stdout from the terminal `result` event, so callers are unchanged.
-    const base = `${escapeShellArg(config.bin ?? 'claude')} -p --permission-mode acceptEdits "${safePrompt}" ${STREAM_JSON_FLAGS}${modelFlag}${effortFlag}`;
+    const allowedToolsFlag = buildClaudeAllowedToolsFlag(
+      config.allowedCommands,
+    );
+    const base = `${escapeShellArg(config.bin ?? 'claude')} -p --permission-mode acceptEdits "${safePrompt}" ${STREAM_JSON_FLAGS}${modelFlag}${effortFlag}${allowedToolsFlag}`;
 
     // `--effort` follows `--model`. `--plugin-dir` sits after them and before the worktree flags, matching where cursor
     // threads its MCP flags — the position is asserted in the parity tests, not incidental.

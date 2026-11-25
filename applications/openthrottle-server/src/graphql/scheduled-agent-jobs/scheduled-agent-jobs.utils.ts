@@ -10,6 +10,10 @@ import { GraphQLError } from 'graphql';
 import type { ScheduledAgentJobsLoaders } from './loaders/loaders.service.ts';
 import type { ScheduledAgentJobRepositoryObject } from './scheduled-agent-job.object.ts';
 import type { SCHEDULED_AGENT_JOB_LIMIT_CODES } from './scheduled-agent-jobs.constants.ts';
+import {
+  SCHEDULED_AGENT_JOB_MAX_ALLOWED_COMMAND_LENGTH,
+  SCHEDULED_AGENT_JOB_MAX_ALLOWED_COMMANDS,
+} from './scheduled-agent-jobs.constants.ts';
 import type { ScheduledAgentJobLimits } from './scheduled-agent-jobs.types.ts';
 
 /**
@@ -151,4 +155,49 @@ export const assertScheduledAgentEnabled = async (
       `The ${trimmedModel} model is disabled. Re-enable it on Settings › Setup to schedule it.`,
     );
   }
+};
+
+/**
+ * @description Validates a job's command allowlist and returns it trimmed and de-duplicated, in the
+ * order given. `undefined` (the field omitted) stays `undefined` so an update keeps the stored list;
+ * `null` is treated as empty. Throws BadRequestException naming the first bad entry: an entry must be
+ * 1-200 characters with no line break, and no parentheses, which would end the `Bash(...)` wrapper
+ * the driver puts around it.
+ */
+export const parseAllowedCommands = (
+  raw: readonly string[] | null | undefined,
+): readonly string[] | undefined => {
+  if (raw === undefined) {
+    return undefined;
+  }
+
+  const unique = [
+    ...new Set(
+      (raw ?? []).map((entry) => {
+        return entry.trim();
+      }),
+    ),
+  ];
+
+  if (unique.length > SCHEDULED_AGENT_JOB_MAX_ALLOWED_COMMANDS) {
+    throw new BadRequestException(
+      `A job may pre-approve at most ${SCHEDULED_AGENT_JOB_MAX_ALLOWED_COMMANDS} commands; got ${unique.length}.`,
+    );
+  }
+
+  const invalid = unique.find((entry) => {
+    return (
+      entry.length === 0 ||
+      entry.length > SCHEDULED_AGENT_JOB_MAX_ALLOWED_COMMAND_LENGTH ||
+      /[\r\n()]/u.test(entry)
+    );
+  });
+
+  if (invalid !== undefined) {
+    throw new BadRequestException(
+      `Invalid allowed command ${JSON.stringify(invalid)}: each must be 1-${SCHEDULED_AGENT_JOB_MAX_ALLOWED_COMMAND_LENGTH} characters with no line break or parentheses.`,
+    );
+  }
+
+  return unique;
 };

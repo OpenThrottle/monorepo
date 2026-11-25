@@ -95,14 +95,34 @@ describe('roles', () => {
       );
     });
 
-    it('mcp has blog draft, code read and plans read/write only', () => {
+    it('schedules:write is held by admin, mcp and user; viewer only reads', () => {
+      for (const role of [ROLES.ADMIN, ROLES.MCP, ROLES.USER] as const) {
+        expect(ROLE_PERMISSIONS[role]).toContain(PERMISSIONS.SCHEDULES_READ);
+        expect(ROLE_PERMISSIONS[role]).toContain(PERMISSIONS.SCHEDULES_WRITE);
+      }
+      expect(ROLE_PERMISSIONS[ROLES.VIEWER]).toContain(
+        PERMISSIONS.SCHEDULES_READ,
+      );
+      expect(ROLE_PERMISSIONS[ROLES.VIEWER]).not.toContain(
+        PERMISSIONS.SCHEDULES_WRITE,
+      );
+      expect(ROLE_PERMISSIONS[ROLES.PLAN_RUNNER]).not.toContain(
+        PERMISSIONS.SCHEDULES_READ,
+      );
+    });
+
+    it('mcp has blog draft, code read, plans and schedules read/write only', () => {
       const perms = ROLE_PERMISSIONS[ROLES.MCP];
       expect(perms).toEqual([
         PERMISSIONS.BLOG_DRAFT,
         PERMISSIONS.CODE_READ,
         PERMISSIONS.PLANS_READ,
         PERMISSIONS.PLANS_WRITE,
+        PERMISSIONS.SCHEDULES_READ,
+        PERMISSIONS.SCHEDULES_WRITE,
       ]);
+      expect(perms).not.toContain(PERMISSIONS.SETTINGS_READ);
+      expect(perms).not.toContain(PERMISSIONS.SETTINGS_WRITE);
       expect(perms).not.toContain(PERMISSIONS.USERS_WRITE);
     });
 

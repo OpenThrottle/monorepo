@@ -94,6 +94,12 @@ export type DriverRepoAgentConfig =
  */
 export interface DriverInvocationConfig {
   /**
+   * Shell command patterns the run may execute without a prompt, in Claude Code's `Bash(<pattern>)`
+   * syntax minus the wrapper (e.g. `pnpm run social:x-post *`). Honored only by drivers with
+   * {@link DriverCapabilities.allowedCommands}; empty or omitted adds nothing.
+   */
+  readonly allowedCommands?: readonly string[];
+  /**
    * Executable the command invokes. Omitted ⇒ the driver's bare {@link AgentDriver.binary}. The
    * engine fills it from {@link AgentDriver.binEnv} (via `resolveDriverBinary`) before building the
    * command, so callers never set it themselves; builders shell-escape it.
@@ -162,6 +168,14 @@ export interface DriverInvocationConfig {
  * @public
  */
 export interface DriverCapabilities {
+  /**
+   * Can pre-approve shell commands for a headless run from
+   * {@link DriverInvocationConfig.allowedCommands} (Claude: `--allowedTools "Bash(<pattern>)"`), so
+   * an unattended run may execute exactly those commands and no others without a permission prompt.
+   * `false` means the CLI has no per-invocation command allowlist; a non-empty list is refused for it
+   * rather than dropped, because a dropped list makes the run fail quietly at its first command.
+   */
+  readonly allowedCommands: boolean;
   /**
    * The CLI resolves the WORKSPACE's committed MCP config (`.mcp.json`, `.cursor/mcp.json`,
    * `opencode.json`), so a run in an OpenThrottle checkout can reach `openthrottle-mcp`.

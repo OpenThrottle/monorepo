@@ -38,6 +38,7 @@ import {
 } from '../utils/shell.ts';
 
 const capabilities: DriverCapabilities = {
+  allowedCommands: false,
   /**
    * Antigravity resolves MCP servers from its OWN config scope, not from the workspace's committed
    * files. It keeps its config under `~/.gemini` —

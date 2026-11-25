@@ -107,6 +107,39 @@ describe('claude driver parity', () => {
     ).toBe(CLAUDE_BASE);
   });
 
+  it('emits no --allowedTools for an empty command allowlist', () => {
+    expect(
+      claudeDriver.buildShellCommand(config({ allowedCommands: [] })),
+    ).toBe(CLAUDE_BASE);
+  });
+
+  it('emits one quoted Bash(...) per allowed command, after --model and before -w', () => {
+    expect(
+      claudeDriver.buildShellCommand(
+        config({
+          allowedCommands: [
+            'pnpm run social:x-post *',
+            'git fetch origin main',
+          ],
+          model: 'sonnet',
+          worktree: { worktree: 'wt' },
+        }),
+      ),
+    ).toBe(
+      `${CLAUDE_BASE} --model sonnet --allowedTools "Bash(pnpm run social:x-post *)" "Bash(git fetch origin main)" -w wt`,
+    );
+  });
+
+  it('escapes shell-special characters inside an allowed command', () => {
+    const command = claudeDriver.buildShellCommand(
+      config({ allowedCommands: ['echo $(id) `id` "x"'] }),
+    );
+
+    expect(command).toBe(
+      CLAUDE_BASE + ' --allowedTools "Bash(echo \\$(id) \\`id\\` \\"x\\")"',
+    );
+  });
+
   it('emits no MCP flags (the CLI attaches project .mcp.json on its own)', () => {
     const command = claudeDriver.buildShellCommand(config({}));
     expect(command).not.toContain('--approve-mcps');
@@ -119,6 +152,7 @@ describe('claude driver parity', () => {
     expect(claudeDriver.id).toBe('claude');
     expect(claudeDriver.label).toBe('claude-code');
     expect(claudeDriver.capabilities).toEqual({
+      allowedCommands: true,
       attachesWorkspaceMcp: true,
       chatStreaming: true,
       isolatesRepoAgentConfig: true,
@@ -209,6 +243,7 @@ describe('cursor driver parity', () => {
     expect(cursorDriver.id).toBe('cursor');
     expect(cursorDriver.label).toBe('cursor-agent');
     expect(cursorDriver.capabilities).toEqual({
+      allowedCommands: false,
       attachesWorkspaceMcp: true,
       chatStreaming: true,
       isolatesRepoAgentConfig: false,

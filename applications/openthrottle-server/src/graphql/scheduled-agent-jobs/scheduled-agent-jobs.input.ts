@@ -92,6 +92,12 @@ export class CreateScheduledAgentJobInputType {
   })
   repositoryCheckoutId?: string;
 
+  @Field(() => [String], {
+    description: `Shell command patterns the run may execute without a permission prompt, in Claude Code Bash(<pattern>) syntax without the wrapper (e.g. "pnpm run social:x-post *"). At most 20, each 1-200 characters with no newline or parentheses. Needs a driver with a command allowlist (claude). An agent-created job with a non-empty list waits for human approval. Omit for none.`,
+    nullable: true,
+  })
+  allowedCommands?: string[];
+
   @Field(() => Boolean, {
     description: `Whether the schedule starts enabled (default true).`,
     nullable: true,
@@ -172,6 +178,12 @@ export class UpdateScheduledAgentJobInputType {
     nullable: true,
   })
   repositoryCheckoutId?: string;
+
+  @Field(() => [String], {
+    description: `Shell command patterns the run may execute without a permission prompt, in Claude Code Bash(<pattern>) syntax without the wrapper (e.g. "pnpm run social:x-post *"). At most 20, each 1-200 characters with no newline or parentheses. Needs a driver with a command allowlist (claude). An agent-created job with a non-empty list waits for human approval. Replaces the whole list; [] clears it. Omit to keep it.`,
+    nullable: true,
+  })
+  allowedCommands?: string[];
 }
 
 @InputType()

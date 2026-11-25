@@ -41,6 +41,7 @@ export class ScheduledAgentJobRunEnqueueService {
     });
 
     const payload: ScheduledAgentJobPayload = {
+      allowedCommands: job.allowedCommands,
       cwd: job.cwd,
       driverId: job.driverId,
       model: job.model,

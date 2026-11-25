@@ -332,6 +332,33 @@ describe('runAgentPrompt — input validation', () => {
     ).rejects.toBeInstanceOf(DriverCapabilityError);
   });
 
+  it('throws DriverCapabilityError, before spawning, for a command allowlist on a driver without one', async () => {
+    vi.mocked(spawn).mockReset();
+
+    await expect(
+      runAgentPrompt({
+        allowedCommands: ['pnpm run social:x-post *'],
+        driverId: 'codex', // allowedCommands: false
+        prompt: 'x',
+      }),
+    ).rejects.toThrow(/does not support a command allowlist/u);
+    expect(spawn).not.toHaveBeenCalled();
+  });
+
+  it('runs a driver without the capability when the allowlist is empty', async () => {
+    const child = makeChild();
+    vi.mocked(spawn).mockReturnValue(child);
+
+    const promise = runAgentPrompt({
+      allowedCommands: [],
+      driverId: 'codex',
+      prompt: 'x',
+    });
+    queueMicrotask(() => child.emit('close', 0));
+
+    await expect(promise).resolves.toMatchObject({ status: 'ok' });
+  });
+
   it('throws DriverCapabilityError, before spawning, for an isolated posture on a driver that cannot isolate', async () => {
     vi.mocked(spawn).mockReset();
 

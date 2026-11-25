@@ -17,6 +17,7 @@ import {
 } from '../utils/shell.ts';
 
 const capabilities: DriverCapabilities = {
+  allowedCommands: false,
   /** Reads the repo's committed `opencode.json` `mcp` block automatically in `run` mode (1.18.16). */
   attachesWorkspaceMcp: true,
   chatStreaming: true,

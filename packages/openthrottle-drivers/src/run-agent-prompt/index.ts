@@ -45,6 +45,12 @@ export interface AgentPromptSettings {
  * @public
  */
 export interface RunAgentPromptConfig {
+  /**
+   * Shell command patterns the run may execute without a prompt (see
+   * {@link DriverInvocationConfig.allowedCommands}). A non-empty list on a driver without the
+   * `allowedCommands` capability throws {@link DriverCapabilityError} before anything spawns.
+   */
+  readonly allowedCommands?: readonly string[];
   /** Process cwd for the subprocess; inherits `process.cwd()` when omitted. */
   readonly cwd?: string;
   /** Raw driver id; validated via `parseDriverId` (throws `UnknownDriverError` when unknown). */
@@ -156,6 +162,15 @@ export const runAgentPrompt = async (
     );
   }
 
+  const allowedCommands = config.allowedCommands ?? [];
+  if (allowedCommands.length > 0 && !driver.capabilities.allowedCommands) {
+    throw new DriverCapabilityError(
+      driverId,
+      'a command allowlist',
+      `cannot pre-approve ${allowedCommands.length} command pattern(s)`,
+    );
+  }
+
   const trustCheck = checkRepoAgentConfig(driver, config);
   if (!trustCheck.ok) {
     throw new DriverCapabilityError(
@@ -167,6 +182,7 @@ export const runAgentPrompt = async (
 
   const buffered: string[] = [];
   const invocationConfig: DriverInvocationConfig = {
+    allowedCommands,
     cwd: config.cwd,
     endpoint,
     iteration: 0,

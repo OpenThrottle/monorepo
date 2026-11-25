@@ -29,6 +29,8 @@ export const PERMISSIONS = {
   FLAGS_WRITE: 'flags:write',
   PLANS_READ: 'plans:read',
   PLANS_WRITE: 'plans:write',
+  SCHEDULES_READ: 'schedules:read',
+  SCHEDULES_WRITE: 'schedules:write',
   SETTINGS_READ: 'settings:read',
   SETTINGS_WRITE: 'settings:write',
   USERS_READ: 'users:read',
@@ -60,6 +62,8 @@ export const ROLE_PERMISSIONS: Readonly<Record<Role, readonly Permission[]>> = {
   [ROLES.USER]: [
     PERMISSIONS.CODE_READ,
     PERMISSIONS.FLAGS_READ,
+    PERMISSIONS.SCHEDULES_READ,
+    PERMISSIONS.SCHEDULES_WRITE,
     PERMISSIONS.SETTINGS_READ,
     PERMISSIONS.SETTINGS_WRITE,
     PERMISSIONS.USERS_READ,
@@ -67,6 +71,7 @@ export const ROLE_PERMISSIONS: Readonly<Record<Role, readonly Permission[]>> = {
   [ROLES.VIEWER]: [
     PERMISSIONS.CODE_READ,
     PERMISSIONS.FLAGS_READ,
+    PERMISSIONS.SCHEDULES_READ,
     PERMISSIONS.SETTINGS_READ,
     PERMISSIONS.USERS_READ,
   ],
@@ -75,6 +80,8 @@ export const ROLE_PERMISSIONS: Readonly<Record<Role, readonly Permission[]>> = {
     PERMISSIONS.CODE_READ,
     PERMISSIONS.PLANS_READ,
     PERMISSIONS.PLANS_WRITE,
+    PERMISSIONS.SCHEDULES_READ,
+    PERMISSIONS.SCHEDULES_WRITE,
   ],
   [ROLES.PLAN_RUNNER]: [PERMISSIONS.PLANS_READ, PERMISSIONS.PLANS_WRITE],
 };

@@ -211,6 +211,7 @@ describe('antigravity driver', () => {
     expect(antigravityDriver.binary).toBe('agy');
     expect(antigravityDriver.binEnv).toBe('OPENTHROTTLE_ANTIGRAVITY_BIN');
     expect(antigravityDriver.capabilities).toEqual({
+      allowedCommands: false,
       attachesWorkspaceMcp: false,
       chatStreaming: true,
       isolatesRepoAgentConfig: false,

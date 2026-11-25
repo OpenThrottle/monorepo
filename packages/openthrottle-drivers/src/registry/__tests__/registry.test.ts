@@ -16,6 +16,7 @@ const fakeDriver = (id: string): AgentDriver => {
     binary: id,
     buildShellCommand: (config) => `${id} ${config.prompt}`,
     capabilities: {
+      allowedCommands: false,
       attachesWorkspaceMcp: false,
       chatStreaming: false,
       isolatesRepoAgentConfig: false,
