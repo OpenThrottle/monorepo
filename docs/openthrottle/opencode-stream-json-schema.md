@@ -1,7 +1,7 @@
 # opencode json schema
 
 The headless event stream the `opencode` chat backend
-(`packages/openthrottle-agentic-utils/src/utils/conversation-backend/opencode/`) and the `opencode`
+(`packages/agentic-conversation-backend/src/utils/opencode*.ts`) and the `opencode`
 plan-run driver (`packages/openthrottle-drivers/src/drivers/opencode.ts`) are built against. opencode
 calls it `run --format json` (NDJSON).
 

@@ -9,7 +9,7 @@ import { describe, expect, test, vi } from 'vitest';
 import type {
   WebsocketDebuggerEventSubscriber,
   WebsocketDebuggerLogEntry,
-} from '../../components/websocket-debugger';
+} from '../../types';
 import { useOpenThrottleWebsocketDebugger } from '../useOpenThrottleWebsocketDebugger';
 
 const systemAlertPayload: NotificationPayload = {

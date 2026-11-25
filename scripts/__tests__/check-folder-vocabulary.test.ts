@@ -13,10 +13,13 @@ import {
   BANNED_FOLDER_NAMES,
   findBannedFolders,
   findGrandfatherDrift,
+  findNestedFolders,
   findOffVocabularyFolders,
   formatHit,
+  formatNestedFolderHit,
   formatOffVocabularyHit,
   GRANDFATHERED_FOLDERS,
+  isAllowedNestedFolder,
   isAllowlisted,
   listStagedPaths,
   listTrackedPaths,
@@ -245,6 +248,114 @@ describe('check-folder-vocabulary', () => {
     });
   });
 
+  describe('isAllowedNestedFolder', () => {
+    it('allows the tooling folders in every bucket', () => {
+      expect(isAllowedNestedFolder('nodejs', 'utils', '__tests__')).toBe(true);
+      expect(isAllowedNestedFolder('react', 'hooks', '__generated__')).toBe(
+        true,
+      );
+    });
+
+    it('allows a PascalCase compound component under components/ in the react buckets', () => {
+      expect(isAllowedNestedFolder('react-router', 'components', 'Card')).toBe(
+        true,
+      );
+      expect(isAllowedNestedFolder('react', 'components', 'DropdownMenu')).toBe(
+        true,
+      );
+    });
+
+    it('rejects a kebab-case folder under components/', () => {
+      expect(
+        isAllowedNestedFolder(
+          'react-router',
+          'components',
+          'websocket-debugger',
+        ),
+      ).toBe(false);
+    });
+
+    it('rejects a PascalCase folder outside components/', () => {
+      expect(isAllowedNestedFolder('react-router', 'utils', 'Card')).toBe(
+        false,
+      );
+      expect(isAllowedNestedFolder('nodejs', 'components', 'Card')).toBe(false);
+    });
+  });
+
+  describe('findNestedFolders', () => {
+    const projects: readonly ProjectBucket[] = [
+      { bucket: 'nodejs', root: 'packages/node-pkg' },
+      { bucket: 'react-router', root: 'packages/rr-pkg' },
+    ];
+
+    it('flags a feature folder below a vocabulary folder, once per folder', () => {
+      const hits = findNestedFolders(
+        [
+          'packages/node-pkg/src/utils/replay/a.ts',
+          'packages/node-pkg/src/utils/replay/b.ts',
+          'packages/node-pkg/src/data/bash-guard/c.ts',
+          'packages/rr-pkg/src/components/websocket-debugger/d.ts',
+        ],
+        projects,
+      );
+
+      expect(hits.map((hit) => hit.path)).toEqual([
+        'packages/node-pkg/src/data/bash-guard',
+        'packages/node-pkg/src/utils/replay',
+        'packages/rr-pkg/src/components/websocket-debugger',
+      ]);
+    });
+
+    it('passes files, tooling folders and compound components', () => {
+      expect(
+        findNestedFolders(
+          [
+            'packages/node-pkg/src/utils/x.ts',
+            'packages/node-pkg/src/utils/__tests__/x.test.ts',
+            'packages/node-pkg/src/utils/__tests__/fixtures/a.json',
+            'packages/node-pkg/src/__tests__/deep/x.test.ts',
+            'packages/rr-pkg/src/components/Card/Card.tsx',
+            'packages/rr-pkg/src/components/Card/__tests__/Card.test.tsx',
+          ],
+          projects,
+        ),
+      ).toEqual([]);
+    });
+
+    it('does not look inside an off-vocabulary top-level folder', () => {
+      expect(
+        findNestedFolders(
+          ['packages/node-pkg/src/adapters/claude/x.ts'],
+          projects,
+        ),
+      ).toEqual([]);
+    });
+
+    it('skips a grandfathered nested folder', () => {
+      expect(
+        findNestedFolders(
+          ['packages/node-pkg/src/utils/replay/x.ts'],
+          projects,
+          [{ path: 'packages/node-pkg/src/utils/replay', reason: 'r' }],
+        ),
+      ).toEqual([]);
+    });
+  });
+
+  describe('formatNestedFolderHit', () => {
+    it('names the folder and both fixes', () => {
+      const line = formatNestedFolderHit({
+        bucket: 'nodejs',
+        path: 'packages/p/src/utils/replay',
+      });
+
+      expect(line).toContain('packages/p/src/utils/replay/');
+      expect(line).toContain('flatten');
+      expect(line).toContain('package');
+    });
+  });
+
   describe('formatOffVocabularyHit', () => {
     it('names the folder, the bucket and every allowed word', () => {
       const [hit] = findOffVocabularyFolders(
@@ -296,6 +407,46 @@ describe('check-folder-vocabulary', () => {
         'packages/nest/src/a',
         'packages/p/src/utils',
       ]);
+    });
+
+    it('reports a nested entry the flat rule allows or ignores as redundant', () => {
+      const drift = findGrandfatherDrift(
+        [
+          'packages/p/src/adapters/claude/x.ts',
+          'packages/p/src/utils/__tests__/x.test.ts',
+        ],
+        projects,
+        [
+          { path: 'packages/p/src/adapters/claude', reason: 'r' },
+          { path: 'packages/p/src/utils/__tests__', reason: 'r' },
+        ],
+      );
+
+      expect(drift.redundant).toEqual([
+        'packages/p/src/adapters/claude',
+        'packages/p/src/utils/__tests__',
+      ]);
+    });
+
+    it('reports a nested entry with no tracked file under it as stale', () => {
+      const drift = findGrandfatherDrift(
+        ['packages/p/src/utils/x.ts'],
+        projects,
+        [{ path: 'packages/p/src/utils/gone', reason: 'r' }],
+      );
+
+      expect(drift).toEqual({
+        redundant: [],
+        stale: ['packages/p/src/utils/gone'],
+      });
+    });
+
+    it('accepts a live nested entry', () => {
+      expect(
+        findGrandfatherDrift(['packages/p/src/utils/replay/x.ts'], projects, [
+          { path: 'packages/p/src/utils/replay', reason: 'r' },
+        ]),
+      ).toEqual({ redundant: [], stale: [] });
     });
 
     it('accepts a live off-vocabulary entry', () => {
@@ -427,6 +578,34 @@ describe('check-folder-vocabulary', () => {
         git('add', 'packages/p/src/post/y.ts');
 
         expect(main(repoRoot, true)).toBe(1);
+      });
+
+      it('fails on a new feature folder below a vocabulary folder', () => {
+        mkdirSync(join(repoRoot, 'packages/p'), { recursive: true });
+        writeFileSync(
+          join(repoRoot, 'packages/p/package.json'),
+          JSON.stringify({ name: 'p', nx: { tags: ['technology:nodejs'] } }),
+        );
+        write('packages/p/src/utils/x.ts');
+        commitAll();
+        write('packages/p/src/utils/feature/y.ts');
+        git('add', 'packages/p/src/utils/feature/y.ts');
+
+        expect(main(repoRoot, true)).toBe(1);
+      });
+
+      it('passes a new __tests__ folder below a vocabulary folder', () => {
+        mkdirSync(join(repoRoot, 'packages/p'), { recursive: true });
+        writeFileSync(
+          join(repoRoot, 'packages/p/package.json'),
+          JSON.stringify({ name: 'p', nx: { tags: ['technology:nodejs'] } }),
+        );
+        write('packages/p/src/utils/x.ts');
+        commitAll();
+        write('packages/p/src/utils/__tests__/x.test.ts');
+        git('add', 'packages/p/src/utils/__tests__/x.test.ts');
+
+        expect(main(repoRoot, true)).toBe(0);
       });
 
       it('passes with nothing staged', () => {

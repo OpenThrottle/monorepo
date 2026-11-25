@@ -1,4 +1,4 @@
-import type { ConversationReasoningEffort } from '@openthrottle/openthrottle-agentic-utils';
+import type { ConversationReasoningEffort } from '@openthrottle/agentic-conversation-backend';
 import type { Mock } from 'vitest';
 
 import type { WorkspaceEditorId } from '../user-workspace-settings/user-workspace-settings.types.ts';

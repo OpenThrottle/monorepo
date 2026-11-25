@@ -4,7 +4,7 @@ import type { DETAIL_LEVELS, OUTPUT_FORMATS } from '../config/index.ts';
 
 /**
  * @description Types shared across ot-telemetry modules. A metric family's own result shape lives
- * beside its query in `utils/metrics/`; only contracts two or more modules depend on live here.
+ * beside its query in `utils/metrics-*.ts`; only contracts two or more modules depend on live here.
  * Every count shape below is a label plus a count — never a title, description, summary, or
  * requirements value.
  */

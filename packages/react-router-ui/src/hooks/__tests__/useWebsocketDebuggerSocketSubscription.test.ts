@@ -5,7 +5,7 @@ import type {
 import { renderHook } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
-import type { WebsocketDebuggerSocket } from '../../components/websocket-debugger/types';
+import type { WebsocketDebuggerSocket } from '../../types';
 import { useWebsocketDebuggerSocketSubscription } from '../useWebsocketDebuggerSocketSubscription';
 
 const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');

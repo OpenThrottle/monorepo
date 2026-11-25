@@ -15,6 +15,24 @@ import {
   Resolver,
   Subscription,
 } from '@nestjs/graphql';
+import type {
+  ChatCompletionMessage,
+  ConversationPermissionModesValue,
+  ConversationReasoningEffort,
+  ConversationServiceTiersValue,
+} from '@openthrottle/agentic-conversation-backend';
+import {
+  AGENT_CLI_ALLOWLIST,
+  backendReplaysFullHistory,
+  formatHandoffPreamble,
+  maxDirectoriesForBackend,
+  resolveAcpPermission,
+  resolveHandoffTokenBudget,
+  selectHandoffMessages,
+  toConversationPermissionMode,
+  toConversationReasoningEffort,
+  toConversationServiceTier,
+} from '@openthrottle/agentic-conversation-backend';
 import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
 import {
   AUTH_PRINCIPAL_KIND_USER,
@@ -35,24 +53,6 @@ import {
   UserDisabledAgentClisRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import { toErrorMessage } from '@openthrottle/nodejs-utils';
-import type {
-  ChatCompletionMessage,
-  ConversationPermissionModesValue,
-  ConversationReasoningEffort,
-  ConversationServiceTiersValue,
-} from '@openthrottle/openthrottle-agentic-utils';
-import {
-  AGENT_CLI_ALLOWLIST,
-  backendReplaysFullHistory,
-  formatHandoffPreamble,
-  maxDirectoriesForBackend,
-  resolveAcpPermission,
-  resolveHandoffTokenBudget,
-  selectHandoffMessages,
-  toConversationPermissionMode,
-  toConversationReasoningEffort,
-  toConversationServiceTier,
-} from '@openthrottle/openthrottle-agentic-utils';
 
 import { CheckoutPathService } from '../../services/checkout-path/checkout-path.service.ts';
 import { buildManagedMcpServers } from '../../services/workspace-editor-config/workspace-editor-config.utils.ts';

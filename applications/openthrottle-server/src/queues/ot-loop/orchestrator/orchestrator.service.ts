@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { discoverAgentClis } from '@openthrottle/agentic-conversation-backend';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   PlanRunsRepository,
@@ -42,7 +43,6 @@ import type { PlanRunCommandRunner } from '@openthrottle/openthrottle-agentic-ut
 import type { AgentConfigTrust } from '@openthrottle/openthrottle-agentic-utils';
 import {
   createPlanRunCommandRunner,
-  discoverAgentClis,
   getOpenThrottleRoot,
   resolveHookPluginDirs,
 } from '@openthrottle/openthrottle-agentic-utils';

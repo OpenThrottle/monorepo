@@ -1,6 +1,6 @@
 import type { NotificationEventNamesValue } from '@openthrottle/openthrottle-notifications';
 
-import type { WebsocketDebuggerLogEntry } from '../components/websocket-debugger/types';
+import type { WebsocketDebuggerLogEntry } from '../types';
 
 /**
  * @description Filters log entries by selected event names. Empty selection shows none.

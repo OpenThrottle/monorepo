@@ -38,31 +38,34 @@ const {
   opencodeStreamMock: vi.fn(),
 }));
 
-vi.mock('@openthrottle/openthrottle-agentic-utils', async (importOriginal) => {
-  const actual =
-    await importOriginal<
-      typeof import('@openthrottle/openthrottle-agentic-utils')
-    >();
-  return {
-    ...actual,
-    // The service routes via the CONVERSATION_CLI_BACKENDS registry, so the
-    // mocked streams must be swapped INTO the registry (not just the individual
-    // exports) for routing to reach them. cursor/codex/grok stay real (unused
-    // here); openai is the default path (openAiConversationBackend, below).
-    CONVERSATION_CLI_BACKENDS: {
-      ...actual.CONVERSATION_CLI_BACKENDS,
-      claude: { stream: claudeStreamMock },
-      cursor: { stream: cursorStreamMock },
-      opencode: { stream: opencodeStreamMock },
-    },
-    claudeConversationBackend: { stream: claudeStreamMock },
-    // The service mints the cursor session itself (create-chat) before spawning
-    // the cursor stream, so this is stubbed to avoid a real child process.
-    createCursorAgentSession: createCursorAgentSessionMock,
-    openAiConversationBackend: { stream: openAiStreamMock },
-    opencodeConversationBackend: { stream: opencodeStreamMock },
-  };
-});
+vi.mock(
+  '@openthrottle/agentic-conversation-backend',
+  async (importOriginal) => {
+    const actual =
+      await importOriginal<
+        typeof import('@openthrottle/agentic-conversation-backend')
+      >();
+    return {
+      ...actual,
+      // The service routes via the CONVERSATION_CLI_BACKENDS registry, so the
+      // mocked streams must be swapped INTO the registry (not just the individual
+      // exports) for routing to reach them. cursor/codex/grok stay real (unused
+      // here); openai is the default path (openAiConversationBackend, below).
+      CONVERSATION_CLI_BACKENDS: {
+        ...actual.CONVERSATION_CLI_BACKENDS,
+        claude: { stream: claudeStreamMock },
+        cursor: { stream: cursorStreamMock },
+        opencode: { stream: opencodeStreamMock },
+      },
+      claudeConversationBackend: { stream: claudeStreamMock },
+      // The service mints the cursor session itself (create-chat) before spawning
+      // the cursor stream, so this is stubbed to avoid a real child process.
+      createCursorAgentSession: createCursorAgentSessionMock,
+      openAiConversationBackend: { stream: openAiStreamMock },
+      opencodeConversationBackend: { stream: opencodeStreamMock },
+    };
+  },
+);
 
 /** Build a fake backend stream yielding the given text deltas + a terminal done. */
 async function* fakeStream(

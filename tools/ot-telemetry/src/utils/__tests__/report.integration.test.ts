@@ -15,24 +15,24 @@ import {
 } from '../../../tests/db/sentinel-fixture.ts';
 import type { MetricQuery } from '../../types/index.ts';
 import { buildEnvelope, resolveWindow } from '../envelope.ts';
+import { runMetricQueries } from '../metrics.ts';
 import {
   agentConversationsMetricQuery,
   planRunsMetricQuery,
   scheduledAgentJobsMetricQuery,
   workSessionsMetricQuery,
-} from '../metrics/agent-runs.ts';
+} from '../metrics-agent-runs.ts';
 import {
   disabledAgentClisMetricQuery,
   favoriteModelsMetricQuery,
   modelTokenUsageMetricQuery,
-} from '../metrics/models.ts';
-import { plansMetricQuery, planTagsMetricQuery } from '../metrics/plans.ts';
-import { runMetricQueries } from '../metrics/registry.ts';
+} from '../metrics-models.ts';
+import { plansMetricQuery, planTagsMetricQuery } from '../metrics-plans.ts';
 import {
   skillUsageMetricQuery,
   skillUsageOutcomeMetricQuery,
-} from '../metrics/skill-usage.ts';
-import { tasksMetricQuery, taskTagsMetricQuery } from '../metrics/tasks.ts';
+} from '../metrics-skill-usage.ts';
+import { tasksMetricQuery, taskTagsMetricQuery } from '../metrics-tasks.ts';
 import { probeCapabilities, readMigrationHighWaterMark } from '../postgres.ts';
 import { renderMarkdownReport } from '../renderMarkdownReport.ts';
 

@@ -8,11 +8,11 @@
  * session: a mid-session `/login` to another account would otherwise keep
  * stamping the old one. Fail-open: any failure is null (an unattributed row).
  */
-import type { IdentifiedAgentAccount } from '@openthrottle/openthrottle-agentic-utils';
+import type { IdentifiedAgentAccount } from '@openthrottle/agentic-conversation-backend';
 import {
   probeClaudeAuthStatus,
   toClaudeAgentAccount,
-} from '@openthrottle/openthrottle-agentic-utils';
+} from '@openthrottle/agentic-conversation-backend';
 
 import type { TokenUsageAccount } from '../../index.ts';
 

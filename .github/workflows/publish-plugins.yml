@@ -17,6 +17,7 @@ on:
     paths:
       - '.claude-plugin/**'
       - '.github/workflows/publish-plugins.yml'
+      - 'packages/agentic-conversation-backend/src/**'
       - 'packages/agentic-hooks/**'
       - 'packages/agentic-token-usage/src/**'
       - 'packages/nodejs-utils/src/**'

@@ -31,7 +31,9 @@ marketplace installs them from `plugins-dist`. Hooks ship nowhere else: there ar
 - `src/utils/` — `scope.ts` (ours | personal | third-party), `privacy.ts` (truncation + secret redaction),
   `logging.ts`, `warnEndpointUnreachable.ts` (an unreachable endpoint warns once per session outside
   an OpenThrottle checkout), `skill-file.ts` (skill name from a `SKILL.md` path, for producers with no
-  skill tool).
+  skill tool). The bash guard lives here too, flat: `bash-guard.ts` (rule registry + evaluator),
+  `bash-guard-types.ts`, `shell-words.ts`, `readQuotedChars.ts`, `shell-environment.ts`, `fs-glob-matcher.ts`,
+  `gh-pr-lookup.ts` and one file per rule (`masked-exit.ts`, `stale-pr-write.ts`, `zsh-*.ts`, `bsd-sed-inplace.ts`).
 - `src/config/` — `env.ts`: endpoint resolution by location, the OpenThrottle-checkout
   predicate, git branch, `OPENTHROTTLE_TELEMETRY_OFFLINE`. `isTelemetryDisabled.ts`: the total off
   switch (`OPENTHROTTLE_SKILL_USAGE_DISABLED`), which every telemetry entrypoint checks first and no

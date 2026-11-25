@@ -1,12 +1,12 @@
 import type { NotificationEventNamesValue } from '@openthrottle/openthrottle-notifications';
 import * as React from 'react';
 
+import { WEBSOCKET_DEBUGGER_ALL_EVENT_NAMES } from '../data/data.websocket-debugger-events';
 import type {
   WebsocketDebuggerEventSubscriber,
   WebsocketDebuggerLogEntry,
   WebsocketDebuggerSocket,
-} from '../components/websocket-debugger';
-import { WEBSOCKET_DEBUGGER_ALL_EVENT_NAMES } from '../components/websocket-debugger';
+} from '../types';
 import { filterWebsocketDebuggerEntries } from '../utils/filterWebsocketDebuggerEntries';
 import { isNotificationEventName } from '../utils/isNotificationEventName';
 import { useWebsocketDebuggerLog } from './useWebsocketDebuggerLog';

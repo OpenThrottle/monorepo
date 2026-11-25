@@ -4,8 +4,7 @@
  * configuration rather than protocol.
  */
 
-import { isRecord } from '@openthrottle/nodejs-utils';
-import type { ConversationBackend } from '@openthrottle/openthrottle-agentic-utils';
+import type { ConversationBackend } from '@openthrottle/agentic-conversation-backend';
 import {
   antigravityConversationBackend,
   claudeConversationBackend,
@@ -13,11 +12,12 @@ import {
   createCursorAgentSession,
   cursorAgentConversationBackend,
   opencodeConversationBackend,
-} from '@openthrottle/openthrottle-agentic-utils';
+} from '@openthrottle/agentic-conversation-backend';
+import { isRecord } from '@openthrottle/nodejs-utils';
 import type { DriversValue } from '@openthrottle/openthrottle-drivers';
 import { getDriver } from '@openthrottle/openthrottle-drivers';
 
-import { DEFAULT_REDACT_KEYS } from '../utils/sanitizer/sanitizer.ts';
+import { DEFAULT_REDACT_KEYS } from '../utils/sanitizer.ts';
 
 /**
  * How a backend gets the session a resume turn continues:

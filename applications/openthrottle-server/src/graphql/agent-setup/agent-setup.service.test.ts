@@ -1,10 +1,10 @@
 import { createMock } from '@golevelup/ts-vitest';
-import type { PubSubEngine } from '@openthrottle/nestjs-graphql';
-import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
   AgentSetupResult,
   RunAgentSetupOptions,
-} from '@openthrottle/openthrottle-agentic-utils';
+} from '@openthrottle/agentic-conversation-backend';
+import type { PubSubEngine } from '@openthrottle/nestjs-graphql';
+import type { LoggerService } from '@openthrottle/nestjs-modules';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { AgentDiscoveryService } from '../agent-discovery/agent-discovery.service.ts';
@@ -15,12 +15,15 @@ const { runAgentSetupMock } = vi.hoisted(() => ({
   runAgentSetupMock: vi.fn(),
 }));
 
-vi.mock('@openthrottle/openthrottle-agentic-utils', async (importOriginal) => ({
-  ...(await importOriginal<
-    typeof import('@openthrottle/openthrottle-agentic-utils')
-  >()),
-  runAgentSetup: runAgentSetupMock,
-}));
+vi.mock(
+  '@openthrottle/agentic-conversation-backend',
+  async (importOriginal) => ({
+    ...(await importOriginal<
+      typeof import('@openthrottle/agentic-conversation-backend')
+    >()),
+    runAgentSetup: runAgentSetupMock,
+  }),
+);
 
 function build(): {
   invalidate: ReturnType<typeof vi.fn>;

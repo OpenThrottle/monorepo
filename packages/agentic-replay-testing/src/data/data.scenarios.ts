@@ -1,7 +1,7 @@
 import {
   CONVERSATION_PERMISSION_MODES,
   CONVERSATION_REASONING_EFFORTS,
-} from '@openthrottle/openthrottle-agentic-utils';
+} from '@openthrottle/agentic-conversation-backend';
 
 import type { Scenario, ScenarioTurn } from '../types/scenario.ts';
 

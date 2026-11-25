@@ -4,7 +4,7 @@
  * ids from the drivers registry, efforts from the conversation reasoning-effort list.
  */
 
-import { toConversationReasoningEffort } from '@openthrottle/openthrottle-agentic-utils';
+import { toConversationReasoningEffort } from '@openthrottle/agentic-conversation-backend';
 import { isDriverId } from '@openthrottle/openthrottle-drivers';
 
 import type { WorkspaceEditorId } from '../../user-workspace-settings/user-workspace-settings.types.ts';

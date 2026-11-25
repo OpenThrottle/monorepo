@@ -14,17 +14,17 @@ OpenThrottle plan: `86010c36-a7b6-4b33-805e-6189d6b1d09d` (one function per task
 
 ## Module layout (proposed)
 
-| Module file (proposed)       | Placeholder today | Intended utilities                                                                                                                                                                                                      |
-| ---------------------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/utils/postgres.ts`      | `postgres.ts`     | `getPostgresUrl`, `ensurePostgresReachable`, `sanitizePostgresUrlForLogs`                                                                                                                                               |
-| `src/utils/workflow.ts`      | `workflow.ts`     | `getOpenThrottleRoot`, `getWorkflowConfigCwd`, `resolveWorkflowTransport`, `readWorkflowDebugLevelFromEnv`, `parseWorkflowRunnerId`                                                                                     |
-| `src/utils/nodejs.ts`        | `nodejs.ts`       | `prependOpenThrottleBinToPath`, `resolveOpenThrottleBinDir`, `pinNxWorkspaceRoot`, subprocess helpers (later)                                                                                                           |
-| `src/utils/metrics.ts`       | `metrics.ts`      | `WallClockMetrics`, `ChildProcessMetrics` (types only)                                                                                                                                                                  |
-| `src/utils/model-discovery/` | shipped           | `discoverModels`, `resolveHosts`/`resolvePorts`, `probeEndpoint`/`probeAll`/`fingerprintProvider`, `dedupeEndpoints`, `createLimiter` — pure local LLM model-server discovery (types in `src/types/model-discovery.ts`) |
+| Module file (proposed)           | Placeholder today | Intended utilities                                                                                                                                                                                                      |
+| -------------------------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/utils/postgres.ts`          | `postgres.ts`     | `getPostgresUrl`, `ensurePostgresReachable`, `sanitizePostgresUrlForLogs`                                                                                                                                               |
+| `src/utils/workflow.ts`          | `workflow.ts`     | `getOpenThrottleRoot`, `getWorkflowConfigCwd`, `resolveWorkflowTransport`, `readWorkflowDebugLevelFromEnv`, `parseWorkflowRunnerId`                                                                                     |
+| `src/utils/nodejs.ts`            | `nodejs.ts`       | `prependOpenThrottleBinToPath`, `resolveOpenThrottleBinDir`, `pinNxWorkspaceRoot`, subprocess helpers (later)                                                                                                           |
+| `src/utils/metrics.ts`           | `metrics.ts`      | `WallClockMetrics`, `ChildProcessMetrics` (types only)                                                                                                                                                                  |
+| `src/utils/model-discovery-*.ts` | shipped           | `discoverModels`, `resolveHosts`/`resolvePorts`, `probeEndpoint`/`probeAll`/`fingerprintProvider`, `dedupeEndpoints`, `createLimiter` — pure local LLM model-server discovery (types in `src/types/model-discovery.ts`) |
 
 **Barrel:** `src/index.ts` re-exports all public symbols (one barrel for the whole package).
 
-### Local model discovery (`src/utils/model-discovery/`)
+### Local model discovery (`src/utils/model-discovery-*.ts`)
 
 Pure, framework-agnostic detection of **locally-running** OpenAI-compatible model
 servers (Ollama-primary; also vLLM, llama.cpp, SGLang, LM Studio) via

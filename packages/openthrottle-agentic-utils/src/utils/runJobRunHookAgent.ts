@@ -18,7 +18,7 @@ import { getDriver, runDriverAsync } from '@openthrottle/openthrottle-drivers';
 import type { WorkflowConfigRunner } from '../types/workflow-config.ts';
 import { resolveHookPluginDirs } from './hook-plugin-injection.ts';
 import type { JobRunHookAgentResult } from './job-run-hooks-runner.ts';
-import { withStructuredOutput } from './structured-output/index.ts';
+import { withStructuredOutput } from './withStructuredOutput.ts';
 
 /** @description Runs one agent-CLI invocation; `runDriverAsync` in production. */
 export type JobRunHookRunDriver = (

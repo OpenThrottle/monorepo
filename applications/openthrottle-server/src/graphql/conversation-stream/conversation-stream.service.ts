@@ -8,6 +8,21 @@
 import { randomUUID } from 'node:crypto';
 
 import { Inject, Injectable } from '@nestjs/common';
+import type {
+  ConversationBackend,
+  ConversationBackendRun,
+  ConversationStreamChunk,
+} from '@openthrottle/agentic-conversation-backend';
+import {
+  classifyCursorFailure,
+  CONVERSATION_CLI_BACKENDS,
+  CONVERSATION_STREAM_CHUNK_KINDS,
+  createCursorAgentSession,
+  isAcpChatEnabled,
+  isRetryableCursorFailure,
+  openAiConversationBackend,
+  resolveChatIdleTimeoutMs,
+} from '@openthrottle/agentic-conversation-backend';
 import type { NormalizedTokenUsage } from '@openthrottle/agentic-token-usage';
 import {
   hasUsageCounts,
@@ -24,21 +39,6 @@ import {
   AgentTokenUsageRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import { isRecord, toErrorMessage } from '@openthrottle/nodejs-utils';
-import type {
-  ConversationBackend,
-  ConversationBackendRun,
-  ConversationStreamChunk,
-} from '@openthrottle/openthrottle-agentic-utils';
-import {
-  classifyCursorFailure,
-  CONVERSATION_CLI_BACKENDS,
-  CONVERSATION_STREAM_CHUNK_KINDS,
-  createCursorAgentSession,
-  isAcpChatEnabled,
-  isRetryableCursorFailure,
-  openAiConversationBackend,
-  resolveChatIdleTimeoutMs,
-} from '@openthrottle/openthrottle-agentic-utils';
 import type { UsageLimit } from '@openthrottle/openthrottle-drivers';
 
 import { AgentAccountStampingService } from '../../services/agent-account-stamping/agent-account-stamping.service.ts';

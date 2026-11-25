@@ -9,7 +9,7 @@ import type {
   ConversationPermissionModesValue,
   ConversationReasoningEffort,
   ConversationServiceTiersValue,
-} from '@openthrottle/openthrottle-agentic-utils';
+} from '@openthrottle/agentic-conversation-backend';
 import type { UsageLimit } from '@openthrottle/openthrottle-drivers';
 
 /** A single streamed chunk published to `conversation:<conversationId>:stream`. */

@@ -5,6 +5,7 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
+    "@openthrottle/agentic-conversation-backend": "workspace:^",
     "@openthrottle/agentic-token-usage": "workspace:^",
     "@openthrottle/nodejs-utils": "workspace:^",
     "@openthrottle/openthrottle-agentic-utils": "workspace:^"

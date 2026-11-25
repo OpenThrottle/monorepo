@@ -78,10 +78,21 @@ vi.mock('@openthrottle/openthrottle-agentic-utils', async (importOriginal) => {
   return {
     ...actual,
     createPlanRunCommandRunner: () => vi.fn(),
-    discoverAgentClis: mocks.discoverAgentClis,
     getOpenThrottleRoot: mocks.getOpenThrottleRoot,
   };
 });
+
+vi.mock(
+  '@openthrottle/agentic-conversation-backend',
+  async (importOriginal) => {
+    const actual =
+      await importOriginal<
+        typeof import('@openthrottle/agentic-conversation-backend')
+      >();
+
+    return { ...actual, discoverAgentClis: mocks.discoverAgentClis };
+  },
+);
 
 vi.mock('@openthrottle/openthrottle-drivers', async (importOriginal) => {
   const actual =

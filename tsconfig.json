@@ -249,6 +249,9 @@
     },
     {
       "path": "./packages/openthrottle-social"
+    },
+    {
+      "path": "./packages/agentic-conversation-backend"
     }
   ]
 }

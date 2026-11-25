@@ -69,3 +69,24 @@ export const BUCKET_FOLDER_VOCABULARY = {
 
 /** A technology bucket whose top-level `src/` folders are checked. */
 export type CheckedBucket = keyof typeof BUCKET_FOLDER_VOCABULARY;
+
+/**
+ * @description The folders that may sit directly below a vocabulary folder
+ * (`src/utils/__tests__/`), in every checked bucket. Anything else one level
+ * down is a feature folder, which ot-folders' "Below the top level, stay flat"
+ * rule forbids: flatten it into subject-named modules, or promote it to a
+ * package.
+ */
+export const NESTED_TOOLING_FOLDERS = ['__generated__', '__tests__'] as const;
+
+/**
+ * @description The vocabulary folder, per bucket, whose children may also be
+ * one PascalCase folder per compound component (`components/Card/` holding
+ * `Card.tsx`, `CardHeader.tsx`, …). nodejs has no components, so no entry.
+ */
+export const COMPOUND_COMPONENT_FOLDER: Readonly<
+  Partial<Record<CheckedBucket, string>>
+> = {
+  react: 'components',
+  'react-router': 'components',
+};

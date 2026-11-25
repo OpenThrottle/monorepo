@@ -9,30 +9,30 @@ import type { MetricQuery } from './types/index.ts';
 import { CliArgsError, parseCliArgs } from './utils/cli-args.ts';
 import { buildEnvelope, resolveWindow } from './utils/envelope.ts';
 import { deriveActorKey, deriveRepoSlug } from './utils/git.ts';
+import { runMetricQueries } from './utils/metrics.ts';
 import {
   agentConversationsMetricQuery,
   planRunsMetricQuery,
   scheduledAgentJobsMetricQuery,
   workSessionsMetricQuery,
-} from './utils/metrics/agent-runs.ts';
+} from './utils/metrics-agent-runs.ts';
 import {
   disabledAgentClisMetricQuery,
   favoriteModelsMetricQuery,
   modelTokenUsageMetricQuery,
-} from './utils/metrics/models.ts';
+} from './utils/metrics-models.ts';
 import {
   plansMetricQuery,
   planTagsMetricQuery,
-} from './utils/metrics/plans.ts';
-import { runMetricQueries } from './utils/metrics/registry.ts';
+} from './utils/metrics-plans.ts';
 import {
   skillUsageMetricQuery,
   skillUsageOutcomeMetricQuery,
-} from './utils/metrics/skill-usage.ts';
+} from './utils/metrics-skill-usage.ts';
 import {
   tasksMetricQuery,
   taskTagsMetricQuery,
-} from './utils/metrics/tasks.ts';
+} from './utils/metrics-tasks.ts';
 import {
   connectReadOnly,
   probeCapabilities,

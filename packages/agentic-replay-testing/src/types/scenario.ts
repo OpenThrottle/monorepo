@@ -1,7 +1,7 @@
 import type {
   ConversationPermissionModesValue,
   ConversationReasoningEffort,
-} from '@openthrottle/openthrottle-agentic-utils';
+} from '@openthrottle/agentic-conversation-backend';
 
 /**
  * One spawn of the CLI within a scenario. Turns after the first resume the

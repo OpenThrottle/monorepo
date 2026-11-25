@@ -10,11 +10,11 @@
 import { randomUUID } from 'node:crypto';
 
 import { Inject, Injectable } from '@nestjs/common';
+import type { AgentSetupResult } from '@openthrottle/agentic-conversation-backend';
+import { runAgentSetup } from '@openthrottle/agentic-conversation-backend';
 import type { PubSubEngine } from '@openthrottle/nestjs-graphql';
 import { agentSetupStreamTopic, PUB_SUB } from '@openthrottle/nestjs-graphql';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import type { AgentSetupResult } from '@openthrottle/openthrottle-agentic-utils';
-import { runAgentSetup } from '@openthrottle/openthrottle-agentic-utils';
 
 import { AgentDiscoveryService } from '../agent-discovery/agent-discovery.service.ts';
 import { AGENT_SETUP_CHUNK_FIELD } from './agent-setup.constants.ts';

@@ -39,6 +39,9 @@
       "path": "../agentic-token-usage/tsconfig.lib.json"
     },
     {
+      "path": "../agentic-conversation-backend/tsconfig.lib.json"
+    },
+    {
       "path": "../nestjs-testing/tsconfig.lib.json"
     },
     {

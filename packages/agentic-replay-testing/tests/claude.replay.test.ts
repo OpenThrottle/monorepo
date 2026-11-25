@@ -6,8 +6,8 @@
  * made of the real CLI's output.
  */
 
-import type { ConversationStreamChunk } from '@openthrottle/openthrottle-agentic-utils';
-import { CONVERSATION_STREAM_CHUNK_KINDS } from '@openthrottle/openthrottle-agentic-utils';
+import type { ConversationStreamChunk } from '@openthrottle/agentic-conversation-backend';
+import { CONVERSATION_STREAM_CHUNK_KINDS } from '@openthrottle/agentic-conversation-backend';
 import { describe, expect, it } from 'vitest';
 
 import type { ReplayFixtureResult } from '../src/index.ts';

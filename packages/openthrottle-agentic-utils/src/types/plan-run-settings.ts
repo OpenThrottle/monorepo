@@ -1,4 +1,5 @@
-import type { ConversationReasoningEffort } from '../utils/conversation-backend/types.ts';
+import type { ConversationReasoningEffort } from '@openthrottle/agentic-conversation-backend';
+
 import type {
   WorkflowConfigDebug,
   WorkflowConfigRunner,

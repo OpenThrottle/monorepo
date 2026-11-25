@@ -11,11 +11,10 @@
     "workflow-memory-reconcile": "./src/scripts/memory-reconcile.ts"
   },
   "dependencies": {
-    "@agentclientprotocol/sdk": "catalog:",
+    "@openthrottle/agentic-conversation-backend": "workspace:^",
     "@openthrottle/nodejs-utils": "workspace:^",
     "@openthrottle/openthrottle-drivers": "workspace:^",
-    "@openthrottle/openthrottle-skills": "workspace:^",
-    "openai": "catalog:"
+    "@openthrottle/openthrottle-skills": "workspace:^"
   },
   "devDependencies": {
     "nx": "catalog:",

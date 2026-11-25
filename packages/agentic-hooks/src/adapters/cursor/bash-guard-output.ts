@@ -1,7 +1,7 @@
 /**
  * Cursor half of the bash guard (see `./bash-guard.ts`, the
  * `beforeShellExecution` entrypoint). Rules live in the neutral core
- * (`data/bash-guard/`); this module only maps Cursor's payload in and the
+ * (`utils/`); this module only maps Cursor's payload in and the
  * verdict out. No rule logic belongs here.
  *
  * Shapes, from Cursor's hooks reference (cursor.com/docs/agent/hooks,

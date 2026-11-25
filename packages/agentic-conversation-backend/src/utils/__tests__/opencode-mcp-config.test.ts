@@ -1,0 +1,261 @@
+import { existsSync, readFileSync } from 'node:fs';
+
+import { describe, expect, it } from 'vitest';
+
+import { CONVERSATION_PERMISSION_MODES } from '../../types/conversation-backend.ts';
+import {
+  translateManagedMcpToOpencode,
+  writeOpencodeMcpConfig,
+} from '../opencode-mcp-config.ts';
+
+const MANAGED = {
+  'openthrottle-mcp': {
+    args: ['./scripts/run-openthrottle-mcp.sh'],
+    command: 'bash',
+    description: 'OpenThrottle MCP',
+    env: {
+      API_URL: 'http://localhost:6021',
+      API_URL_INTERNAL: 'http://localhost:6021',
+    },
+  },
+};
+
+describe('translateManagedMcpToOpencode', () => {
+  it('maps the canonical .mcp.json shape onto opencode local-server config', () => {
+    const config = translateManagedMcpToOpencode(MANAGED);
+
+    expect(config.$schema).toBe('https://opencode.ai/config.json');
+    expect(config.mcp?.['openthrottle-mcp']).toEqual({
+      command: ['bash', './scripts/run-openthrottle-mcp.sh'],
+      enabled: true,
+      environment: {
+        API_URL: 'http://localhost:6021',
+        API_URL_INTERNAL: 'http://localhost:6021',
+      },
+      type: 'local',
+    });
+  });
+
+  it('omits environment when the managed server carries no env', () => {
+    const config = translateManagedMcpToOpencode({
+      fetch: { args: ['mcp-server-fetch'], command: 'uvx' },
+    });
+
+    expect(config.mcp?.['fetch']).toEqual({
+      command: ['uvx', 'mcp-server-fetch'],
+      enabled: true,
+      type: 'local',
+    });
+  });
+
+  it('omits the mcp key entirely when no server has a string command', () => {
+    const config = translateManagedMcpToOpencode({
+      broken: { args: ['x'] },
+    });
+
+    expect(config.mcp).toBeUndefined();
+  });
+});
+
+describe('translateManagedMcpToOpencode — local endpoint provider', () => {
+  it('emits an openai-compatible provider keyed "local" registering the model', () => {
+    const config = translateManagedMcpToOpencode({}, undefined, {
+      baseUrl: 'http://localhost:11434/v1',
+      model: 'llama3',
+    });
+
+    expect(config.provider).toEqual({
+      local: {
+        models: { llama3: {} },
+        name: 'Local endpoint (OpenThrottle)',
+        npm: '@ai-sdk/openai-compatible',
+        options: { apiKey: 'local', baseURL: 'http://localhost:11434/v1' },
+      },
+    });
+  });
+
+  it('uses a supplied apiKey when present', () => {
+    const config = translateManagedMcpToOpencode({}, undefined, {
+      apiKey: 'sk-x',
+      baseUrl: 'http://h:1/v1',
+      model: 'm',
+    });
+
+    expect(config.provider?.['local']?.options.apiKey).toBe('sk-x');
+  });
+
+  it('omits the provider key when no endpoint is targeted', () => {
+    expect(translateManagedMcpToOpencode(MANAGED).provider).toBeUndefined();
+  });
+});
+
+describe('writeOpencodeMcpConfig', () => {
+  it('writes a temp config outside any checkout and cleanup removes it', () => {
+    const file = writeOpencodeMcpConfig(MANAGED);
+
+    expect(file).not.toBeNull();
+    if (file === null) {
+      return;
+    }
+    expect(existsSync(file.path)).toBe(true);
+    const written = JSON.parse(readFileSync(file.path, 'utf8'));
+    expect(written.mcp['openthrottle-mcp'].command).toEqual([
+      'bash',
+      './scripts/run-openthrottle-mcp.sh',
+    ]);
+
+    file.cleanup();
+    expect(existsSync(file.path)).toBe(false);
+    // cleanup is idempotent.
+    expect(() => file.cleanup()).not.toThrow();
+  });
+
+  it('returns null when there is nothing to inject (fullAccess, no servers)', () => {
+    const { fullAccess } = CONVERSATION_PERMISSION_MODES;
+
+    expect(writeOpencodeMcpConfig({}, fullAccess)).toBeNull();
+    expect(
+      writeOpencodeMcpConfig({ broken: { args: ['x'] } }, fullAccess),
+    ).toBeNull();
+  });
+
+  it('writes a config carrying only the local-endpoint provider (no MCP/permission)', () => {
+    const file = writeOpencodeMcpConfig(
+      {},
+      CONVERSATION_PERMISSION_MODES.fullAccess,
+      {
+        baseUrl: 'http://localhost:11434/v1',
+        model: 'llama3',
+      },
+    );
+
+    expect(file).not.toBeNull();
+    if (file === null) {
+      return;
+    }
+    const written = JSON.parse(readFileSync(file.path, 'utf8'));
+    expect(written.mcp).toBeUndefined();
+    expect(written.provider.local.options.baseURL).toBe(
+      'http://localhost:11434/v1',
+    );
+    file.cleanup();
+  });
+});
+
+describe('translateManagedMcpToOpencode — permission slice', () => {
+  it('default (no mode): asks for edit and bash, scoped allow for the injected MCP servers', () => {
+    const config = translateManagedMcpToOpencode(MANAGED);
+
+    expect(config.permission).toEqual({
+      bash: 'ask',
+      edit: 'ask',
+      'openthrottle-mcp*': 'allow',
+    });
+  });
+
+  it('supervised: same as the default', () => {
+    const config = translateManagedMcpToOpencode(
+      MANAGED,
+      CONVERSATION_PERMISSION_MODES.supervised,
+    );
+
+    expect(config.permission).toEqual({
+      bash: 'ask',
+      edit: 'ask',
+      'openthrottle-mcp*': 'allow',
+    });
+  });
+
+  it('autoAcceptEdits: allows edit plus the scoped MCP grant', () => {
+    const config = translateManagedMcpToOpencode(
+      MANAGED,
+      CONVERSATION_PERMISSION_MODES.autoAcceptEdits,
+    );
+
+    expect(config.permission).toEqual({
+      bash: 'ask',
+      edit: 'allow',
+      'openthrottle-mcp*': 'allow',
+    });
+  });
+
+  it('fullAccess: writes no permission slice (handled by --auto)', () => {
+    const config = translateManagedMcpToOpencode(
+      MANAGED,
+      CONVERSATION_PERMISSION_MODES.fullAccess,
+    );
+
+    expect(config.permission).toBeUndefined();
+  });
+
+  it('supervised/default with no servers: still asks for edit and bash', () => {
+    expect(translateManagedMcpToOpencode({}).permission).toEqual({
+      bash: 'ask',
+      edit: 'ask',
+    });
+  });
+
+  it('autoAcceptEdits with no servers: still allows edit', () => {
+    const config = translateManagedMcpToOpencode(
+      {},
+      CONVERSATION_PERMISSION_MODES.autoAcceptEdits,
+    );
+
+    expect(config.permission).toEqual({ bash: 'ask', edit: 'allow' });
+  });
+});
+
+describe('writeOpencodeMcpConfig — permission slice', () => {
+  it('writes the scoped MCP permission into the temp config for the default posture', () => {
+    const file = writeOpencodeMcpConfig(MANAGED);
+
+    expect(file).not.toBeNull();
+    if (file === null) {
+      return;
+    }
+    const written = JSON.parse(readFileSync(file.path, 'utf8'));
+    expect(written.permission).toEqual({
+      bash: 'ask',
+      edit: 'ask',
+      'openthrottle-mcp*': 'allow',
+    });
+    file.cleanup();
+  });
+
+  it('writes a config for autoAcceptEdits even with no MCP servers', () => {
+    const file = writeOpencodeMcpConfig(
+      {},
+      CONVERSATION_PERMISSION_MODES.autoAcceptEdits,
+    );
+
+    expect(file).not.toBeNull();
+    if (file === null) {
+      return;
+    }
+    const written = JSON.parse(readFileSync(file.path, 'utf8'));
+    expect(written.mcp).toBeUndefined();
+    expect(written.permission).toEqual({ bash: 'ask', edit: 'allow' });
+    file.cleanup();
+  });
+
+  it('writes the ask posture for supervised even with no MCP servers', () => {
+    const file = writeOpencodeMcpConfig(
+      {},
+      CONVERSATION_PERMISSION_MODES.supervised,
+    );
+
+    expect(file).not.toBeNull();
+    if (file === null) {
+      return;
+    }
+    const written = JSON.parse(readFileSync(file.path, 'utf8'));
+    expect(written.permission).toEqual({ bash: 'ask', edit: 'ask' });
+    file.cleanup();
+  });
+
+  it('returns null for fullAccess with no MCP servers (--auto covers it)', () => {
+    expect(
+      writeOpencodeMcpConfig({}, CONVERSATION_PERMISSION_MODES.fullAccess),
+    ).toBeNull();
+  });
+});

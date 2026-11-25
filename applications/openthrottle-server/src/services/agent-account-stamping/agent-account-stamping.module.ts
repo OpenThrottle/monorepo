@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
-import { LoggerModule } from '@openthrottle/nestjs-modules';
-import { AgentAccountsModule } from '@openthrottle/nestjs-repositories-server';
-import type { AgentAccountResolver } from '@openthrottle/openthrottle-agentic-utils';
+import type { AgentAccountResolver } from '@openthrottle/agentic-conversation-backend';
 import {
   createAgentAccountResolver,
   defaultAgentAccountResolverDeps,
-} from '@openthrottle/openthrottle-agentic-utils';
+} from '@openthrottle/agentic-conversation-backend';
+import { LoggerModule } from '@openthrottle/nestjs-modules';
+import { AgentAccountsModule } from '@openthrottle/nestjs-repositories-server';
 
 import { AGENT_ACCOUNT_RESOLVER } from './agent-account-stamping.constants.ts';
 import { AgentAccountStampingService } from './agent-account-stamping.service.ts';

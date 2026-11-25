@@ -11,17 +11,15 @@ import {
 import { InfoIcon } from 'lucide-react';
 import * as React from 'react';
 
+import { WEBSOCKET_DEBUGGER_EVENT_OPTIONS } from '../data/data.websocket-debugger-events';
 import { useOpenThrottleWebsocketDebugger } from '../hooks/useOpenThrottleWebsocketDebugger';
 import type {
   WebsocketDebuggerConnectionStatus,
   WebsocketDebuggerEventSubscriber,
   WebsocketDebuggerLogEntry,
   WebsocketDebuggerSocket,
-} from './websocket-debugger';
-import {
-  formatWebsocketDebuggerStatusColor,
-  WEBSOCKET_DEBUGGER_EVENT_OPTIONS,
-} from './websocket-debugger';
+} from '../types';
+import { formatWebsocketDebuggerStatusColor } from '../utils/websocket-debugger';
 import { WebsocketDebuggerLogRow } from './WebsocketDebuggerLogRow';
 
 export interface OpenThrottleWebsocketDebuggerProps {

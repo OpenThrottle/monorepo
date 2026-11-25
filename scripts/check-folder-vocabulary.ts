@@ -31,6 +31,13 @@
  * layout has its own audits. Folders that predate the check are listed in
  * {@link GRANDFATHERED_FOLDERS}, which only ever shrinks.
  *
+ * One level further down it enforces "Below the top level, stay flat": a
+ * vocabulary folder (`src/utils/`, `src/data/`, …) holds files, not feature
+ * folders. Only `NESTED_TOOLING_FOLDERS` (`__tests__`, `__generated__`) and, in
+ * the react buckets, one PascalCase compound-component folder under
+ * `components/` may sit there ({@link findNestedFolders}). Below a grandfathered
+ * top-level folder nothing is checked, and nothing deeper than that level is.
+ *
  * Known limits:
  *
  *   - **Tracked files only.** An empty directory (or one holding only ignored
@@ -39,8 +46,9 @@
  *   - **Names, not intent.** A tool's own specific term is allowed even when it
  *     sounds generic, but only the five names in BANNED_FOLDER_NAMES are
  *     banned everywhere; a sixth vague name needs adding there deliberately.
- *     The bucket check covers only top-level `src/` folders of checked
- *     projects — nested folders, NestJS and applications stay honor system.
+ *     The bucket check covers the top-level `src/` folders of checked
+ *     projects and the level below them — deeper folders, NestJS and
+ *     applications stay honor system.
  *   - **Shrink-only is enforced here, not in the spec.** The whole-tree run
  *     also fails on a {@link GRANDFATHERED_FOLDERS} entry that no tracked file
  *     sits under, or whose folder is now in the vocabulary, because this target
@@ -54,7 +62,9 @@ import type { BannedFolderName, CheckedBucket } from '@tools/generators';
 import {
   BANNED_FOLDER_NAMES,
   BUCKET_FOLDER_VOCABULARY,
+  COMPOUND_COMPONENT_FOLDER,
   FOLDER_VOCABULARY_SKILL_POINTER,
+  NESTED_TOOLING_FOLDERS,
 } from '@tools/generators';
 
 import { hasFlag } from './utils/args.ts';
@@ -169,7 +179,10 @@ export interface ProjectBucket {
   readonly root: string;
 }
 
-/** An exact `<project>/src/<folder>` path exempt from the bucket check. */
+/**
+ * An exact `<project>/src/<folder>` or `<project>/src/<vocabulary>/<folder>`
+ * path exempt from the bucket check.
+ */
 export interface GrandfatheredFolder {
   readonly path: string;
   readonly reason: string;
@@ -179,8 +192,9 @@ const PREDATES_CHECK = `predates the bucket allowlist; move it into the vocabula
 const MCP_VOCABULARY = `MCP protocol vocabulary: the server registers tools and resources`;
 
 /**
- * @description Top-level `src/` folders outside their bucket's vocabulary that
- * existed when the check landed. **Shrink-only**: never add an entry for a new
+ * @description `src/` folders outside their bucket's vocabulary that existed
+ * when the check landed (top level), or that were nested below a vocabulary
+ * folder when the second-level check landed (none were left by then). **Shrink-only**: never add an entry for a new
  * folder — pick a vocabulary word, or move the code to the bucket that owns it.
  * The spec fails on an entry that no longer matches a tracked folder, so a
  * rename into the vocabulary has to delete its line.
@@ -345,6 +359,109 @@ export const findOffVocabularyFolders = (
   return [...hits.values()].sort((a, b) => a.path.localeCompare(b.path));
 };
 
+const TOOLING_FOLDERS: readonly string[] = NESTED_TOOLING_FOLDERS;
+const PASCAL_CASE_FOLDER = /^[A-Z][\dA-Za-z]*$/;
+
+/**
+ * @description Whether `child` may sit directly below the vocabulary folder
+ * `parent`: a tooling folder anywhere, or a PascalCase compound-component
+ * folder under the bucket's components folder.
+ */
+export const isAllowedNestedFolder = (
+  bucket: CheckedBucket,
+  parent: string,
+  child: string,
+): boolean => {
+  if (TOOLING_FOLDERS.includes(child)) {
+    return true;
+  }
+
+  return (
+    parent === COMPOUND_COMPONENT_FOLDER[bucket] &&
+    PASCAL_CASE_FOLDER.test(child)
+  );
+};
+
+/** A folder nested below a vocabulary folder that the flat rule forbids. */
+export interface NestedFolderHit {
+  readonly bucket: CheckedBucket;
+  /** `<project>/src/<vocabulary>/<folder>`. */
+  readonly path: string;
+}
+
+/**
+ * @description Every folder in `paths` that sits directly below one of its
+ * project's vocabulary folders and is neither allowed there
+ * ({@link isAllowedNestedFolder}) nor grandfathered. Off-vocabulary and tooling
+ * top-level folders are not looked inside; hits are deduped and sorted.
+ */
+export const findNestedFolders = (
+  paths: readonly string[],
+  projects: readonly ProjectBucket[],
+  grandfathered: readonly GrandfatheredFolder[] = GRANDFATHERED_FOLDERS,
+): NestedFolderHit[] => {
+  const hits = new Map<string, NestedFolderHit>();
+  const grandfatheredPaths = new Set(grandfathered.map((entry) => entry.path));
+
+  for (const project of projects) {
+    const prefix = `${project.root}/src/`;
+    const allowed: readonly string[] = BUCKET_FOLDER_VOCABULARY[project.bucket];
+
+    for (const path of paths) {
+      const segments = path.startsWith(prefix)
+        ? path.slice(prefix.length).split('/')
+        : [];
+      const [parent, child] = segments;
+      const isNestedFile = segments.length >= 3;
+      if (!isNestedFile || parent === undefined || child === undefined) {
+        continue;
+      }
+      const isCheckedParent =
+        allowed.includes(parent) && !TOOLING_FOLDERS.includes(parent);
+      if (
+        !isCheckedParent ||
+        isAllowedNestedFolder(project.bucket, parent, child)
+      ) {
+        continue;
+      }
+
+      const folderPath = `${prefix}${parent}/${child}`;
+      if (grandfatheredPaths.has(folderPath) || isAllowlisted(path)) {
+        continue;
+      }
+
+      hits.set(folderPath, { bucket: project.bucket, path: folderPath });
+    }
+  }
+
+  return [...hits.values()].sort((a, b) => a.path.localeCompare(b.path));
+};
+
+/**
+ * @description Whether a grandfather entry would pass without its line: a
+ * top-level folder now in the vocabulary, or a nested one the flat rule allows
+ * or does not look at.
+ */
+const isRedundantEntry = (
+  entryPath: string,
+  project: ProjectBucket,
+): boolean => {
+  const allowed: readonly string[] = BUCKET_FOLDER_VOCABULARY[project.bucket];
+  const segments = entryPath.slice(`${project.root}/src/`.length).split('/');
+  const [parent = '', child] = segments;
+
+  if (child === undefined) {
+    return allowed.includes(parent);
+  }
+  const isCheckedParent =
+    allowed.includes(parent) && !TOOLING_FOLDERS.includes(parent);
+  if (segments.length > 2 || !isCheckedParent) {
+    return true;
+  }
+
+  return isAllowedNestedFolder(project.bucket, parent, child);
+};
+
 /** Grandfather entries that no longer earn their place. */
 export interface GrandfatherDrift {
   /** The folder is now in its bucket's vocabulary, or its project is unchecked. */
@@ -373,13 +490,8 @@ export const findGrandfatherDrift = (
       const project = projects.find((candidate) =>
         entry.path.startsWith(`${candidate.root}/src/`),
       );
-      if (project === undefined) {
-        return true;
-      }
-      const allowed: readonly string[] =
-        BUCKET_FOLDER_VOCABULARY[project.bucket];
 
-      return allowed.includes(entry.path.split('/').at(-1) ?? '');
+      return project === undefined || isRedundantEntry(entry.path, project);
     })
     .map((entry) => entry.path);
 
@@ -389,6 +501,11 @@ export const findGrandfatherDrift = (
 /** The failure line for one off-vocabulary folder: the path, bucket and words. */
 export const formatOffVocabularyHit = (hit: OffVocabularyHit): string => {
   return `  ${hit.path}/ — not in the ${hit.bucket} vocabulary; use one of ${hit.allowed.join(', ')}`;
+};
+
+/** The failure line for one nested folder: the path and what to do instead. */
+export const formatNestedFolderHit = (hit: NestedFolderHit): string => {
+  return `  ${hit.path}/ — a feature folder below a vocabulary folder; flatten it into subject-named files, or promote it to a package`;
 };
 
 /** The failure line for one hit: the path, then what to use instead. */
@@ -424,6 +541,7 @@ export const main = (
   const projects = listProjectBuckets(cwd, trackedPaths);
   const hits = findBannedFolders(paths);
   const offVocabulary = findOffVocabularyFolders(paths, projects);
+  const nested = findNestedFolders(paths, projects, grandfathered);
   const scope = staged ? 'staged added/renamed' : 'tracked';
   // Drift is a whole-tree question: a staged run sees only part of the tree.
   const noDrift: GrandfatherDrift = { redundant: [], stale: [] };
@@ -432,7 +550,12 @@ export const main = (
     : findGrandfatherDrift(trackedPaths, projects, grandfathered);
   const driftCount = drift.redundant.length + drift.stale.length;
 
-  if (hits.length === 0 && offVocabulary.length === 0 && driftCount === 0) {
+  const isClean =
+    hits.length === 0 &&
+    offVocabulary.length === 0 &&
+    nested.length === 0 &&
+    driftCount === 0;
+  if (isClean) {
     logger.success(`Folder vocabulary: ${paths.length} ${scope} path(s), no junk-drawer or off-vocabulary folders`); // prettier-ignore
 
     return 0;
@@ -465,6 +588,22 @@ export const main = (
     );
     logger.info(
       'per skills/ot-folders/SKILL.md (rule 1, "Do not invent new folders").',
+    );
+  }
+
+  if (nested.length > 0) {
+    logger.blank();
+    logger.fail(`${nested.length} folder(s) are nested below a vocabulary folder:`); // prettier-ignore
+    for (const hit of nested) {
+      logger.info(formatNestedFolderHit(hit));
+    }
+
+    logger.blank();
+    logger.info(
+      'Only __tests__/__generated__, and PascalCase compound components under',
+    );
+    logger.info(
+      'components/, may sit there, per skills/ot-folders/SKILL.md ("Below the top level, stay flat").',
     );
   }
 
