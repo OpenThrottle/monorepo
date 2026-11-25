@@ -1,5 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
-import type { TagActionType } from '@openthrottle/openthrottle-skills';
+import type { TagActionTypesValue } from '@openthrottle/openthrottle-skills';
 import {
   isTagActionType,
   TAG_ACTION_TYPES,
@@ -10,7 +10,9 @@ import {
  * Shared by the upsert write path and the match preview so both reject an unknown type the same
  * way.
  */
-export const assertTagActionType = (actionType: string): TagActionType => {
+export const assertTagActionType = (
+  actionType: string,
+): TagActionTypesValue => {
   if (!isTagActionType(actionType)) {
     throw new BadRequestException(
       `Unknown action type "${actionType}": expected one of ${Object.values(

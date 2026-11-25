@@ -9,7 +9,8 @@ import {
  * nothing to group on collapse into one shared "Unattributed" lane rather than
  * N single-row lanes. Kept out of the resolver so it is testable without SQL.
  */
-import { TimelineLaneGrouping } from './timeline.enum.ts';
+import type { TimelineLaneGroupingValue } from './timeline.enum.ts';
+import { TIMELINE_LANE_GROUPING } from './timeline.enum.ts';
 import type {
   TimelineLane,
   TimelineLaneFacts,
@@ -67,16 +68,16 @@ const byDriver = (facts: TimelineLaneFacts): TimelineLane => {
  * its checkout and its driver.
  */
 export function resolveTimelineLane(
-  grouping: TimelineLaneGrouping,
+  grouping: TimelineLaneGroupingValue,
   facts: TimelineLaneFacts,
   override: TimelineLaneOverride = null,
 ): TimelineLane {
-  if (override != null && grouping === TimelineLaneGrouping.BY_PLAN) {
+  if (override != null && grouping === TIMELINE_LANE_GROUPING.BY_PLAN) {
     return FIXED_LANES[override];
   }
 
-  if (grouping === TimelineLaneGrouping.BY_CHECKOUT) return byCheckout(facts);
-  if (grouping === TimelineLaneGrouping.BY_DRIVER) return byDriver(facts);
+  if (grouping === TIMELINE_LANE_GROUPING.BY_CHECKOUT) return byCheckout(facts);
+  if (grouping === TIMELINE_LANE_GROUPING.BY_DRIVER) return byDriver(facts);
 
   return byPlan(facts);
 }

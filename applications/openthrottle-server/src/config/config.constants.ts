@@ -16,3 +16,6 @@ export const PROCESS_ROLES = {
   api: 'api',
   worker: 'worker',
 } as const;
+
+export type ProcessRolesKey = keyof typeof PROCESS_ROLES;
+export type ProcessRolesValue = (typeof PROCESS_ROLES)[ProcessRolesKey];

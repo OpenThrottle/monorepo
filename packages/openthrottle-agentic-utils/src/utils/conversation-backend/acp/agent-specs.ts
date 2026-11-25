@@ -44,7 +44,7 @@ import {
   CURSOR_AGENT_DEFAULT_BIN,
 } from '../cursor-agent/argv.ts';
 import { buildCursorAgentEnv } from '../cursor-agent/cursor-agent.ts';
-import type { ConversationPermissionMode } from '../types.ts';
+import type { ConversationPermissionModesValue } from '../types.ts';
 import { CONVERSATION_PERMISSION_MODES } from '../types.ts';
 
 /**
@@ -89,7 +89,7 @@ export interface AcpAgentSpec {
    * or undefined to leave the session in whatever mode it is in.
    */
   readonly sessionMode: (
-    permissionMode: ConversationPermissionMode | undefined,
+    permissionMode: ConversationPermissionModesValue | undefined,
   ) => string | undefined;
 }
 
@@ -130,7 +130,7 @@ function antigravityAcpEnv(
  * irreversible actions, which fullAccess then allows anyway.
  */
 function antigravitySessionMode(
-  permissionMode: ConversationPermissionMode | undefined,
+  permissionMode: ConversationPermissionModesValue | undefined,
 ): string {
   if (permissionMode === CONVERSATION_PERMISSION_MODES.fullAccess) {
     return 'auto';

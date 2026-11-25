@@ -5,7 +5,7 @@ import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
 import type { ChatBackendCapabilities } from '../../types';
-import { ChatReasoningLevel, ChatServiceTier } from '../../types';
+import { CHAT_REASONING_LEVEL, CHAT_SERVICE_TIER } from '../../types';
 import type { ChatReasoningTierControlProps } from '../ChatReasoningTierControl';
 import { ChatReasoningTierControl } from '../ChatReasoningTierControl';
 
@@ -13,12 +13,12 @@ const FULL_CAPS: ChatBackendCapabilities = {
   maxRepositories: 1,
   permissionModes: [],
   reasoningLevels: [
-    ChatReasoningLevel.low,
-    ChatReasoningLevel.medium,
-    ChatReasoningLevel.high,
+    CHAT_REASONING_LEVEL.low,
+    CHAT_REASONING_LEVEL.medium,
+    CHAT_REASONING_LEVEL.high,
   ],
   requiresRepository: false,
-  serviceTiers: [ChatServiceTier.standard, ChatServiceTier.fast],
+  serviceTiers: [CHAT_SERVICE_TIER.standard, CHAT_SERVICE_TIER.fast],
   supervisedGatesEdits: true,
   supportsModelFlag: true,
 };
@@ -29,8 +29,8 @@ const renderControl = (
   return render(
     <ChatReasoningTierControl
       capabilities={FULL_CAPS}
-      reasoning={ChatReasoningLevel.low}
-      serviceTier={ChatServiceTier.standard}
+      reasoning={CHAT_REASONING_LEVEL.low}
+      serviceTier={CHAT_SERVICE_TIER.standard}
       {...overrides}
     />,
   );
@@ -71,7 +71,7 @@ describe('ChatReasoningTierControl Component', () => {
       component.getByTestId('ChatReasoningTierControl-reasoning-high'),
     );
 
-    expect(onReasoningChange).toHaveBeenCalledWith(ChatReasoningLevel.high);
+    expect(onReasoningChange).toHaveBeenCalledWith(CHAT_REASONING_LEVEL.high);
   });
 
   test('fires onServiceTierChange with the chosen tier', async () => {
@@ -83,7 +83,7 @@ describe('ChatReasoningTierControl Component', () => {
       component.getByTestId('ChatReasoningTierControl-tier-fast'),
     );
 
-    expect(onServiceTierChange).toHaveBeenCalledWith(ChatServiceTier.fast);
+    expect(onServiceTierChange).toHaveBeenCalledWith(CHAT_SERVICE_TIER.fast);
   });
 
   test('hides the tier section when the backend exposes no tiers', async () => {

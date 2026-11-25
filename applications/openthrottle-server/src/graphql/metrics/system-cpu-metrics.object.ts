@@ -16,21 +16,21 @@ import {
   ContainerCpuWindowObject,
   ContainerMetricsObject,
 } from './container-metrics.object.ts';
-import type { MetricScopeType } from './metric-scope.enum.ts';
-import { MetricScope } from './metric-scope.enum.ts';
+import type { MetricScopeValue } from './metric-scope.enum.ts';
+import { METRIC_SCOPE } from './metric-scope.enum.ts';
 import { PsiCpuMetricsObject } from './psi-cpu-metrics.object.ts';
 
-export const PressureLevel = {
+export const PRESSURE_LEVEL = {
   high: 'high',
   low: 'low',
   moderate: 'moderate',
   unknown: 'unknown',
 } as const;
 
-export type PressureLevelType =
-  (typeof PressureLevel)[keyof typeof PressureLevel];
+export type PressureLevelKey = keyof typeof PRESSURE_LEVEL;
+export type PressureLevelValue = (typeof PRESSURE_LEVEL)[PressureLevelKey];
 
-registerEnumType(PressureLevel, {
+registerEnumType(PRESSURE_LEVEL, {
   description: `System CPU pressure level interpretation.`,
   name: 'PressureLevel',
 });
@@ -64,11 +64,11 @@ export class LoadAverageMetricsObject {
   })
   perCoreLoad1m!: number;
 
-  @Field(() => MetricScope, {
+  @Field(() => METRIC_SCOPE, {
     description: `Always host when set: os.loadavg() counts every process on the machine. Null on plan-run metrics recorded before scopes existed.`,
     nullable: true,
   })
-  scope!: MetricScopeType | null;
+  scope!: MetricScopeValue | null;
 }
 
 @ObjectType('SystemCpuSnapshot', {
@@ -122,16 +122,16 @@ export class SystemCpuMetricsObject {
   })
   platform!: string;
 
-  @Field(() => MetricScope, {
+  @Field(() => METRIC_SCOPE, {
     description: `What pressureLevel was judged on: container (usage and throttling against the cgroup's cpu.max limit) or host (load average and PSI). Null on runs recorded before scopes existed, which were always host.`,
     nullable: true,
   })
-  pressureBasis!: MetricScopeType | null;
+  pressureBasis!: MetricScopeValue | null;
 
-  @Field(() => PressureLevel, {
+  @Field(() => PRESSURE_LEVEL, {
     description: `Interpretation of CPU pressure: low, moderate, high, or unknown. Judged on the container's own CPU limit when the server has one, otherwise on host load and PSI — see pressureBasis.`,
   })
-  pressureLevel!: PressureLevelType;
+  pressureLevel!: PressureLevelValue;
 
   @Field(() => Float, {
     description: `Delta in PSI full stall time (microseconds) during the job.`,

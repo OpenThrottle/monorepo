@@ -1,4 +1,4 @@
-import type { NotificationEventName } from '@openthrottle/openthrottle-notifications';
+import type { NotificationEventNamesValue } from '@openthrottle/openthrottle-notifications';
 import type { NotificationPayload } from '@openthrottle/openthrottle-notifications';
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
@@ -93,7 +93,7 @@ describe('OpenThrottleWebsocketDebugger Component', () => {
     // eslint-disable-next-line react/no-multi-comp -- test-local harness component
     const ControlledFilter = () => {
       const [selectedEventNames, setSelectedEventNames] = React.useState<
-        readonly NotificationEventName[]
+        readonly NotificationEventNamesValue[]
       >([]);
 
       return (

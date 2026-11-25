@@ -14,3 +14,7 @@ export const EVAL_TRIAL_STATUS = {
   ERRORED: 'errored',
   USAGE_LIMITED: 'usage_limited',
 } as const;
+
+export type EvalTrialStatusKey = keyof typeof EVAL_TRIAL_STATUS;
+export type EvalTrialStatusValue =
+  (typeof EVAL_TRIAL_STATUS)[EvalTrialStatusKey];

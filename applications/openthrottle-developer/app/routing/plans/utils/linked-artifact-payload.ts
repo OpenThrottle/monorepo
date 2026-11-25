@@ -25,8 +25,9 @@ export const ARTIFACT_ICON_KEY = {
   UNKNOWN: 'unknown',
 } as const;
 
-export type ArtifactIconKey =
-  (typeof ARTIFACT_ICON_KEY)[keyof typeof ARTIFACT_ICON_KEY];
+export type ArtifactIconKeyKey = keyof typeof ARTIFACT_ICON_KEY;
+export type ArtifactIconKeyValue =
+  (typeof ARTIFACT_ICON_KEY)[ArtifactIconKeyKey];
 
 /** A status_change transition; `from` is null for an initial state. */
 export interface ArtifactTransition {

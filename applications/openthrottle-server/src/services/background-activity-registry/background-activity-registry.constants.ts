@@ -7,6 +7,10 @@ export const BACKGROUND_ACTIVITY_KINDS = {
   embeddingsBackfill: 'embeddings_backfill',
 } as const;
 
+export type BackgroundActivityKindsKey = keyof typeof BACKGROUND_ACTIVITY_KINDS;
+export type BackgroundActivityKindsValue =
+  (typeof BACKGROUND_ACTIVITY_KINDS)[BackgroundActivityKindsKey];
+
 /**
  * @description `running` while progress keeps arriving; `stalled` once none has for
  * {@link BACKGROUND_ACTIVITY_STALLED_AFTER_MS} (an embedder that hangs, a worker that is busy
@@ -16,6 +20,11 @@ export const BACKGROUND_ACTIVITY_STATUSES = {
   running: 'running',
   stalled: 'stalled',
 } as const;
+
+export type BackgroundActivityStatusesKey =
+  keyof typeof BACKGROUND_ACTIVITY_STATUSES;
+export type BackgroundActivityStatusesValue =
+  (typeof BACKGROUND_ACTIVITY_STATUSES)[BackgroundActivityStatusesKey];
 
 /** @description Suffix under the checkout's queue prefix, so worktrees never see each other's. */
 export const BACKGROUND_ACTIVITY_KEY_SUFFIX = 'background-activities';

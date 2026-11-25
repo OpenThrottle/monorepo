@@ -12,16 +12,17 @@ import { registerEnumType } from '@nestjs/graphql';
 
 import { EDITOR_PRESENCE_STATES } from '../../services/editor-presence/editor-presence.constants.ts';
 
-export const EditorPresenceStateEnum = {
+export const EDITOR_PRESENCE_STATE = {
   INSTALLED: 'installed',
   NOT_FOUND: 'not_found',
   UNKNOWN: 'unknown',
 } as const;
 
-export type EditorPresenceStateEnum =
-  (typeof EditorPresenceStateEnum)[keyof typeof EditorPresenceStateEnum];
+export type EditorPresenceStateKey = keyof typeof EDITOR_PRESENCE_STATE;
+export type EditorPresenceStateValue =
+  (typeof EDITOR_PRESENCE_STATE)[EditorPresenceStateKey];
 
-registerEnumType(EditorPresenceStateEnum, {
+registerEnumType(EDITOR_PRESENCE_STATE, {
   description: `Whether an editor appears to be installed on the machine hosting the OpenThrottle server. Advisory only — never a gate on enabling an editor. Supported values: ${EDITOR_PRESENCE_STATES.join(', ')}.`,
   name: 'EditorPresenceState',
   valuesMap: {

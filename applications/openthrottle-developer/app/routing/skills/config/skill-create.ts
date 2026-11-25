@@ -28,11 +28,12 @@ export const SKILL_CREATE_DESTINATIONS = {
   personal: 'personal',
 } as const;
 
-export type SkillCreateDestination =
-  (typeof SKILL_CREATE_DESTINATIONS)[keyof typeof SKILL_CREATE_DESTINATIONS];
+export type SkillCreateDestinationsKey = keyof typeof SKILL_CREATE_DESTINATIONS;
+export type SkillCreateDestinationsValue =
+  (typeof SKILL_CREATE_DESTINATIONS)[SkillCreateDestinationsKey];
 
 /** The destination selected when the form first opens. */
-export const DEFAULT_SKILL_CREATE_DESTINATION: SkillCreateDestination =
+export const DEFAULT_SKILL_CREATE_DESTINATION: SkillCreateDestinationsValue =
   SKILL_CREATE_DESTINATIONS.personal;
 
 /**
@@ -42,7 +43,7 @@ export const DEFAULT_SKILL_CREATE_DESTINATION: SkillCreateDestination =
  */
 export const isSkillCreateDestination = (
   value: unknown,
-): value is SkillCreateDestination => {
+): value is SkillCreateDestinationsValue => {
   return (
     value === SKILL_CREATE_DESTINATIONS.custom ||
     value === SKILL_CREATE_DESTINATIONS.openthrottle ||
@@ -63,7 +64,7 @@ export const isSkillCreateDestination = (
  * guard, and a hand-crafted POST only ever meets the guard.
  */
 export const isSkillCreateDestinationAvailable = (
-  destination: SkillCreateDestination,
+  destination: SkillCreateDestinationsValue,
   betaPreviewEnabled: boolean,
 ): boolean => {
   return (
@@ -77,7 +78,7 @@ export const isSkillCreateDestinationAvailable = (
  * repo-rooted path would be a lie.
  */
 export const SKILL_CREATE_DESTINATION_PATH_PREFIX: Readonly<
-  Record<SkillCreateDestination, string>
+  Record<SkillCreateDestinationsValue, string>
 > = {
   [SKILL_CREATE_DESTINATIONS.custom]: '.agents/skills/',
   [SKILL_CREATE_DESTINATIONS.openthrottle]: 'skills/',
@@ -90,6 +91,10 @@ export const SKILL_CREATE_FIELDS = {
   destination: 'destination',
   slug: 'slug',
 } as const;
+
+export type SkillCreateFieldsKey = keyof typeof SKILL_CREATE_FIELDS;
+export type SkillCreateFieldsValue =
+  (typeof SKILL_CREATE_FIELDS)[SkillCreateFieldsKey];
 
 /**
  * @description Kebab-case slug pattern for a new skill directory.

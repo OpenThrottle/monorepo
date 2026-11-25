@@ -8,7 +8,8 @@ export const CMS_STATUS = {
   DRAFT: 'DRAFT',
 } as const;
 
+export type CmsStatusKey = keyof typeof CMS_STATUS;
 /**
  * @public
  */
-export type CmsStatus = (typeof CMS_STATUS)[keyof typeof CMS_STATUS];
+export type CmsStatusValue = (typeof CMS_STATUS)[CmsStatusKey];

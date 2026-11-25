@@ -4,7 +4,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import type { CmsDevice } from '../../config/cms-device';
+import type { CmsDeviceValue } from '../../config/cms-device';
 import { CMS_DEVICE } from '../../config/cms-device';
 import { atomFragmentDraft } from '../../data/data.atom.fragment-draft';
 import {
@@ -16,7 +16,7 @@ import { CORE_COMPONENTS } from '../../data/data.registry';
 import { MOCK_FRAGMENTS } from '../../data/mock.fragments';
 import { CoreRendererDevelopment } from '../CoreRendererDevelopment';
 
-const renderPreview = (device: CmsDevice, url: string) => {
+const renderPreview = (device: CmsDeviceValue, url: string) => {
   const store = createStore();
   store.set(atomSettings, { ...atomSettingsDefault, device });
   store.set(atomFragmentDraft, { copy: 'Edited live' });

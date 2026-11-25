@@ -1,10 +1,10 @@
-import type { PromptType } from '@openthrottle/react-router-editor';
+import type { PromptTypesValue } from '@openthrottle/react-router-editor';
 import { PROMPT_TYPE_VALUES } from '@openthrottle/react-router-editor';
 
 import { CustomPromptType } from '~/__generated__/graphql';
 
-/** Narrow a raw string to a create-form {@link PromptType}. */
-export const isPromptType = (value: string): value is PromptType => {
+/** Narrow a raw string to a create-form {@link PromptTypesValue}. */
+export const isPromptType = (value: string): value is PromptTypesValue => {
   return PROMPT_TYPE_VALUES.some((candidate) => candidate === value);
 };
 

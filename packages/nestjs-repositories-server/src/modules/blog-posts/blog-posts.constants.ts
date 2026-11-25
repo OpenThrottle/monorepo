@@ -11,6 +11,9 @@ export const BLOG_POST_STATUS = {
   DRAFT: 'DRAFT',
   PUBLISHED: 'PUBLISHED',
 } as const;
+
+export type BlogPostStatusKey = keyof typeof BLOG_POST_STATUS;
+export type BlogPostStatusValue = (typeof BLOG_POST_STATUS)[BlogPostStatusKey];
 /**
  * @description Every `blog_posts.status` value, alphabetized.
  * @public

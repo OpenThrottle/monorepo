@@ -6,3 +6,7 @@ export const DOCS_SECTION_HEADINGS = {
   docs: 'Docs',
   faq: 'FAQ',
 } as const;
+
+export type DocsSectionHeadingsKey = keyof typeof DOCS_SECTION_HEADINGS;
+export type DocsSectionHeadingsValue =
+  (typeof DOCS_SECTION_HEADINGS)[DocsSectionHeadingsKey];

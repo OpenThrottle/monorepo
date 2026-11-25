@@ -18,27 +18,28 @@ import type { RecurrenceRule } from '../types';
  *
  * @public
  */
-export const RecurrenceFrequency = {
+export const RECURRENCE_FREQUENCY = {
   Daily: 'DAILY',
   Monthly: 'MONTHLY',
   Weekly: 'WEEKLY',
   Yearly: 'YEARLY',
 } as const;
 
+export type RecurrenceFrequencyKey = keyof typeof RECURRENCE_FREQUENCY;
 /**
- * Union of the supported {@link RecurrenceFrequency} values.
+ * Union of the supported {@link RECURRENCE_FREQUENCY} values.
  *
  * @public
  */
-export type RecurrenceFrequency =
-  (typeof RecurrenceFrequency)[keyof typeof RecurrenceFrequency];
+export type RecurrenceFrequencyValue =
+  (typeof RECURRENCE_FREQUENCY)[RecurrenceFrequencyKey];
 
 /**
  * Two-letter weekday codes used by RRULE `BYDAY` / `WKST`.
  *
  * @public
  */
-export const RecurrenceWeekday = {
+export const RECURRENCE_WEEKDAY = {
   Friday: 'FR',
   Monday: 'MO',
   Saturday: 'SA',
@@ -48,13 +49,14 @@ export const RecurrenceWeekday = {
   Wednesday: 'WE',
 } as const;
 
+export type RecurrenceWeekdayKey = keyof typeof RECURRENCE_WEEKDAY;
 /**
- * Union of the supported {@link RecurrenceWeekday} values.
+ * Union of the supported {@link RECURRENCE_WEEKDAY} values.
  *
  * @public
  */
-export type RecurrenceWeekday =
-  (typeof RecurrenceWeekday)[keyof typeof RecurrenceWeekday];
+export type RecurrenceWeekdayValue =
+  (typeof RECURRENCE_WEEKDAY)[RecurrenceWeekdayKey];
 
 /**
  * A structured recurrence specification covering the engine-supported RRULE
@@ -65,33 +67,33 @@ export type RecurrenceWeekday =
  */
 export interface RecurrenceSpec {
   /** Days of the week the event recurs on (RRULE `BYDAY`). */
-  byDay?: RecurrenceWeekday[];
+  byDay?: RecurrenceWeekdayValue[];
   /** Days of the month the event recurs on, 1–31 (RRULE `BYMONTHDAY`). */
   byMonthDay?: number[];
   /** Total number of occurrences (RRULE `COUNT`). Mutually exclusive with `until`. */
   count?: number;
   /** How often the series repeats (RRULE `FREQ`). */
-  frequency: RecurrenceFrequency;
+  frequency: RecurrenceFrequencyValue;
   /** Repeat every N periods of `frequency` (RRULE `INTERVAL`). */
   interval?: number;
   /** Last date/datetime the series runs, as an RRULE `UNTIL` value. */
   until?: string;
   /** The day the week starts on (RRULE `WKST`). */
-  weekStart?: RecurrenceWeekday;
+  weekStart?: RecurrenceWeekdayValue;
 }
 
-const FREQUENCIES = new Set<string>(Object.values(RecurrenceFrequency));
-const WEEKDAYS = new Set<string>(Object.values(RecurrenceWeekday));
+const FREQUENCIES = new Set<string>(Object.values(RECURRENCE_FREQUENCY));
+const WEEKDAYS = new Set<string>(Object.values(RECURRENCE_WEEKDAY));
 
-function isFrequency(value: string): value is RecurrenceFrequency {
+function isFrequency(value: string): value is RecurrenceFrequencyValue {
   return FREQUENCIES.has(value);
 }
 
-function isWeekday(value: string): value is RecurrenceWeekday {
+function isWeekday(value: string): value is RecurrenceWeekdayValue {
   return WEEKDAYS.has(value);
 }
 
-function parseWeekdays(value: string): RecurrenceWeekday[] {
+function parseWeekdays(value: string): RecurrenceWeekdayValue[] {
   return value.split(',').map((code) => {
     if (!isWeekday(code)) {
       throw new Error(`Unsupported RRULE weekday: ${code}`);

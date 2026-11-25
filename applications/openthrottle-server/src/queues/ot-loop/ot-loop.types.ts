@@ -1,11 +1,11 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import type { ExecuteGraphqlOptionsV2 } from '@openthrottle/nodejs-graphql';
-import type { LoopOutputKind } from '@openthrottle/openthrottle-agentic-loop';
+import type { LoopOutputKindValue } from '@openthrottle/openthrottle-agentic-loop';
 import type { PlanRunCommandRunner } from '@openthrottle/openthrottle-agentic-utils';
 import type {
   AgentDriver,
   DriverInvocationConfig,
-  DriverReasoningEffort,
+  DriverReasoningEffortsValue,
   DriverRepoAgentConfig,
   RunDriverOptions,
   UsageLimit,
@@ -42,7 +42,7 @@ export interface PlanRunWorkerGraphqlConfig {
 export interface PlanOutputChunk {
   /** 1-based attempt inside a task; `undefined` for plan-scoped lines. */
   readonly attempt: number | undefined;
-  readonly kind: LoopOutputKind;
+  readonly kind: LoopOutputKindValue;
   /** The task the chunk belongs to; `undefined` = plan-scoped. */
   readonly taskId: string | undefined;
   readonly text: string;
@@ -81,7 +81,7 @@ export type OtLoopRunDriver = (
 export interface OtLoopWorkerRunnerOptions {
   readonly cwd: string;
   readonly driver: AgentDriver;
-  readonly effort: DriverReasoningEffort | undefined;
+  readonly effort: DriverReasoningEffortsValue | undefined;
   /** Explicit worker env over the engine allowlist; blanks the OT credentials (§ 2). */
   readonly env: Readonly<Record<string, string>>;
   /** Receives the limit when an attempt closed on one, so the service can schedule the resume. */

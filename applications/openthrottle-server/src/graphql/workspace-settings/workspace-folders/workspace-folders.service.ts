@@ -60,7 +60,10 @@ import type {
   WorkspaceDirectoryListingObject,
   WorkspacePickerCapabilitiesObject,
 } from '../workspace-folders.object.ts';
-import { WorkspaceFolderReconciliationEnum } from '../workspace-folders.object.ts';
+import {
+  WORKSPACE_FOLDER_RECONCILIATION,
+  WorkspaceFolderReconciliationValue,
+} from '../workspace-folders.object.ts';
 import {
   CHECKOUT_ROOT_ENV,
   WORKSPACE_ROOTS_ENV,
@@ -476,8 +479,8 @@ export class WorkspaceFoldersService {
 
     let checkout: RepositoryCheckout | null = null;
     let repository: Repository | null = null;
-    let reconciliation: WorkspaceFolderReconciliationEnum =
-      WorkspaceFolderReconciliationEnum.CREATED_PROVISIONAL;
+    let reconciliation: WorkspaceFolderReconciliationValue =
+      WORKSPACE_FOLDER_RECONCILIATION.CREATED_PROVISIONAL;
     let createdRepository = false;
 
     // 1. Manifest checkout id: a moved or re-added folder relinks, never duplicates.
@@ -498,7 +501,7 @@ export class WorkspaceFoldersService {
         }
         repository = await this.repositoryFor(checkout);
         reconciliation =
-          WorkspaceFolderReconciliationEnum.MATCHED_MANIFEST_CHECKOUT;
+          WORKSPACE_FOLDER_RECONCILIATION.MATCHED_MANIFEST_CHECKOUT;
       }
     }
 
@@ -510,7 +513,7 @@ export class WorkspaceFoldersService {
       if (known) {
         repository = known;
         reconciliation =
-          WorkspaceFolderReconciliationEnum.MATCHED_MANIFEST_REPOSITORY;
+          WORKSPACE_FOLDER_RECONCILIATION.MATCHED_MANIFEST_REPOSITORY;
       }
     }
 
@@ -522,7 +525,7 @@ export class WorkspaceFoldersService {
           await this.repositoriesRepository.findByNormalizedRemoteUrl(remote);
         if (canonical) {
           repository = canonical;
-          reconciliation = WorkspaceFolderReconciliationEnum.MATCHED_REMOTE;
+          reconciliation = WORKSPACE_FOLDER_RECONCILIATION.MATCHED_REMOTE;
         } else {
           repository = await this.repositoriesRepository.create({
             defaultBranch: snapshot.git.defaultBranch,
@@ -530,7 +533,7 @@ export class WorkspaceFoldersService {
             normalizedRemoteUrl: remote,
             projectId: null,
           });
-          reconciliation = WorkspaceFolderReconciliationEnum.CREATED_CANONICAL;
+          reconciliation = WORKSPACE_FOLDER_RECONCILIATION.CREATED_CANONICAL;
           createdRepository = true;
         }
       } else {
@@ -540,7 +543,7 @@ export class WorkspaceFoldersService {
           normalizedRemoteUrl: null,
           projectId: null,
         });
-        reconciliation = WorkspaceFolderReconciliationEnum.CREATED_PROVISIONAL;
+        reconciliation = WORKSPACE_FOLDER_RECONCILIATION.CREATED_PROVISIONAL;
         createdRepository = true;
       }
     }

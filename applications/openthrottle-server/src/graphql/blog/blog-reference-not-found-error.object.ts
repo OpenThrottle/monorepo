@@ -7,7 +7,7 @@
 
 import { Field, ObjectType } from '@nestjs/graphql';
 
-import type { BlogReferenceEntity } from './blog-reference-entity.enum.ts';
+import type { BlogReferenceEntityValue } from './blog-reference-entity.enum.ts';
 import { BlogReferenceEntityEnum } from './blog-reference-entity.enum.ts';
 
 @ObjectType()
@@ -15,7 +15,7 @@ export class BlogReferenceNotFoundError {
   @Field(() => BlogReferenceEntityEnum, {
     description: `Which kind of record was not found.`,
   })
-  entity!: BlogReferenceEntity;
+  entity!: BlogReferenceEntityValue;
 
   @Field(() => String, { description: `The slug that was not found.` })
   key!: string;

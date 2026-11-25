@@ -4,7 +4,8 @@
 
 import { Field, ID, ObjectType } from '@nestjs/graphql';
 
-import { WorkspaceEditorIdEnum } from './workspace-editor-id.enum.ts';
+import type { WorkspaceEditorIdValue } from './workspace-editor-id.enum.ts';
+import { WORKSPACE_EDITOR_ID } from './workspace-editor-id.enum.ts';
 
 @ObjectType({
   description: `Result of applying editor configuration for one linked repository and editor.`,
@@ -16,8 +17,8 @@ class WorkspaceEditorConfigApplicationObject {
   @Field()
   filesystemPath!: string;
 
-  @Field(() => WorkspaceEditorIdEnum)
-  editor!: WorkspaceEditorIdEnum;
+  @Field(() => WORKSPACE_EDITOR_ID)
+  editor!: WorkspaceEditorIdValue;
 
   @Field(() => [String])
   filesWritten!: string[];

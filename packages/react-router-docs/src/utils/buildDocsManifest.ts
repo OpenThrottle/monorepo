@@ -9,8 +9,9 @@ export const DOCS_SECTION = {
   faq: 'faq',
 } as const;
 
+export type DocsSectionKey = keyof typeof DOCS_SECTION;
 /** @public */
-export type DocsSection = (typeof DOCS_SECTION)[keyof typeof DOCS_SECTION];
+export type DocsSectionValue = (typeof DOCS_SECTION)[DocsSectionKey];
 
 /**
  * The raw module map an app produces from its own content folder, e.g.
@@ -44,7 +45,7 @@ export interface DocEntry {
   /** Route path, e.g. `/docs/getting-started` or `/faq`. */
   readonly path: string;
   /** Which top-level section the entry belongs to. */
-  readonly section: DocsSection;
+  readonly section: DocsSectionValue;
   /** Slug segment after the section, e.g. `getting-started` or `guides/deploy`. */
   readonly slug: string;
   /** Title (docs page heading) / question (faq); from frontmatter `title`. */
@@ -61,7 +62,7 @@ export interface BuildDocsManifestOptions {
 
 const CONTENT_ROOT_MARKER = 'docs-content/';
 
-const isDocsSection = (value: string): value is DocsSection => {
+const isDocsSection = (value: string): value is DocsSectionValue => {
   return value === DOCS_SECTION.docs || value === DOCS_SECTION.faq;
 };
 

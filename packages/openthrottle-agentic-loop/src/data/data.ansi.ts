@@ -10,3 +10,6 @@ export const ANSI_PARTIAL_TAIL_PATTERN = new RegExp(
 
 /** @description Env that asks well-behaved tools not to emit color. */
 export const UNCOLORED_ENV = { FORCE_COLOR: '0', NO_COLOR: '1' } as const;
+
+export type UncoloredEnvKey = keyof typeof UNCOLORED_ENV;
+export type UncoloredEnvValue = (typeof UNCOLORED_ENV)[UncoloredEnvKey];

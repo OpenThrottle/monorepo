@@ -2,7 +2,7 @@
  * @description Choose between the whole-take and per-sentence render paths.
  */
 
-import type { RenderMode, TtsBackend } from './types.ts';
+import type { RenderModeValue, TtsBackend } from './types.ts';
 import { RENDER_MODE } from './types.ts';
 
 export interface SelectRenderModeOptions {
@@ -17,7 +17,7 @@ export interface SelectRenderModeOptions {
  */
 export const selectRenderMode = (
   options: SelectRenderModeOptions,
-): RenderMode => {
+): RenderModeValue => {
   if (options.perSentence || options.backend.renderTake === undefined) {
     return RENDER_MODE.PER_SENTENCE;
   }

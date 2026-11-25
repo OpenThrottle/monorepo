@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { WorkspaceEditorIdEnum } from '../workspace-editor-id.enum.ts';
+import { WORKSPACE_EDITOR_ID } from '../workspace-editor-id.enum.ts';
 import {
   validateContactDisplayName,
   validateContactEmail,
@@ -57,9 +57,9 @@ describe('validateEnabledEditors', () => {
   test('deduplicates while preserving order', () => {
     expect(
       validateEnabledEditors([
-        WorkspaceEditorIdEnum.VSCODE,
-        WorkspaceEditorIdEnum.CURSOR,
-        WorkspaceEditorIdEnum.VSCODE,
+        WORKSPACE_EDITOR_ID.VSCODE,
+        WORKSPACE_EDITOR_ID.CURSOR,
+        WORKSPACE_EDITOR_ID.VSCODE,
       ]),
     ).toEqual(['vscode', 'cursor']);
   });

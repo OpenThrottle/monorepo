@@ -42,11 +42,11 @@ import {
   writeLedger,
 } from './ledger.ts';
 import type {
-  ForeignSkillInjectionMode,
+  ForeignSkillInjectionModeValue,
   ForeignSkillLedger,
   ForeignSkillLedgerEntry,
-  ForeignSkillMaterializationLayer,
-  GitExcludeOwner,
+  ForeignSkillMaterializationLayerValue,
+  GitExcludeOwnerValue,
 } from './types.ts';
 import {
   FOREIGN_SKILL_INJECTION_MODE,
@@ -57,7 +57,7 @@ import {
 
 /** Each layer writes its own `.git/info/exclude` block. */
 const EXCLUDE_OWNER_BY_LAYER: Readonly<
-  Record<ForeignSkillMaterializationLayer, GitExcludeOwner>
+  Record<ForeignSkillMaterializationLayerValue, GitExcludeOwnerValue>
 > = {
   [FOREIGN_SKILL_MATERIALIZATION_LAYER.CURATED]:
     GIT_EXCLUDE_OWNER.FOREIGN_SKILL_INJECTION,
@@ -100,7 +100,7 @@ const canonicalPath = (absPath: string): string => {
 const sharedExcludeRelPaths = (
   repoPath: string,
   env: NodeJS.ProcessEnv,
-  layer: ForeignSkillMaterializationLayer,
+  layer: ForeignSkillMaterializationLayerValue,
 ): readonly string[] => {
   const ownExclude = resolveGitExcludePath(repoPath);
   if (ownExclude === undefined) {
@@ -136,7 +136,7 @@ const sharedExcludeRelPaths = (
 const syncSharedExcludeBlock = (
   repoPath: string,
   env: NodeJS.ProcessEnv,
-  layer: ForeignSkillMaterializationLayer,
+  layer: ForeignSkillMaterializationLayerValue,
   ownRelPaths: readonly string[],
 ): void => {
   const owner = EXCLUDE_OWNER_BY_LAYER[layer];
@@ -158,7 +158,7 @@ const syncSharedExcludeBlock = (
 export interface EnsureMaterializedOptions {
   readonly env?: NodeJS.ProcessEnv;
   /** Which layer to materialize. Defaults to `curated`. */
-  readonly layer?: ForeignSkillMaterializationLayer;
+  readonly layer?: ForeignSkillMaterializationLayerValue;
   /**
    * Restricts the manifest to these skill names (e.g. `['ot-worktree']` for the worktree overlay).
    * Omit for the whole resolved manifest.
@@ -176,7 +176,7 @@ export interface EnsureMaterializedOptions {
 export interface EnsureMaterializedResult {
   /** Skill names actually present in the repo after this call (sorted, de-duplicated). */
   readonly injectedNames: readonly string[];
-  readonly mode: ForeignSkillInjectionMode;
+  readonly mode: ForeignSkillInjectionModeValue;
   readonly warnings: readonly string[];
 }
 
@@ -184,7 +184,7 @@ export interface EnsureMaterializedResult {
 export interface TeardownOptions {
   readonly env?: NodeJS.ProcessEnv;
   /** Which layer to tear down. Defaults to `curated`; other layers are left alone. */
-  readonly layer?: ForeignSkillMaterializationLayer;
+  readonly layer?: ForeignSkillMaterializationLayerValue;
   readonly repoPath: string;
 }
 
@@ -408,7 +408,7 @@ const injectEntry = (
   relPath: string,
   sourcePath: string,
   name: string,
-  mode: ForeignSkillInjectionMode,
+  mode: ForeignSkillInjectionModeValue,
   createdDirs: Set<string>,
 ): ForeignSkillLedgerEntry => {
   const injectedAbs = join(repoPath, relPath);

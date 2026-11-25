@@ -12,3 +12,6 @@ export const ROUTE_STATS_URL = {
   openValue: 'open',
   param: 'stats',
 } as const;
+
+export type RouteStatsUrlKey = keyof typeof ROUTE_STATS_URL;
+export type RouteStatsUrlValue = (typeof ROUTE_STATS_URL)[RouteStatsUrlKey];

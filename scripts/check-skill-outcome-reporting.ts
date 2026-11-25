@@ -34,12 +34,13 @@ export const SKILL_OUTCOME_STATUS = {
   WRONG_NAME: 'wrong-name',
 } as const;
 
-export type SkillOutcomeStatus =
-  (typeof SKILL_OUTCOME_STATUS)[keyof typeof SKILL_OUTCOME_STATUS];
+export type SkillOutcomeStatusKey = keyof typeof SKILL_OUTCOME_STATUS;
+export type SkillOutcomeStatusValue =
+  (typeof SKILL_OUTCOME_STATUS)[SkillOutcomeStatusKey];
 
 export interface SkillOutcomeReport {
   readonly name: string;
-  readonly status: SkillOutcomeStatus;
+  readonly status: SkillOutcomeStatusValue;
 }
 
 /**

@@ -13,7 +13,7 @@ import { getDriver } from '../drivers/index.ts';
 import type { RunDriverOptions } from '../engine/index.ts';
 import { checkRepoAgentConfig, runDriverAsync } from '../engine/index.ts';
 import { DriverCapabilityError } from '../errors/index.ts';
-import type { DriverId } from '../registry/index.ts';
+import type { DriversValue } from '../registry/index.ts';
 import { parseDriverId } from '../registry/index.ts';
 import type {
   DriverChunk,
@@ -86,9 +86,9 @@ export const RUN_AGENT_STATUS = {
   timeout: 'timeout',
 } as const;
 
+export type RunAgentStatusKey = keyof typeof RUN_AGENT_STATUS;
 /** @description One of the {@link RUN_AGENT_STATUS} values. @public */
-export type RunAgentStatus =
-  (typeof RUN_AGENT_STATUS)[keyof typeof RUN_AGENT_STATUS];
+export type RunAgentStatusValue = (typeof RUN_AGENT_STATUS)[RunAgentStatusKey];
 
 /**
  * @description Structured result of {@link runAgentPrompt}. `output` is buffered by `runAgentPrompt`
@@ -102,11 +102,11 @@ export type RunAgentStatus =
  */
 export interface RunAgentPromptResult {
   readonly accountError: AgentAccountError | null;
-  readonly driverId: DriverId;
+  readonly driverId: DriversValue;
   readonly exitCode: number | null;
   readonly model?: string;
   readonly output: string;
-  readonly status: RunAgentStatus;
+  readonly status: RunAgentStatusValue;
   readonly usageLimit: UsageLimit | null;
 }
 
@@ -188,7 +188,7 @@ export const runAgentPrompt = async (
   let accountError: AgentAccountError | null = null;
   let finalOutput: string | undefined;
 
-  let status: RunAgentStatus;
+  let status: RunAgentStatusValue;
   try {
     const engineOutput = await runDriverAsync(driver, invocationConfig, {
       logger: options.logger,

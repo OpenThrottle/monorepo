@@ -1,5 +1,5 @@
 import type {
-  NotificationEventName,
+  NotificationEventNamesValue,
   NotificationPayload,
 } from '@openthrottle/openthrottle-notifications';
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
@@ -66,7 +66,10 @@ describe('useOpenThrottleWebsocketDebugger', () => {
 
   test('appends entries delivered via subscribeToEvents', () => {
     let deliver:
-      | ((event: NotificationEventName, payload: NotificationPayload) => void)
+      | ((
+          event: NotificationEventNamesValue,
+          payload: NotificationPayload,
+        ) => void)
       | undefined;
     const subscribeToEvents: WebsocketDebuggerEventSubscriber = (listener) => {
       deliver = listener;
@@ -91,7 +94,10 @@ describe('useOpenThrottleWebsocketDebugger', () => {
 
   test('handleFilterChange narrows displayEntries to selected event names, dropping unknown values', () => {
     let deliver:
-      | ((event: NotificationEventName, payload: NotificationPayload) => void)
+      | ((
+          event: NotificationEventNamesValue,
+          payload: NotificationPayload,
+        ) => void)
       | undefined;
     const subscribeToEvents: WebsocketDebuggerEventSubscriber = (listener) => {
       deliver = listener;
@@ -125,7 +131,10 @@ describe('useOpenThrottleWebsocketDebugger', () => {
 
   test('handleClear empties the log', () => {
     let deliver:
-      | ((event: NotificationEventName, payload: NotificationPayload) => void)
+      | ((
+          event: NotificationEventNamesValue,
+          payload: NotificationPayload,
+        ) => void)
       | undefined;
     const subscribeToEvents: WebsocketDebuggerEventSubscriber = (listener) => {
       deliver = listener;

@@ -9,11 +9,12 @@ export const SCHEDULE_KIND = {
   once: 'once',
 } as const;
 
-export type ScheduleKind = (typeof SCHEDULE_KIND)[keyof typeof SCHEDULE_KIND];
+export type ScheduleKindKey = keyof typeof SCHEDULE_KIND;
+export type ScheduleKindValue = (typeof SCHEDULE_KIND)[ScheduleKindKey];
 
 export interface ScheduleKindOption {
   label: string;
-  value: ScheduleKind;
+  value: ScheduleKindValue;
 }
 
 export const SCHEDULE_KIND_OPTIONS: readonly ScheduleKindOption[] = [

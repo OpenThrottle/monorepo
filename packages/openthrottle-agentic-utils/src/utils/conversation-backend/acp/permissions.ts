@@ -21,7 +21,7 @@ import type {
   RequestPermissionResponse,
 } from '@agentclientprotocol/sdk';
 
-import type { ConversationPermissionMode } from '../types.ts';
+import type { ConversationPermissionModesValue } from '../types.ts';
 import { CONVERSATION_PERMISSION_MODES } from '../types.ts';
 
 /** Tool kinds `autoAcceptEdits` allows without asking. */
@@ -71,7 +71,7 @@ function select(
  */
 export function decideAcpPermission(
   request: RequestPermissionRequest,
-  permissionMode: ConversationPermissionMode | undefined,
+  permissionMode: ConversationPermissionModesValue | undefined,
   managedServerNames: readonly string[],
 ): RequestPermissionResponse {
   if (permissionMode === CONVERSATION_PERMISSION_MODES.fullAccess) {

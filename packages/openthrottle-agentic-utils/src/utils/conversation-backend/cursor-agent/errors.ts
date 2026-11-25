@@ -50,13 +50,14 @@ export const CURSOR_FAILURE_KINDS = {
   unknown: 'unknown',
 } as const;
 
+export type CursorFailureKindsKey = keyof typeof CURSOR_FAILURE_KINDS;
 /**
  * One of {@link CURSOR_FAILURE_KINDS}.
  *
  * @public
  */
-export type CursorFailureKind =
-  (typeof CURSOR_FAILURE_KINDS)[keyof typeof CURSOR_FAILURE_KINDS];
+export type CursorFailureKindsValue =
+  (typeof CURSOR_FAILURE_KINDS)[CursorFailureKindsKey];
 
 /**
  * Binary missing. Node reports a failed spawn as ENOENT on the `error` event,
@@ -102,7 +103,9 @@ function matchesAny(text: string, patterns: readonly RegExp[]): boolean {
  *
  * @public
  */
-export function classifyCursorFailure(message: string): CursorFailureKind {
+export function classifyCursorFailure(
+  message: string,
+): CursorFailureKindsValue {
   if (matchesAny(message, NOT_INSTALLED_PATTERNS)) {
     return CURSOR_FAILURE_KINDS.notInstalled;
   }
@@ -128,7 +131,9 @@ export function classifyCursorFailure(message: string): CursorFailureKind {
  *
  * @public
  */
-export function isRetryableCursorFailure(kind: CursorFailureKind): boolean {
+export function isRetryableCursorFailure(
+  kind: CursorFailureKindsValue,
+): boolean {
   return (
     kind === CURSOR_FAILURE_KINDS.timeout ||
     kind === CURSOR_FAILURE_KINDS.unknown

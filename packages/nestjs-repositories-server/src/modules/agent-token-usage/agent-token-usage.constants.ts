@@ -8,3 +8,7 @@ export const AGENT_TOKEN_USAGE_SOURCES = {
   CHAT: 'openthrottle-chat',
   CLAUDE_CODE: 'claude-code',
 } as const;
+
+export type AgentTokenUsageSourcesKey = keyof typeof AGENT_TOKEN_USAGE_SOURCES;
+export type AgentTokenUsageSourcesValue =
+  (typeof AGENT_TOKEN_USAGE_SOURCES)[AgentTokenUsageSourcesKey];

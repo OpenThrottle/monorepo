@@ -66,6 +66,9 @@ export const SYMBOLS = {
   warn: '⚠',
 } as const;
 
+export type SymbolsKey = keyof typeof SYMBOLS;
+export type SymbolsValue = (typeof SYMBOLS)[SymbolsKey];
+
 export interface LoggerOptions {
   /** Where narration is written; default stdout. Use stderr for stdout-contract scripts. */
   stream?: NodeJS.WritableStream;

@@ -3,7 +3,7 @@
  * `planId` is implicit (`plans.id`); omit from stored JSON.
  */
 
-import type { DriverId } from '@openthrottle/openthrottle-drivers';
+import type { DriversValue } from '@openthrottle/openthrottle-drivers';
 
 import type { PLAN_RUN_CONFIG_VERSION } from './plan-run-config-storage.constants.ts';
 
@@ -38,7 +38,7 @@ export interface PlanJobRunHooksStorage {
  */
 export interface PlanRunConfigRunV1 extends PlanRunConfigOtLoop {
   readonly debugCli: PlanRunConfigDebugCli;
-  readonly driver: DriverId;
+  readonly driver: DriversValue;
   /**
    * @description Reasoning-effort level (chat vocabulary: low|medium|high|extraHigh|max|ultra);
    * empty = unset. Validated against the driver at enqueue.
@@ -82,7 +82,7 @@ export type PlanRunConfigStorage = PlanRunConfigStorageV1;
  */
 export interface PlanWorkflowRunOptions {
   readonly debugCli: PlanRunConfigDebugCli;
-  readonly driver: DriverId;
+  readonly driver: DriversValue;
   readonly effort: string;
   readonly model: string;
   readonly planId: string;

@@ -144,9 +144,10 @@ export const IDE_SEMANTIC_STATUS = {
   unavailable: 'unavailable',
 } as const;
 
+export type IdeSemanticStatusKey = keyof typeof IDE_SEMANTIC_STATUS;
 /** A semantic index status value. @public */
-export type IdeSemanticStatus =
-  (typeof IDE_SEMANTIC_STATUS)[keyof typeof IDE_SEMANTIC_STATUS];
+export type IdeSemanticStatusValue =
+  (typeof IDE_SEMANTIC_STATUS)[IdeSemanticStatusKey];
 
 /**
  * Semantic-search result envelope. `status` selects the rendered state; `available` is
@@ -167,5 +168,5 @@ export interface IdeSemanticResult {
   /** The repository searched. */
   repository: IdeRepositoryRef;
   /** Index status driving the rendered state. */
-  status: IdeSemanticStatus;
+  status: IdeSemanticStatusValue;
 }

@@ -14,8 +14,8 @@ export const SEARCH_CASE_KIND = {
   TOPIC: 'topic',
 } as const;
 
-export type SearchCaseKind =
-  (typeof SEARCH_CASE_KIND)[keyof typeof SEARCH_CASE_KIND];
+export type SearchCaseKindKey = keyof typeof SEARCH_CASE_KIND;
+export type SearchCaseKindValue = (typeof SEARCH_CASE_KIND)[SearchCaseKindKey];
 
 /**
  * @description One entity a relevant result may point at.
@@ -34,7 +34,7 @@ export type SearchTarget =
  */
 export interface SearchRankingCase {
   readonly id: string;
-  readonly kind: SearchCaseKind;
+  readonly kind: SearchCaseKindValue;
   readonly query: string;
   readonly relevant: readonly SearchTarget[];
   readonly split: 'dev' | 'test';
@@ -59,7 +59,7 @@ export interface CaseScore {
   /** @description 1-based rank of the first relevant chunk, or null when none is in the list. */
   readonly firstRelevantRank: number | null;
   readonly hitAt10: boolean;
-  readonly kind: SearchCaseKind;
+  readonly kind: SearchCaseKindValue;
   readonly recallAt10: number;
   readonly reciprocalRank: number;
 }

@@ -2,7 +2,7 @@ import type { UserWorkspaceSettings } from '@openthrottle/nestjs-repositories-se
 import { describe, expect, test } from 'vitest';
 
 import { toUserWorkspaceProfileObject } from './user-workspace-profile.mapper.ts';
-import { WorkspaceEditorIdEnum } from './workspace-editor-id.enum.ts';
+import { WORKSPACE_EDITOR_ID } from './workspace-editor-id.enum.ts';
 
 describe('toUserWorkspaceProfileObject', () => {
   test('maps enabled editor ids to GraphQL enum values', () => {
@@ -18,8 +18,8 @@ describe('toUserWorkspaceProfileObject', () => {
     const result = toUserWorkspaceProfileObject(settings);
 
     expect(result.enabledEditors).toEqual([
-      WorkspaceEditorIdEnum.CURSOR,
-      WorkspaceEditorIdEnum.VSCODE,
+      WORKSPACE_EDITOR_ID.CURSOR,
+      WORKSPACE_EDITOR_ID.VSCODE,
     ]);
   });
 });

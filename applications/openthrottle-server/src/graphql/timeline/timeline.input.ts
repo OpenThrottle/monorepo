@@ -6,9 +6,12 @@
 import { Field, InputType } from '@nestjs/graphql';
 
 import {
-  TimelineLaneGrouping,
-  TimelineMarkerKind,
-  TimelineSpanKind,
+  TIMELINE_LANE_GROUPING,
+  TIMELINE_MARKER_KIND,
+  TIMELINE_SPAN_KIND,
+  TimelineLaneGroupingValue,
+  TimelineMarkerKindValue,
+  TimelineSpanKindValue,
 } from './timeline.enum.ts';
 
 @InputType()
@@ -36,17 +39,17 @@ export class WorkstreamTimelineInput {
   })
   gitBranch!: string | null;
 
-  @Field(() => TimelineLaneGrouping, {
+  @Field(() => TIMELINE_LANE_GROUPING, {
     description: `How rows are grouped into lanes. Defaults to BY_PLAN.`,
     nullable: true,
   })
-  grouping!: TimelineLaneGrouping | null;
+  grouping!: TimelineLaneGroupingValue | null;
 
-  @Field(() => [TimelineMarkerKind], {
+  @Field(() => [TIMELINE_MARKER_KIND], {
     description: `Marker kinds to include. Omit or pass null for all kinds; an empty list returns no markers.`,
     nullable: true,
   })
-  markerKinds!: TimelineMarkerKind[] | null;
+  markerKinds!: TimelineMarkerKindValue[] | null;
 
   @Field(() => String, {
     description: `Filter to a single plan (UUID).`,
@@ -54,11 +57,11 @@ export class WorkstreamTimelineInput {
   })
   planId!: string | null;
 
-  @Field(() => [TimelineSpanKind], {
+  @Field(() => [TIMELINE_SPAN_KIND], {
     description: `Span kinds to include. Omit or pass null for all kinds; an empty list returns no spans.`,
     nullable: true,
   })
-  spanKinds!: TimelineSpanKind[] | null;
+  spanKinds!: TimelineSpanKindValue[] | null;
 
   @Field(() => Date, {
     description: `End of the window (exclusive). Must be after \`from\`, and no more than 90 days later.`,

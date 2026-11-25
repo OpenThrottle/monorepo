@@ -27,7 +27,7 @@ import type { WorkspaceLocalRepository } from '../../services/workspace-local-re
 import { WorktreeActivityService } from '../../services/worktree-activity/worktree-activity.service.ts';
 import { WorkspaceSettingsLoaders } from './loaders/loaders.service.ts';
 import { toUserWorkspaceProfileObject } from './user-workspace-profile.mapper.ts';
-import { WorkspaceEditorIdEnum } from './workspace-editor-id.enum.ts';
+import { WORKSPACE_EDITOR_ID } from './workspace-editor-id.enum.ts';
 import { WorkspaceSettingsResolver } from './workspace-settings.resolver.ts';
 
 describe('WorkspaceSettingsResolver', () => {
@@ -185,9 +185,9 @@ describe('WorkspaceSettingsResolver', () => {
 
       const result = await resolver.updateWorkspaceProfile(userId, {
         enabledEditors: [
-          WorkspaceEditorIdEnum.CURSOR,
-          WorkspaceEditorIdEnum.VSCODE,
-          WorkspaceEditorIdEnum.CURSOR,
+          WORKSPACE_EDITOR_ID.CURSOR,
+          WORKSPACE_EDITOR_ID.VSCODE,
+          WORKSPACE_EDITOR_ID.CURSOR,
         ],
       });
 

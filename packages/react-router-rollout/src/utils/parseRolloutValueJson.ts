@@ -1,4 +1,4 @@
-import type { RolloutFlagKind } from '../config/rollout-flag-kind';
+import type { RolloutFlagKindValue } from '../config/rollout-flag-kind';
 import { isRolloutFlagKind } from '../config/rollout-flag-kind';
 import type { RolloutFlagValueByKind } from '../types';
 import { isRolloutFlagValueForKind } from './assertRolloutFlagCatalog';
@@ -9,7 +9,7 @@ import { isRolloutFlagValueForKind } from './assertRolloutFlagCatalog';
  *
  * @public
  */
-export const parseRolloutValueJson = <TKey extends RolloutFlagKind>(
+export const parseRolloutValueJson = <TKey extends RolloutFlagKindValue>(
   kind: TKey,
   valueJson: string,
 ): RolloutFlagValueByKind[TKey] | undefined => {

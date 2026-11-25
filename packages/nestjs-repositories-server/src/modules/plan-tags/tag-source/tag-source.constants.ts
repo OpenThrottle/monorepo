@@ -21,6 +21,9 @@ export const TAG_SOURCES = {
   SERVER_LLM: 'server-llm',
 } as const;
 
+export type TagSourcesKey = keyof typeof TAG_SOURCES;
+export type TagSourcesValue = (typeof TAG_SOURCES)[TagSourcesKey];
+
 /**
  * @description Ladder rank per source; higher wins. Used to decide whether a
  * caller may replace or remove an existing tag row.

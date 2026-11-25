@@ -27,3 +27,8 @@ export const PLAN_RUN_WORKTREE_CLEANUP_SKIP = {
   PLAN_UNREADABLE: 'plan-unreadable',
   REASON: 'reason',
 } as const;
+
+export type PlanRunWorktreeCleanupSkipKey =
+  keyof typeof PLAN_RUN_WORKTREE_CLEANUP_SKIP;
+export type PlanRunWorktreeCleanupSkipValue =
+  (typeof PLAN_RUN_WORKTREE_CLEANUP_SKIP)[PlanRunWorktreeCleanupSkipKey];

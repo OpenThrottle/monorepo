@@ -7,7 +7,7 @@
  * against Antigravity CLI 1.1.21.
  */
 
-import type { ConversationPermissionMode } from '../types.ts';
+import type { ConversationPermissionModesValue } from '../types.ts';
 import { CONVERSATION_PERMISSION_MODES } from '../types.ts';
 
 /**
@@ -49,7 +49,7 @@ export interface AntigravityArgvOptions {
    * `fullAccess` → `--dangerously-skip-permissions`; `autoAcceptEdits` → `--mode accept-edits`;
    * `supervised` and the no-mode default emit nothing (agy's own `request-review` posture).
    */
-  readonly permissionMode?: ConversationPermissionMode;
+  readonly permissionMode?: ConversationPermissionModesValue;
   /** The turn's prompt; travels as the value of `-p`. */
   readonly prompt: string;
   /** Conversation id to resume via `--conversation` (agy resumes by id). */

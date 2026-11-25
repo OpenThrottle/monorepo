@@ -21,12 +21,13 @@ export const SKILL_USAGE_SCOPES = {
   THIRD_PARTY: 'third-party',
 } as const;
 
+export type SkillUsageScopesKey = keyof typeof SKILL_USAGE_SCOPES;
 /** One scope member. */
-export type SkillUsageScope =
-  (typeof SKILL_USAGE_SCOPES)[keyof typeof SKILL_USAGE_SCOPES];
+export type SkillUsageScopesValue =
+  (typeof SKILL_USAGE_SCOPES)[SkillUsageScopesKey];
 
 /** A selected scope, or `null` for "all scopes". */
-export type SkillUsageScopeFilter = SkillUsageScope | null;
+export type SkillUsageScopeFilter = SkillUsageScopesValue | null;
 
 /**
  * Badge colour per scope, from the `color` options `Badge` actually supports
@@ -39,7 +40,7 @@ export type SkillUsageScopeFilter = SkillUsageScope | null;
  * `orange` (third-party).
  */
 export const SKILL_USAGE_SCOPE_BADGE_COLORS: Record<
-  SkillUsageScope,
+  SkillUsageScopesValue,
   'blue' | 'green' | 'orange' | 'violet'
 > = {
   injected: 'blue',

@@ -7,6 +7,9 @@ export const COLORS = {
   yellow: '\x1b[1;33m',
 } as const;
 
+export type ColorsKey = keyof typeof COLORS;
+export type ColorsValue = (typeof COLORS)[ColorsKey];
+
 export const ARTWORK_LINE = `${COLORS.gray}--------------------------------------------------------------------------------${COLORS.reset}`;
 
 export const ARTWORK_THANK_YOU = `

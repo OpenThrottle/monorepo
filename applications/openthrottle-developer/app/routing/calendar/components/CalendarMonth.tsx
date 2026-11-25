@@ -1,7 +1,7 @@
 import type { CalendarEvent } from '@openthrottle/react-router-scheduling';
 import {
   Calendar,
-  CalendarView,
+  CALENDAR_VIEW,
   useCalendarSelection,
   useSchedule,
 } from '@openthrottle/react-router-scheduling';
@@ -34,9 +34,9 @@ export const CalendarMonth = (
   const schedule = useSchedule({
     callbacks: selection.callbacks,
     date: new Date(), // Browser only so we get the TZ for free
-    defaultView: CalendarView.Week,
+    defaultView: CALENDAR_VIEW.Week,
     events,
-    views: [CalendarView.Day, CalendarView.Week, CalendarView.Month],
+    views: [CALENDAR_VIEW.Day, CALENDAR_VIEW.Week, CALENDAR_VIEW.Month],
   });
 
   // Setup

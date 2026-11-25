@@ -6,20 +6,22 @@
 
 import { Field, ObjectType } from '@nestjs/graphql';
 
-import { WorkspaceEditorIdEnum } from '../workspace-settings/workspace-editor-id.enum.ts';
-import { EditorPresenceStateEnum } from './editor-presence-state.enum.ts';
+import type { WorkspaceEditorIdValue } from '../workspace-settings/workspace-editor-id.enum.ts';
+import { WORKSPACE_EDITOR_ID } from '../workspace-settings/workspace-editor-id.enum.ts';
+import type { EditorPresenceStateValue } from './editor-presence-state.enum.ts';
+import { EDITOR_PRESENCE_STATE } from './editor-presence-state.enum.ts';
 
 @ObjectType()
 export class EditorPresenceObject {
-  @Field(() => WorkspaceEditorIdEnum, {
+  @Field(() => WORKSPACE_EDITOR_ID, {
     description: `The editor this presence result describes.`,
   })
-  editor!: WorkspaceEditorIdEnum;
+  editor!: WorkspaceEditorIdValue;
 
-  @Field(() => EditorPresenceStateEnum, {
+  @Field(() => EDITOR_PRESENCE_STATE, {
     description: `Probed presence. Advisory only: a NOT_FOUND editor can still be enabled and will still get a toolbar button, and UNKNOWN must render no hint at all.`,
   })
-  presence!: EditorPresenceStateEnum;
+  presence!: EditorPresenceStateValue;
 }
 
 @ObjectType()

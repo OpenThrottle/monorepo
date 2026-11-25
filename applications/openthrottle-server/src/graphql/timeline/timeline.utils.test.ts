@@ -6,13 +6,13 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { TimelineLaneGrouping } from './timeline.enum.ts';
+import { TIMELINE_LANE_GROUPING } from './timeline.enum.ts';
 import { resolveTimelineLane } from './timeline.utils.ts';
 
 describe('resolveTimelineLane', () => {
   describe('BY_PLAN', () => {
     it('keys on the plan and labels with its title', () => {
-      const lane = resolveTimelineLane(TimelineLaneGrouping.BY_PLAN, {
+      const lane = resolveTimelineLane(TIMELINE_LANE_GROUPING.BY_PLAN, {
         planId: 'plan-1',
         planTitle: 'Plan One',
       });
@@ -21,7 +21,7 @@ describe('resolveTimelineLane', () => {
     });
 
     it('falls back to the id when the plan has no title', () => {
-      const lane = resolveTimelineLane(TimelineLaneGrouping.BY_PLAN, {
+      const lane = resolveTimelineLane(TIMELINE_LANE_GROUPING.BY_PLAN, {
         planId: 'plan-1',
         planTitle: '',
       });
@@ -30,7 +30,7 @@ describe('resolveTimelineLane', () => {
     });
 
     it('collapses a row with no plan into the shared lane', () => {
-      const lane = resolveTimelineLane(TimelineLaneGrouping.BY_PLAN, {
+      const lane = resolveTimelineLane(TIMELINE_LANE_GROUPING.BY_PLAN, {
         driver: 'claude',
         planId: null,
       });
@@ -40,17 +40,18 @@ describe('resolveTimelineLane', () => {
 
     it('honours the fixed lanes for sources with no plan link', () => {
       expect(
-        resolveTimelineLane(TimelineLaneGrouping.BY_PLAN, {}, 'skills').key,
+        resolveTimelineLane(TIMELINE_LANE_GROUPING.BY_PLAN, {}, 'skills').key,
       ).toBe('skills');
       expect(
-        resolveTimelineLane(TimelineLaneGrouping.BY_PLAN, {}, 'scheduled').key,
+        resolveTimelineLane(TIMELINE_LANE_GROUPING.BY_PLAN, {}, 'scheduled')
+          .key,
       ).toBe('scheduled');
     });
   });
 
   describe('BY_CHECKOUT', () => {
     it('prefers the checkout id', () => {
-      const lane = resolveTimelineLane(TimelineLaneGrouping.BY_CHECKOUT, {
+      const lane = resolveTimelineLane(TIMELINE_LANE_GROUPING.BY_CHECKOUT, {
         branch: 'feat/x',
         checkoutId: 'checkout-1',
       });
@@ -59,7 +60,7 @@ describe('resolveTimelineLane', () => {
     });
 
     it('falls back to the branch when no checkout resolved', () => {
-      const lane = resolveTimelineLane(TimelineLaneGrouping.BY_CHECKOUT, {
+      const lane = resolveTimelineLane(TIMELINE_LANE_GROUPING.BY_CHECKOUT, {
         branch: 'feat/x',
         checkoutId: null,
       });
@@ -68,7 +69,7 @@ describe('resolveTimelineLane', () => {
     });
 
     it('collapses when it has neither', () => {
-      const lane = resolveTimelineLane(TimelineLaneGrouping.BY_CHECKOUT, {
+      const lane = resolveTimelineLane(TIMELINE_LANE_GROUPING.BY_CHECKOUT, {
         planId: 'plan-1',
       });
 
@@ -77,7 +78,7 @@ describe('resolveTimelineLane', () => {
 
     it('ignores the fixed-lane override — a scheduled run knows its checkout', () => {
       const lane = resolveTimelineLane(
-        TimelineLaneGrouping.BY_CHECKOUT,
+        TIMELINE_LANE_GROUPING.BY_CHECKOUT,
         { checkoutId: 'checkout-1' },
         'scheduled',
       );
@@ -88,7 +89,7 @@ describe('resolveTimelineLane', () => {
 
   describe('BY_DRIVER', () => {
     it('keys on the driver', () => {
-      const lane = resolveTimelineLane(TimelineLaneGrouping.BY_DRIVER, {
+      const lane = resolveTimelineLane(TIMELINE_LANE_GROUPING.BY_DRIVER, {
         driver: 'claude',
       });
 
@@ -96,7 +97,7 @@ describe('resolveTimelineLane', () => {
     });
 
     it('collapses a row that carries no driver, such as a task marker', () => {
-      const lane = resolveTimelineLane(TimelineLaneGrouping.BY_DRIVER, {
+      const lane = resolveTimelineLane(TIMELINE_LANE_GROUPING.BY_DRIVER, {
         planId: 'plan-1',
         planTitle: 'Plan One',
       });

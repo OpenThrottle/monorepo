@@ -4,13 +4,14 @@ import * as React from 'react';
 import type {
   ChatCheckoutOption,
   ChatComposerCapabilityProps,
-  ChatComposerMode,
+  ChatComposerModeValue,
   ChatContextSource,
   ChatModelGroup,
   ChatModelOption,
   ChatPersonaOption,
 } from '../types';
-import { ChatComposerMicState } from '../types';
+import type { ChatComposerMicStateValue } from '../types';
+import { CHAT_COMPOSER_MIC_STATE } from '../types';
 import { ChatComposerAttachControl } from './ChatComposerAttachControl';
 import { ChatComposerCheckoutControl } from './ChatComposerCheckoutControl';
 import { ChatComposerMicControl } from './ChatComposerMicControl';
@@ -30,9 +31,9 @@ export interface ChatComposerToolbarProps extends ChatComposerCapabilityProps {
   /** Model ids the caller has gated off; forwarded to {@link ChatModelPicker}. */
   readonly disabledModelIds?: readonly string[];
   /** Voice-input state reflected by the mic control; pair with {@link onMicToggle}. */
-  readonly micState?: ChatComposerMicState;
+  readonly micState?: ChatComposerMicStateValue;
   /** Selected agent mode; omit to hide the mode toggle. */
-  readonly mode?: ChatComposerMode;
+  readonly mode?: ChatComposerModeValue;
   /**
    * Provider/CLI groups. When supplied, the model control upgrades from the
    * flat Select to the grouped, searchable {@link ChatModelPicker} (using
@@ -49,7 +50,7 @@ export interface ChatComposerToolbarProps extends ChatComposerCapabilityProps {
   readonly onCheckoutsChange?: (checkoutIds: readonly string[]) => void;
   /** Toggle voice input (click starts / click stops); omit to hide the mic control. */
   readonly onMicToggle?: () => void;
-  readonly onModeChange?: (mode: ChatComposerMode) => void;
+  readonly onModeChange?: (mode: ChatComposerModeValue) => void;
   readonly onModelChange?: (modelId: string) => void;
   /** Forwarded to the grouped {@link ChatModelPicker} rail's gear; omit to hide it. */
   readonly onOpenSettings?: () => void;
@@ -97,7 +98,7 @@ export const ChatComposerToolbar = (
     className,
     contextSources,
     disabledModelIds,
-    micState = ChatComposerMicState.idle,
+    micState = CHAT_COMPOSER_MIC_STATE.idle,
     modelGroups,
     modelId,
     models,

@@ -143,9 +143,10 @@ export const FOREIGN_SKILL_LAYER = {
   personal: 'personal',
 } as const;
 
+export type ForeignSkillLayerKey = keyof typeof FOREIGN_SKILL_LAYER;
 /** @public */
-export type ForeignSkillLayer =
-  (typeof FOREIGN_SKILL_LAYER)[keyof typeof FOREIGN_SKILL_LAYER];
+export type ForeignSkillLayerValue =
+  (typeof FOREIGN_SKILL_LAYER)[ForeignSkillLayerKey];
 
 /**
  * One entry in the resolved manifest: a skill that should be projected into the
@@ -154,7 +155,7 @@ export type ForeignSkillLayer =
  * @public
  */
 export interface ForeignSkillManifestEntry {
-  readonly layer: ForeignSkillLayer;
+  readonly layer: ForeignSkillLayerValue;
   readonly name: string;
   readonly sourcePath: string;
 }

@@ -17,3 +17,6 @@ export const BUTTON_VARIANTS = {
   primary: 'default',
   secondary: 'ghost',
 } as const;
+
+export type ButtonVariantsKey = keyof typeof BUTTON_VARIANTS;
+export type ButtonVariantsValue = (typeof BUTTON_VARIANTS)[ButtonVariantsKey];

@@ -25,7 +25,7 @@ import type {
   PlanWaitingForWorktreePayload,
   QueueJobCompletedPayload,
   ScheduledRunFailedPayload,
-  ScheduledRunFailureReason,
+  ScheduledRunFailureReasonsValue,
   SystemAlertPayload,
   TaskCompletedPayload,
   TaskStatusChangedPayload,
@@ -283,7 +283,7 @@ export class NotificationsService {
     link: string;
     message: string;
     ownerUserId: string | null;
-    reason: ScheduledRunFailureReason;
+    reason: ScheduledRunFailureReasonsValue;
     runCount: number;
     runId: string | undefined;
     scheduleName: string;

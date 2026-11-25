@@ -20,6 +20,9 @@ export const CMS_STATUS = {
   DRAFT: 'DRAFT',
 } as const;
 
+export type CmsStatusKey = keyof typeof CMS_STATUS;
+export type CmsStatusValue = (typeof CMS_STATUS)[CmsStatusKey];
+
 /**
  * @description {@link CMS_STATUS} as a list, for TypeORM enum columns.
  * @public

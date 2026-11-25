@@ -2,7 +2,7 @@ import { render } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { useSchedule } from '../../hooks/useSchedule';
-import { CalendarView } from '../../types';
+import { CALENDAR_VIEW } from '../../types';
 import { Calendar } from '../Calendar';
 import type { CalendarSlots } from '../slots';
 import * as slotsModule from '../slots';
@@ -23,7 +23,7 @@ function Harness({
         title: 'Standup',
       },
     ],
-    views: [CalendarView.Week, CalendarView.Month],
+    views: [CALENDAR_VIEW.Week, CALENDAR_VIEW.Month],
   });
   return (
     <Calendar

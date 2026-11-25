@@ -1,6 +1,9 @@
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
-import type { NotificationEventMap, NotificationEventName } from '../events.ts';
+import type {
+  NotificationEventMap,
+  NotificationEventNamesValue,
+} from '../events.ts';
 import { NOTIFICATION_EVENT_NAMES } from '../events.ts';
 import type { NotificationSeverity } from '../types.ts';
 import { NOTIFICATION_SEVERITIES } from '../types.ts';
@@ -56,7 +59,7 @@ describe('events', () => {
     it('has a payload entry for every event name (and no extras)', () => {
       expectTypeOf<
         keyof NotificationEventMap
-      >().toEqualTypeOf<NotificationEventName>();
+      >().toEqualTypeOf<NotificationEventNamesValue>();
     });
 
     it('keys are exactly the NOTIFICATION_EVENT_NAMES values', () => {

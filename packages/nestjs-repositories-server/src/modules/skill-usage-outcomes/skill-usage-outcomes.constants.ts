@@ -15,6 +15,10 @@ export const SKILL_USAGE_OUTCOMES = {
   SUCCESS: 'success',
 } as const;
 
+export type SkillUsageOutcomesKey = keyof typeof SKILL_USAGE_OUTCOMES;
+export type SkillUsageOutcomesValue =
+  (typeof SKILL_USAGE_OUTCOMES)[SkillUsageOutcomesKey];
+
 /**
  * @description Which capture contract wrote a row. `LEGACY_ASSUMED_SUCCESS` rows predate
  * migration 113, when the automatic session-end path hardcoded `success`; their
@@ -26,3 +30,8 @@ export const SKILL_USAGE_CAPTURE_MODELS = {
   LEGACY_ASSUMED_SUCCESS: 'legacy_assumed_success',
   REPORTED_V1: 'reported_v1',
 } as const;
+
+export type SkillUsageCaptureModelsKey =
+  keyof typeof SKILL_USAGE_CAPTURE_MODELS;
+export type SkillUsageCaptureModelsValue =
+  (typeof SKILL_USAGE_CAPTURE_MODELS)[SkillUsageCaptureModelsKey];

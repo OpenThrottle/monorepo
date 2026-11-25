@@ -1,9 +1,10 @@
 import type {
-  ChatPermissionMode,
-  ChatReasoningLevel,
-  ChatServiceTier,
+  ChatPermissionModeValue,
+  ChatReasoningLevelValue,
+  ChatServiceTierValue,
 } from '@openthrottle/react-router-chat';
-import { ChatComposerMode } from '@openthrottle/react-router-chat';
+import type { ChatComposerModeValue } from '@openthrottle/react-router-chat';
+import { CHAT_COMPOSER_MODE } from '@openthrottle/react-router-chat';
 import { APP_NAME } from '@openthrottle/react-router-utils';
 
 /**
@@ -31,9 +32,9 @@ export const CHAT_TOOLBAR_STORAGE_KEY = `${APP_NAME}:chat:toolbar`;
  * @public
  */
 export interface ChatToolbarBackendPrefs {
-  readonly permissionMode?: ChatPermissionMode;
-  readonly reasoning?: ChatReasoningLevel;
-  readonly serviceTier?: ChatServiceTier;
+  readonly permissionMode?: ChatPermissionModeValue;
+  readonly reasoning?: ChatReasoningLevelValue;
+  readonly serviceTier?: ChatServiceTierValue;
 }
 
 /**
@@ -47,10 +48,10 @@ export interface ChatToolbarBackendPrefs {
  * @public
  */
 export interface ChatToolbarState {
-  readonly mode: ChatComposerMode;
+  readonly mode: ChatComposerModeValue;
   readonly modelId: string | undefined;
   readonly perBackend: Readonly<Record<string, ChatToolbarBackendPrefs>>;
-  readonly permissionMode: ChatPermissionMode | undefined;
+  readonly permissionMode: ChatPermissionModeValue | undefined;
   /**
    * When true (default) turns are persisted to a conversation; false is Private
    * mode (ephemeral — no conversation row, no message writes). Added in v3;
@@ -58,7 +59,7 @@ export interface ChatToolbarState {
    */
   readonly persist: boolean;
   readonly personaId: string | undefined;
-  readonly reasoning: ChatReasoningLevel | undefined;
+  readonly reasoning: ChatReasoningLevelValue | undefined;
   /**
    * Opt-in to keep an elevated `permissionMode` (Auto-accept edits / Full
    * access) across browser sessions. False by default: elevated modes decay to
@@ -73,7 +74,7 @@ export interface ChatToolbarState {
    * which the consumer seeds from loader data.
    */
   readonly repositoryIds: readonly string[];
-  readonly serviceTier: ChatServiceTier | undefined;
+  readonly serviceTier: ChatServiceTierValue | undefined;
   readonly version: typeof CHAT_TOOLBAR_STATE_VERSION;
 }
 
@@ -85,7 +86,7 @@ export interface ChatToolbarState {
  * @public
  */
 export const DEFAULT_CHAT_TOOLBAR_STATE: ChatToolbarState = {
-  mode: ChatComposerMode.plan,
+  mode: CHAT_COMPOSER_MODE.plan,
   modelId: undefined,
   perBackend: {},
   permissionMode: undefined,

@@ -6,7 +6,7 @@
 import type { WorkspaceEditorId } from '@openthrottle/nestjs-repositories-server';
 import { isWorkspaceEditorId } from '@openthrottle/nestjs-repositories-server';
 
-import type { WorkspaceEditorIdEnum } from '../workspace-editor-id.enum.ts';
+import type { WorkspaceEditorIdValue } from '../workspace-editor-id.enum.ts';
 
 const MAX_CONTACT_DISPLAY_NAME_LEN = 256;
 const MAX_CONTACT_EMAIL_LEN = 320;
@@ -54,7 +54,7 @@ export const validateContactEmail = (
  * Deduplicates while preserving first-seen order.
  */
 export const validateEnabledEditors = (
-  raw: readonly WorkspaceEditorIdEnum[] | null | undefined,
+  raw: readonly WorkspaceEditorIdValue[] | null | undefined,
 ): WorkspaceEditorId[] | undefined => {
   if (raw === undefined || raw === null) return undefined;
 

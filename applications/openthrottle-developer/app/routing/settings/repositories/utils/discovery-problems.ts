@@ -16,14 +16,15 @@ export const WORKTREE_PROBLEM_GROUP = {
   STALE: 'stale',
 } as const;
 
-export type WorktreeProblemGroupId =
-  (typeof WORKTREE_PROBLEM_GROUP)[keyof typeof WORKTREE_PROBLEM_GROUP];
+export type WorktreeProblemGroupKey = keyof typeof WORKTREE_PROBLEM_GROUP;
+export type WorktreeProblemGroupValue =
+  (typeof WORKTREE_PROBLEM_GROUP)[WorktreeProblemGroupKey];
 
 /** One rendered block: a sentence a person can act on, plus the raw lines behind it. */
 export interface WorktreeProblemGroup {
   /** Raw server `detail` strings, shown only behind a disclosure. */
   readonly details: readonly string[];
-  readonly id: WorktreeProblemGroupId;
+  readonly id: WorktreeProblemGroupValue;
   /** The optional next step, when there is one. */
   readonly remedy: string | null;
   readonly summary: string;

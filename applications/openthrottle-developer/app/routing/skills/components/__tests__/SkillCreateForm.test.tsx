@@ -5,7 +5,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
 
-import type { SkillCreateDestination } from '~/routing/skills/config/skill-create';
+import type { SkillCreateDestinationsValue } from '~/routing/skills/config/skill-create';
 import { SKILL_CREATE_DESTINATIONS } from '~/routing/skills/config/skill-create';
 import { SKILL_CREATE_COPY } from '~/routing/skills/data/data.copy';
 import type { UseSkillCreateFormResult } from '~/routing/skills/hooks/useSkillCreateForm';
@@ -172,7 +172,7 @@ describe('SkillCreateForm Component', () => {
       );
     });
 
-    test.each<[SkillCreateDestination, string]>([
+    test.each<[SkillCreateDestinationsValue, string]>([
       [
         SKILL_CREATE_DESTINATIONS.personal,
         SKILL_CREATE_COPY.destinationPersonalDescription,

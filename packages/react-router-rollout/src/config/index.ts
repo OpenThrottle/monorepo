@@ -5,5 +5,5 @@ export {
 export {
   isRolloutFlagKind,
   ROLLOUT_FLAG_KIND,
-  type RolloutFlagKind,
+  type RolloutFlagKindValue,
 } from './rollout-flag-kind';

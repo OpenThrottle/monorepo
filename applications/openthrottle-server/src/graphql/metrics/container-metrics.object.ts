@@ -6,8 +6,8 @@
 
 import { Field, Float, ObjectType } from '@nestjs/graphql';
 
-import type { MetricScopeType } from './metric-scope.enum.ts';
-import { MetricScope } from './metric-scope.enum.ts';
+import type { MetricScopeValue } from './metric-scope.enum.ts';
+import { METRIC_SCOPE } from './metric-scope.enum.ts';
 import { PsiCpuMetricsObject } from './psi-cpu-metrics.object.ts';
 
 @ObjectType('ContainerCpuMetrics', {
@@ -166,10 +166,10 @@ export class ContainerMetricsObject {
   })
   psi!: PsiCpuMetricsObject | null;
 
-  @Field(() => MetricScope, {
+  @Field(() => METRIC_SCOPE, {
     description: `Always container.`,
   })
-  scope!: MetricScopeType;
+  scope!: MetricScopeValue;
 
   @Field(() => String, {
     description: `Why the cgroup could not be read, when available is false.`,

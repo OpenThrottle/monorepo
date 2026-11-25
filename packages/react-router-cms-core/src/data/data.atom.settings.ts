@@ -1,6 +1,6 @@
 import { atom } from 'jotai';
 
-import type { CmsDevice } from '../config/cms-device';
+import type { CmsDeviceValue } from '../config/cms-device';
 import { CMS_DEVICE } from '../config/cms-device';
 
 /**
@@ -8,7 +8,7 @@ import { CMS_DEVICE } from '../config/cms-device';
  * @public
  */
 export interface AtomSettings {
-  readonly device: CmsDevice;
+  readonly device: CmsDeviceValue;
   readonly navigation: AtomSettingsNavigation;
 }
 

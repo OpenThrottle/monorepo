@@ -20,6 +20,10 @@ export const DESKTOP_ENV_DEFAULTS = {
   ROLLBAR_TOKEN: 'desktop-no-rollbar',
 } as const;
 
+export type DesktopEnvDefaultsKey = keyof typeof DESKTOP_ENV_DEFAULTS;
+export type DesktopEnvDefaultsValue =
+  (typeof DESKTOP_ENV_DEFAULTS)[DesktopEnvDefaultsKey];
+
 /** How long main waits for the child to report its port, then for the health probe. */
 export const SERVER_START_TIMEOUT_MS = 30_000;
 

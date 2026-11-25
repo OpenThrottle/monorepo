@@ -43,3 +43,8 @@ export const AGENT_CONVERSATION_STATUSES = {
   archived: 'archived',
   deleted: 'deleted',
 } as const;
+
+export type AgentConversationStatusesKey =
+  keyof typeof AGENT_CONVERSATION_STATUSES;
+export type AgentConversationStatusesValue =
+  (typeof AGENT_CONVERSATION_STATUSES)[AgentConversationStatusesKey];

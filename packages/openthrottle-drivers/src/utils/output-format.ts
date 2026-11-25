@@ -19,12 +19,13 @@ export const DRIVER_OUTPUT_FORMATS = {
   text: 'text',
 } as const;
 
+export type DriverOutputFormatsKey = keyof typeof DRIVER_OUTPUT_FORMATS;
 /**
  * @description One of the {@link DRIVER_OUTPUT_FORMATS} values.
  * @public
  */
-export type DriverOutputFormat =
-  (typeof DRIVER_OUTPUT_FORMATS)[keyof typeof DRIVER_OUTPUT_FORMATS];
+export type DriverOutputFormatsValue =
+  (typeof DRIVER_OUTPUT_FORMATS)[DriverOutputFormatsKey];
 
 /**
  * @description Returns ` <flag>` when the invocation asked for structured output, `''` otherwise,

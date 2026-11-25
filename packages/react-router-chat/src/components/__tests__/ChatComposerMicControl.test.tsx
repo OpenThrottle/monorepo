@@ -5,7 +5,7 @@ import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
-import { ChatComposerMicState } from '../../types';
+import { CHAT_COMPOSER_MIC_STATE } from '../../types';
 import type { ChatComposerMicControlProps } from '../ChatComposerMicControl';
 import { ChatComposerMicControl } from '../ChatComposerMicControl';
 
@@ -19,7 +19,7 @@ const renderControl = (props: ChatComposerMicControlProps): RenderResult => {
 
 describe('ChatComposerMicControl Component', () => {
   test('renders nothing when no onMicToggle callback is supplied', () => {
-    const component = renderControl({ micState: ChatComposerMicState.idle });
+    const component = renderControl({ micState: CHAT_COMPOSER_MIC_STATE.idle });
 
     expect(
       component.queryByTestId('ChatComposerToolbar-mic'),
@@ -29,7 +29,7 @@ describe('ChatComposerMicControl Component', () => {
   test('renders idle and fires onMicToggle on click', async () => {
     const onMicToggle = vi.fn();
     const component = renderControl({
-      micState: ChatComposerMicState.idle,
+      micState: CHAT_COMPOSER_MIC_STATE.idle,
       onMicToggle,
     });
 
@@ -46,7 +46,7 @@ describe('ChatComposerMicControl Component', () => {
 
   test('reflects the recording state with a pressed, pulsing affordance', () => {
     const component = renderControl({
-      micState: ChatComposerMicState.recording,
+      micState: CHAT_COMPOSER_MIC_STATE.recording,
       onMicToggle: vi.fn(),
     });
 
@@ -59,7 +59,7 @@ describe('ChatComposerMicControl Component', () => {
 
   test('disables the control while finalizing with a spinner', () => {
     const component = renderControl({
-      micState: ChatComposerMicState.finalizing,
+      micState: CHAT_COMPOSER_MIC_STATE.finalizing,
       onMicToggle: vi.fn(),
     });
 
@@ -71,7 +71,7 @@ describe('ChatComposerMicControl Component', () => {
 
   test('disables the control when voice input is unavailable', () => {
     const component = renderControl({
-      micState: ChatComposerMicState.disabled,
+      micState: CHAT_COMPOSER_MIC_STATE.disabled,
       onMicToggle: vi.fn(),
     });
 

@@ -14,7 +14,7 @@ import { GraphQLError } from 'graphql';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
-import { WorkspaceEditorIdEnum } from '../workspace-settings/workspace-editor-id.enum.ts';
+import { WORKSPACE_EDITOR_ID } from '../workspace-settings/workspace-editor-id.enum.ts';
 import { UserPreferencesResolver } from './user-preferences.resolver.ts';
 
 describe('UserPreferencesResolver', () => {
@@ -72,7 +72,7 @@ describe('UserPreferencesResolver', () => {
       );
       expect(result).toEqual({
         defaultAgent: { driver: 'claude', effort: 'high', model: 'opus' },
-        defaultEditor: WorkspaceEditorIdEnum.CURSOR,
+        defaultEditor: WORKSPACE_EDITOR_ID.CURSOR,
       });
     });
 
@@ -95,7 +95,7 @@ describe('UserPreferencesResolver', () => {
       });
 
       const result = await resolver.updateUserPreferences(userId, {
-        defaultEditor: WorkspaceEditorIdEnum.CURSOR,
+        defaultEditor: WORKSPACE_EDITOR_ID.CURSOR,
       });
 
       expect(mockUserPreferencesRepository.update).toHaveBeenCalledWith(
@@ -106,7 +106,7 @@ describe('UserPreferencesResolver', () => {
       );
       expect(result).toEqual({
         defaultAgent: null,
-        defaultEditor: WorkspaceEditorIdEnum.CURSOR,
+        defaultEditor: WORKSPACE_EDITOR_ID.CURSOR,
       });
     });
 

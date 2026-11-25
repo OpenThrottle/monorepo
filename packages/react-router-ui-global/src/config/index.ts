@@ -12,6 +12,11 @@ export const GLOBAL_FEATURE_ONBOARDING_MODAL = {
   value: 'onboarding',
 } as const;
 
+export type GlobalFeatureOnboardingModalKey =
+  keyof typeof GLOBAL_FEATURE_ONBOARDING_MODAL;
+export type GlobalFeatureOnboardingModalValue =
+  (typeof GLOBAL_FEATURE_ONBOARDING_MODAL)[GlobalFeatureOnboardingModalKey];
+
 export const GLOBAL_METRICS_STORAGE_KEY = `openthrottle-developer:metricsPollInterval`;
 
 /**

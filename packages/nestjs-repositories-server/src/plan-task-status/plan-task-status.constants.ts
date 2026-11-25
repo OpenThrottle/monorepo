@@ -36,6 +36,9 @@ export const PLAN_STATUS = {
   SCHEDULED: 'SCHEDULED',
   SKIPPED: 'SKIPPED',
 } as const;
+
+export type PlanStatusKey = keyof typeof PLAN_STATUS;
+export type PlanStatusValue = (typeof PLAN_STATUS)[PlanStatusKey];
 /**
  * @description Status values a task may hold — the same `plan_task_status` enum
  * minus QUEUED and SCHEDULED, which are plans-only (set when a plan's run is
@@ -52,6 +55,9 @@ export const TASK_STATUS = {
   PROMOTED: 'PROMOTED',
   SKIPPED: 'SKIPPED',
 } as const;
+
+export type TaskStatusKey = keyof typeof TASK_STATUS;
+export type TaskStatusValue = (typeof TASK_STATUS)[TaskStatusKey];
 /**
  * @description Every label of the Postgres `plan_task_status` enum (full
  * membership, QUEUED and SCHEDULED included). This is the set the parity test checks against the

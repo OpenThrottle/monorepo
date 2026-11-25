@@ -29,7 +29,10 @@ import { createLogger } from './utils/logger.ts';
 import { WORKTREE_COMPOSE_FILE, worktreeComposeOverride } from './utils/worktree-compose.ts'; // prettier-ignore
 import { writeWorktreeDbMarker } from './utils/worktree-db.ts';
 import { configureIsolatedDb, seedIsolatedDatabase, wantsOwnDb } from './utils/worktree-db-isolate.ts'; // prettier-ignore
-import type { AppPortName, WorktreeDbPorts } from './utils/worktree-ports.ts';
+import type {
+  CanonicalAppPortsKey,
+  WorktreeDbPorts,
+} from './utils/worktree-ports.ts';
 import { APP_PORT_NAMES, CANONICAL_APP_PORTS, resolveWorktreePorts } from './utils/worktree-ports.ts'; // prettier-ignore
 
 const logger = createLogger();
@@ -43,7 +46,7 @@ const logger = createLogger();
  */
 export const rewritePortsInContent = (
   contents: string,
-  ports: Record<AppPortName, number>,
+  ports: Record<CanonicalAppPortsKey, number>,
 ): string => {
   let result = contents;
 

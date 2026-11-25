@@ -17,9 +17,11 @@ export const FOREIGN_SKILL_INJECTION_MODE = {
   symlink: 'symlink',
 } as const;
 
+export type ForeignSkillInjectionModeKey =
+  keyof typeof FOREIGN_SKILL_INJECTION_MODE;
 /** @public */
-export type ForeignSkillInjectionMode =
-  (typeof FOREIGN_SKILL_INJECTION_MODE)[keyof typeof FOREIGN_SKILL_INJECTION_MODE];
+export type ForeignSkillInjectionModeValue =
+  (typeof FOREIGN_SKILL_INJECTION_MODE)[ForeignSkillInjectionModeKey];
 
 /**
  * The two in-repo directories whose union reaches all five agent CLIs
@@ -70,9 +72,10 @@ export const GIT_EXCLUDE_OWNER = {
   WORKTREE_SKILL_OVERLAY: 'worktree-skill-overlay',
 } as const;
 
+export type GitExcludeOwnerKey = keyof typeof GIT_EXCLUDE_OWNER;
 /** @public */
-export type GitExcludeOwner =
-  (typeof GIT_EXCLUDE_OWNER)[keyof typeof GIT_EXCLUDE_OWNER];
+export type GitExcludeOwnerValue =
+  (typeof GIT_EXCLUDE_OWNER)[GitExcludeOwnerKey];
 
 /**
  * Independent skill layers OT materializes into one foreign repo. Each keeps its own ledger and its
@@ -91,9 +94,11 @@ export const FOREIGN_SKILL_MATERIALIZATION_LAYER = {
   WORKTREE_OVERLAY: 'worktree-overlay',
 } as const;
 
+export type ForeignSkillMaterializationLayerKey =
+  keyof typeof FOREIGN_SKILL_MATERIALIZATION_LAYER;
 /** @public */
-export type ForeignSkillMaterializationLayer =
-  (typeof FOREIGN_SKILL_MATERIALIZATION_LAYER)[keyof typeof FOREIGN_SKILL_MATERIALIZATION_LAYER];
+export type ForeignSkillMaterializationLayerValue =
+  (typeof FOREIGN_SKILL_MATERIALIZATION_LAYER)[ForeignSkillMaterializationLayerKey];
 
 /**
  * One injected path recorded in a repo's ledger — the authoritative record for
@@ -111,7 +116,7 @@ export interface ForeignSkillLedgerEntry {
   readonly fingerprint: string | undefined;
   /** Repo-relative POSIX path of the created entry, e.g. `.agents/skills/ot-plans`. */
   readonly injectedRelativePath: string;
-  readonly mode: ForeignSkillInjectionMode;
+  readonly mode: ForeignSkillInjectionModeValue;
   readonly name: string;
   /** Absolute path to the OT/personal source the entry was made from. */
   readonly sourcePath: string;

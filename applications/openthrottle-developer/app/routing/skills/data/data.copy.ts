@@ -7,7 +7,7 @@
 import type { GlobalFeatureOnboardingContent } from '@openthrottle/react-router-ui-global';
 import { BrainCircuitIcon } from 'lucide-react';
 
-import type { SkillCreateDestination } from '~/routing/skills/config/skill-create';
+import type { SkillCreateDestinationsValue } from '~/routing/skills/config/skill-create';
 import { SKILL_CREATE_DESTINATIONS } from '~/routing/skills/config/skill-create';
 
 /**
@@ -257,7 +257,7 @@ export const SKILL_CREATE_COPY = {
  * only naming it.
  */
 export const SKILL_CREATE_DESTINATION_CONSEQUENCE: Readonly<
-  Record<SkillCreateDestination, string>
+  Record<SkillCreateDestinationsValue, string>
 > = {
   [SKILL_CREATE_DESTINATIONS.custom]:
     SKILL_CREATE_COPY.destinationCustomDescription,

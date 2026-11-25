@@ -1,5 +1,5 @@
 import type {
-  NotificationEventName,
+  NotificationEventNamesValue,
   NotificationPayload,
 } from '@openthrottle/openthrottle-notifications';
 import * as React from 'react';
@@ -54,7 +54,7 @@ export const NotificationsStoreProvider = (
 
   // Handlers
   const addNotification = React.useCallback(
-    (event: NotificationEventName, payload: NotificationPayload) => {
+    (event: NotificationEventNamesValue, payload: NotificationPayload) => {
       dispatch({ event, payload, type: 'add' });
     },
     [],

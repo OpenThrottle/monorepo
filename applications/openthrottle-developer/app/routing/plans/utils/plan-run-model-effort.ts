@@ -7,7 +7,8 @@
  */
 
 import type { ChatModelOption } from '@openthrottle/react-router-chat';
-import { ChatReasoningLevel } from '@openthrottle/react-router-chat';
+import type { ChatReasoningLevelValue } from '@openthrottle/react-router-chat';
+import { CHAT_REASONING_LEVEL } from '@openthrottle/react-router-chat';
 import {
   capabilitiesForChatOption,
   decodeChatOption,
@@ -103,8 +104,8 @@ export const parsePlanRunModelOptionId = (
  */
 export const parsePlanRunEffort = (
   effort: string,
-): ChatReasoningLevel | undefined => {
-  return Object.values(ChatReasoningLevel).find((level) => level === effort);
+): ChatReasoningLevelValue | undefined => {
+  return Object.values(CHAT_REASONING_LEVEL).find((level) => level === effort);
 };
 
 /**

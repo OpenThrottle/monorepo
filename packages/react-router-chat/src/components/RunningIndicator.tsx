@@ -1,7 +1,7 @@
 import * as React from 'react';
 
-import type { ChatRunPhase as ChatRunPhaseType } from '../types';
-import { ChatRunPhase } from '../types';
+import type { ChatRunPhaseValue } from '../types';
+import { CHAT_RUN_PHASE } from '../types';
 import { resolveRunningIndicatorCopy } from '../utils/resolveRunningIndicatorCopy';
 
 export interface RunningIndicatorProps {
@@ -19,14 +19,14 @@ export interface RunningIndicatorProps {
    */
   readonly label?: string;
   /** Coarse phase of the in-flight turn. Defaults to `waiting`. */
-  readonly phase?: ChatRunPhaseType;
+  readonly phase?: ChatRunPhaseValue;
 }
 
 /** Subtle in-progress affordance shown until the turn's terminal event lands. */
 export const RunningIndicator = (
   props: RunningIndicatorProps,
 ): React.ReactElement => {
-  const { detail, elapsedMs, label, phase = ChatRunPhase.waiting } = props;
+  const { detail, elapsedMs, label, phase = CHAT_RUN_PHASE.waiting } = props;
 
   // Hooks
 

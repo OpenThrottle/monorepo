@@ -4,7 +4,10 @@
 
 import { Field, ID, InputType } from '@nestjs/graphql';
 
-import { WorkspaceEditorIdEnum } from './workspace-editor-id.enum.ts';
+import {
+  WORKSPACE_EDITOR_ID,
+  WorkspaceEditorIdValue,
+} from './workspace-editor-id.enum.ts';
 
 @InputType()
 export class UpdateWorkspaceProfileInput {
@@ -14,8 +17,8 @@ export class UpdateWorkspaceProfileInput {
   @Field(() => String, { nullable: true })
   contactEmail?: string | null;
 
-  @Field(() => [WorkspaceEditorIdEnum], { nullable: true })
-  enabledEditors?: WorkspaceEditorIdEnum[] | null;
+  @Field(() => [WORKSPACE_EDITOR_ID], { nullable: true })
+  enabledEditors?: WorkspaceEditorIdValue[] | null;
 }
 
 @InputType()

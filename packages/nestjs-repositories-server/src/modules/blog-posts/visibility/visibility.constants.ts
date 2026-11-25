@@ -10,3 +10,6 @@ export const BLOG_POST_STATE = {
   LIVE: 'LIVE',
   SCHEDULED: 'SCHEDULED',
 } as const;
+
+export type BlogPostStateKey = keyof typeof BLOG_POST_STATE;
+export type BlogPostStateValue = (typeof BLOG_POST_STATE)[BlogPostStateKey];

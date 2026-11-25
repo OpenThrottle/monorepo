@@ -6,13 +6,13 @@
 import { Field, Float, Int, ObjectType } from '@nestjs/graphql';
 
 import { ContainerMetricsObject } from './container-metrics.object.ts';
-import type { MetricScopeType } from './metric-scope.enum.ts';
-import { MetricScope } from './metric-scope.enum.ts';
+import type { MetricScopeValue } from './metric-scope.enum.ts';
+import { METRIC_SCOPE } from './metric-scope.enum.ts';
 import { PsiCpuMetricsObject } from './psi-cpu-metrics.object.ts';
-import type { PressureLevelType } from './system-cpu-metrics.object.ts';
+import type { PressureLevelValue } from './system-cpu-metrics.object.ts';
 import {
   LoadAverageMetricsObject,
-  PressureLevel,
+  PRESSURE_LEVEL,
 } from './system-cpu-metrics.object.ts';
 
 @ObjectType('HostMemoryMetrics', {
@@ -24,10 +24,10 @@ export class HostMemoryMetricsObject {
   })
   freeBytes!: number;
 
-  @Field(() => MetricScope, {
+  @Field(() => METRIC_SCOPE, {
     description: `Always host.`,
   })
-  scope!: MetricScopeType;
+  scope!: MetricScopeValue;
 
   @Field(() => Float, {
     description: `Total host memory in bytes.`,
@@ -54,10 +54,10 @@ export class ActiveProcessesMetricsObject {
   })
   lockedWorktrees!: string[];
 
-  @Field(() => MetricScope, {
+  @Field(() => METRIC_SCOPE, {
     description: `Always process.`,
   })
-  scope!: MetricScopeType;
+  scope!: MetricScopeValue;
 
   @Field(() => Int, {
     description: `Worktrees known to the tracker.`,
@@ -94,15 +94,15 @@ export class SystemMetricsSnapshotObject {
   })
   platform!: string;
 
-  @Field(() => MetricScope, {
+  @Field(() => METRIC_SCOPE, {
     description: `What pressureLevel was judged on: container when the server has a cgroup CPU limit, otherwise host.`,
   })
-  pressureBasis!: MetricScopeType;
+  pressureBasis!: MetricScopeValue;
 
-  @Field(() => PressureLevel, {
+  @Field(() => PRESSURE_LEVEL, {
     description: `Interpretation of CPU pressure: low, moderate, high, or unknown.`,
   })
-  pressureLevel!: PressureLevelType;
+  pressureLevel!: PressureLevelValue;
 
   @Field(() => PsiCpuMetricsObject, {
     description: `Host PSI (/proc/pressure/cpu). Null fields off Linux.`,

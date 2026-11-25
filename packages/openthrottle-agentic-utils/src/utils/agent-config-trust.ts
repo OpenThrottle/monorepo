@@ -18,9 +18,10 @@ export const AGENT_CONFIG_POSTURE = {
   TRUSTED: 'trusted',
 } as const;
 
+export type AgentConfigPostureKey = keyof typeof AGENT_CONFIG_POSTURE;
 /** @public */
-export type AgentConfigPosture =
-  (typeof AGENT_CONFIG_POSTURE)[keyof typeof AGENT_CONFIG_POSTURE];
+export type AgentConfigPostureValue =
+  (typeof AGENT_CONFIG_POSTURE)[AgentConfigPostureKey];
 
 /**
  * @description Why a run got its posture, so plan output can say it in words.
@@ -33,14 +34,15 @@ export const AGENT_CONFIG_TRUST_REASON = {
   USER_TRUSTED: 'user-trusted',
 } as const;
 
+export type AgentConfigTrustReasonKey = keyof typeof AGENT_CONFIG_TRUST_REASON;
 /** @public */
-export type AgentConfigTrustReason =
-  (typeof AGENT_CONFIG_TRUST_REASON)[keyof typeof AGENT_CONFIG_TRUST_REASON];
+export type AgentConfigTrustReasonValue =
+  (typeof AGENT_CONFIG_TRUST_REASON)[AgentConfigTrustReasonKey];
 
 /** @public */
 export interface AgentConfigTrust {
-  readonly posture: AgentConfigPosture;
-  readonly reason: AgentConfigTrustReason;
+  readonly posture: AgentConfigPostureValue;
+  readonly reason: AgentConfigTrustReasonValue;
 }
 
 /**

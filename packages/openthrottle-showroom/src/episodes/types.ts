@@ -29,16 +29,17 @@ export const EPISODE_STATUSES = {
   recorded: 'recorded',
 } as const;
 
-export type EpisodeStatus =
-  (typeof EPISODE_STATUSES)[keyof typeof EPISODE_STATUSES];
+export type EpisodeStatusesKey = keyof typeof EPISODE_STATUSES;
+export type EpisodeStatusesValue =
+  (typeof EPISODE_STATUSES)[EpisodeStatusesKey];
 
 export const EPISODE_FORMATS = {
   longform: 'longform',
   short: 'short',
 } as const;
 
-export type EpisodeFormat =
-  (typeof EPISODE_FORMATS)[keyof typeof EPISODE_FORMATS];
+export type EpisodeFormatsKey = keyof typeof EPISODE_FORMATS;
+export type EpisodeFormatsValue = (typeof EPISODE_FORMATS)[EpisodeFormatsKey];
 
 /**
  * `replay` marks a video that depends on a live agent run — a real model call,
@@ -50,8 +51,8 @@ export const RECORDING_MODES = {
   replay: 'replay',
 } as const;
 
-export type RecordingMode =
-  (typeof RECORDING_MODES)[keyof typeof RECORDING_MODES];
+export type RecordingModesKey = keyof typeof RECORDING_MODES;
+export type RecordingModesValue = (typeof RECORDING_MODES)[RecordingModesKey];
 
 /**
  * The four playlists from `docs/marketing/publishing.md`. Long-form goes in the
@@ -65,7 +66,8 @@ export const PLAYLISTS = {
   planningSubstrate: 'planning-substrate',
 } as const;
 
-export type Playlist = (typeof PLAYLISTS)[keyof typeof PLAYLISTS];
+export type PlaylistsKey = keyof typeof PLAYLISTS;
+export type PlaylistsValue = (typeof PLAYLISTS)[PlaylistsKey];
 
 /**
  * One beat: a moment on screen.
@@ -176,7 +178,7 @@ export interface ProductionMetadata {
    * publish checklist cannot catch after upload.
    */
   readonly blockedOn: readonly string[];
-  readonly recording: RecordingMode;
+  readonly recording: RecordingModesValue;
   /** Two lines for the lower third. */
   readonly titleCard: readonly [string, string];
 }
@@ -184,10 +186,10 @@ export interface ProductionMetadata {
 /** Where the episode sits in the season. */
 export interface ReleaseMetadata {
   readonly order: number;
-  readonly playlist: Playlist;
+  readonly playlist: PlaylistsValue;
   readonly publishedAt?: string;
   readonly publishedUrl?: string;
-  readonly status: EpisodeStatus;
+  readonly status: EpisodeStatusesValue;
 }
 
 /**
@@ -228,7 +230,7 @@ export interface VideoEpisode {
    * Asserted after seeding, so a missing row names the video it breaks.
    */
   readonly dataRequirements?: readonly DataRequirement[];
-  readonly format: EpisodeFormat;
+  readonly format: EpisodeFormatsValue;
   readonly id: string;
   readonly production: ProductionMetadata;
   readonly release: ReleaseMetadata;

@@ -35,10 +35,11 @@ export const ID_INPUT_KIND = {
   SHORT_FRAGMENT: 'short-fragment',
 } as const;
 
+export type IdInputKindKey = keyof typeof ID_INPUT_KIND;
 /**
  * @public
  */
-export type IdInputKind = (typeof ID_INPUT_KIND)[keyof typeof ID_INPUT_KIND];
+export type IdInputKindValue = (typeof ID_INPUT_KIND)[IdInputKindKey];
 
 /**
  * @public
@@ -83,7 +84,7 @@ export const isShortIdFragment = (input: string): boolean => {
  * @description Classify a raw command-palette id input as a full UUID, a short
  * resolvable hex fragment, or neither.
  */
-export const classifyIdInput = (input: string): IdInputKind => {
+export const classifyIdInput = (input: string): IdInputKindValue => {
   if (isFullUuid(input)) {
     return ID_INPUT_KIND.FULL_UUID;
   }

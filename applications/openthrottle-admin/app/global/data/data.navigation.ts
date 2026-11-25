@@ -15,6 +15,9 @@ export const ADMIN_PATHS = {
   users: `/users`,
 } as const;
 
+export type AdminPathsKey = keyof typeof ADMIN_PATHS;
+export type AdminPathsValue = (typeof ADMIN_PATHS)[AdminPathsKey];
+
 export const dataNavigation: GlobalLayoutProps['data'] = {
   Workspace: [
     {

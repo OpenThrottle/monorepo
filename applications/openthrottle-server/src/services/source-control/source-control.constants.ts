@@ -7,6 +7,9 @@ export const FORGE_KIND = {
   GITLAB: 'gitlab',
 } as const;
 
+export type ForgeKindKey = keyof typeof FORGE_KIND;
+export type ForgeKindValue = (typeof FORGE_KIND)[ForgeKindKey];
+
 /**
  * @description The forge assumed when a payload or row names none. Every ledger row written before
  * the forge abstraction existed is a GitHub row, so absence must keep meaning GitHub.

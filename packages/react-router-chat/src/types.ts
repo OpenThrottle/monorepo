@@ -11,7 +11,7 @@ export type ChatMessageRole = 'assistant' | 'system' | 'user';
  *
  * @public
  */
-export const ChatTurnEventKind = {
+export const CHAT_TURN_EVENT_KIND = {
   deniedActions: 'deniedActions',
   session: 'session',
   text: 'text',
@@ -21,9 +21,10 @@ export const ChatTurnEventKind = {
   usageLimit: 'usageLimit',
 } as const;
 
-/** Union of {@link ChatTurnEventKind} values. @public */
-export type ChatTurnEventKind =
-  (typeof ChatTurnEventKind)[keyof typeof ChatTurnEventKind];
+export type ChatTurnEventKindKey = keyof typeof CHAT_TURN_EVENT_KIND;
+/** Union of {@link CHAT_TURN_EVENT_KIND} values. @public */
+export type ChatTurnEventKindValue =
+  (typeof CHAT_TURN_EVENT_KIND)[ChatTurnEventKindKey];
 
 /**
  * Lifecycle of a single tool invocation. `running` once the tool_call is seen,
@@ -34,16 +35,16 @@ export type ChatTurnEventKind =
  *
  * @public
  */
-export const ChatToolStatus = {
+export const CHAT_TOOL_STATUS = {
   failed: 'failed',
   notRun: 'not_run',
   running: 'running',
   succeeded: 'succeeded',
 } as const;
 
-/** Union of {@link ChatToolStatus} values. @public */
-export type ChatToolStatus =
-  (typeof ChatToolStatus)[keyof typeof ChatToolStatus];
+export type ChatToolStatusKey = keyof typeof CHAT_TOOL_STATUS;
+/** Union of {@link CHAT_TOOL_STATUS} values. @public */
+export type ChatToolStatusValue = (typeof CHAT_TOOL_STATUS)[ChatToolStatusKey];
 
 /** Streamed assistant text segment (coalesced consecutive deltas). @public */
 export interface ChatTurnTextEvent {
@@ -80,7 +81,7 @@ export interface ChatTurnToolEvent {
   /** Raw tool result payload as JSON (from the tool_result), when present. */
   readonly resultJson: string | null;
   readonly sortOrder: number;
-  readonly status: ChatToolStatus;
+  readonly status: ChatToolStatusValue;
 }
 
 /**
@@ -219,7 +220,7 @@ export type ChatTurnEvent =
  *
  * @public
  */
-export const ChatRunPhase = {
+export const CHAT_RUN_PHASE = {
   connecting: 'connecting',
   runningTool: 'running-tool',
   stillWorking: 'still-working',
@@ -227,8 +228,9 @@ export const ChatRunPhase = {
   waiting: 'waiting',
 } as const;
 
-/** Union of {@link ChatRunPhase} values. @public */
-export type ChatRunPhase = (typeof ChatRunPhase)[keyof typeof ChatRunPhase];
+export type ChatRunPhaseKey = keyof typeof CHAT_RUN_PHASE;
+/** Union of {@link CHAT_RUN_PHASE} values. @public */
+export type ChatRunPhaseValue = (typeof CHAT_RUN_PHASE)[ChatRunPhaseKey];
 
 /** Single message in a modal chat thread. */
 export interface ChatMessage {
@@ -256,7 +258,7 @@ export interface ChatMessage {
    * and additive: when absent the indicator falls back to its `waiting` default.
    * Only meaningful while `pending` is true.
    */
-  readonly phase?: ChatRunPhase;
+  readonly phase?: ChatRunPhaseValue;
   /**
    * Subject for {@link phase} (a model or tool name) composed into the indicator
    * label, when known. Ignored unless `phase` is set.
@@ -431,14 +433,15 @@ export interface ResolvedGroup {
  *
  * @public
  */
-export const ChatCheckoutKind = {
+export const CHAT_CHECKOUT_KIND = {
   primary: 'primary',
   worktree: 'worktree',
 } as const;
 
-/** Union of {@link ChatCheckoutKind} values. @public */
-export type ChatCheckoutKind =
-  (typeof ChatCheckoutKind)[keyof typeof ChatCheckoutKind];
+export type ChatCheckoutKindKey = keyof typeof CHAT_CHECKOUT_KIND;
+/** Union of {@link CHAT_CHECKOUT_KIND} values. @public */
+export type ChatCheckoutKindValue =
+  (typeof CHAT_CHECKOUT_KIND)[ChatCheckoutKindKey];
 
 export interface ChatCheckoutOption {
   /** Current branch shown alongside the checkout (e.g. `main`), when known. */
@@ -455,7 +458,7 @@ export interface ChatCheckoutOption {
    * only nests a row under its repository when it positively knows the row
    * is a worktree.
    */
-  readonly kind?: ChatCheckoutKind;
+  readonly kind?: ChatCheckoutKindValue;
   readonly label: string;
   /** Linked project name. Searchable, never rendered as the qualifier. */
   readonly projectName?: string;
@@ -475,7 +478,7 @@ export interface ChatCheckoutOption {
  *
  * @public
  */
-export const ChatReasoningLevel = {
+export const CHAT_REASONING_LEVEL = {
   extraHigh: 'extraHigh',
   high: 'high',
   low: 'low',
@@ -484,9 +487,10 @@ export const ChatReasoningLevel = {
   ultra: 'ultra',
 } as const;
 
-/** Union of {@link ChatReasoningLevel} values. @public */
-export type ChatReasoningLevel =
-  (typeof ChatReasoningLevel)[keyof typeof ChatReasoningLevel];
+export type ChatReasoningLevelKey = keyof typeof CHAT_REASONING_LEVEL;
+/** Union of {@link CHAT_REASONING_LEVEL} values. @public */
+export type ChatReasoningLevelValue =
+  (typeof CHAT_REASONING_LEVEL)[ChatReasoningLevelKey];
 
 /**
  * Service tier a backend may expose in the reasoning/tier control. `standard`
@@ -495,14 +499,15 @@ export type ChatReasoningLevel =
  *
  * @public
  */
-export const ChatServiceTier = {
+export const CHAT_SERVICE_TIER = {
   fast: 'fast',
   standard: 'standard',
 } as const;
 
-/** Union of {@link ChatServiceTier} values. @public */
-export type ChatServiceTier =
-  (typeof ChatServiceTier)[keyof typeof ChatServiceTier];
+export type ChatServiceTierKey = keyof typeof CHAT_SERVICE_TIER;
+/** Union of {@link CHAT_SERVICE_TIER} values. @public */
+export type ChatServiceTierValue =
+  (typeof CHAT_SERVICE_TIER)[ChatServiceTierKey];
 
 /**
  * Permission posture for an agent backend. `supervised` asks before commands
@@ -513,15 +518,16 @@ export type ChatServiceTier =
  *
  * @public
  */
-export const ChatPermissionMode = {
+export const CHAT_PERMISSION_MODE = {
   autoAcceptEdits: 'autoAcceptEdits',
   fullAccess: 'fullAccess',
   supervised: 'supervised',
 } as const;
 
-/** Union of {@link ChatPermissionMode} values. @public */
-export type ChatPermissionMode =
-  (typeof ChatPermissionMode)[keyof typeof ChatPermissionMode];
+export type ChatPermissionModeKey = keyof typeof CHAT_PERMISSION_MODE;
+/** Union of {@link CHAT_PERMISSION_MODE} values. @public */
+export type ChatPermissionModeValue =
+  (typeof CHAT_PERMISSION_MODE)[ChatPermissionModeKey];
 
 /**
  * What a selected backend (agent CLI or model endpoint) supports, so the
@@ -546,9 +552,9 @@ export interface ChatBackendCapabilities {
    */
   readonly maxRepositories: number;
   /** Permission modes the backend honors; empty hides the permission control. */
-  readonly permissionModes: readonly ChatPermissionMode[];
+  readonly permissionModes: readonly ChatPermissionModeValue[];
   /** Reasoning levels the backend honors; empty hides the reasoning section. */
-  readonly reasoningLevels: readonly ChatReasoningLevel[];
+  readonly reasoningLevels: readonly ChatReasoningLevelValue[];
   /**
    * True when the backend runs against a repository/checkout (agent CLIs), so
    * the composer shows {@link ChatCheckoutSelector}. False for stateless
@@ -556,7 +562,7 @@ export interface ChatBackendCapabilities {
    */
   readonly requiresRepository: boolean;
   /** Service tiers the backend honors; empty hides the tier section. */
-  readonly serviceTiers: readonly ChatServiceTier[];
+  readonly serviceTiers: readonly ChatServiceTierValue[];
   /**
    * True when Supervised asks before file edits; false when the backend applies
    * edits unasked and Supervised only gates commands and tools.
@@ -583,22 +589,22 @@ export interface ChatComposerCapabilityProps {
    * checkout controls; omitting it renders none of them.
    */
   readonly capabilities?: ChatBackendCapabilities;
-  readonly onPermissionModeChange?: (mode: ChatPermissionMode) => void;
-  readonly onReasoningChange?: (level: ChatReasoningLevel) => void;
+  readonly onPermissionModeChange?: (mode: ChatPermissionModeValue) => void;
+  readonly onReasoningChange?: (level: ChatReasoningLevelValue) => void;
   /**
    * Shows the permission control's "Remember my choice" opt-in; omit to hide.
    * Pair with {@link ChatComposerCapabilityProps.rememberPermissionMode}.
    */
   readonly onRememberPermissionModeChange?: (remember: boolean) => void;
-  readonly onServiceTierChange?: (tier: ChatServiceTier) => void;
+  readonly onServiceTierChange?: (tier: ChatServiceTierValue) => void;
   /** Selected permission mode; pair with `capabilities`. */
-  readonly permissionMode?: ChatPermissionMode;
+  readonly permissionMode?: ChatPermissionModeValue;
   /** Selected reasoning level; pair with `capabilities`. */
-  readonly reasoning?: ChatReasoningLevel;
+  readonly reasoning?: ChatReasoningLevelValue;
   /** Keep an elevated permission mode across sessions instead of resetting it. */
   readonly rememberPermissionMode?: boolean;
   /** Selected service tier; pair with `capabilities`. */
-  readonly serviceTier?: ChatServiceTier;
+  readonly serviceTier?: ChatServiceTierValue;
 }
 
 /**
@@ -631,14 +637,15 @@ export interface ChatContextSource {
  *
  * @public
  */
-export const ChatComposerMode = {
+export const CHAT_COMPOSER_MODE = {
   build: 'build',
   plan: 'plan',
 } as const;
 
-/** Union of {@link ChatComposerMode} values. */
-export type ChatComposerMode =
-  (typeof ChatComposerMode)[keyof typeof ChatComposerMode];
+export type ChatComposerModeKey = keyof typeof CHAT_COMPOSER_MODE;
+/** Union of {@link CHAT_COMPOSER_MODE} values. */
+export type ChatComposerModeValue =
+  (typeof CHAT_COMPOSER_MODE)[ChatComposerModeKey];
 
 /**
  * Voice-input state surfaced by the composer toolbar's mic control. `idle` =
@@ -649,16 +656,17 @@ export type ChatComposerMode =
  *
  * @public
  */
-export const ChatComposerMicState = {
+export const CHAT_COMPOSER_MIC_STATE = {
   disabled: 'disabled',
   finalizing: 'finalizing',
   idle: 'idle',
   recording: 'recording',
 } as const;
 
-/** Union of {@link ChatComposerMicState} values. @public */
-export type ChatComposerMicState =
-  (typeof ChatComposerMicState)[keyof typeof ChatComposerMicState];
+export type ChatComposerMicStateKey = keyof typeof CHAT_COMPOSER_MIC_STATE;
+/** Union of {@link CHAT_COMPOSER_MIC_STATE} values. @public */
+export type ChatComposerMicStateValue =
+  (typeof CHAT_COMPOSER_MIC_STATE)[ChatComposerMicStateKey];
 
 /**
  * A workspace file referenced from the composer via an `@`-mention. `path` is

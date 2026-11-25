@@ -22,24 +22,26 @@ export const TIMELINE_WINDOW_PRESET = {
   '7d': '7d',
 } as const;
 
-export type TimelineWindowPreset =
-  (typeof TIMELINE_WINDOW_PRESET)[keyof typeof TIMELINE_WINDOW_PRESET];
+export type TimelineWindowPresetKey = keyof typeof TIMELINE_WINDOW_PRESET;
+export type TimelineWindowPresetValue =
+  (typeof TIMELINE_WINDOW_PRESET)[TimelineWindowPresetKey];
 
-export const TIMELINE_WINDOW_PRESETS: readonly TimelineWindowPreset[] = [
+export const TIMELINE_WINDOW_PRESETS: readonly TimelineWindowPresetValue[] = [
   TIMELINE_WINDOW_PRESET['24h'],
   TIMELINE_WINDOW_PRESET['7d'],
   TIMELINE_WINDOW_PRESET['30d'],
 ];
 
-export const DEFAULT_TIMELINE_WINDOW_PRESET: TimelineWindowPreset =
+export const DEFAULT_TIMELINE_WINDOW_PRESET: TimelineWindowPresetValue =
   TIMELINE_WINDOW_PRESET['7d'];
 
 /** Hours each preset spans, used to build the loader's `from`. */
-export const TIMELINE_WINDOW_HOURS: Record<TimelineWindowPreset, number> = {
-  '24h': 24,
-  '30d': 24 * 30,
-  '7d': 24 * 7,
-};
+export const TIMELINE_WINDOW_HOURS: Record<TimelineWindowPresetValue, number> =
+  {
+    '24h': 24,
+    '30d': 24 * 30,
+    '7d': 24 * 7,
+  };
 
 export const DEFAULT_TIMELINE_GROUPING = TimelineLaneGrouping.ByPlan;
 
@@ -58,3 +60,7 @@ export const TIMELINE_SEARCH_PARAM = {
   spanKinds: 'spans',
   window: 'window',
 } as const;
+
+export type TimelineSearchParamKey = keyof typeof TIMELINE_SEARCH_PARAM;
+export type TimelineSearchParamValue =
+  (typeof TIMELINE_SEARCH_PARAM)[TimelineSearchParamKey];

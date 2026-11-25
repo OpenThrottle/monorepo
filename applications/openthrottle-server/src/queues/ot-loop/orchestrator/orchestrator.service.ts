@@ -43,9 +43,9 @@ import {
   resolveHookPluginDirs,
 } from '@openthrottle/openthrottle-agentic-utils';
 import type {
-  DriverId,
-  DriverReasoningEffort,
+  DriverReasoningEffortsValue,
   DriverRepoAgentConfig,
+  DriversValue,
   UsageLimit,
 } from '@openthrottle/openthrottle-drivers';
 import {
@@ -81,7 +81,7 @@ import { createOtLoopWorkerRunner } from '../ot-loop-worker-runner.factory.ts';
 import { createPlanOutputWriter } from '../plan-output-writer.factory.ts';
 import type { RunOtLoopJobParams } from './orchestrator.types.ts';
 
-const DRIVER_REASONING_EFFORT_VALUES: readonly DriverReasoningEffort[] =
+const DRIVER_REASONING_EFFORT_VALUES: readonly DriverReasoningEffortsValue[] =
   Object.values(DRIVER_REASONING_EFFORTS);
 
 const toModel = (value: string | null | undefined): string | undefined => {
@@ -92,7 +92,7 @@ const toModel = (value: string | null | undefined): string | undefined => {
 
 const toEffort = (
   value: string | null | undefined,
-): DriverReasoningEffort | undefined => {
+): DriverReasoningEffortsValue | undefined => {
   return DRIVER_REASONING_EFFORT_VALUES.find((level) => level === value);
 };
 
@@ -356,11 +356,11 @@ export class OtLoopOrchestratorService {
   }
 
   private async buildDeps(input: {
-    readonly driver: DriverId;
+    readonly driver: DriversValue;
     readonly client: LoopClient;
     readonly commands: readonly string[];
     readonly cwd: string;
-    readonly effort: DriverReasoningEffort | undefined;
+    readonly effort: DriverReasoningEffortsValue | undefined;
     readonly output: PlanOutputWriter;
     readonly planId: string;
     readonly planRunId: string | undefined;

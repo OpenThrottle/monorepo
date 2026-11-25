@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import type { TagActionCondition } from '../explainTagActionRuleMatch.ts';
+import type { TagActionConditionsValue } from '../explainTagActionRuleMatch.ts';
 import {
   explainTagActionRuleMatch,
   TAG_ACTION_CONDITIONS,
@@ -40,7 +40,7 @@ const rule = (
 const failedConditions = (
   overrides: Partial<TagActionRuleInput>,
   ctx = context,
-): TagActionCondition[] => {
+): TagActionConditionsValue[] => {
   return explainTagActionRuleMatch(ctx, rule(overrides))
     .conditions.filter((result) => !result.passed)
     .map((result) => result.condition);

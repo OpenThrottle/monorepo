@@ -5,7 +5,10 @@
 
 import { Field, InputType } from '@nestjs/graphql';
 
-import { WorkspaceEditorIdEnum } from '../workspace-settings/workspace-editor-id.enum.ts';
+import {
+  WORKSPACE_EDITOR_ID,
+  WorkspaceEditorIdValue,
+} from '../workspace-settings/workspace-editor-id.enum.ts';
 
 @InputType({
   description: `A default agent. Driver and model are required together; effort may be null.`,
@@ -31,6 +34,6 @@ export class UpdateUserPreferencesInput {
   @Field(() => UserPreferencesAgentInput, { nullable: true })
   defaultAgent?: UserPreferencesAgentInput | null;
 
-  @Field(() => WorkspaceEditorIdEnum, { nullable: true })
-  defaultEditor?: WorkspaceEditorIdEnum | null;
+  @Field(() => WORKSPACE_EDITOR_ID, { nullable: true })
+  defaultEditor?: WorkspaceEditorIdValue | null;
 }

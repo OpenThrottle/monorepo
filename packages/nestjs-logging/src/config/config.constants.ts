@@ -11,6 +11,10 @@ export const NESTJS_LOGGING_LEVELS = {
   verbose: 'verbose',
   warn: 'warn',
 } as const;
+
+export type NestjsLoggingLevelsKey = keyof typeof NESTJS_LOGGING_LEVELS;
+export type NestjsLoggingLevelsValue =
+  (typeof NESTJS_LOGGING_LEVELS)[NestjsLoggingLevelsKey];
 export const ALL_NESTJS_LOGGING_LEVELS: ReadonlyArray<NestjsLoggingLevel> = [
   NESTJS_LOGGING_LEVELS.verbose,
   NESTJS_LOGGING_LEVELS.debug,

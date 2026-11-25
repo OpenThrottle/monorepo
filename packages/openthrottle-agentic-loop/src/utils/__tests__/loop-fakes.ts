@@ -5,7 +5,7 @@ import type {
   LoopFollowUp,
   LoopInboxMessage,
   LoopTask,
-  LoopTaskStatus,
+  LoopTaskStatusValue,
   ValidationResult,
   WorkerAttemptInput,
   WorkerAttemptResult,
@@ -248,6 +248,6 @@ export const makeWorld = (options: FakeWorldOptions): FakeWorld => {
 export const statusOf = (
   world: FakeWorld,
   id: string,
-): LoopTaskStatus | undefined => {
+): LoopTaskStatusValue | undefined => {
   return world.tasks.get(id)?.status;
 };

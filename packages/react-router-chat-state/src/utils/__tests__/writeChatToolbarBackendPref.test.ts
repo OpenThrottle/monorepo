@@ -1,7 +1,7 @@
 import type { ChatModelOption } from '@openthrottle/react-router-chat';
 import {
-  ChatPermissionMode,
-  ChatReasoningLevel,
+  CHAT_PERMISSION_MODE,
+  CHAT_REASONING_LEVEL,
 } from '@openthrottle/react-router-chat';
 import { describe, expect, test } from 'vitest';
 
@@ -28,12 +28,12 @@ describe('writeChatToolbarBackendPref', () => {
   describe('when a backend is selected', () => {
     test('writes the value under that backend and as the global fallback', () => {
       const result = writeChatToolbarBackendPref(state({}), 'claude', {
-        permissionMode: ChatPermissionMode.fullAccess,
+        permissionMode: CHAT_PERMISSION_MODE.fullAccess,
       });
 
-      expect(result.permissionMode).toBe(ChatPermissionMode.fullAccess);
+      expect(result.permissionMode).toBe(CHAT_PERMISSION_MODE.fullAccess);
       expect(result.perBackend.claude?.permissionMode).toBe(
-        ChatPermissionMode.fullAccess,
+        CHAT_PERMISSION_MODE.fullAccess,
       );
     });
 
@@ -41,13 +41,13 @@ describe('writeChatToolbarBackendPref', () => {
       const before = state({
         modelId: claudeModel.id,
         perBackend: {
-          claude: { permissionMode: ChatPermissionMode.supervised },
+          claude: { permissionMode: CHAT_PERMISSION_MODE.supervised },
         },
-        permissionMode: ChatPermissionMode.supervised,
+        permissionMode: CHAT_PERMISSION_MODE.supervised,
       });
 
       const after = writeChatToolbarBackendPref(before, 'claude', {
-        permissionMode: ChatPermissionMode.fullAccess,
+        permissionMode: CHAT_PERMISSION_MODE.fullAccess,
       });
       const effective = reconcileChatToolbarState(after, {
         models: [claudeModel],
@@ -55,21 +55,21 @@ describe('writeChatToolbarBackendPref', () => {
         repositories: [],
       });
 
-      expect(effective.permissionMode).toBe(ChatPermissionMode.fullAccess);
+      expect(effective.permissionMode).toBe(CHAT_PERMISSION_MODE.fullAccess);
     });
 
     test('keeps the other prefs on that backend entry', () => {
       const result = writeChatToolbarBackendPref(
         state({
-          perBackend: { claude: { reasoning: ChatReasoningLevel.high } },
+          perBackend: { claude: { reasoning: CHAT_REASONING_LEVEL.high } },
         }),
         'claude',
-        { permissionMode: ChatPermissionMode.autoAcceptEdits },
+        { permissionMode: CHAT_PERMISSION_MODE.autoAcceptEdits },
       );
 
       expect(result.perBackend.claude).toEqual({
-        permissionMode: ChatPermissionMode.autoAcceptEdits,
-        reasoning: ChatReasoningLevel.high,
+        permissionMode: CHAT_PERMISSION_MODE.autoAcceptEdits,
+        reasoning: CHAT_REASONING_LEVEL.high,
       });
     });
 
@@ -77,15 +77,15 @@ describe('writeChatToolbarBackendPref', () => {
       const result = writeChatToolbarBackendPref(
         state({
           perBackend: {
-            codex: { permissionMode: ChatPermissionMode.supervised },
+            codex: { permissionMode: CHAT_PERMISSION_MODE.supervised },
           },
         }),
         'claude',
-        { permissionMode: ChatPermissionMode.fullAccess },
+        { permissionMode: CHAT_PERMISSION_MODE.fullAccess },
       );
 
       expect(result.perBackend.codex?.permissionMode).toBe(
-        ChatPermissionMode.supervised,
+        CHAT_PERMISSION_MODE.supervised,
       );
     });
   });
@@ -93,10 +93,10 @@ describe('writeChatToolbarBackendPref', () => {
   describe('when no backend is selected', () => {
     test('writes only the global field', () => {
       const result = writeChatToolbarBackendPref(state({}), undefined, {
-        permissionMode: ChatPermissionMode.fullAccess,
+        permissionMode: CHAT_PERMISSION_MODE.fullAccess,
       });
 
-      expect(result.permissionMode).toBe(ChatPermissionMode.fullAccess);
+      expect(result.permissionMode).toBe(CHAT_PERMISSION_MODE.fullAccess);
       expect(result.perBackend).toEqual({});
     });
   });

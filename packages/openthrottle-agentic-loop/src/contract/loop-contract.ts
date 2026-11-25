@@ -15,9 +15,9 @@ export const LOOP_TASK_STATUS = {
   SKIPPED: 'SKIPPED',
 } as const;
 
+export type LoopTaskStatusKey = keyof typeof LOOP_TASK_STATUS;
 /** @public */
-export type LoopTaskStatus =
-  (typeof LOOP_TASK_STATUS)[keyof typeof LOOP_TASK_STATUS];
+export type LoopTaskStatusValue = (typeof LOOP_TASK_STATUS)[LoopTaskStatusKey];
 
 /** @public */
 export const LOOP_PLAN_STATUS = {
@@ -26,9 +26,9 @@ export const LOOP_PLAN_STATUS = {
   IN_PROGRESS: 'IN_PROGRESS',
 } as const;
 
+export type LoopPlanStatusKey = keyof typeof LOOP_PLAN_STATUS;
 /** @public */
-export type LoopPlanStatus =
-  (typeof LOOP_PLAN_STATUS)[keyof typeof LOOP_PLAN_STATUS];
+export type LoopPlanStatusValue = (typeof LOOP_PLAN_STATUS)[LoopPlanStatusKey];
 
 /**
  * @description What a plan-output chunk is. The values mirror the `plan_output_stream.kind` CHECK
@@ -42,9 +42,9 @@ export const LOOP_OUTPUT_KIND = {
   WORKER: 'worker',
 } as const;
 
+export type LoopOutputKindKey = keyof typeof LOOP_OUTPUT_KIND;
 /** @public */
-export type LoopOutputKind =
-  (typeof LOOP_OUTPUT_KIND)[keyof typeof LOOP_OUTPUT_KIND];
+export type LoopOutputKindValue = (typeof LOOP_OUTPUT_KIND)[LoopOutputKindKey];
 
 /** @public */
 export interface LoopTask {
@@ -54,7 +54,7 @@ export interface LoopTask {
   readonly id: string;
   readonly requirements: readonly string[];
   readonly sortOrder: number;
-  readonly status: LoopTaskStatus;
+  readonly status: LoopTaskStatusValue;
   readonly title: string;
 }
 
@@ -231,10 +231,10 @@ export interface LoopClient {
   }): Promise<string>;
   updatePlanStatus(input: {
     readonly planId: string;
-    readonly status: LoopPlanStatus;
+    readonly status: LoopPlanStatusValue;
   }): Promise<void>;
   updateTask(input: {
-    readonly status: LoopTaskStatus;
+    readonly status: LoopTaskStatusValue;
     readonly summary: string | undefined;
     readonly taskId: string;
   }): Promise<void>;

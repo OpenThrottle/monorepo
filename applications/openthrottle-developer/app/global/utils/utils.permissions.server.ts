@@ -2,7 +2,7 @@ import { getAuthTokenFromCookie } from '@openthrottle/react-router-auth';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 
 import { GetMyPermissionsDocument } from '~/__generated__/graphql';
-import type { Permission } from '~/global/config/permissions';
+import type { PermissionsValue } from '~/global/config/permissions';
 import { hasPermission } from '~/global/utils/utils.permissions';
 
 /**
@@ -51,7 +51,7 @@ export const fetchMyPermissions = async (
  */
 export const requirePermission = async (
   request: Request,
-  permission: Permission,
+  permission: PermissionsValue,
 ): Promise<void> => {
   const permissions = await fetchMyPermissions(request);
 

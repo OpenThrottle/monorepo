@@ -12,6 +12,10 @@ export const GLOBAL_TABLE_COLUMN_KIND = {
   TEXT: 'text',
 } as const;
 
+export type GlobalTableColumnKindKey = keyof typeof GLOBAL_TABLE_COLUMN_KIND;
+export type GlobalTableColumnKindValue =
+  (typeof GLOBAL_TABLE_COLUMN_KIND)[GlobalTableColumnKindKey];
+
 /**
  * @public
  * @description Copy rendered by {@link GlobalTable}: the empty-table message and the placeholder

@@ -17,6 +17,9 @@ export const RUN_IDENTITY_ENV = {
   taskId: 'OPENTHROTTLE_TASK_ID',
 } as const;
 
+export type RunIdentityEnvKey = keyof typeof RUN_IDENTITY_ENV;
+export type RunIdentityEnvValue = (typeof RUN_IDENTITY_ENV)[RunIdentityEnvKey];
+
 /**
  * The run an attempt belongs to. `planRunId` and `taskId` are `null` when the orchestrator has none
  * (an untracked TTY run, a plan-level iteration with no task picked yet).

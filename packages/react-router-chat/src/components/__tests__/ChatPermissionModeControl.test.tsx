@@ -6,16 +6,16 @@ import { describe, expect, test, vi } from 'vitest';
 
 import { SUPERVISED_UNGATED_EDITS_DESCRIPTION } from '../../data/data.chat-permission-mode-meta';
 import type { ChatBackendCapabilities } from '../../types';
-import { ChatPermissionMode } from '../../types';
+import { CHAT_PERMISSION_MODE } from '../../types';
 import type { ChatPermissionModeControlProps } from '../ChatPermissionModeControl';
 import { ChatPermissionModeControl } from '../ChatPermissionModeControl';
 
 const ALL_MODES: ChatBackendCapabilities = {
   maxRepositories: 1,
   permissionModes: [
-    ChatPermissionMode.supervised,
-    ChatPermissionMode.autoAcceptEdits,
-    ChatPermissionMode.fullAccess,
+    CHAT_PERMISSION_MODE.supervised,
+    CHAT_PERMISSION_MODE.autoAcceptEdits,
+    CHAT_PERMISSION_MODE.fullAccess,
   ],
   reasoningLevels: [],
   requiresRepository: true,
@@ -30,7 +30,7 @@ const renderControl = (
   return render(
     <ChatPermissionModeControl
       capabilities={ALL_MODES}
-      permissionMode={ChatPermissionMode.supervised}
+      permissionMode={CHAT_PERMISSION_MODE.supervised}
       {...overrides}
     />,
   );
@@ -79,7 +79,7 @@ describe('ChatPermissionModeControl Component', () => {
     const component = renderControl({
       capabilities: {
         ...ALL_MODES,
-        permissionModes: [ChatPermissionMode.supervised],
+        permissionModes: [CHAT_PERMISSION_MODE.supervised],
       },
     });
     await user.click(
@@ -106,7 +106,7 @@ describe('ChatPermissionModeControl Component', () => {
     );
 
     expect(onPermissionModeChange).toHaveBeenCalledWith(
-      ChatPermissionMode.fullAccess,
+      CHAT_PERMISSION_MODE.fullAccess,
     );
   });
 
@@ -147,7 +147,7 @@ describe('ChatPermissionModeControl Component', () => {
         const component = await openMenu({
           capabilities: {
             ...ALL_MODES,
-            permissionModes: [ChatPermissionMode.supervised],
+            permissionModes: [CHAT_PERMISSION_MODE.supervised],
           },
           onRememberPermissionModeChange: vi.fn(),
         });

@@ -70,18 +70,19 @@ export interface CalendarEvent {
  *
  * @public
  */
-export const CalendarView = {
+export const CALENDAR_VIEW = {
   Day: 'day',
   Month: 'month',
   Week: 'week',
 } as const;
 
+export type CalendarViewKey = keyof typeof CALENDAR_VIEW;
 /**
- * Union of the supported {@link CalendarView} values.
+ * Union of the supported {@link CALENDAR_VIEW} values.
  *
  * @public
  */
-export type CalendarView = (typeof CalendarView)[keyof typeof CalendarView];
+export type CalendarViewValue = (typeof CALENDAR_VIEW)[CalendarViewKey];
 
 /**
  * Feature toggles for the Schedule-X plugin set the wrapper wires up. Each flag
@@ -141,13 +142,13 @@ export interface ScheduleConfig {
   /** Initially selected date (`Date` or ISO 8601 string). Defaults to today. */
   date?: Date | string;
   /** Initial/active view. Should be one of `views`. */
-  defaultView?: CalendarView;
+  defaultView?: CalendarViewValue;
   /** Initial events. */
   events?: CalendarEvent[];
   /** Plugin feature toggles. Defaults to the full v1 plugin set. */
   plugins?: SchedulePluginsConfig;
   /** Enabled view styles. Defaults to week + month. */
-  views?: readonly CalendarView[];
+  views?: readonly CalendarViewValue[];
 }
 
 /**

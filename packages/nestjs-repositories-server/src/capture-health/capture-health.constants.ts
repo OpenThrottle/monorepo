@@ -16,5 +16,9 @@ export const CAPTURE_HEALTH_STREAMS = {
   TOKEN_USAGE: 'token_usage',
 } as const;
 
+export type CaptureHealthStreamsKey = keyof typeof CAPTURE_HEALTH_STREAMS;
+export type CaptureHealthStreamsValue =
+  (typeof CAPTURE_HEALTH_STREAMS)[CaptureHealthStreamsKey];
+
 /** Source label for rows captured without one (NULL or blank `source`). */
 export const CAPTURE_HEALTH_UNKNOWN_SOURCE = 'unknown';

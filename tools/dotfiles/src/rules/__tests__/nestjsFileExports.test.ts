@@ -116,6 +116,17 @@ export let resumeCount = 0;
       errors: [{ messageId: 'wrongExport' }, { messageId: 'wrongExport' }],
       filename: `${DIR}/usage-limit.constants.ts`,
     },
+    // .constants.ts: a type that is not an exported const's Key/Value.
+    {
+      code: `export const USAGE_LIMIT_KIND = { HOURLY: 'hourly' } as const;
+
+export type UsageLimitKind = (typeof USAGE_LIMIT_KIND)[keyof typeof USAGE_LIMIT_KIND];
+
+export type OtherKindKey = 'a';
+`,
+      errors: [{ messageId: 'wrongExport' }, { messageId: 'wrongExport' }],
+      filename: `${DIR}/usage-limit.constants.ts`,
+    },
     // .repository.ts that exports a constant and a type beside the class.
     {
       code: `export abstract class UsageLimitRepository {}
@@ -208,6 +219,15 @@ export type { Job } from 'bullmq';
       code: `export const MAX_RESUMES = 3;
 
 export const USAGE_LIMIT_TYPES = ['hourly', 'weekly'] as const;
+`,
+      filename: `${DIR}/usage-limit.constants.ts`,
+    },
+    // .constants.ts may carry an enum-like const's canonical Key/Value types.
+    {
+      code: `export const USAGE_LIMIT_KIND = { HOURLY: 'hourly' } as const;
+
+export type UsageLimitKindKey = keyof typeof USAGE_LIMIT_KIND;
+export type UsageLimitKindValue = (typeof USAGE_LIMIT_KIND)[UsageLimitKindKey];
 `,
       filename: `${DIR}/usage-limit.constants.ts`,
     },

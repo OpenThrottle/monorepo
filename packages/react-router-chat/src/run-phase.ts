@@ -1,14 +1,11 @@
-import type {
-  ChatRunPhase as ChatRunPhaseType,
-  ChatTurnEvent,
-  ChatTurnToolEvent,
-} from './types';
-import { ChatRunPhase, ChatToolStatus } from './types';
+import type { ChatTurnEvent, ChatTurnToolEvent } from './types';
+import type { ChatRunPhaseValue } from './types';
+import { CHAT_RUN_PHASE, CHAT_TOOL_STATUS } from './types';
 
 /** A resolved phase plus an optional subject (tool/model name) for the label. */
 export interface ResolvedRunPhase {
   readonly detail: string | null;
-  readonly phase: ChatRunPhaseType;
+  readonly phase: ChatRunPhaseValue;
 }
 
 /**
@@ -26,12 +23,12 @@ export const deriveRunPhaseFromEvents = (
     .sort((a, b) => a.sortOrder - b.sortOrder)
     .filter(
       (event): event is ChatTurnToolEvent =>
-        event.kind === 'tool' && event.status === ChatToolStatus.running,
+        event.kind === 'tool' && event.status === CHAT_TOOL_STATUS.running,
     )
     .at(-1);
 
   if (runningTool !== undefined) {
-    return { detail: runningTool.name, phase: ChatRunPhase.runningTool };
+    return { detail: runningTool.name, phase: CHAT_RUN_PHASE.runningTool };
   }
 
   const latest = [...events]
@@ -40,10 +37,10 @@ export const deriveRunPhaseFromEvents = (
     .at(-1);
 
   if (latest?.kind === 'thinking') {
-    return { detail: null, phase: ChatRunPhase.thinking };
+    return { detail: null, phase: CHAT_RUN_PHASE.thinking };
   }
 
-  return { detail: null, phase: ChatRunPhase.waiting };
+  return { detail: null, phase: CHAT_RUN_PHASE.waiting };
 };
 
 /**
@@ -66,12 +63,12 @@ export const RUN_PHASE_STILL_WORKING_AFTER_MS = 15_000;
  */
 export const deriveRunPhaseFromElapsed = (
   elapsedMs: number,
-): ChatRunPhaseType => {
+): ChatRunPhaseValue => {
   if (elapsedMs < RUN_PHASE_CONNECTING_UNTIL_MS) {
-    return ChatRunPhase.connecting;
+    return CHAT_RUN_PHASE.connecting;
   }
   if (elapsedMs >= RUN_PHASE_STILL_WORKING_AFTER_MS) {
-    return ChatRunPhase.stillWorking;
+    return CHAT_RUN_PHASE.stillWorking;
   }
-  return ChatRunPhase.waiting;
+  return CHAT_RUN_PHASE.waiting;
 };

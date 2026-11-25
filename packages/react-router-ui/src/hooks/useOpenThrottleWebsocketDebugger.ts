@@ -1,4 +1,4 @@
-import type { NotificationEventName } from '@openthrottle/openthrottle-notifications';
+import type { NotificationEventNamesValue } from '@openthrottle/openthrottle-notifications';
 import * as React from 'react';
 
 import type {
@@ -18,9 +18,9 @@ export interface UseOpenThrottleWebsocketDebuggerOptions {
    */
   readonly initialEntries?: readonly WebsocketDebuggerLogEntry[];
   readonly onSelectedEventNamesChange?: (
-    names: readonly NotificationEventName[],
+    names: readonly NotificationEventNamesValue[],
   ) => void;
-  readonly selectedEventNames?: readonly NotificationEventName[];
+  readonly selectedEventNames?: readonly NotificationEventNamesValue[];
   /** @description Standalone / Storybook: attach listeners on this socket. */
   readonly socket?: WebsocketDebuggerSocket | null;
   readonly subscribeToEvents?: WebsocketDebuggerEventSubscriber;
@@ -31,7 +31,7 @@ export interface UseOpenThrottleWebsocketDebuggerResult {
   readonly displayEntries: readonly WebsocketDebuggerLogEntry[];
   readonly handleClear: () => void;
   readonly handleFilterChange: (values: string[]) => void;
-  readonly selectedEventNames: readonly NotificationEventName[];
+  readonly selectedEventNames: readonly NotificationEventNamesValue[];
 }
 
 /**

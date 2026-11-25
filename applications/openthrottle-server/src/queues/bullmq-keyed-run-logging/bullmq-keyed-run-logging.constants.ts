@@ -9,3 +9,7 @@ export const RUN_OUTPUT_SOURCE = {
   planRun: 'plan-run',
   spawn: 'spawn',
 } as const;
+
+export type RunOutputSourceKey = keyof typeof RUN_OUTPUT_SOURCE;
+export type RunOutputSourceValue =
+  (typeof RUN_OUTPUT_SOURCE)[RunOutputSourceKey];

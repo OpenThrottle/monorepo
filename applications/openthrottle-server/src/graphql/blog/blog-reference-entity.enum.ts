@@ -11,8 +11,9 @@ export const BLOG_REFERENCE_ENTITY = {
   TAG: 'TAG',
 } as const;
 
-export type BlogReferenceEntity =
-  (typeof BLOG_REFERENCE_ENTITY)[keyof typeof BLOG_REFERENCE_ENTITY];
+export type BlogReferenceEntityKey = keyof typeof BLOG_REFERENCE_ENTITY;
+export type BlogReferenceEntityValue =
+  (typeof BLOG_REFERENCE_ENTITY)[BlogReferenceEntityKey];
 
 registerEnumType(BLOG_REFERENCE_ENTITY, {
   description: `The kind of record a blog write referenced by slug that does not exist.`,

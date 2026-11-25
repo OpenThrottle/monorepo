@@ -4,7 +4,7 @@
  */
 
 import type {
-  NotificationEventName,
+  NotificationEventNamesValue,
   NotificationPayload,
 } from '@openthrottle/openthrottle-notifications';
 import { APP_NAME } from '@openthrottle/react-router-utils';
@@ -25,7 +25,11 @@ export const DEFAULT_NOTIFICATIONS_STORAGE_KEY = `${APP_NAME}:notifications`;
 
 /** @public */
 export type NotificationsStoreAction =
-  | { event: NotificationEventName; payload: NotificationPayload; type: 'add' }
+  | {
+      event: NotificationEventNamesValue;
+      payload: NotificationPayload;
+      type: 'add';
+    }
   | { id: string; type: 'markRead' }
   | { type: 'markAllRead' }
   | { id: string; type: 'dismiss' }
@@ -36,7 +40,7 @@ export type NotificationsStoreAction =
 export interface NotificationsStoreContextValue {
   /** Add a notification (e.g. from WebSocket handler). */
   readonly addNotification: (
-    event: NotificationEventName,
+    event: NotificationEventNamesValue,
     payload: NotificationPayload,
   ) => void;
   readonly dismiss: (id: string) => void;

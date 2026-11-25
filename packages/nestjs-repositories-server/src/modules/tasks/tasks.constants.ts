@@ -23,9 +23,17 @@ export const PLAN_TASK_LIST_ORDER = {
   sortOrder: 'ASC',
 } as const;
 
+export type PlanTaskListOrderKey = keyof typeof PLAN_TASK_LIST_ORDER;
+export type PlanTaskListOrderValue =
+  (typeof PLAN_TASK_LIST_ORDER)[PlanTaskListOrderKey];
+
 /** Canonical order for cross-plan task list queries (within each plan). */
 export const CROSS_PLAN_TASK_LIST_ORDER = {
   createdAt: 'ASC',
   planId: 'ASC',
   sortOrder: 'ASC',
 } as const;
+
+export type CrossPlanTaskListOrderKey = keyof typeof CROSS_PLAN_TASK_LIST_ORDER;
+export type CrossPlanTaskListOrderValue =
+  (typeof CROSS_PLAN_TASK_LIST_ORDER)[CrossPlanTaskListOrderKey];

@@ -15,7 +15,7 @@
  * passed through verbatim.
  */
 
-import type { ConversationPermissionMode } from '../types.ts';
+import type { ConversationPermissionModesValue } from '../types.ts';
 import { CONVERSATION_PERMISSION_MODES } from '../types.ts';
 
 /**
@@ -53,7 +53,7 @@ export interface CursorAgentArgvOptions {
    *   cursor's read-only Q&A mode: no file writes and no shell. `--sandbox
    *   enabled` is not an alternative — the same version exits 1 with it.
    */
-  readonly permissionMode?: ConversationPermissionMode;
+  readonly permissionMode?: ConversationPermissionModesValue;
   /** The fully-composed prompt (persona prefix already applied by the caller). */
   readonly prompt: string;
   /** Chat session id to resume; one OT conversation maps to one cursor chat. */

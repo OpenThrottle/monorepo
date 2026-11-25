@@ -15,6 +15,10 @@ export const TELEMETRY_WARNING_KINDS = {
   PLUGIN_OUTDATED: `PLUGIN_OUTDATED`,
 } as const;
 
+export type TelemetryWarningKindsKey = keyof typeof TELEMETRY_WARNING_KINDS;
+export type TelemetryWarningKindsValue =
+  (typeof TELEMETRY_WARNING_KINDS)[TelemetryWarningKindsKey];
+
 /** Delivery legs a heartbeat can arrive through, in display order. */
 export const TELEMETRY_DELIVERY_LEGS = [
   `repo`,

@@ -9,13 +9,14 @@ export const PREFERENCES_INTENTS = {
   saveDefaultEditor: 'saveDefaultEditor',
 } as const;
 
-export type PreferencesIntent =
-  (typeof PREFERENCES_INTENTS)[keyof typeof PREFERENCES_INTENTS];
+export type PreferencesIntentsKey = keyof typeof PREFERENCES_INTENTS;
+export type PreferencesIntentsValue =
+  (typeof PREFERENCES_INTENTS)[PreferencesIntentsKey];
 
 /** @description What the preferences action returns for any intent. */
 export type PreferencesActionResult =
-  | { readonly error: string; readonly intent: PreferencesIntent | null }
-  | { readonly intent: PreferencesIntent; readonly ok: true };
+  | { readonly error: string; readonly intent: PreferencesIntentsValue | null }
+  | { readonly intent: PreferencesIntentsValue; readonly ok: true };
 
 /**
  * @description Radix `Select` reserves the empty string, so the "System default"

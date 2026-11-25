@@ -6,7 +6,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import type { SkillCreateDestination } from '~/routing/skills/config/skill-create';
+import type { SkillCreateDestinationsValue } from '~/routing/skills/config/skill-create';
 import {
   isSkillCreateDestination,
   SKILL_CREATE_DESTINATIONS,
@@ -25,8 +25,8 @@ export interface SkillCreateDestinationFieldProps {
    */
   betaPreviewEnabled: boolean;
   className?: string;
-  onChange: (destination: SkillCreateDestination) => void;
-  value: SkillCreateDestination;
+  onChange: (destination: SkillCreateDestinationsValue) => void;
+  value: SkillCreateDestinationsValue;
 }
 
 /**

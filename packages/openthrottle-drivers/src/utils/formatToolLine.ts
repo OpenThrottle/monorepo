@@ -5,7 +5,7 @@
  * stays the bare `→ <tool>`.
  */
 
-import type { ToolArgumentKind } from '../data/data.tool-argument.ts';
+import type { ToolArgumentKindsValue } from '../data/data.tool-argument.ts';
 import {
   TOOL_ARGUMENT_FIELDS,
   TOOL_ARGUMENT_KIND_BY_TOOL,
@@ -74,7 +74,7 @@ const shortenPath = (path: string, cwd: string): string => {
 };
 
 const argumentOf = (
-  kind: ToolArgumentKind,
+  kind: ToolArgumentKindsValue,
   value: string,
   cwd: string,
 ): string => {

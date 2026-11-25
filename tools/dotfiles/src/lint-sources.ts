@@ -1,6 +1,7 @@
 import { TSESLint } from '@typescript-eslint/utils';
 import tslint from 'typescript-eslint';
 
+import { asConstEnumShape } from './rules/asConstEnumShape.ts';
 import { componentPrimitiveShape } from './rules/componentPrimitiveShape.ts';
 import { dataFileShape } from './rules/dataFileShape.ts';
 import { longStringTemplateLiteral } from './rules/longStringTemplateLiteral.ts';
@@ -30,6 +31,7 @@ const READABILITY_CONFIG: TSESLint.FlatConfig.ConfigArray = [
     plugins: {
       openthrottle: {
         rules: {
+          'as-const-enum-shape': asConstEnumShape,
           'component-primitive-shape': componentPrimitiveShape,
           'data-file-shape': dataFileShape,
           'long-string-template-literal': longStringTemplateLiteral,
@@ -39,6 +41,7 @@ const READABILITY_CONFIG: TSESLint.FlatConfig.ConfigArray = [
       },
     },
     rules: {
+      'openthrottle/as-const-enum-shape': 'error',
       'openthrottle/long-string-template-literal': 'error',
       'openthrottle/named-function-block-body': 'error',
       'openthrottle/three-line-ternary': 'error',

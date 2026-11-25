@@ -1,8 +1,8 @@
 import type {
   LoopClient,
   LoopFollowUp,
-  LoopPlanStatus,
-  LoopTaskStatus,
+  LoopPlanStatusValue,
+  LoopTaskStatusValue,
 } from '@openthrottle/openthrottle-agentic-loop';
 import { LOOP_OUTPUT_KIND } from '@openthrottle/openthrottle-agentic-loop';
 
@@ -116,7 +116,7 @@ export const createOtLoopClient = (
 
   const updatePlanStatus = async (input: {
     readonly planId: string;
-    readonly status: LoopPlanStatus;
+    readonly status: LoopPlanStatusValue;
   }): Promise<void> => {
     await executeGraphqlV2(
       UpdatePlanDocument,
@@ -126,7 +126,7 @@ export const createOtLoopClient = (
   };
 
   const updateTask = async (input: {
-    readonly status: LoopTaskStatus;
+    readonly status: LoopTaskStatusValue;
     readonly summary: string | undefined;
     readonly taskId: string;
   }): Promise<void> => {

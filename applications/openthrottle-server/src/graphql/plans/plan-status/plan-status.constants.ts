@@ -13,3 +13,7 @@ export const CANCEL_PLAN_RUN_OUTCOME = {
   /** An actively-executing run was signaled to stop (local abort or cross-process pub/sub); it stops imminently. */
   RUN_STOPPING: 'RUN_STOPPING',
 } as const;
+
+export type CancelPlanRunOutcomeKey = keyof typeof CANCEL_PLAN_RUN_OUTCOME;
+export type CancelPlanRunOutcomeValue =
+  (typeof CANCEL_PLAN_RUN_OUTCOME)[CancelPlanRunOutcomeKey];

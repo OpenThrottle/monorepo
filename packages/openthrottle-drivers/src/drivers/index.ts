@@ -5,7 +5,7 @@
  * an import cycle (driver modules import `defineDriver`), which is also why the gate lives here.
  */
 
-import type { DriverId } from '../registry/index.ts';
+import type { DriversValue } from '../registry/index.ts';
 import { DRIVER_IDS, lookupDriver } from '../registry/index.ts';
 import type { AgentDriver } from '../types/index.ts';
 import { antigravityDriver } from './antigravity.ts';
@@ -25,13 +25,13 @@ export { opencodeDriver } from './opencode.ts';
 /**
  * @description Registry map from driver id to driver.
  *
- * This is the completeness gate for {@link DriverId}, and the reason it lives here rather
+ * This is the completeness gate for {@link DriversValue}, and the reason it lives here rather
  * than in `../registry`: this module may import the concrete driver modules, that one may not
  * (they import `defineDriver` from it, so importing them back would close a cycle). Adding an
  * id to `DRIVERS` fails to compile here until a driver module is registered for it.
  * @public
  */
-export const DRIVER_REGISTRY: Record<DriverId, AgentDriver> = {
+export const DRIVER_REGISTRY: Record<DriversValue, AgentDriver> = {
   antigravity: antigravityDriver,
   claude: claudeDriver,
   codex: codexDriver,
@@ -53,6 +53,6 @@ export const ALL_DRIVERS: readonly AgentDriver[] = DRIVER_IDS.map(
  * @description Resolves the driver registered for `id`, or throws `UnknownDriverError`.
  * @public
  */
-export const getDriver = (id: DriverId): AgentDriver => {
+export const getDriver = (id: DriversValue): AgentDriver => {
   return lookupDriver(DRIVER_REGISTRY, id);
 };

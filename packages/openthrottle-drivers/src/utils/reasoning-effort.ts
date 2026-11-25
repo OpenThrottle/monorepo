@@ -20,12 +20,13 @@ export const DRIVER_REASONING_EFFORTS = {
   ultra: 'ultra',
 } as const;
 
+export type DriverReasoningEffortsKey = keyof typeof DRIVER_REASONING_EFFORTS;
 /**
  * @description One of the {@link DRIVER_REASONING_EFFORTS} values.
  * @public
  */
-export type DriverReasoningEffort =
-  (typeof DRIVER_REASONING_EFFORTS)[keyof typeof DRIVER_REASONING_EFFORTS];
+export type DriverReasoningEffortsValue =
+  (typeof DRIVER_REASONING_EFFORTS)[DriverReasoningEffortsKey];
 
 /**
  * @description Maps a level onto claude's `--effort` vocabulary (`low`/`medium`/`high`/`xhigh`/
@@ -34,7 +35,7 @@ export type DriverReasoningEffort =
  * @public
  */
 export function claudeEffortFlag(
-  reasoning: DriverReasoningEffort | undefined,
+  reasoning: DriverReasoningEffortsValue | undefined,
 ): string | undefined {
   switch (reasoning) {
     case DRIVER_REASONING_EFFORTS.low:
@@ -60,7 +61,7 @@ export function claudeEffortFlag(
  * @public
  */
 export function codexReasoningEffort(
-  reasoning: DriverReasoningEffort | undefined,
+  reasoning: DriverReasoningEffortsValue | undefined,
 ): string | undefined {
   return lowMediumHighEffort(reasoning);
 }
@@ -72,7 +73,7 @@ export function codexReasoningEffort(
  * @public
  */
 export function grokReasoningEffort(
-  reasoning: DriverReasoningEffort | undefined,
+  reasoning: DriverReasoningEffortsValue | undefined,
 ): string | undefined {
   return lowMediumHighEffort(reasoning);
 }
@@ -84,7 +85,7 @@ export function grokReasoningEffort(
  * @public
  */
 export function opencodeVariant(
-  reasoning: DriverReasoningEffort | undefined,
+  reasoning: DriverReasoningEffortsValue | undefined,
 ): string | undefined {
   switch (reasoning) {
     case DRIVER_REASONING_EFFORTS.low:
@@ -104,7 +105,7 @@ export function opencodeVariant(
 
 /** The `low`/`medium`/`high` triple shared by codex and grok; everything above `high` clamps. */
 function lowMediumHighEffort(
-  reasoning: DriverReasoningEffort | undefined,
+  reasoning: DriverReasoningEffortsValue | undefined,
 ): string | undefined {
   switch (reasoning) {
     case DRIVER_REASONING_EFFORTS.low:

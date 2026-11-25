@@ -18,5 +18,9 @@ export const PLAN_RULES_TRIGGER_KINDS = {
   TASK_CREATED: 'task-created',
 } as const;
 
+export type PlanRulesTriggerKindsKey = keyof typeof PLAN_RULES_TRIGGER_KINDS;
+export type PlanRulesTriggerKindsValue =
+  (typeof PLAN_RULES_TRIGGER_KINDS)[PlanRulesTriggerKindsKey];
+
 /** Token standing in for a null environment inside a dedup id. */
 export const PLAN_RULES_NULL_ENVIRONMENT_TOKEN = 'none';

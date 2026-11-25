@@ -16,7 +16,8 @@ export const EVAL_AREA = {
   TASK_CRUD: 'task-crud',
 } as const;
 
-export type EvalArea = (typeof EVAL_AREA)[keyof typeof EVAL_AREA];
+export type EvalAreaKey = keyof typeof EVAL_AREA;
+export type EvalAreaValue = (typeof EVAL_AREA)[EvalAreaKey];
 
 /**
  * @description How one argument of the selected tool call is checked.
@@ -55,7 +56,7 @@ export type CaseOrigin =
  * @description One eval case.
  */
 export interface ToolSelectionCase {
-  readonly area: EvalArea;
+  readonly area: EvalAreaValue;
   readonly expect: CaseExpectation;
   /** @description Tools that fail the case if called at all (e.g. a destructive near-miss). */
   readonly forbid: readonly string[];

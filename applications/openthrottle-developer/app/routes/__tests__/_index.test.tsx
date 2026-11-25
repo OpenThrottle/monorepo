@@ -1,4 +1,4 @@
-import { ChatComposerMode } from '@openthrottle/react-router-chat';
+import { CHAT_COMPOSER_MODE } from '@openthrottle/react-router-chat';
 import {
   CHAT_TOOLBAR_STORAGE_KEY,
   chatToolbarStateAtom,
@@ -139,7 +139,7 @@ describe('routes/_index.tsx toolbar persistence', () => {
   test('rehydrates the toolbar from localStorage on a fresh store (reload)', async () => {
     localStorage.setItem(
       CHAT_TOOLBAR_STORAGE_KEY,
-      JSON.stringify({ mode: ChatComposerMode.build, version: 1 }),
+      JSON.stringify({ mode: CHAT_COMPOSER_MODE.build, version: 1 }),
     );
     const freshStore = createStore();
 
@@ -158,7 +158,7 @@ describe('routes/_index.tsx toolbar persistence', () => {
     await view.findByTestId('ChatComposer');
 
     expect(freshStore.get(chatToolbarStateAtom).mode).toBe(
-      ChatComposerMode.build,
+      CHAT_COMPOSER_MODE.build,
     );
   });
 

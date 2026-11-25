@@ -1,6 +1,6 @@
 import type {
   DriverMcpOption,
-  DriverMcpReachability,
+  DriverMcpReachabilityValue,
 } from '~/routing/schedule/data/data.driver-mcp';
 import { DRIVER_MCP_REACHABILITY } from '~/routing/schedule/data/data.driver-mcp';
 
@@ -11,7 +11,7 @@ import { DRIVER_MCP_REACHABILITY } from '~/routing/schedule/data/data.driver-mcp
 export const resolveDriverMcpReachability = (
   driverId: string,
   agents: readonly DriverMcpOption[] | undefined,
-): DriverMcpReachability => {
+): DriverMcpReachabilityValue => {
   const match = agents?.find((agent) => agent.driver === driverId);
   if (match === undefined) {
     return DRIVER_MCP_REACHABILITY.unknown;

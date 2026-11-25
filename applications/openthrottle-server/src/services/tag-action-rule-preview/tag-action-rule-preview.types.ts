@@ -1,6 +1,6 @@
 import type {
   TagActionRuleMatchExplanation,
-  TagActionType,
+  TagActionTypesValue,
 } from '@openthrottle/openthrottle-skills';
 
 /**
@@ -9,7 +9,7 @@ import type {
  * @public
  */
 export interface TagActionRulePreviewRule {
-  readonly actionType: TagActionType;
+  readonly actionType: TagActionTypesValue;
   readonly environment: string | null;
   readonly projectId: string | null;
   readonly repositoryId: string | null;

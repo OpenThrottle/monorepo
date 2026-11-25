@@ -1,4 +1,4 @@
-import type { ScheduledRunFailureReason } from '@openthrottle/openthrottle-notifications';
+import type { ScheduledRunFailureReasonsValue } from '@openthrottle/openthrottle-notifications';
 import { SCHEDULED_RUN_FAILURE_REASONS } from '@openthrottle/openthrottle-notifications';
 /** @description The developer-app path a notice links to: the run when there is one, else the schedule. */
 export const scheduledRunFailureLink = (input: {
@@ -16,7 +16,7 @@ export const scheduledRunFailureLink = (input: {
 /** @description The one-line summary a notice shows, naming the schedule and what went wrong. */
 export const scheduledRunFailureMessage = (input: {
   readonly errorMessage: string | null;
-  readonly reason: ScheduledRunFailureReason;
+  readonly reason: ScheduledRunFailureReasonsValue;
   readonly runCount: number;
   readonly scheduleName: string;
 }): string => {

@@ -8,3 +8,8 @@ export const WORKTREE_SKILL_OVERLAY_STATUS = {
   NOT_FOREIGN: 'not-foreign',
   OPTED_OUT: 'opted-out',
 } as const;
+
+export type WorktreeSkillOverlayStatusKey =
+  keyof typeof WORKTREE_SKILL_OVERLAY_STATUS;
+export type WorktreeSkillOverlayStatusValue =
+  (typeof WORKTREE_SKILL_OVERLAY_STATUS)[WorktreeSkillOverlayStatusKey];

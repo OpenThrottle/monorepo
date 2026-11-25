@@ -1,4 +1,4 @@
-import type { CmsStatus } from '../config/cms-status';
+import type { CmsStatusValue } from '../config/cms-status';
 
 /**
  * @description A stored layout row: a named, slugged entry point into a fragment tree. Field names
@@ -12,7 +12,7 @@ export interface CmsLayout {
   readonly metadata: unknown;
   readonly name: string;
   readonly slug: string;
-  readonly status: CmsStatus;
+  readonly status: CmsStatusValue;
   readonly tags: readonly string[];
   readonly updated_at: string;
   readonly uuid: string;
@@ -43,7 +43,7 @@ export interface CmsSchema {
   readonly created_at: string;
   readonly is_deleted: boolean | null;
   readonly json_schema: unknown;
-  readonly status: CmsStatus;
+  readonly status: CmsStatusValue;
   readonly typename: string;
   readonly updated_at: string;
   readonly uuid: string;

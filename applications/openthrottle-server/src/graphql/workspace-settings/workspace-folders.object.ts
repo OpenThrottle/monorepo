@@ -12,7 +12,7 @@ import {
   RepositoryObject,
 } from './repository.object.ts';
 
-export const WorkspaceFolderReconciliationEnum = {
+export const WORKSPACE_FOLDER_RECONCILIATION = {
   CREATED_CANONICAL: 'created_canonical',
   CREATED_PROVISIONAL: 'created_provisional',
   MATCHED_MANIFEST_CHECKOUT: 'matched_manifest_checkout',
@@ -20,10 +20,12 @@ export const WorkspaceFolderReconciliationEnum = {
   MATCHED_REMOTE: 'matched_remote',
 } as const;
 
-export type WorkspaceFolderReconciliationEnum =
-  (typeof WorkspaceFolderReconciliationEnum)[keyof typeof WorkspaceFolderReconciliationEnum];
+export type WorkspaceFolderReconciliationKey =
+  keyof typeof WORKSPACE_FOLDER_RECONCILIATION;
+export type WorkspaceFolderReconciliationValue =
+  (typeof WORKSPACE_FOLDER_RECONCILIATION)[WorkspaceFolderReconciliationKey];
 
-registerEnumType(WorkspaceFolderReconciliationEnum, {
+registerEnumType(WORKSPACE_FOLDER_RECONCILIATION, {
   description: `How addWorkspaceFolder resolved the folder's identity: via the on-disk OT manifest (checkout or repository id), via the normalized git remote, or by creating a new canonical/provisional repository.`,
   name: 'WorkspaceFolderReconciliation',
 });
@@ -145,8 +147,8 @@ export class AddWorkspaceFolderPayloadObject {
   })
   projectCreated!: boolean;
 
-  @Field(() => WorkspaceFolderReconciliationEnum)
-  reconciliation!: WorkspaceFolderReconciliationEnum;
+  @Field(() => WORKSPACE_FOLDER_RECONCILIATION)
+  reconciliation!: WorkspaceFolderReconciliationValue;
 
   @Field(() => RepositoryObject)
   repository!: RepositoryObject;

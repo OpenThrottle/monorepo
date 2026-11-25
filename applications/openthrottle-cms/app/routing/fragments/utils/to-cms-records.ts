@@ -2,7 +2,7 @@ import type {
   CmsFragment,
   CmsFragmentRecord,
   CmsParsedSchema,
-  CmsStatus,
+  CmsStatusValue,
 } from '@openthrottle/react-router-cms-core';
 import {
   CMS_STATUS,
@@ -57,7 +57,7 @@ export interface CmsSchemaObjectInput {
 
 const CMS_STATUSES: readonly string[] = Object.values(CMS_STATUS);
 
-const isCmsStatus = (value: unknown): value is CmsStatus => {
+const isCmsStatus = (value: unknown): value is CmsStatusValue => {
   return typeof value === 'string' && CMS_STATUSES.includes(value);
 };
 

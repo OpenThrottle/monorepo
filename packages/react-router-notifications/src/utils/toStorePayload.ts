@@ -1,5 +1,5 @@
 import type {
-  NotificationEventName,
+  NotificationEventNamesValue,
   NotificationPayload,
 } from '@openthrottle/openthrottle-notifications';
 
@@ -13,7 +13,7 @@ import type {
  * returned `payload` is the same `node` object).
  */
 export function toStorePayload(node: { readonly event: string }): {
-  event: NotificationEventName;
+  event: NotificationEventNamesValue;
   payload: NotificationPayload;
 };
 export function toStorePayload(node: { readonly event: string }): unknown {

@@ -16,6 +16,9 @@ export const ROLES = {
   VIEWER: 'viewer',
 } as const;
 
+export type RolesKey = keyof typeof ROLES;
+export type RolesValue = (typeof ROLES)[RolesKey];
+
 /** Built-in permission identifiers (resource:action style). */
 export const PERMISSIONS = {
   BLOG_DRAFT: 'blog:draft',
@@ -30,6 +33,9 @@ export const PERMISSIONS = {
   USERS_READ: 'users:read',
   USERS_WRITE: 'users:write',
 } as const;
+
+export type PermissionsKey = keyof typeof PERMISSIONS;
+export type PermissionsValue = (typeof PERMISSIONS)[PermissionsKey];
 
 /**
  * Default / seed mapping ONLY: which permissions each built-in role has.

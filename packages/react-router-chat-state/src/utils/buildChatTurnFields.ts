@@ -1,7 +1,7 @@
 import type {
-  ChatPermissionMode,
-  ChatReasoningLevel,
-  ChatServiceTier,
+  ChatPermissionModeValue,
+  ChatReasoningLevelValue,
+  ChatServiceTierValue,
 } from '@openthrottle/react-router-chat';
 
 import type { DecodedChatOption } from './chat-model-option';
@@ -21,16 +21,16 @@ export interface ChatTurnFieldsParams {
   readonly decoded: DecodedChatOption;
   /** Workspace-relative paths @-mentioned in the message (CLI backends only). */
   readonly fileMentions: readonly string[];
-  readonly permissionMode: ChatPermissionMode | null | undefined;
+  readonly permissionMode: ChatPermissionModeValue | null | undefined;
   readonly persist: boolean;
   readonly personaId: string | null | undefined;
-  readonly reasoning: ChatReasoningLevel | null | undefined;
+  readonly reasoning: ChatReasoningLevelValue | null | undefined;
   /**
    * Selected checkouts, primary first — index 0 becomes the process `cwd` and
    * the rest become additional granted directories.
    */
   readonly repositoryIds: readonly string[];
-  readonly serviceTier: ChatServiceTier | null | undefined;
+  readonly serviceTier: ChatServiceTierValue | null | undefined;
 }
 
 /**

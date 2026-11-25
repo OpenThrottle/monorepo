@@ -67,7 +67,7 @@ import {
 import { discoverRepoSkills } from '~/routing/agents/utils/discoverRepoSkills.server';
 import { getMonorepoRoot } from '~/routing/agents/utils/resolve-monorepo-root.server';
 import { isPathInsideRoot } from '~/routing/agents/utils/skill-path-allowlist.server';
-import type { SkillCreateDestination } from '~/routing/skills/config/skill-create';
+import type { SkillCreateDestinationsValue } from '~/routing/skills/config/skill-create';
 import { SKILL_CREATE_DESTINATIONS } from '~/routing/skills/config/skill-create';
 import { SKILL_CREATE_COPY } from '~/routing/skills/data/data.copy';
 import { syncSkillLinks } from '~/routing/skills/utils/syncSkillLinks.server';
@@ -86,7 +86,7 @@ const SKILL_FILENAME = 'SKILL.md';
 
 export interface CreateSkillFileInput {
   readonly content: string;
-  readonly destination: SkillCreateDestination;
+  readonly destination: SkillCreateDestinationsValue;
   readonly slug: string;
 }
 
@@ -172,7 +172,7 @@ const lockfileSkillSlugs = (monorepoRoot: string): readonly string[] => {
  * destination alone — client input contributes only the slug.
  */
 const destinationRoot = (
-  destination: SkillCreateDestination,
+  destination: SkillCreateDestinationsValue,
   monorepoRoot: string,
   personalRoot: string,
 ): string => {
@@ -195,7 +195,7 @@ const destinationRoot = (
  * destinations; slug-relative for personal, whose root is outside the checkout.
  */
 const validationPath = (
-  destination: SkillCreateDestination,
+  destination: SkillCreateDestinationsValue,
   slug: string,
 ): string => {
   switch (destination) {

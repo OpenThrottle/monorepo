@@ -19,6 +19,11 @@ export const TELEMETRY_COVERAGE_WARNING_KINDS = {
   PLUGIN_OUTDATED: 'PLUGIN_OUTDATED',
 } as const;
 
+export type TelemetryCoverageWarningKindsKey =
+  keyof typeof TELEMETRY_COVERAGE_WARNING_KINDS;
+export type TelemetryCoverageWarningKindsValue =
+  (typeof TELEMETRY_COVERAGE_WARNING_KINDS)[TelemetryCoverageWarningKindsKey];
+
 /** Short, factual, server-owned messages; the UI owns its longer copy. */
 export const TELEMETRY_COVERAGE_WARNING_MESSAGES = {
   BUFFER_GROWING: `Buffered records rose across the last three heartbeats.`,

@@ -2,7 +2,7 @@ import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
 import * as React from 'react';
 import { useFetcher } from 'react-router';
 
-import type { SkillCreateDestination } from '~/routing/skills/config/skill-create';
+import type { SkillCreateDestinationsValue } from '~/routing/skills/config/skill-create';
 import {
   DEFAULT_SKILL_CREATE_DESTINATION,
   SKILL_CREATE_DESTINATION_PATH_PREFIX,
@@ -27,7 +27,7 @@ export interface UseSkillCreateFormResult {
   canSubmit: boolean;
   content: string;
   description: string;
-  destination: SkillCreateDestination;
+  destination: SkillCreateDestinationsValue;
   /** Path handed to Monaco; frozen once the author edits the document. */
   editorPath: string;
   /**
@@ -46,7 +46,9 @@ export interface UseSkillCreateFormResult {
   isDocumentDirty: boolean;
   isSubmitting: boolean;
   setDescription: React.Dispatch<React.SetStateAction<string>>;
-  setDestination: React.Dispatch<React.SetStateAction<SkillCreateDestination>>;
+  setDestination: React.Dispatch<
+    React.SetStateAction<SkillCreateDestinationsValue>
+  >;
   setSlug: React.Dispatch<React.SetStateAction<string>>;
   setTags: React.Dispatch<React.SetStateAction<string>>;
   slug: string;
@@ -77,9 +79,10 @@ export const useSkillCreateForm = (): UseSkillCreateFormResult => {
   // Hooks
   const fetcher = useFetcher<SkillCreateActionData>();
   const [description, setDescription] = React.useState('');
-  const [destination, setDestination] = React.useState<SkillCreateDestination>(
-    DEFAULT_SKILL_CREATE_DESTINATION,
-  );
+  const [destination, setDestination] =
+    React.useState<SkillCreateDestinationsValue>(
+      DEFAULT_SKILL_CREATE_DESTINATION,
+    );
   const [draft, setDraft] = React.useState('');
   const [isDocumentDirty, setIsDocumentDirty] = React.useState(false);
   const [slug, setSlug] = React.useState('');

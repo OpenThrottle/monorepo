@@ -17,20 +17,21 @@ import {
 } from '../data/data.chat-permission-mode-meta';
 import { CHAT_PERMISSION_REMEMBER_COPY } from '../data/data.copy';
 import type { ChatBackendCapabilities } from '../types';
-import { ChatPermissionMode } from '../types';
+import type { ChatPermissionModeValue } from '../types';
+import { CHAT_PERMISSION_MODE } from '../types';
 
 export interface ChatPermissionModeControlProps {
   /** Selected backend's capabilities; gates which modes render. */
   readonly capabilities: ChatBackendCapabilities;
   readonly className?: string;
-  readonly onPermissionModeChange?: (mode: ChatPermissionMode) => void;
+  readonly onPermissionModeChange?: (mode: ChatPermissionModeValue) => void;
   /**
    * Renders the "Remember my choice" opt-in when supplied (and the backend has
    * an elevated mode); omit to hide it. Pair with {@link rememberPermissionMode}.
    */
   readonly onRememberPermissionModeChange?: (remember: boolean) => void;
   /** Currently-selected permission mode. */
-  readonly permissionMode?: ChatPermissionMode;
+  readonly permissionMode?: ChatPermissionModeValue;
   /** Whether an elevated mode is kept across sessions instead of resetting. */
   readonly rememberPermissionMode?: boolean;
 }
@@ -70,13 +71,13 @@ export const ChatPermissionModeControl = (
   // Only Auto-accept edits / Full access ever reset, so the opt-in is
   // meaningless for a backend whose sole mode is Supervised.
   const hasElevatedMode = modes.some(
-    (mode) => mode !== ChatPermissionMode.supervised,
+    (mode) => mode !== CHAT_PERMISSION_MODE.supervised,
   );
   const showRemember = onRememberPermissionModeChange != null && hasElevatedMode; // prettier-ignore
 
-  const describeMode = (mode: ChatPermissionMode): string => {
+  const describeMode = (mode: ChatPermissionModeValue): string => {
     if (
-      mode === ChatPermissionMode.supervised &&
+      mode === CHAT_PERMISSION_MODE.supervised &&
       !capabilities.supervisedGatesEdits
     ) {
       return SUPERVISED_UNGATED_EDITS_DESCRIPTION;
@@ -85,7 +86,7 @@ export const ChatPermissionModeControl = (
   };
 
   // Handlers
-  const onSelectMode = (mode: ChatPermissionMode): void => {
+  const onSelectMode = (mode: ChatPermissionModeValue): void => {
     onPermissionModeChange?.(mode);
   };
   const onRememberCheckedChange = (checked: boolean): void => {

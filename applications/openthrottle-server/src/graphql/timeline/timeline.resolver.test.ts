@@ -9,9 +9,9 @@ import type { DataSource } from 'typeorm';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
-  TimelineLaneGrouping,
-  TimelineMarkerKind,
-  TimelineSpanKind,
+  TIMELINE_LANE_GROUPING,
+  TIMELINE_MARKER_KIND,
+  TIMELINE_SPAN_KIND,
 } from './timeline.enum.ts';
 import type { WorkstreamTimelineInput } from './timeline.input.ts';
 import { TimelineResolver } from './timeline.resolver.ts';
@@ -104,8 +104,8 @@ describe('TimelineResolver.workstreamTimeline', () => {
     it('queries only the requested kinds', async () => {
       await resolver.workstreamTimeline(
         baseInput({
-          markerKinds: [TimelineMarkerKind.GRILLING],
-          spanKinds: [TimelineSpanKind.PLAN_RUN],
+          markerKinds: [TIMELINE_MARKER_KIND.GRILLING],
+          spanKinds: [TIMELINE_SPAN_KIND.PLAN_RUN],
         }),
       );
 
@@ -170,7 +170,7 @@ describe('TimelineResolver.workstreamTimeline', () => {
       );
 
       const result = await resolver.workstreamTimeline(
-        baseInput({ markerKinds: [TimelineMarkerKind.TASK_ADDED] }),
+        baseInput({ markerKinds: [TIMELINE_MARKER_KIND.TASK_ADDED] }),
       );
 
       expect(result.truncation).toEqual([
@@ -193,7 +193,7 @@ describe('TimelineResolver.workstreamTimeline', () => {
       ]);
 
       const result = await resolver.workstreamTimeline(
-        baseInput({ markerKinds: [TimelineMarkerKind.TASK_ADDED] }),
+        baseInput({ markerKinds: [TIMELINE_MARKER_KIND.TASK_ADDED] }),
       );
 
       expect(result.truncation[0]?.truncated).toBe(false);
@@ -221,7 +221,7 @@ describe('TimelineResolver.workstreamTimeline', () => {
       ]);
 
       const result = await resolver.workstreamTimeline(
-        baseInput({ spanKinds: [TimelineSpanKind.PLAN_RUN] }),
+        baseInput({ spanKinds: [TIMELINE_SPAN_KIND.PLAN_RUN] }),
       );
 
       expect(result.spans[0]?.derivedEnd).toBe(true);
@@ -247,7 +247,7 @@ describe('TimelineResolver.workstreamTimeline', () => {
       ]);
 
       const result = await resolver.workstreamTimeline(
-        baseInput({ spanKinds: [TimelineSpanKind.WORK_SESSION] }),
+        baseInput({ spanKinds: [TIMELINE_SPAN_KIND.WORK_SESSION] }),
       );
 
       expect(result.spans[0]?.derivedEnd).toBe(false);
@@ -275,7 +275,7 @@ describe('TimelineResolver.workstreamTimeline', () => {
       vi.setSystemTime(FIXED_NOW);
       const before = FIXED_NOW.getTime();
       const result = await resolver.workstreamTimeline(
-        baseInput({ spanKinds: [TimelineSpanKind.WORK_SESSION] }),
+        baseInput({ spanKinds: [TIMELINE_SPAN_KIND.WORK_SESSION] }),
       );
 
       const span = result.spans[0];
@@ -294,7 +294,7 @@ describe('TimelineResolver.workstreamTimeline', () => {
           driver: 'claude',
           gitBranch: 'main',
           planId: 'plan-1',
-          spanKinds: [TimelineSpanKind.PLAN_RUN],
+          spanKinds: [TIMELINE_SPAN_KIND.PLAN_RUN],
         }),
       );
 
@@ -309,7 +309,7 @@ describe('TimelineResolver.workstreamTimeline', () => {
       const result = await resolver.workstreamTimeline(
         baseInput({
           planId: 'plan-1',
-          spanKinds: [TimelineSpanKind.SCHEDULED_RUN],
+          spanKinds: [TIMELINE_SPAN_KIND.SCHEDULED_RUN],
         }),
       );
 
@@ -323,7 +323,7 @@ describe('TimelineResolver.workstreamTimeline', () => {
       // ("status_change:task:<uuid>:COMPLETED:<uuid>"), which is unreadable in
       // a tooltip; the payload holds the actual transition.
       await resolver.workstreamTimeline(
-        baseInput({ markerKinds: [TimelineMarkerKind.STATUS_CHANGE] }),
+        baseInput({ markerKinds: [TIMELINE_MARKER_KIND.STATUS_CHANGE] }),
       );
 
       const sql = query.mock.calls[0]?.[0] ?? '';
@@ -334,7 +334,7 @@ describe('TimelineResolver.workstreamTimeline', () => {
 
     it('excludes never-touched tasks from the task-updated leg', async () => {
       await resolver.workstreamTimeline(
-        baseInput({ markerKinds: [TimelineMarkerKind.TASK_UPDATED] }),
+        baseInput({ markerKinds: [TIMELINE_MARKER_KIND.TASK_UPDATED] }),
       );
 
       expect(query.mock.calls[0]?.[0]).toContain(
@@ -364,8 +364,8 @@ describe('TimelineResolver.workstreamTimeline', () => {
 
       const result = await resolver.workstreamTimeline(
         baseInput({
-          grouping: TimelineLaneGrouping.BY_DRIVER,
-          spanKinds: [TimelineSpanKind.PLAN_RUN],
+          grouping: TIMELINE_LANE_GROUPING.BY_DRIVER,
+          spanKinds: [TIMELINE_SPAN_KIND.PLAN_RUN],
         }),
       );
 
@@ -389,7 +389,7 @@ describe('TimelineResolver.workstreamTimeline', () => {
       ]);
 
       const result = await resolver.workstreamTimeline(
-        baseInput({ markerKinds: [TimelineMarkerKind.GRILLING] }),
+        baseInput({ markerKinds: [TIMELINE_MARKER_KIND.GRILLING] }),
       );
 
       expect(result.markers[0]?.laneKey).toBe('skills');
@@ -413,7 +413,7 @@ describe('TimelineResolver.workstreamTimeline', () => {
 
     it('selects user_id so an attributed event can be told from an unattributed one', async () => {
       await resolver.workstreamTimeline(
-        baseInput({ markerKinds: [TimelineMarkerKind.GRILLING] }),
+        baseInput({ markerKinds: [TIMELINE_MARKER_KIND.GRILLING] }),
       );
 
       const sql = query.mock.calls.map(([text]) => text).join('\n');
@@ -424,7 +424,7 @@ describe('TimelineResolver.workstreamTimeline', () => {
       query.mockResolvedValue([grillingRow('user-1')]);
 
       const result = await resolver.workstreamTimeline(
-        baseInput({ markerKinds: [TimelineMarkerKind.GRILLING] }),
+        baseInput({ markerKinds: [TIMELINE_MARKER_KIND.GRILLING] }),
       );
 
       expect(result.markers[0]?.userId).toBe('user-1');
@@ -434,7 +434,7 @@ describe('TimelineResolver.workstreamTimeline', () => {
       query.mockResolvedValue([grillingRow(null)]);
 
       const result = await resolver.workstreamTimeline(
-        baseInput({ markerKinds: [TimelineMarkerKind.GRILLING] }),
+        baseInput({ markerKinds: [TIMELINE_MARKER_KIND.GRILLING] }),
       );
 
       expect(result.markers).toHaveLength(1);
@@ -446,7 +446,7 @@ describe('TimelineResolver.workstreamTimeline', () => {
       await resolver.workstreamTimeline(
         baseInput({
           gitBranch: 'feat/x',
-          markerKinds: [TimelineMarkerKind.GRILLING],
+          markerKinds: [TIMELINE_MARKER_KIND.GRILLING],
         }),
       );
 
@@ -498,7 +498,10 @@ describe('TimelineResolver.workstreamTimeline', () => {
 
       const result = await resolver.workstreamTimeline(
         baseInput({
-          spanKinds: [TimelineSpanKind.PLAN_RUN, TimelineSpanKind.WORK_SESSION],
+          spanKinds: [
+            TIMELINE_SPAN_KIND.PLAN_RUN,
+            TIMELINE_SPAN_KIND.WORK_SESSION,
+          ],
         }),
       );
 

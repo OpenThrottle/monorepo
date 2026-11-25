@@ -62,7 +62,8 @@ export const RENDER_MODE = {
   WHOLE_TAKE: 'whole-take',
 } as const;
 
-export type RenderMode = (typeof RENDER_MODE)[keyof typeof RENDER_MODE];
+export type RenderModeKey = keyof typeof RENDER_MODE;
+export type RenderModeValue = (typeof RENDER_MODE)[RenderModeKey];
 
 export interface TtsBackend {
   /** Identifier recorded in timings.json, so a take can be traced to its voice. */
@@ -106,7 +107,7 @@ export interface NarrationTimings {
    * Which render path produced this take. Optional only so timings written before
    * the field existed still type-check; narrate always writes it.
    */
-  readonly renderMode?: RenderMode;
+  readonly renderMode?: RenderModeValue;
   readonly segments: readonly SegmentTiming[];
   readonly slug: string;
   readonly totalSeconds: number;

@@ -3,10 +3,10 @@ import type {
   ChatPersonaOption,
 } from '@openthrottle/react-router-chat';
 import {
-  ChatComposerMode,
-  ChatPermissionMode,
-  ChatReasoningLevel,
-  ChatServiceTier,
+  CHAT_COMPOSER_MODE,
+  CHAT_PERMISSION_MODE,
+  CHAT_REASONING_LEVEL,
+  CHAT_SERVICE_TIER,
 } from '@openthrottle/react-router-chat';
 import { describe, expect, test } from 'vitest';
 
@@ -341,14 +341,14 @@ describe('reconcileChatToolbarState', () => {
       const result = reconcileChatToolbarState(
         persisted({
           modelId: 'claude',
-          permissionMode: ChatPermissionMode.supervised,
-          reasoning: ChatReasoningLevel.high,
-          serviceTier: ChatServiceTier.fast,
+          permissionMode: CHAT_PERMISSION_MODE.supervised,
+          reasoning: CHAT_REASONING_LEVEL.high,
+          serviceTier: CHAT_SERVICE_TIER.fast,
         }),
         { models: [claudeCliModel], personas: [], repositories: [repoA] },
       );
-      expect(result.permissionMode).toBe(ChatPermissionMode.supervised);
-      expect(result.reasoning).toBe(ChatReasoningLevel.high);
+      expect(result.permissionMode).toBe(CHAT_PERMISSION_MODE.supervised);
+      expect(result.reasoning).toBe(CHAT_REASONING_LEVEL.high);
       // No backend advertises a service-tier control, so it is always cleared.
       expect(result.serviceTier).toBeUndefined();
     });
@@ -356,7 +356,7 @@ describe('reconcileChatToolbarState', () => {
     test('clears a reasoning level the CLI backend does not permit', () => {
       // claude tops out at `max`; `ultra` is not advertised, so it is cleared.
       const result = reconcileChatToolbarState(
-        persisted({ modelId: 'claude', reasoning: ChatReasoningLevel.ultra }),
+        persisted({ modelId: 'claude', reasoning: CHAT_REASONING_LEVEL.ultra }),
         { models: [claudeCliModel], personas: [], repositories: [repoA] },
       );
       expect(result.reasoning).toBeUndefined();
@@ -366,14 +366,14 @@ describe('reconcileChatToolbarState', () => {
       const result = reconcileChatToolbarState(
         persisted({
           modelId: 'cursor',
-          permissionMode: ChatPermissionMode.fullAccess,
-          reasoning: ChatReasoningLevel.high,
-          serviceTier: ChatServiceTier.fast,
+          permissionMode: CHAT_PERMISSION_MODE.fullAccess,
+          reasoning: CHAT_REASONING_LEVEL.high,
+          serviceTier: CHAT_SERVICE_TIER.fast,
         }),
         { models: [cliModel], personas: [], repositories: [repoA] },
       );
       // cursor still has a permission surface, but no reasoning/tier controls.
-      expect(result.permissionMode).toBe(ChatPermissionMode.fullAccess);
+      expect(result.permissionMode).toBe(CHAT_PERMISSION_MODE.fullAccess);
       expect(result.reasoning).toBeUndefined();
       expect(result.serviceTier).toBeUndefined();
     });
@@ -382,16 +382,16 @@ describe('reconcileChatToolbarState', () => {
       const result = reconcileChatToolbarState(
         persisted({
           modelId: openaiModel.id,
-          permissionMode: ChatPermissionMode.fullAccess,
-          reasoning: ChatReasoningLevel.high,
-          serviceTier: ChatServiceTier.fast,
+          permissionMode: CHAT_PERMISSION_MODE.fullAccess,
+          reasoning: CHAT_REASONING_LEVEL.high,
+          serviceTier: CHAT_SERVICE_TIER.fast,
         }),
         { models: [openaiModel], personas: [], repositories: [] },
       );
       // openai has no permission surface and no tier, but forwards reasoning
       // best-effort — so high is retained while the other two are cleared.
       expect(result.permissionMode).toBeUndefined();
-      expect(result.reasoning).toBe(ChatReasoningLevel.high);
+      expect(result.reasoning).toBe(CHAT_REASONING_LEVEL.high);
       expect(result.serviceTier).toBeUndefined();
     });
 
@@ -399,11 +399,14 @@ describe('reconcileChatToolbarState', () => {
       // Persisted CLI selection with a reasoning level openai also permits; the
       // CLI model is gone so it falls back to openai, which keeps the level.
       const result = reconcileChatToolbarState(
-        persisted({ modelId: 'cursor', reasoning: ChatReasoningLevel.medium }),
+        persisted({
+          modelId: 'cursor',
+          reasoning: CHAT_REASONING_LEVEL.medium,
+        }),
         { models: [openaiModel], personas: [], repositories: [] },
       );
       expect(result.modelId).toBe(openaiModel.id);
-      expect(result.reasoning).toBe(ChatReasoningLevel.medium);
+      expect(result.reasoning).toBe(CHAT_REASONING_LEVEL.medium);
     });
   });
 
@@ -425,32 +428,32 @@ describe('reconcileChatToolbarState', () => {
       const result = reconcileChatToolbarState(
         persisted({
           modelId: 'claude',
-          perBackend: { claude: { reasoning: ChatReasoningLevel.high } },
-          reasoning: ChatReasoningLevel.low,
+          perBackend: { claude: { reasoning: CHAT_REASONING_LEVEL.high } },
+          reasoning: CHAT_REASONING_LEVEL.low,
         }),
         { models: [claudeModel], personas: [], repositories: [repoA] },
       );
-      expect(result.reasoning).toBe(ChatReasoningLevel.high);
+      expect(result.reasoning).toBe(CHAT_REASONING_LEVEL.high);
     });
 
     test('falls back to the global when the effective backend has no entry', () => {
       const result = reconcileChatToolbarState(
         persisted({
           modelId: 'claude',
-          perBackend: { codex: { reasoning: ChatReasoningLevel.high } },
-          reasoning: ChatReasoningLevel.low,
+          perBackend: { codex: { reasoning: CHAT_REASONING_LEVEL.high } },
+          reasoning: CHAT_REASONING_LEVEL.low,
         }),
         { models: [claudeModel], personas: [], repositories: [repoA] },
       );
-      expect(result.reasoning).toBe(ChatReasoningLevel.low);
+      expect(result.reasoning).toBe(CHAT_REASONING_LEVEL.low);
     });
 
     test('distinct per-CLI values coexist (claude=high vs codex=low)', () => {
       const state = persisted({
         modelId: 'claude',
         perBackend: {
-          claude: { reasoning: ChatReasoningLevel.high },
-          codex: { reasoning: ChatReasoningLevel.low },
+          claude: { reasoning: CHAT_REASONING_LEVEL.high },
+          codex: { reasoning: CHAT_REASONING_LEVEL.low },
         },
       });
       const models = [claudeModel, codexModel];
@@ -465,8 +468,8 @@ describe('reconcileChatToolbarState', () => {
         { models, personas: [], repositories: [repoA] },
       );
 
-      expect(asClaude.reasoning).toBe(ChatReasoningLevel.high);
-      expect(asCodex.reasoning).toBe(ChatReasoningLevel.low);
+      expect(asClaude.reasoning).toBe(CHAT_REASONING_LEVEL.high);
+      expect(asCodex.reasoning).toBe(CHAT_REASONING_LEVEL.low);
     });
 
     test('gates a per-backend override the effective backend disallows', () => {
@@ -475,7 +478,7 @@ describe('reconcileChatToolbarState', () => {
       const result = reconcileChatToolbarState(
         persisted({
           modelId: openaiModel.id,
-          perBackend: { openai: { reasoning: ChatReasoningLevel.ultra } },
+          perBackend: { openai: { reasoning: CHAT_REASONING_LEVEL.ultra } },
         }),
         { models: [openaiModel], personas: [], repositories: [] },
       );
@@ -483,7 +486,7 @@ describe('reconcileChatToolbarState', () => {
     });
 
     test('passes perBackend through unchanged (derive-only)', () => {
-      const perBackend = { claude: { reasoning: ChatReasoningLevel.high } };
+      const perBackend = { claude: { reasoning: CHAT_REASONING_LEVEL.high } };
       const result = reconcileChatToolbarState(
         persisted({ modelId: 'claude', perBackend }),
         { models: [claudeModel], personas: [], repositories: [repoA] },
@@ -513,21 +516,21 @@ describe('reconcileChatToolbarState', () => {
   describe('purity', () => {
     test('preserves mode and version', () => {
       const result = reconcileChatToolbarState(
-        persisted({ mode: ChatComposerMode.build, modelId: 'cursor' }),
+        persisted({ mode: CHAT_COMPOSER_MODE.build, modelId: 'cursor' }),
         { models: [cliModel], personas: [], repositories: [repoA] },
       );
-      expect(result.mode).toBe(ChatComposerMode.build);
+      expect(result.mode).toBe(CHAT_COMPOSER_MODE.build);
       expect(result.version).toBe(CHAT_TOOLBAR_STATE_VERSION);
     });
 
     test('does not mutate its input and writes nothing to storage', () => {
       const input = persisted({
         modelId: 'gone',
-        permissionMode: ChatPermissionMode.fullAccess,
+        permissionMode: CHAT_PERMISSION_MODE.fullAccess,
         personaId: 'gone',
-        reasoning: ChatReasoningLevel.high,
+        reasoning: CHAT_REASONING_LEVEL.high,
         repositoryIds: ['gone'],
-        serviceTier: ChatServiceTier.fast,
+        serviceTier: CHAT_SERVICE_TIER.fast,
       });
       const snapshot = { ...input };
 

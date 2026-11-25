@@ -9,7 +9,7 @@
 
 import type {
   AccountError,
-  AccountErrorKind,
+  AccountErrorKindsValue,
   AgentDriver,
   DriverParsedOutput,
   UsageLimit,
@@ -75,7 +75,9 @@ const usageLimitOf = (chunk: ConversationStreamChunk): UsageLimit | null => {
   };
 };
 
-const isAccountErrorKind = (value: unknown): value is AccountErrorKind => {
+const isAccountErrorKind = (
+  value: unknown,
+): value is AccountErrorKindsValue => {
   return Object.values(ACCOUNT_ERROR_KINDS).some((known) => {
     return known === value;
   });

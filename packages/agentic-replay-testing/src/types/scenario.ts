@@ -1,5 +1,5 @@
 import type {
-  ConversationPermissionMode,
+  ConversationPermissionModesValue,
   ConversationReasoningEffort,
 } from '@openthrottle/openthrottle-agentic-utils';
 
@@ -12,7 +12,7 @@ import type {
 export interface ScenarioTurn {
   /** Abort the run as soon as the first text chunk arrives. */
   readonly abortAfterFirstChunk: boolean;
-  readonly permissionMode: ConversationPermissionMode | undefined;
+  readonly permissionMode: ConversationPermissionModesValue | undefined;
   readonly prompt: string;
   readonly reasoning: ConversationReasoningEffort | undefined;
   readonly systemPrompt: string | undefined;

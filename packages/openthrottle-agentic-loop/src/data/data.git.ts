@@ -59,5 +59,9 @@ export const FINALIZE_PRIOR_REASONS = {
   tasks_blocked: 'workflow_tasks_blocked',
 } as const;
 
+export type FinalizePriorReasonsKey = keyof typeof FINALIZE_PRIOR_REASONS;
+export type FinalizePriorReasonsValue =
+  (typeof FINALIZE_PRIOR_REASONS)[FinalizePriorReasonsKey];
+
 /** @description Fallback squash header when the range gives none. */
 export const SQUASH_FALLBACK_SUBJECT = 'chore: deliver plan tasks';

@@ -1,6 +1,6 @@
 import type {
   NotificationSeverity,
-  ScheduledRunFailureReason,
+  ScheduledRunFailureReasonsValue,
 } from '@openthrottle/openthrottle-notifications';
 
 /**
@@ -17,7 +17,7 @@ export interface ScheduledRunFailureNotice {
   readonly message: string;
   /** Who to tell. Null for a schedule with no owner; a channel that targets a person skips it. */
   readonly ownerUserId: string | null;
-  readonly reason: ScheduledRunFailureReason;
+  readonly reason: ScheduledRunFailureReasonsValue;
   readonly runCount: number;
   readonly runId: string | undefined;
   readonly scheduleName: string;
@@ -40,7 +40,7 @@ export interface ScheduledRunFailureChannel {
 /** What a caller knows about the run(s) that went wrong. */
 export interface ScheduledRunFailureInput {
   readonly errorMessage: string | null;
-  readonly reason: ScheduledRunFailureReason;
+  readonly reason: ScheduledRunFailureReasonsValue;
   /** How many runs this covers; a boot that records several missed fires sends one notice. */
   readonly runCount: number;
   readonly runId: string | undefined;

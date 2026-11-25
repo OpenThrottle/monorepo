@@ -8,5 +8,9 @@ export const SHELL_IPC_CHANNELS = {
   testServer: 'openthrottle-shell:test-server',
 } as const;
 
+export type ShellIpcChannelsKey = keyof typeof SHELL_IPC_CHANNELS;
+export type ShellIpcChannelsValue =
+  (typeof SHELL_IPC_CHANNELS)[ShellIpcChannelsKey];
+
 /** Name of the global the preload exposes on the connection screen only. */
 export const SHELL_BRIDGE_NAME = 'openthrottleShell';

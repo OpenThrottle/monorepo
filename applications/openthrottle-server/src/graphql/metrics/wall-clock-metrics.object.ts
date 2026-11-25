@@ -6,17 +6,18 @@
 
 import { Field, Float, ObjectType, registerEnumType } from '@nestjs/graphql';
 
-export const WallClockInterpretation = {
+export const WALL_CLOCK_INTERPRETATION = {
   cpu_bound: 'cpu_bound',
   idle: 'idle',
   io_bound: 'io_bound',
   mixed: 'mixed',
 } as const;
 
-export type WallClockInterpretationType =
-  (typeof WallClockInterpretation)[keyof typeof WallClockInterpretation];
+export type WallClockInterpretationKey = keyof typeof WALL_CLOCK_INTERPRETATION;
+export type WallClockInterpretationValue =
+  (typeof WALL_CLOCK_INTERPRETATION)[WallClockInterpretationKey];
 
-registerEnumType(WallClockInterpretation, {
+registerEnumType(WALL_CLOCK_INTERPRETATION, {
   description: `Interpretation of wall-clock to CPU time ratio.`,
   name: 'WallClockInterpretation',
 });
@@ -45,10 +46,10 @@ export class WallClockMetricsObject {
   })
   endTimestamp!: number;
 
-  @Field(() => WallClockInterpretation, {
+  @Field(() => WALL_CLOCK_INTERPRETATION, {
     description: `Interpretation hint: cpu_bound (ratio <= 1.5), mixed (1.5-5), io_bound (> 5), idle (no CPU time).`,
   })
-  interpretation!: WallClockInterpretationType;
+  interpretation!: WallClockInterpretationValue;
 
   @Field(() => Float, {
     description: `Start timestamp (Unix ms) when job began.`,

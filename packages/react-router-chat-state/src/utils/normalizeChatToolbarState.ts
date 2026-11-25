@@ -1,9 +1,13 @@
 import { isRecord } from '@openthrottle/nodejs-utils';
+import type { ChatComposerModeValue } from '@openthrottle/react-router-chat';
+import type { ChatPermissionModeValue } from '@openthrottle/react-router-chat';
+import type { ChatServiceTierValue } from '@openthrottle/react-router-chat';
+import type { ChatReasoningLevelValue } from '@openthrottle/react-router-chat';
 import {
-  ChatComposerMode,
-  ChatPermissionMode,
-  ChatReasoningLevel,
-  ChatServiceTier,
+  CHAT_COMPOSER_MODE,
+  CHAT_PERMISSION_MODE,
+  CHAT_REASONING_LEVEL,
+  CHAT_SERVICE_TIER,
 } from '@openthrottle/react-router-chat';
 
 import type {
@@ -25,20 +29,24 @@ function isMemberOf<T extends string>(
   );
 }
 
-const isChatComposerMode = (value: unknown): value is ChatComposerMode => {
-  return isMemberOf(Object.values(ChatComposerMode), value);
+const isChatComposerMode = (value: unknown): value is ChatComposerModeValue => {
+  return isMemberOf(Object.values(CHAT_COMPOSER_MODE), value);
 };
 
-const isChatPermissionMode = (value: unknown): value is ChatPermissionMode => {
-  return isMemberOf(Object.values(ChatPermissionMode), value);
+const isChatPermissionMode = (
+  value: unknown,
+): value is ChatPermissionModeValue => {
+  return isMemberOf(Object.values(CHAT_PERMISSION_MODE), value);
 };
 
-const isChatReasoningLevel = (value: unknown): value is ChatReasoningLevel => {
-  return isMemberOf(Object.values(ChatReasoningLevel), value);
+const isChatReasoningLevel = (
+  value: unknown,
+): value is ChatReasoningLevelValue => {
+  return isMemberOf(Object.values(CHAT_REASONING_LEVEL), value);
 };
 
-const isChatServiceTier = (value: unknown): value is ChatServiceTier => {
-  return isMemberOf(Object.values(ChatServiceTier), value);
+const isChatServiceTier = (value: unknown): value is ChatServiceTierValue => {
+  return isMemberOf(Object.values(CHAT_SERVICE_TIER), value);
 };
 
 /**
@@ -60,9 +68,9 @@ function coercePerBackend(
     }
 
     const prefs: {
-      permissionMode?: ChatPermissionMode;
-      reasoning?: ChatReasoningLevel;
-      serviceTier?: ChatServiceTier;
+      permissionMode?: ChatPermissionModeValue;
+      reasoning?: ChatReasoningLevelValue;
+      serviceTier?: ChatServiceTierValue;
     } = {};
     if (isChatPermissionMode(entry.permissionMode)) {
       prefs.permissionMode = entry.permissionMode;

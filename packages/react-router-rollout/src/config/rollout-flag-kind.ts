@@ -11,13 +11,14 @@ export const ROLLOUT_FLAG_KIND = {
   STRING: 'string',
 } as const;
 
+export type RolloutFlagKindKey = keyof typeof ROLLOUT_FLAG_KIND;
 /**
  * Union of rollout flag kind wire values.
  *
  * @public
  */
-export type RolloutFlagKind =
-  (typeof ROLLOUT_FLAG_KIND)[keyof typeof ROLLOUT_FLAG_KIND];
+export type RolloutFlagKindValue =
+  (typeof ROLLOUT_FLAG_KIND)[RolloutFlagKindKey];
 
 const ROLLOUT_FLAG_KINDS = new Set<string>(Object.values(ROLLOUT_FLAG_KIND));
 
@@ -26,6 +27,8 @@ const ROLLOUT_FLAG_KINDS = new Set<string>(Object.values(ROLLOUT_FLAG_KIND));
  *
  * @public
  */
-export const isRolloutFlagKind = (value: unknown): value is RolloutFlagKind => {
+export const isRolloutFlagKind = (
+  value: unknown,
+): value is RolloutFlagKindValue => {
   return typeof value === 'string' && ROLLOUT_FLAG_KINDS.has(value);
 };

@@ -17,3 +17,7 @@ export const CODE_INDEX_STATUS = {
   ready: 'ready',
   unavailable: 'unavailable',
 } as const;
+
+export type CodeIndexStatusKey = keyof typeof CODE_INDEX_STATUS;
+export type CodeIndexStatusValue =
+  (typeof CODE_INDEX_STATUS)[CodeIndexStatusKey];

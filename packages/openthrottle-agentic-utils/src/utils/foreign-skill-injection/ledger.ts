@@ -18,7 +18,7 @@ import { join } from 'node:path';
 
 import type {
   ForeignSkillLedger,
-  ForeignSkillMaterializationLayer,
+  ForeignSkillMaterializationLayerValue,
 } from './types.ts';
 import {
   FOREIGN_SKILL_LEDGER_DIR_ENV,
@@ -26,7 +26,7 @@ import {
 } from './types.ts';
 
 /** Every non-curated layer, matched against a ledger filename's `.<layer>.json` suffix. */
-const SUFFIXED_LAYERS: readonly ForeignSkillMaterializationLayer[] = [
+const SUFFIXED_LAYERS: readonly ForeignSkillMaterializationLayerValue[] = [
   FOREIGN_SKILL_MATERIALIZATION_LAYER.WORKTREE_OVERLAY,
 ];
 
@@ -73,7 +73,7 @@ export const resolveLedgerDir = (
 export const ledgerPathForRepo = (
   repoPath: string,
   env: NodeJS.ProcessEnv = process.env,
-  layer: ForeignSkillMaterializationLayer = FOREIGN_SKILL_MATERIALIZATION_LAYER.CURATED,
+  layer: ForeignSkillMaterializationLayerValue = FOREIGN_SKILL_MATERIALIZATION_LAYER.CURATED,
 ): string => {
   const hash = createHash('sha256').update(repoPath).digest('hex').slice(0, 32);
   const isCurated = layer === FOREIGN_SKILL_MATERIALIZATION_LAYER.CURATED;
@@ -90,7 +90,7 @@ export const ledgerPathForRepo = (
  */
 export const layerForLedgerPath = (
   ledgerPath: string,
-): ForeignSkillMaterializationLayer => {
+): ForeignSkillMaterializationLayerValue => {
   const suffixed = SUFFIXED_LAYERS.find((layer) => {
     return ledgerPath.endsWith(`.${layer}.json`);
   });

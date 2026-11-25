@@ -1,8 +1,8 @@
 import {
-  ChatComposerMode,
-  ChatPermissionMode,
-  ChatReasoningLevel,
-  ChatServiceTier,
+  CHAT_COMPOSER_MODE,
+  CHAT_PERMISSION_MODE,
+  CHAT_REASONING_LEVEL,
+  CHAT_SERVICE_TIER,
 } from '@openthrottle/react-router-chat';
 import { APP_NAME } from '@openthrottle/react-router-utils';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -25,7 +25,7 @@ describe('chat toolbar constants', () => {
 
   test('DEFAULT_CHAT_TOOLBAR_STATE defaults to plan mode, persist on, remember off, everything else unset', () => {
     expect(DEFAULT_CHAT_TOOLBAR_STATE).toEqual({
-      mode: ChatComposerMode.plan,
+      mode: CHAT_COMPOSER_MODE.plan,
       modelId: undefined,
       perBackend: {},
       permissionMode: undefined,
@@ -68,23 +68,23 @@ describe('normalizeChatToolbarState', () => {
   describe('valid current-version blob', () => {
     test('round-trips a fully-populated blob including perBackend, persist=false and rememberPermissionMode=true', () => {
       const blob = {
-        mode: ChatComposerMode.build,
+        mode: CHAT_COMPOSER_MODE.build,
         modelId: 'http://localhost:11434/v1::llama3',
         perBackend: {
-          claude: { reasoning: ChatReasoningLevel.high },
+          claude: { reasoning: CHAT_REASONING_LEVEL.high },
           codex: {
-            permissionMode: ChatPermissionMode.supervised,
-            reasoning: ChatReasoningLevel.low,
-            serviceTier: ChatServiceTier.standard,
+            permissionMode: CHAT_PERMISSION_MODE.supervised,
+            reasoning: CHAT_REASONING_LEVEL.low,
+            serviceTier: CHAT_SERVICE_TIER.standard,
           },
         },
-        permissionMode: ChatPermissionMode.fullAccess,
+        permissionMode: CHAT_PERMISSION_MODE.fullAccess,
         persist: false,
         personaId: 'persona-42',
-        reasoning: ChatReasoningLevel.high,
+        reasoning: CHAT_REASONING_LEVEL.high,
         rememberPermissionMode: true,
         repositoryIds: ['repo-7', 'repo-8'],
-        serviceTier: ChatServiceTier.fast,
+        serviceTier: CHAT_SERVICE_TIER.fast,
         version: CHAT_TOOLBAR_STATE_VERSION,
       };
 
@@ -95,14 +95,14 @@ describe('normalizeChatToolbarState', () => {
   describe('v2 → v3 migration (persist)', () => {
     test('seeds persist=true on a v2 blob that predates the field', () => {
       const v2Blob = {
-        mode: ChatComposerMode.build,
+        mode: CHAT_COMPOSER_MODE.build,
         modelId: 'cursor',
-        perBackend: { claude: { reasoning: ChatReasoningLevel.high } },
-        permissionMode: ChatPermissionMode.supervised,
+        perBackend: { claude: { reasoning: CHAT_REASONING_LEVEL.high } },
+        permissionMode: CHAT_PERMISSION_MODE.supervised,
         personaId: 'persona-42',
-        reasoning: ChatReasoningLevel.high,
+        reasoning: CHAT_REASONING_LEVEL.high,
         repositoryId: 'repo-7',
-        serviceTier: ChatServiceTier.fast,
+        serviceTier: CHAT_SERVICE_TIER.fast,
         version: 2,
       };
 
@@ -126,13 +126,13 @@ describe('normalizeChatToolbarState', () => {
   describe('v1 → v4 migration', () => {
     test('migrates a fully-populated v1 blob forward, seeding perBackend + persist and widening the repository', () => {
       const v1Blob = {
-        mode: ChatComposerMode.build,
+        mode: CHAT_COMPOSER_MODE.build,
         modelId: 'http://localhost:11434/v1::llama3',
-        permissionMode: ChatPermissionMode.fullAccess,
+        permissionMode: CHAT_PERMISSION_MODE.fullAccess,
         personaId: 'persona-42',
-        reasoning: ChatReasoningLevel.high,
+        reasoning: CHAT_REASONING_LEVEL.high,
         repositoryId: 'repo-7',
-        serviceTier: ChatServiceTier.fast,
+        serviceTier: CHAT_SERVICE_TIER.fast,
         version: 1,
       };
 
@@ -217,12 +217,12 @@ describe('normalizeChatToolbarState', () => {
   describe('v4 → v5 migration (rememberPermissionMode)', () => {
     test('seeds rememberPermissionMode=false on a v4 blob that predates the field', () => {
       const result = normalizeChatToolbarState({
-        permissionMode: ChatPermissionMode.fullAccess,
+        permissionMode: CHAT_PERMISSION_MODE.fullAccess,
         version: 4,
       });
 
       expect(result.rememberPermissionMode).toBe(false);
-      expect(result.permissionMode).toBe(ChatPermissionMode.fullAccess);
+      expect(result.permissionMode).toBe(CHAT_PERMISSION_MODE.fullAccess);
     });
 
     test('treats a non-boolean rememberPermissionMode as off', () => {
@@ -238,13 +238,13 @@ describe('normalizeChatToolbarState', () => {
   describe('legacy / unversioned migration', () => {
     test('migrates an unversioned blob forward, preserving still-valid fields', () => {
       const legacy = {
-        mode: ChatComposerMode.build,
+        mode: CHAT_COMPOSER_MODE.build,
         modelId: 'cursor',
-        permissionMode: ChatPermissionMode.supervised,
+        permissionMode: CHAT_PERMISSION_MODE.supervised,
         personaId: 'p1',
-        reasoning: ChatReasoningLevel.medium,
+        reasoning: CHAT_REASONING_LEVEL.medium,
         repositoryId: 'r1',
-        serviceTier: ChatServiceTier.standard,
+        serviceTier: CHAT_SERVICE_TIER.standard,
         // no version field
       };
 
@@ -261,10 +261,13 @@ describe('normalizeChatToolbarState', () => {
 
     test('treats a version of 0 as legacy and coerces forward', () => {
       expect(
-        normalizeChatToolbarState({ mode: ChatComposerMode.build, version: 0 }),
+        normalizeChatToolbarState({
+          mode: CHAT_COMPOSER_MODE.build,
+          version: 0,
+        }),
       ).toEqual({
         ...DEFAULT_CHAT_TOOLBAR_STATE,
-        mode: ChatComposerMode.build,
+        mode: CHAT_COMPOSER_MODE.build,
       });
     });
   });
@@ -273,7 +276,7 @@ describe('normalizeChatToolbarState', () => {
     test('a newer version is not guessed at', () => {
       expect(
         normalizeChatToolbarState({
-          mode: ChatComposerMode.build,
+          mode: CHAT_COMPOSER_MODE.build,
           modelId: 'cursor',
           version: 99,
         }),
@@ -283,10 +286,10 @@ describe('normalizeChatToolbarState', () => {
     test('a non-numeric version is treated as legacy (v0), not newer', () => {
       expect(
         normalizeChatToolbarState({
-          mode: ChatComposerMode.build,
+          mode: CHAT_COMPOSER_MODE.build,
           version: 'nope',
         }).mode,
-      ).toBe(ChatComposerMode.build);
+      ).toBe(CHAT_COMPOSER_MODE.build);
     });
   });
 
@@ -294,7 +297,7 @@ describe('normalizeChatToolbarState', () => {
     test('drops an unknown mode back to the default', () => {
       expect(
         normalizeChatToolbarState({ mode: 'sideways', version: 1 }).mode,
-      ).toBe(ChatComposerMode.plan);
+      ).toBe(CHAT_COMPOSER_MODE.plan);
     });
 
     test('drops unknown enum values to undefined', () => {
@@ -337,15 +340,15 @@ describe('normalizeChatToolbarState', () => {
     test('keeps valid per-backend entries', () => {
       const result = normalizeChatToolbarState({
         perBackend: {
-          claude: { reasoning: ChatReasoningLevel.high },
-          openai: { serviceTier: ChatServiceTier.fast },
+          claude: { reasoning: CHAT_REASONING_LEVEL.high },
+          openai: { serviceTier: CHAT_SERVICE_TIER.fast },
         },
         version: CHAT_TOOLBAR_STATE_VERSION,
       });
 
       expect(result.perBackend).toEqual({
-        claude: { reasoning: ChatReasoningLevel.high },
-        openai: { serviceTier: ChatServiceTier.fast },
+        claude: { reasoning: CHAT_REASONING_LEVEL.high },
+        openai: { serviceTier: CHAT_SERVICE_TIER.fast },
       });
     });
 
@@ -354,14 +357,14 @@ describe('normalizeChatToolbarState', () => {
         perBackend: {
           claude: {
             permissionMode: 'godmode',
-            reasoning: ChatReasoningLevel.medium,
+            reasoning: CHAT_REASONING_LEVEL.medium,
           },
         },
         version: CHAT_TOOLBAR_STATE_VERSION,
       });
 
       expect(result.perBackend).toEqual({
-        claude: { reasoning: ChatReasoningLevel.medium },
+        claude: { reasoning: CHAT_REASONING_LEVEL.medium },
       });
     });
 
@@ -403,7 +406,7 @@ describe('chatToolbarStateAtom localStorage', () => {
     localStorage.setItem(
       CHAT_TOOLBAR_STORAGE_KEY,
       JSON.stringify({
-        mode: ChatComposerMode.build,
+        mode: CHAT_COMPOSER_MODE.build,
         modelId: 'cursor',
         version: 1,
       }),
@@ -415,7 +418,7 @@ describe('chatToolbarStateAtom localStorage', () => {
 
     expect(store.get(chatToolbarStateAtom)).toEqual({
       ...DEFAULT_CHAT_TOOLBAR_STATE,
-      mode: ChatComposerMode.build,
+      mode: CHAT_COMPOSER_MODE.build,
       modelId: 'cursor',
     });
   });
@@ -423,7 +426,7 @@ describe('chatToolbarStateAtom localStorage', () => {
   test('hydrates an unknown-version blob as defaults on module init', async () => {
     localStorage.setItem(
       CHAT_TOOLBAR_STORAGE_KEY,
-      JSON.stringify({ mode: ChatComposerMode.build, version: 99 }),
+      JSON.stringify({ mode: CHAT_COMPOSER_MODE.build, version: 99 }),
     );
 
     const { chatToolbarStateAtom } = await import('../data.atom.chat-toolbar');
@@ -440,7 +443,7 @@ describe('chatToolbarStateAtom localStorage', () => {
 
     store.set(chatToolbarStateAtom, {
       ...DEFAULT_CHAT_TOOLBAR_STATE,
-      mode: ChatComposerMode.build,
+      mode: CHAT_COMPOSER_MODE.build,
       repositoryIds: ['repo-7'],
     });
 
@@ -452,7 +455,7 @@ describe('chatToolbarStateAtom localStorage', () => {
       repositoryIds: string[];
       version: number;
     } = JSON.parse(raw ?? '{}');
-    expect(parsed.mode).toBe(ChatComposerMode.build);
+    expect(parsed.mode).toBe(CHAT_COMPOSER_MODE.build);
     expect(parsed.repositoryIds).toEqual(['repo-7']);
     expect(parsed.version).toBe(CHAT_TOOLBAR_STATE_VERSION);
   });

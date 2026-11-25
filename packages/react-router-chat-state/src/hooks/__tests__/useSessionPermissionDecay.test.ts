@@ -1,4 +1,4 @@
-import { ChatPermissionMode } from '@openthrottle/react-router-chat';
+import { CHAT_PERMISSION_MODE } from '@openthrottle/react-router-chat';
 import { renderHook } from '@testing-library/react';
 import { createStore, Provider } from 'jotai';
 import * as React from 'react';
@@ -44,7 +44,7 @@ describe('useSessionPermissionDecay', () => {
   });
 
   test('decays once when the session sentinel is absent, then sets it', () => {
-    seedToolbar({ permissionMode: ChatPermissionMode.fullAccess });
+    seedToolbar({ permissionMode: CHAT_PERMISSION_MODE.fullAccess });
 
     renderInStore();
 
@@ -54,18 +54,20 @@ describe('useSessionPermissionDecay', () => {
 
   test('is a no-op when the session sentinel is already present', () => {
     sessionStorage.setItem(CHAT_TOOLBAR_SESSION_SENTINEL_KEY, '1');
-    seedToolbar({ permissionMode: ChatPermissionMode.fullAccess });
+    seedToolbar({ permissionMode: CHAT_PERMISSION_MODE.fullAccess });
 
     renderInStore();
 
-    expect(readPersisted().permissionMode).toBe(ChatPermissionMode.fullAccess);
+    expect(readPersisted().permissionMode).toBe(
+      CHAT_PERMISSION_MODE.fullAccess,
+    );
   });
 
   test('still decays (without throwing) when sessionStorage is unavailable', () => {
     vi.spyOn(window.sessionStorage, 'getItem').mockImplementation(() => {
       throw new Error('sessionStorage denied');
     });
-    seedToolbar({ permissionMode: ChatPermissionMode.fullAccess });
+    seedToolbar({ permissionMode: CHAT_PERMISSION_MODE.fullAccess });
 
     expect(() => renderInStore()).not.toThrow();
     expect(readPersisted().permissionMode).toBeUndefined();

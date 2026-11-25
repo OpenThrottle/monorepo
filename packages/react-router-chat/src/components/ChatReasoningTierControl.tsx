@@ -15,23 +15,23 @@ import {
   DEFAULT_REASONING_LABELS,
   DEFAULT_SERVICE_TIER_LABELS,
 } from '../data/data.chat-reasoning-tier-labels';
-import type { ChatReasoningLevel, ChatServiceTier } from '../types';
+import type { ChatReasoningLevelValue, ChatServiceTierValue } from '../types';
 import type { ChatBackendCapabilities } from '../types';
 
 export interface ChatReasoningTierControlProps {
   /** Selected backend's capabilities; gates which options (and sections) show. */
   readonly capabilities: ChatBackendCapabilities;
   readonly className?: string;
-  readonly onReasoningChange?: (level: ChatReasoningLevel) => void;
-  readonly onServiceTierChange?: (tier: ChatServiceTier) => void;
+  readonly onReasoningChange?: (level: ChatReasoningLevelValue) => void;
+  readonly onServiceTierChange?: (tier: ChatServiceTierValue) => void;
   /** Currently-selected reasoning level. */
-  readonly reasoning?: ChatReasoningLevel;
+  readonly reasoning?: ChatReasoningLevelValue;
   /** Override the default human labels for reasoning levels. */
-  readonly reasoningLabels?: Partial<Record<ChatReasoningLevel, string>>;
+  readonly reasoningLabels?: Partial<Record<ChatReasoningLevelValue, string>>;
   /** Currently-selected service tier. */
-  readonly serviceTier?: ChatServiceTier;
+  readonly serviceTier?: ChatServiceTierValue;
   /** Override the default human labels for service tiers. */
-  readonly serviceTierLabels?: Partial<Record<ChatServiceTier, string>>;
+  readonly serviceTierLabels?: Partial<Record<ChatServiceTierValue, string>>;
 }
 
 /**
@@ -67,10 +67,10 @@ export const ChatReasoningTierControl = (
   const showReasoning = reasoningLevels.length > 0;
   const showTier = serviceTiers.length > 0;
 
-  const reasoningLabelFor = (level: ChatReasoningLevel): string => {
+  const reasoningLabelFor = (level: ChatReasoningLevelValue): string => {
     return reasoningLabels?.[level] ?? DEFAULT_REASONING_LABELS[level];
   };
-  const serviceTierLabelFor = (tier: ChatServiceTier): string => {
+  const serviceTierLabelFor = (tier: ChatServiceTierValue): string => {
     return serviceTierLabels?.[tier] ?? DEFAULT_SERVICE_TIER_LABELS[tier];
   };
 
@@ -90,7 +90,7 @@ export const ChatReasoningTierControl = (
   // Handlers
   const onReasoningSelect = (
     event: Event | React.SyntheticEvent,
-    level: ChatReasoningLevel,
+    level: ChatReasoningLevelValue,
   ): void => {
     // Keep the menu open so the tier can be picked in the same session.
     event.preventDefault();
@@ -99,7 +99,7 @@ export const ChatReasoningTierControl = (
 
   const onTierSelect = (
     event: Event | React.SyntheticEvent,
-    tier: ChatServiceTier,
+    tier: ChatServiceTierValue,
   ): void => {
     event.preventDefault();
     onServiceTierChange?.(tier);

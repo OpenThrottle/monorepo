@@ -13,3 +13,7 @@ export const EVAL_LABEL_VERDICT = {
   fail: 'fail',
   pass: 'pass',
 } as const;
+
+export type EvalLabelVerdictKey = keyof typeof EVAL_LABEL_VERDICT;
+export type EvalLabelVerdictValue =
+  (typeof EVAL_LABEL_VERDICT)[EvalLabelVerdictKey];

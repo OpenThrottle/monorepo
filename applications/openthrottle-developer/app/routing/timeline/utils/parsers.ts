@@ -6,7 +6,7 @@
 
 import { TimelineLaneGrouping } from '~/__generated__/graphql';
 
-import type { TimelineWindowPreset } from '../config/defaults';
+import type { TimelineWindowPresetValue } from '../config/defaults';
 import {
   DEFAULT_TIMELINE_GROUPING,
   DEFAULT_TIMELINE_WINDOW_PRESET,
@@ -19,11 +19,11 @@ const MS_PER_HOUR = 60 * 60 * 1000;
 
 export type TimelineWindow = {
   readonly fromIso: string;
-  readonly preset: TimelineWindowPreset;
+  readonly preset: TimelineWindowPresetValue;
   readonly toIso: string;
 };
 
-const isWindowPreset = (value: string): value is TimelineWindowPreset => {
+const isWindowPreset = (value: string): value is TimelineWindowPresetValue => {
   return TIMELINE_WINDOW_PRESETS.some((preset) => preset === value);
 };
 
@@ -36,7 +36,7 @@ const isGrouping = (value: string): value is TimelineLaneGrouping => {
 /** The window preset named in the URL, or the default. */
 export function parseTimelineWindowPreset(
   params: URLSearchParams,
-): TimelineWindowPreset {
+): TimelineWindowPresetValue {
   const raw = params.get(TIMELINE_SEARCH_PARAM.window);
   if (raw != null && isWindowPreset(raw)) return raw;
 

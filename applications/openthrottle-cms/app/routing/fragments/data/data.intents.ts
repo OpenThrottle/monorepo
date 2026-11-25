@@ -9,8 +9,8 @@ export const FRAGMENT_INTENT = {
   UPDATE: 'updateFragment',
 } as const;
 
+export type FragmentIntentKey = keyof typeof FRAGMENT_INTENT;
 /**
  * @public
  */
-export type FragmentIntent =
-  (typeof FRAGMENT_INTENT)[keyof typeof FRAGMENT_INTENT];
+export type FragmentIntentValue = (typeof FRAGMENT_INTENT)[FragmentIntentKey];

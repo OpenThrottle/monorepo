@@ -8,7 +8,7 @@ import {
 import { fetchAuthGraphql } from '~/global/utils/graphql.server';
 import { toCmsActionFailure } from '~/global/utils/toCmsActionFailure';
 import { FRAGMENT_EDITOR_COPY } from '~/routing/fragments/data/data.copy';
-import type { FragmentIntent } from '~/routing/fragments/data/data.intents';
+import type { FragmentIntentValue } from '~/routing/fragments/data/data.intents';
 import { FRAGMENT_INTENT } from '~/routing/fragments/data/data.intents';
 import type { FragmentActionResult } from '~/routing/fragments/types/fragment-action';
 import {
@@ -20,7 +20,7 @@ import {
 
 const INTENTS: readonly string[] = Object.values(FRAGMENT_INTENT);
 
-const isFragmentIntent = (value: unknown): value is FragmentIntent => {
+const isFragmentIntent = (value: unknown): value is FragmentIntentValue => {
   return typeof value === 'string' && INTENTS.includes(value);
 };
 

@@ -1,6 +1,6 @@
 import { atom } from 'jotai';
 
-import type { EditorLanguage, PromptType } from '../config';
+import type { FileExtensionsValue, PromptTypesValue } from '../config';
 
 /**
  * @description Represents a file in the editor.
@@ -10,8 +10,8 @@ export interface EditorFile {
   readonly filename: string;
   readonly id?: string;
   readonly labels?: readonly string[];
-  readonly language: EditorLanguage;
-  readonly promptType?: PromptType;
+  readonly language: FileExtensionsValue;
+  readonly promptType?: PromptTypesValue;
 }
 
 /**
@@ -22,7 +22,7 @@ export interface EditorAtom {
   readonly files: readonly EditorFile[];
   readonly isLoading: boolean;
   readonly searchQuery: string;
-  readonly selectedType: PromptType | undefined;
+  readonly selectedType: PromptTypesValue | undefined;
   readonly tabs: readonly EditorFile[];
 }
 

@@ -10,7 +10,8 @@ export const ID_REF_KIND = {
   TASK: 'TASK',
 } as const;
 
-export type IdRefKind = (typeof ID_REF_KIND)[keyof typeof ID_REF_KIND];
+export type IdRefKindKey = keyof typeof ID_REF_KIND;
+export type IdRefKindValue = (typeof ID_REF_KIND)[IdRefKindKey];
 
 registerEnumType(ID_REF_KIND, {
   description: `Which entity an id ref resolved to: a plan or a task.`,

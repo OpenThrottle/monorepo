@@ -15,6 +15,10 @@ export const WORKSPACE_EDITORS = {
   vscode: 'vscode',
 } as const;
 
+export type WorkspaceEditorsKey = keyof typeof WORKSPACE_EDITORS;
+export type WorkspaceEditorsValue =
+  (typeof WORKSPACE_EDITORS)[WorkspaceEditorsKey];
+
 /**
  * @description Every {@link WORKSPACE_EDITORS} id.
  * @public

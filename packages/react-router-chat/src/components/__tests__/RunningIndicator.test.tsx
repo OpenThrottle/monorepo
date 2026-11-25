@@ -7,7 +7,7 @@ import {
   RUNNING_INDICATOR_SLOW_HINT,
   RUNNING_INDICATOR_SLOW_HINT_AFTER_MS,
 } from '../../data/data.chat-run-phase-copy';
-import { ChatRunPhase } from '../../types';
+import { CHAT_RUN_PHASE } from '../../types';
 import { resolveRunningIndicatorCopy } from '../../utils/resolveRunningIndicatorCopy';
 import type { RunningIndicatorProps } from '../RunningIndicator';
 import { RunningIndicator } from '../RunningIndicator';
@@ -18,7 +18,7 @@ const renderIndicator = (props: RunningIndicatorProps = {}): RenderResult => {
 
 describe('resolveRunningIndicatorCopy', () => {
   test('maps each phase to a distinct default label', () => {
-    const labels = Object.values(ChatRunPhase).map(
+    const labels = Object.values(CHAT_RUN_PHASE).map(
       (phase) => resolveRunningIndicatorCopy({ phase }).label,
     );
 
@@ -28,7 +28,7 @@ describe('resolveRunningIndicatorCopy', () => {
   test('composes the tool name for the running-tool phase', () => {
     const copy = resolveRunningIndicatorCopy({
       detail: 'shell',
-      phase: ChatRunPhase.runningTool,
+      phase: CHAT_RUN_PHASE.runningTool,
     });
 
     expect(copy.label).toBe('Running shell…');
@@ -37,7 +37,7 @@ describe('resolveRunningIndicatorCopy', () => {
   test('composes the model name for the waiting phase', () => {
     const copy = resolveRunningIndicatorCopy({
       detail: 'claude-opus',
-      phase: ChatRunPhase.waiting,
+      phase: CHAT_RUN_PHASE.waiting,
     });
 
     expect(copy.label).toBe('Waiting for claude-opus…');
@@ -47,7 +47,7 @@ describe('resolveRunningIndicatorCopy', () => {
     expect(
       resolveRunningIndicatorCopy({
         detail: '  ',
-        phase: ChatRunPhase.runningTool,
+        phase: CHAT_RUN_PHASE.runningTool,
       }).label,
     ).toBe('Running a tool…');
   });
@@ -56,7 +56,7 @@ describe('resolveRunningIndicatorCopy', () => {
     test('adds the slow hint once a generic wait exceeds the threshold', () => {
       const copy = resolveRunningIndicatorCopy({
         elapsedMs: RUNNING_INDICATOR_SLOW_HINT_AFTER_MS,
-        phase: ChatRunPhase.waiting,
+        phase: CHAT_RUN_PHASE.waiting,
       });
 
       expect(copy.hint).toBe(RUNNING_INDICATOR_SLOW_HINT);
@@ -66,7 +66,7 @@ describe('resolveRunningIndicatorCopy', () => {
       expect(
         resolveRunningIndicatorCopy({
           elapsedMs: RUNNING_INDICATOR_SLOW_HINT_AFTER_MS - 1,
-          phase: ChatRunPhase.connecting,
+          phase: CHAT_RUN_PHASE.connecting,
         }).hint,
       ).toBeNull();
     });
@@ -75,7 +75,7 @@ describe('resolveRunningIndicatorCopy', () => {
       expect(
         resolveRunningIndicatorCopy({
           elapsedMs: RUNNING_INDICATOR_SLOW_HINT_AFTER_MS * 10,
-          phase: ChatRunPhase.runningTool,
+          phase: CHAT_RUN_PHASE.runningTool,
         }).hint,
       ).toBeNull();
     });
@@ -94,7 +94,7 @@ describe('RunningIndicator Component', () => {
   test('renders the composed tool label for the running-tool phase', () => {
     const component = renderIndicator({
       detail: 'getMcpTools',
-      phase: ChatRunPhase.runningTool,
+      phase: CHAT_RUN_PHASE.runningTool,
     });
 
     expect(component.getByText('Running getMcpTools…')).toBeInTheDocument();
@@ -103,7 +103,7 @@ describe('RunningIndicator Component', () => {
   test('shows the slow-wait hint after the threshold', () => {
     const component = renderIndicator({
       elapsedMs: RUNNING_INDICATOR_SLOW_HINT_AFTER_MS,
-      phase: ChatRunPhase.waiting,
+      phase: CHAT_RUN_PHASE.waiting,
     });
 
     expect(
@@ -114,7 +114,7 @@ describe('RunningIndicator Component', () => {
   test('an explicit label overrides the resolved copy', () => {
     const component = renderIndicator({
       label: 'Custom…',
-      phase: ChatRunPhase.thinking,
+      phase: CHAT_RUN_PHASE.thinking,
     });
 
     expect(component.getByText('Custom…')).toBeInTheDocument();

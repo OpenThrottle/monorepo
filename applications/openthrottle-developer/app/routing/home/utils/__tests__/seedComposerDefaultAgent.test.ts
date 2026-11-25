@@ -1,5 +1,5 @@
 import type { ChatModelOption } from '@openthrottle/react-router-chat';
-import { ChatReasoningLevel } from '@openthrottle/react-router-chat';
+import { CHAT_REASONING_LEVEL } from '@openthrottle/react-router-chat';
 import { DEFAULT_CHAT_TOOLBAR_STATE } from '@openthrottle/react-router-chat-state';
 import { describe, expect, it } from 'vitest';
 
@@ -92,7 +92,7 @@ describe('seedComposerDefaultAgent', () => {
       const persisted = {
         ...DEFAULT_CHAT_TOOLBAR_STATE,
         modelId: 'claude',
-        reasoning: ChatReasoningLevel.low,
+        reasoning: CHAT_REASONING_LEVEL.low,
       };
 
       const result = seedComposerDefaultAgent(persisted, agent, models);

@@ -10,7 +10,7 @@
  * client renderer can derive from a single source.
  */
 
-import type { DriverReasoningEffort } from '@openthrottle/openthrottle-drivers';
+import type { DriverReasoningEffortsValue } from '@openthrottle/openthrottle-drivers';
 import { DRIVER_REASONING_EFFORTS } from '@openthrottle/openthrottle-drivers';
 
 import type { ChatCompletionMessage } from '../chat-completions/index.ts';
@@ -34,17 +34,19 @@ export const CONVERSATION_PERMISSION_MODES = {
   supervised: 'supervised',
 } as const;
 
+export type ConversationPermissionModesKey =
+  keyof typeof CONVERSATION_PERMISSION_MODES;
 /**
  * One of the {@link CONVERSATION_PERMISSION_MODES} values.
  *
  * @public
  */
-export type ConversationPermissionMode =
-  (typeof CONVERSATION_PERMISSION_MODES)[keyof typeof CONVERSATION_PERMISSION_MODES];
+export type ConversationPermissionModesValue =
+  (typeof CONVERSATION_PERMISSION_MODES)[ConversationPermissionModesKey];
 
 /**
  * Narrow an untrusted transport string (GraphQL input) to a
- * {@link ConversationPermissionMode}, or `undefined` when it is absent or not a
+ * {@link ConversationPermissionModesValue}, or `undefined` when it is absent or not a
  * recognized mode. Keeps the resolver transport-only: it forwards the raw input
  * through this one guard rather than mapping to CLI flags itself.
  *
@@ -52,7 +54,7 @@ export type ConversationPermissionMode =
  */
 export function toConversationPermissionMode(
   value: string | null | undefined,
-): ConversationPermissionMode | undefined {
+): ConversationPermissionModesValue | undefined {
   if (value == null) {
     return undefined;
   }
@@ -82,7 +84,7 @@ export const CONVERSATION_REASONING_EFFORTS = DRIVER_REASONING_EFFORTS;
  *
  * @public
  */
-export type ConversationReasoningEffort = DriverReasoningEffort;
+export type ConversationReasoningEffort = DriverReasoningEffortsValue;
 
 /**
  * Narrow an untrusted transport string (GraphQL input) to a
@@ -119,24 +121,26 @@ export const CONVERSATION_SERVICE_TIERS = {
   standard: 'standard',
 } as const;
 
+export type ConversationServiceTiersKey =
+  keyof typeof CONVERSATION_SERVICE_TIERS;
 /**
  * One of the {@link CONVERSATION_SERVICE_TIERS} values.
  *
  * @public
  */
-export type ConversationServiceTier =
-  (typeof CONVERSATION_SERVICE_TIERS)[keyof typeof CONVERSATION_SERVICE_TIERS];
+export type ConversationServiceTiersValue =
+  (typeof CONVERSATION_SERVICE_TIERS)[ConversationServiceTiersKey];
 
 /**
  * Narrow an untrusted transport string (GraphQL input) to a
- * {@link ConversationServiceTier}, or `undefined` when it is absent or not a
+ * {@link ConversationServiceTiersValue}, or `undefined` when it is absent or not a
  * recognized tier. Keeps the resolver transport-only.
  *
  * @public
  */
 export function toConversationServiceTier(
   value: string | null | undefined,
-): ConversationServiceTier | undefined {
+): ConversationServiceTiersValue | undefined {
   if (value == null) {
     return undefined;
   }
@@ -187,6 +191,17 @@ export const CONVERSATION_STREAM_CHUNK_KINDS = {
   usageLimit: 'usage_limit',
 } as const;
 
+/** @public */
+export type ConversationStreamChunkKindsKey =
+  keyof typeof CONVERSATION_STREAM_CHUNK_KINDS;
+/**
+ * One of the {@link CONVERSATION_STREAM_CHUNK_KINDS} values.
+ *
+ * @public
+ */
+export type ConversationStreamChunkKindsValue =
+  (typeof CONVERSATION_STREAM_CHUNK_KINDS)[ConversationStreamChunkKindsKey];
+
 /**
  * Terminal-chunk metadata key listing what a turn was refused permission for, as readable labels
  * (`string[]`). Set only when something was refused. A refusal can end a turn with no answer text
@@ -217,14 +232,6 @@ export const CONVERSATION_TOOL_NOT_RUN_KEY = 'notRun';
 export const CONVERSATION_TOOL_DENIED_ERROR = `Permission denied: the tool call was refused.`;
 
 /**
- * One of the {@link CONVERSATION_STREAM_CHUNK_KINDS} values.
- *
- * @public
- */
-export type ConversationStreamChunkKind =
-  (typeof CONVERSATION_STREAM_CHUNK_KINDS)[keyof typeof CONVERSATION_STREAM_CHUNK_KINDS];
-
-/**
  * One emitted piece of a streamed turn. `delta` carries incremental text for
  * `kind: 'text'` (empty on the terminal chunk); non-text kinds use `metadata`
  * for their structured payload. `done` is true exactly once, on the terminal
@@ -240,7 +247,7 @@ export interface ConversationStreamChunk {
   /** Error message when the stream failed; null/undefined otherwise. */
   readonly error?: string | null;
   /** What this chunk represents. */
-  readonly kind: ConversationStreamChunkKind;
+  readonly kind: ConversationStreamChunkKindsValue;
   /** Structured payload for non-text kinds (tool args, usage, session id, …). */
   readonly metadata?: Readonly<Record<string, unknown>>;
 }
@@ -301,7 +308,7 @@ export interface ConversationBackendRun {
    * they apply a safe default that unblocks only the injected managed MCP
    * servers. Ignored by the openai backend.
    */
-  readonly permissionMode?: ConversationPermissionMode;
+  readonly permissionMode?: ConversationPermissionModesValue;
   /**
    * Reasoning-effort level selected in the composer toolbar. Backends that
    * expose a reasoning knob map it to their own vocabulary in the argv/request
@@ -324,7 +331,7 @@ export interface ConversationBackendRun {
    * by tier honor it (cursor-agent, via the model-string `[fast=…]` suffix); the
    * rest ignore it. Absent ⇒ the backend's own default.
    */
-  readonly serviceTier?: ConversationServiceTier;
+  readonly serviceTier?: ConversationServiceTiersValue;
   /**
    * CLI backend session handle to resume (e.g. a cursor-agent chat id). CLI
    * backends own multi-turn context themselves, so they read only the latest

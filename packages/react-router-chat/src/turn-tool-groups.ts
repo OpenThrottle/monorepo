@@ -5,7 +5,8 @@ import {
 } from './data/data.chat-tool-categories';
 import { CHAT_TOOL_SUMMARY_COPY } from './data/data.copy';
 import type { ChatTurnEvent, ChatTurnToolEvent } from './types';
-import { ChatToolStatus } from './types';
+import type { ChatToolStatusValue } from './types';
+import { CHAT_TOOL_STATUS } from './types';
 
 /** A run of two or more consecutive tool events, folded for display. */
 export interface TurnTimelineToolGroup {
@@ -67,17 +68,17 @@ export const buildTurnTimeline = (
  */
 export const aggregateToolStatus = (
   tools: readonly ChatTurnToolEvent[],
-): ChatToolStatus => {
-  if (tools.some((tool) => tool.status === ChatToolStatus.running)) {
-    return ChatToolStatus.running;
+): ChatToolStatusValue => {
+  if (tools.some((tool) => tool.status === CHAT_TOOL_STATUS.running)) {
+    return CHAT_TOOL_STATUS.running;
   }
-  if (tools.some((tool) => tool.status === ChatToolStatus.failed)) {
-    return ChatToolStatus.failed;
+  if (tools.some((tool) => tool.status === CHAT_TOOL_STATUS.failed)) {
+    return CHAT_TOOL_STATUS.failed;
   }
-  if (tools.some((tool) => tool.status === ChatToolStatus.notRun)) {
-    return ChatToolStatus.notRun;
+  if (tools.some((tool) => tool.status === CHAT_TOOL_STATUS.notRun)) {
+    return CHAT_TOOL_STATUS.notRun;
   }
-  return ChatToolStatus.succeeded;
+  return CHAT_TOOL_STATUS.succeeded;
 };
 
 /**
@@ -90,7 +91,7 @@ export const activeToolOf = (
   tools: readonly ChatTurnToolEvent[],
 ): ChatTurnToolEvent | null => {
   const lastRunning = tools
-    .filter((tool) => tool.status === ChatToolStatus.running)
+    .filter((tool) => tool.status === CHAT_TOOL_STATUS.running)
     .at(-1);
 
   return lastRunning ?? tools.at(-1) ?? null;
@@ -175,7 +176,7 @@ export interface TurnTimelineActivityGroup {
   readonly items: readonly TurnTimelineItem[];
   readonly kind: 'activity';
   /** Aggregate status across every nested tool (see {@link aggregateToolStatus}). */
-  readonly status: ChatToolStatus;
+  readonly status: ChatToolStatusValue;
   /** How many thinking segments the run contains. */
   readonly thinkingCount: number;
   /** How many tool calls the run contains, across all nested groups. */

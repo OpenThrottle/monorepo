@@ -6,7 +6,8 @@
 import { Field, Float, ObjectType } from '@nestjs/graphql';
 
 import type { SearchMode } from '../search/search.types.ts';
-import { CustomPromptTypeEnum } from './custom-prompt.object.ts';
+import type { CustomPromptTypeValue } from './custom-prompt.object.ts';
+import { CUSTOM_PROMPT_TYPE } from './custom-prompt.object.ts';
 
 @ObjectType({
   description: `A ranked agent-asset match from semantic search over custom_prompt embeddings.`,
@@ -23,10 +24,10 @@ export class AgentAssetChunk {
   @Field(() => String, { description: 'Asset title.' })
   title!: string;
 
-  @Field(() => CustomPromptTypeEnum, {
+  @Field(() => CUSTOM_PROMPT_TYPE, {
     description: 'Prompt type (skills, rules, personas, …).',
   })
-  promptType!: CustomPromptTypeEnum;
+  promptType!: CustomPromptTypeValue;
 
   @Field(() => String, {
     description: 'Repo-relative file path on disk (SSOT), if known.',

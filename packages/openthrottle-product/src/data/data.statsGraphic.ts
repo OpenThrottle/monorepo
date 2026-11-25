@@ -66,6 +66,10 @@ export const STATS_GRAPHIC_LAYOUT = {
   width: 1280,
 } as const;
 
+export type StatsGraphicLayoutKey = keyof typeof STATS_GRAPHIC_LAYOUT;
+export type StatsGraphicLayoutValue =
+  (typeof STATS_GRAPHIC_LAYOUT)[StatsGraphicLayoutKey];
+
 /**
  * @description Approximate advance widths (in em) for semibold sans text, per
  * character class. GitHub renders the SVG as an image with whatever system

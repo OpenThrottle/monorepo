@@ -33,3 +33,8 @@ export const PLAN_RUN_WORKTREE_NOMINATION = {
   PR_CLOSED: 'pr-closed',
   PR_MERGED: 'pr-merged',
 } as const;
+
+export type PlanRunWorktreeNominationKey =
+  keyof typeof PLAN_RUN_WORKTREE_NOMINATION;
+export type PlanRunWorktreeNominationValue =
+  (typeof PLAN_RUN_WORKTREE_NOMINATION)[PlanRunWorktreeNominationKey];

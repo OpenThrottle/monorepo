@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { UseScheduleResult } from '../../hooks/useSchedule';
 import * as useScheduleModule from '../../hooks/useSchedule';
-import { CalendarView } from '../../types';
+import { CALENDAR_VIEW } from '../../types';
 import { CalendarLayout } from '../CalendarLayout';
 
 const events = [
@@ -107,7 +107,7 @@ describe('CalendarLayout', () => {
       <CalendarLayout
         defaultDate={new Date(2026, 5, 15)}
         events={events}
-        views={[CalendarView.Week, CalendarView.Month]}
+        views={[CALENDAR_VIEW.Week, CALENDAR_VIEW.Month]}
       />,
     );
     const toolbar = toolbarOf(component.container);
@@ -123,7 +123,7 @@ describe('CalendarLayout', () => {
       <CalendarLayout
         defaultDate={new Date(2026, 5, 15)}
         events={events}
-        views={[CalendarView.Day]}
+        views={[CALENDAR_VIEW.Day]}
       />,
     );
     const toolbar = toolbarOf(component.container);
@@ -156,7 +156,7 @@ describe('CalendarLayout', () => {
       <CalendarLayout
         defaultDate={new Date(2026, 5, 15)}
         events={events}
-        views={[CalendarView.Week]}
+        views={[CALENDAR_VIEW.Week]}
       />,
     );
 
@@ -167,7 +167,7 @@ describe('CalendarLayout', () => {
       <CalendarLayout
         defaultDate={new Date(2026, 5, 15)}
         events={events}
-        views={[CalendarView.Week]}
+        views={[CALENDAR_VIEW.Week]}
       />,
     );
     expect(captured?.all().map((e) => e.id)).toEqual(['a']);
@@ -178,7 +178,7 @@ describe('CalendarLayout', () => {
       <CalendarLayout
         defaultDate={new Date(2026, 5, 15)}
         events={next}
-        views={[CalendarView.Week]}
+        views={[CALENDAR_VIEW.Week]}
       />,
     );
     expect(captured?.all().map((e) => e.id)).toEqual(['b']);

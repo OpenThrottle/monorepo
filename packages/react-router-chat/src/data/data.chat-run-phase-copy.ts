@@ -1,19 +1,19 @@
-import type { ChatRunPhase as ChatRunPhaseType } from '../types';
-import { ChatRunPhase } from '../types';
+import type { ChatRunPhaseValue } from '../types';
+import { CHAT_RUN_PHASE } from '../types';
 
 /**
- * Default human label per {@link ChatRunPhase}. Kept out of
+ * Default human label per {@link CHAT_RUN_PHASE}. Kept out of
  * {@link RunningIndicator} per the repo's component/data split. A phase with a
  * known `detail` (a tool or model name) composes a more specific string in
  * {@link resolveRunningIndicatorCopy}; these are the detail-less fallbacks.
  * @public
  */
-export const CHAT_RUN_PHASE_LABEL: Record<ChatRunPhaseType, string> = {
-  [ChatRunPhase.connecting]: 'Connecting…',
-  [ChatRunPhase.runningTool]: 'Running a tool…',
-  [ChatRunPhase.stillWorking]: 'Still working…',
-  [ChatRunPhase.thinking]: 'Thinking…',
-  [ChatRunPhase.waiting]: 'Waiting for the model…',
+export const CHAT_RUN_PHASE_LABEL: Record<ChatRunPhaseValue, string> = {
+  [CHAT_RUN_PHASE.connecting]: 'Connecting…',
+  [CHAT_RUN_PHASE.runningTool]: 'Running a tool…',
+  [CHAT_RUN_PHASE.stillWorking]: 'Still working…',
+  [CHAT_RUN_PHASE.thinking]: 'Thinking…',
+  [CHAT_RUN_PHASE.waiting]: 'Waiting for the model…',
 };
 
 /**

@@ -13,3 +13,7 @@ export const AGENT_TRAJECTORY_SOURCE = {
   SESSION_UPLOAD: 'session_upload',
   SPAWNED: 'spawned',
 } as const;
+
+export type AgentTrajectorySourceKey = keyof typeof AGENT_TRAJECTORY_SOURCE;
+export type AgentTrajectorySourceValue =
+  (typeof AGENT_TRAJECTORY_SOURCE)[AgentTrajectorySourceKey];

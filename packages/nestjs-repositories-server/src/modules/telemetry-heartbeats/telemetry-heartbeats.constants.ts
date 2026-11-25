@@ -9,6 +9,11 @@ export const TELEMETRY_HEARTBEAT_DELIVERY_LEGS = {
   REPO: 'repo',
 } as const;
 
+export type TelemetryHeartbeatDeliveryLegsKey =
+  keyof typeof TELEMETRY_HEARTBEAT_DELIVERY_LEGS;
+export type TelemetryHeartbeatDeliveryLegsValue =
+  (typeof TELEMETRY_HEARTBEAT_DELIVERY_LEGS)[TelemetryHeartbeatDeliveryLegsKey];
+
 /** How many recent total-buffered counts the upsert keeps per key. */
 export const TELEMETRY_HEARTBEAT_RECENT_TOTALS_LIMIT = 3;
 

@@ -8,12 +8,13 @@ import type {
 } from '@openthrottle/nestjs-repositories-server';
 
 import type { UserWorkspaceProfileObject } from './user-workspace-profile.object.ts';
-import { WorkspaceEditorIdEnum } from './workspace-editor-id.enum.ts';
+import type { WorkspaceEditorIdValue } from './workspace-editor-id.enum.ts';
+import { WORKSPACE_EDITOR_ID } from './workspace-editor-id.enum.ts';
 
-const EDITOR_ID_TO_ENUM: Record<WorkspaceEditorId, WorkspaceEditorIdEnum> = {
-  claude: WorkspaceEditorIdEnum.CLAUDE,
-  cursor: WorkspaceEditorIdEnum.CURSOR,
-  vscode: WorkspaceEditorIdEnum.VSCODE,
+const EDITOR_ID_TO_ENUM: Record<WorkspaceEditorId, WorkspaceEditorIdValue> = {
+  claude: WORKSPACE_EDITOR_ID.CLAUDE,
+  cursor: WORKSPACE_EDITOR_ID.CURSOR,
+  vscode: WORKSPACE_EDITOR_ID.VSCODE,
 };
 
 /**
@@ -21,7 +22,7 @@ const EDITOR_ID_TO_ENUM: Record<WorkspaceEditorId, WorkspaceEditorIdEnum> = {
  */
 export const toWorkspaceEditorIdEnum = (
   editorId: WorkspaceEditorId,
-): WorkspaceEditorIdEnum => {
+): WorkspaceEditorIdValue => {
   return EDITOR_ID_TO_ENUM[editorId];
 };
 
