@@ -183,6 +183,9 @@ export const SETTINGS_AGENTS_COPY = {
   modelExpandCollapse: `Collapse models`,
   modelExpandExpand: `Expand models`,
   modelFavoriteLabel: `Favorite model`,
+  modelFilterEmpty: `No models match this filter.`,
+  modelFilterLabel: `Filter models`,
+  modelFilterPlaceholder: `Filter models…`,
   modelToggleLabel: `Toggle model`,
   modelsAgentOffReason: `The agent is disabled. Re-enable it to change its models.`,
   modelsEmpty: `No machine-listable models.`,
@@ -202,7 +205,6 @@ export const SETTINGS_AGENTS_COPY = {
   setupLogSucceeded: `Finished successfully`,
   setupLogTitleInstallPrefix: `Installing`,
   setupLogTitleUpdatePrefix: `Updating`,
-  setupLogViewButton: `View log`,
   toggleDisabledReason: `Requires the settings:write permission.`,
 } as const;
 

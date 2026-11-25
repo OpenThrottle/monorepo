@@ -2,7 +2,6 @@ import type {
   AgentSetupMode,
   AgentSetupRunStatus,
 } from '~/routing/settings/data/agent-clis';
-import { getAgentSetupStatusLabel } from '~/routing/settings/utils/agent-setup-status-label';
 
 /** The slice of a streamed setup chunk needed to resolve a run's status. */
 export interface AgentSetupRunChunk {
@@ -52,24 +51,4 @@ export const getAgentSetupRunMode = (
     return serverMode;
   }
   return fallback;
-};
-
-/**
- * @description One-line row summary of a run: the failure label when it
- * failed, otherwise the installer's last non-blank log line (e.g. "Already
- * up to date"), falling back to the generic running / succeeded label.
- */
-export const getAgentSetupRowSummary = (
-  status: AgentSetupRunStatus,
-  logText: string,
-): string => {
-  if (status.kind === 'failed') {
-    return getAgentSetupStatusLabel(status);
-  }
-  const lastLine = logText
-    .split('\n')
-    .map((line) => line.trim())
-    .filter((line) => line !== '')
-    .at(-1);
-  return lastLine ?? getAgentSetupStatusLabel(status);
 };

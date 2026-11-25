@@ -24,7 +24,7 @@ export const SettingsAgentsIntroduction = (
 
   // Markup
   const lastChecked = (
-    <p className="text-muted-foreground mt-1 text-xs">
+    <p className="text-muted-foreground mt-3 text-xs">
       Last checked {new Date(scannedAt ?? '').toLocaleString()}
     </p>
   );

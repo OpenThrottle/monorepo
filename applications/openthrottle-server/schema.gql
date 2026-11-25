@@ -1401,7 +1401,7 @@ type SetAgentModelsEnabledResult {
   driver: String!
 
   """
-  The per-model enablement state applied to every model of the driver: true = all enabled, false = all disabled.
+  The per-model enablement state applied to every supplied model: true = enabled, false = disabled.
   """
   enabled: Boolean!
 }
@@ -8105,7 +8105,7 @@ type Mutation {
   setAgentModelEnabled(driver: String!, model: String!, enabled: Boolean!): SetAgentModelEnabledResult!
 
   """
-  Bulk enable or disable EVERY model of an agent CLI driver for the current user (the select-all / deselect-all affordance). enabled=true clears all per-model disables for the driver; enabled=false records each supplied model id as disabled. An agent-level OFF still hard-overrides all its models. Gated by SETTINGS_WRITE; rejects unknown drivers.
+  Bulk enable or disable the supplied models of an agent CLI driver for the current user (the select-all / deselect-all affordance, over every model or a filtered subset). enabled=true clears the per-model disables of exactly the supplied model ids; enabled=false records each supplied model id as disabled. Models not supplied are left unchanged, and an empty list is a no-op. An agent-level OFF still hard-overrides all its models. Gated by SETTINGS_WRITE; rejects unknown drivers.
   """
   setAgentModelsEnabled(driver: String!, models: [String!]!, enabled: Boolean!): SetAgentModelsEnabledResult!
 

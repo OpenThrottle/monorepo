@@ -2,7 +2,7 @@ import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
-import { IsNull, Not } from 'typeorm';
+import { In, IsNull } from 'typeorm';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { UserDisabledAgentCli } from './user-disabled-agent-cli.entity.ts';
@@ -212,14 +212,23 @@ describe('UserDisabledAgentClisRepository', () => {
 
   describe('setModelsEnabled', () => {
     describe('when enabling', () => {
-      it('clears every per-model row for the driver', async () => {
+      it('clears the per-model rows of only the listed models', async () => {
         await repository.setModelsEnabled(userId, 'cursor', ['a', 'b'], true);
 
+        // Never a driver-wide clear: a filtered "Enable N shown" must leave
+        // every other disabled model (and the agent-level row) alone.
+        expect(remove).toHaveBeenCalledTimes(1);
         expect(remove).toHaveBeenCalledWith({
           driver: 'cursor',
-          model: Not(IsNull()),
+          model: In(['a', 'b']),
           userId,
         });
+      });
+
+      it('is a no-op for an empty model list', async () => {
+        await repository.setModelsEnabled(userId, 'cursor', [], true);
+
+        expect(remove).not.toHaveBeenCalled();
       });
     });
 

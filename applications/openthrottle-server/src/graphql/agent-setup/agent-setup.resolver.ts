@@ -141,7 +141,7 @@ export class AgentSetupResolver {
   }
 
   @Mutation(() => SetAgentModelsEnabledResult, {
-    description: `Bulk enable or disable EVERY model of an agent CLI driver for the current user (the select-all / deselect-all affordance). enabled=true clears all per-model disables for the driver; enabled=false records each supplied model id as disabled. An agent-level OFF still hard-overrides all its models. Gated by SETTINGS_WRITE; rejects unknown drivers.`,
+    description: `Bulk enable or disable the supplied models of an agent CLI driver for the current user (the select-all / deselect-all affordance, over every model or a filtered subset). enabled=true clears the per-model disables of exactly the supplied model ids; enabled=false records each supplied model id as disabled. Models not supplied are left unchanged, and an empty list is a no-op. An agent-level OFF still hard-overrides all its models. Gated by SETTINGS_WRITE; rejects unknown drivers.`,
     name: 'setAgentModelsEnabled',
   })
   @UseGuards(GqlPermissionsGuard)

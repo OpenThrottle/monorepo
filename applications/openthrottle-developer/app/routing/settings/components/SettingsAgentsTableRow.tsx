@@ -4,8 +4,7 @@ import * as React from 'react';
 
 import { SettingsAgentsAgentToggle } from '~/routing/settings/components/SettingsAgentsAgentToggle';
 import { SettingsAgentsCliControls } from '~/routing/settings/components/SettingsAgentsCliControls';
-import { SettingsAgentsModelBulkToggle } from '~/routing/settings/components/SettingsAgentsModelBulkToggle';
-import { SettingsAgentsModelRow } from '~/routing/settings/components/SettingsAgentsModelRow';
+import { SettingsAgentsModelPanel } from '~/routing/settings/components/SettingsAgentsModelPanel';
 import type { AgentCliStatus } from '~/routing/settings/data/agent-clis';
 import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/copy';
 import {
@@ -94,29 +93,7 @@ export const SettingsAgentsTableRow = (
       data-testid={`SettingsAgentsTableRow-${driver}-models`}
     >
       <TableCell colSpan={SETTINGS_AGENTS_COLUMN_COUNT}>
-        <div className="bg-muted/30 rounded-md px-3 py-1">
-          <div className="flex items-center justify-between gap-3 border-b py-1">
-            <span className="text-muted-foreground text-xs">
-              {settingsAgentsModelsEnabledSummary(enabledCount, models.length)}
-            </span>
-            <SettingsAgentsModelBulkToggle
-              agentDisabled={!enabled}
-              canManage={canManage}
-              driver={driver}
-              enabledCount={enabledCount}
-              models={models}
-            />
-          </div>
-          {modelOptions.map((model) => (
-            <SettingsAgentsModelRow
-              agentDisabled={!enabled}
-              canManage={canManage}
-              driver={driver}
-              key={model.model}
-              model={model}
-            />
-          ))}
-        </div>
+        <SettingsAgentsModelPanel canManage={canManage} status={status} />
       </TableCell>
     </TableRow>
   );
