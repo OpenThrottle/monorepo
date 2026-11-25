@@ -2,7 +2,7 @@ import { dirname } from 'node:path';
 
 import { isRecord, toErrorMessage } from '@openthrottle/nodejs-utils';
 
-import { SETTINGS_VERSION } from '../data/data.settings.ts';
+import { SETTINGS_VERSION } from '../data/settings.ts';
 import { normalizeServerUrl } from '../utils/normalizeServerUrl.ts';
 
 /** The filesystem calls the store needs; injected so tests need no disk. */

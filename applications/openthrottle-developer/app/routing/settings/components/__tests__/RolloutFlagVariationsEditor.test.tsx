@@ -6,7 +6,7 @@ import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import { RolloutFlagKind } from '~/__generated__/graphql';
-import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
+import { ROLLOUT_COPY } from '~/routing/settings/data/copy';
 
 import type { RolloutFlagVariationsEditorProps } from '../RolloutFlagVariationsEditor';
 import { RolloutFlagVariationsEditor } from '../RolloutFlagVariationsEditor';

@@ -5,8 +5,8 @@ import {
 } from '@openthrottle/react-router-chat';
 import { describe, expect, test } from 'vitest';
 
-import type { ChatToolbarState } from '../../data/data.chat-toolbar-state';
-import { DEFAULT_CHAT_TOOLBAR_STATE } from '../../data/data.chat-toolbar-state';
+import type { ChatToolbarState } from '../../data/chat-toolbar-state';
+import { DEFAULT_CHAT_TOOLBAR_STATE } from '../../data/chat-toolbar-state';
 import { decayElevatedPermissionModes } from '../decayElevatedPermissionModes';
 
 const state = (overrides: Partial<ChatToolbarState>): ChatToolbarState => {

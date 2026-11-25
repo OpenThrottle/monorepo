@@ -7,7 +7,7 @@ import type {
   PlanRunConfigCheckoutFragment,
   PlanRunConfigRepositoryFieldsFragment,
 } from '~/__generated__/graphql';
-import { PLAN_CHECKOUT_SELECTOR_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_CHECKOUT_SELECTOR_COPY } from '~/routing/plans/data/copy';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 
 import type { PlanCheckoutSelectorProps } from '../PlanCheckoutSelector';

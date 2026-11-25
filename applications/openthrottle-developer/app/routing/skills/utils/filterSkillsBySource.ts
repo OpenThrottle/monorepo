@@ -14,7 +14,7 @@
  * four-way classification both the filter and the source badge switch on.
  */
 
-import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 
 export const SKILL_SOURCE_KINDS = [
   'custom',

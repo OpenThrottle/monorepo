@@ -2,7 +2,7 @@ import { Button, cn } from '@openthrottle/react-router-shadcn';
 import { GradientMesh } from '@openthrottle/react-router-ui-global';
 import * as React from 'react';
 
-import { LANDING_CLOSE } from '~/routing/home/data/data.landing';
+import { LANDING_CLOSE } from '~/routing/home/data/landing';
 
 export interface LandingCloseProps {
   className?: string;

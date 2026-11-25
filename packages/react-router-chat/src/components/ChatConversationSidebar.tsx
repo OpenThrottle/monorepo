@@ -8,7 +8,7 @@ import {
 import { MessageSquarePlus } from 'lucide-react';
 import * as React from 'react';
 
-import { CHAT_CONVERSATION_SIDEBAR_COPY } from '../data/data.chat-conversation-sidebar.copy';
+import { CHAT_CONVERSATION_SIDEBAR_COPY } from '../data/chat-conversation-sidebar.copy';
 import { useChatConversationSidebar } from '../hooks/useChatConversationSidebar';
 import type { AgentConversationListItem } from '../types';
 import { ChatConversationListError } from './ChatConversationListError';

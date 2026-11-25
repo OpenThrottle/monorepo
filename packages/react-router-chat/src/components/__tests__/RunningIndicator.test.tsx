@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 import {
   RUNNING_INDICATOR_SLOW_HINT,
   RUNNING_INDICATOR_SLOW_HINT_AFTER_MS,
-} from '../../data/data.chat-run-phase-copy';
+} from '../../data/chat-run-phase-copy';
 import { CHAT_RUN_PHASE } from '../../types';
 import { resolveRunningIndicatorCopy } from '../../utils/resolveRunningIndicatorCopy';
 import type { RunningIndicatorProps } from '../RunningIndicator';

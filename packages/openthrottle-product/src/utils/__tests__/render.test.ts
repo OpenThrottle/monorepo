@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { PRODUCT_FEATURES } from '../../data/data.features';
-import { PRODUCT_POSITIONING } from '../../data/data.positioning';
-import { PRODUCT_PROJECTS } from '../../data/data.projects';
-import { ORG_PROFILE_COPY, SURFACE_MARKERS } from '../../data/data.surfaces';
+import { PRODUCT_FEATURES } from '../../data/features';
+import { PRODUCT_POSITIONING } from '../../data/positioning';
+import { PRODUCT_PROJECTS } from '../../data/projects';
+import { ORG_PROFILE_COPY, SURFACE_MARKERS } from '../../data/surfaces';
 import type { ProductFeature } from '../../types/product';
 import type { SurfaceInput } from '../../types/surfaces';
 import {

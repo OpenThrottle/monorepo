@@ -14,7 +14,7 @@ import type { ChatComposerMicStateValue } from '@openthrottle/react-router-chat'
 import { useAudioCapture } from '@openthrottle/react-router-ui';
 import * as React from 'react';
 
-import { VOICE_PHASE } from '~/routing/home/data/data.voice';
+import { VOICE_PHASE } from '~/routing/home/data/voice';
 import { useTranscriptionStream } from '~/routing/home/hooks/useTranscriptionStream';
 import { encodeFloat32ToInt16Base64 } from '~/routing/home/utils/encodeFloat32ToInt16Base64';
 import { joinDraftParts } from '~/routing/home/utils/joinDraftParts';

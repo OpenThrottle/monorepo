@@ -2,7 +2,7 @@ import { AlertDialogTrigger, Button } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import { PlanRunCancelScheduledDialog } from '~/routing/plans/components/PlanRunCancelScheduledDialog';
-import { PLAN_RUN_CANCEL_SCHEDULED_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_RUN_CANCEL_SCHEDULED_COPY } from '~/routing/plans/data/copy';
 
 export interface PlanRunCancelScheduledButtonProps {
   readonly planId: string;

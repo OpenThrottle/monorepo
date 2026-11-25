@@ -14,7 +14,7 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { SKILL_CREATE_DESTINATIONS } from '~/routing/skills/config/skill-create';
-import { SKILL_CREATE_COPY } from '~/routing/skills/data/data.copy';
+import { SKILL_CREATE_COPY } from '~/routing/skills/data/copy';
 
 vi.mock('~/routing/agents/utils/discoverRepoSkills.server', () => ({
   discoverRepoSkills: vi.fn(),

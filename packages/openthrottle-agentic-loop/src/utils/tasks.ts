@@ -1,5 +1,5 @@
-import { THIN_TASK_MIN_CHARS } from '../data/data.constants.ts';
-import { LOOP_TASK_STATUS } from '../data/data.loop.ts';
+import { THIN_TASK_MIN_CHARS } from '../data/constants.ts';
+import { LOOP_TASK_STATUS } from '../data/loop.ts';
 import type { LoopOutcome, LoopTask } from '../types/loop.ts';
 
 /** @description Task-centric mode narrows the plan's tasks to the one task; otherwise all of them. */

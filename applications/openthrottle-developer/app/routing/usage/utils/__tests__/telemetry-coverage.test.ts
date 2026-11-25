@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { TELEMETRY_WARNING_KINDS } from '~/routing/usage/data/data.telemetry-coverage-copy';
+import { TELEMETRY_WARNING_KINDS } from '~/routing/usage/data/telemetry-coverage-copy';
 import {
   buildTelemetryMachine,
   telemetryHoursAgo,

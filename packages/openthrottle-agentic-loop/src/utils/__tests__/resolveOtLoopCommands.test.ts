@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { OT_LOOP_NEEDS_VALIDATION_MESSAGE } from '../../data/data.constants.ts';
+import { OT_LOOP_NEEDS_VALIDATION_MESSAGE } from '../../data/constants.ts';
 import type { ResolverFs } from '../../types/validation.ts';
 import { resolveOtLoopCommands } from '../resolveOtLoopCommands.ts';
 

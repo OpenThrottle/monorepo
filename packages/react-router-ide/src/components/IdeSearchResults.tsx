@@ -8,7 +8,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import type { IdeSearchResult, SearchMatch } from '../data/data.view-models';
+import type { IdeSearchResult, SearchMatch } from '../data/view-models';
 import { IdeSearchResultRow } from './IdeSearchResultRow';
 
 export interface IdeSearchResultsProps {

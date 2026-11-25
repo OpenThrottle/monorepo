@@ -10,7 +10,7 @@ import {
 import {
   TIMELINE_DISCLOSURE_COPY,
   TIMELINE_LEGEND_COPY,
-} from '~/routing/timeline/data/data.copy';
+} from '~/routing/timeline/data/copy';
 
 import { TimelineMarkerGlyph } from './TimelineMarkerGlyph';
 import { TIMELINE_DERIVED_PATTERN_ID } from './TimelineSpanBar';

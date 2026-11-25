@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { SCHEDULE_CADENCE_COPY } from '~/routing/schedule/data/data.copy';
+import { SCHEDULE_CADENCE_COPY } from '~/routing/schedule/data/copy';
 
 import type { ScheduleCadenceFields } from '../describeScheduleCadence';
 import { describeScheduleCadence } from '../describeScheduleCadence';

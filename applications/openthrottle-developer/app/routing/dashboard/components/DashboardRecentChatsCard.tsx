@@ -7,12 +7,12 @@ import { Link } from 'react-router';
 import {
   RECENT_CHATS_CARD_COPY,
   RECENT_CHATS_CARD_DESTINATION_LABELS,
-} from '~/routing/dashboard/data/data.copy';
+} from '~/routing/dashboard/data/copy';
 import {
   conversationHref,
   conversationLabel,
 } from '~/routing/dashboard/utils/recent-chats';
-import { WORKSPACE_FULL_JUMP_LINKS } from '~/routing/navigation/data/data.workspace-jump-links';
+import { WORKSPACE_FULL_JUMP_LINKS } from '~/routing/navigation/data/workspace-jump-links';
 
 const MAX_ROWS = 3;
 

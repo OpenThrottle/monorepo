@@ -10,7 +10,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { BLOG_STALE_WRITE_COPY } from '~/routing/blog/data/data.copy';
+import { BLOG_STALE_WRITE_COPY } from '~/routing/blog/data/copy';
 
 export interface BlogPostStaleWriteDialogProps {
   readonly isOverwriting: boolean;

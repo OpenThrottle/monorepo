@@ -4,7 +4,7 @@ import * as React from 'react';
 import {
   TRAJECTORY_SUMMARY_COPY,
   TRAJECTORY_VIEWER_COPY,
-} from '~/routing/evals/data/data.copy';
+} from '~/routing/evals/data/copy';
 import type { AtifTrajectory } from '~/routing/evals/types';
 import {
   formatTrajectoryCost,

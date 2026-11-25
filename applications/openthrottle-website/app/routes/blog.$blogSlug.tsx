@@ -5,7 +5,7 @@ import type { Route } from '@/app/routes/+types/blog.$blogSlug';
 import { BlogDetails } from '~/routing/blog/components/BlogDetails';
 import { BlogErrorBoundary } from '~/routing/blog/components/BlogErrorBoundary';
 import { BlogPageShell } from '~/routing/blog/components/BlogPageShell';
-import { BLOG_COPY } from '~/routing/blog/data/data.copy';
+import { BLOG_COPY } from '~/routing/blog/data/copy';
 import { loadBlogPost } from '~/routing/blog/utils/blog-loaders.server';
 import { buildBlogPostMeta } from '~/routing/blog/utils/blog-seo';
 

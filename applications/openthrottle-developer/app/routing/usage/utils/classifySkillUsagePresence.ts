@@ -1,6 +1,6 @@
-import type { SkillPresence } from '~/routing/usage/data/data.skill-presence';
-import { SKILL_PRESENCE } from '~/routing/usage/data/data.skill-presence';
-import { SKILL_USAGE_SCOPES } from '~/routing/usage/data/data.skill-usage-copy';
+import type { SkillPresence } from '~/routing/usage/data/skill-presence';
+import { SKILL_PRESENCE } from '~/routing/usage/data/skill-presence';
+import { SKILL_USAGE_SCOPES } from '~/routing/usage/data/skill-usage-copy';
 
 /**
  * Classify one leaderboard row. A `third-party` row is `external` regardless of

@@ -3,7 +3,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { LANDING_NAV } from '~/routing/home/data/data.landing';
+import { LANDING_NAV } from '~/routing/home/data/landing';
 
 const isBlogEnabled = vi.fn();
 

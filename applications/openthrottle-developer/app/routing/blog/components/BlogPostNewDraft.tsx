@@ -4,7 +4,7 @@ import { FilePlusIcon } from 'lucide-react';
 import * as React from 'react';
 import { Form, useNavigation } from 'react-router';
 
-import { BLOG_NEW_COPY } from '~/routing/blog/data/data.copy';
+import { BLOG_NEW_COPY } from '~/routing/blog/data/copy';
 
 export interface BlogPostNewDraftProps {
   /** Why the last attempt failed, if it did. */

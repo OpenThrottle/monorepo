@@ -13,7 +13,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   GLOBAL_BACKGROUND_ACTIVITY_COPY,
   GLOBAL_SIDEBAR_FOOTER_COPY,
-} from '../../data/data.copy';
+} from '../../data/copy';
 import type { GlobalBackgroundActivity } from '../../utils/background-activity';
 import { buildAppReleaseHref } from '../../utils/buildAppReleaseHref';
 import { GlobalProviders } from '../GlobalProviders';

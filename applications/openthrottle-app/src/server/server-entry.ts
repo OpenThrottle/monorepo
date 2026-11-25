@@ -11,7 +11,7 @@ import { createRequestHandler } from '@react-router/express';
 import compression from 'compression';
 import express from 'express';
 
-import { SHELL_HEALTH_PATH } from '../main/data/data.server-env.ts';
+import { SHELL_HEALTH_PATH } from '../main/data/server-env.ts';
 import {
   dropUndefined,
   withLocalOrigin,

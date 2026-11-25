@@ -13,11 +13,11 @@ import {
 import type {
   ChatToolbarBackendPrefs,
   ChatToolbarState,
-} from '../data/data.chat-toolbar-state';
+} from '../data/chat-toolbar-state';
 import {
   CHAT_TOOLBAR_STATE_VERSION,
   DEFAULT_CHAT_TOOLBAR_STATE,
-} from '../data/data.chat-toolbar-state';
+} from '../data/chat-toolbar-state';
 
 /** True when `value` is one of the string members of an as-const union. */
 function isMemberOf<T extends string>(

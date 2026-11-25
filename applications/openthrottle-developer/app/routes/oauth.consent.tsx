@@ -20,7 +20,7 @@ import {
 import { SITE_TITLE } from '~/global/config/settings';
 import { ConsentCard } from '~/routing/oauth/components/ConsentCard';
 import { ConsentUnavailable } from '~/routing/oauth/components/ConsentUnavailable';
-import { OAUTH_SCOPES } from '~/routing/oauth/data/data.copy';
+import { OAUTH_SCOPES } from '~/routing/oauth/data/copy';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

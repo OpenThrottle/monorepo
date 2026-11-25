@@ -64,16 +64,16 @@ export * from './components/ToggleGroup/index';
 export * from './components/Tooltip/index';
 
 // Data
-export * from './data/data.cron-presets';
-export * from './data/data.faceted-filter';
+export * from './data/cron-presets';
+export * from './data/faceted-filter';
 
 // Hooks
 export * from './hooks/useCarousel';
 
 // Themes
-export * from './data/data.cursor-themes';
-export * from './data/data.theme-tokens';
-export * from './data/data.themes';
+export * from './data/cursor-themes';
+export * from './data/theme-tokens';
+export * from './data/themes';
 export * from './types/theme';
 export * from './utils/theme';
 

@@ -2,7 +2,7 @@ import type { Identifier } from 'dnd-core';
 import * as React from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 
-import { CMS_REORDER_DRAG_TYPE } from '../data/data.reorder';
+import { CMS_REORDER_DRAG_TYPE } from '../data/reorder';
 import { shouldReorderOnHover } from '../utils/shouldReorderOnHover';
 
 /**

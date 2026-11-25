@@ -45,7 +45,7 @@ This note traces how the OpenThrottle command palette and workspace search work 
 
 **Files:** `app/global/hooks/useCommanderOptions.ts`, `app/global/utils/navigation-to-commander-groups.tsx`
 
-- **Navigation data is the single source of truth.** `root.tsx` picks the record once — `const navigation = data?.user ? dataNavigationV2 : dataNavigationGuest` (`app/global/data/data.navigation.ts`) — and passes the _same_ value to both `GlobalLayout data={…}` and `useCommanderOptions(navigation)`. Adding a sidebar link adds a ⌘K row; there is no second list to update.
+- **Navigation data is the single source of truth.** `root.tsx` picks the record once — `const navigation = data?.user ? dataNavigationV2 : dataNavigationGuest` (`app/global/data/navigation.ts`) — and passes the _same_ value to both `GlobalLayout data={…}` and `useCommanderOptions(navigation)`. Adding a sidebar link adds a ⌘K row; there is no second list to update.
 - The hook reads `FEATURE_BETA_PREVIEW` / `FEATURE_CHARLIE_PREVIEW` and delegates to the pure mapper `buildCommanderGroupsFromNavigation(navigation, { isBetaEnabled, isCharlieEnabled, navigate })`, memoized on `[navigate, navigation]`.
 - Mapper rules (mirroring `GlobalSidebarContent` visibility):
   - Group heading = navigation section key (`Agents` / `Settings` / `Workspace`, `Workspace` / `Legal` for guests); groups left empty after filtering are omitted.

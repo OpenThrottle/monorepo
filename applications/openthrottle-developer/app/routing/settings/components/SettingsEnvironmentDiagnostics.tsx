@@ -4,7 +4,7 @@ import { MonitorCloudIcon } from 'lucide-react';
 import * as React from 'react';
 import { Link } from 'react-router';
 
-import { URL_MATRIX_ROWS } from '../data/data.url-matrix-rows';
+import { URL_MATRIX_ROWS } from '../data/url-matrix-rows';
 import { useSettingsEnvironmentDiagnostics } from '../hooks/useSettingsEnvironmentDiagnostics';
 import type { SettingsDiagnosticsLoaderData } from '../utils/getSettingsDiagnosticsLoaderData';
 import {

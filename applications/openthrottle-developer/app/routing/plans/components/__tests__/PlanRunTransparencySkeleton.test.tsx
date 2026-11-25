@@ -4,7 +4,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { PLAN_RUN_TRANSPARENCY_SKELETON_HISTORY_ROWS } from '~/routing/plans/data/data.plan-run-transparency-skeleton';
+import { PLAN_RUN_TRANSPARENCY_SKELETON_HISTORY_ROWS } from '~/routing/plans/data/plan-run-transparency-skeleton';
 
 import type { PlanRunTransparencySkeletonProps } from '../PlanRunTransparencySkeleton';
 import { PlanRunTransparencySkeleton } from '../PlanRunTransparencySkeleton';

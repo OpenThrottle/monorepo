@@ -1,4 +1,4 @@
-import type { THEME_TOKEN_NAMES } from '../data/data.theme-tokens';
+import type { THEME_TOKEN_NAMES } from '../data/theme-tokens';
 
 /** A CSS custom-property name (without the leading `--`) a theme must define. */
 export type ThemeTokenName = (typeof THEME_TOKEN_NAMES)[number];

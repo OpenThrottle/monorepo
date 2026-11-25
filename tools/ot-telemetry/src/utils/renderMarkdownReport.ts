@@ -1,5 +1,5 @@
 import { TABLE_ROW_LIMIT } from '../config/index.ts';
-import { REPORT_TITLE, WHAT_IS_IN_THIS_FILE_COPY } from '../data/data.copy.ts';
+import { REPORT_TITLE, WHAT_IS_IN_THIS_FILE_COPY } from '../data/copy.ts';
 import type { ReportEnvelope } from '../types/index.ts';
 import { describeDetailLevel } from './envelope.ts';
 import {

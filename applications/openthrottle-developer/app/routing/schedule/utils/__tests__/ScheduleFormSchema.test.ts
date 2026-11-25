@@ -1,7 +1,7 @@
 import { parseFormData } from '@openthrottle/react-router-graphql';
 import { describe, expect, test } from 'vitest';
 
-import { SCHEDULE_REPOSITORY_NONE_VALUE } from '~/routing/schedule/data/data.repositories';
+import { SCHEDULE_REPOSITORY_NONE_VALUE } from '~/routing/schedule/data/repositories';
 
 import { ScheduleFormSchema } from '../ScheduleFormSchema';
 

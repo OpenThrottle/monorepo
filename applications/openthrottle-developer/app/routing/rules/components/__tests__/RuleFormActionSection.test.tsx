@@ -5,7 +5,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { RULES_COPY } from '~/routing/rules/data/data.copy';
+import { RULES_COPY } from '~/routing/rules/data/copy';
 
 import type { RuleFormActionSectionProps } from '../RuleFormActionSection';
 import { RuleFormActionSection } from '../RuleFormActionSection';

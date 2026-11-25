@@ -1,4 +1,4 @@
-import { PLAN_EDITOR_ACTIONS_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_EDITOR_ACTIONS_COPY } from '~/routing/plans/data/copy';
 
 export interface PlanEditorTooltipInput {
   /** Null when the editor's precondition (a checkout folder) is unmet. */

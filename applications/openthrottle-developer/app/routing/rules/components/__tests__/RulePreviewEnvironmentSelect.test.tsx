@@ -11,7 +11,7 @@ import {
 import { afterEach, describe, expect, test } from 'vitest';
 
 import { RULE_PREVIEW_ENVIRONMENT_PARAM } from '~/routing/rules/config/rule-preview';
-import { RULE_PREVIEW_COPY } from '~/routing/rules/data/data.copy';
+import { RULE_PREVIEW_COPY } from '~/routing/rules/data/copy';
 
 import { RulePreviewEnvironmentSelect } from '../RulePreviewEnvironmentSelect';
 

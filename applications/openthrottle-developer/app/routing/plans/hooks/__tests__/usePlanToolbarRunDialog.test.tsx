@@ -3,7 +3,7 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/graphql';
-import { PLAN_TOOLBAR_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_TOOLBAR_COPY } from '~/routing/plans/data/copy';
 import { getRecentWorkspacePaths } from '~/routing/plans/utils/workspace-path';
 
 import type { UsePlanToolbarRunDialogOptions } from '../usePlanToolbarRunDialog';

@@ -23,9 +23,9 @@ import {
   OPENTHROTTLE_WEBSITE_URL,
 } from '@openthrottle/react-router-utils';
 
-import { PRODUCT_FEATURES } from '../data/data.features';
-import { PRODUCT_POSITIONING } from '../data/data.positioning';
-import { PRODUCT_PROJECTS } from '../data/data.projects';
+import { PRODUCT_FEATURES } from '../data/features';
+import { PRODUCT_POSITIONING } from '../data/positioning';
+import { PRODUCT_PROJECTS } from '../data/projects';
 import { isLandedFeature, isUpcomingFeature } from '../utils/features';
 import { renderReadmeSection, replaceMarkedSection } from '../utils/render';
 import { validateProjects, validateRegistry } from '../utils/validate';

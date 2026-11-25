@@ -3,9 +3,9 @@ import { OpenThrottleThemeToggle } from '@openthrottle/react-router-ui';
 import type { ThemeMode } from '@openthrottle/react-router-utils';
 import * as React from 'react';
 
-import { DEFAULT_APPEARANCE_CONFIG } from '~/global/data/data.appearance-config';
+import { DEFAULT_APPEARANCE_CONFIG } from '~/global/data/appearance-config';
 import { useHydratedAppearanceConfig } from '~/global/hooks/useHydratedAppearanceConfig';
-import { APPEARANCE_COPY } from '~/routing/settings/data/data.copy';
+import { APPEARANCE_COPY } from '~/routing/settings/data/copy';
 
 export interface AppearanceThemeModeFieldProps {}
 

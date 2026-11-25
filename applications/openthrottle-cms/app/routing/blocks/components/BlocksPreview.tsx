@@ -13,8 +13,8 @@ import {
 import { cn, Label, Switch } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { BLOCK_SAMPLES } from '../data/data.blocks';
-import { BLOCKS_COPY } from '../data/data.copy';
+import { BLOCK_SAMPLES } from '../data/blocks';
+import { BLOCKS_COPY } from '../data/copy';
 import { debugClassName } from '../utils/debugClassName';
 
 export interface BlocksPreviewProps {

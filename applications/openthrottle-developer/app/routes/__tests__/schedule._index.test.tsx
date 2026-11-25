@@ -5,7 +5,7 @@ import type { Route } from '@/app/routes/+types/schedule._index';
 import {
   SCHEDULE_COPY,
   SCHEDULE_ONBOARDING,
-} from '~/routing/schedule/data/data.copy';
+} from '~/routing/schedule/data/copy';
 import { buildRootMatch } from '~/testing/buildRootMatch';
 import {
   renderRoutesStub,

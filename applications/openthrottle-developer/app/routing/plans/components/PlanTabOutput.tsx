@@ -12,7 +12,7 @@ import { PlanOutputStreamSkeleton } from '~/routing/plans/components/PlanOutputS
 import {
   PLAN_DEFERRED_SECTION_COPY,
   PLAN_TAB_OUTPUT_COPY,
-} from '~/routing/plans/data/data.copy';
+} from '~/routing/plans/data/copy';
 import { usePlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
 
 export interface PlanTabOutputProps {

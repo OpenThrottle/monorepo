@@ -12,9 +12,9 @@ import type { ScheduledJobDetailFragment } from '~/__generated__/graphql';
 import { ScheduleKindFields } from '~/routing/schedule/components/ScheduleKindFields';
 import { ScheduleMcpWarning } from '~/routing/schedule/components/ScheduleMcpWarning';
 import { ScheduleRepositoryField } from '~/routing/schedule/components/ScheduleRepositoryField';
-import type { DriverMcpOption } from '~/routing/schedule/data/data.driver-mcp';
-import { SCHEDULED_JOB_DRIVER_IDS } from '~/routing/schedule/data/data.drivers';
-import type { ScheduleRepositoryOption } from '~/routing/schedule/data/data.repositories';
+import type { DriverMcpOption } from '~/routing/schedule/data/driver-mcp';
+import { SCHEDULED_JOB_DRIVER_IDS } from '~/routing/schedule/data/drivers';
+import type { ScheduleRepositoryOption } from '~/routing/schedule/data/repositories';
 
 export interface ScheduleFormProps {
   action: 'create' | 'update';

@@ -3,7 +3,7 @@ import { GlobalPopover } from '@openthrottle/react-router-ui-global';
 import * as React from 'react';
 
 import type { RolloutFlagFieldsFragment } from '~/__generated__/graphql';
-import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
+import { ROLLOUT_COPY } from '~/routing/settings/data/copy';
 import { rolloutFlagEditPath } from '~/routing/settings/utils/rollout-flag-format';
 
 export interface RolloutFlagsTableRowActionsProps {

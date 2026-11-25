@@ -5,7 +5,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { PROJECT_REPOSITORIES_COPY } from '~/routing/projects/data/data.copy';
+import { PROJECT_REPOSITORIES_COPY } from '~/routing/projects/data/copy';
 
 import type { ProjectRepositoriesProps } from '../ProjectRepositories';
 import { ProjectRepositories } from '../ProjectRepositories';

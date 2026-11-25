@@ -8,7 +8,7 @@ import * as React from 'react';
 import { useFetcher, useRevalidator } from 'react-router';
 
 import type { action as agentEnabledAction } from '~/routes/resources.agent-enabled';
-import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/data.copy';
+import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/copy';
 
 /** Resource-route action path backing the per-agent enable/disable toggle. */
 const AGENT_ENABLED_ACTION = '/resources/agent-enabled';

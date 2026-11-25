@@ -2,7 +2,7 @@ import { Button } from '@openthrottle/react-router-shadcn';
 import { ROLLBAR_TOKEN } from '@openthrottle/react-router-utils';
 import * as React from 'react';
 
-import { GLOBAL_ERROR_BOUNDARY_COPY } from '../data/data.copy';
+import { GLOBAL_ERROR_BOUNDARY_COPY } from '../data/copy';
 import { isUsableRollbarClientToken } from '../utils/client-error-diagnostics';
 
 export interface GlobalErrorBoundaryReferencePanelProps {

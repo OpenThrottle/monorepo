@@ -14,7 +14,7 @@ import {
 import {
   SKILL_CREATE_COPY,
   SKILL_CREATE_DESTINATION_CONSEQUENCE,
-} from '~/routing/skills/data/data.copy';
+} from '~/routing/skills/data/copy';
 
 export interface SkillCreateDestinationFieldProps {
   /**

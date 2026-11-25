@@ -15,12 +15,12 @@ import type {
   RuleFormVocabularyOption,
 } from '~/routing/rules/components/RuleForm';
 import { RuleFormScopeSelects } from '~/routing/rules/components/RuleFormScopeSelects';
-import { RULES_COPY } from '~/routing/rules/data/data.copy';
+import { RULES_COPY } from '~/routing/rules/data/copy';
 import {
   ANY,
   ENVIRONMENTS,
   PLAN_STATUSES,
-} from '~/routing/rules/data/data.rule-form-options';
+} from '~/routing/rules/data/rule-form-options';
 
 export interface RuleFormMatchSectionProps {
   environment: string;

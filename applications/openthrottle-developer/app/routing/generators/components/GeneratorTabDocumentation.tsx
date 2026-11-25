@@ -8,7 +8,7 @@ import {
 import * as React from 'react';
 import { Link } from 'react-router';
 
-import { generators } from '~/routing/generators/data/data.generators';
+import { generators } from '~/routing/generators/data/generators';
 
 export interface GeneratorTabDocumentationProps {
   className?: string;

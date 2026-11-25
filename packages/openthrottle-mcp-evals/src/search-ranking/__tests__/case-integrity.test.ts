@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { SEARCH_RANKING_CASES } from '../data/data.cases.ts';
+import { SEARCH_RANKING_CASES } from '../data/cases.ts';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 

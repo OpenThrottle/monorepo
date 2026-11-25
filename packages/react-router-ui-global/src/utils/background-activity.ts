@@ -1,6 +1,6 @@
 import type { BackgroundActivityObject } from '@openthrottle/openthrottle-developer-codegen';
 
-import { GLOBAL_BACKGROUND_ACTIVITY_COPY } from '../data/data.copy';
+import { GLOBAL_BACKGROUND_ACTIVITY_COPY } from '../data/copy';
 
 /**
  * @public

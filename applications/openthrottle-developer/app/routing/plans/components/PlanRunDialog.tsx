@@ -19,7 +19,7 @@ import { PlanRunDialogHiddenFields } from '~/routing/plans/components/PlanRunDia
 import { PlanRunDialogSchedule } from '~/routing/plans/components/PlanRunDialogSchedule';
 import { PlanRunDialogSettings } from '~/routing/plans/components/PlanRunDialogSettings';
 import { PlanRunDialogWorkspace } from '~/routing/plans/components/PlanRunDialogWorkspace';
-import { PLAN_RUN_DIALOG_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_RUN_DIALOG_COPY } from '~/routing/plans/data/copy';
 import { usePlanRunDialog } from '~/routing/plans/hooks/usePlanRunDialog';
 import type {
   PlanRunDialogMode,

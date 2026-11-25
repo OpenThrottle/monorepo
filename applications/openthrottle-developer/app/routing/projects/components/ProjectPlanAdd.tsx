@@ -2,7 +2,7 @@ import { Button, cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { useFetcher } from 'react-router';
 
-import { PROJECT_PLANS_COPY } from '~/routing/projects/data/data.copy';
+import { PROJECT_PLANS_COPY } from '~/routing/projects/data/copy';
 
 export interface ProjectPlanAddOption {
   readonly id: string;

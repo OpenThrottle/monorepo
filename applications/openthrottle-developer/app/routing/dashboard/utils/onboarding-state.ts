@@ -1,11 +1,11 @@
 import { isRecord } from '@openthrottle/nodejs-utils';
 import { createJSONStorage } from 'jotai/utils';
 
-import type { OnboardingState } from '~/routing/dashboard/data/data.onboarding-state';
+import type { OnboardingState } from '~/routing/dashboard/data/onboarding-state';
 import {
   DEFAULT_ONBOARDING_STATE,
   ONBOARDING_STATE_VERSION,
-} from '~/routing/dashboard/data/data.onboarding-state';
+} from '~/routing/dashboard/data/onboarding-state';
 
 /**
  * Coerce a persisted record into a valid {@link OnboardingState}: a non-boolean

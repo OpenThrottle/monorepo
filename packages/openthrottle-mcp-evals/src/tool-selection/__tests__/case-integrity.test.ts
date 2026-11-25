@@ -3,8 +3,8 @@ import { TOOLSET_NAMES } from '@openthrottle/openthrottle-mcp/tool-surface';
 import { listToolSurface } from '@openthrottle/openthrottle-mcp/tool-surface';
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import { TOOL_SELECTION_CASES } from '../data/data.cases.ts';
-import { HARNESS_TOOLS } from '../data/data.harness-tools.ts';
+import { TOOL_SELECTION_CASES } from '../data/cases.ts';
+import { HARNESS_TOOLS } from '../data/harness-tools.ts';
 
 /**
  * @description Structural checks on the case data against the LIVE tool surface — offline and free, so they run

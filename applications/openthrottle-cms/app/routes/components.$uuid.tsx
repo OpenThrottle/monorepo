@@ -12,7 +12,7 @@ import type { Route } from '@/app/routes/+types/components.$uuid';
 import { CmsComponentDetailDocument } from '~/__generated__/graphql';
 import { GlobalDetailList } from '~/global/components/GlobalDetailList';
 import { SITE_TITLE } from '~/global/config/settings';
-import { CMS_COMPONENT_DETAIL_FIELDS } from '~/global/data/data.cms-detail-fields';
+import { CMS_COMPONENT_DETAIL_FIELDS } from '~/global/data/cms-detail-fields';
 import { getLibraryHref } from '~/global/utils/getLibraryHref';
 import { fetchPublicGraphql } from '~/global/utils/graphql.server';
 import { requireRecord } from '~/global/utils/requireRecord';
@@ -20,7 +20,7 @@ import { ComponentEditor } from '~/routing/components/components/ComponentEditor
 import {
   COMPONENT_DETAIL_COPY,
   COMPONENT_EDITOR_COPY,
-} from '~/routing/components/data/data.copy';
+} from '~/routing/components/data/copy';
 import type { ComponentActionResult } from '~/routing/components/types/component-action';
 import { runComponentAction } from '~/routing/components/utils/runComponentAction.server';
 

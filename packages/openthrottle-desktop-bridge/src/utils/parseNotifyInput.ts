@@ -1,4 +1,4 @@
-import { DESKTOP_NOTIFY_MAX_LENGTH } from '../data/data.desktop-bridge.ts';
+import { DESKTOP_NOTIFY_MAX_LENGTH } from '../data/desktop-bridge.ts';
 import type { DesktopNotifyInput } from '../types/desktop-bridge.ts';
 
 export type ParseNotifyInputResult =

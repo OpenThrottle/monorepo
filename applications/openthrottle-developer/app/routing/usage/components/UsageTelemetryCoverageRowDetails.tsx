@@ -7,7 +7,7 @@ import type { UsageTelemetryCoverageMachineFragment } from '~/__generated__/grap
 import {
   FORGET_TELEMETRY_MACHINE_INTENT,
   TELEMETRY_COVERAGE_COPY,
-} from '~/routing/usage/data/data.telemetry-coverage-copy';
+} from '~/routing/usage/data/telemetry-coverage-copy';
 import {
   machineDisplayName,
   repoDisplayName,

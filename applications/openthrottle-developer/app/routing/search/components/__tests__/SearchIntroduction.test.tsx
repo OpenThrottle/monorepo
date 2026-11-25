@@ -2,7 +2,7 @@ import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
-import { SEARCH_INTRODUCTION_COPY } from '~/routing/search/data/data.copy';
+import { SEARCH_INTRODUCTION_COPY } from '~/routing/search/data/copy';
 
 import { SearchIntroduction } from '../SearchIntroduction';
 

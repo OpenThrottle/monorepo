@@ -9,7 +9,7 @@ import {
   CHAT_DRAFT_WRITE_DELAY_MS,
   CHAT_DRAFTS_STATE_VERSION,
   CHAT_DRAFTS_STORAGE_KEY,
-} from '../../data/data.chat-drafts-state';
+} from '../../data/chat-drafts-state';
 import { normalizeChatDraftsState } from '../../utils/normalizeChatDraftsState';
 import type { UseChatDraftOptions, UseChatDraftResult } from '../useChatDraft';
 import { useChatDraft } from '../useChatDraft';

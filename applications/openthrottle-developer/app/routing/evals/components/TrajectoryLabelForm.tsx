@@ -15,7 +15,7 @@ import {
   TRAJECTORY_LABEL_INTENT,
   TRAJECTORY_NOTE_MAX_LENGTH,
 } from '~/routing/evals/config/defaults';
-import { TRAJECTORY_LABEL_COPY } from '~/routing/evals/data/data.copy';
+import { TRAJECTORY_LABEL_COPY } from '~/routing/evals/data/copy';
 import { useTrajectoryLabelForm } from '~/routing/evals/hooks/useTrajectoryLabelForm';
 
 export interface TrajectoryLabelFormProps {

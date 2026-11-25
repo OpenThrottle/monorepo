@@ -10,7 +10,7 @@ import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import type { ScheduledJobDetailFragment } from '~/__generated__/graphql';
-import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
+import { SCHEDULE_COPY } from '~/routing/schedule/data/copy';
 
 import type { ScheduleFormProps } from '../ScheduleForm';
 import { ScheduleForm } from '../ScheduleForm';

@@ -9,12 +9,12 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
+import { SCHEDULE_COPY } from '~/routing/schedule/data/copy';
 import {
   SCHEDULE_MISFIRE_DEFAULT_POLICY,
   SCHEDULE_MISFIRE_DEFAULT_THRESHOLD_MINUTES,
   SCHEDULE_MISFIRE_POLICY_OPTIONS,
-} from '~/routing/schedule/data/data.misfire';
+} from '~/routing/schedule/data/misfire';
 
 export interface ScheduleMisfireFieldsProps {
   /** The schedule's current policy; undefined on create (the server default applies). */

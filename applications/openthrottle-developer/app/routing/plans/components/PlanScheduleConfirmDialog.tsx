@@ -10,7 +10,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { PLAN_SCHEDULE_CONFIRM_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_SCHEDULE_CONFIRM_COPY } from '~/routing/plans/data/copy';
 
 export interface PlanScheduleConfirmDialogProps {
   /** @description The affirmative button, e.g. "Unschedule and run now". */

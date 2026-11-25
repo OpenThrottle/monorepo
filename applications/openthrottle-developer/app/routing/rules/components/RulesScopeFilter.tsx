@@ -7,7 +7,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { RULES_COPY } from '~/routing/rules/data/data.copy';
+import { RULES_COPY } from '~/routing/rules/data/copy';
 import {
   RULES_SCOPE_ALL,
   RULES_SCOPE_GLOBAL,

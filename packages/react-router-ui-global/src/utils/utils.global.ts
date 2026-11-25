@@ -2,7 +2,7 @@
 // import { PaperPlaneTiltIcon } from '@phosphor-icons/react/dist/ssr/PaperPlaneTilt';
 // import { HouseIcon } from '@phosphor-icons/react/dist/ssr/House';
 // import { LockIcon } from '@phosphor-icons/react/dist/ssr/Lock';
-// import { ADMIN_PATHS, dataNavigation } from '~/global/data/data.navigation';
+// import { ADMIN_PATHS, dataNavigation } from '~/global/data/navigation';
 
 import type {
   RootMetricsFragment,

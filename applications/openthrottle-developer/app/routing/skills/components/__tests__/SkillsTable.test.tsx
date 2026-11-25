@@ -3,12 +3,12 @@ import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import {
   SKILL_RECORD_TAGS_COPY,
   SKILLS_EMPTY_COPY,
   SKILLS_SOURCE_COPY,
-} from '~/routing/skills/data/data.copy';
+} from '~/routing/skills/data/copy';
 
 import { renderRoutesStub } from '../../../../testing/route-fixtures';
 import type { SkillsTableProps } from '../SkillsTable';

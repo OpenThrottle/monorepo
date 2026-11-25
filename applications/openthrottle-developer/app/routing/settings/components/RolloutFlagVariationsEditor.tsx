@@ -3,8 +3,8 @@ import * as React from 'react';
 
 import { RolloutFlagKind } from '~/__generated__/graphql';
 import { RolloutFlagVariationValueField } from '~/routing/settings/components/RolloutFlagVariationValueField';
-import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
-import type { RolloutFlagKindOption } from '~/routing/settings/data/data.rollout-kinds';
+import { ROLLOUT_COPY } from '~/routing/settings/data/copy';
+import type { RolloutFlagKindOption } from '~/routing/settings/data/rollout-kinds';
 import type { RolloutFormVariation } from '~/routing/settings/utils/rollout-typed-config';
 import {
   decodeVariationValueForEdit,

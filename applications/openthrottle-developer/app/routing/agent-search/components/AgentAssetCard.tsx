@@ -11,7 +11,7 @@ import { Link } from 'react-router';
 import {
   AGENT_ASSET_LIST_HREF_BY_TYPE,
   AGENT_ASSET_PROMPT_TYPE_LABEL,
-} from '~/routing/agent-search/data/data.agent-asset-card';
+} from '~/routing/agent-search/data/agent-asset-card';
 import type { AgentAssetResult } from '~/routing/agent-search/types';
 
 export interface AgentAssetCardProps {

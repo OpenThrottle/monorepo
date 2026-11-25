@@ -7,7 +7,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { PULL_REQUESTS_ROW_ACTIONS_COPY } from '~/routing/pull-requests/data/data.copy';
+import { PULL_REQUESTS_ROW_ACTIONS_COPY } from '~/routing/pull-requests/data/copy';
 
 import type { PullRequestsTableProps } from '../PullRequestsTable';
 import { PullRequestsTable } from '../PullRequestsTable';

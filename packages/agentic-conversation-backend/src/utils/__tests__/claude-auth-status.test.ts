@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   CLAUDE_NOT_LOGGED_IN_WARNING,
   claudeApiKeyOverrideWarning,
-} from '../../data/data.copy.ts';
+} from '../../data/copy.ts';
 import {
   CLAUDE_ACTIVE_CREDENTIALS,
   parseClaudeAuthStatus,

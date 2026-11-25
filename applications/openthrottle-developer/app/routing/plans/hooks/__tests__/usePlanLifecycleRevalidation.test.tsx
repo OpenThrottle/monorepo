@@ -29,7 +29,7 @@ vi.mock('~/services/getGraphqlWsClient', () => ({
 }));
 
 // Shorten the coalescing window so the tests stay fast.
-vi.mock('~/routing/plans/data/data.plan-lifecycle-events', () => ({
+vi.mock('~/routing/plans/data/plan-lifecycle-events', () => ({
   PLAN_LIFECYCLE_REVALIDATE_DELAY_MS: 20,
 }));
 

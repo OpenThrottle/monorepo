@@ -1,7 +1,7 @@
 import { UpdateCmsLibraryComponentDocument } from '~/__generated__/graphql';
 import { fetchAuthGraphql } from '~/global/utils/graphql.server';
 import { toCmsActionFailure } from '~/global/utils/toCmsActionFailure';
-import { COMPONENT_EDITOR_COPY } from '~/routing/components/data/data.copy';
+import { COMPONENT_EDITOR_COPY } from '~/routing/components/data/copy';
 import type { ComponentActionResult } from '~/routing/components/types/component-action';
 import { readComponentUpdateForm } from '~/routing/components/utils/readComponentUpdateForm';
 

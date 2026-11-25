@@ -11,7 +11,7 @@ import { TrajectoryFinalMetrics } from '~/routing/evals/components/TrajectoryFin
 import { TrajectoryHeader } from '~/routing/evals/components/TrajectoryHeader';
 import { TrajectoryLabelPanel } from '~/routing/evals/components/TrajectoryLabelPanel';
 import { TrajectoryTimeline } from '~/routing/evals/components/TrajectoryTimeline';
-import { TRAJECTORY_VIEWER_COPY } from '~/routing/evals/data/data.copy';
+import { TRAJECTORY_VIEWER_COPY } from '~/routing/evals/data/copy';
 import type { AtifTrajectory } from '~/routing/evals/types';
 import {
   buildTrajectoryTimeline,

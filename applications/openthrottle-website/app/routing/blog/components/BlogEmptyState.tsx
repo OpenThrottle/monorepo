@@ -10,7 +10,7 @@ import {
 import * as React from 'react';
 import { Link } from 'react-router';
 
-import { BLOG_COPY } from '~/routing/blog/data/data.copy';
+import { BLOG_COPY } from '~/routing/blog/data/copy';
 import { BLOG_BASE_PATH } from '~/routing/blog/utils/blog-urls';
 
 export interface BlogEmptyStateProps {

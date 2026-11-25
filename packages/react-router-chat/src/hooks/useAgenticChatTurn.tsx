@@ -12,11 +12,11 @@ import type {
   ConversationStreamSubscriptionData,
   ConversationStreamSubscriptionVariables,
 } from '../conversation-stream';
-import { EMPTY_CHAT_SEED } from '../data/data.chat-agentic-turn-seed';
+import { EMPTY_CHAT_SEED } from '../data/chat-agentic-turn-seed';
 import {
   AGENT_CONVERSATIONS_ACTION,
   CONVERSATION_STREAM_ACTION,
-} from '../data/data.chat-conversation-actions';
+} from '../data/chat-conversation-actions';
 import { deriveRunPhaseFromElapsed } from '../run-phase';
 import type {
   ChatMessage,

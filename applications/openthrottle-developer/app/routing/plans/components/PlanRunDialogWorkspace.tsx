@@ -4,7 +4,7 @@ import * as React from 'react';
 import { Link } from 'react-router';
 
 import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/graphql';
-import { PLAN_RUN_DIALOG_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_RUN_DIALOG_COPY } from '~/routing/plans/data/copy';
 import { getPlanConfigurationTabHref } from '~/routing/plans/utils/plan-run-dialog';
 import { toPlanCheckoutOptions } from '~/routing/plans/utils/toPlanCheckoutOptions';
 

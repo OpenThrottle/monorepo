@@ -24,8 +24,8 @@ import {
   workflowRunIterationTimeoutTextAtom,
   workflowRunOptionsAtom,
   workflowWorkingDirectoryAtom,
-} from '~/routing/plans/data/data.atom-plan';
-import { PLAN_DEFERRED_SECTION_COPY } from '~/routing/plans/data/data.copy';
+} from '~/routing/plans/data/atom-plan';
+import { PLAN_DEFERRED_SECTION_COPY } from '~/routing/plans/data/copy';
 
 /**
  * @description The plan run options (target, validation, workspace, lifecycle hooks, agent,

@@ -2,7 +2,7 @@ import { dirname } from 'node:path';
 
 import { isRecord } from '@openthrottle/nodejs-utils';
 
-import { WINDOW_STATE_VERSION } from '../data/data.window-state.ts';
+import { WINDOW_STATE_VERSION } from '../data/window-state.ts';
 import type { Rectangle } from './isBoundsVisible.ts';
 
 /** Synchronous fs calls, injected so tests need no disk. Sync on purpose: the final save runs while the window closes. */

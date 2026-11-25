@@ -5,7 +5,7 @@ import { PanelRightIcon } from 'lucide-react';
 import * as React from 'react';
 
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
-import { PLAN_TASK_ROW_ACTIONS_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_TASK_ROW_ACTIONS_COPY } from '~/routing/plans/data/copy';
 
 export interface PlanTasksTableCellActionsProps {
   row: DataTableRow<PlanTaskRowFragment>;

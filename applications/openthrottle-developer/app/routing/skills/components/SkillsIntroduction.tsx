@@ -5,7 +5,7 @@ import {
 import { BrainCircuitIcon } from 'lucide-react';
 import * as React from 'react';
 
-import { SKILLS_COPY } from '~/routing/skills/data/data.copy';
+import { SKILLS_COPY } from '~/routing/skills/data/copy';
 
 export interface SkillsIntroductionProps {}
 

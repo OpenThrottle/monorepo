@@ -11,7 +11,7 @@ import type { Route } from '@/app/routes/+types/fragments._index';
 import { CmsFragmentsDocument } from '~/__generated__/graphql';
 import { GlobalTable } from '~/global/components/GlobalTable';
 import { SITE_TITLE } from '~/global/config/settings';
-import { CMS_FRAGMENT_COLUMNS } from '~/global/data/data.cms-table-columns';
+import { CMS_FRAGMENT_COLUMNS } from '~/global/data/cms-table-columns';
 import { fetchPublicGraphql } from '~/global/utils/graphql.server';
 import { getFragmentRowHref } from '~/routing/fragments/utils/getFragmentRowHref';
 

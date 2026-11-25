@@ -44,7 +44,7 @@ describe('classify', () => {
     expect(classify('applications/app-a/app/global/config/defaults.ts')).toBe(
       'config',
     );
-    expect(classify('packages/pkg-a/src/data/data.copy.ts')).toBe('data');
+    expect(classify('packages/pkg-a/src/data/copy.ts')).toBe('data');
   });
 
   it('routes are flat — a nested app/routes/** file is not a route', () => {
@@ -165,7 +165,7 @@ describe('analyzeCoverage', () => {
   it('classifies config and data as informational and reports them', () => {
     const paths = [
       'applications/app-a/app/global/config/defaults.ts',
-      'packages/pkg-a/src/data/data.copy.ts',
+      'packages/pkg-a/src/data/copy.ts',
     ];
     const entries = analyzeCoverage(paths, reader());
     const config = entries.find((e) => e.category === 'config');
@@ -188,7 +188,7 @@ describe('hasStrictFailure', () => {
     const entries = analyzeCoverage(
       [
         'applications/app-a/app/global/config/defaults.ts',
-        'packages/pkg-a/src/data/data.copy.ts',
+        'packages/pkg-a/src/data/copy.ts',
       ],
       reader(),
     );

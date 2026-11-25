@@ -13,7 +13,7 @@ import { SITE_TITLE } from '~/global/config/settings';
 import { requirePermission } from '~/global/utils/utils.permissions.server';
 import { runBlogPostCreateAction } from '~/routing/blog/actions/new';
 import { BlogPostNewDraft } from '~/routing/blog/components/BlogPostNewDraft';
-import { BLOG_COPY, BLOG_NEW_COPY } from '~/routing/blog/data/data.copy';
+import { BLOG_COPY, BLOG_NEW_COPY } from '~/routing/blog/data/copy';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

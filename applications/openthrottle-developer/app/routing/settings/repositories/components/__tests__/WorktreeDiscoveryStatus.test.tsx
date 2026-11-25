@@ -5,7 +5,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
 
-import { WORKTREE_DISCOVERY_COPY } from '~/routing/settings/repositories/data/data.copy';
+import { WORKTREE_DISCOVERY_COPY } from '~/routing/settings/repositories/data/copy';
 import { mockDiscoveredWorktrees } from '~/routing/settings/repositories/testing/mock-repositories';
 
 import type { WorktreeDiscoveryStatusProps } from '../WorktreeDiscoveryStatus';

@@ -10,7 +10,7 @@ import {
   TrajectoryViewerRemoveLabelDocument,
 } from '~/__generated__/graphql';
 import { LabelAgentTrajectoryInputSchema } from '~/__generated__/schemas';
-import { TRAJECTORY_LABEL_COPY } from '~/routing/evals/data/data.copy';
+import { TRAJECTORY_LABEL_COPY } from '~/routing/evals/data/copy';
 import type {
   TrajectoryLabelActionFailure,
   TrajectoryLabelRemoved,

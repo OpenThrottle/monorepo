@@ -6,8 +6,8 @@ import type { PlanRunHistoryEntryFragment } from '~/__generated__/graphql';
 import { PlanRunMetaList } from '~/routing/plans/components/PlanRunMetaList';
 import { PlanRunProvenanceCell } from '~/routing/plans/components/PlanRunProvenanceCell';
 import { PlanRunTime } from '~/routing/plans/components/PlanRunTime';
-import { PLAN_RUN_TRANSPARENCY_COPY } from '~/routing/plans/data/data.copy';
-import { PLAN_RUN_HISTORY_META_FIELDS } from '~/routing/plans/data/data.plan-run-history';
+import { PLAN_RUN_TRANSPARENCY_COPY } from '~/routing/plans/data/copy';
+import { PLAN_RUN_HISTORY_META_FIELDS } from '~/routing/plans/data/plan-run-history';
 import type { PlanRunJobMetrics } from '~/routing/plans/utils/joinPlanRunJobMetrics';
 import {
   buildPlanRunSnapshotDiffLabels,

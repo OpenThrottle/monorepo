@@ -1,5 +1,5 @@
 import type { RepositoryCheckoutInspectionFragment } from '~/__generated__/graphql';
-import { REPOSITORY_HOOK_TELEMETRY_COPY } from '~/routing/settings/repositories/data/data.copy';
+import { REPOSITORY_HOOK_TELEMETRY_COPY } from '~/routing/settings/repositories/data/copy';
 
 /**
  * Badge tone per status. `not_wired` is `outline` rather than `destructive`:

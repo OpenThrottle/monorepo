@@ -2,7 +2,7 @@ import {
   SKILL_USAGE_COPY,
   SKILL_USAGE_SCOPE_BADGE_COLORS,
   SKILL_USAGE_SCOPES,
-} from '~/routing/usage/data/data.skill-usage-copy';
+} from '~/routing/usage/data/skill-usage-copy';
 
 /** Human label for a scope id. */
 export const skillUsageScopeLabel = (scope: string): string => {

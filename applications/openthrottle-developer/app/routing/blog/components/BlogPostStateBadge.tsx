@@ -2,8 +2,8 @@ import { Badge } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import type { BlogPostState } from '~/__generated__/graphql';
-import { BLOG_STATE_BADGE_LABELS } from '~/routing/blog/data/data.copy';
-import { BLOG_STATE_BADGE_COLOR } from '~/routing/blog/data/data.state-badge';
+import { BLOG_STATE_BADGE_LABELS } from '~/routing/blog/data/copy';
+import { BLOG_STATE_BADGE_COLOR } from '~/routing/blog/data/state-badge';
 
 export interface BlogPostStateBadgeProps {
   readonly state: BlogPostState;

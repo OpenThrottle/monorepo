@@ -3,7 +3,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { PROMPTS_EMPTY_COPY } from '~/routing/prompts/data/data.copy';
+import { PROMPTS_EMPTY_COPY } from '~/routing/prompts/data/copy';
 
 import type { PromptsEmptyProps } from '../PromptsEmpty';
 import { PromptsEmpty } from '../PromptsEmpty';

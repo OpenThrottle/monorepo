@@ -9,7 +9,7 @@ import * as React from 'react';
 
 import type { PlanRunHistoryEntryFragment } from '~/__generated__/graphql';
 import { PlanWorkflowRunUpcoming } from '~/routing/plans/components/PlanWorkflowRunUpcoming';
-import { PLAN_SCHEDULED_RUNS_CARD_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_SCHEDULED_RUNS_CARD_COPY } from '~/routing/plans/data/copy';
 import type { PlanScheduledRunRef } from '~/routing/plans/utils/plan-run-sections';
 import { selectUpcomingRuns } from '~/routing/plans/utils/plan-run-sections';
 

@@ -18,12 +18,12 @@ import {
   compareSearchModes,
   DEFAULT_COMPARE_OPTIONS,
 } from './compareSearchModes.ts';
-import { SEARCH_RANKING_CASES } from './data/data.cases.ts';
+import { SEARCH_RANKING_CASES } from './data/cases.ts';
 import {
   SEARCH_RANKING_DATASET_ID,
   SEARCH_RANKING_DATASET_VERSION,
   SEARCH_RANKING_GRADER_VERSION,
-} from './data/data.dataset.ts';
+} from './data/dataset.ts';
 import type { RankedChunk, SearchRankingCase } from './eval-case.ts';
 import type { SearchAnswer, SearchFn } from './runSearchRanking.ts';
 import { runSearchMode } from './runSearchRanking.ts';

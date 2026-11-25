@@ -9,7 +9,7 @@ import {
   workflowCheckoutIdAtom,
   workflowRepositoryIdAtom,
   workflowWorkingDirectoryAtom,
-} from '~/routing/plans/data/data.atom-plan';
+} from '~/routing/plans/data/atom-plan';
 
 import type { UsePlanCheckoutSelectionOptions } from '../usePlanCheckoutSelection';
 import { usePlanCheckoutSelection } from '../usePlanCheckoutSelection';

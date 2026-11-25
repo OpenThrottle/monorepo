@@ -12,7 +12,7 @@ import {
   EVAL_COMPARE_COPY,
   EVAL_REPORT_COPY,
   EVAL_RUNS_COPY,
-} from '~/routing/evals/data/data.copy';
+} from '~/routing/evals/data/copy';
 import {
   MOCK_REPORT_BASE,
   MOCK_REPORT_CANDIDATE,

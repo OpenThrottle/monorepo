@@ -10,7 +10,7 @@ import type { action } from '~/routes/plans.$planId._index';
 import {
   PLAN_RUN_CANCEL_SCHEDULED_COPY,
   PLAN_TOOLBAR_COPY,
-} from '~/routing/plans/data/data.copy';
+} from '~/routing/plans/data/copy';
 
 import type { PlanToolbarRunActionsProps } from '../PlanToolbarRunActions';
 import { PlanToolbarRunActions } from '../PlanToolbarRunActions';

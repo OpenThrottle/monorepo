@@ -6,7 +6,7 @@ import { createRoutesStub, redirect } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import { RolloutFlagKind } from '~/__generated__/graphql';
-import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
+import { ROLLOUT_COPY } from '~/routing/settings/data/copy';
 import { defaultTypedConfigForKind } from '~/routing/settings/utils/rollout-typed-config';
 
 import type { RolloutFlagEditFormProps } from '../RolloutFlagEditForm';

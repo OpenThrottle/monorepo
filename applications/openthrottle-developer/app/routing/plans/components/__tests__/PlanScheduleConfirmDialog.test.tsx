@@ -5,7 +5,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { PLAN_SCHEDULE_CONFIRM_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_SCHEDULE_CONFIRM_COPY } from '~/routing/plans/data/copy';
 
 import type { PlanScheduleConfirmDialogProps } from '../PlanScheduleConfirmDialog';
 import { PlanScheduleConfirmDialog } from '../PlanScheduleConfirmDialog';

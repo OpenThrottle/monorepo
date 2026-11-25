@@ -12,7 +12,7 @@ import { PlanDeferredSection } from '~/routing/plans/components/PlanDeferredSect
 import {
   PLAN_CHECKOUT_SELECTOR_COPY,
   PLAN_DEFERRED_SECTION_COPY,
-} from '~/routing/plans/data/data.copy';
+} from '~/routing/plans/data/copy';
 import { getPlanCheckoutHint } from '~/routing/plans/utils/getPlanCheckoutHint';
 import { toPlanCheckoutOptions } from '~/routing/plans/utils/toPlanCheckoutOptions';
 

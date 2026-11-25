@@ -2,7 +2,7 @@ import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
-import { LOGIC_COOKIES_COPY } from '../../data/data.copy';
+import { LOGIC_COOKIES_COPY } from '../../data/copy';
 import { LogicCookies } from '../LogicCookies';
 
 describe('LogicCookies', () => {

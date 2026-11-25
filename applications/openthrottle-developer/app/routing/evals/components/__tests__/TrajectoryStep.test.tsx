@@ -2,12 +2,12 @@ import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
-import { TRAJECTORY_TIMELINE_COPY } from '~/routing/evals/data/data.copy';
-import { STEP_SOURCE_LABEL } from '~/routing/evals/data/data.step-source';
+import { TRAJECTORY_TIMELINE_COPY } from '~/routing/evals/data/copy';
 import {
   MOCK_SUBAGENT_ID,
   MOCK_TRAJECTORY,
 } from '~/routing/evals/data/mock.trajectory';
+import { STEP_SOURCE_LABEL } from '~/routing/evals/data/step-source';
 import { renderEvals } from '~/routing/evals/testing/renderEvals';
 import type { TrajectoryStepView } from '~/routing/evals/types';
 import { buildTrajectoryTimeline } from '~/routing/evals/utils/timeline';

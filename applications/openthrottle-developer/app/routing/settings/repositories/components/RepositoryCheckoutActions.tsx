@@ -4,11 +4,11 @@ import * as React from 'react';
 import { useNavigation } from 'react-router';
 
 import type { RepositoryCheckoutFieldsFragment } from '~/__generated__/graphql';
-import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
+import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/copy';
 import {
   REMOVE_PLAN_RUN_WORKTREE_COPY,
   REPOSITORIES_ROW_ACTIONS_COPY,
-} from '~/routing/settings/repositories/data/data.copy';
+} from '~/routing/settings/repositories/data/copy';
 import { REMOVE_PLAN_RUN_WORKTREE_INTENT } from '~/routing/settings/repositories/utils/missing-rows';
 
 /** The worktree on disk behind a checkout the server says is safe to remove. */

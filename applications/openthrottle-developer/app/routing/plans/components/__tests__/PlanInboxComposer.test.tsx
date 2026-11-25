@@ -6,7 +6,7 @@ import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
-import { PLAN_INBOX_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_INBOX_COPY } from '~/routing/plans/data/copy';
 
 import { PlanInboxComposer } from '../PlanInboxComposer';
 

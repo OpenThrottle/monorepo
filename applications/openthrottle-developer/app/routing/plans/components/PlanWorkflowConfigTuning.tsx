@@ -4,7 +4,7 @@ import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 import * as React from 'react';
 
 import { PlanWorkflowConfigModelEffort } from '~/routing/plans/components/PlanWorkflowConfigModelEffort';
-import { PLAN_CONFIG_TUNING_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_CONFIG_TUNING_COPY } from '~/routing/plans/data/copy';
 import type { PlanRunOptions } from '~/routing/plans/utils/plan-run-options';
 
 export interface PlanWorkflowConfigTuningProps {

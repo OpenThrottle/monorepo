@@ -808,8 +808,8 @@ clause, which no linter can see.
 - **A file named for its single export takes that export's casing**: **PascalCase** for a React
   component (`Button.tsx`), **camelCase** for a function (`getFormFieldKind.ts`) — the rule hooks
   already follow (`useFoo.ts`). **kebab-case** for everything else: a module with several exports
-  (`schema-refs.ts`), scripts, config. NestJS `<folder>.<kind>.ts` and `data.<name>.ts` keep their
-  own forms. The boundary, as
+  (`schema-refs.ts`), scripts, config, and every file directly under a `data/` folder. NestJS
+  `<folder>.<kind>.ts` and `mock.<name>.ts` keep their own forms. The boundary, as
   [`scripts/codemod-file-name-casing.ts`](../../scripts/codemod-file-name-casing.ts) applies it:
   - **Single export means one _value_ export.** Type-only exports beside it don't count, so a
     function plus its `GetFooOptions` / `GetFooResult` types is single-export, exactly like a
@@ -986,11 +986,11 @@ conformant.
   with it (e.g. `Foo` + `FooProps`). Infrequently it may export one extra closely-related
   type or interface — but never constants, hardcoded data, lists, mock data, or copy.
 - Hardcoded data, lists, mock data, and user-facing copy belong in the nearest `data/`
-  folder, not inlined in components. Use the standardized `data.<name>.ts` naming (`.tsx`
-  only when it needs JSX) so one file can export many related values:
-  - User-facing copy → `data.copy.ts`
+  folder, not inlined in components. Name each file `<name>.ts` in kebab-case (`.tsx` only
+  when it needs JSX) so one file can export many related values:
+  - User-facing copy → `copy.ts`
   - Mock fixtures → `mock.<name>.ts`
-  - Other static data and lists → `data.<name>.ts`
+  - Other static data and lists → `<name>.ts`
   - Functions never — they go to the sibling `utils/`. See
     [Data files hold data](#data-files-hold-data).
 - The component imports the data via the `~/routing/<area>/data/…` alias and renders it.
@@ -1007,7 +1007,7 @@ conformant.
   derivation, parsing, filtering, computed or sorted lists, uniqueness, or a shape rule
   ("every entry is a valid URL"). Assert the **rule**, not the specific values.
 - When copy is the contract, the consuming component or route spec asserts against the
-  imported constant from `data.copy.ts` (single source of truth) rather than a duplicated
+  imported constant from `data/copy.ts` (single source of truth) rather than a duplicated
   literal — see
   [snapshot-replacement-patterns.md](../testing/snapshot-replacement-patterns.md).
 
@@ -1074,15 +1074,18 @@ name ([`ot-folders` § Naming](../../skills/ot-folders/SKILL.md#naming)).
 
 ### Data files hold data
 
-A `.ts` file directly under a `data/` folder is named `data.<name>.ts` (`.tsx` only when it
-needs JSX), and it exports **values, not functions**. User-facing copy goes in
-`data.copy.ts` and mock fixtures in `mock.<name>.ts`, as
+A `.ts` file directly under a `data/` folder is named `<name>.ts` in kebab-case (`.tsx` only
+when it needs JSX), and it exports **values, not functions**. User-facing copy goes in
+`copy.ts` and mock fixtures in `mock.<name>.ts`, as
 [Component and data boundaries](#component-and-data-boundaries) already says. A function —
 a merge, a filter, a formatter, a row builder — belongs in the sibling `utils/`, even when
 it only ever reads that data. Spec files under `__tests__/` are exempt.
 
-**Why.** The prefix makes every data file sort together and say what it is, so
-`data/` is greppable by name alone. A function in `data/` is logic hiding where nobody
+**Why.** The folder already says the file is data, so the name only has to say what data:
+`data/copy.ts`, not `data/copy.ts`. Data files used to carry a `data.` prefix; it was
+dropped because it repeated the folder and every import path said "data" twice. `mock.` stays,
+because it says something the folder cannot: that the values are fixtures, not shipped data.
+A function in `data/` is logic hiding where nobody
 looks for it, and it is exactly the case [Testing data files](#component-and-data-boundaries)
 says _does_ need a spec.
 
@@ -1090,12 +1093,13 @@ says _does_ need a spec.
 // BAD
 routing/settings/data/mcp-connectors.data.ts
 routing/settings/data/url-matrix-rows.ts
-routing/settings/data/data.agent-clis.ts   ← exports mergeAgentClis()
+routing/settings/data/agentClis.ts
+routing/settings/data/agent-clis.ts   ← exports mergeAgentClis()
 
 // GOOD
-routing/settings/data/data.mcp-connectors.ts
-routing/settings/data/data.url-matrix-rows.ts
-routing/settings/data/data.agent-clis.ts   ← values only
+routing/settings/data/mcp-connectors.ts
+routing/settings/data/url-matrix-rows.ts
+routing/settings/data/agent-clis.ts   ← values only
 routing/settings/utils/merge-agent-clis.ts ← the function
 ```
 
@@ -1261,7 +1265,7 @@ const COPY = {
 ```
 
 **Why.** Copy reads as `key: value` on one line, and a diff that edits the string touches one
-line, not two. `data.copy.ts` files already use backticks throughout. Short strings keep
+line, not two. `data/copy.ts` files already use backticks throughout. Short strings keep
 single quotes: the convention is about strings that wrap, not about quote style.
 
 **Enforcement.** `openthrottle/long-string-template-literal` is on at `error` repo-wide. It
@@ -1473,7 +1477,7 @@ asserts the label is in the HTML.
 - **Assert behavior and structure** — roles, labels, `href`, test ids — not marketing copy.
   Prefer `getByRole`/`getByLabelText` over `getByText` for sentence-length strings. When the
   exact copy _is_ the contract (error and empty-state messages, branded text), single-source
-  it in the area's `data/data.copy.ts` (`.tsx` if it needs JSX): the component renders the
+  it in the area's `data/copy.ts` (`.tsx` if it needs JSX): the component renders the
   constant and the spec imports the same constant, so a wording change touches one place and
   no spec breaks. See
   [snapshot-replacement-patterns.md](../testing/snapshot-replacement-patterns.md).

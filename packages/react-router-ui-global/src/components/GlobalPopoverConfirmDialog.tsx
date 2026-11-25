@@ -11,7 +11,7 @@ import {
 import * as React from 'react';
 import { useFetcher, useSubmit } from 'react-router';
 
-import { GLOBAL_POPOVER_COPY } from '../data/data.copy';
+import { GLOBAL_POPOVER_COPY } from '../data/copy';
 
 /**
  * @public

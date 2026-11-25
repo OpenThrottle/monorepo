@@ -14,7 +14,7 @@ import * as React from 'react';
 import { useFetcher, useRevalidator } from 'react-router';
 
 import type { action as planDetailAction } from '~/routes/plans.$planId._index';
-import { PLAN_RUN_CANCEL_SCHEDULED_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_RUN_CANCEL_SCHEDULED_COPY } from '~/routing/plans/data/copy';
 import {
   cancelPlanRunToastTone,
   describeCancelPlanRunResult,

@@ -1,4 +1,4 @@
-import { CHAT_USAGE_LIMIT_COPY } from '../data/data.copy';
+import { CHAT_USAGE_LIMIT_COPY } from '../data/copy';
 
 /**
  * Human line for a usage-limit event: "Usage limit reached — resets <local

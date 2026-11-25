@@ -7,7 +7,7 @@ import { GlobalTable } from '~/global/components/GlobalTable';
 import {
   GLOBAL_TABLE_COLUMN_KIND,
   GLOBAL_TABLE_COPY,
-} from '~/global/data/data.global-table';
+} from '~/global/data/global-table';
 import type { GlobalTableColumn } from '~/global/types/global-table';
 
 interface DemoRow {

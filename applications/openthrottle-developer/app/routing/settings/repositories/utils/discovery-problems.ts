@@ -3,7 +3,7 @@ import type {
   DiscoveredWorktreesScanFragment,
 } from '~/__generated__/graphql';
 import { WorktreeDiscoveryProblemKind } from '~/__generated__/graphql';
-import { WORKTREE_DISCOVERY_COPY } from '~/routing/settings/repositories/data/data.copy';
+import { WORKTREE_DISCOVERY_COPY } from '~/routing/settings/repositories/data/copy';
 
 /**
  * @description Identity of a rendered group. Several kinds collapse into

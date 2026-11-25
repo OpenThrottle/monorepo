@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'vitest';
 
 import type { UsageSkillUsageBySkillFragment } from '~/__generated__/graphql';
-import { SKILL_PRESENCE } from '~/routing/usage/data/data.skill-presence';
-import { SKILL_USAGE_SCOPES } from '~/routing/usage/data/data.skill-usage-copy';
+import { SKILL_PRESENCE } from '~/routing/usage/data/skill-presence';
+import { SKILL_USAGE_SCOPES } from '~/routing/usage/data/skill-usage-copy';
 
 import { partitionSkillUsageByPresence } from '../partitionSkillUsageByPresence';
 

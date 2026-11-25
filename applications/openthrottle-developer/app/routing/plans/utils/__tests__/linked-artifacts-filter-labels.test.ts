@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { LINKED_ARTIFACTS_PANEL_COPY } from '~/routing/plans/data/data.copy';
+import { LINKED_ARTIFACTS_PANEL_COPY } from '~/routing/plans/data/copy';
 import {
   getTypeFilterLabel,
   getVerificationFilterLabel,

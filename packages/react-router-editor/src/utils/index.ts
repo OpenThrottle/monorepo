@@ -5,7 +5,7 @@ import {
   REGEX_KEBAB_CASE,
   REGEX_PASCAL_CASE,
 } from '../config';
-import type { EditorFile } from '../data/data.atom.editor';
+import type { EditorFile } from '../data/atom.editor';
 
 const FILE_EXTENSION_LANGUAGES: Readonly<Record<string, FileExtensionsValue>> =
   FILE_EXTENSIONS;

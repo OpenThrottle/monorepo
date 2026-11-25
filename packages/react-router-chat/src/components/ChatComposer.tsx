@@ -1,7 +1,7 @@
 import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { CHAT_COMPOSER_QUEUE_COPY } from '../data/data.copy';
+import { CHAT_COMPOSER_QUEUE_COPY } from '../data/copy';
 import { useChatComposerMentions } from '../hooks/useChatComposerMentions';
 import { useChatComposerPromptRecall } from '../hooks/useChatComposerPromptRecall';
 import { useChatComposerSlashCommands } from '../hooks/useChatComposerSlashCommands';

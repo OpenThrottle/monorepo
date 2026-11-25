@@ -12,7 +12,7 @@ import {
   TIMELINE_SPAN_KIND_LABEL,
   TIMELINE_SPAN_KINDS,
 } from '~/routing/timeline/config/kinds';
-import { TIMELINE_CONTROLS_COPY } from '~/routing/timeline/data/data.copy';
+import { TIMELINE_CONTROLS_COPY } from '~/routing/timeline/data/copy';
 import { withTimelineKinds } from '~/routing/timeline/utils/search-params';
 
 import { TimelineMarkerGlyph } from './TimelineMarkerGlyph';

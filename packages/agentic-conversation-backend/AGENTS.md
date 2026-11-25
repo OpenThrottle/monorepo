@@ -17,7 +17,7 @@ Flat by the repo's "stay flat below the top level" rule — the per-CLI files ar
   `cursor-agent-mint`/`-teardown`, `opencode-mcp-config`, …) for claude, antigravity, codex, cursor-agent, grok, opencode;
   `acp*.ts` (ACP path); `registry.ts`; `openai.ts` + `streamChatCompletion.ts` (HTTP path); discovery, setup, handoff, keepalive.
 - `src/types/` — `conversation-backend.ts` (chunk/backends contract), `agent-account.ts`.
-- `src/data/data.copy.ts` — Claude auth-status copy.
+- `src/data/copy.ts` — Claude auth-status copy.
 - `src/index.ts` — the only barrel; it lists exactly the public symbols (per-CLI argv/event internals stay private, except the
   event mappers that plan-run transcript readers reuse).
 

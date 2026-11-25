@@ -4,7 +4,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { OUTPUT_FORMATS, REPORT_FILE_NAMES } from './config/index.ts';
-import { RUN_COMPLETE_COPY } from './data/data.copy.ts';
+import { RUN_COMPLETE_COPY } from './data/copy.ts';
 import type { MetricQuery } from './types/index.ts';
 import { CliArgsError, parseCliArgs } from './utils/cli-args.ts';
 import { buildEnvelope, resolveWindow } from './utils/envelope.ts';

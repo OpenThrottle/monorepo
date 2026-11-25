@@ -6,7 +6,7 @@ import {
   TOKEN_USAGE_SOURCE_LABELS,
   TOKEN_USAGE_SOURCES,
   TOKEN_USAGE_STATS,
-} from '~/routing/usage/data/data.token-usage-copy';
+} from '~/routing/usage/data/token-usage-copy';
 import {
   tokenUsageProviderLabel,
   tokenUsageSourceLabel,

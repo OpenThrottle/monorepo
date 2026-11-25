@@ -10,7 +10,7 @@ import * as React from 'react';
 import { Link } from 'react-router';
 
 import type { WorkspaceRepositoryFieldsFragment } from '~/__generated__/graphql';
-import { WORKSPACE_REPOSITORY_DETAIL_COPY } from '~/routing/settings/data/data.copy';
+import { WORKSPACE_REPOSITORY_DETAIL_COPY } from '~/routing/settings/data/copy';
 import { RepositoryAgentConfigTrust } from '~/routing/settings/repositories/components/RepositoryAgentConfigTrust';
 import { RepositoryDetailCheckout } from '~/routing/settings/repositories/components/RepositoryDetailCheckout';
 

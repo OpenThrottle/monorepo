@@ -6,7 +6,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { OUTPUT_STREAM_COPY } from '~/routing/plans/data/data.copy';
+import { OUTPUT_STREAM_COPY } from '~/routing/plans/data/copy';
 import type { OutputStreamAttemptGroup } from '~/routing/plans/utils/output-stream-attempts';
 import {
   buildAttemptHeader,

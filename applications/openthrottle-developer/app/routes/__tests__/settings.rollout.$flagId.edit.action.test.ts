@@ -7,7 +7,7 @@ import {
   DeleteRolloutFlagDocument,
   UpdateRolloutFlagDocument,
 } from '~/__generated__/graphql';
-import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
+import { ROLLOUT_COPY } from '~/routing/settings/data/copy';
 
 vi.mock('@openthrottle/react-router-graphql', async (importOriginal) => {
   const actual =

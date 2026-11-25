@@ -4,7 +4,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import { FRAGMENT_INTENT } from '~/routing/fragments/data/data.intents';
+import { FRAGMENT_INTENT } from '~/routing/fragments/data/intents';
 import { MOCK_CONTAINER_EDITOR_RECORDS } from '~/routing/fragments/data/mock.fragment-editor';
 
 import type { UseFragmentChildrenResult } from '../useFragmentChildren';

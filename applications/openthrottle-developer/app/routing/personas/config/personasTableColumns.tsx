@@ -6,8 +6,8 @@ import {
 } from '@openthrottle/react-router-ui-global';
 import * as React from 'react';
 
-import type { RepoPersonaEntry } from '~/routing/agents/data/data.repo-personas-registry';
-import { PERSONAS_ROW_ACTIONS_COPY } from '~/routing/personas/data/data.copy';
+import type { RepoPersonaEntry } from '~/routing/agents/data/repo-personas-registry';
+import { PERSONAS_ROW_ACTIONS_COPY } from '~/routing/personas/data/copy';
 
 export type PersonasTableColumnValue =
   | RepoPersonaEntry['repoRelativePath']

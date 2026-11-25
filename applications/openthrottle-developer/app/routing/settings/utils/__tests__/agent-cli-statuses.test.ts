@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import type { AgentCliStatus } from '~/routing/settings/data/data.agent-clis';
+import type { AgentCliStatus } from '~/routing/settings/data/agent-clis';
 import {
   collectAgentCliAuthWarnings,
   filterAgentCliStatuses,

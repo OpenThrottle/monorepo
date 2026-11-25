@@ -2,7 +2,7 @@ import { CardContent } from '@openthrottle/react-router-shadcn';
 import { useAtomValue } from 'jotai';
 import * as React from 'react';
 
-import { workflowRunOptionsValidationAtom } from '~/routing/plans/data/data.atom-plan';
+import { workflowRunOptionsValidationAtom } from '~/routing/plans/data/atom-plan';
 
 export interface PlanTabConfigurationValidationProps {
   // className?: string;

@@ -10,7 +10,7 @@ import * as React from 'react';
 import {
   PLAN_RUN_TRANSPARENCY_SKELETON_HISTORY_COLUMNS,
   PLAN_RUN_TRANSPARENCY_SKELETON_HISTORY_ROWS,
-} from '~/routing/plans/data/data.plan-run-transparency-skeleton';
+} from '~/routing/plans/data/plan-run-transparency-skeleton';
 
 export interface PlanRunTransparencySkeletonProps {
   readonly className?: string;

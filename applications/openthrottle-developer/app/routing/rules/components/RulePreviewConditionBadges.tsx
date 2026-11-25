@@ -3,7 +3,7 @@ import { CheckIcon, XIcon } from 'lucide-react';
 import * as React from 'react';
 
 import type { RulePreviewNonMatchFragment } from '~/__generated__/graphql';
-import { RULE_PREVIEW_COPY } from '~/routing/rules/data/data.copy';
+import { RULE_PREVIEW_COPY } from '~/routing/rules/data/copy';
 import { selectVisibleConditions } from '~/routing/rules/utils/selectVisibleConditions';
 
 export interface RulePreviewConditionBadgesProps {

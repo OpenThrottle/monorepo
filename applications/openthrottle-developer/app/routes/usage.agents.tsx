@@ -13,7 +13,7 @@ import { GetUsageTokenUsageDocument } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import { UsagePageIntroduction } from '~/routing/usage/components/UsagePageIntroduction';
 import { UsageTokenUsage } from '~/routing/usage/components/UsageTokenUsage';
-import { TOKEN_USAGE_COPY } from '~/routing/usage/data/data.token-usage-copy';
+import { TOKEN_USAGE_COPY } from '~/routing/usage/data/token-usage-copy';
 import { getUsageRange } from '~/routing/usage/utils/getUsageRange';
 
 type HandleData = Route.ComponentProps['loaderData'];

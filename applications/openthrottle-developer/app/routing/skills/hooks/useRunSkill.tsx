@@ -3,7 +3,7 @@ import { toast } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import { useAgenticChatTurn } from '~/routing/home/hooks/useAgenticChatTurn';
-import { SKILL_RUN_COPY } from '~/routing/skills/data/data.copy';
+import { SKILL_RUN_COPY } from '~/routing/skills/data/copy';
 import type { RunSkillPayload } from '~/routing/skills/types';
 
 export interface UseRunSkillResult {

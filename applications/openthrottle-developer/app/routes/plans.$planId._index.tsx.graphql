@@ -344,7 +344,7 @@ query PlanDetailRunHistory($planId: ID!) {
   }
   # `limit: 25` matches `recentPlanRunsMetrics` above so completed-job metrics can
   # join onto history rows, and must equal PLAN_RUN_HISTORY_FETCH_LIMIT in
-  # routing/plans/data/data.plan-run-history.ts (the history footer reads it).
+  # routing/plans/data/plan-run-history.ts (the history footer reads it).
   # `includeAllScheduled` makes the limit cap only non-SCHEDULED runs and adds
   # every SCHEDULED one, so a run scheduled long ago never drops out of Upcoming.
   planRunsByPlanId(

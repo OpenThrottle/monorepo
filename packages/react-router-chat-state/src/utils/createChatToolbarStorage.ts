@@ -1,6 +1,6 @@
 import { createJSONStorage } from 'jotai/utils';
 
-import type { ChatToolbarState } from '../data/data.chat-toolbar-state';
+import type { ChatToolbarState } from '../data/chat-toolbar-state';
 import { normalizeChatToolbarState } from './normalizeChatToolbarState';
 
 /**

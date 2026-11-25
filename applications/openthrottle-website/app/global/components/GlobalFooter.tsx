@@ -2,7 +2,7 @@ import { OpenThrottleLogo } from '@openthrottle/react-router-ui';
 import * as React from 'react';
 import { Link } from 'react-router';
 
-import { GLOBAL_FOOTER } from '~/global/data/data.copy';
+import { GLOBAL_FOOTER } from '~/global/data/copy';
 import { isBlogEnabled } from '~/global/utils/blog-enabled';
 
 export interface GlobalFooterProps {}

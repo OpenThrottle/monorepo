@@ -1,7 +1,7 @@
 import {
   COMMAND_TIMEOUT_EXIT_CODE,
   OUTPUT_BUFFER_MAX_CHARS,
-} from '../data/data.constants.ts';
+} from '../data/constants.ts';
 import type { LoopValidator } from '../types/loop.ts';
 import type {
   CommandSequenceResult,

@@ -5,8 +5,8 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { developerRolloutFlags } from '~/global/data/data.rollout-flags';
-import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
+import { developerRolloutFlags } from '~/global/data/rollout-flags';
+import { ROLLOUT_COPY } from '~/routing/settings/data/copy';
 
 import { RolloutSdkHydrationStatus } from '../RolloutSdkHydrationStatus';
 

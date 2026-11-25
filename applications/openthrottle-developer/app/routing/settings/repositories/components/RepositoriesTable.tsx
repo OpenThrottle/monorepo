@@ -21,7 +21,7 @@ import {
   REPOSITORIES_ONBOARDING,
   REPOSITORIES_TABLE_COPY,
   REPOSITORY_HOOK_TELEMETRY_COPY,
-} from '~/routing/settings/repositories/data/data.copy';
+} from '~/routing/settings/repositories/data/copy';
 import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/types';
 import { toExpandedState } from '~/routing/settings/repositories/utils/expansion';
 import type { CheckoutDrift } from '~/routing/settings/utils/driftLabels';

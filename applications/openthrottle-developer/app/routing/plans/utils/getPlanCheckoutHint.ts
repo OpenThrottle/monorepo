@@ -1,4 +1,4 @@
-import { PLAN_CHECKOUT_SELECTOR_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_CHECKOUT_SELECTOR_COPY } from '~/routing/plans/data/copy';
 
 export interface PlanCheckoutHintInput {
   readonly minimal: boolean;

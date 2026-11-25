@@ -3,7 +3,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
 
-import { SKILL_RUN_COPY } from '~/routing/skills/data/data.copy';
+import { SKILL_RUN_COPY } from '~/routing/skills/data/copy';
 
 import { SkillRunConversation } from '../SkillRunConversation';
 

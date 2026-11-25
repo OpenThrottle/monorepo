@@ -1,7 +1,7 @@
 import {
   PLAN_STATUS_BADGE_COPY,
   PLAN_TOOLBAR_COPY,
-} from '~/routing/plans/data/data.copy';
+} from '~/routing/plans/data/copy';
 import { formatPlanScheduledFor } from '~/routing/plans/utils/formatPlanScheduledFor';
 
 /**

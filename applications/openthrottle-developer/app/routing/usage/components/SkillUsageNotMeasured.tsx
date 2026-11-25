@@ -4,7 +4,7 @@ import * as React from 'react';
 import {
   SKILL_USAGE_COPY,
   SKILL_USAGE_TELEMETRY_SCOPE_DOC_HREF,
-} from '~/routing/usage/data/data.skill-usage-copy';
+} from '~/routing/usage/data/skill-usage-copy';
 
 export interface SkillUsageNotMeasuredProps {
   readonly className: string | undefined;

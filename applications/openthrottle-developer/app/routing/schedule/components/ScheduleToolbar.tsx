@@ -7,7 +7,7 @@ import { PlusIcon } from 'lucide-react';
 import * as React from 'react';
 import { Link } from 'react-router';
 
-import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
+import { SCHEDULE_COPY } from '~/routing/schedule/data/copy';
 
 export interface ScheduleToolbarProps {
   className?: string;

@@ -13,7 +13,7 @@ import { Link } from 'react-router';
 import {
   PLAN_TASKS_EMPTY_COPY,
   PLANS_INDEX_EMPTY_COPY,
-} from '~/routing/plans/data/data.copy';
+} from '~/routing/plans/data/copy';
 
 export interface PlanTasksEmptyProps {
   className?: string;

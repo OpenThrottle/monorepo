@@ -203,7 +203,7 @@ tools/ot-telemetry
 ├── src
 │   ├── index.ts                 # CLI entry: parse flags, connect, probe, run metrics, write files
 │   ├── config/index.ts          # schema version, detail levels, output formats, limits, namespaces
-│   ├── data/data.copy.ts        # the fixed prose in report.md and the CLI's messages
+│   ├── data/copy.ts        # the fixed prose in report.md and the CLI's messages
 │   ├── types/index.ts           # contracts shared across modules (envelope, probe, metric registry)
 │   └── utils
 │       ├── cli-args.ts          # --since/--until/--out/--detail/--format parsing and validation

@@ -4,7 +4,7 @@ import { useParams } from 'react-router';
 import { LinkedArtifactGroup } from '~/routing/plans/components/LinkedArtifactGroup';
 import { LinkedArtifactRowItem } from '~/routing/plans/components/LinkedArtifactRowItem';
 import { LinkedArtifactsSummary } from '~/routing/plans/components/LinkedArtifactsSummary';
-import { LINKED_ARTIFACTS_PANEL_COPY } from '~/routing/plans/data/data.copy';
+import { LINKED_ARTIFACTS_PANEL_COPY } from '~/routing/plans/data/copy';
 import { groupLinkedArtifacts } from '~/routing/plans/utils/groupLinkedArtifacts';
 import {
   ARTIFACT_FILTER_ALL,

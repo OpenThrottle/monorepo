@@ -8,8 +8,8 @@ import {
   BLOG_STATE_TABS,
   DEFAULT_BLOG_STATE,
 } from '~/routing/blog/config/defaults';
-import { BLOG_AGENT_EDITORS } from '~/routing/blog/data/data.agent-editors';
-import { BLOG_COPY } from '~/routing/blog/data/data.copy';
+import { BLOG_AGENT_EDITORS } from '~/routing/blog/data/agent-editors';
+import { BLOG_COPY } from '~/routing/blog/data/copy';
 
 /**
  * @description The `state` URL value for a tab: the lower-cased enum value

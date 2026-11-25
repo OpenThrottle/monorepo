@@ -1092,7 +1092,7 @@ export const nestjsEslintConfig = tslint.config([
 ]);
 
 /**
- * The data-folder contract: a file directly under `data/` is `data.<name>.ts`
+ * The data-folder contract: a file directly under `data/` is a kebab-case `<name>.ts`
  * (or `mock.<name>.ts`) and exports values, never functions
  * (docs/monorepo/code-style.md, "Data files hold data"), checked by
  * `openthrottle/data-file-shape`.

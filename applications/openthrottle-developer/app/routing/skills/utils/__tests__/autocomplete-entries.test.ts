@@ -16,7 +16,7 @@ const {
   toAutocompleteEntry,
 } = await import('../autocomplete-entries');
 type RepoSkillEntryType =
-  import('~/routing/agents/data/data.repo-skills-registry').RepoSkillEntry;
+  import('~/routing/agents/data/repo-skills-registry').RepoSkillEntry;
 
 const mockExecute = vi.mocked(executeGraphqlWithAuth);
 

@@ -15,7 +15,7 @@ import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import * as React from 'react';
 
 import type { UsageTokenUsageRowFragment } from '~/__generated__/graphql';
-import { TOKEN_USAGE_COPY } from '~/routing/usage/data/data.token-usage-copy';
+import { TOKEN_USAGE_COPY } from '~/routing/usage/data/token-usage-copy';
 import { groupTokenUsage } from '~/routing/usage/utils/groupTokenUsage';
 import { tokenUsageSourceLabel } from '~/routing/usage/utils/token-usage-labels';
 

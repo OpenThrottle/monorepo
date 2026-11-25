@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { PLAN_RUN_OT_LOOP_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_RUN_OT_LOOP_COPY } from '~/routing/plans/data/copy';
 
 import type { PlanRunOtLoopFieldsProps } from '../PlanRunOtLoopFields';
 import { PlanRunOtLoopFields } from '../PlanRunOtLoopFields';

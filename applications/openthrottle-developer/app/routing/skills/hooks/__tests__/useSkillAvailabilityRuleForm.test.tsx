@@ -4,7 +4,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/data.copy';
+import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/copy';
 import type { SkillAvailabilityRuleValue } from '~/routing/skills/utils/skill-availability';
 
 import type {

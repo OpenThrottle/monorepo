@@ -3,7 +3,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { GLOBAL_FOOTER } from '../../data/data.copy';
+import { GLOBAL_FOOTER } from '../../data/copy';
 import type { GlobalFooterProps } from '../GlobalFooter';
 
 const isBlogEnabled = vi.fn();

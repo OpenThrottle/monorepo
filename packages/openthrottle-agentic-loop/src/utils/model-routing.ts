@@ -8,7 +8,7 @@ import {
   MODEL_ROUTING_POLICY_RELATIVE_PATH,
   MODEL_ROUTING_POLICY_VERSION,
   MODEL_ROUTING_REVIEW_TIER,
-} from '../data/data.model-routing.ts';
+} from '../data/model-routing.ts';
 import type { LoopTask } from '../types/loop.ts';
 import type {
   DriverModelLister,

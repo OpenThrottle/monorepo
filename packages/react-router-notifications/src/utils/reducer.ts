@@ -4,7 +4,7 @@ import {
   NOTIFICATIONS_DEDUP_WINDOW_MS,
   NOTIFICATIONS_MAX_STORED,
 } from '../config/index';
-import type { NotificationsStoreAction } from '../data/data.notifications-store.context';
+import type { NotificationsStoreAction } from '../data/notifications-store.context';
 import type { NotificationInstance } from '../types';
 import { generateId } from './generateId';
 

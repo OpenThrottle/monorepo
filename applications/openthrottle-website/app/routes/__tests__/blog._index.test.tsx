@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/blog._index';
 import { BlogIndexDocument } from '~/__generated__/graphql';
-import { BLOG_COPY } from '~/routing/blog/data/data.copy';
+import { BLOG_COPY } from '~/routing/blog/data/copy';
 import { MOCK_BLOG_POST_SUMMARY } from '~/routing/blog/testing/mock.blog-posts';
 
 const assertBlogEnabled = vi.fn();

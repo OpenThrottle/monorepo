@@ -17,7 +17,7 @@ import { Link } from 'react-router';
 
 import type { QueueCardFragment } from '~/__generated__/graphql';
 import { QueueHealthPill } from '~/routing/queues/components/QueueHealthPill';
-import { QUEUES_ROW_ACTIONS_COPY } from '~/routing/queues/data/data.copy';
+import { QUEUES_ROW_ACTIONS_COPY } from '~/routing/queues/data/copy';
 import { backlogForQueue } from '~/routing/queues/utils/queue-stats-chart';
 import { queueDetailHref } from '~/routing/queues/utils/queues-table';
 

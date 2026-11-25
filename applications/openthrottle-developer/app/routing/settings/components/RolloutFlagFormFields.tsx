@@ -3,7 +3,7 @@ import * as React from 'react';
 
 import type { RolloutFlagFieldsFragment } from '~/__generated__/graphql';
 import { RolloutFlagTypedFields } from '~/routing/settings/components/RolloutFlagTypedFields';
-import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
+import { ROLLOUT_COPY } from '~/routing/settings/data/copy';
 import { formatRolloutTargetRoles } from '~/routing/settings/utils/rollout-action';
 
 export interface RolloutFlagFormFieldsProps {

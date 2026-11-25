@@ -1,4 +1,4 @@
-import { DESKTOP_BRIDGE_NAME } from '../data/data.desktop-bridge.ts';
+import { DESKTOP_BRIDGE_NAME } from '../data/desktop-bridge.ts';
 import type { OpenThrottleDesktopBridge } from '../types/desktop-bridge.ts';
 
 /**

@@ -9,11 +9,11 @@ import * as React from 'react';
 import { useLocation } from 'react-router';
 
 import { CmsActionFailureAlert } from '~/global/components/CmsActionFailureAlert';
-import { AUTH_ROUTES } from '~/routing/auth/data/data.routes';
+import { AUTH_ROUTES } from '~/routing/auth/data/routes';
 import { FragmentChildAdd } from '~/routing/fragments/components/FragmentChildAdd';
 import { FragmentChildCreate } from '~/routing/fragments/components/FragmentChildCreate';
-import { FRAGMENT_EDITOR_COPY } from '~/routing/fragments/data/data.copy';
-import { FRAGMENT_INTENT } from '~/routing/fragments/data/data.intents';
+import { FRAGMENT_EDITOR_COPY } from '~/routing/fragments/data/copy';
+import { FRAGMENT_INTENT } from '~/routing/fragments/data/intents';
 import { useFragmentChildren } from '~/routing/fragments/hooks/useFragmentChildren';
 import type { FragmentActionResult } from '~/routing/fragments/types/fragment-action';
 import type { FragmentChildPicker } from '~/routing/fragments/types/fragment-children';

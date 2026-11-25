@@ -10,7 +10,7 @@ import {
 import * as React from 'react';
 
 import { SkillAvailabilityRuleRemoveButton } from '~/routing/skills/components/SkillAvailabilityRuleRemoveButton';
-import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/data.copy';
+import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/copy';
 import { useSkillAvailabilityRuleForm } from '~/routing/skills/hooks/useSkillAvailabilityRuleForm';
 import type { SkillAvailabilityRuleValue } from '~/routing/skills/utils/skill-availability';
 import {

@@ -14,8 +14,8 @@ import * as React from 'react';
 
 import type { UserPreferencesDefaultAgentFragment } from '~/__generated__/graphql';
 import { PlanRunEffortControl } from '~/routing/plans/components/PlanRunEffortControl';
-import { SETTINGS_PREFERENCES_COPY } from '~/routing/settings/data/data.copy';
-import { PREFERENCES_INTENTS } from '~/routing/settings/data/data.preferences';
+import { SETTINGS_PREFERENCES_COPY } from '~/routing/settings/data/copy';
+import { PREFERENCES_INTENTS } from '~/routing/settings/data/preferences';
 import { useSettingsPreferencesAgentForm } from '~/routing/settings/hooks/useSettingsPreferencesAgentForm';
 import { toPreferencesFeedback } from '~/routing/settings/utils/user-preferences';
 

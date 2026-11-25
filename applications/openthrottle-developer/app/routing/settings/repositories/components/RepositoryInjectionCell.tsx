@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 import { RepositorySkillInjectionToggle } from '~/routing/settings/repositories/components/RepositorySkillInjectionToggle';
-import { REPOSITORIES_TABLE_COPY } from '~/routing/settings/repositories/data/data.copy';
+import { REPOSITORIES_TABLE_COPY } from '~/routing/settings/repositories/data/copy';
 import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/types';
 
 export interface RepositoryInjectionCellProps {

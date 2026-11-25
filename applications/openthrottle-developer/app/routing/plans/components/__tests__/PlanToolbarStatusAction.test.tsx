@@ -7,7 +7,7 @@ import { createRoutesStub, useFetcher } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import type { action } from '~/routes/plans.$planId._index';
-import { PLAN_SCHEDULE_CONFIRM_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_SCHEDULE_CONFIRM_COPY } from '~/routing/plans/data/copy';
 import { formatPlanScheduledFor } from '~/routing/plans/utils/formatPlanScheduledFor';
 
 import type { PlanToolbarStatusActionProps } from '../PlanToolbarStatusAction';

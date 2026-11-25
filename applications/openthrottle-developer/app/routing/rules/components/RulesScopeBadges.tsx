@@ -2,7 +2,7 @@ import { Badge, cn } from '@openthrottle/react-router-shadcn';
 import { ChevronRightIcon } from 'lucide-react';
 import * as React from 'react';
 
-import { RULES_COPY } from '~/routing/rules/data/data.copy';
+import { RULES_COPY } from '~/routing/rules/data/copy';
 import type { RuleScopeStep } from '~/routing/rules/utils/formatters';
 
 export interface RulesScopeBadgesProps {

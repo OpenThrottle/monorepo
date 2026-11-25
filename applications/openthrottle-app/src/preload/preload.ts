@@ -24,7 +24,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 import {
   SHELL_BRIDGE_NAME,
   SHELL_IPC_CHANNELS,
-} from '../bridge/data/data.shell-channels.ts';
+} from '../bridge/data/shell-channels.ts';
 import type { ShellBridge } from '../bridge/types/shell-bridge.ts';
 
 // The main tsconfig has no DOM lib; the preload only reads this one field.

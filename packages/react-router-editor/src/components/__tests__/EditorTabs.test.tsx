@@ -6,8 +6,8 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import type { EditorFile } from '../../data/data.atom.editor';
-import { editorAtom, editorAtomDefaults } from '../../data/data.atom.editor';
+import type { EditorFile } from '../../data/atom.editor';
+import { editorAtom, editorAtomDefaults } from '../../data/atom.editor';
 import type { EditorTabsProps } from '../EditorTabs';
 import { EditorTabs } from '../EditorTabs';
 

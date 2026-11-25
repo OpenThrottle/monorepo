@@ -1,7 +1,7 @@
 import type { ChatComposerMicStateValue } from '@openthrottle/react-router-chat';
 import { CHAT_COMPOSER_MIC_STATE } from '@openthrottle/react-router-chat';
 
-import { VOICE_PHASE } from '~/routing/home/data/data.voice';
+import { VOICE_PHASE } from '~/routing/home/data/voice';
 
 type VoicePhase = (typeof VOICE_PHASE)[keyof typeof VOICE_PHASE];
 

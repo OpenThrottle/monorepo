@@ -11,8 +11,8 @@ Weekly. The registry changes at the speed features land, which is roughly weekly
 OpenThrottle is an Nx + pnpm workspace monorepo (Node >= 26, pnpm only).
 
 - **`packages/openthrottle-product/`** is the only source of truth for how OpenThrottle describes itself:
-  - `src/data/data.positioning.ts` (`PRODUCT_POSITIONING`) is the positioning canon: tagline, lede and four pillars (`memory`, `runners`, `history`, `local`). The owner wrote it and changes it by hand. **Never propose a change to it.**
-  - `src/data/data.features.ts` (`PRODUCT_FEATURES`) is the feature registry, grouped by pillar in display order. Each entry is a discriminated union on `status` (`shipped` | `preview` | `in-flight` | `planned`) with `id`, `name`, `emoji` (one grapheme), `pillar`, `oneLiner` (at most 120 characters), `body`, `evidence { docs, planIds, prs }`, `since` (YYYY-MM-DD) and `public`.
+  - `src/data/positioning.ts` (`PRODUCT_POSITIONING`) is the positioning canon: tagline, lede and four pillars (`memory`, `runners`, `history`, `local`). The owner wrote it and changes it by hand. **Never propose a change to it.**
+  - `src/data/features.ts` (`PRODUCT_FEATURES`) is the feature registry, grouped by pillar in display order. Each entry is a discriminated union on `status` (`shipped` | `preview` | `in-flight` | `planned`) with `id`, `name`, `emoji` (one grapheme), `pillar`, `oneLiner` (at most 120 characters), `body`, `evidence { docs, planIds, prs }`, `since` (YYYY-MM-DD) and `public`.
   - `README.md` in that package documents the entry shape and the rules.
 - Every surface is built from the registry: the website home page, `@openthrottle/react-router-ui`'s `FEATURES`, the root `README.md` section between `<!-- features:start -->` and `<!-- features:end -->`, the GitHub org profile and the LinkedIn block. After a registry edit, `pnpm nx run @openthrottle/openthrottle-product:generate-surfaces` rewrites the README section, and `check-surfaces` is the drift gate.
 
@@ -68,7 +68,7 @@ Exactly one `create_plan` followed by one `create_tasks` batch (or, per Dedupe, 
 - **Description:** the window you read (dates, PR count, plans checked), the verdict on each user-facing PR (one line each, including "no change" verdicts for the ones you looked at hardest), and the first line `/ot-loop <this plan's id>` instructions for whoever runs it.
 - **Tasks:** one per registry entry touched, each with `sortOrder` set and `wave: 1`, and each fully self-contained:
   - **Entry:** the `id` (new or existing) and its pillar.
-  - **Change:** the exact TypeScript object to add, or the exact field-by-field diff to apply to `packages/openthrottle-product/src/data/data.features.ts`, ready to paste.
+  - **Change:** the exact TypeScript object to add, or the exact field-by-field diff to apply to `packages/openthrottle-product/src/data/features.ts`, ready to paste.
   - **Evidence:** PR numbers, plan ids and doc paths, with one sentence each on what they show.
   - **Approval:** for a new entry, "Owner approval needed before `public: true`".
   - **Validation:** "Run `generate-surfaces`, commit the README section, then `check-surfaces`, `lint`, `typecheck` and `test` on `@openthrottle/openthrottle-product`."

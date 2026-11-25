@@ -15,7 +15,7 @@ const { GraphqlResponseError, executeGraphqlWithAuth } =
 const { PlanDetailEnqueuePlanRunDocument, PlanDetailSchedulePlanRunDocument } =
   await import('~/__generated__/graphql');
 const { PLAN_SCHEDULE_CONFIRM_COPY } =
-  await import('~/routing/plans/data/data.copy');
+  await import('~/routing/plans/data/copy');
 const { runPlan, schedulePlanRun } = await import('../planId');
 
 const mockExecute = vi.mocked(executeGraphqlWithAuth);

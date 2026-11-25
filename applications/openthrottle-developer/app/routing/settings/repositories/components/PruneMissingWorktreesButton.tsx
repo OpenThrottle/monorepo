@@ -13,7 +13,7 @@ import { Eraser } from 'lucide-react';
 import * as React from 'react';
 import { useNavigation, useSubmit } from 'react-router';
 
-import { MISSING_WORKTREES_COPY } from '~/routing/settings/repositories/data/data.copy';
+import { MISSING_WORKTREES_COPY } from '~/routing/settings/repositories/data/copy';
 import { PRUNE_WORKTREE_CHECKOUTS_INTENT } from '~/routing/settings/repositories/utils/missing-rows';
 
 export interface PruneMissingWorktreesButtonProps {

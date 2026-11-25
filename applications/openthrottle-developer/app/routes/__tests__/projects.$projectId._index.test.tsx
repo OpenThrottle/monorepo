@@ -5,7 +5,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import { PROJECT_NOT_FOUND_COPY } from '~/routing/projects/data/data.copy';
+import { PROJECT_NOT_FOUND_COPY } from '~/routing/projects/data/copy';
 
 import ProjectDetail from '../projects.$projectId._index';
 

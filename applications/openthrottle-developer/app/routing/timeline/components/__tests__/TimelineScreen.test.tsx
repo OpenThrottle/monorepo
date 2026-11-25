@@ -8,13 +8,13 @@ import { TimelineLaneGrouping } from '~/__generated__/graphql';
 import {
   TIMELINE_EMPTY_COPY,
   TIMELINE_PAGE_COPY,
-} from '~/routing/timeline/data/data.copy';
+} from '~/routing/timeline/data/copy';
 import {
   FIXTURE_WINDOW_FROM,
   FIXTURE_WINDOW_TO,
   TIMELINE_FIXTURE_MARKERS,
   TIMELINE_FIXTURE_SPANS,
-} from '~/routing/timeline/data/data.fixtures';
+} from '~/routing/timeline/data/fixtures';
 
 import type { TimelineScreenProps } from '../TimelineScreen';
 import { TimelineScreen } from '../TimelineScreen';

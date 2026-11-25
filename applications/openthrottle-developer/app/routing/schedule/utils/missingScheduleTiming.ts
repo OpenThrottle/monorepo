@@ -5,8 +5,8 @@
  * so update can be a partial patch.
  */
 
-import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
-import { SCHEDULE_KIND } from '~/routing/schedule/data/data.schedule-kind';
+import { SCHEDULE_COPY } from '~/routing/schedule/data/copy';
+import { SCHEDULE_KIND } from '~/routing/schedule/data/schedule-kind';
 
 export interface ParsedScheduleForm {
   cronPattern?: string;

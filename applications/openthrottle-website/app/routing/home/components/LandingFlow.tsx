@@ -2,7 +2,7 @@ import { cn } from '@openthrottle/react-router-shadcn';
 import { GlobalAnimationWaves } from '@openthrottle/react-router-ui-global';
 import * as React from 'react';
 
-import { LANDING_FLOW } from '~/routing/home/data/data.landing';
+import { LANDING_FLOW } from '~/routing/home/data/landing';
 
 export interface LandingFlowProps {
   className?: string;

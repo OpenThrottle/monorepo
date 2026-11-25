@@ -1,7 +1,7 @@
 import { Check } from 'lucide-react';
 import * as React from 'react';
 
-import { FACETED_FILTER_COPY } from '../data/data.faceted-filter';
+import { FACETED_FILTER_COPY } from '../data/faceted-filter';
 import { cn } from '../utils/cn';
 import { CommandGroup, CommandItem } from './Command';
 import type { FacetedFilterOption } from './FacetedFilter';

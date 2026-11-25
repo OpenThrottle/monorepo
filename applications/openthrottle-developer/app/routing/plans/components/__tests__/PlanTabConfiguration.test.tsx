@@ -9,8 +9,8 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import {
   resetWorkflowRunToDefaultsAtom,
   workflowRunOptionsAtom,
-} from '~/routing/plans/data/data.atom-plan';
-import { PLAN_RUN_OT_LOOP_COPY } from '~/routing/plans/data/data.copy';
+} from '~/routing/plans/data/atom-plan';
+import { PLAN_RUN_OT_LOOP_COPY } from '~/routing/plans/data/copy';
 import { MOCK_PLAN_RUN_MODELS } from '~/routing/plans/data/mock.plan-run-models';
 
 import type { PlanTabConfigurationProps } from '../PlanTabConfiguration';

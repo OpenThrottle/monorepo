@@ -8,7 +8,7 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import {
   PROJECT_PLAN_TASKS_COPY,
   PROJECT_PLANS_COPY,
-} from '~/routing/projects/data/data.copy';
+} from '~/routing/projects/data/copy';
 
 import type { ProjectPlansListProps } from '../ProjectPlansList';
 import { ProjectPlansList } from '../ProjectPlansList';

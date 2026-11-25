@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { PRODUCT_POSITIONING } from '../../data/data.positioning';
+import { PRODUCT_POSITIONING } from '../../data/positioning';
 import type { ProductFeature, ProductPositioning } from '../../types/product';
 import { validateProjects, validateRegistry } from '../validate';
 

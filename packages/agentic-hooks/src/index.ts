@@ -16,7 +16,7 @@ export * from './config/isTelemetryDisabled.ts';
 export * from './data/checkpoints.ts';
 export * from './data/chunk.ts';
 export * from './data/claimPlanInbox.ts';
-export * from './data/data.destructive-commands.ts';
+export * from './data/destructive-commands.ts';
 export * from './data/events.ts';
 export * from './data/findPlanRunBinding.ts';
 export * from './data/graphql.ts';

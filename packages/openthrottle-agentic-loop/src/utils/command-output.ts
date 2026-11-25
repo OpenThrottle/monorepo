@@ -1,4 +1,4 @@
-import { ANSI_PARTIAL_TAIL_PATTERN, ANSI_PATTERN } from '../data/data.ansi.ts';
+import { ANSI_PARTIAL_TAIL_PATTERN, ANSI_PATTERN } from '../data/ansi.ts';
 import {
   NX_TARGET_FLAG_PATTERN,
   NX_TARGET_RUN_PATTERN,
@@ -9,7 +9,7 @@ import {
   SUMMARY_RED_MARK,
   SUMMARY_SEPARATOR,
   SUMMARY_TIMED_OUT_WORD,
-} from '../data/data.validation-summary.ts';
+} from '../data/validation-summary.ts';
 import type {
   BatchedChunkSink,
   BatchedChunkSinkOptions,

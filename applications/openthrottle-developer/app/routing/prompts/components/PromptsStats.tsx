@@ -2,7 +2,7 @@ import { cn } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleStatCard } from '@openthrottle/react-router-ui';
 import * as React from 'react';
 
-import { PROMPTS_STATS_COPY } from '~/routing/prompts/data/data.copy';
+import { PROMPTS_STATS_COPY } from '~/routing/prompts/data/copy';
 
 export interface PromptsStatsProps {
   className?: string;

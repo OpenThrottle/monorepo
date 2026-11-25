@@ -19,7 +19,7 @@ import * as React from 'react';
 import { useFetcher, useRevalidator } from 'react-router';
 
 import type { action as taskDetailAction } from '~/routes/plans.$planId.tasks.$taskId._index';
-import { PLAN_TASK_TOOLBAR_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_TASK_TOOLBAR_COPY } from '~/routing/plans/data/copy';
 import {
   getPromotionQueuedDescription,
   readPromoteTaskJobId,

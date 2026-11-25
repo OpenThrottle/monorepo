@@ -36,7 +36,7 @@ It spends real tokens on the logged-in account. Every transcript is sanitized an
 before it is written to `fixtures/<backend>/`, and a scenario that expects a write to be denied
 fails the recording if the file appears.
 
-The shared scenarios (`src/data/data.scenarios.ts`) are recorded by every backend: `accept-edits`,
+The shared scenarios (`src/data/scenarios.ts`) are recorded by every backend: `accept-edits`,
 `error`, `interrupt`, `multi-tool`, `permission-denied`, `resume` (two turns), `simple-turn`,
 `system-prompt`, `thinking`, `tool-use`. A claude `rate_limit_event` (status `allowed`) arrives on
 every turn, so each claude transcript carries one; a real rejection cannot be provoked on demand.

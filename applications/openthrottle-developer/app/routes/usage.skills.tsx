@@ -16,7 +16,7 @@ import {
 import { SITE_TITLE } from '~/global/config/settings';
 import { UsagePageIntroduction } from '~/routing/usage/components/UsagePageIntroduction';
 import { UsageSkillUsage } from '~/routing/usage/components/UsageSkillUsage';
-import { SKILL_USAGE_COPY } from '~/routing/usage/data/data.skill-usage-copy';
+import { SKILL_USAGE_COPY } from '~/routing/usage/data/skill-usage-copy';
 import { getUsageRange } from '~/routing/usage/utils/getUsageRange';
 import { parseSkillScope } from '~/routing/usage/utils/parseSkillScope';
 

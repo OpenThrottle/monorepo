@@ -21,7 +21,7 @@ import {
 import type {
   RepoSkillEntry,
   SkillRegistryLayout,
-} from '~/routing/agents/data/data.repo-skills-registry';
+} from '~/routing/agents/data/repo-skills-registry';
 import { parseSkillFrontmatter } from '~/routing/agents/utils/parseSkillFrontmatter.server';
 import { dedupeRepoSkillEntriesBySlug } from '~/routing/agents/utils/repo-skills-registry';
 import { isPathInsidePersonalSkillsRoot } from '~/routing/agents/utils/skill-path-allowlist.server';

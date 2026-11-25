@@ -12,7 +12,7 @@ import {
   MCP_PROVIDER_DISPLAY,
   MCP_PROVIDER_FALLBACK_LABEL,
   MCP_PROVIDER_FALLBACK_ORDER,
-} from '~/routing/settings/data/data.mcp-connectors';
+} from '~/routing/settings/data/mcp-connectors';
 
 /** A connector's connection state from the current user's perspective. */
 export type McpConnectorStatus = 'disabled' | 'disconnected' | 'enabled';

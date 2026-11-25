@@ -6,7 +6,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { EVAL_COMPARE_COPY } from '~/routing/evals/data/data.copy';
+import { EVAL_COMPARE_COPY } from '~/routing/evals/data/copy';
 import { describeMcNemar } from '~/routing/evals/utils/report-format';
 
 export interface EvalCompareVerdictProps {

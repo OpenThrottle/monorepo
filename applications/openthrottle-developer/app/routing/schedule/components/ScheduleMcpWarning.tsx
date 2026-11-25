@@ -1,7 +1,7 @@
 import * as React from 'react';
 
-import type { DriverMcpOption } from '~/routing/schedule/data/data.driver-mcp';
-import { DRIVER_MCP_WARNING } from '~/routing/schedule/data/data.driver-mcp';
+import type { DriverMcpOption } from '~/routing/schedule/data/driver-mcp';
+import { DRIVER_MCP_WARNING } from '~/routing/schedule/data/driver-mcp';
 import { resolveDriverMcpReachability } from '~/routing/schedule/utils/resolveDriverMcpReachability';
 
 export interface ScheduleMcpWarningProps {

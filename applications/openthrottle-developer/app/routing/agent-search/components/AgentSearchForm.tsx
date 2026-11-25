@@ -2,7 +2,7 @@ import { Button, cn, Input, Label } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import { AGENT_SEARCH_BASE_PATH } from '~/routing/agent-search/config';
-import { AGENT_SEARCH_COPY } from '~/routing/agent-search/data/data.copy';
+import { AGENT_SEARCH_COPY } from '~/routing/agent-search/data/copy';
 import type { AgentSearchTab } from '~/routing/agent-search/types';
 
 export interface AgentSearchFormProps {

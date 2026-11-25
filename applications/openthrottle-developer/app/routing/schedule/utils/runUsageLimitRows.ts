@@ -1,4 +1,4 @@
-import { RUN_DETAIL_COPY } from '~/routing/schedule/data/data.run-detail';
+import { RUN_DETAIL_COPY } from '~/routing/schedule/data/run-detail';
 import { formatWhen } from '~/routing/schedule/utils/formatWhen';
 
 /** The usage-limit fields of a scheduled run — a structural subset of the run fragments. */

@@ -3,7 +3,7 @@ import { MissingWorktreeCheckoutReason } from '~/__generated__/graphql';
 import {
   REPOSITORIES_TABLE_COPY,
   WORKTREE_REMOVAL_OUTCOME_COPY,
-} from '~/routing/settings/repositories/data/data.copy';
+} from '~/routing/settings/repositories/data/copy';
 import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/types';
 
 /** One badge to render: a label plus the hover text that explains what it means. */

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
-import { DESKTOP_BRIDGE_NAME } from '../../data/data.desktop-bridge.ts';
+import { DESKTOP_BRIDGE_NAME } from '../../data/desktop-bridge.ts';
 import { getDesktopBridge } from '../desktop-bridge.ts';
 
 const bridge = {

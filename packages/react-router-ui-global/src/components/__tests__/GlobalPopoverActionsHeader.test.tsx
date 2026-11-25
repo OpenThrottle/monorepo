@@ -3,7 +3,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, describe, expect, test } from 'vitest';
 
-import { GLOBAL_POPOVER_COPY } from '../../data/data.copy';
+import { GLOBAL_POPOVER_COPY } from '../../data/copy';
 import { GlobalPopoverActionsHeader } from '../GlobalPopoverActionsHeader';
 
 describe('GlobalPopoverActionsHeader Component', () => {

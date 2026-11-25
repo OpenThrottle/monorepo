@@ -9,7 +9,7 @@ import { useIsHydrated } from '@openthrottle/react-router-utils';
 import * as React from 'react';
 
 import type { BlogPostListRowFragment } from '~/__generated__/graphql';
-import { BLOG_COPY } from '~/routing/blog/data/data.copy';
+import { BLOG_COPY } from '~/routing/blog/data/copy';
 
 import { BlogPostRow } from './BlogPostRow';
 

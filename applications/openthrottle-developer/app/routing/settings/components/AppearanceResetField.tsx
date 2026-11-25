@@ -12,9 +12,9 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { DEFAULT_APPEARANCE_CONFIG } from '~/global/data/data.appearance-config';
+import { DEFAULT_APPEARANCE_CONFIG } from '~/global/data/appearance-config';
 import { useHydratedAppearanceConfig } from '~/global/hooks/useHydratedAppearanceConfig';
-import { APPEARANCE_COPY } from '~/routing/settings/data/data.copy';
+import { APPEARANCE_COPY } from '~/routing/settings/data/copy';
 import { countNonDefaultAppearanceFields } from '~/routing/settings/utils/countNonDefaultAppearanceFields';
 
 export interface AppearanceResetFieldProps {}

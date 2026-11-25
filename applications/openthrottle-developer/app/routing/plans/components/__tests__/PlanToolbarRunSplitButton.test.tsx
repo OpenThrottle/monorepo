@@ -11,7 +11,7 @@ import {
   PLAN_RUN_CANCEL_SCHEDULED_COPY,
   PLAN_SCHEDULE_CONFIRM_COPY,
   PLAN_TOOLBAR_COPY,
-} from '~/routing/plans/data/data.copy';
+} from '~/routing/plans/data/copy';
 import { formatPlanScheduledFor } from '~/routing/plans/utils/formatPlanScheduledFor';
 
 import type { PlanToolbarRunSplitButtonProps } from '../PlanToolbarRunSplitButton';

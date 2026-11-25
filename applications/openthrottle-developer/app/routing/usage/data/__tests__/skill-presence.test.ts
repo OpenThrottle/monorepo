@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { SKILL_RECORD_TAGS_COPY } from '~/routing/skills/data/data.copy';
+import { SKILL_RECORD_TAGS_COPY } from '~/routing/skills/data/copy';
 import {
   SKILL_PRESENCE,
   SKILL_PRESENCE_BADGED,
@@ -8,8 +8,8 @@ import {
   SKILL_PRESENCE_LINKABLE,
   SKILL_PRESENCE_TOOLTIPS,
   SKILL_PRESENCES,
-} from '~/routing/usage/data/data.skill-presence';
-import { SKILL_USAGE_SCOPES } from '~/routing/usage/data/data.skill-usage-copy';
+} from '~/routing/usage/data/skill-presence';
+import { SKILL_USAGE_SCOPES } from '~/routing/usage/data/skill-usage-copy';
 import { classifySkillUsagePresence } from '~/routing/usage/utils/classifySkillUsagePresence';
 
 describe('skill-presence', () => {

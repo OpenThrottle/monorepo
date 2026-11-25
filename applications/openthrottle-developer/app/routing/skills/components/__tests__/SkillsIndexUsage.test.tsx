@@ -5,12 +5,12 @@ import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
 import type { UsageSkillUsageBySkillFragment } from '~/__generated__/graphql';
-import { SKILLS_INDEX_USAGE_COPY } from '~/routing/skills/data/data.copy';
-import { SKILL_PRESENCE_LABELS } from '~/routing/usage/data/data.skill-presence';
+import { SKILLS_INDEX_USAGE_COPY } from '~/routing/skills/data/copy';
+import { SKILL_PRESENCE_LABELS } from '~/routing/usage/data/skill-presence';
 import {
   SKILL_USAGE_COPY,
   SKILL_USAGE_SCOPES,
-} from '~/routing/usage/data/data.skill-usage-copy';
+} from '~/routing/usage/data/skill-usage-copy';
 
 import type { SkillsIndexUsageProps } from '../SkillsIndexUsage';
 import { SkillsIndexUsage } from '../SkillsIndexUsage';

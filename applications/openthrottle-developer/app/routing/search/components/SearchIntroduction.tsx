@@ -3,7 +3,7 @@ import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { SearchIcon } from 'lucide-react';
 import * as React from 'react';
 
-import { SEARCH_INTRODUCTION_COPY } from '~/routing/search/data/data.copy';
+import { SEARCH_INTRODUCTION_COPY } from '~/routing/search/data/copy';
 
 export interface SearchIntroductionProps {
   readonly className?: string;

@@ -12,8 +12,8 @@ import {
 import { useAtom } from 'jotai';
 import * as React from 'react';
 
-import { FRAGMENT_PREVIEW_COPY } from '~/routing/fragments/data/data.copy';
-import { FRAGMENT_PREVIEW_DEVICES } from '~/routing/fragments/data/data.preview';
+import { FRAGMENT_PREVIEW_COPY } from '~/routing/fragments/data/copy';
+import { FRAGMENT_PREVIEW_DEVICES } from '~/routing/fragments/data/preview';
 import type { CmsFragmentEditorRecords } from '~/routing/fragments/utils/to-cms-records';
 import { toCmsPreviewFragments } from '~/routing/fragments/utils/to-cms-records';
 

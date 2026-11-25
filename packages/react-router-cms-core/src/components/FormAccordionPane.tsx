@@ -6,7 +6,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { FORM_FIELD_COPY } from '../data/data.copy';
+import { FORM_FIELD_COPY } from '../data/copy';
 
 /**
  * @public

@@ -15,7 +15,7 @@ import {
   localDateTimeToUtcIso,
   toDateTimeLocalValue,
 } from '~/global/utils/dates';
-import { BLOG_LIFECYCLE_COPY } from '~/routing/blog/data/data.copy';
+import { BLOG_LIFECYCLE_COPY } from '~/routing/blog/data/copy';
 import { validateScheduleLocalDateTime } from '~/routing/blog/utils/lifecycle';
 
 export interface BlogPostPublishPopoverProps {

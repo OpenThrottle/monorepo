@@ -20,7 +20,7 @@ import { ProjectPlanAdd } from '~/routing/projects/components/ProjectPlanAdd';
 import { ProjectPlansList } from '~/routing/projects/components/ProjectPlansList';
 import { ProjectRepositories } from '~/routing/projects/components/ProjectRepositories';
 import { PROJECT_PLANS_PAGE_LIMIT } from '~/routing/projects/config/projects.defaults';
-import { PROJECT_PLANS_COPY } from '~/routing/projects/data/data.copy';
+import { PROJECT_PLANS_COPY } from '~/routing/projects/data/copy';
 import { formatProjectDate } from '~/routing/projects/utils/format';
 
 type ProjectDetailLoaderData = Route.ComponentProps['loaderData'];

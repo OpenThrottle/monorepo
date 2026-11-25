@@ -6,8 +6,8 @@ import { useNavigate } from 'react-router';
 import {
   BRANCH_FILTER_ALL_VALUE,
   BRANCH_FILTER_COPY,
-} from '~/routing/usage/data/data.branch-filter-copy';
-import type { SkillUsageScopeFilter } from '~/routing/usage/data/data.skill-usage-copy';
+} from '~/routing/usage/data/branch-filter-copy';
+import type { SkillUsageScopeFilter } from '~/routing/usage/data/skill-usage-copy';
 import { useUsageBranchSearch } from '~/routing/usage/hooks/useUsageBranchSearch';
 import type { UsageBranchOption } from '~/routing/usage/types';
 import { buildUsageSearch } from '~/routing/usage/utils/buildUsageSearch';

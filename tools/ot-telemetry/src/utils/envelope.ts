@@ -4,7 +4,7 @@ import {
   DETAIL_LEVELS,
   REPORT_SCHEMA_VERSION,
 } from '../config/index.ts';
-import { DETAIL_LEVEL_DESCRIPTIONS } from '../data/data.copy.ts';
+import { DETAIL_LEVEL_DESCRIPTIONS } from '../data/copy.ts';
 import type {
   BuildEnvelopeInput,
   DetailLevel,

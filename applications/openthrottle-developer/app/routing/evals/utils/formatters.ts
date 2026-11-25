@@ -1,5 +1,5 @@
 import type { AgentTrajectorySummaryFragment } from '~/__generated__/graphql';
-import { TRAJECTORY_SUMMARY_COPY } from '~/routing/evals/data/data.copy';
+import { TRAJECTORY_SUMMARY_COPY } from '~/routing/evals/data/copy';
 
 const NUMBER_FORMAT = new Intl.NumberFormat('en-US');
 

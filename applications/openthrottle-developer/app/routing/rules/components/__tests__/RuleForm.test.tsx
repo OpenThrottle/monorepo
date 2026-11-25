@@ -6,7 +6,7 @@ import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import { RULE_PREVIEW_PATH } from '~/routing/rules/config/rule-preview';
-import { RULE_PREVIEW_COPY, RULES_COPY } from '~/routing/rules/data/data.copy';
+import { RULE_PREVIEW_COPY, RULES_COPY } from '~/routing/rules/data/copy';
 import type { RulePreviewState } from '~/routing/rules/types';
 
 import type { RuleFormProps } from '../RuleForm';

@@ -8,7 +8,7 @@ import {
   DEFAULT_STATUSES,
   STATUS_OPTIONS,
 } from '~/routing/plans/config/status-options';
-import { PLAN_STATUS_FILTER_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_STATUS_FILTER_COPY } from '~/routing/plans/data/copy';
 import { planStatusValues } from '~/routing/plans/types';
 
 import { PlanStatusFilter } from '../PlanStatusFilter';

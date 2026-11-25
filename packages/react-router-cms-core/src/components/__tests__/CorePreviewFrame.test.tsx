@@ -5,10 +5,7 @@ import { describe, expect, test } from 'vitest';
 
 import type { CmsDeviceValue } from '../../config/cms-device';
 import { CMS_DEVICE } from '../../config/cms-device';
-import {
-  atomSettings,
-  atomSettingsDefault,
-} from '../../data/data.atom.settings';
+import { atomSettings, atomSettingsDefault } from '../../data/atom.settings';
 import { CorePreviewFrame } from '../CorePreviewFrame';
 
 const renderFrame = (device: CmsDeviceValue) => {

@@ -1,4 +1,4 @@
-import { DESKTOP_ENV_DEFAULTS } from '../data/data.server-env.ts';
+import { DESKTOP_ENV_DEFAULTS } from '../data/server-env.ts';
 
 export type ServerEnv = Readonly<Record<string, string>>;
 

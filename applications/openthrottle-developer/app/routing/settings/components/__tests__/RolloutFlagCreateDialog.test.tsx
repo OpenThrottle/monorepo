@@ -5,7 +5,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
+import { ROLLOUT_COPY } from '~/routing/settings/data/copy';
 
 import type { RolloutFlagCreateDialogProps } from '../RolloutFlagCreateDialog';
 import { RolloutFlagCreateDialog } from '../RolloutFlagCreateDialog';

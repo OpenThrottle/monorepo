@@ -1,7 +1,7 @@
 import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { ARTWORK_YODA } from '../data/data.artwork';
+import { ARTWORK_YODA } from '../data/artwork';
 
 export interface OpenThrottleEmptyStateProps {
   readonly className?: string;

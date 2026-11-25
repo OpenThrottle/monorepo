@@ -4,7 +4,7 @@ import * as React from 'react';
 
 import type { ProjectPlanRowFragment } from '~/__generated__/graphql';
 import { ProjectPlanRow } from '~/routing/projects/components/ProjectPlanRow';
-import { PROJECT_PLANS_COPY } from '~/routing/projects/data/data.copy';
+import { PROJECT_PLANS_COPY } from '~/routing/projects/data/copy';
 
 export interface ProjectPlansListProps {
   readonly className?: string;

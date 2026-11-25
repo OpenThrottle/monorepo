@@ -6,11 +6,11 @@ import { createJSONStorage } from 'jotai/utils';
 import type {
   ConfigObject,
   ReducedMotionModesValue,
-} from '~/global/data/data.appearance-config';
+} from '~/global/data/appearance-config';
 import {
   DEFAULT_APPEARANCE_CONFIG,
   REDUCED_MOTION_MODES,
-} from '~/global/data/data.appearance-config';
+} from '~/global/data/appearance-config';
 
 const isThemeMode = (value: unknown): value is ThemeMode => {
   return value === 'dark' || value === 'light' || value === 'system';

@@ -14,7 +14,7 @@ import type {
 import {
   SKILL_USAGE_COPY,
   SKILL_USAGE_SCOPES,
-} from '../../data/data.skill-usage-copy';
+} from '../../data/skill-usage-copy';
 import type { UsageSkillUsageProps } from '../UsageSkillUsage';
 import { UsageSkillUsage } from '../UsageSkillUsage';
 

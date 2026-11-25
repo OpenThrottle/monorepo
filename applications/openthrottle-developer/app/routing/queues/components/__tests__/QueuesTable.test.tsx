@@ -6,7 +6,7 @@ import { createRoutesStub, useParams } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import type { QueueCardFragment } from '~/__generated__/graphql';
-import { QUEUES_ROW_ACTIONS_COPY } from '~/routing/queues/data/data.copy';
+import { QUEUES_ROW_ACTIONS_COPY } from '~/routing/queues/data/copy';
 
 import type { QueuesTableProps } from '../QueuesTable';
 import { QueuesTable } from '../QueuesTable';

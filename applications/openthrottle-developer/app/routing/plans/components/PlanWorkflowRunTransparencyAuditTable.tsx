@@ -16,11 +16,11 @@ import type {
 import { collectResumedRunIds } from '~/global/utils/utils.usage-limit';
 import { PlanWorkflowRunHistoryRow } from '~/routing/plans/components/PlanWorkflowRunHistoryRow';
 import { PlanWorkflowRunSection } from '~/routing/plans/components/PlanWorkflowRunSection';
-import { PLAN_RUN_TRANSPARENCY_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_RUN_TRANSPARENCY_COPY } from '~/routing/plans/data/copy';
 import {
   PLAN_RUN_HISTORY_FETCH_LIMIT,
   PLAN_RUN_HISTORY_INITIAL_ROWS,
-} from '~/routing/plans/data/data.plan-run-history';
+} from '~/routing/plans/data/plan-run-history';
 import { joinPlanRunJobMetrics } from '~/routing/plans/utils/joinPlanRunJobMetrics';
 import type { PlanRunOptions } from '~/routing/plans/utils/plan-run-options';
 import { selectHistoryRuns } from '~/routing/plans/utils/plan-run-sections';

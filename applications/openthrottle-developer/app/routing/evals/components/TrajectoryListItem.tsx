@@ -7,7 +7,7 @@ import type { AgentTrajectorySummaryFragment } from '~/__generated__/graphql';
 import {
   TASK_TRAJECTORIES_COPY,
   TRAJECTORY_SUMMARY_COPY,
-} from '~/routing/evals/data/data.copy';
+} from '~/routing/evals/data/copy';
 import { formatTrajectorySource } from '~/routing/evals/utils/formatters';
 import { buildTrajectorySummaryFacts } from '~/routing/evals/utils/summaries';
 import { PlanRunTime } from '~/routing/plans/components/PlanRunTime';

@@ -25,7 +25,7 @@ import { BlogPostLifecycleControls } from '~/routing/blog/components/BlogPostLif
 import { BlogPostReadOnlyNotice } from '~/routing/blog/components/BlogPostReadOnlyNotice';
 import { BlogPostStaleWriteDialog } from '~/routing/blog/components/BlogPostStaleWriteDialog';
 import { BlogPostUnsavedChangesDialog } from '~/routing/blog/components/BlogPostUnsavedChangesDialog';
-import { BLOG_COPY, BLOG_EDITOR_COPY } from '~/routing/blog/data/data.copy';
+import { BLOG_COPY, BLOG_EDITOR_COPY } from '~/routing/blog/data/copy';
 import { useBlogPostEditor } from '~/routing/blog/hooks/useBlogPostEditor';
 import type {
   BlogPostActionResult,

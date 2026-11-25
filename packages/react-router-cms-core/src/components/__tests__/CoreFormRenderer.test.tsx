@@ -7,8 +7,8 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
 
-import { atomFragmentDraft } from '../../data/data.atom.fragment-draft';
-import { CORE_FORM_COPY, FORM_CHILDREN_COPY } from '../../data/data.copy';
+import { atomFragmentDraft } from '../../data/atom.fragment-draft';
+import { CORE_FORM_COPY, FORM_CHILDREN_COPY } from '../../data/copy';
 import { MOCK_FORM_SCHEMA } from '../../data/mock.form-schema';
 import { MOCK_FRAGMENT_RECORDS } from '../../data/mock.fragment-records';
 import type { CmsParsedSchema } from '../../types/cms-json-schema';

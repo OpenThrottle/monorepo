@@ -1,6 +1,6 @@
 import { extname } from 'node:path';
 
-import { NATIVE_EXTENSIONS, SCRIPT_EXTENSIONS } from '../data/data.stage.ts';
+import { NATIVE_EXTENSIONS, SCRIPT_EXTENSIONS } from '../data/stage.ts';
 
 export interface StagedEntry {
   /** The `stat` mode bits. */

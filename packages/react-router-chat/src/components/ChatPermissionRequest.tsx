@@ -1,8 +1,8 @@
 import { Button, cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { ChatPermissionResponderContext } from '../data/data.chat-permission-responder-context';
-import { CHAT_PERMISSION_REQUEST_COPY } from '../data/data.copy';
+import { ChatPermissionResponderContext } from '../data/chat-permission-responder-context';
+import { CHAT_PERMISSION_REQUEST_COPY } from '../data/copy';
 import type { ChatTurnPermissionEvent } from '../types';
 
 export interface ChatPermissionRequestProps {

@@ -3,7 +3,7 @@ import { createTestRouterContext } from '@openthrottle/react-router-testing';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import { SKILL_CREATE_DESTINATIONS } from '~/routing/skills/config/skill-create';
-import { SKILL_CREATE_COPY } from '~/routing/skills/data/data.copy';
+import { SKILL_CREATE_COPY } from '~/routing/skills/data/copy';
 
 // The action dynamically imports this module; mocking it keeps the action test
 // about parsing, narrowing and the response shape rather than about disk.

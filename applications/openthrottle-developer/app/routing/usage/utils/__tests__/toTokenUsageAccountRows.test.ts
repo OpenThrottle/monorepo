@@ -7,7 +7,7 @@ import type {
 import {
   TOKEN_USAGE_COPY,
   TOKEN_USAGE_UNATTRIBUTED_ACCOUNT_ID,
-} from '~/routing/usage/data/data.token-usage-copy';
+} from '~/routing/usage/data/token-usage-copy';
 
 import { toTokenUsageAccountRows } from '../toTokenUsageAccountRows';
 

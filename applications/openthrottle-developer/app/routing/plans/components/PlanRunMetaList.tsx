@@ -1,8 +1,8 @@
 import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { PLAN_RUN_TRANSPARENCY_COPY } from '~/routing/plans/data/data.copy';
-import { PLAN_RUN_META_FIELDS } from '~/routing/plans/data/data.plan-run-history';
+import { PLAN_RUN_TRANSPARENCY_COPY } from '~/routing/plans/data/copy';
+import { PLAN_RUN_META_FIELDS } from '~/routing/plans/data/plan-run-history';
 import type { PlanRunMetaItem } from '~/routing/plans/utils/plan-run-sections';
 
 export interface PlanRunMetaListProps {

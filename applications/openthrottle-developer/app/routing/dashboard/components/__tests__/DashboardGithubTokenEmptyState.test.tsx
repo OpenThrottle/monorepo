@@ -3,7 +3,7 @@ import { render } from '@testing-library/react';
 import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { GITHUB_STATS_TOKEN_EMPTY_STATE_COPY } from '~/routing/dashboard/data/data.copy';
+import { GITHUB_STATS_TOKEN_EMPTY_STATE_COPY } from '~/routing/dashboard/data/copy';
 
 import { DashboardGithubTokenEmptyState } from '../DashboardGithubTokenEmptyState';
 

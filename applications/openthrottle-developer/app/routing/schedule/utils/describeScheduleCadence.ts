@@ -1,6 +1,6 @@
 import type { ScheduledJobCardFragment } from '~/__generated__/graphql';
-import { SCHEDULE_CADENCE_COPY } from '~/routing/schedule/data/data.copy';
-import { SCHEDULE_KIND } from '~/routing/schedule/data/data.schedule-kind';
+import { SCHEDULE_CADENCE_COPY } from '~/routing/schedule/data/copy';
+import { SCHEDULE_KIND } from '~/routing/schedule/data/schedule-kind';
 
 /** The schedule fields that decide when it fires. */
 export type ScheduleCadenceFields = Pick<

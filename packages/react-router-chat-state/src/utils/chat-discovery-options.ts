@@ -5,7 +5,7 @@ import type {
   ChatPersonaOption,
 } from '@openthrottle/react-router-chat';
 
-import { AGENT_NOT_SIGNED_IN_SUFFIX } from '../data/data.copy';
+import { AGENT_NOT_SIGNED_IN_SUFFIX } from '../data/copy';
 import type { ChatAgentRuntime } from '../types';
 import {
   cliGroupId,

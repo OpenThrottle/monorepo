@@ -1,0 +1,99 @@
+/**
+ * @description Single-sourced section headings the presentational
+ * `GlobalFeatureOnboarding` layout renders around each feature's supplied copy
+ * object. Feature-specific wording lives in that feature's own `data/copy.ts`,
+ * not here.
+ */
+
+export const GLOBAL_ERROR_BOUNDARY_COPY = {
+  crashReporting: {
+    active: `When crash reporting is configured, this id is attached to the automated report so support can correlate your session.`,
+    inactive: `Crash reporting is not active in this environment (no usable client reporter token); the reference id still helps support match logs you send manually.`,
+  },
+  /** Shown in place of the reference id until the page hydrates. */
+  pendingReferenceId: `Generating…`,
+} as const;
+
+export const GLOBAL_FEATURE_ONBOARDING_SECTION_COPY = {
+  internalUsage: `How we use it internally`,
+  steps: `Quick start`,
+  useCases: `What you could use it for`,
+  whatItIs: `What it is`,
+} as const;
+
+/**
+ * @description Default label for the {@link GlobalFeatureOnboardingTrigger}
+ * button that re-opens the onboarding pitch once a list is populated. Callers can
+ * override per feature via the trigger's `label` prop.
+ */
+export const GLOBAL_FEATURE_ONBOARDING_TRIGGER_LABEL = `How it works`;
+
+/**
+ * @public
+ * Default copy for {@link GlobalPopover}: shared Actions column header text and
+ * fallback labels for the confirm dialog when a submit action omits them.
+ */
+export const GLOBAL_POPOVER_COPY = {
+  actionsHeader: `Actions`,
+  cancelLabel: `Cancel`,
+  confirmLabel: `Confirm`,
+} as const;
+
+/**
+ * @public
+ * Default copy for {@link GlobalToolbarSearch}. Consumers override the
+ * placeholder and aria-label per surface; the submit button falls back to this
+ * label when no override is supplied.
+ */
+export const GLOBAL_TOOLBAR_SEARCH_COPY = {
+  buttonLabel: `Search`,
+} as const;
+
+/**
+ * @description Accessible names and menu labels for the trailing icon links in
+ * {@link GlobalLayoutHeaderLinks}. The same strings label the inline icon links
+ * (`aria-label`) and the overflow menu items shown below `sm`.
+ */
+export const GLOBAL_LAYOUT_HEADER_LINKS_COPY = {
+  github: `GitHub`,
+  menuLabel: `More actions`,
+  reportBug: `Report a bug`,
+  signOut: `Sign out`,
+} as const;
+
+/**
+ * @public
+ * Copy for {@link GlobalSidebarFooter}. `versionPrefix` prefixes the app version
+ * (its package.json `version`, injected by each app at build time) in the badge;
+ * `versionLinkLabel` is the badge link's accessible name.
+ */
+/**
+ * @description Copy for the background-activity bar, ring and tooltip in the
+ * sidebar footer (OT plan 5767e798). Lines are composed as
+ * `{done} / {total} · started {elapsed} ago · ~{eta} left`.
+ */
+export const GLOBAL_BACKGROUND_ACTIVITY_COPY = {
+  ago: `ago`,
+  estimating: `estimating time left`,
+  label: `Background work in progress`,
+  left: `left`,
+  separator: ` · `,
+  stalled: `no progress lately`,
+  started: `started`,
+} as const;
+
+export const GLOBAL_SIDEBAR_FOOTER_COPY = {
+  systemStatus: `System Status`,
+  versionLinkLabel: `Release notes for version`,
+  versionPrefix: `v`,
+} as const;
+
+/**
+ * @public
+ * @description Labels for {@link GlobalStatsToggleButton}: the button's
+ * accessible name and tooltip, which flip with the stats panel's open state.
+ */
+export const GLOBAL_STATS_TOGGLE_COPY = {
+  hide: `Hide stats`,
+  show: `Show stats`,
+} as const;

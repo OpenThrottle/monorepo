@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 
-import { FAVORITES_GROUP_ID } from '../../data/data.chat-model-picker-favorites';
+import { FAVORITES_GROUP_ID } from '../../data/chat-model-picker-favorites';
 import type { ChatModelGroup, ChatModelOption } from '../../types';
 import type { UseChatModelPickerOptions } from '../useChatModelPicker';
 import { useChatModelPicker } from '../useChatModelPicker';

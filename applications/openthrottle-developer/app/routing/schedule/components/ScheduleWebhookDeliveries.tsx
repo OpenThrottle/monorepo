@@ -2,7 +2,7 @@ import { cn, DataTable } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import type { ScheduleWebhookDeliveryRowFragment } from '~/__generated__/graphql';
-import { SCHEDULE_WEBHOOK_COPY } from '~/routing/schedule/data/data.copy';
+import { SCHEDULE_WEBHOOK_COPY } from '~/routing/schedule/data/copy';
 import { buildScheduleWebhookDeliveryColumns } from '~/routing/schedule/utils/buildScheduleWebhookDeliveryColumns';
 
 export interface ScheduleWebhookDeliveriesProps {

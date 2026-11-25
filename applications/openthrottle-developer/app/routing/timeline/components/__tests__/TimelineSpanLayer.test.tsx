@@ -8,7 +8,7 @@ import {
   FIXTURE_WINDOW_FROM,
   FIXTURE_WINDOW_TO,
   TIMELINE_FIXTURE_SPANS,
-} from '~/routing/timeline/data/data.fixtures';
+} from '~/routing/timeline/data/fixtures';
 import type { TimelineLane } from '~/routing/timeline/types';
 import { buildTimelineLanes } from '~/routing/timeline/utils/lanes';
 import { createTimelineScale } from '~/routing/timeline/utils/scale';

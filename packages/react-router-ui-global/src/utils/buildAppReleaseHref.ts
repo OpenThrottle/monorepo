@@ -1,4 +1,4 @@
-import { GLOBAL_RELEASES_URL } from '../data/data.releases';
+import { GLOBAL_RELEASES_URL } from '../data/releases';
 
 /**
  * @description The releases search for `<appName>@<version>` (nx.json

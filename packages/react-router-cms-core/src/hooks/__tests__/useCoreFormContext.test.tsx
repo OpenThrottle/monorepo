@@ -3,7 +3,7 @@ import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
 import { CMS_STATUS } from '../../config/cms-status';
-import { CoreFormContext } from '../../data/data.core-form-context';
+import { CoreFormContext } from '../../data/core-form-context';
 import type { CmsFormContextValue } from '../../types/cms-render';
 import { useCoreFormContext } from '../useCoreFormContext';
 

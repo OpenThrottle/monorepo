@@ -7,7 +7,7 @@
 
 import { toErrorMessage } from '@openthrottle/nodejs-utils';
 
-import { LOOP_TASK_STATUS } from '../data/data.loop.ts';
+import { LOOP_TASK_STATUS } from '../data/loop.ts';
 import type { LoopOutcome, RunOtLoopOptions } from '../types/loop.ts';
 import {
   claimGuidance,

@@ -26,7 +26,7 @@ import { cliGradeBoundaryOf, cliSelectionOf } from './cli-selection.ts';
 import {
   TOOL_SELECTION_GRADER_ID,
   TOOL_SELECTION_GRADER_VERSION,
-} from './data/data.dataset.ts';
+} from './data/dataset.ts';
 import type { ToolSelectionCase, TrialGrade } from './eval-case.ts';
 import { gradeCase } from './gradeCase.ts';
 import type { CliDriverId, SandboxLaunch } from './sandbox-attachment.ts';

@@ -4,8 +4,8 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import { CORE_COMPONENTS } from '../../data/data.registry';
 import { MOCK_FRAGMENTS } from '../../data/mock.fragments';
+import { CORE_COMPONENTS } from '../../data/registry';
 import type { CmsComponentRegistry } from '../../types/cms-render';
 import { createComponentRegistry } from '../../utils/createComponentRegistry';
 import { registerComponent } from '../../utils/registerComponent';

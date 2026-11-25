@@ -1,4 +1,4 @@
-import { INTRODUCTIONS } from '../data/data.introductions';
+import { INTRODUCTIONS } from '../data/introductions';
 
 /**
  * @description Returns one introduction at random from {@link INTRODUCTIONS}.

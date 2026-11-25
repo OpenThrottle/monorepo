@@ -10,7 +10,7 @@ import * as React from 'react';
 import type { Route } from '@/app/routes/+types/blocks._index';
 import { SITE_TITLE } from '~/global/config/settings';
 import { BlocksPreview } from '~/routing/blocks/components/BlocksPreview';
-import { BLOCKS_COPY } from '~/routing/blocks/data/data.copy';
+import { BLOCKS_COPY } from '~/routing/blocks/data/copy';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

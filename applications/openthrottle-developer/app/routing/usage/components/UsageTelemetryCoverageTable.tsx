@@ -16,7 +16,7 @@ import type { UsageTelemetryCoverageMachineFragment } from '~/__generated__/grap
 import {
   TELEMETRY_COVERAGE_COPY,
   TELEMETRY_DELIVERY_LEGS,
-} from '~/routing/usage/data/data.telemetry-coverage-copy';
+} from '~/routing/usage/data/telemetry-coverage-copy';
 import {
   countMachineWarnings,
   deliveryLegLabel,

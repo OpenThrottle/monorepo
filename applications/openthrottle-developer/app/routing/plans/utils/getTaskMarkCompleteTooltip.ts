@@ -1,4 +1,4 @@
-import { PLAN_TASK_TOOLBAR_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_TASK_TOOLBAR_COPY } from '~/routing/plans/data/copy';
 
 export interface TaskMarkCompleteTooltipInput {
   readonly isCompleted: boolean;

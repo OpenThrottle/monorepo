@@ -5,11 +5,11 @@ import * as React from 'react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { CHAT_TOOLBAR_SESSION_SENTINEL_KEY } from '../../config/chat-session-permission-decay';
-import type { ChatToolbarState } from '../../data/data.chat-toolbar-state';
+import type { ChatToolbarState } from '../../data/chat-toolbar-state';
 import {
   CHAT_TOOLBAR_STORAGE_KEY,
   DEFAULT_CHAT_TOOLBAR_STATE,
-} from '../../data/data.chat-toolbar-state';
+} from '../../data/chat-toolbar-state';
 import { useSessionPermissionDecay } from '../useSessionPermissionDecay';
 
 describe('useSessionPermissionDecay', () => {

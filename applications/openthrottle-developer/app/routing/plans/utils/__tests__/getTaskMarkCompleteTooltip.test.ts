@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { PLAN_TASK_TOOLBAR_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_TASK_TOOLBAR_COPY } from '~/routing/plans/data/copy';
 import { getTaskMarkCompleteTooltip } from '~/routing/plans/utils/getTaskMarkCompleteTooltip';
 
 const idle = {

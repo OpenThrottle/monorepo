@@ -10,7 +10,7 @@ import {
 import * as React from 'react';
 import type { Blocker } from 'react-router';
 
-import { BLOG_UNSAVED_COPY } from '~/routing/blog/data/data.copy';
+import { BLOG_UNSAVED_COPY } from '~/routing/blog/data/copy';
 
 export interface BlogPostUnsavedChangesDialogProps {
   readonly blocker: Blocker;

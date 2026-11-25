@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
-import { SCHEDULE_APPROVAL_COPY } from '~/routing/schedule/data/data.copy';
+import { SCHEDULE_APPROVAL_COPY } from '~/routing/schedule/data/copy';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 
 import { ScheduleAllowedCommands } from '../ScheduleAllowedCommands';

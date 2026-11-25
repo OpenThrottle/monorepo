@@ -25,7 +25,7 @@ import {
 import { UpsertTagActionRuleInputSchema } from '~/__generated__/schemas';
 import { SITE_TITLE } from '~/global/config/settings';
 import { RuleForm } from '~/routing/rules/components/RuleForm';
-import { RULES_COPY } from '~/routing/rules/data/data.copy';
+import { RULES_COPY } from '~/routing/rules/data/copy';
 import { buildRulePromptOptions } from '~/routing/rules/utils/rule-prompt-options';
 
 type HandleData = Route.ComponentProps['loaderData'];

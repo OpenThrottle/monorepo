@@ -2,7 +2,7 @@ import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import type { BlogPostSummaryFragment } from '~/__generated__/graphql';
-import { BLOG_COPY } from '~/routing/blog/data/data.copy';
+import { BLOG_COPY } from '~/routing/blog/data/copy';
 
 import { BlogEmptyState } from './BlogEmptyState';
 import { BlogPreview } from './BlogPreview';

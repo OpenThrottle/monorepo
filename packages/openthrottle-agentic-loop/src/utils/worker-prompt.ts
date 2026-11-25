@@ -1,13 +1,13 @@
 import {
   FAILURE_TAIL_MAX_BYTES,
   FAILURE_TAIL_MAX_LINES,
-} from '../data/data.constants.ts';
+} from '../data/constants.ts';
 import {
   WORKER_PROMPT_HARD_RULES,
   WORKER_PROMPT_INTRO,
   WORKER_PROMPT_REPOSITORY_RULES,
   WORKER_PROMPT_RESULT_INSTRUCTIONS,
-} from '../data/data.worker-prompt.ts';
+} from '../data/worker-prompt.ts';
 import type { AttemptFailure, LoopTask } from '../types/loop.ts';
 import { stripAnsi } from './command-output.ts';
 

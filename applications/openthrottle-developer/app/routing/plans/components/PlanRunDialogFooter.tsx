@@ -6,7 +6,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { PLAN_RUN_DIALOG_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_RUN_DIALOG_COPY } from '~/routing/plans/data/copy';
 import type { PlanRunDialogMode } from '~/routing/plans/types';
 import { getPlanRunDialogSubmitLabel } from '~/routing/plans/utils/plan-run-dialog';
 

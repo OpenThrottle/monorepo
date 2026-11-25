@@ -11,7 +11,7 @@
 import { useRouteLoaderData } from 'react-router';
 
 import type { loader } from '~/routes/plans.$planId._index';
-import { PLAN_DETAIL_ROUTE_ID } from '~/routing/plans/data/data.plan-detail-route-id';
+import { PLAN_DETAIL_ROUTE_ID } from '~/routing/plans/data/plan-detail-route-id';
 import type { PlanDetailRouteData } from '~/routing/plans/types';
 
 /**

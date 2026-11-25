@@ -3,7 +3,7 @@ import { render, within } from '@testing-library/react';
 import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { LANDING_ROADMAP } from '~/routing/home/data/data.landing';
+import { LANDING_ROADMAP } from '~/routing/home/data/landing';
 
 import { LandingRoadmap } from '../LandingRoadmap';
 

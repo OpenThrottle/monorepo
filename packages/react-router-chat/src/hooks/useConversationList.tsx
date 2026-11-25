@@ -2,8 +2,8 @@ import { toast } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { useFetcher } from 'react-router';
 
-import { AGENT_CONVERSATIONS_ACTION } from '../data/data.chat-conversation-actions';
-import { CHAT_CONVERSATION_SIDEBAR_COPY } from '../data/data.chat-conversation-sidebar.copy';
+import { AGENT_CONVERSATIONS_ACTION } from '../data/chat-conversation-actions';
+import { CHAT_CONVERSATION_SIDEBAR_COPY } from '../data/chat-conversation-sidebar.copy';
 import type {
   AgentConversationListItem,
   ListAgentConversationsResult,

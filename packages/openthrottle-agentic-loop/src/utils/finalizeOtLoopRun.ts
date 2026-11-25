@@ -12,7 +12,7 @@ import {
   COMMIT_TEMP_PREFIX,
   FINALIZE_PRIOR_REASONS,
   SQUASH_FALLBACK_SUBJECT,
-} from '../data/data.git.ts';
+} from '../data/git.ts';
 import type { PlanRunFinalizePort } from '../types/plan-run-finalize-port.ts';
 import type { WorkflowRunResult } from '../types/workflow-run-result.ts';
 import { appendCommitFooters } from './commit.ts';

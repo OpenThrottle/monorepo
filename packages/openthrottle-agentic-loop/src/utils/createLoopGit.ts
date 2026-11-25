@@ -11,7 +11,7 @@ import {
   COMMIT_TEMP_PREFIX,
   LOOP_DIR_PREFIX,
   LOOP_PATCHES_DIR,
-} from '../data/data.git.ts';
+} from '../data/git.ts';
 import type {
   DiscardTaskChangesResult,
   GitCommitResult,

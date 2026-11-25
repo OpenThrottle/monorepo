@@ -10,7 +10,7 @@ import { SearchAlertIcon } from 'lucide-react';
 import * as React from 'react';
 import { Link } from 'react-router';
 
-import { NOTES_EMPTY_VARIANTS } from '~/routing/notes/data/data.empty-variants';
+import { NOTES_EMPTY_VARIANTS } from '~/routing/notes/data/empty-variants';
 
 export interface NotesEmptyProps {
   className?: string;

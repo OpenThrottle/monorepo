@@ -2,7 +2,7 @@ import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import { SkillAvailabilityRuleForm } from '~/routing/skills/components/SkillAvailabilityRuleForm';
-import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/data.copy';
+import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/copy';
 import type { SkillAvailabilityRuleValue } from '~/routing/skills/utils/skill-availability';
 
 const COPY = SKILL_AVAILABILITY_COPY.rules;

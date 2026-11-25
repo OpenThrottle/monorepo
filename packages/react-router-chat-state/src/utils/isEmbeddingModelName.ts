@@ -1,4 +1,4 @@
-import { EMBEDDING_MODEL_NAME_PATTERNS } from '../data/data.embedding-models';
+import { EMBEDDING_MODEL_NAME_PATTERNS } from '../data/embedding-models';
 
 /**
  * @description True when a discovered model id names an embedding-only model

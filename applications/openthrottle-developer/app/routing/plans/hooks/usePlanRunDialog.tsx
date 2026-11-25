@@ -11,7 +11,7 @@ import { useFetcher } from 'react-router';
 
 import type { action } from '~/routes/plans.$planId._index';
 import { PLAN_RUN_DIALOG_CLOCK_TICK_MS } from '~/routing/plans/config/defaults';
-import { PLAN_RUN_OT_LOOP_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_RUN_OT_LOOP_COPY } from '~/routing/plans/data/copy';
 import { usePlanDefaultAgent } from '~/routing/plans/hooks/usePlanDefaultAgent';
 import type { UsePlanRunDialogConfirmResult } from '~/routing/plans/hooks/usePlanRunDialogConfirm';
 import { usePlanRunDialogConfirm } from '~/routing/plans/hooks/usePlanRunDialogConfirm';

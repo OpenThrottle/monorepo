@@ -8,10 +8,10 @@ import {
 import * as React from 'react';
 import { Await } from 'react-router';
 
-import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import type { RepositoryOption } from '~/routing/home/utils/models.server';
 import { RunSkillDialog } from '~/routing/skills/components/RunSkillDialog';
-import { SKILL_RUN_COPY } from '~/routing/skills/data/data.copy';
+import { SKILL_RUN_COPY } from '~/routing/skills/data/copy';
 import type { RunSkillPayload } from '~/routing/skills/types';
 
 /** Deferred bundle the loader streams for the Run-skill modal. */

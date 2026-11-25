@@ -2,7 +2,7 @@ import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import * as modelsServer from '~/routing/home/utils/models.server';
 import * as readSkillFile from '~/routing/skills/utils/readSkillFileBySlug.server';
 import * as skillIndexLoaders from '~/routing/skills/utils/skill-index-loaders';

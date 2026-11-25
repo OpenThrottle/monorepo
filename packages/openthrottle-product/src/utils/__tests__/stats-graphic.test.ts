@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { STATS_GRAPHIC_LAYOUT } from '../../data/data.statsGraphic';
+import { STATS_GRAPHIC_LAYOUT } from '../../data/stats-graphic';
 import type { SurfaceStats } from '../../types/surfaces';
 import {
   escapeXml,

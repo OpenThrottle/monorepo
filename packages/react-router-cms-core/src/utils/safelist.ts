@@ -1,6 +1,6 @@
 import { getThemeSafelistPatterns } from '@openthrottle/react-router-shadcn';
 
-import { CMS_SAFELIST_GROUPS } from '../data/data.cms-safelist';
+import { CMS_SAFELIST_GROUPS } from '../data/cms-safelist';
 
 /**
  * @public

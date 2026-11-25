@@ -5,7 +5,7 @@ import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
-import { TASK_DETAIL_COPY } from '~/routing/plans/data/data.copy';
+import { TASK_DETAIL_COPY } from '~/routing/plans/data/copy';
 
 import type { TaskDetailsProps } from '../TaskDetails';
 import { TaskDetails } from '../TaskDetails';

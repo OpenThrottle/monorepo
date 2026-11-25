@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/blog.tags.$tagSlug';
 import { BlogTagDocument } from '~/__generated__/graphql';
-import { BLOG_COPY } from '~/routing/blog/data/data.copy';
+import { BLOG_COPY } from '~/routing/blog/data/copy';
 import {
   MOCK_BLOG_POST_SUMMARY,
   MOCK_BLOG_TAG,

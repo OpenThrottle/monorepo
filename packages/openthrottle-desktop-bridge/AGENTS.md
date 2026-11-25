@@ -10,7 +10,7 @@ application → application reference.
 
 ## Layout
 
-- `src/data/data.desktop-bridge.ts` — bridge name, protocol, `DESKTOP_IPC_CHANNELS`.
+- `src/data/desktop-bridge.ts` — bridge name, protocol, `DESKTOP_IPC_CHANNELS`.
 - `src/types/desktop-bridge.ts` — the bridge interface and result types.
 - `src/utils/` — `getDesktopBridge`, `mapDeepLink`, `toPlanRoute`, `findDeepLink`, `parseNotifyInput`.
 

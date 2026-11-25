@@ -13,8 +13,8 @@ import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
-import { SKILL_WRITE_COPY } from '~/routing/skills/data/data.copy';
+import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import { SKILL_WRITE_COPY } from '~/routing/skills/data/copy';
 
 vi.mock('~/routing/agents/utils/discoverRepoSkills.server', () => ({
   discoverRepoSkills: vi.fn(),

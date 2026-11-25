@@ -5,8 +5,8 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
-import { SKILLS_SOURCE_COPY } from '~/routing/skills/data/data.copy';
+import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import { SKILLS_SOURCE_COPY } from '~/routing/skills/data/copy';
 import { getModelInvocationBadge } from '~/routing/skills/utils/model-invocation-badge';
 
 import type { SkillIntroductionBadgesProps } from '../SkillIntroductionBadges';

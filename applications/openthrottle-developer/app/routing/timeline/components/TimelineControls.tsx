@@ -15,7 +15,7 @@ import {
   TIMELINE_CONTROLS_COPY,
   TIMELINE_GROUPING_LABELS,
   TIMELINE_WINDOW_LABELS,
-} from '~/routing/timeline/data/data.copy';
+} from '~/routing/timeline/data/copy';
 import {
   formatTimelineTimestamp,
   timelineZoneLabel,

@@ -4,7 +4,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import { SETTINGS_CONNECTIONS_COPY } from '~/routing/settings/data/data.copy';
+import { SETTINGS_CONNECTIONS_COPY } from '~/routing/settings/data/copy';
 
 import { SettingsConnectionsRevokeCell } from '../SettingsConnectionsRevokeCell';
 

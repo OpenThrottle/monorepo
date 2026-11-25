@@ -15,12 +15,12 @@ import type { ScheduleWebhookTriggerFragment } from '~/__generated__/graphql';
 import { ScheduleWebhookCustomFields } from '~/routing/schedule/components/ScheduleWebhookCustomFields';
 import { ScheduleWebhookFilterRows } from '~/routing/schedule/components/ScheduleWebhookFilterRows';
 import { ScheduleWebhookSigningGuide } from '~/routing/schedule/components/ScheduleWebhookSigningGuide';
-import { SCHEDULE_WEBHOOK_COPY } from '~/routing/schedule/data/data.copy';
+import { SCHEDULE_WEBHOOK_COPY } from '~/routing/schedule/data/copy';
 import {
   WEBHOOK_LIMITS,
   WEBHOOK_PRESET,
   WEBHOOK_PRESET_OPTIONS,
-} from '~/routing/schedule/data/data.webhook';
+} from '~/routing/schedule/data/webhook';
 
 export interface ScheduleWebhookFormProps {
   /** Action-level error to show inline (validation, or the server refusing). */

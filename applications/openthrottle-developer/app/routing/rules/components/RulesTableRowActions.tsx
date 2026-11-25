@@ -3,7 +3,7 @@ import { GlobalPopover } from '@openthrottle/react-router-ui-global';
 import * as React from 'react';
 
 import type { TagActionRuleRowFragment } from '~/__generated__/graphql';
-import { RULES_COPY } from '~/routing/rules/data/data.copy';
+import { RULES_COPY } from '~/routing/rules/data/copy';
 
 export interface RulesTableRowActionsProps {
   readonly onToggleEnabled: (rule: TagActionRuleRowFragment) => void;

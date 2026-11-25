@@ -1,5 +1,5 @@
 import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
-import type { DailyStatsChartDatum } from '~/routing/dashboard/data/data.daily-stats-chart';
+import type { DailyStatsChartDatum } from '~/routing/dashboard/data/daily-stats-chart';
 
 /** Formats YYYY-MM-DD for X-axis display (e.g. "Feb 11"). */
 export const formatChartDate = (value: string): string => {

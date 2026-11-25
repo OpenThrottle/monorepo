@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { DEFAULT_APPEARANCE_CONFIG } from '~/global/data/data.appearance-config';
+import { DEFAULT_APPEARANCE_CONFIG } from '~/global/data/appearance-config';
 
 import { countNonDefaultAppearanceFields } from '../countNonDefaultAppearanceFields';
 

@@ -14,11 +14,11 @@ import { PlanRunStatusCell } from '~/routing/plans/components/PlanRunStatusCell'
 import { PlanRunTime } from '~/routing/plans/components/PlanRunTime';
 import { PlanWorkflowRunHistoryDetail } from '~/routing/plans/components/PlanWorkflowRunHistoryDetail';
 import { PlanWorkflowRunHistoryRowActions } from '~/routing/plans/components/PlanWorkflowRunHistoryRowActions';
-import { PLAN_RUN_TRANSPARENCY_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_RUN_TRANSPARENCY_COPY } from '~/routing/plans/data/copy';
 import {
   PLAN_RUN_HISTORY_COLUMN_COUNT,
   PLAN_RUN_HISTORY_META_FIELDS,
-} from '~/routing/plans/data/data.plan-run-history';
+} from '~/routing/plans/data/plan-run-history';
 import type { PlanRunJobMetrics } from '~/routing/plans/utils/joinPlanRunJobMetrics';
 import type { PlanRunOptions } from '~/routing/plans/utils/plan-run-options';
 import { buildPlanRunMetaItems } from '~/routing/plans/utils/plan-run-sections';

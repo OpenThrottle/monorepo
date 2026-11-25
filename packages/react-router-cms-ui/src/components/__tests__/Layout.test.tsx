@@ -4,7 +4,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import { COPY } from '../../data/data.copy';
+import { COPY } from '../../data/copy';
 import type { LayoutProps } from '../Layout';
 import { Layout } from '../Layout';
 

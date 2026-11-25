@@ -1,4 +1,4 @@
-import { BLOG_EDITOR_COPY } from '~/routing/blog/data/data.copy';
+import { BLOG_EDITOR_COPY } from '~/routing/blog/data/copy';
 
 export interface ResolveSaveStatusInput {
   readonly isDirty: boolean;

@@ -17,8 +17,8 @@ import * as React from 'react';
 import type {
   AgentSetupMode,
   AgentSetupRunStatus,
-} from '~/routing/settings/data/data.agent-clis';
-import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/data.copy';
+} from '~/routing/settings/data/agent-clis';
+import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/copy';
 import {
   getAgentSetupStatusLabel,
   getAgentSetupTitle,

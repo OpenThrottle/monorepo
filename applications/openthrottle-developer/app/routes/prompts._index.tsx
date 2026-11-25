@@ -24,7 +24,7 @@ import { PromptsIntroduction } from '~/routing/prompts/components/PromptsIntrodu
 import { PromptsStats } from '~/routing/prompts/components/PromptsStats';
 import { PromptsTable } from '~/routing/prompts/components/PromptsTable';
 import { PromptToolbar } from '~/routing/prompts/components/PromptToolbar';
-import { PROMPTS_ONBOARDING } from '~/routing/prompts/data/data.copy';
+import { PROMPTS_ONBOARDING } from '~/routing/prompts/data/copy';
 import {
   parsePromptsSortFromSearchParams,
   parsePromptsTypesFromSearchParams,

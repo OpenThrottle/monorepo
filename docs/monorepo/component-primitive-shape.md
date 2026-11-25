@@ -203,7 +203,7 @@ scaffolds them):
 - **Hardcoded data** (option lists, column definitions, static arrays/maps) →
   sibling `data/`.
 - **Configuration** (tunables, feature flags, thresholds) → sibling `config/`.
-- **Copy / user-facing strings** → `data/data.copy.ts`.
+- **Copy / user-facing strings** → `data/copy.ts`.
 
 This targets **file-scope** declarations, not values computed _inside_ the
 component. Small derived values stay inline under `// Setup`; a `useMemo`
@@ -420,7 +420,7 @@ source of truth for all of them.
   route types); alphabetized object keys and unused params prefixed `_`.
 - **Copy / data / config separation** — the `folders` generator scaffolds the
   canonical sibling subtree `components/ config/ data/ hooks/ utils/` (+
-  `types.ts`). Sentence-length UI copy → `data/data.copy.ts` (`*_COPY as const`);
+  `types.ts`). Sentence-length UI copy → `data/copy.ts` (`*_COPY as const`);
   config constants → `config/defaults.ts`; form schemas → `config/form.*.ts`.
   This is the concrete backing for [R4](#r4--hoist-file-scope-helpers-constants-and-config-out-of-the-component-file).
 - **Tests** — colocated in `__tests__/`; Vitest; render via

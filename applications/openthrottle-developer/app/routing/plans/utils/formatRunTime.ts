@@ -1,7 +1,7 @@
 import { formatDistance } from 'date-fns';
 
 import { formatDateTime, parseDate } from '~/global/utils/dates';
-import { PLAN_RUN_TRANSPARENCY_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_RUN_TRANSPARENCY_COPY } from '~/routing/plans/data/copy';
 
 /** Past this distance from now a run time reads as an absolute local date, not "in 9 days". */
 const RELATIVE_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;

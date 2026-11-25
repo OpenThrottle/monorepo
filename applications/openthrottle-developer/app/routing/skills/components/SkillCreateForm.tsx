@@ -4,7 +4,7 @@ import * as React from 'react';
 import { Link } from 'react-router';
 
 import { SkillCreateDestinationField } from '~/routing/skills/components/SkillCreateDestinationField';
-import { SKILL_CREATE_COPY } from '~/routing/skills/data/data.copy';
+import { SKILL_CREATE_COPY } from '~/routing/skills/data/copy';
 import type { UseSkillCreateFormResult } from '~/routing/skills/hooks/useSkillCreateForm';
 
 export interface SkillCreateFormProps {

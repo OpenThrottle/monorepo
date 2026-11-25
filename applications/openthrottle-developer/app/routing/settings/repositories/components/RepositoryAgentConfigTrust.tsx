@@ -10,7 +10,7 @@ import { useFetcher, useRevalidator } from 'react-router';
 
 import type { RepositoryCheckoutFieldsFragment } from '~/__generated__/graphql';
 import type { action as agentConfigTrustAction } from '~/routes/resources.repository-agent-config-trust';
-import { REPOSITORY_AGENT_CONFIG_TRUST_COPY } from '~/routing/settings/repositories/data/data.copy';
+import { REPOSITORY_AGENT_CONFIG_TRUST_COPY } from '~/routing/settings/repositories/data/copy';
 import { deriveAgentConfigTrust } from '~/routing/settings/repositories/utils/deriveAgentConfigTrust';
 import { pluralSuffix } from '~/routing/settings/repositories/utils/pluralSuffix';
 

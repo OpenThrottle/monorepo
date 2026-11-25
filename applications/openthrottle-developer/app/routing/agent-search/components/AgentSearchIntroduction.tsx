@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import { AGENT_SEARCH_COPY } from '~/routing/agent-search/data/data.copy';
+import { AGENT_SEARCH_COPY } from '~/routing/agent-search/data/copy';
 
 export interface AgentSearchIntroductionProps {}
 

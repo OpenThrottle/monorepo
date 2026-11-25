@@ -19,7 +19,7 @@ import {
   toPlanRunModelOptionId,
 } from '~/routing/plans/utils/plan-run-model-effort';
 import { isSelectablePlanRunDriver } from '~/routing/plans/utils/plan-workflow-config-execution';
-import type { PreferencesActionResult } from '~/routing/settings/data/data.preferences';
+import type { PreferencesActionResult } from '~/routing/settings/data/preferences';
 
 /**
  * @description A saved default agent the user can still run: the picker option it

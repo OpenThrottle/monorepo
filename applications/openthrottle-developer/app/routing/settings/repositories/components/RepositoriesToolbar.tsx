@@ -21,7 +21,7 @@ import {
   REPOSITORIES_SORT_OPTIONS,
   REPOSITORIES_SORT_ORDER,
 } from '~/routing/settings/repositories/config/repositories.defaults';
-import { REPOSITORIES_TABLE_COPY } from '~/routing/settings/repositories/data/data.copy';
+import { REPOSITORIES_TABLE_COPY } from '~/routing/settings/repositories/data/copy';
 
 export interface RepositoriesToolbarProps {
   children: React.ReactNode;

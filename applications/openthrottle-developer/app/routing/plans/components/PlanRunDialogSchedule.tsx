@@ -7,7 +7,7 @@ import {
 import { ClockIcon } from 'lucide-react';
 import * as React from 'react';
 
-import { PLAN_RUN_DIALOG_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_RUN_DIALOG_COPY } from '~/routing/plans/data/copy';
 
 export interface PlanRunDialogScheduleProps {
   readonly className?: string;

@@ -10,11 +10,11 @@ import { Link } from 'react-router';
 
 import type { ScheduleWebhookDeliveryRowFragment } from '~/__generated__/graphql';
 import { ScheduleWebhookRenderedPrompt } from '~/routing/schedule/components/ScheduleWebhookRenderedPrompt';
-import { SCHEDULE_WEBHOOK_COPY } from '~/routing/schedule/data/data.copy';
+import { SCHEDULE_WEBHOOK_COPY } from '~/routing/schedule/data/copy';
 import {
   WEBHOOK_DELIVERY_STATUS_COLOR,
   WEBHOOK_DELIVERY_STATUS_LABEL,
-} from '~/routing/schedule/data/data.webhook';
+} from '~/routing/schedule/data/webhook';
 import { describeWebhookDeliveryReason } from '~/routing/schedule/utils/describeWebhookDeliveryReason';
 import { formatWhen } from '~/routing/schedule/utils/formatWhen';
 

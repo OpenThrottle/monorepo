@@ -3,7 +3,7 @@ import type { GlobalPopoverAction } from '@openthrottle/react-router-ui-global';
 import { GlobalPopover } from '@openthrottle/react-router-ui-global';
 import * as React from 'react';
 
-import { PLAN_RUN_TRANSPARENCY_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_RUN_TRANSPARENCY_COPY } from '~/routing/plans/data/copy';
 import { planRunJobDetailPath } from '~/routing/plans/utils/plan-run-options';
 
 export interface PlanWorkflowRunHistoryRowActionsProps {

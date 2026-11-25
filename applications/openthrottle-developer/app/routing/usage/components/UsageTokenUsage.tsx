@@ -20,7 +20,7 @@ import { UsageTokenUsageAccounts } from '~/routing/usage/components/UsageTokenUs
 import { UsageTokenUsageFilters } from '~/routing/usage/components/UsageTokenUsageFilters';
 import { UsageTokenUsageSources } from '~/routing/usage/components/UsageTokenUsageSources';
 import { UsageTokenUsageTable } from '~/routing/usage/components/UsageTokenUsageTable';
-import { TOKEN_USAGE_STATS } from '~/routing/usage/data/data.token-usage-copy';
+import { TOKEN_USAGE_STATS } from '~/routing/usage/data/token-usage-copy';
 import { buildUsageSearch } from '~/routing/usage/utils/buildUsageSearch';
 import { groupTokenUsage } from '~/routing/usage/utils/groupTokenUsage';
 import { tokenUsageEmptyMessage } from '~/routing/usage/utils/tokenUsageEmptyMessage';

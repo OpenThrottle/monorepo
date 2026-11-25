@@ -3,8 +3,8 @@ import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
-import { SCHEDULE_WEBHOOK_COPY } from '~/routing/schedule/data/data.copy';
-import { WEBHOOK_LIMITS } from '~/routing/schedule/data/data.webhook';
+import { SCHEDULE_WEBHOOK_COPY } from '~/routing/schedule/data/copy';
+import { WEBHOOK_LIMITS } from '~/routing/schedule/data/webhook';
 
 import { ScheduleWebhookFilterRows } from '../ScheduleWebhookFilterRows';
 

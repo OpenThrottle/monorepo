@@ -11,7 +11,7 @@ const ICON_SM = 'h-3! w-3!';
 /**
  * @description Navigation record shape shared by `GlobalLayout` and the palette
  * — the same `dataNavigationV2` / `dataNavigationGuest` exports from
- * `~/global/data/data.navigation`.
+ * `~/global/data/navigation`.
  */
 export type NavigationRecord = Record<
   string,
@@ -131,7 +131,7 @@ const toCommanderItems = (
 
 /**
  * @description Derives commander groups from the navigation record that already
- * drives the global sidebar, so adding a link in `data.navigation.ts` is enough
+ * drives the global sidebar, so adding a link in `data/navigation.ts` is enough
  * for both surfaces. Section keys become group headings (Agents / Settings /
  * Workspace / Legal); groups left empty after beta/disabled filtering are omitted.
  */

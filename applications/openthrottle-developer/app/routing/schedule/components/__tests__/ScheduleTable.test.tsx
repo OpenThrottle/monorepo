@@ -8,7 +8,7 @@ import type { ScheduledJobCardFragment } from '~/__generated__/graphql';
 import {
   SCHEDULE_CADENCE_COPY,
   SCHEDULE_COPY,
-} from '~/routing/schedule/data/data.copy';
+} from '~/routing/schedule/data/copy';
 
 import type { ScheduleTableProps } from '../ScheduleTable';
 import { ScheduleTable } from '../ScheduleTable';

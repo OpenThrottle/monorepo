@@ -19,7 +19,7 @@ import { join } from 'node:path';
 import {
   CLI_DRIVER_BINARIES,
   SANDBOX_SERVER_NAME,
-} from './data/data.cli-drivers.ts';
+} from './data/cli-drivers.ts';
 
 /**
  * @description A CLI the suite can drive against the sandbox.

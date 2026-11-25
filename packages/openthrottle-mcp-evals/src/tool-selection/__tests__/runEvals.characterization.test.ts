@@ -1,6 +1,6 @@
 /**
  * @description Parity proof for the eval-core port. These literals were recorded against the original
- * hand-rolled run loop with a scripted selector over real cases from `data.cases.ts`, and must keep passing
+ * hand-rolled run loop with a scripted selector over real cases from `data/cases.ts`, and must keep passing
  * through whatever implements `runEvals` — the aggregated per-case results are what committed baselines and
  * `compareBaseline` read, so any drift here is a baseline-compatibility break.
  */
@@ -8,7 +8,7 @@
 import type { ToolSurface } from '@openthrottle/openthrottle-mcp/tool-surface';
 import { describe, expect, it } from 'vitest';
 
-import { TOOL_SELECTION_CASES } from '../data/data.cases.ts';
+import { TOOL_SELECTION_CASES } from '../data/cases.ts';
 import type {
   SelectedCall,
   Selection,

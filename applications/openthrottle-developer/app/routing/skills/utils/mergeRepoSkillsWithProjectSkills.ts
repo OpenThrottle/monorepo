@@ -12,7 +12,7 @@
 
 import type { SkillOutcomeTelemetry } from '@openthrottle/openthrottle-skills';
 
-import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 
 /**
  * A per-project skill row from the `projectSkills` query, narrowed to the fields

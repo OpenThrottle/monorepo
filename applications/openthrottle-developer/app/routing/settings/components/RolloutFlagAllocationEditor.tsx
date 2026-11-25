@@ -1,7 +1,7 @@
 import { Input, Label } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
+import { ROLLOUT_COPY } from '~/routing/settings/data/copy';
 import type { RolloutFormFallthroughBucket } from '~/routing/settings/utils/rollout-typed-config';
 import {
   fallthroughWeightsAreValid,

@@ -5,7 +5,7 @@ import type {
 } from '@openthrottle/react-router-chat';
 
 import { capabilitiesForChatOption } from '../config/chat-capabilities';
-import type { ChatToolbarState } from '../data/data.chat-toolbar-state';
+import type { ChatToolbarState } from '../data/chat-toolbar-state';
 import type { ChatAgentRuntime } from '../types';
 import { decodeChatOption } from './chat-model-option';
 import { isEmbeddingModelName } from './isEmbeddingModelName';

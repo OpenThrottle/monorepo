@@ -24,13 +24,13 @@ import { SANDBOX_CALL_LOG_ENV } from '../sandbox/bin-sandbox.ts';
 import { createAnthropicToolSelector } from './anthropic-tool-selector.ts';
 import type { BaselineComparison, RunResult } from './compareBaseline.ts';
 import { compareBaseline, passRate } from './compareBaseline.ts';
-import { TOOL_SELECTION_CASES } from './data/data.cases.ts';
+import { TOOL_SELECTION_CASES } from './data/cases.ts';
 import {
   CLI_DRIVER_BINARIES,
   DEFAULT_CLI_TIMEOUT_MS,
   UNSUPPORTED_CLI_DRIVERS,
-} from './data/data.cli-drivers.ts';
-import { HARNESS_TOOLS } from './data/data.harness-tools.ts';
+} from './data/cli-drivers.ts';
+import { HARNESS_TOOLS } from './data/harness-tools.ts';
 import type { ToolSelectionCase, TrialGrade } from './eval-case.ts';
 import { runCliEvals } from './runCliEvals.ts';
 import type { ToolSelectionRun } from './runEvals.ts';

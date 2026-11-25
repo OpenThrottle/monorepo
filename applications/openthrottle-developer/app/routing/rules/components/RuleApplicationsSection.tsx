@@ -3,9 +3,9 @@ import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import * as React from 'react';
 import { Link } from 'react-router';
 
-import { PLAN_RULE_APPLICATION_STATE_STYLES } from '~/routing/plans/data/data.plan-rule-applications-state-styles';
+import { PLAN_RULE_APPLICATION_STATE_STYLES } from '~/routing/plans/data/plan-rule-applications-state-styles';
 import { RuleApplicationDetails } from '~/routing/rules/components/RuleApplicationDetails';
-import { RULE_DETAIL_COPY } from '~/routing/rules/data/data.copy';
+import { RULE_DETAIL_COPY } from '~/routing/rules/data/copy';
 import { formatRulesDate } from '~/routing/rules/utils/formatters';
 import type { RuleApplicationRowData } from '~/routing/rules/utils/rule-applications';
 import { groupRuleApplicationsByState } from '~/routing/rules/utils/rule-applications';

@@ -1,4 +1,4 @@
-import { TOKEN_USAGE_COPY } from '~/routing/usage/data/data.token-usage-copy';
+import { TOKEN_USAGE_COPY } from '~/routing/usage/data/token-usage-copy';
 import { tokenUsageProviderLabel } from '~/routing/usage/utils/token-usage-labels';
 
 /** Empty-state copy for the token-usage table: all providers, or one provider. */

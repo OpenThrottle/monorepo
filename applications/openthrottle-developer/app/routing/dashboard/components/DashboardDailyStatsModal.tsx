@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router';
 
 import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
 import { DashboardDailyStatsModalDetail } from '~/routing/dashboard/components/DashboardDailyStatsModalDetail';
-import { DAILY_STATS_MODAL_COPY } from '~/routing/dashboard/data/data.copy';
+import { DAILY_STATS_MODAL_COPY } from '~/routing/dashboard/data/copy';
 import {
   parseSelectedStatDate,
   selectDailyStatByDate,

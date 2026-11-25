@@ -3,7 +3,7 @@
  * surface a case's gold files, and how high.
  */
 
-import { CODE_SEARCH_K } from './data/data.dataset.ts';
+import { CODE_SEARCH_K } from './data/dataset.ts';
 import type {
   CodeCaseScore,
   CodeRankedMatch,

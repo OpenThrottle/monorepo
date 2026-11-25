@@ -12,13 +12,13 @@ export * from './config/chat-capabilities';
 export * from './config/chat-session-permission-decay';
 
 // 📦 Data / Atoms
-export * from './data/data.atom.chat-context-meter';
-export * from './data/data.atom.chat-drafts';
-export * from './data/data.atom.chat-toolbar';
-export * from './data/data.chat-context-meter-state';
-export * from './data/data.chat-drafts-state';
-export * from './data/data.chat-toolbar-seeds';
-export * from './data/data.chat-toolbar-state';
+export * from './data/atom.chat-context-meter';
+export * from './data/atom.chat-drafts';
+export * from './data/atom.chat-toolbar';
+export * from './data/chat-context-meter-state';
+export * from './data/chat-drafts-state';
+export * from './data/chat-toolbar-seeds';
+export * from './data/chat-toolbar-state';
 
 // 🪝 React Hooks
 export * from './hooks/useChatDraft';

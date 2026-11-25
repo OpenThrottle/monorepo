@@ -3,7 +3,7 @@ import * as React from 'react';
 import { useFetcher, useRevalidator } from 'react-router';
 
 import type { action as agentModelsEnabledAction } from '~/routes/resources.agent-models-enabled';
-import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/data.copy';
+import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/copy';
 
 /** Resource-route action path backing the per-agent select-all / deselect-all controls. */
 const AGENT_MODELS_ENABLED_ACTION = '/resources/agent-models-enabled';

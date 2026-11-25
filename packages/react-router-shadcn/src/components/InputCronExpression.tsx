@@ -3,7 +3,7 @@ import cronstrue from 'cronstrue';
 import { ChevronDownIcon } from 'lucide-react';
 import * as React from 'react';
 
-import { CRON_EXPRESSION_COPY, CRON_PRESETS } from '../data/data.cron-presets';
+import { CRON_EXPRESSION_COPY, CRON_PRESETS } from '../data/cron-presets';
 import { cn } from '../utils/cn';
 import {
   DropdownMenu,

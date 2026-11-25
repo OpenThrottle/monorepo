@@ -15,7 +15,7 @@ import type { LayoutColumnProps } from '../components/LayoutColumn';
 import type { LayoutGridProps } from '../components/LayoutGrid';
 import type { LogicCookiesProps } from '../components/LogicCookies';
 import type { LogicParamsProps } from '../components/LogicParams';
-import { REGISTRY_OPTIONS } from '../data/data.registry-options';
+import { REGISTRY_OPTIONS } from '../data/registry-options';
 import type { CmsRenderProps } from '../types/cms-render';
 import {
   readOneOf,

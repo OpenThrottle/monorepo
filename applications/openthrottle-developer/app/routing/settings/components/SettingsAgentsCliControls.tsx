@@ -4,8 +4,8 @@ import { useFetcher, useRevalidator } from 'react-router';
 
 import type { action as agentSetupAction } from '~/routes/resources.agent-setup';
 import { SettingsAgentsSetupLogDialog } from '~/routing/settings/components/SettingsAgentsSetupLogDialog';
-import type { AgentCliStatus } from '~/routing/settings/data/data.agent-clis';
-import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/data.copy';
+import type { AgentCliStatus } from '~/routing/settings/data/agent-clis';
+import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/copy';
 import { useAgentSetupStream } from '~/routing/settings/hooks/useAgentSetupStream';
 import { sanitizeAgentSetupLog } from '~/routing/settings/utils/agent-setup-log';
 import {

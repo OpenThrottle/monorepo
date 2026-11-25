@@ -20,7 +20,7 @@ import { SkillRunConversation } from '~/routing/skills/components/SkillRunConver
 import {
   SKILL_DETAIL_COPY,
   SKILL_WRITE_COPY,
-} from '~/routing/skills/data/data.copy';
+} from '~/routing/skills/data/copy';
 import { useRunSkill } from '~/routing/skills/hooks/useRunSkill';
 import { loadSkillRunOptions } from '~/routing/skills/utils/loadSkillRunOptions.server';
 import { mergeRepoSkillsWithProjectSkills } from '~/routing/skills/utils/mergeRepoSkillsWithProjectSkills';

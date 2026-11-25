@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
 import type { CommanderGroup } from '../../components/OpenThrottleCommander';
-import { COMMANDER_ESCAPE_HEADING } from '../../data/data.copy';
+import { COMMANDER_ESCAPE_HEADING } from '../../data/copy';
 import { getCommanderEscapeHeading } from '../getCommanderEscapeHeading';
 
 describe('getCommanderEscapeHeading', () => {

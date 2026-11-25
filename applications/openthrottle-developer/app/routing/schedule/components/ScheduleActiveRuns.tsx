@@ -14,13 +14,13 @@ import * as React from 'react';
 import { Link, useFetcher } from 'react-router';
 
 import type { ScheduleInFlightRunFragment } from '~/__generated__/graphql';
-import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
+import { SCHEDULE_COPY } from '~/routing/schedule/data/copy';
 import {
   RUN_STATUS_COLOR,
   RUN_STATUS_LABEL,
   RUN_STATUS_VARIANT,
   RUN_TRIGGER_LABEL,
-} from '~/routing/schedule/data/data.run-status';
+} from '~/routing/schedule/data/run-status';
 import { useElapsedTicker } from '~/routing/schedule/hooks/useElapsedTicker';
 import { formatDuration } from '~/routing/schedule/utils/formatDuration';
 

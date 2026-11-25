@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import type { EditorFile } from '../../data/data.atom.editor';
+import type { EditorFile } from '../../data/atom.editor';
 import {
   areFilesUpdated,
   getFilenameError,

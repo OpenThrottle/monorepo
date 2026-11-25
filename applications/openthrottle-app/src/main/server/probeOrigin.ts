@@ -1,4 +1,4 @@
-import { SHELL_HEALTH_PATH } from '../data/data.server-env.ts';
+import { SHELL_HEALTH_PATH } from '../data/server-env.ts';
 
 export type ProbeResult =
   { readonly ok: false; readonly reason: string } | { readonly ok: true };

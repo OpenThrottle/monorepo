@@ -15,7 +15,7 @@ import {
 } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import { EvalRunsRoute } from '~/routing/evals/components/EvalRunsRoute';
-import { EVAL_RUNS_COPY } from '~/routing/evals/data/data.copy';
+import { EVAL_RUNS_COPY } from '~/routing/evals/data/copy';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

@@ -4,7 +4,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { PROMPTS_COPY } from '~/routing/prompts/data/data.copy';
+import { PROMPTS_COPY } from '~/routing/prompts/data/copy';
 
 import { PromptsIntroduction } from '../PromptsIntroduction';
 

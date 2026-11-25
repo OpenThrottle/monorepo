@@ -4,7 +4,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import { CHAT_DENIED_ACTIONS_COPY } from '../../data/data.copy';
+import { CHAT_DENIED_ACTIONS_COPY } from '../../data/copy';
 import type { ChatDeniedActionsNoticeProps } from '../ChatDeniedActionsNotice';
 import { ChatDeniedActionsNotice } from '../ChatDeniedActionsNotice';
 

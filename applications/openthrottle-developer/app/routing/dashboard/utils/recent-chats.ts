@@ -1,6 +1,6 @@
 import type { AgentConversationListItem } from '@openthrottle/react-router-chat';
 
-import { RECENT_CHATS_CARD_COPY } from '~/routing/dashboard/data/data.copy';
+import { RECENT_CHATS_CARD_COPY } from '~/routing/dashboard/data/copy';
 
 /**
  * @description Deep-link into a specific chat on the home route

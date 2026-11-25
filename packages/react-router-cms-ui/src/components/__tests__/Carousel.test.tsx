@@ -4,7 +4,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { COPY } from '../../data/data.copy';
+import { COPY } from '../../data/copy';
 import type { CarouselProps } from '../Carousel';
 import { Carousel } from '../Carousel';
 

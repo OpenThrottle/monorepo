@@ -15,8 +15,8 @@ import { Link } from 'react-router';
 import {
   RULES_ATTACH_PROMPT_LABELS,
   RULES_COPY,
-} from '~/routing/rules/data/data.copy';
-import { ATTACH_PROMPT_PLACEMENTS } from '~/routing/rules/data/data.rule-form-options';
+} from '~/routing/rules/data/copy';
+import { ATTACH_PROMPT_PLACEMENTS } from '~/routing/rules/data/rule-form-options';
 import type { RuleFormAttachPromptState } from '~/routing/rules/types';
 import type { RuleFormPromptOption } from '~/routing/rules/utils/rule-prompt-options';
 

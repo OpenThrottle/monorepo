@@ -4,7 +4,7 @@ import {
   README_SECTION_COPY,
   SURFACE_BANNER,
   SURFACE_MARKERS,
-} from '../data/data.surfaces';
+} from '../data/surfaces';
 import type { ProductFeature } from '../types/product';
 import type {
   ReplaceSectionResult,

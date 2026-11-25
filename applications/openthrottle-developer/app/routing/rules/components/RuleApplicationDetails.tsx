@@ -2,7 +2,7 @@ import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { Link } from 'react-router';
 
-import { RULE_DETAIL_COPY } from '~/routing/rules/data/data.copy';
+import { RULE_DETAIL_COPY } from '~/routing/rules/data/copy';
 import { parseRuleApplicationDetails } from '~/routing/rules/utils/rule-applications';
 
 export interface RuleApplicationDetailsProps {

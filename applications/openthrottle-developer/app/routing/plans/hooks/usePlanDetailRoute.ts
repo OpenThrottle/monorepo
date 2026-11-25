@@ -24,9 +24,9 @@ import {
   workflowRunTuningJsonAtom,
   workflowWorkingDirectoryAtom,
   workspaceRepositoriesReadyAtom,
-} from '~/routing/plans/data/data.atom-plan';
-import { PLAN_RUN_GATING_COPY } from '~/routing/plans/data/data.copy';
-import { PLAN_DETAIL_REVALIDATE_EVENTS } from '~/routing/plans/data/data.plan-lifecycle-events';
+} from '~/routing/plans/data/atom-plan';
+import { PLAN_RUN_GATING_COPY } from '~/routing/plans/data/copy';
+import { PLAN_DETAIL_REVALIDATE_EVENTS } from '~/routing/plans/data/plan-lifecycle-events';
 import { usePlanDeferredValue } from '~/routing/plans/hooks/usePlanDeferredValue';
 import { usePlanLifecycleRevalidation } from '~/routing/plans/hooks/usePlanLifecycleRevalidation';
 import { usePlanOutputStream } from '~/routing/plans/hooks/usePlanOutputStream';

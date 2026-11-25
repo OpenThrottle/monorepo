@@ -20,8 +20,8 @@ import { redirect, useFetcher, useSearchParams } from 'react-router';
 
 import type { Route } from '@/app/routes/+types/_index';
 import { SITE_SUBDOMAIN, SITE_TITLE } from '~/global/config/settings';
-import { REDUCED_MOTION_MODES } from '~/global/data/data.appearance-config';
-import { configAtom } from '~/global/data/data.atom-config';
+import { REDUCED_MOTION_MODES } from '~/global/data/appearance-config';
+import { configAtom } from '~/global/data/atom-config';
 import type { AuthFetcherData } from '~/routing/auth/actions/login';
 import { loginAction } from '~/routing/auth/actions/login';
 import { AuthBackground } from '~/routing/auth/components/AuthBackground';

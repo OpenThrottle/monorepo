@@ -20,7 +20,7 @@ import {
   workflowRunIterationTimeoutTextAtom,
   workflowRunOptionsAtom,
   workflowWorkingDirectoryAtom,
-} from '~/routing/plans/data/data.atom-plan';
+} from '~/routing/plans/data/atom-plan';
 import { resolveDefaultRunBranch } from '~/routing/plans/utils/plan-run-branch';
 import type { WorkflowRunSeedPlan } from '~/routing/plans/utils/workflow-run-atom-state';
 import { getWorkflowRunSeedValues } from '~/routing/plans/utils/workflow-run-atom-state';

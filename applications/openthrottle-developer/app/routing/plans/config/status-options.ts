@@ -4,7 +4,7 @@
  * derived from the generated PlanTaskStatus GraphQL enum) so this filter cannot
  * drift from the canonical status vocabulary. Only the display ORDER is local.
  */
-import { PLAN_STATUS_FILTER_GROUPS } from '~/routing/plans/data/data.plan-status-filter-groups';
+import { PLAN_STATUS_FILTER_GROUPS } from '~/routing/plans/data/plan-status-filter-groups';
 import type { PlanStatusKey } from '~/routing/plans/types';
 import { planStatusValues } from '~/routing/plans/types';
 

@@ -6,7 +6,7 @@ import { PlanTasksEmpty } from '~/routing/plans/components/PlanTasksEmpty';
 import {
   MOBILE_CARD_ROW_CLASS,
   MOBILE_CARD_TABLE_CLASS,
-} from '~/routing/plans/data/data.mobile-card';
+} from '~/routing/plans/data/mobile-card';
 import { usePlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
 import { usePlanManagedTaskIds } from '~/routing/plans/hooks/usePlanManagedTaskIds';
 import { buildPlanTabTasksColumns } from '~/routing/plans/utils/buildPlanTabTasksColumns';

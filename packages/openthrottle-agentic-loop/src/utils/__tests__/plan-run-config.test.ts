@@ -13,7 +13,7 @@ import {
 } from '@openthrottle/openthrottle-agentic-utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { PLAN_RUN_ENV } from '../../data/data.plan-run-config.ts';
+import { PLAN_RUN_ENV } from '../../data/plan-run-config.ts';
 import {
   applyPlanRunOtRootFromConfig,
   loadPlanRunConfig,

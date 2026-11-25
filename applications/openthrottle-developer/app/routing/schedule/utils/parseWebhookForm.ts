@@ -5,13 +5,13 @@
  * filter with no values, more than 16 filters).
  */
 import type { CreateScheduledAgentJobWebhookTriggerInputType } from '~/__generated__/graphql';
-import { SCHEDULE_WEBHOOK_COPY } from '~/routing/schedule/data/data.copy';
+import { SCHEDULE_WEBHOOK_COPY } from '~/routing/schedule/data/copy';
 import {
   WEBHOOK_FILTER_NO_VALUE_OPS,
   WEBHOOK_FILTER_OP,
   WEBHOOK_LIMITS,
   WEBHOOK_PRESET,
-} from '~/routing/schedule/data/data.webhook';
+} from '~/routing/schedule/data/webhook';
 
 export type WebhookTriggerFields = Omit<
   CreateScheduledAgentJobWebhookTriggerInputType,

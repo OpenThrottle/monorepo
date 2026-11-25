@@ -1,7 +1,7 @@
 import { Button, cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { CHAT_COMPOSER_QUEUE_COPY } from '../data/data.copy';
+import { CHAT_COMPOSER_QUEUE_COPY } from '../data/copy';
 import type { ChatTokenUsage } from '../types';
 import { ChatContextMeter } from './ChatContextMeter';
 import { ChatUsageCounter } from './ChatUsageCounter';

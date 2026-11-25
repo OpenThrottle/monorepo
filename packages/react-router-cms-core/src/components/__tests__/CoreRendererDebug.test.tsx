@@ -3,9 +3,9 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import { PREVIEW_COPY } from '../../data/data.copy';
-import { CORE_COMPONENTS } from '../../data/data.registry';
+import { PREVIEW_COPY } from '../../data/copy';
 import { MOCK_FRAGMENTS } from '../../data/mock.fragments';
+import { CORE_COMPONENTS } from '../../data/registry';
 import type { CmsFragment } from '../../types/cms-fragment';
 import { CoreRendererDebug } from '../CoreRendererDebug';
 

@@ -16,7 +16,7 @@ import type {
 } from '@openthrottle/openthrottle-agentic-utils';
 
 import type { SandboxToolCall } from '../sandbox/createSandboxMcpServer.ts';
-import { SANDBOX_SERVER_NAME } from './data/data.cli-drivers.ts';
+import { SANDBOX_SERVER_NAME } from './data/cli-drivers.ts';
 import type { CaseExpectation, SelectedCall, Selection } from './eval-case.ts';
 
 /**

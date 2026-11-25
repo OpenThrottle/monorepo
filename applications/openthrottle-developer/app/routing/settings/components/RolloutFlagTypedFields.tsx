@@ -12,8 +12,8 @@ import type { RolloutFlagFieldsFragment } from '~/__generated__/graphql';
 import { RolloutFlagKind } from '~/__generated__/graphql';
 import { RolloutFlagAllocationEditor } from '~/routing/settings/components/RolloutFlagAllocationEditor';
 import { RolloutFlagVariationsEditor } from '~/routing/settings/components/RolloutFlagVariationsEditor';
-import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
-import { ROLLOUT_FLAG_KINDS } from '~/routing/settings/data/data.rollout-kinds';
+import { ROLLOUT_COPY } from '~/routing/settings/data/copy';
+import { ROLLOUT_FLAG_KINDS } from '~/routing/settings/data/rollout-kinds';
 import { isRolloutFlagKind } from '~/routing/settings/utils/isRolloutFlagKind';
 import type { RolloutFormTypedConfig } from '~/routing/settings/utils/rollout-typed-config';
 import {

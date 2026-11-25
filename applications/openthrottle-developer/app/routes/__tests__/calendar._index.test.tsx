@@ -3,7 +3,7 @@ import * as React from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import { CALENDAR_DEMO_EVENTS } from '~/routing/calendar/data/data.calendar-demo';
+import { CALENDAR_DEMO_EVENTS } from '~/routing/calendar/data/calendar-demo';
 
 import Component from '../calendar._index';
 

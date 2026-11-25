@@ -13,7 +13,7 @@ import {
   QUEUE_JOB_FINISHED_STATES,
   QUEUE_JOB_LOG_LEVELS,
   QUEUE_JOB_LOG_STATUS_META,
-} from '~/routing/queues/data/data.queue-job-log-console';
+} from '~/routing/queues/data/queue-job-log-console';
 import { useQueueJobLogs } from '~/routing/queues/hooks/useQueueJobLogs';
 import { formatQueueJobLogLine } from '~/routing/queues/utils/formatQueueJobLogLine';
 

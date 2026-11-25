@@ -1,7 +1,7 @@
 import type {
   ChatToolbarBackendPrefs,
   ChatToolbarState,
-} from '../data/data.chat-toolbar-state';
+} from '../data/chat-toolbar-state';
 
 /**
  * @description Last-used-wins write for the capability-gated toolbar controls

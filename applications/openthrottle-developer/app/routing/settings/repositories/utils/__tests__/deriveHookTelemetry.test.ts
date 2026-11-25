@@ -4,7 +4,7 @@ import type {
   RepositoryCheckoutInspectionFragment,
   RepositoryHookTelemetryFragment,
 } from '~/__generated__/graphql';
-import { REPOSITORY_HOOK_TELEMETRY_COPY } from '~/routing/settings/repositories/data/data.copy';
+import { REPOSITORY_HOOK_TELEMETRY_COPY } from '~/routing/settings/repositories/data/copy';
 import { deriveHookTelemetry } from '~/routing/settings/repositories/utils/deriveHookTelemetry';
 
 const inspectionWith = (

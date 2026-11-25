@@ -6,8 +6,8 @@
  * `isCustom` overlays.
  */
 
-import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
-import { SKILLS_SOURCE_COPY } from '~/routing/skills/data/data.copy';
+import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import { SKILLS_SOURCE_COPY } from '~/routing/skills/data/copy';
 import type { SkillSourceKind } from '~/routing/skills/utils/filterSkillsBySource';
 import { getSkillSourceKind } from '~/routing/skills/utils/filterSkillsBySource';
 

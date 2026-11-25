@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { BLOG_EDITOR_COPY } from '~/routing/blog/data/data.copy';
+import { BLOG_EDITOR_COPY } from '~/routing/blog/data/copy';
 
 import { resolveSaveStatus } from '../resolveSaveStatus';
 

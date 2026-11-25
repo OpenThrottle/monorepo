@@ -1,7 +1,7 @@
 import {
   DESKTOP_DEEP_LINK_PROTOCOL,
   UUID_PATTERN,
-} from '../data/data.desktop-bridge.ts';
+} from '../data/desktop-bridge.ts';
 
 const PLAN_ROUTE_PATTERN = /^\/plans\/([^/?#]+)$/;
 

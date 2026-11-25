@@ -1,7 +1,7 @@
 import { Badge } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { REPOSITORY_HOOK_TELEMETRY_COPY } from '~/routing/settings/repositories/data/data.copy';
+import { REPOSITORY_HOOK_TELEMETRY_COPY } from '~/routing/settings/repositories/data/copy';
 import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/types';
 import { deriveHookTelemetry } from '~/routing/settings/repositories/utils/deriveHookTelemetry';
 

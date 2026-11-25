@@ -4,7 +4,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import { RECENT_CHATS_CARD_COPY } from '~/routing/dashboard/data/data.copy';
+import { RECENT_CHATS_CARD_COPY } from '~/routing/dashboard/data/copy';
 
 import { DashboardRecentChatsCard } from '../DashboardRecentChatsCard';
 

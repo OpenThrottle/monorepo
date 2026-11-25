@@ -13,7 +13,7 @@ import {
   TIMELINE_EMPTY_COPY,
   TIMELINE_PAGE_COPY,
   TIMELINE_TRUNCATION_COPY,
-} from '~/routing/timeline/data/data.copy';
+} from '~/routing/timeline/data/copy';
 import type {
   TimelineMarkerCluster,
   TimelineTruncation,

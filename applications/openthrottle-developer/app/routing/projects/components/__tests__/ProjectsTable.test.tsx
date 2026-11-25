@@ -5,7 +5,7 @@ import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import type { ProjectCardFragment } from '~/__generated__/graphql';
-import { PROJECTS_ROW_ACTIONS_COPY } from '~/routing/projects/data/data.copy';
+import { PROJECTS_ROW_ACTIONS_COPY } from '~/routing/projects/data/copy';
 
 import type { ProjectsTableProps } from '../ProjectsTable';
 import { ProjectsTable } from '../ProjectsTable';

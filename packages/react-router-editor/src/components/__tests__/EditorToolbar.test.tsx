@@ -11,8 +11,8 @@ import {
 } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import type { EditorAtom } from '../../data/data.atom.editor';
-import { editorAtom, editorAtomDefaults } from '../../data/data.atom.editor';
+import type { EditorAtom } from '../../data/atom.editor';
+import { editorAtom, editorAtomDefaults } from '../../data/atom.editor';
 import type { EditorToolbarProps } from '../EditorToolbar';
 import { EditorToolbar } from '../EditorToolbar';
 

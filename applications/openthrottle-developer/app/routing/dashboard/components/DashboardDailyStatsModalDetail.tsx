@@ -5,8 +5,8 @@ import { DashboardDailyStatsDayChart } from '~/routing/dashboard/components/Dash
 import {
   DAILY_STATS_METRICS,
   DAILY_STATS_MODAL_COPY,
-} from '~/routing/dashboard/data/data.copy';
-import { DAILY_STATS_CHART_CONFIG } from '~/routing/dashboard/data/data.daily-stats-chart';
+} from '~/routing/dashboard/data/copy';
+import { DAILY_STATS_CHART_CONFIG } from '~/routing/dashboard/data/daily-stats-chart';
 import { formatChartDate } from '~/routing/dashboard/utils/daily-stats-chart';
 
 export interface DashboardDailyStatsModalDetailProps {

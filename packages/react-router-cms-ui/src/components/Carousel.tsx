@@ -8,7 +8,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { COPY } from '../data/data.copy';
+import { COPY } from '../data/copy';
 import type { CmsComponentDebug } from '../types';
 
 /**

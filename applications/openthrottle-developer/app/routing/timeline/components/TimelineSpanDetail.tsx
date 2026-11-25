@@ -11,7 +11,7 @@ import { TIMELINE_SPAN_KIND_LABEL } from '~/routing/timeline/config/kinds';
 import {
   TIMELINE_DETAIL_COPY,
   TIMELINE_SPAN_TOOLTIP_COPY,
-} from '~/routing/timeline/data/data.copy';
+} from '~/routing/timeline/data/copy';
 import {
   formatTimelineDuration,
   formatTimelineTimestamp,

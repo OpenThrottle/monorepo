@@ -2,7 +2,7 @@ import { cn } from '@openthrottle/react-router-shadcn';
 import { MeshGradient } from '@paper-design/shaders-react';
 import * as React from 'react';
 
-import { DEFAULT_GRADIENT_MESH_COLORS } from '../data/data.gradient-mesh';
+import { DEFAULT_GRADIENT_MESH_COLORS } from '../data/gradient-mesh';
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
 
 export interface GradientMeshProps extends React.HTMLAttributes<HTMLDivElement> {

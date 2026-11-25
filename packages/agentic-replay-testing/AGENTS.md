@@ -26,7 +26,7 @@ service and backend with no agentic-utils mock (ids seeded, `Date` frozen).
   a `ConversationBackendRun`, shared by recorder and replay so their argv can only differ for real.
 - [src/config/config.backends.ts](src/config/config.backends.ts) — per-backend recording profiles:
   bin env, redact keys, host-only stdout lines to drop.
-- [src/data/data.scenarios.ts](src/data/data.scenarios.ts) — the shared scenarios.
+- [src/data/scenarios.ts](src/data/scenarios.ts) — the shared scenarios.
 - [tests/claude.replay.test.ts](tests/claude.replay.test.ts) — every claude transcript through the
   production claude backend. [tests/replay-coverage.guard.test.ts](tests/replay-coverage.guard.test.ts)
   fails when a transcript is not named literally (`replayFixturePath('<backend>', '<stem>')`) by a

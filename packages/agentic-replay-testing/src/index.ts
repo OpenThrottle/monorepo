@@ -1,5 +1,5 @@
 export * from './config/config.backends.ts';
-export * from './data/data.scenarios.ts';
+export * from './data/scenarios.ts';
 export * from './types/scenario.ts';
 export * from './types/transcript.ts';
 export {

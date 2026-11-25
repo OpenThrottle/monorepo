@@ -1,7 +1,7 @@
 import { LockIcon } from 'lucide-react';
 import * as React from 'react';
 
-import { BLOG_EDITOR_COPY } from '~/routing/blog/data/data.copy';
+import { BLOG_EDITOR_COPY } from '~/routing/blog/data/copy';
 
 export interface BlogPostReadOnlyNoticeProps {}
 

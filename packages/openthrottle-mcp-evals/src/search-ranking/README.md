@@ -54,7 +54,7 @@ and `topic-compose-topology-doc`.
 
 ## Cases
 
-[`data/data.cases.ts`](./data/data.cases.ts) holds the cases. Each one is a query, a `kind`
+[`data/cases.ts`](./data/cases.ts) holds the cases. Each one is a query, a `kind`
 (`identifier` or `topic`), a `split`, and a `relevant` gold set of targets:
 
 | Target          | Matches                                                  |

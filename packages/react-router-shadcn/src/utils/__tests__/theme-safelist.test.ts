@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { THEME_TOKEN_NAMES } from '../../data/data.theme-tokens';
+import { THEME_TOKEN_NAMES } from '../../data/theme-tokens';
 import {
   buildThemeSafelist,
   getThemeColorNames,

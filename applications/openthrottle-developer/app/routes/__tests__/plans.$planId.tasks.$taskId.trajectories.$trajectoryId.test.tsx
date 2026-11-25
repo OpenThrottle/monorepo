@@ -41,8 +41,7 @@ const {
   MOCK_TRAJECTORY,
   MOCK_TRAJECTORY_SUMMARY,
 } = await import('~/routing/evals/data/mock.trajectory');
-const { TRAJECTORY_LABEL_COPY } =
-  await import('~/routing/evals/data/data.copy');
+const { TRAJECTORY_LABEL_COPY } = await import('~/routing/evals/data/copy');
 const { action, loader } =
   await import('../plans.$planId.tasks.$taskId.trajectories.$trajectoryId');
 

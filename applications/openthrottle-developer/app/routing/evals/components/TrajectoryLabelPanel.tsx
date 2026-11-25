@@ -5,7 +5,7 @@ import * as React from 'react';
 import type { AgentTrajectoryLabelRowFragment } from '~/__generated__/graphql';
 import { TrajectoryLabelForm } from '~/routing/evals/components/TrajectoryLabelForm';
 import { TrajectoryLabelList } from '~/routing/evals/components/TrajectoryLabelList';
-import { TRAJECTORY_LABEL_COPY } from '~/routing/evals/data/data.copy';
+import { TRAJECTORY_LABEL_COPY } from '~/routing/evals/data/copy';
 
 export interface TrajectoryLabelPanelProps {
   readonly className?: string;

@@ -3,7 +3,7 @@ import { describe, expect, test } from 'vitest';
 import {
   CHAT_DRAFTS_STATE_VERSION,
   DEFAULT_CHAT_DRAFTS_STATE,
-} from '../../data/data.chat-drafts-state';
+} from '../../data/chat-drafts-state';
 import { normalizeChatDraftsState } from '../normalizeChatDraftsState';
 
 describe('normalizeChatDraftsState', () => {

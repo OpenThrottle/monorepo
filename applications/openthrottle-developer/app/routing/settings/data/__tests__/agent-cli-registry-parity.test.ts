@@ -19,7 +19,7 @@
 import { ALL_DRIVERS } from '@openthrottle/openthrottle-drivers';
 import { describe, expect, it } from 'vitest';
 
-import { AGENT_CLI_DRIVERS } from '~/routing/settings/data/data.agent-clis';
+import { AGENT_CLI_DRIVERS } from '~/routing/settings/data/agent-clis';
 import { mergeAgentCliStatuses } from '~/routing/settings/utils/agent-cli-statuses';
 
 /**

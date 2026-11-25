@@ -15,7 +15,7 @@ import { EvalCasesTable } from '~/routing/evals/components/EvalCasesTable';
 import { EvalConfigTuple } from '~/routing/evals/components/EvalConfigTuple';
 import { EvalGradersTable } from '~/routing/evals/components/EvalGradersTable';
 import { EvalHeadlineNumbers } from '~/routing/evals/components/EvalHeadlineNumbers';
-import { EVAL_REPORT_COPY } from '~/routing/evals/data/data.copy';
+import { EVAL_REPORT_COPY } from '~/routing/evals/data/copy';
 import {
   describeRunConfig,
   formatEvalTimestamp,

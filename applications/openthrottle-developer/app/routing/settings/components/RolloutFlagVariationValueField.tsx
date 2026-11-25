@@ -10,8 +10,8 @@ import {
 import * as React from 'react';
 
 import { RolloutFlagKind } from '~/__generated__/graphql';
-import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
-import type { RolloutFlagKindOption } from '~/routing/settings/data/data.rollout-kinds';
+import { ROLLOUT_COPY } from '~/routing/settings/data/copy';
+import type { RolloutFlagKindOption } from '~/routing/settings/data/rollout-kinds';
 import { encodeVariationValueJson } from '~/routing/settings/utils/rollout-typed-config';
 
 export interface RolloutFlagVariationValueFieldProps {

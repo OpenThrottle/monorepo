@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { CHAT_USAGE_LIMIT_COPY } from '../../data/data.copy';
+import { CHAT_USAGE_LIMIT_COPY } from '../../data/copy';
 import { formatUsageLimitMessage } from '../formatUsageLimitMessage';
 
 describe('formatUsageLimitMessage', () => {

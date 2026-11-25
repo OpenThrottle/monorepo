@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
+import { ROLLOUT_COPY } from '~/routing/settings/data/copy';
 
 import { getRolloutHydrationStatusLabel } from '../getRolloutHydrationStatusLabel';
 

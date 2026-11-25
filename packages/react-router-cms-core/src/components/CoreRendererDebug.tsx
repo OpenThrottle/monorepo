@@ -2,7 +2,7 @@ import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { Link } from 'react-router';
 
-import { PREVIEW_COPY } from '../data/data.copy';
+import { PREVIEW_COPY } from '../data/copy';
 import type { CmsFragment } from '../types/cms-fragment';
 import type { CmsComponentRegistry } from '../types/cms-render';
 import { CoreNullComponent } from './CoreNullComponent';

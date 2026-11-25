@@ -14,7 +14,7 @@ import * as React from 'react';
 import { useFetcher } from 'react-router';
 
 import { SkillTagVocabularyRow } from '~/routing/skills/components/SkillTagVocabularyRow';
-import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/data.copy';
+import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/copy';
 import type { SkillTagValue } from '~/routing/skills/utils/skill-availability';
 import { isKebabCase } from '~/routing/skills/utils/skill-availability';
 

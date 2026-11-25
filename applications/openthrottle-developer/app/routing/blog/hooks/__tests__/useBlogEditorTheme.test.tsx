@@ -4,8 +4,8 @@ import * as React from 'react';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
 
-import { DEFAULT_APPEARANCE_CONFIG } from '~/global/data/data.appearance-config';
-import { configAtom } from '~/global/data/data.atom-config';
+import { DEFAULT_APPEARANCE_CONFIG } from '~/global/data/appearance-config';
+import { configAtom } from '~/global/data/atom-config';
 
 import { useBlogEditorTheme } from '../useBlogEditorTheme';
 

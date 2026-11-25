@@ -1,4 +1,4 @@
-import { PROXIED_PATHS } from '../../main/data/data.server-env.ts';
+import { PROXIED_PATHS } from '../../main/data/server-env.ts';
 
 /**
  * @description Whether a request URL belongs to the OT server rather than the

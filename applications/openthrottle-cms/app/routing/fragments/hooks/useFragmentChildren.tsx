@@ -5,7 +5,7 @@ import type {
 import * as React from 'react';
 import { useSubmit } from 'react-router';
 
-import { FRAGMENT_INTENT } from '~/routing/fragments/data/data.intents';
+import { FRAGMENT_INTENT } from '~/routing/fragments/data/intents';
 
 export interface UseFragmentChildrenOptions {
   /** Where cms-core's "Add children" link points. */

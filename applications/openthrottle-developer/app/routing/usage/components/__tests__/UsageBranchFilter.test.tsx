@@ -5,8 +5,8 @@ import * as React from 'react';
 import { createRoutesStub, useLocation } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
 
-import { BRANCH_FILTER_COPY } from '../../data/data.branch-filter-copy';
-import { SKILL_USAGE_SCOPES } from '../../data/data.skill-usage-copy';
+import { BRANCH_FILTER_COPY } from '../../data/branch-filter-copy';
+import { SKILL_USAGE_SCOPES } from '../../data/skill-usage-copy';
 import type { UsageBranchFilterProps } from '../UsageBranchFilter';
 import { UsageBranchFilter } from '../UsageBranchFilter';
 

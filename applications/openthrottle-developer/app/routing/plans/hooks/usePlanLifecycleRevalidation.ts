@@ -12,13 +12,13 @@ import { useSubscription } from '@openthrottle/react-router-graphql';
 import * as React from 'react';
 
 import { PlanLifecycleNotificationsDocument } from '~/__generated__/graphql';
-import { PLAN_LIFECYCLE_REVALIDATE_DELAY_MS } from '~/routing/plans/data/data.plan-lifecycle-events';
+import { PLAN_LIFECYCLE_REVALIDATE_DELAY_MS } from '~/routing/plans/data/plan-lifecycle-events';
 import { useCoalescedRevalidate } from '~/routing/plans/hooks/useCoalescedRevalidate';
 import { shouldRevalidateForLifecycleEvent } from '~/routing/plans/utils/plan-lifecycle-events';
 import { getGraphqlWsClient } from '~/services/getGraphqlWsClient';
 
 export interface UsePlanLifecycleRevalidationOptions {
-  /** Event names that refresh this route (see `data.plan-lifecycle-events`). */
+  /** Event names that refresh this route (see `data/plan-lifecycle-events`). */
   readonly events: readonly string[];
   /** Scope task-level events to one task (the task detail route); `undefined` for the whole plan. */
   readonly taskId: string | undefined;

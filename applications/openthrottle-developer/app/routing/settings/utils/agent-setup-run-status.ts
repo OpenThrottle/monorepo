@@ -1,7 +1,7 @@
 import type {
   AgentSetupMode,
   AgentSetupRunStatus,
-} from '~/routing/settings/data/data.agent-clis';
+} from '~/routing/settings/data/agent-clis';
 import { getAgentSetupStatusLabel } from '~/routing/settings/utils/agent-setup-status-label';
 
 /** The slice of a streamed setup chunk needed to resolve a run's status. */

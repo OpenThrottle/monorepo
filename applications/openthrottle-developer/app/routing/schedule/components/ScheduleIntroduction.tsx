@@ -5,7 +5,7 @@ import {
 import { CalendarClockIcon } from 'lucide-react';
 import * as React from 'react';
 
-import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
+import { SCHEDULE_COPY } from '~/routing/schedule/data/copy';
 
 export interface ScheduleIntroductionProps {
   className?: string;

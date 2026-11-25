@@ -4,7 +4,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { INTRODUCTIONS } from '../../data/data.introductions';
+import { INTRODUCTIONS } from '../../data/introductions';
 import type { OpenThrottleProductGetStartedProps } from '../OpenThrottleProductGetStarted';
 import { OpenThrottleProductGetStarted } from '../OpenThrottleProductGetStarted';
 

@@ -2,7 +2,7 @@ import { act, renderHook } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 
 import type { TagActionRuleRowFragment } from '~/__generated__/graphql';
-import { ANY } from '~/routing/rules/data/data.rule-form-options';
+import { ANY } from '~/routing/rules/data/rule-form-options';
 
 import { useRuleForm } from '../useRuleForm';
 

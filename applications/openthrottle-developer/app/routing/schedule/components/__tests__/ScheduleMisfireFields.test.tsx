@@ -4,8 +4,8 @@ import * as React from 'react';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
 
-import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
-import { SCHEDULE_MISFIRE_POLICY_OPTIONS } from '~/routing/schedule/data/data.misfire';
+import { SCHEDULE_COPY } from '~/routing/schedule/data/copy';
+import { SCHEDULE_MISFIRE_POLICY_OPTIONS } from '~/routing/schedule/data/misfire';
 
 import { ScheduleMisfireFields } from '../ScheduleMisfireFields';
 

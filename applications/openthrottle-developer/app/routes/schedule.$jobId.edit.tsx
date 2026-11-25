@@ -26,7 +26,7 @@ import {
 } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import { ScheduleForm } from '~/routing/schedule/components/ScheduleForm';
-import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
+import { SCHEDULE_COPY } from '~/routing/schedule/data/copy';
 import { missingScheduleTiming } from '~/routing/schedule/utils/missingScheduleTiming';
 import { ScheduleFormSchema } from '~/routing/schedule/utils/ScheduleFormSchema';
 

@@ -7,9 +7,9 @@ import {
 } from '~/__generated__/graphql';
 import { fetchAuthGraphql } from '~/global/utils/graphql.server';
 import { toCmsActionFailure } from '~/global/utils/toCmsActionFailure';
-import { FRAGMENT_EDITOR_COPY } from '~/routing/fragments/data/data.copy';
-import type { FragmentIntentValue } from '~/routing/fragments/data/data.intents';
-import { FRAGMENT_INTENT } from '~/routing/fragments/data/data.intents';
+import { FRAGMENT_EDITOR_COPY } from '~/routing/fragments/data/copy';
+import type { FragmentIntentValue } from '~/routing/fragments/data/intents';
+import { FRAGMENT_INTENT } from '~/routing/fragments/data/intents';
 import type { FragmentActionResult } from '~/routing/fragments/types/fragment-action';
 import {
   readChildOrder,

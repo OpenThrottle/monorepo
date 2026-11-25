@@ -21,7 +21,7 @@ import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
 import {
   MOBILE_CARD_BLOCK_CLASS,
   MOBILE_CARD_TITLE_CLASS,
-} from '~/routing/plans/data/data.mobile-card';
+} from '~/routing/plans/data/mobile-card';
 import type { PlanStatusKey } from '~/routing/plans/types';
 import { PLANS_DETAIL_TAB_SEARCH_PARAM } from '~/routing/plans/utils/parsers';
 import { isPlanStatusKey } from '~/routing/plans/utils/utils.plans';

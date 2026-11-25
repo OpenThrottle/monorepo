@@ -7,7 +7,7 @@ import {
   DEFAULT_LIMIT,
   MAX_LIMIT,
 } from '~/routing/queues/config/queue-job-logs';
-import { EMPTY_PAGE } from '~/routing/queues/data/data.queue-job-logs-page';
+import { EMPTY_PAGE } from '~/routing/queues/data/queue-job-logs-page';
 
 /**
  * Resource loader backing the live job-log console's history backfill —

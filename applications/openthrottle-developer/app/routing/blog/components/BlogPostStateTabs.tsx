@@ -8,7 +8,7 @@ import {
   BLOG_STATE_PARAM,
   BLOG_STATE_TABS,
 } from '~/routing/blog/config/defaults';
-import { BLOG_COPY, BLOG_STATE_LABELS } from '~/routing/blog/data/data.copy';
+import { BLOG_COPY, BLOG_STATE_LABELS } from '~/routing/blog/data/copy';
 import { parseBlogState, toBlogStateParam } from '~/routing/blog/utils/posts';
 
 export interface BlogPostStateTabsProps {

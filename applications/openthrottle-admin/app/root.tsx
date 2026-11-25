@@ -49,7 +49,7 @@ import {
   SignoutDocument,
 } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
-import { dataNavigation } from '~/global/data/data.navigation';
+import { dataNavigation } from '~/global/data/navigation';
 import { useHeaderChatController } from '~/routing/chat/hooks/useHeaderChatController';
 import stylesheet from '~/styles.css?url';
 

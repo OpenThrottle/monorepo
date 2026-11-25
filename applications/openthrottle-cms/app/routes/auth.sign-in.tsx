@@ -17,7 +17,7 @@ import { CmsLoginDocument } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import { fetchPublicGraphql } from '~/global/utils/graphql.server';
 import { AuthSignInForm } from '~/routing/auth/components/AuthSignInForm';
-import { AUTH_COPY } from '~/routing/auth/data/data.copy';
+import { AUTH_COPY } from '~/routing/auth/data/copy';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

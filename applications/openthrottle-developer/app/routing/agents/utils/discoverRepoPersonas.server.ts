@@ -2,7 +2,7 @@ import type { Dirent } from 'node:fs';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 
-import type { RepoPersonaEntry } from '~/routing/agents/data/data.repo-personas-registry';
+import type { RepoPersonaEntry } from '~/routing/agents/data/repo-personas-registry';
 import { parsePersonaFrontmatter } from '~/routing/agents/utils/parsePersonaFrontmatter.server';
 
 const PERSONAS_DIR = '.agents/personas';

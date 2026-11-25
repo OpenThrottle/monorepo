@@ -1,10 +1,10 @@
 import { describe, expect, test } from 'vitest';
 
-import { SCHEDULE_WEBHOOK_COPY } from '~/routing/schedule/data/data.copy';
+import { SCHEDULE_WEBHOOK_COPY } from '~/routing/schedule/data/copy';
 import {
   WEBHOOK_DELIVERY_STATUS_REASON,
   WEBHOOK_REJECT_REASON_LABEL,
-} from '~/routing/schedule/data/data.webhook';
+} from '~/routing/schedule/data/webhook';
 
 import { describeWebhookDeliveryReason } from '../describeWebhookDeliveryReason';
 

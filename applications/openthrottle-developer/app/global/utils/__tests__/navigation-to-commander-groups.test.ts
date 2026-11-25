@@ -4,7 +4,7 @@ import { describe, expect, test, vi } from 'vitest';
 import {
   dataNavigationGuest,
   dataNavigationV2,
-} from '~/global/data/data.navigation';
+} from '~/global/data/navigation';
 
 import type { NavigationRecord } from '../navigation-to-commander-groups';
 import {
@@ -27,7 +27,7 @@ const buildOptions = (
 
 /**
  * @description Mirrors the mapper's visibility rules so expectations are derived
- * from `data.navigation.ts` rather than a duplicated list of destination ids.
+ * from `data/navigation.ts` rather than a duplicated list of destination ids.
  */
 const expectedLinks = (
   navigation: NavigationRecord,

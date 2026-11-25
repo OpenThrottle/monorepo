@@ -13,7 +13,7 @@ import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import * as React from 'react';
 
 import { OutputStreamAttempt } from '~/routing/plans/components/OutputStreamAttempt';
-import { OUTPUT_STREAM_COPY } from '~/routing/plans/data/data.copy';
+import { OUTPUT_STREAM_COPY } from '~/routing/plans/data/copy';
 import { groupChunksIntoEntries } from '~/routing/plans/utils/output-stream-attempts';
 import type { OutputStreamChunk } from '~/routing/plans/utils/output-stream-chunks';
 import {

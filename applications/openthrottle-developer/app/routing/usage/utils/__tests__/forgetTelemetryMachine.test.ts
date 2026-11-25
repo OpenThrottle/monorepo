@@ -2,7 +2,7 @@ import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { ForgetUsageTelemetryMachineDocument } from '~/__generated__/graphql';
-import { FORGET_TELEMETRY_MACHINE_INTENT } from '~/routing/usage/data/data.telemetry-coverage-copy';
+import { FORGET_TELEMETRY_MACHINE_INTENT } from '~/routing/usage/data/telemetry-coverage-copy';
 
 import { forgetTelemetryMachine } from '../forgetTelemetryMachine';
 

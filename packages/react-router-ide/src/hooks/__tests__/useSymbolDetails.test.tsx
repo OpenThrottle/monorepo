@@ -4,10 +4,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import type {
-  ExportedSymbol,
-  IdeSymbolDetails,
-} from '../../data/data.view-models';
+import type { ExportedSymbol, IdeSymbolDetails } from '../../data/view-models';
 import { useSymbolDetails } from '../useSymbolDetails';
 
 const symbol: ExportedSymbol = {

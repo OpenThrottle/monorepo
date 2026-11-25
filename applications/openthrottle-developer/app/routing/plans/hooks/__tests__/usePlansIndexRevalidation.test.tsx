@@ -3,7 +3,7 @@ import { createStore, Provider } from 'jotai';
 import { createRoutesStub } from 'react-router';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
-import { userAtom } from '~/global/data/data.atom-user';
+import { userAtom } from '~/global/data/atom-user';
 
 import { usePlansIndexRevalidation } from '../usePlansIndexRevalidation';
 

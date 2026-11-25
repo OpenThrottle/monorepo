@@ -9,11 +9,11 @@ import {
   PruneWorktreeCheckoutOutcome,
   WorkspaceFolderReconciliation,
 } from '~/__generated__/graphql';
-import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
+import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/copy';
 import {
   REPOSITORIES_ONBOARDING,
   WORKTREE_DISCOVERY_COPY,
-} from '~/routing/settings/repositories/data/data.copy';
+} from '~/routing/settings/repositories/data/copy';
 import {
   mockCheckout,
   mockDiscoveredWorktrees,

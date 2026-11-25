@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Link } from 'react-router';
 
 import type { UsageSkillUsageFilterOptionsFragment } from '~/__generated__/graphql';
-import type { SkillUsageScopeFilter } from '~/routing/usage/data/data.skill-usage-copy';
+import type { SkillUsageScopeFilter } from '~/routing/usage/data/skill-usage-copy';
 import { buildUsageSearch } from '~/routing/usage/utils/buildUsageSearch';
 import {
   skillUsageCwdLabel,

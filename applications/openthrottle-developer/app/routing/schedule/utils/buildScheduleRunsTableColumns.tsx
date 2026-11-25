@@ -11,7 +11,7 @@ import { Link } from 'react-router';
 import type { ScheduledJobRunRowFragment } from '~/__generated__/graphql';
 import type { ScheduleRunsTableProps } from '~/routing/schedule/components/ScheduleRunsTable';
 import { ScheduleRunStatusCell } from '~/routing/schedule/components/ScheduleRunStatusCell';
-import { RUN_TRIGGER_LABEL } from '~/routing/schedule/data/data.run-status';
+import { RUN_TRIGGER_LABEL } from '~/routing/schedule/data/run-status';
 import {
   formatRunCost,
   formatRunTotalTokens,

@@ -22,7 +22,7 @@ import {
 } from '~/__generated__/graphql';
 import { GlobalDetailList } from '~/global/components/GlobalDetailList';
 import { SITE_TITLE } from '~/global/config/settings';
-import { CMS_FRAGMENT_DETAIL_FIELDS } from '~/global/data/data.cms-detail-fields';
+import { CMS_FRAGMENT_DETAIL_FIELDS } from '~/global/data/cms-detail-fields';
 import { fetchPublicGraphql } from '~/global/utils/graphql.server';
 import { requireRecord } from '~/global/utils/requireRecord';
 import { FragmentEditor } from '~/routing/fragments/components/FragmentEditor';
@@ -30,7 +30,7 @@ import { FragmentPreview } from '~/routing/fragments/components/FragmentPreview'
 import {
   FRAGMENT_DETAIL_COPY,
   FRAGMENT_EDITOR_UNAVAILABLE_COPY,
-} from '~/routing/fragments/data/data.copy';
+} from '~/routing/fragments/data/copy';
 import type { FragmentActionResult } from '~/routing/fragments/types/fragment-action';
 import type { FragmentChildPicker } from '~/routing/fragments/types/fragment-children';
 import {

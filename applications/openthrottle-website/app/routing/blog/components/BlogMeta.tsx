@@ -10,7 +10,7 @@ import type {
   BlogAuthorSummaryFragment,
   Scalars,
 } from '~/__generated__/graphql';
-import { BLOG_COPY } from '~/routing/blog/data/data.copy';
+import { BLOG_COPY } from '~/routing/blog/data/copy';
 import {
   formatBlogDate,
   getBlogAuthorInitials,

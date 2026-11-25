@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 import { PlanScheduleConfirmDialog } from '~/routing/plans/components/PlanScheduleConfirmDialog';
-import { PLAN_SCHEDULE_CONFIRM_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_SCHEDULE_CONFIRM_COPY } from '~/routing/plans/data/copy';
 import type { PlanRunDialogMode } from '~/routing/plans/types';
 import { formatPlanScheduledFor } from '~/routing/plans/utils/formatPlanScheduledFor';
 

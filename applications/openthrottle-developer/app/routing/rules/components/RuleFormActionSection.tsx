@@ -10,11 +10,11 @@ import {
 import * as React from 'react';
 
 import { RuleFormAttachPromptFields } from '~/routing/rules/components/RuleFormAttachPromptFields';
-import { RULES_COPY } from '~/routing/rules/data/data.copy';
+import { RULES_COPY } from '~/routing/rules/data/copy';
 import {
   ACTION_TYPE_LABELS,
   ATTACH_PROMPT_ACTION_TYPE,
-} from '~/routing/rules/data/data.rule-form-options';
+} from '~/routing/rules/data/rule-form-options';
 import type { RuleFormAttachPromptState } from '~/routing/rules/types';
 import type { RuleFormPromptOption } from '~/routing/rules/utils/rule-prompt-options';
 

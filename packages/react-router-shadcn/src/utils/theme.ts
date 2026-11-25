@@ -3,9 +3,9 @@ import {
   THEME_SAFELIST_HOVER_PREFIXES,
   THEME_SAFELIST_PREFIXES,
   THEME_TOKEN_COLOR_ALIASES,
-} from '../data/data.theme-safelist';
-import { THEME_TOKEN_NAMES } from '../data/data.theme-tokens';
-import { THEMES } from '../data/data.themes';
+} from '../data/theme-safelist';
+import { THEME_TOKEN_NAMES } from '../data/theme-tokens';
+import { THEMES } from '../data/themes';
 import type { Theme, ThemeTokens } from '../types/theme';
 
 const braces = (items: readonly string[]): string => {

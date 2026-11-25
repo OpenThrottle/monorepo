@@ -1,7 +1,7 @@
 import { Button } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { SCHEDULE_WEBHOOK_COPY } from '~/routing/schedule/data/data.copy';
+import { SCHEDULE_WEBHOOK_COPY } from '~/routing/schedule/data/copy';
 
 export interface ScheduleWebhookRenderedPromptProps {
   /** The exact prompt the run started with; null when none was rendered. */

@@ -18,7 +18,7 @@ import {
 } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import { SettingsConnectionsTable } from '~/routing/settings/components/SettingsConnectionsTable';
-import { SETTINGS_CONNECTIONS_COPY as COPY } from '~/routing/settings/data/data.copy';
+import { SETTINGS_CONNECTIONS_COPY as COPY } from '~/routing/settings/data/copy';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

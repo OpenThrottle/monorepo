@@ -11,7 +11,7 @@ import type { Route } from '@/app/routes/+types/settings.rollout.$flagId._index'
 import { GetRolloutFlagDocument } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import { RolloutFlagDetail } from '~/routing/settings/components/RolloutFlagDetail';
-import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
+import { ROLLOUT_COPY } from '~/routing/settings/data/copy';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

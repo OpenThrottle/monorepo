@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import { FACETED_FILTER_COPY } from '../data/data.faceted-filter';
+import { FACETED_FILTER_COPY } from '../data/faceted-filter';
 import { Button } from './Button';
 import {
   Command,

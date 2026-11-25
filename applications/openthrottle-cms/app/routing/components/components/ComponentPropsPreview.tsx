@@ -8,7 +8,7 @@ import {
 import { Provider } from 'jotai';
 import * as React from 'react';
 
-import { COMPONENT_PREVIEW_COPY } from '~/routing/components/data/data.copy';
+import { COMPONENT_PREVIEW_COPY } from '~/routing/components/data/copy';
 import { toCmsParsedSchema } from '~/routing/fragments/utils/to-cms-records';
 
 export interface ComponentPropsPreviewProps {

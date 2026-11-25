@@ -11,7 +11,7 @@ import type { Route } from '@/app/routes/+types/evals.compare';
 import { EvalRunComparisonRouteDocument } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import { EvalCompareRoute } from '~/routing/evals/components/EvalCompareRoute';
-import { EVAL_COMPARE_COPY } from '~/routing/evals/data/data.copy';
+import { EVAL_COMPARE_COPY } from '~/routing/evals/data/copy';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

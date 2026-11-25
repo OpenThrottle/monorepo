@@ -5,7 +5,7 @@ import { describe, expect, test } from 'vitest';
 import {
   TELEMETRY_COVERAGE_COMMANDS,
   TELEMETRY_COVERAGE_COPY,
-} from '~/routing/usage/data/data.telemetry-coverage-copy';
+} from '~/routing/usage/data/telemetry-coverage-copy';
 import {
   buildTelemetryCoverage,
   buildTelemetryMachine,

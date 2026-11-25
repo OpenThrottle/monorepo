@@ -2,7 +2,7 @@ import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
-import { TELEMETRY_COVERAGE_COPY } from '~/routing/usage/data/data.telemetry-coverage-copy';
+import { TELEMETRY_COVERAGE_COPY } from '~/routing/usage/data/telemetry-coverage-copy';
 import {
   buildTelemetryMachine,
   TELEMETRY_COVERAGE_NOW_ISO,

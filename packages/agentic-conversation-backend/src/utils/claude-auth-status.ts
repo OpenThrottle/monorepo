@@ -13,7 +13,7 @@ import { isRecord } from '@openthrottle/nodejs-utils';
 import {
   CLAUDE_NOT_LOGGED_IN_WARNING,
   claudeApiKeyOverrideWarning,
-} from '../data/data.copy.ts';
+} from '../data/copy.ts';
 import {
   CLAUDE_CONFIG_DIR_KEY,
   CLAUDE_HOST_ENV_KEYS,

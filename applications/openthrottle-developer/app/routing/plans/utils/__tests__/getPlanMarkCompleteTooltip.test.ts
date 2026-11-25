@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { PLAN_TOOLBAR_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_TOOLBAR_COPY } from '~/routing/plans/data/copy';
 import { getPlanMarkCompleteTooltip } from '~/routing/plans/utils/getPlanMarkCompleteTooltip';
 
 describe('getPlanMarkCompleteTooltip', () => {

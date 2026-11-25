@@ -1,9 +1,9 @@
-import type { ChatToolCategory } from './data/data.chat-tool-categories';
+import type { ChatToolCategory } from './data/chat-tool-categories';
 import {
   CHAT_TOOL_CATEGORY_BY_NAME,
   CHAT_TOOL_CATEGORY_ORDER,
-} from './data/data.chat-tool-categories';
-import { CHAT_TOOL_SUMMARY_COPY } from './data/data.copy';
+} from './data/chat-tool-categories';
+import { CHAT_TOOL_SUMMARY_COPY } from './data/copy';
 import type { ChatTurnEvent, ChatTurnToolEvent } from './types';
 import type { ChatToolStatusValue } from './types';
 import { CHAT_TOOL_STATUS } from './types';

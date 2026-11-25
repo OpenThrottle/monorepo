@@ -3,7 +3,7 @@ import { render } from '@testing-library/react';
 import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { AGENT_SEARCH_COPY } from '~/routing/agent-search/data/data.copy';
+import { AGENT_SEARCH_COPY } from '~/routing/agent-search/data/copy';
 
 import type { AgentSearchIntroductionProps } from '../AgentSearchIntroduction';
 import { AgentSearchIntroduction } from '../AgentSearchIntroduction';

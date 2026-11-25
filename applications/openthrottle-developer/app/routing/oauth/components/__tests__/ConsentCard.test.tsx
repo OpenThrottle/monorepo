@@ -4,7 +4,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import { OAUTH_CONSENT_COPY } from '~/routing/oauth/data/data.copy';
+import { OAUTH_CONSENT_COPY } from '~/routing/oauth/data/copy';
 
 import type { ConsentCardProps } from '../ConsentCard';
 import { ConsentCard } from '../ConsentCard';

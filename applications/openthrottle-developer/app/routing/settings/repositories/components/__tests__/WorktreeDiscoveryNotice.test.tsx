@@ -10,7 +10,7 @@ import {
   WorktreeDiscoveryProblemKind,
   WorktreeRootSource,
 } from '~/__generated__/graphql';
-import { WORKTREE_DISCOVERY_COPY } from '~/routing/settings/repositories/data/data.copy';
+import { WORKTREE_DISCOVERY_COPY } from '~/routing/settings/repositories/data/copy';
 import {
   mockDiscoveredWorktrees,
   mockScannedRoot,

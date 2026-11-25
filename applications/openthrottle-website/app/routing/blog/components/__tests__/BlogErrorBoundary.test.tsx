@@ -4,7 +4,7 @@ import * as React from 'react';
 import { createRoutesStub, data } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import { BLOG_COPY } from '~/routing/blog/data/data.copy';
+import { BLOG_COPY } from '~/routing/blog/data/copy';
 
 import { BlogErrorBoundary } from '../BlogErrorBoundary';
 

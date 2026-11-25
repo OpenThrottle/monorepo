@@ -115,7 +115,7 @@ goes:
 | ------------------------------------------------- | ----------------------------------------- |
 | Another type or interface (a row, an item, a map) | the sibling `types.ts`                    |
 | A pure function                                   | the sibling `utils/`                      |
-| Static data, a lookup table, a context object     | the sibling `data/` (copy → data.copy.ts) |
+| Static data, a lookup table, a context object     | the sibling `data/` (copy → data/copy.ts) |
 | A tunable (a timeout, a threshold, a page size)   | the sibling `config/`                     |
 | Another hook                                      | its own file in `hooks/` (H1)             |
 | A re-export (`export { … } from`, `export *`)     | the package's `index.ts`                  |

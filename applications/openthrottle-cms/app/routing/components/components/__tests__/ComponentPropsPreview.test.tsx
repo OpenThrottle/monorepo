@@ -3,7 +3,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import { COMPONENT_PREVIEW_COPY } from '~/routing/components/data/data.copy';
+import { COMPONENT_PREVIEW_COPY } from '~/routing/components/data/copy';
 
 import { ComponentPropsPreview } from '../ComponentPropsPreview';
 

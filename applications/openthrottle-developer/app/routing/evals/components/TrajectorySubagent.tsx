@@ -11,7 +11,7 @@ import * as React from 'react';
 
 import { TrajectoryErrors } from '~/routing/evals/components/TrajectoryErrors';
 import { TrajectoryTimeline } from '~/routing/evals/components/TrajectoryTimeline';
-import { TRAJECTORY_TIMELINE_COPY } from '~/routing/evals/data/data.copy';
+import { TRAJECTORY_TIMELINE_COPY } from '~/routing/evals/data/copy';
 import type { AtifTrajectory } from '~/routing/evals/types';
 import {
   buildTrajectoryTimeline,

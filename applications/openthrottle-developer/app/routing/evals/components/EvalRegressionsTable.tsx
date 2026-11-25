@@ -10,7 +10,7 @@ import {
 import * as React from 'react';
 
 import type { EvalRunReportCaseFragment } from '~/__generated__/graphql';
-import { EVAL_COMPARE_COPY } from '~/routing/evals/data/data.copy';
+import { EVAL_COMPARE_COPY } from '~/routing/evals/data/copy';
 import { shortId } from '~/routing/evals/utils/report-format';
 
 export interface EvalRegressionsTableProps {

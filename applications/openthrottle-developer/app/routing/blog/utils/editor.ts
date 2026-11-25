@@ -12,7 +12,7 @@ import {
   BLOG_POST_SAVE_INTENT,
   BLOG_SLUG_PATTERN,
 } from '~/routing/blog/config/defaults';
-import { BLOG_EDITOR_COPY } from '~/routing/blog/data/data.copy';
+import { BLOG_EDITOR_COPY } from '~/routing/blog/data/copy';
 import type {
   BlogPostChanges,
   BlogPostEditorValues,

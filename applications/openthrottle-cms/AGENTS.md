@@ -15,7 +15,7 @@ database and rendered through `CoreRenderer` from `@openthrottle/react-router-cm
   - `@openthrottle/react-router-cms-core/src/cms-safelist.css` forces common non-theme utilities:
     spacing (`p*`/`m*`/`gap*`/`space-*` on the scale `0,1,2,3,4,6,8,10,12,16,20,24,32`, plus
     `m*-auto`), typography, layout (display, flex/grid, `md:`/`lg:` layout), radius, borders,
-    shadows and `opacity-*`. Edit `src/data/data.cms-safelist.ts` in that package and regenerate
+    shadows and `opacity-*`. Edit `src/data/cms-safelist.ts` in that package and regenerate
     with `pnpm nx run @openthrottle/react-router-cms-core:test -- -u buildCmsSafelist`.
 
   Anything else (an off-scale step like `p-5`, opacity modifiers like `bg-primary/20`, gradients)

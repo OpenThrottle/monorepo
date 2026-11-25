@@ -8,7 +8,7 @@ import type {
   UsageTokenUsageByAccountFragment,
   UsageTokenUsageTotalsFragment,
 } from '~/__generated__/graphql';
-import { TOKEN_USAGE_UNATTRIBUTED_ACCOUNT_ID } from '~/routing/usage/data/data.token-usage-copy';
+import { TOKEN_USAGE_UNATTRIBUTED_ACCOUNT_ID } from '~/routing/usage/data/token-usage-copy';
 
 import type { UsageTokenUsageAccountsProps } from '../UsageTokenUsageAccounts';
 import { UsageTokenUsageAccounts } from '../UsageTokenUsageAccounts';

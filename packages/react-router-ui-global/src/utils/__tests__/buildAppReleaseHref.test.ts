@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { GLOBAL_RELEASES_URL } from '../../data/data.releases';
+import { GLOBAL_RELEASES_URL } from '../../data/releases';
 import { buildAppReleaseHref } from '../buildAppReleaseHref';
 
 describe('buildAppReleaseHref', () => {

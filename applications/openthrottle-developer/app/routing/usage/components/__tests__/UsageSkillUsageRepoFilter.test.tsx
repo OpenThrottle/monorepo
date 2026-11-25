@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import type { UsageSkillUsageFilterOptionsFragment } from '~/__generated__/graphql';
 
-import { SKILL_USAGE_SCOPES } from '../../data/data.skill-usage-copy';
+import { SKILL_USAGE_SCOPES } from '../../data/skill-usage-copy';
 import type { UsageSkillUsageRepoFilterProps } from '../UsageSkillUsageRepoFilter';
 import { UsageSkillUsageRepoFilter } from '../UsageSkillUsageRepoFilter';
 

@@ -6,7 +6,7 @@ import {
 import pg from 'pg';
 
 import { MIGRATION_LEDGER, POSTGRES_ENV_VARS_TRIED } from '../config/index.ts';
-import { POSTGRES_CONNECTION_FAILURE_PREFIX } from '../data/data.copy.ts';
+import { POSTGRES_CONNECTION_FAILURE_PREFIX } from '../data/copy.ts';
 import type {
   CapabilityProbe,
   MigrationHighWaterMarkResult,

@@ -1,7 +1,7 @@
 import type { AgentConversationListItem } from '@openthrottle/react-router-chat';
 import { describe, expect, test } from 'vitest';
 
-import { RECENT_CHATS_CARD_COPY } from '~/routing/dashboard/data/data.copy';
+import { RECENT_CHATS_CARD_COPY } from '~/routing/dashboard/data/copy';
 
 import { conversationHref, conversationLabel } from '../recent-chats';
 

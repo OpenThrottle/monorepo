@@ -13,7 +13,7 @@ import type { FormEvent } from 'react';
 import * as React from 'react';
 
 import type { ShellBridge } from '../../bridge/types/shell-bridge.ts';
-import { CONNECTION_COPY } from '../data/data.copy.ts';
+import { CONNECTION_COPY } from '../data/copy.ts';
 import { useConnectionForm } from '../hooks/useConnectionForm.ts';
 import { ConnectionFeedbackAlert } from './ConnectionFeedbackAlert.tsx';
 

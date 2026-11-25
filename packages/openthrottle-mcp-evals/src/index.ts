@@ -12,7 +12,7 @@ export type {
 /** @public */
 export { compareBaseline, passRate } from './tool-selection/compareBaseline.ts';
 /** @public */
-export { TOOL_SELECTION_CASES } from './tool-selection/data/data.cases.ts';
+export { TOOL_SELECTION_CASES } from './tool-selection/data/cases.ts';
 /** @public */
 export type {
   ToolSelectionCase,

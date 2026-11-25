@@ -5,7 +5,7 @@ import * as React from 'react';
 import {
   COMMANDER_CLASS_NAME,
   COMMANDER_ESCAPE_ROW_KEYWORD,
-} from '../data/data.commander';
+} from '../data/commander';
 import { CommanderItemRow } from './CommanderItemRow';
 import type { CommanderItem } from './OpenThrottleCommander';
 

@@ -39,7 +39,7 @@ export interface GlobalFeatureOnboardingLink {
  * @description The typed copy contract every empty-page onboarding block conforms to.
  * `GlobalFeatureOnboarding` is purely presentational and renders whatever a feature
  * passes in here, so every "teach-me-fast" empty state reads as one consistent system.
- * Each feature supplies a copy object of this shape from its own `data/data.copy.ts`;
+ * Each feature supplies a copy object of this shape from its own `data/copy.ts`;
  * no feature-specific copy lives in the layout.
  * @public
  */

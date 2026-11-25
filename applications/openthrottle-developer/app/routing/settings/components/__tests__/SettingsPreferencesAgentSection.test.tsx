@@ -13,7 +13,7 @@ import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import { MOCK_PLAN_RUN_MODELS } from '~/routing/plans/data/mock.plan-run-models';
-import { SETTINGS_PREFERENCES_COPY } from '~/routing/settings/data/data.copy';
+import { SETTINGS_PREFERENCES_COPY } from '~/routing/settings/data/copy';
 
 import type { SettingsPreferencesAgentSectionProps } from '../SettingsPreferencesAgentSection';
 import { SettingsPreferencesAgentSection } from '../SettingsPreferencesAgentSection';

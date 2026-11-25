@@ -5,7 +5,7 @@ import {
   DEFAULT_CHUNK_DURATION_MS,
   WORKLET_PROCESSOR_NAME,
 } from '../config/audio-capture';
-import { WORKLET_PROCESSOR_SOURCE } from '../data/data.audio-capture-worklet';
+import { WORKLET_PROCESSOR_SOURCE } from '../data/audio-capture-worklet';
 import type { AudioCaptureStatus } from '../types';
 import { isCaptureSupported } from '../utils/isCaptureSupported';
 import { toError } from '../utils/toError';

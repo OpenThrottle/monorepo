@@ -5,8 +5,8 @@ import * as React from 'react';
 import {
   ACTION_TOUCH_CLASSES,
   ACTION_VISIBILITY_CLASSES,
-} from '../data/data.chat-conversation-row.classes';
-import { CHAT_CONVERSATION_SIDEBAR_COPY } from '../data/data.chat-conversation-sidebar.copy';
+} from '../data/chat-conversation-row.classes';
+import { CHAT_CONVERSATION_SIDEBAR_COPY } from '../data/chat-conversation-sidebar.copy';
 import type { AgentConversationListItem } from '../types';
 import { formatRelativeChatTimestamp } from '../utils/index';
 

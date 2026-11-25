@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { OUTPUT_STREAM_COPY } from '~/routing/plans/data/data.copy';
+import { OUTPUT_STREAM_COPY } from '~/routing/plans/data/copy';
 import type { OutputStreamAttemptGroup } from '~/routing/plans/utils/output-stream-attempts';
 
 import type { OutputStreamAttemptProps } from '../OutputStreamAttempt';

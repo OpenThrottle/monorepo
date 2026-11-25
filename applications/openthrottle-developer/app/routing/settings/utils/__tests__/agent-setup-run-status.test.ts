@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/data.copy';
+import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/copy';
 
 import {
   getAgentSetupRowSummary,

@@ -3,11 +3,11 @@ import { useAtomValue } from 'jotai';
 import * as React from 'react';
 
 import { NotificationsDocument } from '~/__generated__/graphql';
-import { userAtom } from '~/global/data/data.atom-user';
+import { userAtom } from '~/global/data/atom-user';
 import {
   PLAN_LIFECYCLE_REVALIDATE_DELAY_MS,
   PLANS_INDEX_REVALIDATE_EVENTS,
-} from '~/routing/plans/data/data.plan-lifecycle-events';
+} from '~/routing/plans/data/plan-lifecycle-events';
 import { useCoalescedRevalidate } from '~/routing/plans/hooks/useCoalescedRevalidate';
 import { shouldRevalidateForLifecycleEvent } from '~/routing/plans/utils/plan-lifecycle-events';
 import { getGraphqlWsClient } from '~/services/getGraphqlWsClient';

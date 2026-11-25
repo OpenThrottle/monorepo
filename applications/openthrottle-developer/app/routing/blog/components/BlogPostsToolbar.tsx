@@ -9,7 +9,7 @@ import {
   BLOG_NEW_POST_PATH,
   BLOG_SEARCH_PARAM,
 } from '~/routing/blog/config/defaults';
-import { BLOG_COPY } from '~/routing/blog/data/data.copy';
+import { BLOG_COPY } from '~/routing/blog/data/copy';
 
 export interface BlogPostsToolbarProps {}
 

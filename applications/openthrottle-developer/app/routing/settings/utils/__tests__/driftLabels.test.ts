@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
+import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/copy';
 
 import type { CheckoutDrift } from '../driftLabels';
 import { driftLabels } from '../driftLabels';

@@ -28,7 +28,7 @@ root.
 > `src/index.ts`).
 
 Reference consumer: `openthrottle-developer` (`DeveloperRolloutProvider`,
-`data.rollout-flags.ts`, `fetchRolloutEvaluations.ts`).
+`data/rollout-flags.ts`, `fetchRolloutEvaluations.ts`).
 
 ## Wire a second app
 
@@ -120,7 +120,7 @@ import {
   useRollout,
   useRolloutFlag,
 } from '@openthrottle/react-router-rollout';
-import { appRolloutFlags } from '~/global/data/data.rollout-flags';
+import { appRolloutFlags } from '~/global/data/rollout-flags';
 
 const enabled = useRolloutFlag(appRolloutFlags, 'billing.invoices'); // boolean
 const theme = useRolloutFlag(appRolloutFlags, 'theme.mode'); // string

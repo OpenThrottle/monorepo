@@ -4,7 +4,7 @@ import { GithubLogoIcon } from '@phosphor-icons/react/dist/ssr/GithubLogo';
 import * as React from 'react';
 import { Link } from 'react-router';
 
-import { LANDING_HERO } from '~/routing/home/data/data.landing';
+import { LANDING_HERO } from '~/routing/home/data/landing';
 import { useRotatingHeadline } from '~/routing/home/hooks/useRotatingHeadline';
 
 import { LandingNav } from './LandingNav';

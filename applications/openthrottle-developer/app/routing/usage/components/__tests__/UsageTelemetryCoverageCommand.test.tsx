@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
-import { TELEMETRY_COVERAGE_COPY } from '~/routing/usage/data/data.telemetry-coverage-copy';
+import { TELEMETRY_COVERAGE_COPY } from '~/routing/usage/data/telemetry-coverage-copy';
 
 import { UsageTelemetryCoverageCommand } from '../UsageTelemetryCoverageCommand';
 

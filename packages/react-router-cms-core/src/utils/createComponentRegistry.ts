@@ -1,4 +1,4 @@
-import { CORE_COMPONENTS } from '../data/data.registry';
+import { CORE_COMPONENTS } from '../data/registry';
 import type { CmsComponentRegistry } from '../types/cms-render';
 
 /**

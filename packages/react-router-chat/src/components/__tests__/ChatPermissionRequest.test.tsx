@@ -5,7 +5,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
 
-import { ChatPermissionResponderContext } from '../../data/data.chat-permission-responder-context';
+import { ChatPermissionResponderContext } from '../../data/chat-permission-responder-context';
 import type {
   ChatPermissionResponder,
   ChatTurnPermissionEvent,

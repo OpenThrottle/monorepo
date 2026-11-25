@@ -2,7 +2,7 @@ import { cn, Label, Switch } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { useSearchParams } from 'react-router';
 
-import { MISSING_WORKTREES_COPY } from '~/routing/settings/repositories/data/data.copy';
+import { MISSING_WORKTREES_COPY } from '~/routing/settings/repositories/data/copy';
 import {
   SHOW_MISSING_PARAM,
   SHOW_MISSING_VALUE,

@@ -12,7 +12,7 @@ import { SITE_TITLE } from '~/global/config/settings';
 import { CalendarIntroduction } from '~/routing/calendar/components/CalendarIntroduction';
 import { CalendarTable } from '~/routing/calendar/components/CalendarTable';
 import { CalendarToolbar } from '~/routing/calendar/components/CalendarToolbar';
-import { CALENDAR_EVENTS } from '~/routing/calendar/data/data.events';
+import { CALENDAR_EVENTS } from '~/routing/calendar/data/events';
 import { filterCalendarEventsBySearch } from '~/routing/calendar/utils/events';
 
 type HandleData = Route.ComponentProps['loaderData'];

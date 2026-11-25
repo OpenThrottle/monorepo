@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import { ChatContext } from '../data/data.chat-context';
+import { ChatContext } from '../data/chat-context';
 import type {
   ChatComposerControls,
   ChatContextValue,

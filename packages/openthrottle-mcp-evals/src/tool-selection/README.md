@@ -120,7 +120,7 @@ when you add or remove cases. The baseline diff is the review.
 
 ## Adding a case
 
-Cases live in [`data/data.cases.ts`](./data/data.cases.ts). Ids are stable keys, so never rename one;
+Cases live in [`data/cases.ts`](./data/cases.ts). Ids are stable keys, so never rename one;
 delete it and add a new one instead.
 
 1. **A fix case must fail before its fix.** When an agent picked the wrong tool, write the case first and
@@ -144,9 +144,9 @@ tool or argument that no longer exists, which would otherwise leave a case that 
 | File                                          | Role                                                                                        |
 | --------------------------------------------- | ------------------------------------------------------------------------------------------- |
 | `eval-case.ts`                                | Case, selection and selector types                                                          |
-| `data/data.cases.ts`                          | The cases                                                                                   |
-| `data/data.dataset.ts`                        | Dataset target, grader id and version                                                       |
-| `data/data.harness-tools.ts`                  | Generic harness tools offered next to OT                                                    |
+| `data/cases.ts`                               | The cases                                                                                   |
+| `data/dataset.ts`                             | Dataset target, grader id and version                                                       |
+| `data/harness-tools.ts`                       | Generic harness tools offered next to OT                                                    |
 | `tool-selection-core.ts`                      | Cases as a core `EvalDataset`, the iteration under test, and `gradeCase` as a `code` grader |
 | `selection-trajectory.ts`                     | Selection to and from an ATIF trajectory, usage included                                    |
 | `gradeCase.ts`                                | Pure grading rules (unit-tested, runs in CI)                                                |
@@ -159,7 +159,7 @@ tool or argument that no longer exists, which would otherwise leave a case that 
 | `cli-tool-selection-core.ts`                  | The CLI iteration (wrapper + call log per trial) and its grader, with the leak stop         |
 | `cli-selection.ts`                            | Graded OT calls from a CLI trajectory, cross-checked against the sandbox call log           |
 | `sandbox-attachment.ts`                       | Per-CLI wrapper scripts that attach the sandbox in place of the real server                 |
-| `data/data.cli-drivers.ts`                    | Supported and refused CLIs, the sandbox server name, CLI defaults                           |
+| `data/cli-drivers.ts`                         | Supported and refused CLIs, the sandbox server name, CLI defaults                           |
 
 The evals, the sandbox included, are not reachable from `bin.ts` or `bin-http.ts`, so the production
 esbuild bundle does not include them or the eval core. The sandbox is not a package `bin` either; the eval

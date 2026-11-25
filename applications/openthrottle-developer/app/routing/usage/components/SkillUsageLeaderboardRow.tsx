@@ -8,8 +8,8 @@ import {
   SKILL_PRESENCE_LABELS,
   SKILL_PRESENCE_LINKABLE,
   SKILL_PRESENCE_TOOLTIPS,
-} from '~/routing/usage/data/data.skill-presence';
-import { SKILL_USAGE_COPY } from '~/routing/usage/data/data.skill-usage-copy';
+} from '~/routing/usage/data/skill-presence';
+import { SKILL_USAGE_COPY } from '~/routing/usage/data/skill-usage-copy';
 import type { SkillUsageRowWithPresence } from '~/routing/usage/utils/partitionSkillUsageByPresence';
 import {
   skillUsageAvgDurationLabel,

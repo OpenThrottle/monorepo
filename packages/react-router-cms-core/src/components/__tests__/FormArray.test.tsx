@@ -4,8 +4,8 @@ import { createStore, Provider } from 'jotai';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
-import { atomFragmentDraft } from '../../data/data.atom.fragment-draft';
-import { FORM_FIELD_COPY } from '../../data/data.copy';
+import { atomFragmentDraft } from '../../data/atom.fragment-draft';
+import { FORM_FIELD_COPY } from '../../data/copy';
 import { MOCK_FORM_SCHEMA } from '../../data/mock.form-schema';
 import { FormArray } from '../FormArray';
 

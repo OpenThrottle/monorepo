@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { CALENDAR_DEMO_EVENTS } from '../../data/data.calendar-demo';
+import { CALENDAR_DEMO_EVENTS } from '../../data/calendar-demo';
 import { CalendarMonth } from '../CalendarMonth';
 
 describe('CalendarMonth', () => {

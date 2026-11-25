@@ -12,7 +12,7 @@ import { join } from 'node:path';
 
 import { splitFrontmatter } from '@openthrottle/openthrottle-skills';
 
-import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import { discoverRepoSkills } from '~/routing/agents/utils/discoverRepoSkills.server';
 import { getMonorepoRoot } from '~/routing/agents/utils/resolve-monorepo-root.server';
 import { isAllowedSkillPath } from '~/routing/agents/utils/skill-path-allowlist.server';

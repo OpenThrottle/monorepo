@@ -3,7 +3,7 @@ import * as React from 'react';
 
 import type { AgentTrajectorySummaryFragment } from '~/__generated__/graphql';
 import { TrajectoryListItem } from '~/routing/evals/components/TrajectoryListItem';
-import { TASK_TRAJECTORIES_COPY } from '~/routing/evals/data/data.copy';
+import { TASK_TRAJECTORIES_COPY } from '~/routing/evals/data/copy';
 import { sortTrajectoriesNewestFirst } from '~/routing/evals/utils/summaries';
 
 export interface TaskTrajectoriesSectionProps {

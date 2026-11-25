@@ -14,7 +14,7 @@ import {
   parseDate,
 } from '~/global/utils/dates';
 import { BLOG_POST_LIFECYCLE_INTENT } from '~/routing/blog/config/defaults';
-import { BLOG_COPY, BLOG_LIFECYCLE_COPY } from '~/routing/blog/data/data.copy';
+import { BLOG_COPY, BLOG_LIFECYCLE_COPY } from '~/routing/blog/data/copy';
 import type {
   BlogPostLifecycleRequest,
   BlogPostLifecycleResult,

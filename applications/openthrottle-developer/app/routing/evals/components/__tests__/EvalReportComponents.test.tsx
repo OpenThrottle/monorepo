@@ -7,10 +7,7 @@ import { EvalConfigTuple } from '~/routing/evals/components/EvalConfigTuple';
 import { EvalGradersTable } from '~/routing/evals/components/EvalGradersTable';
 import { EvalHeadlineNumbers } from '~/routing/evals/components/EvalHeadlineNumbers';
 import { EvalStat } from '~/routing/evals/components/EvalStat';
-import {
-  EVAL_REPORT_COPY,
-  EVAL_STAT_COPY,
-} from '~/routing/evals/data/data.copy';
+import { EVAL_REPORT_COPY, EVAL_STAT_COPY } from '~/routing/evals/data/copy';
 import { MOCK_REPORT_BASE } from '~/routing/evals/data/mock.eval-report';
 import { renderEvals } from '~/routing/evals/testing/renderEvals';
 

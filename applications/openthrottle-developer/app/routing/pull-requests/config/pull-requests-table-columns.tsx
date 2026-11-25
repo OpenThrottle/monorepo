@@ -20,7 +20,7 @@ import * as React from 'react';
 
 import { PullRequestStatus } from '~/routing/pull-requests/components/PullRequestStatus';
 import { buildPullRequestListSearchWithPreview } from '~/routing/pull-requests/constants/pull-request-list-url';
-import { PULL_REQUESTS_ROW_ACTIONS_COPY } from '~/routing/pull-requests/data/data.copy';
+import { PULL_REQUESTS_ROW_ACTIONS_COPY } from '~/routing/pull-requests/data/copy';
 import type { PullRequestsListFilters } from '~/routing/pull-requests/types/pull-requests-list-filters';
 import {
   githubCommitUrl,

@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/auth.sign-in';
 import { CmsLoginDocument } from '~/__generated__/graphql';
-import { AUTH_COPY } from '~/routing/auth/data/data.copy';
+import { AUTH_COPY } from '~/routing/auth/data/copy';
 
 const fetchPublicGraphql = vi.fn();
 

@@ -1,4 +1,4 @@
-import type { LoopTaskStatusValue } from '../../data/data.loop.ts';
+import type { LoopTaskStatusValue } from '../../data/loop.ts';
 import type {
   GitCommitResult,
   GitHeadState,

@@ -4,7 +4,7 @@ import { Link } from 'react-router';
 
 import { PlanTaskCardStatusBadge } from '~/routing/plans/components/PlanTaskCardStatusBadge';
 import { PROJECT_PLAN_TASKS_VISIBLE_LIMIT } from '~/routing/projects/config/projects.defaults';
-import { PROJECT_PLAN_TASKS_COPY } from '~/routing/projects/data/data.copy';
+import { PROJECT_PLAN_TASKS_COPY } from '~/routing/projects/data/copy';
 import type { UseProjectPlanTasksResult } from '~/routing/projects/hooks/useProjectPlanTasks';
 
 export interface ProjectPlanTasksProps {

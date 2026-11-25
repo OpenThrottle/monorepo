@@ -4,7 +4,7 @@ import type {
 } from '@openthrottle/openthrottle-notifications';
 import * as React from 'react';
 
-import { WEBSOCKET_DEBUGGER_ALL_EVENT_NAMES } from '../data/data.websocket-debugger-events';
+import { WEBSOCKET_DEBUGGER_ALL_EVENT_NAMES } from '../data/websocket-debugger-events';
 import type {
   WebsocketDebuggerEventSubscriber,
   WebsocketDebuggerSocket,

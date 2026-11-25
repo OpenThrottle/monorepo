@@ -3,7 +3,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import { ADMIN_PATHS } from '~/global/data/data.navigation';
+import { ADMIN_PATHS } from '~/global/data/navigation';
 
 import * as RouteModule from '../dashboard._index';
 

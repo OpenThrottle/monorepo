@@ -10,7 +10,7 @@ import * as React from 'react';
 import { useFetcher, useRevalidator } from 'react-router';
 
 import type { action as agentModelFavoriteAction } from '~/routes/resources.agent-model-favorite';
-import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/data.copy';
+import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/copy';
 
 /** Resource-route action path backing the per-model favorite toggle. */
 const AGENT_MODEL_FAVORITE_ACTION = '/resources/agent-model-favorite';

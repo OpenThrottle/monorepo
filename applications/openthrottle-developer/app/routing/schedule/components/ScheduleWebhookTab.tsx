@@ -4,7 +4,7 @@ import type { ScheduleWebhookTriggerFragment } from '~/__generated__/graphql';
 import { ScheduleWebhookCredentials } from '~/routing/schedule/components/ScheduleWebhookCredentials';
 import { ScheduleWebhookForm } from '~/routing/schedule/components/ScheduleWebhookForm';
 import { ScheduleWebhookStatusBar } from '~/routing/schedule/components/ScheduleWebhookStatusBar';
-import { SCHEDULE_WEBHOOK_COPY } from '~/routing/schedule/data/data.copy';
+import { SCHEDULE_WEBHOOK_COPY } from '~/routing/schedule/data/copy';
 import type { WebhookCredentials } from '~/routing/schedule/utils/getWebhookCredentials';
 
 export interface ScheduleWebhookTabProps {

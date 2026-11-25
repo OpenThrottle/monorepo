@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { PLAN_RUN_META_FIELDS } from '~/routing/plans/data/data.plan-run-history';
+import { PLAN_RUN_META_FIELDS } from '~/routing/plans/data/plan-run-history';
 
 import {
   buildPlanRunMetaItems,

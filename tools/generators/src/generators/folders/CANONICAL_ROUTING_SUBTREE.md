@@ -56,6 +56,7 @@ The generator also writes non-placeholder files at this level:
 
 - `types.ts`
 - `config/defaults.ts`
+- `data/copy.ts`
 - `utils/formatters.ts`
 - `utils/parsers.ts`
 

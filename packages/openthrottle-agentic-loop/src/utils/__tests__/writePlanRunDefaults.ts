@@ -1,7 +1,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
-import { PLAN_RUN_DEFAULTS_FILENAME } from '../../data/data.plan-run-config.ts';
+import { PLAN_RUN_DEFAULTS_FILENAME } from '../../data/plan-run-config.ts';
 
 /**
  * @description Writes `.openthrottle/ot-loop.json` under `dir` with the given `defaults` block

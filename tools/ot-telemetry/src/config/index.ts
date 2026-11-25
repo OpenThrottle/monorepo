@@ -2,7 +2,7 @@ import { OPENTHROTTLE_POSTGRES_URL_ENV } from '@openthrottle/openthrottle-agenti
 
 /**
  * @description Constants and defaults for the ot-telemetry report. Behavior
- * lives in `utils/`; user-facing prose lives in `data/data.copy.ts`.
+ * lives in `utils/`; user-facing prose lives in `data/copy.ts`.
  */
 
 /** Bumped whenever the envelope shape changes in a way a consumer must handle. */

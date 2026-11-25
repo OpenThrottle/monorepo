@@ -3,7 +3,7 @@ import {
   EVAL_REPORT_COPY,
   EVAL_RUNS_COPY,
   EVAL_STAT_COPY,
-} from '~/routing/evals/data/data.copy';
+} from '~/routing/evals/data/copy';
 import { formatTrajectoryCost } from '~/routing/evals/utils/formatters';
 
 const SIGNIFICANCE_LEVEL = 0.05;

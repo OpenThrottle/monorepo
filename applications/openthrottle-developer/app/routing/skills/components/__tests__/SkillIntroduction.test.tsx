@@ -5,11 +5,11 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import {
   SKILL_DETAIL_COPY,
   SKILLS_SOURCE_COPY,
-} from '~/routing/skills/data/data.copy';
+} from '~/routing/skills/data/copy';
 import { getModelInvocationBadge } from '~/routing/skills/utils/model-invocation-badge';
 
 import type { SkillIntroductionProps } from '../SkillIntroduction';

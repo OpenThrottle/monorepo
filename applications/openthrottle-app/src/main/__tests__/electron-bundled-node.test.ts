@@ -14,7 +14,7 @@ import { describe, expect, it } from 'vitest';
 import {
   ELECTRON_BUNDLED_NODE,
   EMBEDDED_SERVER_RUNTIME_PACKAGES,
-} from '../data/data.electron-node.ts';
+} from '../data/electron-node.ts';
 
 const require = createRequire(import.meta.url);
 

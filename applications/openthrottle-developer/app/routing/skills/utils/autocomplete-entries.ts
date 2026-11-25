@@ -4,7 +4,7 @@ import {
   ProjectSkillsDocument,
   SkillAvailabilityDocument,
 } from '~/__generated__/graphql';
-import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import type { ProjectSkillFlagRow } from '~/routing/skills/utils/mergeRepoSkillsWithProjectSkills';
 import { mergeRepoSkillsWithProjectSkills } from '~/routing/skills/utils/mergeRepoSkillsWithProjectSkills';
 import type { SkillAvailabilityRow } from '~/routing/skills/utils/mergeRepoSkillsWithSkillAvailability';

@@ -11,8 +11,8 @@ import * as React from 'react';
 import { useSearchParams } from 'react-router';
 
 import { RULE_PREVIEW_ENVIRONMENT_PARAM } from '~/routing/rules/config/rule-preview';
-import { RULE_PREVIEW_COPY } from '~/routing/rules/data/data.copy';
-import { ENVIRONMENTS } from '~/routing/rules/data/data.rule-form-options';
+import { RULE_PREVIEW_COPY } from '~/routing/rules/data/copy';
+import { ENVIRONMENTS } from '~/routing/rules/data/rule-form-options';
 import { parseRulePreviewEnvironment } from '~/routing/rules/utils/rule-preview-params';
 
 export interface RulePreviewEnvironmentSelectProps {

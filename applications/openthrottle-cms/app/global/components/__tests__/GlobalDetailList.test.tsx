@@ -6,7 +6,7 @@ import { GlobalDetailList } from '~/global/components/GlobalDetailList';
 import {
   GLOBAL_TABLE_COLUMN_KIND,
   GLOBAL_TABLE_COPY,
-} from '~/global/data/data.global-table';
+} from '~/global/data/global-table';
 import type { GlobalDetailField } from '~/global/types/global-detail-list';
 
 interface Row {

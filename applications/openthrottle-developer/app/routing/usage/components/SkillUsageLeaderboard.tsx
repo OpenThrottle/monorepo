@@ -9,7 +9,7 @@ import {
 import * as React from 'react';
 
 import { SkillUsageLeaderboardRow } from '~/routing/usage/components/SkillUsageLeaderboardRow';
-import { SKILL_USAGE_COPY } from '~/routing/usage/data/data.skill-usage-copy';
+import { SKILL_USAGE_COPY } from '~/routing/usage/data/skill-usage-copy';
 import type { SkillUsageRowWithPresence } from '~/routing/usage/utils/partitionSkillUsageByPresence';
 
 export interface SkillUsageLeaderboardProps {

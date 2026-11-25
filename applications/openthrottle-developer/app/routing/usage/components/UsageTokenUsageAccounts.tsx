@@ -20,7 +20,7 @@ import type { UsageTokenUsageByAccountFragment } from '~/__generated__/graphql';
 import {
   TOKEN_USAGE_COPY,
   TOKEN_USAGE_CREDENTIAL_BADGE_COLORS,
-} from '~/routing/usage/data/data.token-usage-copy';
+} from '~/routing/usage/data/token-usage-copy';
 import { toTokenUsageAccountRows } from '~/routing/usage/utils/toTokenUsageAccountRows';
 
 export interface UsageTokenUsageAccountsProps {

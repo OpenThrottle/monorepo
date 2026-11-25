@@ -15,8 +15,8 @@ import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import * as React from 'react';
 
 import type { UsageCaptureHealthRowFragment } from '~/__generated__/graphql';
-import { CAPTURE_HEALTH_STALE_AFTER_MS } from '~/routing/usage/data/data.capture-health';
-import { CAPTURE_HEALTH_COPY } from '~/routing/usage/data/data.capture-health-copy';
+import { CAPTURE_HEALTH_STALE_AFTER_MS } from '~/routing/usage/data/capture-health';
+import { CAPTURE_HEALTH_COPY } from '~/routing/usage/data/capture-health-copy';
 import { buildCaptureHealthEntries } from '~/routing/usage/utils/capture-health';
 import { captureHealthStreamLabel } from '~/routing/usage/utils/captureHealthStreamLabel';
 

@@ -22,7 +22,7 @@ import {
 import { SettingsPreferencesAgentSection } from '~/routing/settings/components/SettingsPreferencesAgentSection';
 import { SettingsPreferencesEditorSection } from '~/routing/settings/components/SettingsPreferencesEditorSection';
 import { SettingsPreferencesIntro } from '~/routing/settings/components/SettingsPreferencesIntro';
-import { PREFERENCES_INTENTS } from '~/routing/settings/data/data.preferences';
+import { PREFERENCES_INTENTS } from '~/routing/settings/data/preferences';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

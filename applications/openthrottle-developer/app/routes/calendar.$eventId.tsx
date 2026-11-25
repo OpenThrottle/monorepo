@@ -17,8 +17,8 @@ import { Link } from 'react-router';
 import type { Route } from '@/app/routes/+types/calendar.$eventId';
 import { SITE_TITLE } from '~/global/config/settings';
 import { CalendarEventDetails } from '~/routing/calendar/components/CalendarEventDetails';
-import { CALENDAR_NOT_FOUND_COPY } from '~/routing/calendar/data/data.copy';
-import { CALENDAR_EVENTS } from '~/routing/calendar/data/data.events';
+import { CALENDAR_NOT_FOUND_COPY } from '~/routing/calendar/data/copy';
+import { CALENDAR_EVENTS } from '~/routing/calendar/data/events';
 import { getCalendarEventById } from '~/routing/calendar/utils/events';
 
 type HandleData = Route.ComponentProps['loaderData'];

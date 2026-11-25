@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 import { BlogPostTextField } from '~/routing/blog/components/BlogPostTextField';
-import { BLOG_EDITOR_COPY } from '~/routing/blog/data/data.copy';
+import { BLOG_EDITOR_COPY } from '~/routing/blog/data/copy';
 import type {
   BlogPostEditorValues,
   BlogPostFieldErrors,

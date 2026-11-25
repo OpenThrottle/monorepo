@@ -4,7 +4,7 @@ import { CHAT_PERMISSION_MODE } from '@openthrottle/react-router-chat';
 import type {
   ChatToolbarBackendPrefs,
   ChatToolbarState,
-} from '../data/data.chat-toolbar-state';
+} from '../data/chat-toolbar-state';
 
 /**
  * The permission modes that must not silently survive a browser session: both

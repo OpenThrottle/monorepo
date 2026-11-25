@@ -4,8 +4,8 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import { FRAGMENT_EDITOR_COPY } from '~/routing/fragments/data/data.copy';
-import { FRAGMENT_INTENT } from '~/routing/fragments/data/data.intents';
+import { FRAGMENT_EDITOR_COPY } from '~/routing/fragments/data/copy';
+import { FRAGMENT_INTENT } from '~/routing/fragments/data/intents';
 
 import { FragmentChildCreate } from '../FragmentChildCreate';
 

@@ -7,7 +7,7 @@
 
 import type { ConversationBackendRun } from '@openthrottle/agentic-conversation-backend';
 
-import { SCENARIOS } from '../data/data.scenarios.ts';
+import { SCENARIOS } from '../data/scenarios.ts';
 import type { Scenario, ScenarioTurn } from '../types/scenario.ts';
 
 /**

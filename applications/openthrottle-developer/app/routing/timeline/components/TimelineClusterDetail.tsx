@@ -3,7 +3,7 @@ import * as React from 'react';
 import { Link } from 'react-router';
 
 import { TIMELINE_MARKER_KIND_LABEL } from '~/routing/timeline/config/kinds';
-import { TIMELINE_DETAIL_COPY } from '~/routing/timeline/data/data.copy';
+import { TIMELINE_DETAIL_COPY } from '~/routing/timeline/data/copy';
 import type { TimelineMarkerCluster } from '~/routing/timeline/types';
 import { formatTimelineTimestamp } from '~/routing/timeline/utils/formatters';
 

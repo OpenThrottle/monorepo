@@ -1,7 +1,7 @@
 import type { MetaDescriptor } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import { BLOG_COPY } from '~/routing/blog/data/data.copy';
+import { BLOG_COPY } from '~/routing/blog/data/copy';
 import {
   MOCK_BLOG_POST_DETAIL,
   MOCK_BLOG_TAG,

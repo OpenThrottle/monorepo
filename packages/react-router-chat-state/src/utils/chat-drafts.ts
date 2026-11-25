@@ -1,5 +1,5 @@
-import type { ChatDraftsState } from '../data/data.chat-drafts-state';
-import { CHAT_DRAFTS_STATE_VERSION } from '../data/data.chat-drafts-state';
+import type { ChatDraftsState } from '../data/chat-drafts-state';
+import { CHAT_DRAFTS_STATE_VERSION } from '../data/chat-drafts-state';
 
 /**
  * @description The stored draft for `key`, or `''` when there is none.

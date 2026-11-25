@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { THEME_TOKEN_NAMES } from '../../data/data.theme-tokens';
-import { THEMES } from '../../data/data.themes';
+import { THEME_TOKEN_NAMES } from '../../data/theme-tokens';
+import { THEMES } from '../../data/themes';
 import { buildThemeStylesheet, getTheme, isThemeId } from '../theme';
 
 describe('theme registry', () => {

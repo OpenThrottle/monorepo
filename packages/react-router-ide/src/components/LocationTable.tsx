@@ -12,7 +12,7 @@ import * as React from 'react';
 import type {
   DefinitionLocation,
   ReferenceLocation,
-} from '../data/data.view-models';
+} from '../data/view-models';
 
 export interface LocationTableProps {
   rows: (DefinitionLocation | ReferenceLocation)[];

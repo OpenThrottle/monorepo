@@ -16,7 +16,7 @@ import {
 import * as React from 'react';
 import { Form } from 'react-router';
 
-import { AUTH_COPY } from '~/routing/auth/data/data.copy';
+import { AUTH_COPY } from '~/routing/auth/data/copy';
 
 export interface AuthSignInFormProps {
   readonly className: string | undefined;

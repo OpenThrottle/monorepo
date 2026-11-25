@@ -27,7 +27,7 @@ import {
   RUN_DETAIL_COPY,
   RUN_STATUS_TO_JOB_STATE,
   SCHEDULED_AGENT_JOBS_QUEUE_NAME,
-} from '~/routing/schedule/data/data.run-detail';
+} from '~/routing/schedule/data/run-detail';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

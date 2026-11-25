@@ -5,7 +5,7 @@ import * as React from 'react';
 import { createRoutesStub, useSearchParams } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { RULES_COPY } from '../../data/data.copy';
+import { RULES_COPY } from '../../data/copy';
 import type { RulesToolbarProps } from '../RulesToolbar';
 import { RulesToolbar } from '../RulesToolbar';
 

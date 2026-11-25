@@ -4,10 +4,10 @@ import { useAtomValue } from 'jotai';
 import * as React from 'react';
 import { Form } from 'react-router';
 
-import { atomFragmentDraft } from '../data/data.atom.fragment-draft';
-import { CORE_FORM_COPY } from '../data/data.copy';
-import { CoreFormContext } from '../data/data.core-form-context';
-import { FORM_FIELDS } from '../data/data.form-fields';
+import { atomFragmentDraft } from '../data/atom.fragment-draft';
+import { CORE_FORM_COPY } from '../data/copy';
+import { CoreFormContext } from '../data/core-form-context';
+import { FORM_FIELDS } from '../data/form-fields';
 import type { CmsParsedSchema } from '../types/cms-json-schema';
 import type {
   CmsFormChildren,

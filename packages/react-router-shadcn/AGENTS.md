@@ -40,7 +40,7 @@ theme for all React Router apps. The base layer of the `react-router-*` UI stack
 - [src/theme-safelist.css](src/theme-safelist.css) is generated from `THEME_TOKEN_NAMES` by
   [utils/theme.ts](src/utils/theme.ts) and drift-checked by a file snapshot in
   its test. After changing a token, its `@theme` mapping or the prefix list in
-  `data/data.theme-safelist.ts`, regenerate with
+  `data/theme-safelist.ts`, regenerate with
   `pnpm nx run @openthrottle/react-router-shadcn:test -- -u theme-safelist`. A token with no
   `--color-*` in `theme.css` `@theme` safelists a class Tailwind never generates.
 - Theme changes ripple to every app and UI package at once; tokens and dark-mode overrides are

@@ -18,12 +18,12 @@ import { CmsLayoutDetailDocument } from '~/__generated__/graphql';
 import { GlobalDetailList } from '~/global/components/GlobalDetailList';
 import { GlobalTable } from '~/global/components/GlobalTable';
 import { SITE_TITLE } from '~/global/config/settings';
-import { CMS_LAYOUT_DETAIL_FIELDS } from '~/global/data/data.cms-detail-fields';
-import { CMS_LAYOUT_FRAGMENT_COLUMNS } from '~/global/data/data.cms-table-columns';
+import { CMS_LAYOUT_DETAIL_FIELDS } from '~/global/data/cms-detail-fields';
+import { CMS_LAYOUT_FRAGMENT_COLUMNS } from '~/global/data/cms-table-columns';
 import { fetchAuthGraphql } from '~/global/utils/graphql.server';
 import { requireRecord } from '~/global/utils/requireRecord';
 import { toCmsFragments } from '~/global/utils/toCmsFragments';
-import { LAYOUT_DETAIL_COPY } from '~/routing/layouts/data/data.copy';
+import { LAYOUT_DETAIL_COPY } from '~/routing/layouts/data/copy';
 import {
   getLayoutFragmentRowHref,
   getLayoutFragmentRowId,

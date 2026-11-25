@@ -16,7 +16,7 @@ pages are assembled from, ported from the RocketCMS library
   Carousel, Heading, Hero, Image, Layout, Link, Tweet, Wysiwyg), scaffolded with
   `@tools/generators:react` (`--destination=@openthrottle/react-router-cms-ui`).
 - [src/types.ts](src/types.ts) — `CmsComponentDebug`, the shape of every component's `debug` static.
-- [src/data/](src/data/) — copy (`data.copy.ts`) and lookup tables the components read (button
+- [src/data/](src/data/) — copy (`data/copy.ts`) and lookup tables the components read (button
   sizes/variants, card icons, heading tags, Wysiwyg descendant classes). Not exported.
 - [schemas/](schemas/) — **generated**: one `<Block>.schema.json` (JSON Schema draft 7) per block
   plus `manifest.json` (`typename`, content-hash `version`, `file`). Never hand-edit; regenerate

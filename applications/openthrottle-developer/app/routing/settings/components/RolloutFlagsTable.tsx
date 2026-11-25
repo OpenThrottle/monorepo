@@ -6,7 +6,7 @@ import { Link } from 'react-router';
 
 import type { RolloutFlagFieldsFragment } from '~/__generated__/graphql';
 import { RolloutFlagsTableRowActions } from '~/routing/settings/components/RolloutFlagsTableRowActions';
-import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
+import { ROLLOUT_COPY } from '~/routing/settings/data/copy';
 import {
   formatRolloutAllocationSummary,
   formatRolloutTimestamp,

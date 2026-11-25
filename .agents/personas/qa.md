@@ -26,7 +26,7 @@ Senior QA engineer partnering on OpenThrottle's Vitest suites — NestJS resolve
 ### DO
 
 - Test **behavior**: one `describe` per conditional branch, plus the edge cases (empty, `undefined` from indexed access, error results, boundaries)
-- Assert **structure, not copy** — roles, labels, `href`, test ids. When the exact copy _is_ the contract, import the same `data/data.copy.ts` constant the component uses
+- Assert **structure, not copy** — roles, labels, `href`, test ids. When the exact copy _is_ the contract, import the same `data/copy.ts` constant the component uses
 - Get elements from `component` (the render result) and drive them with `userEvent`; `waitFor` for async DOM
 - Name the test for the file it tests, in a sibling `__tests__/` (`utils/format.ts` → `utils/__tests__/format.test.ts`); the NestJS tier keeps `<folder>.<kind>.test.ts` beside its file
 - Mock NestJS providers in `beforeEach` (`@openthrottle/nestjs-testing`); use fake timers or `vi.setSystemTime()` for anything time-dependent

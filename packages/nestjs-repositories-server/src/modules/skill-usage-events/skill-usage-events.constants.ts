@@ -13,7 +13,7 @@ export const SKILL_USAGE_DEFAULT_BRANCHES = ['main', 'master'] as const;
  * in Postgres by `skill_usage_events_scope_check`, mirrored (deliberately, to
  * avoid a React Router app importing from a NestJS package) by
  * `SKILL_USAGE_SCOPES` in
- * `applications/openthrottle-developer/app/routing/usage/data/data.skill-usage-copy.ts`,
+ * `applications/openthrottle-developer/app/routing/usage/data/skill-usage-copy.ts`,
  * and by the `Scope` union in `packages/agentic-hooks/src/types.ts` which the
  * capture hooks bundle. Widening the vocabulary means touching all three.
  *

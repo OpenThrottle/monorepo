@@ -1,6 +1,6 @@
 import { createJSONStorage } from 'jotai/utils';
 
-import type { ChatDraftsState } from '../data/data.chat-drafts-state';
+import type { ChatDraftsState } from '../data/chat-drafts-state';
 import { normalizeChatDraftsState } from './normalizeChatDraftsState';
 
 /**

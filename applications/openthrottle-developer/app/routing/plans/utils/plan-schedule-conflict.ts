@@ -1,7 +1,7 @@
 import { toErrorMessageOr } from '@openthrottle/nodejs-utils';
 import { isGraphqlResponseError } from '@openthrottle/react-router-graphql';
 
-import { PLAN_SCHEDULE_CONFIRM_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_SCHEDULE_CONFIRM_COPY } from '~/routing/plans/data/copy';
 
 /**
  * @description The `extensions.code` values the server rejects a run-now or schedule request with

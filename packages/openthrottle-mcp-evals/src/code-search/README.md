@@ -34,7 +34,7 @@ code search reports `available: false`, 2 on a usage or connection error.
 
 ## Cases
 
-[`data/data.cases.ts`](./data/data.cases.ts): a `body` case pastes the code a diff would add, an
+[`data/cases.ts`](./data/cases.ts): a `body` case pastes the code a diff would add, an
 `intent` case describes it in prose. `relevantPaths` is the existing home on the current tree, so a
 case whose home moves must be updated (the case-integrity test fails when a gold path disappears).
 Bump `CODE_SEARCH_DATASET_VERSION` whenever a gold set changes.
