@@ -5,6 +5,7 @@ import { MemoryRouter, useLoaderData, useSearchParams } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/projects._index';
+import { PROJECTS_INDEX_COPY } from '~/routing/projects/data/copy';
 import type { ProjectWithStats } from '~/routing/projects/types';
 import { buildRootMatch } from '~/testing/buildRootMatch';
 import { renderWithMemoryRouter } from '~/testing/route-fixtures';
@@ -118,6 +119,23 @@ describe('routes/projects._index.tsx', () => {
     });
     expect(newProjectLinks.length).toBeGreaterThanOrEqual(1);
     expect(newProjectLinks[0]).toHaveAttribute('href', '/projects/create');
+  });
+
+  test('should offer a New project action when projects exist', () => {
+    const component = render(
+      <MemoryRouter>
+        <Index
+          actionData={undefined}
+          loaderData={mockLoaderDataWithProjects}
+          matches={matches}
+          params={{}}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(
+      component.getByRole('link', { name: PROJECTS_INDEX_COPY.newProject }),
+    ).toHaveAttribute('href', '/projects/create');
   });
 
   describe('pagination', () => {

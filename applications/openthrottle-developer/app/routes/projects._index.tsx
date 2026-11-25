@@ -1,9 +1,7 @@
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
-import { Button } from '@openthrottle/react-router-shadcn';
 import { OpenThrottlePagination } from '@openthrottle/react-router-ui';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
-  GlobalHeading,
   GlobalScreen,
   GlobalStatsPanel,
   readSearchParam,
@@ -15,13 +13,12 @@ import {
   mergeRouteModuleMeta,
   parsePagination,
 } from '@openthrottle/react-router-utils';
-import { FolderPlusIcon, FoldersIcon } from 'lucide-react';
 import * as React from 'react';
-import { Link } from 'react-router';
 
 import type { Route } from '@/app/routes/+types/projects._index';
 import { GetProjectsDocument } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
+import { ProjectsIndexHeader } from '~/routing/projects/components/ProjectsIndexHeader';
 import { ProjectsStats } from '~/routing/projects/components/ProjectsStats';
 import { ProjectsTable } from '~/routing/projects/components/ProjectsTable';
 import { ProjectsToolbar } from '~/routing/projects/components/ProjectsToolbar';
@@ -141,24 +138,7 @@ export default function Component(
 
   return (
     <GlobalScreen beta={true}>
-      <div>
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <GlobalHeading heading="h1" icon={FoldersIcon} title="Projects" />
-
-          <Button asChild={true} className="gap-2" size="xs" variant="outline">
-            <Link prefetch="intent" to="/settings/repositories">
-              <FolderPlusIcon aria-hidden={true} className="size-4" />
-              Add repository
-            </Link>
-          </Button>
-        </div>
-
-        <p className="text-muted-foreground text-sm">
-          Projects are initiatives: an ordered list of plans across one or more
-          linked repositories. Each row shows how many of its plans are
-          completed.
-        </p>
-      </div>
+      <ProjectsIndexHeader />
 
       <GlobalStatsPanel>
         <ProjectsStats

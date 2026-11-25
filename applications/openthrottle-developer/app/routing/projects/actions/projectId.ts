@@ -19,6 +19,7 @@ import {
   MoveProjectPlanInputSchema,
   RemoveProjectTagInputSchema,
 } from '~/__generated__/schemas';
+import { PROJECT_PLANS_COPY } from '~/routing/projects/data/copy';
 
 const parseProjectTagForm = (
   intent: 'addProjectTag' | 'removeProjectTag',
@@ -39,6 +40,46 @@ const parseProjectTagForm = (
 const readField = (formData: FormData, key: string): string => {
   const value = formData.get(key);
   return typeof value === 'string' ? value.trim() : '';
+};
+
+/**
+ * @description Adds every submitted `planId` in the order picked. The adds run
+ * one at a time on purpose: each appends after the project's current last plan,
+ * so concurrent adds would race for the same sort position. A failed add does
+ * not stop the rest; the result names how many did not land.
+ */
+const addPlansToProject = async (
+  args: Route.ActionArgs,
+  projectId: string,
+  formData: FormData,
+) => {
+  const planIds = formData
+    .getAll('planId')
+    .filter((value) => typeof value === 'string')
+    .map((value) => value.trim())
+    .filter((value) => value !== '');
+  if (planIds.length === 0) {
+    return { projectError: 'Pick at least one plan to add.' };
+  }
+
+  let failed = 0;
+  for (const planId of planIds) {
+    try {
+      // eslint-disable-next-line no-await-in-loop -- sequential by design: each add appends at the current end of the order
+      await executeGraphqlWithAuth(args.request, ProjectDetailAddPlanDocument, {
+        input: { planId, projectId },
+      });
+    } catch {
+      failed += 1;
+    }
+  }
+
+  if (failed > 0) {
+    return {
+      projectError: `${PROJECT_PLANS_COPY.addFailedPrefix} ${failed} of ${planIds.length} plans.`,
+    };
+  }
+  return { projectUpdated: true };
 };
 
 const runProjectStructureIntent = async (
@@ -62,10 +103,8 @@ const runProjectStructureIntent = async (
       ProjectDetailUnlinkRepositoryDocument,
       { input: { projectId, repositoryId } },
     );
-  } else if (intent === 'addPlanToProject' && planId !== '') {
-    await executeGraphqlWithAuth(args.request, ProjectDetailAddPlanDocument, {
-      input: { planId, projectId },
-    });
+  } else if (intent === 'addPlanToProject') {
+    return addPlansToProject(args, projectId, formData);
   } else if (intent === 'removePlanFromProject' && planId !== '') {
     await executeGraphqlWithAuth(
       args.request,

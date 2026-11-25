@@ -15,11 +15,13 @@ import { SITE_TITLE } from '~/global/config/settings';
 import {
   addHook,
   addPlanTag,
+  assignPlanProject,
   cancelPlanRun,
   detachHook,
   evaluatePlanRules,
   forceSettlePlanRun,
   postPlanMessage,
+  removePlanProject,
   removePlanTag,
   reschedulePlanRun,
   runPlan,
@@ -129,6 +131,8 @@ export const action = async (args: Route.ActionArgs) => {
       return addHook(args, planId, formData);
     case 'addPlanTag':
       return addPlanTag(args, planId, formData);
+    case 'assignPlanProject':
+      return assignPlanProject(args, planId, formData);
     case 'cancelPlanRun':
       return cancelPlanRun(args, planId, formData);
     case 'detachHook':
@@ -139,6 +143,8 @@ export const action = async (args: Route.ActionArgs) => {
       return forceSettlePlanRun(args, formData);
     case 'postPlanMessage':
       return postPlanMessage(args, planId, formData);
+    case 'removePlanProject':
+      return removePlanProject(args, planId);
     case 'removePlanTag':
       return removePlanTag(args, planId, formData);
     case 'reschedulePlanRun':

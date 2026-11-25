@@ -3,7 +3,6 @@ query getProjectForEdit($id: ID!) {
     description
     id
     name
-    nxProjectName
     updatedAt
   }
 }
@@ -13,7 +12,10 @@ mutation updateProject($input: UpdateProjectInput!) {
     description
     id
     name
-    nxProjectName
     updatedAt
   }
+}
+
+mutation ProjectEditDeleteProject($input: DeleteProjectInput!) {
+  deleteProject(input: $input)
 }

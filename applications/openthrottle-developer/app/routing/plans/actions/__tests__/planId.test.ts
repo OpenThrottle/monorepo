@@ -16,9 +16,11 @@ const { executeGraphqlWithAuth } =
   await import('@openthrottle/react-router-graphql');
 const {
   PlanDetailAddPlanTagDocument,
+  PlanDetailAddPlanToProjectDocument,
   PlanDetailAddHookDocument,
   PlanDetailDetachHookDocument,
   PlanDetailEnqueuePlanRunDocument,
+  PlanDetailRemovePlanFromProjectDocument,
   PlanDetailReschedulePlanRunDocument,
   PlanDetailSetPlanStatusDocument,
   PlanDetailUpdatePlanRunConfigDocument,
@@ -26,6 +28,8 @@ const {
 } = await import('~/__generated__/graphql');
 const {
   addPlanTag,
+  assignPlanProject,
+  removePlanProject,
   removePlanTag,
   reschedulePlanRun,
   addHook,
@@ -422,5 +426,58 @@ describe('plans/actions/planId reschedulePlanRun', () => {
     expect(result).toEqual({
       reschedulePlanRunError: 'Run is already starting.',
     });
+  });
+});
+
+describe('plans/actions/planId project assignment', () => {
+  beforeEach(() => {
+    mockExecute.mockReset();
+  });
+
+  test('assignPlanProject injects the route planId', async () => {
+    mockExecute.mockResolvedValue(
+      asMock<Awaited<ReturnType<typeof executeGraphqlWithAuth>>>({
+        addPlanToProject: { id: 'plan-1', projectId: 'project-2' },
+      }),
+    );
+    const args = actionArgs();
+
+    const result = await assignPlanProject(
+      args,
+      'plan-1',
+      form({ intent: 'assignPlanProject', projectId: 'project-2' }),
+    );
+
+    expect(mockExecute).toHaveBeenCalledWith(
+      args.request,
+      PlanDetailAddPlanToProjectDocument,
+      { input: { planId: 'plan-1', projectId: 'project-2' } },
+    );
+    expect(result).toEqual({ planProjectUpdated: true });
+  });
+
+  test('assignPlanProject rejects a missing project id without a request', async () => {
+    const result = await assignPlanProject(
+      actionArgs(),
+      'plan-1',
+      form({ intent: 'assignPlanProject' }),
+    );
+
+    expect(result).toHaveProperty('planProjectError');
+    expect(mockExecute).not.toHaveBeenCalled();
+  });
+
+  test('removePlanProject clears the project and surfaces a failure', async () => {
+    mockExecute.mockRejectedValue(new Error('nope'));
+    const args = actionArgs();
+
+    const result = await removePlanProject(args, 'plan-1');
+
+    expect(mockExecute).toHaveBeenCalledWith(
+      args.request,
+      PlanDetailRemovePlanFromProjectDocument,
+      { input: { planId: 'plan-1' } },
+    );
+    expect(result).toEqual({ planProjectError: 'nope' });
   });
 });

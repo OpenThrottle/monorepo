@@ -9,6 +9,8 @@ import { SearchAlertIcon } from 'lucide-react';
 import * as React from 'react';
 import { Link } from 'react-router';
 
+import { PROJECTS_INDEX_COPY } from '~/routing/projects/data/copy';
+
 export interface ProjectsEmptyProps {
   className?: string;
 }
@@ -39,9 +41,9 @@ export const ProjectsEmpty = (
       <EmptyDescription>
         Create your first project to get started.
       </EmptyDescription>
-      <Link to="/projects/create">
-        <Button variant="secondary">New project</Button>
-      </Link>
+      <Button asChild={true} variant="secondary">
+        <Link to="/projects/create">{PROJECTS_INDEX_COPY.newProject}</Link>
+      </Button>
     </Empty>
   );
 };

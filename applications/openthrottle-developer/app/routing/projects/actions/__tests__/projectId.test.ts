@@ -3,6 +3,7 @@ import { createTestRouterContext } from '@openthrottle/react-router-testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/projects.$projectId._index';
+import { PROJECT_PLANS_COPY } from '~/routing/projects/data/copy';
 
 // Keep the real `parseFormData`; only stub the network call. `importOriginal`
 // is SSR-safe under node (the package's `window.env` read is `IS_BROWSER`-gated).
@@ -171,6 +172,34 @@ describe('projects/actions/projectId tag parser', () => {
 
       expect(result).toHaveProperty('projectError');
       expect(mockExecute).not.toHaveBeenCalled();
+    });
+
+    test('adds several plans one at a time in the order picked', async () => {
+      const formData = form({ intent: 'addPlanToProject' });
+      formData.append('planId', 'plan-1');
+      formData.append('planId', 'plan-2');
+
+      const result = await runProjectDetailAction(actionArgs(formData));
+
+      expect(result).toEqual({ projectUpdated: true });
+      expect(mockExecute.mock.calls.map((call) => call[2])).toEqual([
+        { input: { planId: 'plan-1', projectId: 'proj-1' } },
+        { input: { planId: 'plan-2', projectId: 'proj-1' } },
+      ]);
+    });
+
+    test('keeps adding after a failure and reports how many did not land', async () => {
+      mockExecute.mockRejectedValueOnce(new Error('gone'));
+      const formData = form({ intent: 'addPlanToProject' });
+      formData.append('planId', 'plan-1');
+      formData.append('planId', 'plan-2');
+
+      const result = await runProjectDetailAction(actionArgs(formData));
+
+      expect(mockExecute).toHaveBeenCalledTimes(2);
+      expect(result).toEqual({
+        projectError: `${PROJECT_PLANS_COPY.addFailedPrefix} 1 of 2 plans.`,
+      });
     });
 
     test('surfaces a server failure as projectError', async () => {

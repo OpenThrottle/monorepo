@@ -1,29 +1,33 @@
-import {
-  executeGraphqlWithAuth,
-  parseFormData,
-} from '@openthrottle/react-router-graphql';
+import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
-import { GlobalScreen } from '@openthrottle/react-router-ui-global';
-import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalErrorBoundary,
+  GlobalHeading,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import { FolderPenIcon } from 'lucide-react';
 import * as React from 'react';
-import { redirect } from 'react-router';
-import { z } from 'zod/v3';
 
 import type { Route } from '@/app/routes/+types/projects.$projectId.edit';
-import {
-  GetProjectForEditDocument,
-  UpdateProjectDocument,
-} from '~/__generated__/graphql';
-import { UpdateProjectInputSchema } from '~/__generated__/schemas';
+import { GetProjectForEditDocument } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
+import {
+  deleteProject,
+  updateProject,
+} from '~/routing/projects/actions/project-edit';
+import { ProjectDeleteZone } from '~/routing/projects/components/ProjectDeleteZone';
 import { ProjectForm } from '~/routing/projects/components/ProjectForm';
 import { ProjectNotFound } from '~/routing/projects/components/ProjectNotFound';
+import {
+  PROJECT_EDIT_COPY,
+  PROJECT_FORM_COPY,
+} from '~/routing/projects/data/copy';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
-  breadcrumb: (_match) => 'Edit',
+  breadcrumb: (_match) => PROJECT_EDIT_COPY.breadcrumb,
   links: (match) => {
     const project = match.loaderData?.project;
     const links = [{ children: 'Projects', to: '/projects' }];
@@ -84,16 +88,22 @@ export default function Component(
 
   return (
     <GlobalScreen>
+      <GlobalHeading
+        heading="h1"
+        icon={FolderPenIcon}
+        title={`${PROJECT_EDIT_COPY.headingPrefix} ${project.name}`}
+      />
       <ProjectForm
         actionData={actionData}
         cancelTo={`/projects/${project.id}`}
         defaultValues={{
           description: project.description,
           name: project.name,
-          nxProjectName: project.nxProjectName,
         }}
-        submitLabel="Save changes"
+        repositories={undefined}
+        submitLabel={PROJECT_FORM_COPY.saveSubmit}
       />
+      <ProjectDeleteZone projectName={project.name} />
     </GlobalScreen>
   );
 }
@@ -101,48 +111,14 @@ export default function Component(
 export const action = async (args: Route.ActionArgs) => {
   const projectId = args.params.projectId;
   const formData = await args.request.formData();
+  const intent = formData.get('intent');
 
-  // `id` is the route param. `name` is required at the UI layer (the generated
-  // Update schema leaves it optional), so tighten it to `min(1)`. `description`
-  // and `nxProjectName` clear to `null` when blank, matching the edit form.
-  const parsed = parseFormData(
-    formData,
-    UpdateProjectInputSchema()
-      .omit({ id: true })
-      .extend({ name: z.string().min(1) }),
-  );
-  if (!parsed.success) {
-    return { error: 'Project name is required.' };
+  // The edit form posts no intent; the delete zone posts `deleteProject`.
+  if (intent === 'deleteProject') {
+    return deleteProject(args, projectId);
   }
 
-  const input = {
-    description: parsed.data.description ?? null,
-    id: projectId,
-    name: parsed.data.name,
-    nxProjectName: parsed.data.nxProjectName ?? null,
-  };
-
-  try {
-    const result = await executeGraphqlWithAuth(
-      args.request,
-      UpdateProjectDocument,
-      { input },
-    );
-
-    if (!result.updateProject?.id) {
-      return { error: 'Failed to update project.' };
-    }
-
-    return redirect(`/projects/${result.updateProject.id}`);
-  } catch (error) {
-    const isError = error instanceof Error;
-    const message = isError ? error.message : 'Failed to update project.';
-
-    return { error: message };
-  }
-
-  // 🚨 Default to invalid action error when no intent is provided.
-  // throw new Error('Invalid intent');
+  return updateProject(args, projectId, formData);
 };
 
 export const ErrorBoundary = GlobalErrorBoundary;

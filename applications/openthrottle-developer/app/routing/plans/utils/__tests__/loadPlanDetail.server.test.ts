@@ -14,6 +14,7 @@ describe('loadPlanDetail', () => {
       expect(result.tasks).toEqual([]);
       await expect(result.inboxMessages).resolves.toEqual([]);
       await expect(result.workspaceRepositories).resolves.toEqual([]);
+      await expect(result.projects).resolves.toEqual([]);
     });
   });
 });

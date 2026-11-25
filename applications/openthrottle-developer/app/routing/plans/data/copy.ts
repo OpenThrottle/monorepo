@@ -733,3 +733,18 @@ export const PLAN_WORKFLOW_CONFIG_ACTIONS_COPY = {
 export const PLAN_WORKFLOW_CONFIG_TARGET_COPY = {
   invalidIdWarning: `Value does not match a UUID pattern; validation may fail.`,
 } as const;
+
+/**
+ * @description Copy for {@link PlanProjectControl}: the plan header's project
+ * badge and its assign / move / remove picker.
+ */
+export const PLAN_PROJECT_COPY = {
+  add: `Add to project`,
+  badgeAriaPrefix: `Project:`,
+  change: `Move`,
+  empty: `No projects match.`,
+  loading: `Loading projects…`,
+  noOtherProjects: `No other projects yet.`,
+  remove: `Remove from project`,
+  search: `Search projects…`,
+} as const;

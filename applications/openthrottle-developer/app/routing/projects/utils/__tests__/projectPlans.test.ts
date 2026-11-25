@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
 import {
+  buildNewPlanPrompt,
   getAvailablePlans,
   getProjectPlanProgress,
   getUnlinkedRepositories,
@@ -42,5 +43,15 @@ describe('getUnlinkedRepositories', () => {
     expect(getUnlinkedRepositories(all, [{ id: 'r1' }])).toEqual([
       { id: 'r2' },
     ]);
+  });
+});
+
+describe('buildNewPlanPrompt', () => {
+  test('names the project and the projectId to pass to create_plan', () => {
+    const prompt = buildNewPlanPrompt({ id: 'proj-1', name: 'Atlas' });
+
+    expect(prompt).toContain('"Atlas"');
+    expect(prompt).toContain('projectId: proj-1');
+    expect(prompt).toContain('create_plan');
   });
 });

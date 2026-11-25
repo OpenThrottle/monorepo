@@ -4,6 +4,7 @@ import { NotebookTextIcon } from 'lucide-react';
 import * as React from 'react';
 
 import type { PlanDetailsFragment } from '~/__generated__/graphql';
+import { PlanProjectControl } from '~/routing/plans/components/PlanProjectControl';
 import { PlanStatusBadge } from '~/routing/plans/components/PlanStatusBadge';
 import { PlanUnscheduleAction } from '~/routing/plans/components/PlanUnscheduleAction';
 import type { PlanStatusKey } from '~/routing/plans/types';
@@ -31,11 +32,7 @@ export const PlanDetailRouteHeader = (
   // Hooks
 
   // Setup
-
-  // Most plans carry no project, so the chip is conditional rather than an
-  // "unassigned" placeholder that would sit on every other plan header.
   const title = plan.title ?? 'Untitled';
-  const _project = plan.projectRelation;
   const showUnschedule = !FEATURE_BETA_PREVIEW && status === 'SCHEDULED';
 
   // Handlers
@@ -75,22 +72,7 @@ export const PlanDetailRouteHeader = (
             />
           )}
 
-          {/* {project ? (
-            <Badge
-              asChild={true}
-              color="sky"
-              data-testid="PlanProjectBadge"
-              size="xs"
-            >
-              <Link
-                aria-label={`Project: ${project.name}`}
-                to={`/projects/${project.id}`}
-              >
-                <FolderGit2Icon />
-                {project.name}
-              </Link>
-            </Badge>
-          ) : null} */}
+          <PlanProjectControl project={plan.projectRelation} />
 
           {authorLine}
           {assigneeOnlyLine}
