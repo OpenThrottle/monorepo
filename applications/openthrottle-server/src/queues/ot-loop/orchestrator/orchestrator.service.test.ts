@@ -10,8 +10,13 @@ import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
   PlanRunsRepository,
   PlanRunsRepositoryMock,
+  PlanTag,
+  PlanTagsRepository,
 } from '@openthrottle/nestjs-repositories-server';
-import { createPlanRunsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import {
+  createPlanRunsRepositoryMock,
+  createPlanTagsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import { asMock } from '@openthrottle/nestjs-testing';
 import type {
   LoopDeps,
@@ -134,6 +139,7 @@ describe('OtLoopOrchestratorService', () => {
   const calls: { document: unknown; variables: unknown }[] = [];
   let tasks: LoopTask[];
   let planRunsRepository: PlanRunsRepositoryMock;
+  let planTagsRepository: ReturnType<typeof createPlanTagsRepositoryMock>;
   let prepare: ReturnType<typeof vi.fn<PlanRunWorkspaceService['prepare']>>;
   let service: OtLoopOrchestratorService;
 
@@ -193,6 +199,7 @@ describe('OtLoopOrchestratorService', () => {
     tasks = [task()];
     planRunsRepository = createPlanRunsRepositoryMock();
     planRunsRepository.readCancelRequested.mockResolvedValue(null);
+    planTagsRepository = createPlanTagsRepositoryMock();
     prepare = vi.fn<PlanRunWorkspaceService['prepare']>();
     prepare.mockResolvedValue(
       asMock<PreparedPlanRunWorkspace>({
@@ -227,6 +234,7 @@ describe('OtLoopOrchestratorService', () => {
       createMock<LoggerService>(),
       createMock<PlanRunsRepository>(planRunsRepository),
       createMock<PlanRunWorkspaceService>({ prepare }),
+      asMock<PlanTagsRepository>(planTagsRepository),
     );
   });
 
@@ -258,6 +266,42 @@ describe('OtLoopOrchestratorService', () => {
       prepare.mockRejectedValueOnce(new Error('worktree provisioning failed'));
 
       await expect(runJob()).rejects.toThrow('worktree provisioning failed');
+    });
+  });
+
+  describe('a plan tagged `no-plan-run`', () => {
+    const tagRow = (tag: string): PlanTag => {
+      return asMock<PlanTag>({ planId: PLAN_ID, tag });
+    };
+
+    it('refuses before provisioning a worktree or starting the loop', async () => {
+      planTagsRepository.listByPlanId.mockResolvedValue([
+        tagRow('no-plan-run'),
+      ]);
+
+      const result = await runJob();
+
+      expect(result).toEqual({
+        exitCode: 1,
+        reason: 'workflow_input_required',
+        status: 'failed',
+      });
+      expect(planTagsRepository.listByPlanId).toHaveBeenCalledWith(PLAN_ID);
+      expect(prepare).not.toHaveBeenCalled();
+      expect(mocks.runOtLoop).not.toHaveBeenCalled();
+      expect(mocks.finalizeOtLoopRun).not.toHaveBeenCalled();
+      expect(JSON.stringify(callsTo(AppendPlanOutputDocument))).toContain(
+        'tagged `no-plan-run`',
+      );
+    });
+
+    it('runs a plan with other tags as usual', async () => {
+      planTagsRepository.listByPlanId.mockResolvedValue([tagRow('social')]);
+
+      await runJob();
+
+      expect(prepare).toHaveBeenCalledTimes(1);
+      expect(mocks.runOtLoop).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -547,6 +591,7 @@ describe('OtLoopOrchestratorService', () => {
         createMock<LoggerService>(),
         createMock<PlanRunsRepository>(planRunsRepository),
         createMock<PlanRunWorkspaceService>({ prepare }),
+        asMock<PlanTagsRepository>(planTagsRepository),
       );
 
       const result = await runJob();

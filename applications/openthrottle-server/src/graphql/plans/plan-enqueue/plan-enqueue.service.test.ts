@@ -17,6 +17,7 @@ import type {
 } from '@openthrottle/nestjs-repositories-server';
 import {
   PlanRun as PlanRunEntity,
+  PlanTag,
   Task,
 } from '@openthrottle/nestjs-repositories-server';
 import {
@@ -55,6 +56,7 @@ import { buildPlanRunConfigSnapshotFromJobData } from '../enqueue-plan-run-confi
 import { buildRunPlanOrchestratorJobData } from '../enqueue-plan-run-tuning/enqueue-plan-run-tuning.utils.ts';
 import type { PlanStatusService } from '../plan-status/plan-status.service.ts';
 import { PlanEnqueueService } from './plan-enqueue.service.ts';
+import { PLAN_RUN_EXCLUDED_BY_TAG_CODE } from './run-excluded-tags/run-excluded-tags.constants.ts';
 
 // `runConfig` is a plain stored shell, not an auto-mocked proxy: the enqueue parses
 // `runConfig.run`, and a proxy would answer with a function.
@@ -106,6 +108,11 @@ describe('PlanEnqueueService', () => {
     update: vi.fn().mockResolvedValue(undefined),
   };
 
+  // plan_tags reads (the run-excluded-tag guard in prepareOrchestratorRun). Untagged by default.
+  const planTagRepo = {
+    find: vi.fn().mockResolvedValue([]),
+  };
+
   // plan_runs reads inside a transaction (the fire-time re-read of the scheduled row).
   const planRunRepo = {
     findOne: vi.fn().mockResolvedValue(null),
@@ -115,9 +122,13 @@ describe('PlanEnqueueService', () => {
     findOne: vi.fn().mockResolvedValue(mockPlan),
     manager: {
       // Non-transactional reads (the runnable-task guard in prepareOrchestratorRun).
-      getRepository: vi.fn((entity: unknown) =>
-        entity === Task ? taskRepo : repo,
-      ),
+      getRepository: vi.fn((entity: unknown) => {
+        if (entity === Task) {
+          return taskRepo;
+        }
+
+        return entity === PlanTag ? planTagRepo : repo;
+      }),
       transaction: vi.fn(
         async (
           cb: (manager: {
@@ -273,6 +284,7 @@ describe('PlanEnqueueService', () => {
     mockResolveSessionId.mockReset().mockResolvedValue('session-1');
     planRunRepo.findOne.mockReset().mockResolvedValue(null);
     taskRepo.count.mockReset().mockResolvedValue(1);
+    planTagRepo.find.mockReset().mockResolvedValue([]);
     planRunsRepository.hasActiveRun.mockReset().mockResolvedValue(false);
     planRunsRepository.transitionScheduledRun
       .mockReset()
@@ -336,6 +348,89 @@ describe('PlanEnqueueService', () => {
       ).rejects.toBeInstanceOf(NotFoundException);
       expect(mockAdd).not.toHaveBeenCalled();
       expect(mockEnqueuePlanRun).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('a plan tagged `no-plan-run`', () => {
+    beforeEach(() => {
+      planTagRepo.find.mockResolvedValue([
+        { planId: mockPlan.id, tag: 'no-plan-run' },
+      ]);
+    });
+
+    test('enqueuePlanRun refuses it with PLAN_RUN_EXCLUDED_BY_TAG and writes nothing', async () => {
+      const extensions = await expectScheduleConflict(
+        service.enqueueOrchestrator({
+          branch: 'feature/test',
+          mode: null,
+          planId: mockPlan.id,
+          priority: null,
+          taskId: null,
+          workingDirectory: null,
+        }),
+      );
+
+      expect(extensions).toEqual({
+        code: PLAN_RUN_EXCLUDED_BY_TAG_CODE,
+        planId: mockPlan.id,
+        tag: 'no-plan-run',
+      });
+      expect(planTagRepo.find).toHaveBeenCalledWith({
+        where: { planId: mockPlan.id },
+      });
+      expect(planRunsRepository.recordQueuedRun).not.toHaveBeenCalled();
+      expect(mockApplyStatusChange).not.toHaveBeenCalled();
+      expect(mockEnqueuePlanRun).not.toHaveBeenCalled();
+    });
+
+    test('a task-targeted run is refused too', async () => {
+      const extensions = await expectScheduleConflict(
+        service.enqueueOrchestrator({
+          branch: 'feature/test',
+          mode: 'task',
+          planId: mockPlan.id,
+          priority: null,
+          taskId: 'task-1',
+          workingDirectory: null,
+        }),
+      );
+
+      expect(extensions['code']).toBe(PLAN_RUN_EXCLUDED_BY_TAG_CODE);
+      expect(mockEnqueuePlanRun).not.toHaveBeenCalled();
+    });
+
+    test('schedulePlanRun refuses it and records no scheduled run', async () => {
+      const extensions = await expectScheduleConflict(
+        service.schedulePlanRun({
+          actorKind: 'user',
+          actorSub: 'user-1',
+          actorUserId: 'user-1',
+          branch: 'feature/scheduled',
+          planId: mockPlan.id,
+          scheduledFor: new Date(Date.now() + 60 * 60 * 1_000),
+        }),
+      );
+
+      expect(extensions['code']).toBe(PLAN_RUN_EXCLUDED_BY_TAG_CODE);
+      expect(planRunsRepository.recordQueuedRun).not.toHaveBeenCalled();
+      expect(mockEnqueuePlanRun).not.toHaveBeenCalled();
+    });
+
+    test('a plan tagged only `social` still enqueues', async () => {
+      planTagRepo.find.mockResolvedValue([
+        { planId: mockPlan.id, tag: 'social' },
+      ]);
+
+      const result = await service.enqueueOrchestrator({
+        branch: 'feature/test',
+        mode: null,
+        planId: mockPlan.id,
+        priority: null,
+        taskId: null,
+        workingDirectory: null,
+      });
+
+      expect(result.jobId).toBe('job-orch-1');
     });
   });
 

@@ -246,6 +246,9 @@
     },
     {
       "path": "./packages/nestjs-repositories-server"
+    },
+    {
+      "path": "./packages/openthrottle-social"
     }
   ]
 }

@@ -5,7 +5,8 @@
  * `GraphQLError`s on purpose (see `createPlanScheduleConflictError`), so a stale tab clicking
  * Schedule produced a full stack trace for an outcome the client handles with a confirm dialog.
  *
- * Conflicts carrying a {@link PLAN_SCHEDULE_CONFLICT_CODE} are logged at warn as one line, without
+ * Conflicts carrying a {@link PLAN_SCHEDULE_CONFLICT_CODE}, or a run refused by
+ * {@link PLAN_RUN_EXCLUDED_BY_TAG_CODE}, are logged at warn as one line, without
  * a stack. Every other `GraphQLError` is logged exactly as Nest's default would have. Both are
  * rethrown unchanged, so the client response is identical either way.
  */
@@ -15,10 +16,12 @@ import { Catch, Logger } from '@nestjs/common';
 import { GraphQLError } from 'graphql';
 
 import { PLAN_SCHEDULE_CONFLICT_CODE } from './plan-enqueue.constants.ts';
+import { PLAN_RUN_EXCLUDED_BY_TAG_CODE } from './run-excluded-tags/run-excluded-tags.constants.ts';
 
-const SCHEDULE_CONFLICT_CODES: ReadonlySet<unknown> = new Set(
-  Object.values(PLAN_SCHEDULE_CONFLICT_CODE),
-);
+const SCHEDULE_CONFLICT_CODES: ReadonlySet<unknown> = new Set([
+  ...Object.values(PLAN_SCHEDULE_CONFLICT_CODE),
+  PLAN_RUN_EXCLUDED_BY_TAG_CODE,
+]);
 
 @Catch(GraphQLError)
 export class PlanScheduleConflictFilter implements ExceptionFilter<GraphQLError> {
