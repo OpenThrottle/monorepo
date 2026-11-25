@@ -186,11 +186,19 @@ describe('routes/settings.agents.tsx', () => {
       within(claudeRow).queryByTestId('SettingsAgentsCliControlsLog'),
     ).not.toBeInTheDocument();
 
-    // Closing the dialog (which does not cancel the run) exposes View log.
+    // Closing the dialog does not cancel the run; the row keeps only the
+    // in-flight button, with no inline summary or View log.
     await user.keyboard('{Escape}');
+    expect(component.queryByRole('dialog')).not.toBeInTheDocument();
     expect(
-      within(claudeRow).getByRole('button', { name: 'View log' }),
-    ).toBeInTheDocument();
+      within(claudeRow).queryByTestId('SettingsAgentsCliControlsStatus'),
+    ).not.toBeInTheDocument();
+    expect(
+      within(claudeRow).queryByRole('button', { name: 'View log' }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(claudeRow).getByRole('button', { name: /Updating…/ }),
+    ).toBeDisabled();
   });
 
   test('shows the last-checked timestamp from the scan', async () => {

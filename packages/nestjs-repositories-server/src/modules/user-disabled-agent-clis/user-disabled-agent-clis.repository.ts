@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { CreateModelInput } from '@openthrottle/nestjs-postgres';
 import { BaseRepository } from '@openthrottle/nestjs-postgres';
-import { IsNull, Not, Repository } from 'typeorm';
+import { In, IsNull, Repository } from 'typeorm';
 
 import type { ModelPreferenceMap } from '../../model-preference-map/model-preference-map.types.ts';
 import { toModelPreferenceMap } from '../../model-preference-map/model-preference-map.utils.ts';
@@ -122,10 +122,11 @@ export class UserDisabledAgentClisRepository extends BaseRepository<
   }
 
   /**
-   * @description Enables or disables EVERY model of a driver for a user at once (the setup
-   * page's select-all). Enabling clears all per-model rows for the driver, leaving the
-   * agent-level row alone; disabling inserts a row for each id in `models` not already
-   * disabled. Both are idempotent, and disabling an empty `models` is a no-op.
+   * @description Enables or disables the listed `models` of a driver for a user at once (the
+   * setup page's select-all, over every model or only a filtered subset). Enabling deletes the
+   * per-model rows for exactly those ids, leaving other models and the agent-level row alone;
+   * disabling inserts a row for each id in `models` not already disabled. Both are idempotent,
+   * and an empty `models` is a no-op either way.
    */
   async setModelsEnabled(
     userId: string,
@@ -133,8 +134,11 @@ export class UserDisabledAgentClisRepository extends BaseRepository<
     models: readonly string[],
     enabled: boolean,
   ): Promise<void> {
+    if (models.length === 0) {
+      return;
+    }
     if (enabled) {
-      await this.removeMany({ driver, model: Not(IsNull()), userId });
+      await this.removeMany({ driver, model: In([...models]), userId });
       return;
     }
 

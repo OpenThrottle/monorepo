@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react';
+import { act, render, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
@@ -6,30 +6,65 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { AgentSetupActionResult } from '~/routes/resources.agent-setup';
 import type { AgentCliStatus } from '~/routing/settings/data/agent-clis';
-import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/copy';
 import type { UseAgentSetupStreamResult } from '~/routing/settings/hooks/useAgentSetupStream';
 
 import { SettingsAgentsCliControls } from '../SettingsAgentsCliControls';
 
 // Drive the run's stream directly: the real hook opens a graphql-ws
-// subscription, which is out of scope for the row's behavior.
+// subscription, which is out of scope for the row's behavior. Subscribers let
+// a test advance a live run (e.g. running → failed) without remounting.
 const { streamState } = vi.hoisted(() => {
   const initial: UseAgentSetupStreamResult = {
     chunks: [],
     done: false,
     error: null,
   };
-  return { streamState: { current: initial } };
+  return {
+    streamState: {
+      current: initial,
+      listeners: new Set<() => void>(),
+    },
+  };
 });
 
-vi.mock('~/routing/settings/hooks/useAgentSetupStream', () => ({
-  useAgentSetupStream: (runId: string | null): UseAgentSetupStreamResult => {
-    if (runId == null) {
-      return { chunks: [], done: false, error: null };
-    }
+vi.mock('~/routing/settings/hooks/useAgentSetupStream', async () => {
+  const ReactModule = await import('react');
+  const idle: UseAgentSetupStreamResult = {
+    chunks: [],
+    done: false,
+    error: null,
+  };
+  const subscribe = (listener: () => void): (() => void) => {
+    streamState.listeners.add(listener);
+    return () => {
+      streamState.listeners.delete(listener);
+    };
+  };
+  const getSnapshot = (): UseAgentSetupStreamResult => {
     return streamState.current;
-  },
-}));
+  };
+  return {
+    useAgentSetupStream: (runId: string | null): UseAgentSetupStreamResult => {
+      const current = ReactModule.useSyncExternalStore(subscribe, getSnapshot);
+      return runId == null ? idle : current;
+    },
+  };
+});
+
+const setStream = (next: UseAgentSetupStreamResult): void => {
+  act(() => {
+    streamState.current = next;
+    for (const listener of streamState.listeners) {
+      listener();
+    }
+  });
+};
+
+const failedStream: UseAgentSetupStreamResult = {
+  chunks: [],
+  done: true,
+  error: 'non-zero-exit',
+};
 
 const notInstalled: AgentCliStatus = {
   driver: 'grok',
@@ -80,7 +115,9 @@ const chunk = (
 
 const renderControls = (
   props: React.ComponentProps<typeof SettingsAgentsCliControls>,
-  actionResult: AgentSetupActionResult | { ok: boolean } = { ok: true },
+  actionResult: AgentSetupActionResult | Promise<never> | { ok: boolean } = {
+    ok: true,
+  },
 ) => {
   const Component = () => {
     return <SettingsAgentsCliControls {...props} />;
@@ -126,15 +163,30 @@ describe('SettingsAgentsCliControls', () => {
     });
     const button = component.getByRole('button', { name: 'Update' });
     expect(button).toBeEnabled();
-    // No run yet: no status line, no View log, no dialog.
+    // No run yet: just the button, no spinner, no dialog.
+    expect(component.queryByRole('status')).not.toBeInTheDocument();
     expect(
-      component.queryByRole('button', {
-        name: SETTINGS_AGENTS_COPY.setupLogViewButton,
-      }),
+      component.queryByTestId('SettingsAgentsSetupLogDialog'),
     ).not.toBeInTheDocument();
-    expect(
-      component.queryByTestId('SettingsAgentsCliControlsStatus'),
-    ).not.toBeInTheDocument();
+  });
+
+  describe('submitting', () => {
+    test('the button is disabled with a spinner before the run starts', async () => {
+      const user = userEvent.setup();
+      // An action that never settles holds the fetcher in `submitting`.
+      const component = renderControls(
+        { canManage: true, installEnabled: true, status: installed },
+        new Promise<never>(() => {}),
+      );
+
+      await user.click(component.getByRole('button', { name: 'Update' }));
+
+      const button = await component.findByRole('button', {
+        name: /Updating…/,
+      });
+      expect(button).toBeDisabled();
+      expect(within(button).getByRole('status')).toBeInTheDocument();
+    });
   });
 
   test('disabled-by-flag: button disabled, but the env explanation is NOT repeated here', () => {
@@ -184,7 +236,7 @@ describe('SettingsAgentsCliControls', () => {
       ).not.toBeInTheDocument();
     });
 
-    test('closing the dialog leaves a compact status and View log reopens it', async () => {
+    test('closing the dialog leaves only the in-flight spinner button', async () => {
       streamState.current = {
         chunks: [chunk('==> Fetching opencode\n')],
         done: false,
@@ -197,29 +249,23 @@ describe('SettingsAgentsCliControls', () => {
         component.queryByTestId('SettingsAgentsSetupLogDialog'),
       ).not.toBeInTheDocument();
 
-      const statusLine = component.getByTestId(
-        'SettingsAgentsCliControlsStatus',
-      );
-      expect(statusLine).toHaveAttribute('data-status', 'running');
-      expect(statusLine).toHaveTextContent('==> Fetching opencode');
+      // No inline output: neither the log line nor a View log button.
+      expect(
+        component.queryByTestId('SettingsAgentsCliControlsStatus'),
+      ).not.toBeInTheDocument();
+      expect(
+        component.queryByText(/Fetching opencode/),
+      ).not.toBeInTheDocument();
+      expect(component.getAllByRole('button')).toHaveLength(1);
       // The run is not cancelled by closing: the button is still in flight.
-      expect(
-        component.getByRole('button', { name: /Updating…/ }),
-      ).toBeDisabled();
-
-      await user.click(
-        component.getByRole('button', {
-          name: SETTINGS_AGENTS_COPY.setupLogViewButton,
-        }),
-      );
-      expect(
-        await component.findByTestId('SettingsAgentsSetupLogDialog'),
-      ).toBeInTheDocument();
+      const button = component.getByRole('button', { name: /Updating…/ });
+      expect(button).toBeDisabled();
+      expect(within(button).getByRole('status')).toBeInTheDocument();
     });
   });
 
   describe('succeeded', () => {
-    test('the row summarizes the last log line', async () => {
+    test('the dialog reports success and the row shows no summary', async () => {
       streamState.current = {
         chunks: [
           chunk('==> Upgrading opencode\nAlready up to date.\n', {
@@ -232,19 +278,22 @@ describe('SettingsAgentsCliControls', () => {
       };
       const { component } = await startRun();
 
-      const statusLine = component.getByTestId(
-        'SettingsAgentsCliControlsStatus',
-      );
-      expect(statusLine).toHaveAttribute('data-status', 'succeeded');
-      expect(statusLine).toHaveTextContent('Already up to date.');
       expect(
         component.getByTestId('SettingsAgentsSetupLogDialogStatus'),
       ).toHaveAttribute('data-status', 'succeeded');
+      expect(
+        component.queryByTestId('SettingsAgentsCliControlsStatus'),
+      ).not.toBeInTheDocument();
+      // Done: the button is actionable again. The open modal hides the row
+      // from the accessibility tree, hence `hidden`.
+      expect(
+        component.getByRole('button', { hidden: true, name: 'Update' }),
+      ).toBeEnabled();
     });
   });
 
   describe('failed', () => {
-    test('the row and the dialog show the failure with its exit code', async () => {
+    test('the dialog shows the failure with its exit code', async () => {
       streamState.current = {
         chunks: [
           chunk('boom\n', { id: 'a' }),
@@ -261,14 +310,47 @@ describe('SettingsAgentsCliControls', () => {
       };
       const { component } = await startRun();
 
-      const statusLine = component.getByTestId(
-        'SettingsAgentsCliControlsStatus',
+      const dialogStatus = component.getByTestId(
+        'SettingsAgentsSetupLogDialogStatus',
       );
-      expect(statusLine).toHaveAttribute('data-status', 'failed');
-      expect(statusLine).toHaveTextContent('exit code 1');
+      expect(dialogStatus).toHaveAttribute('data-status', 'failed');
+      expect(dialogStatus).toHaveTextContent('exit code 1');
       expect(
-        component.getByTestId('SettingsAgentsSetupLogDialogStatus'),
+        component.queryByTestId('SettingsAgentsCliControlsStatus'),
+      ).not.toBeInTheDocument();
+    });
+
+    test('a run that fails after the dialog was closed reopens it', async () => {
+      const { component, user } = await startRun();
+
+      await user.keyboard('{Escape}');
+      expect(
+        component.queryByTestId('SettingsAgentsSetupLogDialog'),
+      ).not.toBeInTheDocument();
+
+      setStream(failedStream);
+
+      const dialog = await component.findByTestId(
+        'SettingsAgentsSetupLogDialog',
+      );
+      expect(
+        within(dialog).getByTestId('SettingsAgentsSetupLogDialogStatus'),
       ).toHaveAttribute('data-status', 'failed');
+    });
+
+    test('closing the reopened failure keeps it closed', async () => {
+      const { component, user } = await startRun();
+
+      await user.keyboard('{Escape}');
+      setStream(failedStream);
+      await component.findByTestId('SettingsAgentsSetupLogDialog');
+
+      await user.keyboard('{Escape}');
+      await waitFor(() => {
+        expect(
+          component.queryByTestId('SettingsAgentsSetupLogDialog'),
+        ).not.toBeInTheDocument();
+      });
     });
   });
 

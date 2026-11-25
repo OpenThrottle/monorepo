@@ -3294,7 +3294,7 @@ export type Mutation = {
   setAgentModelEnabled: SetAgentModelEnabledResult;
   /** Star or unstar a single MODEL of an agent CLI driver for the current user. Favorited models float to the top of / are highlighted in chat/model pickers and run selection. Favoriting is orthogonal to enablement — it never enables a disabled model. Presence-as-favorite: favorite=true records the star, favorite=false clears it. Gated by SETTINGS_WRITE; rejects unknown drivers. */
   setAgentModelFavorite: SetAgentModelFavoriteResult;
-  /** Bulk enable or disable EVERY model of an agent CLI driver for the current user (the select-all / deselect-all affordance). enabled=true clears all per-model disables for the driver; enabled=false records each supplied model id as disabled. An agent-level OFF still hard-overrides all its models. Gated by SETTINGS_WRITE; rejects unknown drivers. */
+  /** Bulk enable or disable the supplied models of an agent CLI driver for the current user (the select-all / deselect-all affordance, over every model or a filtered subset). enabled=true clears the per-model disables of exactly the supplied model ids; enabled=false records each supplied model id as disabled. Models not supplied are left unchanged, and an empty list is a no-op. An agent-level OFF still hard-overrides all its models. Gated by SETTINGS_WRITE; rejects unknown drivers. */
   setAgentModelsEnabled: SetAgentModelsEnabledResult;
   /** Replace the full set of tags on a blog post by tag slug. A caller holding only blog:draft may tag DRAFT posts; for any other post it gets BlogPostPublishPermissionRequiredError. Also returns BlogPostNotFoundError and BlogReferenceNotFoundError (unknown tag slug). */
   setBlogPostTags: SetBlogPostTagsResult;
@@ -7279,7 +7279,7 @@ export type SetAgentModelsEnabledResult = {
   __typename?: 'SetAgentModelsEnabledResult';
   /** The driver whose models were bulk-toggled. */
   driver: Scalars['String']['output'];
-  /** The per-model enablement state applied to every model of the driver: true = all enabled, false = all disabled. */
+  /** The per-model enablement state applied to every supplied model: true = enabled, false = disabled. */
   enabled: Scalars['Boolean']['output'];
 };
 

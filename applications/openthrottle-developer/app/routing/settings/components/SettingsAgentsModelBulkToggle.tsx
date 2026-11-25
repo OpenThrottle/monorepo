@@ -4,6 +4,10 @@ import { useFetcher, useRevalidator } from 'react-router';
 
 import type { action as agentModelsEnabledAction } from '~/routes/resources.agent-models-enabled';
 import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/copy';
+import {
+  settingsAgentsModelBulkDeselectShown,
+  settingsAgentsModelBulkSelectShown,
+} from '~/routing/settings/utils/settings-agents-copy';
 
 /** Resource-route action path backing the per-agent select-all / deselect-all controls. */
 const AGENT_MODELS_ENABLED_ACTION = '/resources/agent-models-enabled';
@@ -15,16 +19,19 @@ export interface SettingsAgentsModelBulkToggleProps {
   canManage: boolean;
   /** Driver id these models belong to. */
   driver: string;
-  /** Count of currently-enabled models (drives which control is actionable). */
+  /** Count of currently-enabled models among `models` (drives which control is actionable). */
   enabledCount: number;
-  /** Every model id of this agent, in discovery order. */
+  /** True while a model filter narrows `models`; the labels then name the shown count. */
+  filtered: boolean;
+  /** The model ids the controls act on: every model, or only the filtered ones. */
   models: readonly string[];
 }
 
 export const SettingsAgentsModelBulkToggle = (
   props: SettingsAgentsModelBulkToggleProps,
 ): React.ReactElement => {
-  const { agentDisabled, driver, canManage, enabledCount, models } = props;
+  const { agentDisabled, driver, canManage, enabledCount, filtered, models } =
+    props;
 
   // Hooks
   const fetcher = useFetcher<typeof agentModelsEnabledAction>();
@@ -37,6 +44,12 @@ export const SettingsAgentsModelBulkToggle = (
   const allEnabled = enabledCount >= total;
   const allDisabled = enabledCount === 0;
   const errorMessage = fetcher.data?.errorMessage ?? null;
+  const selectLabel = filtered
+    ? settingsAgentsModelBulkSelectShown(total)
+    : SETTINGS_AGENTS_COPY.modelBulkSelect;
+  const deselectLabel = filtered
+    ? settingsAgentsModelBulkDeselectShown(total)
+    : SETTINGS_AGENTS_COPY.modelBulkDeselect;
 
   // Handlers
   const submit = (enabled: boolean): void => {
@@ -83,7 +96,7 @@ export const SettingsAgentsModelBulkToggle = (
           type="button"
           variant="ghost"
         >
-          {SETTINGS_AGENTS_COPY.modelBulkSelect}
+          {selectLabel}
         </Button>
         <Button
           className="h-6 px-2 text-xs"
@@ -94,7 +107,7 @@ export const SettingsAgentsModelBulkToggle = (
           type="button"
           variant="ghost"
         >
-          {SETTINGS_AGENTS_COPY.modelBulkDeselect}
+          {deselectLabel}
         </Button>
       </div>
       {errorMessage != null ? (

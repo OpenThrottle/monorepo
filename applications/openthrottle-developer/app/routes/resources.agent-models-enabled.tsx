@@ -13,8 +13,8 @@ export interface AgentModelsEnabledActionResult {
 /**
  * Resource route action backing the /settings/agents per-agent select-all / deselect-all affordance —
  * `POST /resources/agent-models-enabled` with `driver` + `enabled` + a JSON-encoded `models` list.
- * One mutation flips EVERY model of the driver at once (vs. one request per model), so a 200-model
- * agent is a single round trip. The server re-validates the driver against the drivers registry and
+ * One mutation flips exactly the listed models (every model, or only those a filter shows) at once
+ * (vs. one request per model), so a 200-model agent is a single round trip. The server re-validates the driver against the drivers registry and
  * enforces SETTINGS_WRITE. On failure the caller reverts optimistically and surfaces `errorMessage`.
  */
 export const action = async (

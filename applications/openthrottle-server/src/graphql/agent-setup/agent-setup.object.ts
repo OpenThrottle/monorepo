@@ -61,8 +61,9 @@ export class SetAgentModelEnabledResult {
 
 /**
  * @description Result of `setAgentModelsEnabled`: the bulk select-all / deselect-all outcome for a
- * driver. `enabled` echoes the state applied to EVERY model of the driver (true = all cleared to
- * enabled; false = all recorded disabled). An agent-level OFF still hard-overrides downstream.
+ * driver. `enabled` echoes the state applied to every supplied model (true = cleared to enabled;
+ * false = recorded disabled); models not supplied are unchanged. An agent-level OFF still
+ * hard-overrides downstream.
  */
 @ObjectType()
 export class SetAgentModelsEnabledResult {
@@ -72,7 +73,7 @@ export class SetAgentModelsEnabledResult {
   driver!: string;
 
   @Field(() => Boolean, {
-    description: `The per-model enablement state applied to every model of the driver: true = all enabled, false = all disabled.`,
+    description: `The per-model enablement state applied to every supplied model: true = enabled, false = disabled.`,
   })
   enabled!: boolean;
 }

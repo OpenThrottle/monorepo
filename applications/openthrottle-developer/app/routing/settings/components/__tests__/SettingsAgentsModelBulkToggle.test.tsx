@@ -4,6 +4,11 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
+import {
+  settingsAgentsModelBulkDeselectShown,
+  settingsAgentsModelBulkSelectShown,
+} from '~/routing/settings/utils/settings-agents-copy';
+
 import { SettingsAgentsModelBulkToggle } from '../SettingsAgentsModelBulkToggle';
 
 const renderBulk = (
@@ -36,6 +41,7 @@ describe('SettingsAgentsModelBulkToggle', () => {
         canManage: true,
         driver: 'cursor',
         enabledCount: 1,
+        filtered: false,
         models: ['a', 'b', 'c'],
       },
       (formData) => submitted.push(formData),
@@ -60,6 +66,7 @@ describe('SettingsAgentsModelBulkToggle', () => {
         canManage: true,
         driver: 'cursor',
         enabledCount: 3,
+        filtered: false,
         models: ['a', 'b', 'c'],
       },
       (formData) => submitted.push(formData),
@@ -79,6 +86,7 @@ describe('SettingsAgentsModelBulkToggle', () => {
       canManage: true,
       driver: 'cursor',
       enabledCount: 3,
+      filtered: false,
       models: ['a', 'b', 'c'],
     });
     expect(
@@ -92,6 +100,7 @@ describe('SettingsAgentsModelBulkToggle', () => {
       canManage: true,
       driver: 'cursor',
       enabledCount: 1,
+      filtered: false,
       models: ['a', 'b'],
     });
     expect(
@@ -108,6 +117,7 @@ describe('SettingsAgentsModelBulkToggle', () => {
       canManage: false,
       driver: 'cursor',
       enabledCount: 1,
+      filtered: false,
       models: ['a', 'b'],
     });
     expect(
@@ -116,5 +126,22 @@ describe('SettingsAgentsModelBulkToggle', () => {
     expect(
       component.getByTestId('SettingsAgentsModelBulkToggle-cursor-disable'),
     ).toBeDisabled();
+  });
+
+  test('a filtered set labels the controls with the shown count', () => {
+    const component = renderBulk({
+      agentDisabled: false,
+      canManage: true,
+      driver: 'cursor',
+      enabledCount: 1,
+      filtered: true,
+      models: ['a', 'b'],
+    });
+    expect(
+      component.getByTestId('SettingsAgentsModelBulkToggle-cursor-enable'),
+    ).toHaveTextContent(settingsAgentsModelBulkSelectShown(2));
+    expect(
+      component.getByTestId('SettingsAgentsModelBulkToggle-cursor-disable'),
+    ).toHaveTextContent(settingsAgentsModelBulkDeselectShown(2));
   });
 });
