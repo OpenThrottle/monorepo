@@ -4,7 +4,10 @@
 
 import { Field, ID, InputType, Int } from '@nestjs/graphql';
 
-import { CustomPromptTypeEnum } from './custom-prompt.object.ts';
+import {
+  CUSTOM_PROMPT_TYPE,
+  CustomPromptTypeValue,
+} from './custom-prompt.object.ts';
 
 @InputType({
   description: `Input for semantic search over agent-asset (custom_prompt) embeddings.`,
@@ -21,11 +24,11 @@ export class AgentAssetSearchInput {
   })
   limit!: number | null;
 
-  @Field(() => [CustomPromptTypeEnum], {
+  @Field(() => [CUSTOM_PROMPT_TYPE], {
     description: `Filter by prompt types (default: skills, rules, personas). Empty/null uses the default set.`,
     nullable: true,
   })
-  promptTypes!: CustomPromptTypeEnum[] | null;
+  promptTypes!: CustomPromptTypeValue[] | null;
 
   @Field(() => ID, {
     description: 'Filter by project id (multi-repo scoping).',

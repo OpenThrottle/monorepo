@@ -2,7 +2,7 @@ import type { ExecuteGraphqlOptionsV2 } from '@openthrottle/nodejs-graphql';
 import { getGraphQLUrl } from '@openthrottle/nodejs-graphql';
 import type {
   LoopTask,
-  LoopTaskStatus,
+  LoopTaskStatusValue,
 } from '@openthrottle/openthrottle-agentic-loop';
 import {
   isRunnerExecutedHookTask,
@@ -20,11 +20,11 @@ import type { PlanRunWorkerGraphqlConfig } from './ot-loop.types.ts';
 const LOOP_TASK_STATUS_VALUES: readonly string[] =
   Object.values(LOOP_TASK_STATUS);
 
-const isLoopTaskStatus = (value: string): value is LoopTaskStatus => {
+const isLoopTaskStatus = (value: string): value is LoopTaskStatusValue => {
   return LOOP_TASK_STATUS_VALUES.includes(value);
 };
 
-const statusOf = (row: TaskFragment): LoopTaskStatus => {
+const statusOf = (row: TaskFragment): LoopTaskStatusValue => {
   if (isRunnerExecutedHookTask(row)) {
     return LOOP_TASK_STATUS.SKIPPED;
   }

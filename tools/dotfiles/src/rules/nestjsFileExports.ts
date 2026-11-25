@@ -1,6 +1,7 @@
 import type { TSESTree } from '@typescript-eslint/utils';
 import { ESLintUtils } from '@typescript-eslint/utils';
 
+import { pascalNameOf } from './asConstEnumShape.ts';
 import { parseNestFile } from './nestjs-file-shared.ts';
 
 /**
@@ -18,7 +19,9 @@ import { parseNestFile } from './nestjs-file-shared.ts';
  *     subclass. A type it needs lives in `.types.ts`.
  *   - `.utils.ts` exports only functions.
  *   - `.types.ts` exports only types and interfaces.
- *   - `.constants.ts` exports only `const` values that are not functions.
+ *   - `.constants.ts` exports only `const` values that are not functions, plus
+ *     the `<Pascal>Key` / `<Pascal>Value` types of an exported const, which
+ *     `as-const-enum-shape` requires directly after an enum-like object.
  *   - `.provider.ts` exports only Nest provider values: `const` provider
  *     objects or arrays, or functions returning them. An injectable class is a
  *     `.service.ts`, and a type goes in `.types.ts`.
@@ -286,8 +289,20 @@ export const nestjsFileExports = createRule<[], MessageIds>({
         }
 
         if (allowed === undefined) return;
+        const exportedConstants = exported.filter((binding) => {
+          return kind === 'constants' && binding.shape === 'constant';
+        });
+        const enumCompanions = new Set(
+          exportedConstants.flatMap((binding) => {
+            const pascal = pascalNameOf(binding.name);
+            return [`${pascal}Key`, `${pascal}Value`];
+          }),
+        );
         for (const binding of exported) {
           if (allowed.shapes.includes(binding.shape)) continue;
+          const isEnumCompanion =
+            binding.shape === 'type' && enumCompanions.has(binding.name);
+          if (isEnumCompanion) continue;
           context.report({
             data: {
               allowed: allowed.label,

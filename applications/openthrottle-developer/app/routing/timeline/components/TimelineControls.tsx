@@ -6,7 +6,7 @@ import * as React from 'react';
 import { useSearchParams } from 'react-router';
 
 import type { TimelineLaneGrouping } from '~/__generated__/graphql';
-import type { TimelineWindowPreset } from '~/routing/timeline/config/defaults';
+import type { TimelineWindowPresetValue } from '~/routing/timeline/config/defaults';
 import {
   TIMELINE_GROUPINGS,
   TIMELINE_WINDOW_PRESETS,
@@ -32,7 +32,7 @@ export interface TimelineControlsProps {
   readonly selectedMarkerKinds: readonly string[] | null;
   readonly selectedSpanKinds: readonly string[] | null;
   readonly windowFromIso: string;
-  readonly windowPreset: TimelineWindowPreset;
+  readonly windowPreset: TimelineWindowPresetValue;
   readonly windowToIso: string;
 }
 

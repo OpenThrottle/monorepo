@@ -211,22 +211,56 @@ cannot tell deliberate sequencing from an accident.
 
 ### No new enums
 
-**Enforced** by `no-restricted-syntax` → `TSEnumDeclaration` at `error`. Existing enums
-are grandfathered; do not add more.
+**Enforced** by `no-restricted-syntax` → `TSEnumDeclaration` at `error` (existing enums
+are grandfathered; do not add more), and the replacement's shape by
+`openthrottle/as-const-enum-shape` at `error`.
 
-Use an `as const` object when you need enum-like behavior:
+Use an `as const` object when you need enum-like behavior, in exactly this shape:
 
 ```ts
-const backendToFrontendEnum = {
-  md: 'MEDIUM',
-  sm: 'SMALL',
-  xs: 'EXTRA_SMALL',
+export const CODE_SEARCH_CASE_KIND = {
+  BODY: 'body',
+  INTENT: 'intent',
 } as const;
 
-type LowerCaseEnum = keyof typeof backendToFrontendEnum; // "md" | "sm" | "xs"
-
-type UpperCaseEnum = (typeof backendToFrontendEnum)[LowerCaseEnum]; // "MEDIUM" | "SMALL" | "EXTRA_SMALL"
+export type CodeSearchCaseKindKey = keyof typeof CODE_SEARCH_CASE_KIND;
+export type CodeSearchCaseKindValue =
+  (typeof CODE_SEARCH_CASE_KIND)[CodeSearchCaseKindKey];
 ```
+
+An exported, enum-like `as const` object is named in ALL_CAPS and is followed **directly** by
+its `<Pascal>Key` and `<Pascal>Value` type aliases, both exported, in exactly the form above.
+`openthrottle/as-const-enum-shape` checks it, and `eslint --fix` inserts or rewrites the two
+aliases. The details:
+
+- **Enum-like** means a flat object literal under `as const` (optionally followed by
+  `satisfies`), every value a number or a string with no whitespace. An object with an
+  object, array, call or identifier value is configuration, and one whose strings contain
+  whitespace is copy or messages; the rule ignores both, and any `*_COPY` object. So are
+  `as const` **arrays** (`PROMPT_TYPES`, `DRIVERS`): an array has no key, so there is no
+  `Key` type to give it.
+- **The Pascal name is derived mechanically** from the const name: split on `_`, capitalize the
+  first letter of each segment and lower-case the rest. `MCP_TOOL_KIND` → `McpToolKind`,
+  `PERMISSIONS` → `PermissionsKey` / `PermissionsValue`. Acronyms are not preserved and plurals
+  are not singularized — a derivation you can do in your head beats a nicer name you have to
+  look up.
+- **Only exported objects are covered.** A module-private object is read in one file, and
+  requiring two types nobody uses there would trip `@typescript-eslint/no-unused-vars`. If a
+  private object does declare `Key`/`Value` types, use the same names and form.
+- **A hand-written PascalCase enum-like object is reported** with a request to rename it to
+  ALL_CAPS (no autofix: the rename touches every importer). Drop an `Enum` or `GraphQL` suffix
+  when you rename (`WorkspaceEditorIdEnum` → `WORKSPACE_EDITOR_ID`). A NestJS
+  `registerEnumType(X, { name: '…' })` takes its GraphQL name from `name`, not from the
+  variable, so the rename does not change `schema.gql`.
+- **Generated output is exempt.** Codegen's `__generated__/` files emit PascalCase objects with
+  a same-named merged type; the rule skips them.
+- **A misnamed value type is reported, not renamed.** `type ScheduleKind = (typeof
+SCHEDULE_KIND)[keyof typeof SCHEDULE_KIND]` is flagged so it becomes `ScheduleKindValue`, but
+  the rename reaches callers in other files, so do it with a TS-aware rename, never `sed`.
+- **Knip.** `knip.jsonc` sets `ignoreExportsUsedInFile.type`, so `Key` (used by `Value` in the
+  same file) is never reported. An exported `Value` that nothing imports **is** reported as an
+  unused exported type; knip is report-only and has no name-based ignore, so that is the
+  accepted cost of a uniform vocabulary. Do not delete a mandated `Value` to quiet knip.
 
 The specific trap that motivates the ban: **numeric enums produce a reverse mapping**, so
 they have twice the keys you wrote.

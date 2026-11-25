@@ -29,6 +29,10 @@ export const WORKTREE_BADGE_COLORS = {
   registration: 'orange',
 } as const satisfies Record<WorktreeBadge['tone'], string>;
 
+export type WorktreeBadgeColorsKey = keyof typeof WORKTREE_BADGE_COLORS;
+export type WorktreeBadgeColorsValue =
+  (typeof WORKTREE_BADGE_COLORS)[WorktreeBadgeColorsKey];
+
 const ACTIVITY_BADGES = {
   DIRTY: {
     label: REPOSITORIES_TABLE_COPY.worktreeActivityDirty,

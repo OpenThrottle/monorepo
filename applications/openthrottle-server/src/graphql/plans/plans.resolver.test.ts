@@ -58,7 +58,7 @@ import type {
   ListPlansByStatusInput,
   UpdatePlanInput,
 } from './plan.input.ts';
-import { PlanRunModeGraphQL } from './plan.input.ts';
+import { PLAN_RUN_MODE } from './plan.input.ts';
 import { PlanEnqueueService } from './plan-enqueue/plan-enqueue.service.ts';
 import { PlanStatusService } from './plan-status/plan-status.service.ts';
 import { PlansResolver } from './plans.resolver.ts';
@@ -1091,7 +1091,7 @@ describe('PlansResolver', () => {
         resolver.enqueuePlanRun({
           branch: 'feature/test',
           idempotencyKey: null,
-          mode: PlanRunModeGraphQL.task,
+          mode: PLAN_RUN_MODE.task,
           planId: mockPlan.id,
           priority: null,
           taskId: null,
@@ -1111,7 +1111,7 @@ describe('PlansResolver', () => {
       await resolver.enqueuePlanRun({
         branch: 'feature/test',
         idempotencyKey: null,
-        mode: PlanRunModeGraphQL.task,
+        mode: PLAN_RUN_MODE.task,
         planId: mockPlan.id,
         priority: null,
         taskId: '45a30762-92a9-42f4-90e0-2437c7ef26a8',
@@ -1140,7 +1140,7 @@ describe('PlansResolver', () => {
         resolver.enqueuePlanRun({
           branch: 'feature/test',
           idempotencyKey: null,
-          mode: PlanRunModeGraphQL.task,
+          mode: PLAN_RUN_MODE.task,
           planId: mockPlan.id,
           priority: null,
           taskId: '45a30762-92a9-42f4-90e0-2437c7ef26a8',

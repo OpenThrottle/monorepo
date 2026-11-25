@@ -1,4 +1,5 @@
-import { ChatComposerMicState } from '@openthrottle/react-router-chat';
+import type { ChatComposerMicStateValue } from '@openthrottle/react-router-chat';
+import { CHAT_COMPOSER_MIC_STATE } from '@openthrottle/react-router-chat';
 
 import { VOICE_PHASE } from '~/routing/home/data/data.voice';
 
@@ -11,15 +12,15 @@ type VoicePhase = (typeof VOICE_PHASE)[keyof typeof VOICE_PHASE];
 export const resolveMicState = (
   isSupported: boolean,
   phase: VoicePhase,
-): ChatComposerMicState => {
+): ChatComposerMicStateValue => {
   if (!isSupported) {
-    return ChatComposerMicState.disabled;
+    return CHAT_COMPOSER_MIC_STATE.disabled;
   }
   if (phase === VOICE_PHASE.finalizing) {
-    return ChatComposerMicState.finalizing;
+    return CHAT_COMPOSER_MIC_STATE.finalizing;
   }
   if (phase === VOICE_PHASE.idle) {
-    return ChatComposerMicState.idle;
+    return CHAT_COMPOSER_MIC_STATE.idle;
   }
-  return ChatComposerMicState.recording;
+  return CHAT_COMPOSER_MIC_STATE.recording;
 };

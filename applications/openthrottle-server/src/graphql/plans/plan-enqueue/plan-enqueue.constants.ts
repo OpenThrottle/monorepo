@@ -14,6 +14,11 @@ export const PLAN_SCHEDULE_CONFLICT_CODE = {
   PLAN_NOT_SCHEDULABLE: 'PLAN_NOT_SCHEDULABLE',
 } as const;
 
+export type PlanScheduleConflictCodeKey =
+  keyof typeof PLAN_SCHEDULE_CONFLICT_CODE;
+export type PlanScheduleConflictCodeValue =
+  (typeof PLAN_SCHEDULE_CONFLICT_CODE)[PlanScheduleConflictCodeKey];
+
 /** @description Plan statuses a run may be scheduled from (D2). */
 export const SCHEDULABLE_PLAN_STATUSES: readonly string[] = [
   'BACKLOG',

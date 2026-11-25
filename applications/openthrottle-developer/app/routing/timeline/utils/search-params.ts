@@ -10,7 +10,7 @@
 
 import type { TimelineLaneGrouping } from '~/__generated__/graphql';
 
-import type { TimelineWindowPreset } from '../config/defaults';
+import type { TimelineWindowPresetValue } from '../config/defaults';
 import {
   DEFAULT_TIMELINE_GROUPING,
   DEFAULT_TIMELINE_WINDOW_PRESET,
@@ -31,7 +31,7 @@ const withParam = (
 
 export function withTimelineWindow(
   params: URLSearchParams,
-  preset: TimelineWindowPreset,
+  preset: TimelineWindowPresetValue,
 ): URLSearchParams {
   return withParam(
     params,

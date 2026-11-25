@@ -16,7 +16,7 @@ import {
 } from '../config/defaults';
 import { useCalendar } from '../hooks/useCalendar';
 import { useSchedule } from '../hooks/useSchedule';
-import type { CalendarView } from '../types';
+import type { CalendarViewValue } from '../types';
 import type { CalendarEvent } from '../types';
 import { Calendar } from './Calendar';
 import type { CalendarSlots } from './slots';
@@ -27,7 +27,7 @@ export interface CalendarLayoutProps {
   /** Initially selected date (defaults to today). */
   readonly defaultDate?: Date | string;
   /** Initially active view (defaults to the package default view). */
-  readonly defaultView?: CalendarView;
+  readonly defaultView?: CalendarViewValue;
   /**
    * Events to display. The schedule is seeded from this on mount; afterward,
    * passing a new array reference replaces the displayed events (the array
@@ -41,7 +41,7 @@ export interface CalendarLayoutProps {
   /** Custom render slots (event cards, event modal, header content). */
   readonly slots?: CalendarSlots;
   /** Enabled views (defaults to week + month). */
-  readonly views?: readonly CalendarView[];
+  readonly views?: readonly CalendarViewValue[];
 }
 
 /**

@@ -11,21 +11,21 @@ import {
   ContainerMemoryEventsObject,
   ContainerMetricsObject,
 } from '../metrics/container-metrics.object.ts';
-import type { MetricScopeType } from '../metrics/metric-scope.enum.ts';
-import { MetricScope } from '../metrics/metric-scope.enum.ts';
+import type { MetricScopeValue } from '../metrics/metric-scope.enum.ts';
+import { METRIC_SCOPE } from '../metrics/metric-scope.enum.ts';
 import { ProcessMetricsSnapshotObject } from '../metrics/process-metrics-snapshot.object.ts';
 import { PsiCpuMetricsObject } from '../metrics/psi-cpu-metrics.object.ts';
-import type { PressureLevelType } from '../metrics/system-cpu-metrics.object.ts';
+import type { PressureLevelValue } from '../metrics/system-cpu-metrics.object.ts';
 import {
   LoadAverageMetricsObject,
-  PressureLevel,
+  PRESSURE_LEVEL,
   SystemCpuMetricsObject,
   SystemCpuSnapshotObject,
 } from '../metrics/system-cpu-metrics.object.ts';
 import { TaskRunMetricsObject } from '../metrics/task-run-metrics.object.ts';
-import type { WallClockInterpretationType } from '../metrics/wall-clock-metrics.object.ts';
+import type { WallClockInterpretationValue } from '../metrics/wall-clock-metrics.object.ts';
 import {
-  WallClockInterpretation,
+  WALL_CLOCK_INTERPRETATION,
   WallClockMetricsObject,
 } from '../metrics/wall-clock-metrics.object.ts';
 
@@ -87,12 +87,12 @@ function readRecord(
 function readNullableScope(
   record: Record<string, unknown>,
   key: string,
-): MetricScopeType | null {
+): MetricScopeValue | null {
   const value = record[key];
   switch (value) {
-    case MetricScope.container:
-    case MetricScope.host:
-    case MetricScope.process:
+    case METRIC_SCOPE.container:
+    case METRIC_SCOPE.host:
+    case METRIC_SCOPE.process:
       return value;
     default:
       return null;
@@ -119,16 +119,16 @@ function readNullableString(
 function readWallClockInterpretation(
   record: Record<string, unknown>,
   key: string,
-): WallClockInterpretationType {
+): WallClockInterpretationValue {
   const value = record[key];
   switch (value) {
-    case WallClockInterpretation.cpu_bound:
-    case WallClockInterpretation.idle:
-    case WallClockInterpretation.io_bound:
-    case WallClockInterpretation.mixed:
+    case WALL_CLOCK_INTERPRETATION.cpu_bound:
+    case WALL_CLOCK_INTERPRETATION.idle:
+    case WALL_CLOCK_INTERPRETATION.io_bound:
+    case WALL_CLOCK_INTERPRETATION.mixed:
       return value;
     default:
-      return WallClockInterpretation.mixed;
+      return WALL_CLOCK_INTERPRETATION.mixed;
   }
 }
 
@@ -141,16 +141,16 @@ function readWallClockInterpretation(
 function readPressureLevel(
   record: Record<string, unknown>,
   key: string,
-): PressureLevelType {
+): PressureLevelValue {
   const value = record[key];
   switch (value) {
-    case PressureLevel.high:
-    case PressureLevel.low:
-    case PressureLevel.moderate:
-    case PressureLevel.unknown:
+    case PRESSURE_LEVEL.high:
+    case PRESSURE_LEVEL.low:
+    case PRESSURE_LEVEL.moderate:
+    case PRESSURE_LEVEL.unknown:
       return value;
     default:
-      return PressureLevel.unknown;
+      return PRESSURE_LEVEL.unknown;
   }
 }
 

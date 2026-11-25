@@ -3,7 +3,7 @@ import type { LucideIcon } from 'lucide-react';
 import { GaugeIcon, MonitorIcon } from 'lucide-react';
 import type * as React from 'react';
 
-import type { ReducedMotionMode } from '~/global/data/data.appearance-config';
+import type { ReducedMotionModesValue } from '~/global/data/data.appearance-config';
 import { REDUCED_MOTION_MODES } from '~/global/data/data.appearance-config';
 import { AppearanceBrandColorField } from '~/routing/settings/components/AppearanceBrandColorField';
 import { AppearanceContextMeterField } from '~/routing/settings/components/AppearanceContextMeterField';
@@ -105,7 +105,7 @@ export const APPEARANCE_PREVIEW_CHART_CLASSES: readonly string[] = [
 export interface AppearanceMotionOption {
   readonly icon: LucideIcon;
   readonly label: string;
-  readonly value: ReducedMotionMode;
+  readonly value: ReducedMotionModesValue;
 }
 
 /** Options for the motion toggle group, mirroring the theme toggle's shape. */

@@ -3,7 +3,7 @@ import { createStore, Provider } from 'jotai';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
-import type { CmsDevice } from '../../config/cms-device';
+import type { CmsDeviceValue } from '../../config/cms-device';
 import { CMS_DEVICE } from '../../config/cms-device';
 import {
   atomSettings,
@@ -11,7 +11,7 @@ import {
 } from '../../data/data.atom.settings';
 import { CorePreviewFrame } from '../CorePreviewFrame';
 
-const renderFrame = (device: CmsDevice) => {
+const renderFrame = (device: CmsDeviceValue) => {
   const store = createStore();
   store.set(atomSettings, { ...atomSettingsDefault, device });
 

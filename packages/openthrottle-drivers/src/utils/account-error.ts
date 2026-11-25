@@ -20,12 +20,13 @@ export const ACCOUNT_ERROR_KINDS = {
   permissionError: 'permission_error',
 } as const;
 
+export type AccountErrorKindsKey = keyof typeof ACCOUNT_ERROR_KINDS;
 /**
  * @description One of the {@link ACCOUNT_ERROR_KINDS} values.
  * @public
  */
-export type AccountErrorKind =
-  (typeof ACCOUNT_ERROR_KINDS)[keyof typeof ACCOUNT_ERROR_KINDS];
+export type AccountErrorKindsValue =
+  (typeof ACCOUNT_ERROR_KINDS)[AccountErrorKindsKey];
 
 /**
  * @description A fatal account error the agent CLI hit. `message` is the CLI's human text (for
@@ -33,7 +34,7 @@ export type AccountErrorKind =
  * @public
  */
 export interface AccountError {
-  readonly kind: AccountErrorKind;
+  readonly kind: AccountErrorKindsValue;
   readonly message: string | null;
 }
 
@@ -53,7 +54,7 @@ const isRecord = (value: unknown): value is Record<string, unknown> => {
 };
 
 /** Wire error names → kind. Anything absent (rate_limit, server_error, …) is not fatal. */
-const WIRE_ERROR_KINDS: Readonly<Record<string, AccountErrorKind>> = {
+const WIRE_ERROR_KINDS: Readonly<Record<string, AccountErrorKindsValue>> = {
   authentication_error: ACCOUNT_ERROR_KINDS.authenticationError,
   authentication_failed: ACCOUNT_ERROR_KINDS.authenticationError,
   billing_error: ACCOUNT_ERROR_KINDS.billingError,
@@ -61,13 +62,13 @@ const WIRE_ERROR_KINDS: Readonly<Record<string, AccountErrorKind>> = {
 };
 
 /** HTTP statuses on an error `result` that only ever mean a fatal account error. */
-const STATUS_ERROR_KINDS: Readonly<Record<number, AccountErrorKind>> = {
+const STATUS_ERROR_KINDS: Readonly<Record<number, AccountErrorKindsValue>> = {
   401: ACCOUNT_ERROR_KINDS.authenticationError,
   403: ACCOUNT_ERROR_KINDS.permissionError,
 };
 
 /** The kind for an `error` value, whether a bare name or an `{ type }` object. */
-const kindOfWireError = (value: unknown): AccountErrorKind | null => {
+const kindOfWireError = (value: unknown): AccountErrorKindsValue | null => {
   const name = isRecord(value) ? value.type : value;
 
   if (typeof name !== 'string') {

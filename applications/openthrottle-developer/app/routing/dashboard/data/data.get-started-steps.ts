@@ -1,4 +1,4 @@
-import type { OnboardingStepId } from '~/routing/dashboard/utils/onboarding-steps';
+import type { OnboardingStepIdValue } from '~/routing/dashboard/utils/onboarding-steps';
 import { ONBOARDING_STEP_ID } from '~/routing/dashboard/utils/onboarding-steps';
 
 /**
@@ -8,7 +8,7 @@ import { ONBOARDING_STEP_ID } from '~/routing/dashboard/utils/onboarding-steps';
  */
 export interface GetStartedStepMeta {
   readonly href: string;
-  readonly id: OnboardingStepId;
+  readonly id: OnboardingStepIdValue;
 }
 
 /**

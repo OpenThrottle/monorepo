@@ -1,21 +1,22 @@
-import { ChatComposerMicState } from '../types';
+import type { ChatComposerMicStateValue } from '../types';
+import { CHAT_COMPOSER_MIC_STATE } from '../types';
 
 /**
  * @description The accessible label and tooltip text for the composer mic in
- * each {@link ChatComposerMicState}.
+ * each {@link CHAT_COMPOSER_MIC_STATE}.
  */
 export const getChatComposerMicLabel = (
-  micState: ChatComposerMicState,
+  micState: ChatComposerMicStateValue,
 ): string => {
-  if (micState === ChatComposerMicState.recording) {
+  if (micState === CHAT_COMPOSER_MIC_STATE.recording) {
     return 'Stop voice input';
   }
 
-  if (micState === ChatComposerMicState.finalizing) {
+  if (micState === CHAT_COMPOSER_MIC_STATE.finalizing) {
     return 'Transcribing…';
   }
 
-  if (micState === ChatComposerMicState.disabled) {
+  if (micState === CHAT_COMPOSER_MIC_STATE.disabled) {
     return 'Voice input unavailable';
   }
 

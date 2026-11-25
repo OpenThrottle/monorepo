@@ -5,7 +5,7 @@ import * as React from 'react';
 import { CHECKOUT_ROW_MAX_CHARS } from '../data/data.checkout-row';
 import { CHAT_CHECKOUT_ROW_COPY } from '../data/data.copy';
 import type { ChatCheckoutOption } from '../types';
-import { ChatCheckoutKind } from '../types';
+import { CHAT_CHECKOUT_KIND } from '../types';
 import {
   shortenBranchName,
   shortenCheckoutPath,
@@ -80,7 +80,7 @@ export const ChatCheckoutSelectorRow = (
   const location = hasPath
     ? shortenCheckoutPath(filesystemPath, CHECKOUT_ROW_MAX_CHARS.path)
     : descriptor?.qualifier;
-  const isWorktree = checkout.kind === ChatCheckoutKind.worktree;
+  const isWorktree = checkout.kind === CHAT_CHECKOUT_KIND.worktree;
   const KindIcon = isWorktree ? GitFork : FolderGit2;
   // At the cap, unselected rows are inert but selected ones stay toggleable —
   // otherwise the list traps the user with no way back under the cap.
@@ -138,7 +138,7 @@ export const ChatCheckoutSelectorRow = (
     <CommandItem
       className="overflow-hidden"
       data-kind={
-        isWorktree ? ChatCheckoutKind.worktree : ChatCheckoutKind.primary
+        isWorktree ? CHAT_CHECKOUT_KIND.worktree : CHAT_CHECKOUT_KIND.primary
       }
       data-nested={nested}
       data-testid={`ChatCheckoutSelector-option-${id}`}

@@ -16,6 +16,11 @@ export const TAG_ACTION_SPECIFICITY_WEIGHTS = {
   TAG: 1,
 } as const;
 
+export type TagActionSpecificityWeightsKey =
+  keyof typeof TAG_ACTION_SPECIFICITY_WEIGHTS;
+export type TagActionSpecificityWeightsValue =
+  (typeof TAG_ACTION_SPECIFICITY_WEIGHTS)[TagActionSpecificityWeightsKey];
+
 /**
  * @description How narrowly a rule is scoped — higher is narrower. Pure. Shared by the plan-rules
  * dispatch (via {@link rankMatchedTagActions}) and by any surface that wants to order rules the way

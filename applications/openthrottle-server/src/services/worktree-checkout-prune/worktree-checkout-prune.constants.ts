@@ -20,6 +20,11 @@ export const PRUNE_WORKTREE_CHECKOUT_OUTCOME = {
   SKIPPED_PRIMARY: 'skipped-primary',
 } as const;
 
+export type PruneWorktreeCheckoutOutcomeKey =
+  keyof typeof PRUNE_WORKTREE_CHECKOUT_OUTCOME;
+export type PruneWorktreeCheckoutOutcomeValue =
+  (typeof PRUNE_WORKTREE_CHECKOUT_OUTCOME)[PruneWorktreeCheckoutOutcomeKey];
+
 /** Cap on a short audit value (result, probe, branch, agent session). */
 export const MAX_REMOVAL_AUDIT_SHORT_LENGTH = 256;
 

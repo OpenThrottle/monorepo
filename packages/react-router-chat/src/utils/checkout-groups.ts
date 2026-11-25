@@ -1,5 +1,5 @@
 import type { ChatCheckoutOption } from '../types';
-import { ChatCheckoutKind } from '../types';
+import { CHAT_CHECKOUT_KIND } from '../types';
 import { parseRepositoryRemote } from './repository-identity';
 
 /**
@@ -84,7 +84,7 @@ function repositoryKeyOf(
 }
 
 function isWorktree(checkout: ChatCheckoutOption): boolean {
-  return checkout.kind === ChatCheckoutKind.worktree;
+  return checkout.kind === CHAT_CHECKOUT_KIND.worktree;
 }
 
 /**

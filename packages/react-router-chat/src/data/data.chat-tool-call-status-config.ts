@@ -1,7 +1,7 @@
 import { Ban, Check, Loader2, X } from 'lucide-react';
 
-import type { ChatToolStatus as ChatToolStatusType } from '../types';
-import { ChatToolStatus } from '../types';
+import type { ChatToolStatusValue } from '../types';
+import { CHAT_TOOL_STATUS } from '../types';
 
 interface StatusConfig {
   readonly Icon: typeof Check;
@@ -15,26 +15,26 @@ interface StatusConfig {
  * per the repo's component/data split.
  * @public
  */
-export const STATUS_CONFIG: Record<ChatToolStatusType, StatusConfig> = {
-  [ChatToolStatus.failed]: {
+export const STATUS_CONFIG: Record<ChatToolStatusValue, StatusConfig> = {
+  [CHAT_TOOL_STATUS.failed]: {
     Icon: X,
     color: 'red',
     label: 'failed',
     spin: false,
   },
-  [ChatToolStatus.notRun]: {
+  [CHAT_TOOL_STATUS.notRun]: {
     Icon: Ban,
     color: 'slate',
     label: 'not run',
     spin: false,
   },
-  [ChatToolStatus.running]: {
+  [CHAT_TOOL_STATUS.running]: {
     Icon: Loader2,
     color: 'amber',
     label: 'running',
     spin: true,
   },
-  [ChatToolStatus.succeeded]: {
+  [CHAT_TOOL_STATUS.succeeded]: {
     Icon: Check,
     color: 'green',
     label: 'succeeded',

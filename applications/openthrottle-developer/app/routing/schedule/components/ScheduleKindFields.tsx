@@ -13,7 +13,7 @@ import * as React from 'react';
 import type { ScheduledJobDetailFragment } from '~/__generated__/graphql';
 import { ScheduleMisfireFields } from '~/routing/schedule/components/ScheduleMisfireFields';
 import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
-import type { ScheduleKind } from '~/routing/schedule/data/data.schedule-kind';
+import type { ScheduleKindValue } from '~/routing/schedule/data/data.schedule-kind';
 import {
   SCHEDULE_INTERVAL_DEFAULT_MINUTES,
   SCHEDULE_KIND,
@@ -47,7 +47,7 @@ export const ScheduleKindFields = (
   const { job } = props;
 
   // Hooks
-  const [kind, setKind] = React.useState<ScheduleKind>(
+  const [kind, setKind] = React.useState<ScheduleKindValue>(
     SCHEDULE_KIND_OPTIONS.find((option) => option.value === job?.scheduleKind)
       ?.value ?? SCHEDULE_KIND.cron,
   );

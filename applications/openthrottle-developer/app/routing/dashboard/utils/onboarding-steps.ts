@@ -16,8 +16,9 @@ export const ONBOARDING_STEP_ID = {
   workspaceRepo: 'workspaceRepo',
 } as const;
 
-export type OnboardingStepId =
-  (typeof ONBOARDING_STEP_ID)[keyof typeof ONBOARDING_STEP_ID];
+export type OnboardingStepIdKey = keyof typeof ONBOARDING_STEP_ID;
+export type OnboardingStepIdValue =
+  (typeof ONBOARDING_STEP_ID)[OnboardingStepIdKey];
 
 /**
  * @description Plan statuses that imply the user has kicked off at least one
@@ -31,7 +32,7 @@ export const RUN_STARTED_PLAN_STATUSES: readonly string[] = [
   'QUEUED',
 ];
 
-export type OnboardingCompletion = Record<OnboardingStepId, boolean>;
+export type OnboardingCompletion = Record<OnboardingStepIdValue, boolean>;
 
 /**
  * @description Total number of plans across every status bucket returned by

@@ -26,8 +26,9 @@ export const SKILL_RECORD_TAG_INTENTS = {
   REMOVE_TAG: 'removeProjectSkillTag',
 } as const;
 
-export type SkillRecordTagIntent =
-  (typeof SKILL_RECORD_TAG_INTENTS)[keyof typeof SKILL_RECORD_TAG_INTENTS];
+export type SkillRecordTagIntentsKey = keyof typeof SKILL_RECORD_TAG_INTENTS;
+export type SkillRecordTagIntentsValue =
+  (typeof SKILL_RECORD_TAG_INTENTS)[SkillRecordTagIntentsKey];
 
 export interface SkillRecordTagActionResult {
   readonly error?: string;

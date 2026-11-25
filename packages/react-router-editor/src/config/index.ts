@@ -16,7 +16,8 @@ export const PROMPT_TYPES = {
   SKILLS: 'skills',
 } as const;
 
-export type PromptType = (typeof PROMPT_TYPES)[keyof typeof PROMPT_TYPES];
+export type PromptTypesKey = keyof typeof PROMPT_TYPES;
+export type PromptTypesValue = (typeof PROMPT_TYPES)[PromptTypesKey];
 
 export const PROMPT_TYPE_VALUES = Object.values(PROMPT_TYPES);
 
@@ -56,8 +57,8 @@ export const FILE_EXTENSIONS = {
   yml: 'yaml',
 } as const;
 
-export type FileExtension = keyof typeof FILE_EXTENSIONS;
-export type EditorLanguage = (typeof FILE_EXTENSIONS)[FileExtension];
+export type FileExtensionsKey = keyof typeof FILE_EXTENSIONS;
+export type FileExtensionsValue = (typeof FILE_EXTENSIONS)[FileExtensionsKey];
 
 /**
  * @description Default editor theme configuration.

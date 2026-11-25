@@ -1,4 +1,4 @@
-import type { RolloutFlagKind } from '../config/rollout-flag-kind';
+import type { RolloutFlagKindValue } from '../config/rollout-flag-kind';
 import type {
   RolloutFlagCatalog,
   RolloutFlagKey,
@@ -17,7 +17,7 @@ export type RolloutResolvedValues<TCatalog extends RolloutFlagCatalog> = {
 
 type MutableResolvedValues = Record<
   string,
-  RolloutFlagValueByKind[RolloutFlagKind]
+  RolloutFlagValueByKind[RolloutFlagKindValue]
 >;
 
 /**
@@ -43,7 +43,7 @@ export const defaultsFromCatalog = <TCatalog extends RolloutFlagCatalog>(
  * `isRolloutFlagValueForKind`, which also rejects `NaN` and non-object JSON
  * defaults — so a catalog that type-checks always seals.
  */
-const hasKindType = (kind: RolloutFlagKind, value: unknown): boolean => {
+const hasKindType = (kind: RolloutFlagKindValue, value: unknown): boolean => {
   if (kind === 'json') {
     return (
       value === null ||

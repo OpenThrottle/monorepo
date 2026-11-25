@@ -14,7 +14,7 @@
 import { applyLexicon } from '../narrate/lexicon.ts';
 import type { NarrationSentence } from '../narrate/types.ts';
 import { loadFormat } from '../runner/format.ts';
-import type { EpisodeFormat, Variant } from './types.ts';
+import type { EpisodeFormatsValue, Variant } from './types.ts';
 
 /** Natural narration pace used to convert a word count into seconds. */
 export const WORDS_PER_MINUTE = 145;
@@ -72,7 +72,7 @@ export const estimatedSpokenSeconds = (variant: Variant): number => {
  * seconds of picture, and that is correct: the gaps are where the viewer watches
  * the action instead of listening to someone describe it.
  */
-export const budgetWords = (format: EpisodeFormat): number => {
+export const budgetWords = (format: EpisodeFormatsValue): number => {
   const spec = loadFormat();
   const { longform, short } = spec.formats;
   const shortSeconds = short.targetDurationSeconds ?? short.maxDurationSeconds;

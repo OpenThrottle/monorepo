@@ -5,3 +5,6 @@ export const VOICE_PHASE = {
   recording: 'recording',
   starting: 'starting',
 } as const;
+
+export type VoicePhaseKey = keyof typeof VOICE_PHASE;
+export type VoicePhaseValue = (typeof VOICE_PHASE)[VoicePhaseKey];

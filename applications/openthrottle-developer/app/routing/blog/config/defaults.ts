@@ -50,6 +50,10 @@ export const BLOG_POST_SAVE_INTENT = {
   SAVE: 'save',
 } as const;
 
+export type BlogPostSaveIntentKey = keyof typeof BLOG_POST_SAVE_INTENT;
+export type BlogPostSaveIntentValue =
+  (typeof BLOG_POST_SAVE_INTENT)[BlogPostSaveIntentKey];
+
 /**
  * Lifecycle `intent` values the `/blog/:postId` action accepts, beside the save
  * intents. Each maps onto one server mutation and needs `blog:write`.
@@ -60,6 +64,11 @@ export const BLOG_POST_LIFECYCLE_INTENT = {
   UNPUBLISH: 'unpublish',
 } as const;
 
+export type BlogPostLifecycleIntentKey =
+  keyof typeof BLOG_POST_LIFECYCLE_INTENT;
+export type BlogPostLifecycleIntentValue =
+  (typeof BLOG_POST_LIFECYCLE_INTENT)[BlogPostLifecycleIntentKey];
+
 /** Author `<Select>` value for "no byline" (Radix Select forbids an empty value). */
 export const BLOG_NO_AUTHOR_VALUE = '__none__';
 
@@ -68,6 +77,10 @@ export const BLOG_EDITOR_MONACO_THEMES = {
   dark: 'vs-dark',
   light: 'light',
 } as const;
+
+export type BlogEditorMonacoThemesKey = keyof typeof BLOG_EDITOR_MONACO_THEMES;
+export type BlogEditorMonacoThemesValue =
+  (typeof BLOG_EDITOR_MONACO_THEMES)[BlogEditorMonacoThemesKey];
 
 /** Every editable field of the post editor, in display order. */
 export const BLOG_POST_EDITOR_FIELDS: readonly BlogPostEditorField[] = [

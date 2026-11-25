@@ -4,7 +4,7 @@
 
 import { Field, ObjectType, registerEnumType } from '@nestjs/graphql';
 
-export const CustomPromptTypeEnum = {
+export const CUSTOM_PROMPT_TYPE = {
   AGENTS: 'agents',
   COMMANDS: 'commands',
   PERSONAS: 'personas',
@@ -13,10 +13,11 @@ export const CustomPromptTypeEnum = {
   SKILLS: 'skills',
 } as const;
 
-export type CustomPromptTypeEnum =
-  (typeof CustomPromptTypeEnum)[keyof typeof CustomPromptTypeEnum];
+export type CustomPromptTypeKey = keyof typeof CUSTOM_PROMPT_TYPE;
+export type CustomPromptTypeValue =
+  (typeof CUSTOM_PROMPT_TYPE)[CustomPromptTypeKey];
 
-registerEnumType(CustomPromptTypeEnum, {
+registerEnumType(CUSTOM_PROMPT_TYPE, {
   description: 'Type of custom prompt document',
   name: 'CustomPromptType',
 });
@@ -43,8 +44,8 @@ export class CustomPromptObject {
   @Field(() => String, { nullable: true })
   description!: string | null;
 
-  @Field(() => CustomPromptTypeEnum)
-  promptType!: CustomPromptTypeEnum;
+  @Field(() => CUSTOM_PROMPT_TYPE)
+  promptType!: CustomPromptTypeValue;
 
   @Field(() => [String])
   labels!: string[];

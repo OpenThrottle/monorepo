@@ -4,7 +4,10 @@
 
 import { Field, ID, ObjectType } from '@nestjs/graphql';
 
-import { WorkspaceEditorIdEnum } from './workspace-editor-id.enum.ts';
+import {
+  WORKSPACE_EDITOR_ID,
+  WorkspaceEditorIdValue,
+} from './workspace-editor-id.enum.ts';
 
 @ObjectType({
   description: `Per-user workspace profile: contact fields and enabled editors.`,
@@ -25,10 +28,10 @@ export class UserWorkspaceProfileObject {
   @Field(() => Date)
   createdAt!: Date;
 
-  @Field(() => [WorkspaceEditorIdEnum], {
+  @Field(() => [WORKSPACE_EDITOR_ID], {
     description: `Editors the user wants OpenThrottle to configure in linked repos.`,
   })
-  enabledEditors!: WorkspaceEditorIdEnum[];
+  enabledEditors!: WorkspaceEditorIdValue[];
 
   @Field(() => Date)
   updatedAt!: Date;

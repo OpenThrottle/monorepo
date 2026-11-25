@@ -26,11 +26,11 @@ export {
   resolvePersonalSkillsRoot,
 } from './personal-skills-config.ts';
 export type {
-  ForeignSkillInjectionMode,
+  ForeignSkillInjectionModeValue,
   ForeignSkillLedger,
   ForeignSkillLedgerEntry,
-  ForeignSkillMaterializationLayer,
-  GitExcludeOwner,
+  ForeignSkillMaterializationLayerValue,
+  GitExcludeOwnerValue,
 } from './types.ts';
 export {
   FOREIGN_SKILL_INJECTION_MODE,

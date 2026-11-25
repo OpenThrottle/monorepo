@@ -9,7 +9,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import type { ChatComposerControls } from '../../context/ChatProvider';
 import { ChatProvider } from '../../context/ChatProvider';
 import type { ChatMessage } from '../../types';
-import { ChatComposerMode } from '../../types';
+import { CHAT_COMPOSER_MODE } from '../../types';
 import type { ChatDialogProps } from '../ChatDialog';
 import { ChatDialog } from '../ChatDialog';
 
@@ -192,7 +192,7 @@ describe('ChatDialog Component', () => {
       overrides: Partial<ChatComposerControls> = {},
     ): ChatComposerControls => {
       return {
-        mode: ChatComposerMode.plan,
+        mode: CHAT_COMPOSER_MODE.plan,
         modelId: 'm1',
         models: [{ id: 'm1', label: 'Model One' }],
         ...overrides,

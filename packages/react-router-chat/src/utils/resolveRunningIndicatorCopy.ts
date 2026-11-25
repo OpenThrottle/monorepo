@@ -4,8 +4,8 @@ import {
   RUNNING_INDICATOR_SLOW_HINT,
   RUNNING_INDICATOR_SLOW_HINT_AFTER_MS,
 } from '../data/data.chat-run-phase-copy';
-import type { ChatRunPhase as ChatRunPhaseType } from '../types';
-import { ChatRunPhase } from '../types';
+import type { ChatRunPhaseValue } from '../types';
+import { CHAT_RUN_PHASE } from '../types';
 
 /**
  * Pure phase → copy resolver for {@link RunningIndicator}. Composes a specific
@@ -21,7 +21,7 @@ export const resolveRunningIndicatorCopy = ({
 }: {
   readonly detail?: string | null;
   readonly elapsedMs?: number;
-  readonly phase: ChatRunPhaseType;
+  readonly phase: ChatRunPhaseValue;
 }): RunningIndicatorCopy => {
   const trimmedDetail = detail?.trim() ? detail.trim() : null;
 
@@ -33,9 +33,9 @@ export const resolveRunningIndicatorCopy = ({
     }
 
     switch (phase) {
-      case ChatRunPhase.runningTool:
+      case CHAT_RUN_PHASE.runningTool:
         return `Running ${trimmedDetail}…`;
-      case ChatRunPhase.waiting:
+      case CHAT_RUN_PHASE.waiting:
         return `Waiting for ${trimmedDetail}…`;
       default:
         return defaultLabel;
@@ -43,7 +43,7 @@ export const resolveRunningIndicatorCopy = ({
   })();
 
   const isGenericWait =
-    phase === ChatRunPhase.connecting || phase === ChatRunPhase.waiting;
+    phase === CHAT_RUN_PHASE.connecting || phase === CHAT_RUN_PHASE.waiting;
   const isSlowWait =
     isGenericWait &&
     elapsedMs !== undefined &&

@@ -13,6 +13,7 @@ import pluginSimpleImportSort from 'eslint-plugin-simple-import-sort';
 import tslint from 'typescript-eslint';
 
 import { agentCliSpawnChokepoint } from './rules/agentCliSpawnChokepoint.ts';
+import { asConstEnumShape } from './rules/asConstEnumShape.ts';
 import { componentPrimitiveShape } from './rules/componentPrimitiveShape.ts';
 import { dataFileShape } from './rules/dataFileShape.ts';
 import { disableRequiresReason } from './rules/disableRequiresReason.ts';
@@ -282,6 +283,7 @@ export const eslintConfig = tslint.config([
       openthrottle: {
         rules: {
           'agent-cli-spawn-chokepoint': agentCliSpawnChokepoint,
+          'as-const-enum-shape': asConstEnumShape,
           'component-primitive-shape': componentPrimitiveShape,
           'data-file-shape': dataFileShape,
           'disable-requires-reason': disableRequiresReason,
@@ -381,6 +383,12 @@ export const eslintConfig = tslint.config([
       // at `error`, and because a "useless" assignment is occasionally a typo
       // masking a bug, which wants a human read rather than a blind delete.
       'no-useless-assignment': 'warn',
+      // The canonical `as const` enum shape (code-style.md § No new enums): an
+      // exported enum-like object is ALL_CAPS and is followed directly by its
+      // `<Pascal>Key` / `<Pascal>Value` types. `eslint --fix` inserts or
+      // rewrites the pair; a misnamed alias or a PascalCase object needs a
+      // TS-aware rename. The existing sites were migrated by OT plan 86f8330c.
+      'openthrottle/as-const-enum-shape': 'error',
       // "Long strings are template literals" (code-style.md). A custom rule
       // rather than `quotes: ['error', 'backtick']`, which would rewrite every
       // short string in the repo; this reports only a quoted string Prettier

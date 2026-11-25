@@ -8,6 +8,11 @@ export const COMMANDER_ESCAPE_ROW_KEYWORD = {
   search: '__commander_escape_search__',
 } as const;
 
+export type CommanderEscapeRowKeywordKey =
+  keyof typeof COMMANDER_ESCAPE_ROW_KEYWORD;
+export type CommanderEscapeRowKeywordValue =
+  (typeof COMMANDER_ESCAPE_ROW_KEYWORD)[CommanderEscapeRowKeywordKey];
+
 /**
  * @description Palette row and group styling, shared by the navigation groups
  * and the no-match group so every row has the same height, padding and

@@ -15,6 +15,10 @@ export const ROLLOUT_FLAG_KIND = {
   NUMBER: 'number',
   STRING: 'string',
 } as const;
+
+export type RolloutFlagKindKey = keyof typeof ROLLOUT_FLAG_KIND;
+export type RolloutFlagKindValue =
+  (typeof ROLLOUT_FLAG_KIND)[RolloutFlagKindKey];
 /** LD-like boolean defaults used by migration 089 and entity column defaults. */
 export const ROLLOUT_BOOLEAN_DEFAULT_VARIATIONS: RolloutFlagVariation[] = [
   { value: false },
@@ -36,3 +40,7 @@ export const ROLLOUT_EVALUATION_REASON = {
   OFF: 'off',
   TARGET_ROLES: 'target_roles',
 } as const;
+
+export type RolloutEvaluationReasonKey = keyof typeof ROLLOUT_EVALUATION_REASON;
+export type RolloutEvaluationReasonValue =
+  (typeof ROLLOUT_EVALUATION_REASON)[RolloutEvaluationReasonKey];

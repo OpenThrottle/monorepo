@@ -81,14 +81,15 @@ export const RENAME_STATUS = {
   rename: 'rename',
 } as const;
 
-export type RenameStatus = (typeof RENAME_STATUS)[keyof typeof RENAME_STATUS];
+export type RenameStatusKey = keyof typeof RENAME_STATUS;
+export type RenameStatusValue = (typeof RENAME_STATUS)[RenameStatusKey];
 
 /** One file the codemod looked at and would act on (or refused to). */
 export interface RenameCandidate {
   readonly companions: readonly CompanionMove[];
   readonly exportName: string;
   readonly from: string;
-  readonly status: RenameStatus;
+  readonly status: RenameStatusValue;
   /** False when the rename also changes the name, not just its casing. */
   readonly stemMatches: boolean;
   readonly to: string;
@@ -400,7 +401,7 @@ export const planRenames = (
       return claimed.has(collisionKey(target)) || existsColliding(path.join(workspaceRoot, path.dirname(target)), path.basename(target)); // prettier-ignore
     });
 
-    let status: RenameStatus = RENAME_STATUS.rename;
+    let status: RenameStatusValue = RENAME_STATUS.rename;
     if (isConstantName(exportName)) {
       status = RENAME_STATUS.constant;
     } else if (collides) {

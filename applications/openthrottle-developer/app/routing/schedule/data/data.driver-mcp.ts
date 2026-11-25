@@ -20,9 +20,10 @@ export const DRIVER_MCP_REACHABILITY = {
   unknown: 'unknown',
 } as const;
 
+export type DriverMcpReachabilityKey = keyof typeof DRIVER_MCP_REACHABILITY;
 /** One of the {@link DRIVER_MCP_REACHABILITY} values. */
-export type DriverMcpReachability =
-  (typeof DRIVER_MCP_REACHABILITY)[keyof typeof DRIVER_MCP_REACHABILITY];
+export type DriverMcpReachabilityValue =
+  (typeof DRIVER_MCP_REACHABILITY)[DriverMcpReachabilityKey];
 
 /** Minimal shape this module needs from the `ScheduleFormAgentClis` query. */
 export interface DriverMcpOption {
@@ -36,7 +37,7 @@ export interface DriverMcpOption {
  * on any driver.
  */
 export const DRIVER_MCP_WARNING: Record<
-  DriverMcpReachability,
+  DriverMcpReachabilityValue,
   { body: string; title: string } | null
 > = {
   [DRIVER_MCP_REACHABILITY.attaches]: null,

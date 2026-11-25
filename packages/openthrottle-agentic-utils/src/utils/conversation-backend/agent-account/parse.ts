@@ -8,7 +8,7 @@ import type { ClaudeAuthStatus } from '../claude/auth-status.ts';
 import { CLAUDE_ACTIVE_CREDENTIALS } from '../claude/auth-status.ts';
 import type {
   AgentAccountIdentity,
-  AgentAccountUnattributedReason,
+  AgentAccountUnattributedReasonsValue,
 } from './types.ts';
 import {
   AGENT_ACCOUNT_API_KEY_ID,
@@ -58,7 +58,7 @@ function apiKeyAccount(provider: string): AgentAccountIdentity {
 
 function unattributed(
   provider: string,
-  reason: AgentAccountUnattributedReason,
+  reason: AgentAccountUnattributedReasonsValue,
 ): AgentAccountIdentity {
   return { kind: 'unattributed', provider, reason };
 }

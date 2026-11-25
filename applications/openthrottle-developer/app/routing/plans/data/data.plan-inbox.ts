@@ -49,3 +49,8 @@ export const PLAN_INBOX_KIND_BADGE_COLOR = {
   QUEUE: 'blue',
   STEER: 'violet',
 } as const satisfies Record<string, NonNullable<BadgeProps['color']>>;
+
+export type PlanInboxKindBadgeColorKey =
+  keyof typeof PLAN_INBOX_KIND_BADGE_COLOR;
+export type PlanInboxKindBadgeColorValue =
+  (typeof PLAN_INBOX_KIND_BADGE_COLOR)[PlanInboxKindBadgeColorKey];

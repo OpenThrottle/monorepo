@@ -18,7 +18,7 @@ import { AGENT_CONFIG_POSTURE } from '@openthrottle/openthrottle-agentic-utils';
 import type {
   AgentDriver,
   DriverRepoAgentConfig,
-  RunAgentStatus,
+  RunAgentStatusValue,
   UsageLimit,
 } from '@openthrottle/openthrottle-drivers';
 import {
@@ -76,14 +76,14 @@ const TERMINAL_RUN_STATUSES: ReadonlySet<ScheduledAgentJobRunStatus> = new Set([
   'usage_limited',
 ]);
 /**
- * @description Maps a driver {@link RunAgentStatus} to the persisted run status, letting an
+ * @description Maps a driver {@link RunAgentStatusValue} to the persisted run status, letting an
  * agent-emitted {@link parseRunOutcome} verdict override a clean exit.
  *
  * The override is only ever applied to `ok`: a run that timed out, was cancelled, or exited non-zero
  * is already being reported honestly, and a sentinel printed before a crash must not upgrade it.
  */
 const runStatusForAgentStatus = (
-  status: RunAgentStatus,
+  status: RunAgentStatusValue,
   outcome: 'completed' | 'no_op' | null = null,
 ): ScheduledAgentJobRunStatus => {
   switch (status) {
@@ -147,7 +147,7 @@ const usageColumns = (
 
 /** @description Human error detail for a non-ok agent status; null for a clean run. */
 const errorMessageForAgentStatus = (
-  status: RunAgentStatus,
+  status: RunAgentStatusValue,
   exitCode: number | null,
 ): string | null => {
   switch (status) {

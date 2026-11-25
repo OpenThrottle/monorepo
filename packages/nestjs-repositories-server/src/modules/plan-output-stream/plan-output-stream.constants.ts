@@ -16,6 +16,10 @@ export const PLAN_OUTPUT_STREAM_KIND = {
   WORKER: 'worker',
 } as const;
 
+export type PlanOutputStreamKindKey = keyof typeof PLAN_OUTPUT_STREAM_KIND;
+export type PlanOutputStreamKindValue =
+  (typeof PLAN_OUTPUT_STREAM_KIND)[PlanOutputStreamKindKey];
+
 /**
  * The allowed `kind` values, in the order the CHECK lists them.
  * @public

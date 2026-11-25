@@ -37,3 +37,7 @@ export const TAGGING_ENTITY_TYPES = {
   PLAN: 'plan',
   TASK: 'task',
 } as const;
+
+export type TaggingEntityTypesKey = keyof typeof TAGGING_ENTITY_TYPES;
+export type TaggingEntityTypesValue =
+  (typeof TAGGING_ENTITY_TYPES)[TaggingEntityTypesKey];

@@ -5,6 +5,10 @@ export const WORKTREE_ROOT_SOURCE = {
   ENV: 'env',
 } as const;
 
+export type WorktreeRootSourceKey = keyof typeof WORKTREE_ROOT_SOURCE;
+export type WorktreeRootSourceValue =
+  (typeof WORKTREE_ROOT_SOURCE)[WorktreeRootSourceKey];
+
 /**
  * The default worktree root under `$HOME`, matching `resolve_worktree_root` in
  * `skills/ot-worktree/scripts/root.sh` and the commented entry in `.env.default` (a test keeps all

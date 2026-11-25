@@ -24,6 +24,10 @@ export const DESKTOP_IPC_CHANNELS = {
   openExternal: 'openthrottle-desktop:open-external',
 } as const;
 
+export type DesktopIpcChannelsKey = keyof typeof DESKTOP_IPC_CHANNELS;
+export type DesktopIpcChannelsValue =
+  (typeof DESKTOP_IPC_CHANNELS)[DesktopIpcChannelsKey];
+
 /** Longest notification title or body main will accept from a page. */
 export const DESKTOP_NOTIFY_MAX_LENGTH = 512;
 

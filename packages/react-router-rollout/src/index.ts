@@ -5,7 +5,7 @@ export {
   isRolloutFlagKind,
   ROLLOUT_CACHE_KEY_PREFIX,
   ROLLOUT_FLAG_KIND,
-  type RolloutFlagKind,
+  type RolloutFlagKindValue,
 } from './config';
 export type { RolloutContextValue } from './data';
 export { RolloutContext } from './data';

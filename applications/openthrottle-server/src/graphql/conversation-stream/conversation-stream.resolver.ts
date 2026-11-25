@@ -37,9 +37,9 @@ import {
 } from '@openthrottle/nestjs-repositories-server';
 import type {
   ChatCompletionMessage,
-  ConversationPermissionMode,
+  ConversationPermissionModesValue,
   ConversationReasoningEffort,
-  ConversationServiceTier,
+  ConversationServiceTiersValue,
 } from '@openthrottle/openthrottle-agentic-utils';
 import {
   AGENT_CLI_ALLOWLIST,
@@ -211,14 +211,14 @@ interface ResolvedBackendRun {
   > | null;
   readonly model: string;
   /** Composer permission posture forwarded to CLI backends; null when unset. */
-  readonly permissionMode: ConversationPermissionMode | null;
+  readonly permissionMode: ConversationPermissionModesValue | null;
   readonly provider: string | null;
   /** Reasoning effort forwarded to backends that expose one; null when unset. */
   readonly reasoning: ConversationReasoningEffort | null;
   /** True when the CLI backend should resume `sessionId` rather than create it (claude). */
   readonly resumeSession: boolean;
   /** Service tier forwarded to tier-aware backends (cursor); null when unset. */
-  readonly serviceTier: ConversationServiceTier | null;
+  readonly serviceTier: ConversationServiceTiersValue | null;
   readonly sessionId: string | null;
   readonly systemPrompt: string | null;
 }

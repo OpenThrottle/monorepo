@@ -40,7 +40,7 @@ export { discoverSkillDirs } from './skill-discovery.ts';
 
 /** @public */
 export type {
-  ForeignSkillLayer,
+  ForeignSkillLayerValue,
   ForeignSkillManifestEntry,
   ResolveForeignSkillManifestInput,
   ResolveForeignSkillManifestResult,
@@ -61,8 +61,8 @@ export { evaluateTagActionRules } from './tag-actions.ts';
 
 /** @public */
 export type {
-  TagActionCondition,
   TagActionConditionResult,
+  TagActionConditionsValue,
   TagActionRuleMatchExplanation,
 } from './explainTagActionRuleMatch.ts';
 export {
@@ -83,7 +83,7 @@ export type {
   AvailabilityExceptionActionPayload,
   InjectTaskActionPayload,
   PromoteTaskToPlanActionPayload,
-  TagActionType,
+  TagActionTypesValue,
 } from './tag-actions.ts';
 export {
   ATTACH_PROMPT_PLACEMENTS,

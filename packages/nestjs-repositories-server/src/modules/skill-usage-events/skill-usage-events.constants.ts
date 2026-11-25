@@ -38,6 +38,10 @@ export const SKILL_USAGE_SCOPES = {
   THIRD_PARTY: 'third-party',
 } as const;
 
+export type SkillUsageScopesKey = keyof typeof SKILL_USAGE_SCOPES;
+export type SkillUsageScopesValue =
+  (typeof SKILL_USAGE_SCOPES)[SkillUsageScopesKey];
+
 /**
  * @description Human-readable member list for validation messages, e.g.
  * `scope must be one of: ours, personal, third-party`. Generated from the
@@ -70,3 +74,8 @@ export const SKILL_USAGE_PRIVACY_LEVELS = {
   NAME_ONLY: 'name-only',
   TRUNCATED: 'truncated',
 } as const;
+
+export type SkillUsagePrivacyLevelsKey =
+  keyof typeof SKILL_USAGE_PRIVACY_LEVELS;
+export type SkillUsagePrivacyLevelsValue =
+  (typeof SKILL_USAGE_PRIVACY_LEVELS)[SkillUsagePrivacyLevelsKey];

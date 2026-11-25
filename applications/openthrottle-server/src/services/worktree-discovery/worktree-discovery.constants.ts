@@ -8,6 +8,10 @@ export const WORKTREE_DISCOVERY_SOURCE = {
   ROOT_SCAN: 'root-scan',
 } as const;
 
+export type WorktreeDiscoverySourceKey = keyof typeof WORKTREE_DISCOVERY_SOURCE;
+export type WorktreeDiscoverySourceValue =
+  (typeof WORKTREE_DISCOVERY_SOURCE)[WorktreeDiscoverySourceKey];
+
 /**
  * Why a discovery scan is less than complete, or what it noticed on the way. Deliberately NOT a TS
  * enum (docs/monorepo/code-style.md): an `as const` object keeps the values inlineable and the
@@ -47,6 +51,11 @@ export const WORKTREE_DISCOVERY_PROBLEM = {
   STALE_WORKTREE_ENTRY: 'stale-worktree-entry',
 } as const;
 
+export type WorktreeDiscoveryProblemKey =
+  keyof typeof WORKTREE_DISCOVERY_PROBLEM;
+export type WorktreeDiscoveryProblemValue =
+  (typeof WORKTREE_DISCOVERY_PROBLEM)[WorktreeDiscoveryProblemKey];
+
 /**
  * Why a registered `repository_checkouts` row of kind `worktree` has no live worktree behind it.
  * - `PATH_GONE` — nothing exists at the path any more.
@@ -57,3 +66,7 @@ export const MISSING_CHECKOUT_REASON = {
   NOT_A_WORKTREE: 'not-a-worktree',
   PATH_GONE: 'path-gone',
 } as const;
+
+export type MissingCheckoutReasonKey = keyof typeof MISSING_CHECKOUT_REASON;
+export type MissingCheckoutReasonValue =
+  (typeof MISSING_CHECKOUT_REASON)[MissingCheckoutReasonKey];

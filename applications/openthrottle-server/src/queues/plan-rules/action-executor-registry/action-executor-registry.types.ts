@@ -5,7 +5,7 @@ import type {
 } from '@openthrottle/nestjs-repositories-server';
 import type {
   MatchedTagAction,
-  TagActionType,
+  TagActionTypesValue,
 } from '@openthrottle/openthrottle-skills';
 
 export interface ActionExecutorContext {
@@ -44,7 +44,7 @@ export interface ActionReconcileContext extends ActionExecutorContext {
  * Executors therefore never see a superseded match and need no arbitration of their own.
  */
 export interface ActionExecutor {
-  readonly actionType: TagActionType;
+  readonly actionType: TagActionTypesValue;
   execute(context: ActionExecutorContext): Promise<void>;
   /**
    * @description Optional managed-invariant pass for an already-'applied' (rule,

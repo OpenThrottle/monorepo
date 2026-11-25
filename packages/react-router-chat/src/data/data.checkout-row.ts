@@ -12,3 +12,7 @@ export const CHECKOUT_ROW_MAX_CHARS = {
   branch: 38,
   path: 38,
 } as const;
+
+export type CheckoutRowMaxCharsKey = keyof typeof CHECKOUT_ROW_MAX_CHARS;
+export type CheckoutRowMaxCharsValue =
+  (typeof CHECKOUT_ROW_MAX_CHARS)[CheckoutRowMaxCharsKey];

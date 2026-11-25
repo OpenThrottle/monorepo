@@ -17,9 +17,10 @@ export const TAG_ACTION_CONDITIONS = {
   TAGS: 'tags',
 } as const;
 
+export type TagActionConditionsKey = keyof typeof TAG_ACTION_CONDITIONS;
 /** @public */
-export type TagActionCondition =
-  (typeof TAG_ACTION_CONDITIONS)[keyof typeof TAG_ACTION_CONDITIONS];
+export type TagActionConditionsValue =
+  (typeof TAG_ACTION_CONDITIONS)[TagActionConditionsKey];
 
 /**
  * @description One condition's verdict. `expected` is what the rule requires (null when the rule
@@ -29,7 +30,7 @@ export type TagActionCondition =
  */
 export interface TagActionConditionResult {
   readonly actual: string | null;
-  readonly condition: TagActionCondition;
+  readonly condition: TagActionConditionsValue;
   readonly expected: string | null;
   readonly passed: boolean;
 }
@@ -55,7 +56,7 @@ export interface TagActionRuleMatchExplanation {
 }
 
 const scalarCondition = (
-  condition: TagActionCondition,
+  condition: TagActionConditionsValue,
   expected: string | null,
   actual: string | null,
 ): TagActionConditionResult => {

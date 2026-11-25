@@ -2,7 +2,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import type { DriverId } from '@openthrottle/openthrottle-drivers';
+import type { DriversValue } from '@openthrottle/openthrottle-drivers';
 import { isDriverId, parseDriverId } from '@openthrottle/openthrottle-drivers';
 
 import {
@@ -210,9 +210,9 @@ export const readWorkflowDebugLevelFromEnv = (
 
 /**
  * Which CLI/process runs each agentic iteration.
- * @deprecated Use {@link DriverId} from `@openthrottle/openthrottle-drivers`.
+ * @deprecated Use {@link DriversValue} from `@openthrottle/openthrottle-drivers`.
  */
-export type WorkflowRunnerId = DriverId;
+export type WorkflowRunnerId = DriversValue;
 
 /**
  * Returns true when `value` is a supported {@link WorkflowRunnerId}.

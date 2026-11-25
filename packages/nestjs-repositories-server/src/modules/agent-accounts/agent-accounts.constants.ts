@@ -8,3 +8,8 @@ export const AGENT_ACCOUNT_CREDENTIAL_KINDS = {
   SUBSCRIPTION: 'subscription',
   UNKNOWN: 'unknown',
 } as const;
+
+export type AgentAccountCredentialKindsKey =
+  keyof typeof AGENT_ACCOUNT_CREDENTIAL_KINDS;
+export type AgentAccountCredentialKindsValue =
+  (typeof AGENT_ACCOUNT_CREDENTIAL_KINDS)[AgentAccountCredentialKindsKey];

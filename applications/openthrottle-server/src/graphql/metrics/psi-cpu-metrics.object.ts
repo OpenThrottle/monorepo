@@ -5,8 +5,8 @@
 
 import { Field, Float, ObjectType } from '@nestjs/graphql';
 
-import type { MetricScopeType } from './metric-scope.enum.ts';
-import { MetricScope } from './metric-scope.enum.ts';
+import type { MetricScopeValue } from './metric-scope.enum.ts';
+import { METRIC_SCOPE } from './metric-scope.enum.ts';
 
 @ObjectType('PsiCpuMetrics', {
   description: `Linux Pressure Stall Information (PSI) for CPU. Null fields on non-Linux platforms.`,
@@ -60,9 +60,9 @@ export class PsiCpuMetricsObject {
   })
   someTotalUs!: number | null;
 
-  @Field(() => MetricScope, {
+  @Field(() => METRIC_SCOPE, {
     description: `Whose pressure this is: host (/proc/pressure/cpu) or container (the server cgroup's cpu.pressure). Null on plan-run metrics recorded before scopes existed.`,
     nullable: true,
   })
-  scope!: MetricScopeType | null;
+  scope!: MetricScopeValue | null;
 }

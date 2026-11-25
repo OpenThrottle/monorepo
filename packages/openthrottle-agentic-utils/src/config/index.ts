@@ -50,3 +50,6 @@ export const WORKFLOW_EVENT = {
   JOB_RUN: 'job_run',
   METRIC: 'metric',
 } as const;
+
+export type WorkflowEventKey = keyof typeof WORKFLOW_EVENT;
+export type WorkflowEventValue = (typeof WORKFLOW_EVENT)[WorkflowEventKey];

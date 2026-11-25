@@ -10,6 +10,10 @@ export const BLOG_WRITE_RESULT_KIND = {
   STALE_WRITE: 'stale-write',
 } as const;
 
+export type BlogWriteResultKindKey = keyof typeof BLOG_WRITE_RESULT_KIND;
+export type BlogWriteResultKindValue =
+  (typeof BLOG_WRITE_RESULT_KIND)[BlogWriteResultKindKey];
+
 /**
  * @description What a {@link BlogWriteNotFound} could not find.
  * @public
@@ -19,3 +23,7 @@ export const BLOG_WRITE_ENTITY = {
   POST: 'post',
   TAG: 'tag',
 } as const;
+
+export type BlogWriteEntityKey = keyof typeof BLOG_WRITE_ENTITY;
+export type BlogWriteEntityValue =
+  (typeof BLOG_WRITE_ENTITY)[BlogWriteEntityKey];

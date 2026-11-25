@@ -8,11 +8,12 @@ import {
 import { Loader2, Mic } from 'lucide-react';
 import * as React from 'react';
 
-import { ChatComposerMicState } from '../types';
+import type { ChatComposerMicStateValue } from '../types';
+import { CHAT_COMPOSER_MIC_STATE } from '../types';
 import { getChatComposerMicLabel } from '../utils/getChatComposerMicLabel';
 
 export interface ChatComposerMicControlProps {
-  readonly micState: ChatComposerMicState;
+  readonly micState: ChatComposerMicStateValue;
   /** Toggle voice input (click starts / click stops); omit to hide the control. */
   readonly onMicToggle?: () => void;
 }
@@ -20,7 +21,7 @@ export interface ChatComposerMicControlProps {
 /**
  * @description Toggle-only voice-input mic for {@link ChatComposerToolbar}. Its
  * icon, label, pressed/disabled state, and pulsing/spinner affordance are driven
- * by {@link ChatComposerMicState} (idle / recording / finalizing / disabled).
+ * by {@link CHAT_COMPOSER_MIC_STATE} (idle / recording / finalizing / disabled).
  * Renders nothing when {@link ChatComposerMicControlProps.onMicToggle} is
  * omitted. Presentational — the consumer owns all capture and transcription.
  *
@@ -34,8 +35,8 @@ export const ChatComposerMicControl = (
   // Hooks
 
   // Setup
-  const isMicFinalizing = micState === ChatComposerMicState.finalizing;
-  const isMicRecording = micState === ChatComposerMicState.recording;
+  const isMicFinalizing = micState === CHAT_COMPOSER_MIC_STATE.finalizing;
+  const isMicRecording = micState === CHAT_COMPOSER_MIC_STATE.recording;
   const micLabel = getChatComposerMicLabel(micState);
 
   // Handlers
@@ -65,7 +66,7 @@ export const ChatComposerMicControl = (
           data-mic-state={micState}
           data-testid="ChatComposerToolbar-mic"
           disabled={
-            micState === ChatComposerMicState.disabled || isMicFinalizing
+            micState === CHAT_COMPOSER_MIC_STATE.disabled || isMicFinalizing
           }
           onClick={onMicToggle}
           size="icon"

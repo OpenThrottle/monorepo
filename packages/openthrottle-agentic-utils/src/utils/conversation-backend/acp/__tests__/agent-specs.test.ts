@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ConversationPermissionMode } from '../../types.ts';
+import type { ConversationPermissionModesValue } from '../../types.ts';
 import { ACP_AGENT_SPECS } from '../agent-specs.ts';
 
 describe('ACP_AGENT_SPECS session modes', () => {
@@ -26,12 +26,9 @@ describe('ACP_AGENT_SPECS session modes', () => {
     const spec = ACP_AGENT_SPECS['cursor'];
 
     it('pins agent mode for every posture and reports edits as unasked', () => {
-      const postures: ReadonlyArray<ConversationPermissionMode | undefined> = [
-        'autoAcceptEdits',
-        'fullAccess',
-        'supervised',
-        undefined,
-      ];
+      const postures: ReadonlyArray<
+        ConversationPermissionModesValue | undefined
+      > = ['autoAcceptEdits', 'fullAccess', 'supervised', undefined];
       for (const mode of postures) {
         expect(spec?.sessionMode(mode)).toBe('agent');
       }

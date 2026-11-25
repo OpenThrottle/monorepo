@@ -7,7 +7,7 @@
  */
 
 import { BaseModel } from '@openthrottle/nestjs-postgres';
-import type { TagActionType } from '@openthrottle/openthrottle-skills';
+import type { TagActionTypesValue } from '@openthrottle/openthrottle-skills';
 import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 
 import { PLAN_STATUS_VALUES } from '../../plan-task-status/plan-task-status.constants.ts';
@@ -66,7 +66,7 @@ export class TagActionRule extends BaseModel {
   environment!: string | null;
 
   @Column({ name: 'action_type', type: 'text' })
-  actionType!: TagActionType;
+  actionType!: TagActionTypesValue;
 
   @Column({ name: 'action_payload', type: 'jsonb' })
   actionPayload!: unknown;

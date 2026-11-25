@@ -1,4 +1,5 @@
-import { ChatPermissionMode } from '@openthrottle/react-router-chat';
+import type { ChatPermissionModeValue } from '@openthrottle/react-router-chat';
+import { CHAT_PERMISSION_MODE } from '@openthrottle/react-router-chat';
 
 import type {
   ChatToolbarBackendPrefs,
@@ -10,13 +11,13 @@ import type {
  * apply changes without per-action review, so they decay to the safe default.
  * `supervised` is intentionally absent — it never decays.
  */
-const ELEVATED_PERMISSION_MODES: readonly ChatPermissionMode[] = [
-  ChatPermissionMode.autoAcceptEdits,
-  ChatPermissionMode.fullAccess,
+const ELEVATED_PERMISSION_MODES: readonly ChatPermissionModeValue[] = [
+  CHAT_PERMISSION_MODE.autoAcceptEdits,
+  CHAT_PERMISSION_MODE.fullAccess,
 ];
 
 const isElevatedPermissionMode = (
-  mode: ChatPermissionMode | undefined,
+  mode: ChatPermissionModeValue | undefined,
 ): boolean => {
   return mode != null && ELEVATED_PERMISSION_MODES.includes(mode);
 };

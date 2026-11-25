@@ -1,17 +1,20 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { CalendarView } from '../../types';
+import type { CalendarViewValue } from '../../types';
+import { CALENDAR_VIEW } from '../../types';
 import { useCalendar } from '../useCalendar';
 import { useSchedule } from '../useSchedule';
 
 const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
 
-function renderUseCalendar(defaultView: CalendarView = CalendarView.Week) {
+function renderUseCalendar(
+  defaultView: CalendarViewValue = CALENDAR_VIEW.Week,
+) {
   return renderHook(() => {
     const schedule = useSchedule({
       events: [],
-      views: [CalendarView.Week, CalendarView.Month],
+      views: [CALENDAR_VIEW.Week, CALENDAR_VIEW.Month],
     });
     return useCalendar(schedule, {
       defaultDate: new Date(2026, 5, 15),
@@ -32,7 +35,7 @@ describe('useCalendar', () => {
 
   it('initializes from the provided default view and date', () => {
     const { result } = renderUseCalendar();
-    expect(result.current.view).toBe(CalendarView.Week);
+    expect(result.current.view).toBe(CALENDAR_VIEW.Week);
     expect(result.current.date.getFullYear()).toBe(2026);
     expect(result.current.date.getMonth()).toBe(5);
     expect(result.current.date.getDate()).toBe(15);
@@ -40,12 +43,12 @@ describe('useCalendar', () => {
 
   it('switches the active view', () => {
     const { result } = renderUseCalendar();
-    act(() => result.current.setView(CalendarView.Month));
-    expect(result.current.view).toBe(CalendarView.Month);
+    act(() => result.current.setView(CALENDAR_VIEW.Month));
+    expect(result.current.view).toBe(CALENDAR_VIEW.Month);
   });
 
   it('advances and rewinds by one week in week view', () => {
-    const { result } = renderUseCalendar(CalendarView.Week);
+    const { result } = renderUseCalendar(CALENDAR_VIEW.Week);
     act(() => result.current.next());
     expect(result.current.date.getDate()).toBe(22);
     act(() => result.current.prev());
@@ -54,7 +57,7 @@ describe('useCalendar', () => {
   });
 
   it('advances by one month in month view', () => {
-    const { result } = renderUseCalendar(CalendarView.Month);
+    const { result } = renderUseCalendar(CALENDAR_VIEW.Month);
     act(() => result.current.next());
     expect(result.current.date.getMonth()).toBe(6); // July
     expect(result.current.date.getDate()).toBe(15);

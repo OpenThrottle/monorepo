@@ -1,5 +1,5 @@
 import type {
-  NotificationEventName,
+  NotificationEventNamesValue,
   NotificationPayload,
 } from '@openthrottle/openthrottle-notifications';
 import * as React from 'react';
@@ -12,7 +12,7 @@ import type {
 
 export interface UseWebsocketDebuggerSocketSubscriptionOptions {
   readonly append: (
-    event: NotificationEventName,
+    event: NotificationEventNamesValue,
     payload: NotificationPayload,
   ) => void;
   readonly enabled?: boolean;

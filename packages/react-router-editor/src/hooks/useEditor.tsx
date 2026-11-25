@@ -2,7 +2,7 @@ import { useAtom } from 'jotai';
 import type { Dispatch, SetStateAction } from 'react';
 import { useNavigate } from 'react-router';
 
-import type { PromptType } from '../config';
+import type { PromptTypesValue } from '../config';
 import type { EditorAtom, EditorFile } from '../data/data.atom.editor';
 import { editorAtom, filteredFilesAtom } from '../data/data.atom.editor';
 import { getLanguageFromExt } from '../utils';
@@ -25,7 +25,9 @@ export interface UseEditorResult {
   readonly setFiles: (files: readonly EditorFile[]) => void;
   readonly setLoading: (isLoading: boolean) => void;
   readonly setSearchQuery: (searchQuery: string) => void;
-  readonly setSelectedType: (selectedType: PromptType | undefined) => void;
+  readonly setSelectedType: (
+    selectedType: PromptTypesValue | undefined,
+  ) => void;
 }
 
 /**
@@ -110,7 +112,9 @@ export const useEditor = (options?: UseEditorOptions): UseEditorResult => {
     setEditor((current) => ({ ...current, searchQuery }));
   };
 
-  const setSelectedType = (selectedType: PromptType | undefined): void => {
+  const setSelectedType = (
+    selectedType: PromptTypesValue | undefined,
+  ): void => {
     setEditor((current) => ({ ...current, selectedType }));
   };
 

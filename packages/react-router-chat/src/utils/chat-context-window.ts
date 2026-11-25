@@ -10,9 +10,10 @@ export const CHAT_CONTEXT_WINDOW_TONES = {
   warning: 'warning',
 } as const;
 
+export type ChatContextWindowTonesKey = keyof typeof CHAT_CONTEXT_WINDOW_TONES;
 /** @public */
-export type ChatContextWindowTone =
-  (typeof CHAT_CONTEXT_WINDOW_TONES)[keyof typeof CHAT_CONTEXT_WINDOW_TONES];
+export type ChatContextWindowTonesValue =
+  (typeof CHAT_CONTEXT_WINDOW_TONES)[ChatContextWindowTonesKey];
 
 const WARNING_PERCENT = 75;
 const CRITICAL_PERCENT = 90;
@@ -24,12 +25,12 @@ const CRITICAL_PERCENT = 90;
 export interface ChatContextWindowUsage {
   /** Rounded fill, clamped to 0-100. */
   readonly percent: number;
-  readonly tone: ChatContextWindowTone;
+  readonly tone: ChatContextWindowTonesValue;
   readonly usedTokens: number;
   readonly windowTokens: number;
 }
 
-const toneFor = (percent: number): ChatContextWindowTone => {
+const toneFor = (percent: number): ChatContextWindowTonesValue => {
   if (percent >= CRITICAL_PERCENT) {
     return CHAT_CONTEXT_WINDOW_TONES.critical;
   }

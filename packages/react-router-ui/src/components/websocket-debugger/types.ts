@@ -1,5 +1,5 @@
 import type {
-  NotificationEventName,
+  NotificationEventNamesValue,
   NotificationPayload,
 } from '@openthrottle/openthrottle-notifications';
 
@@ -17,7 +17,7 @@ export interface WebsocketDebuggerSocket {
  */
 export type WebsocketDebuggerEventSubscriber = (
   listener: (
-    event: NotificationEventName,
+    event: NotificationEventNamesValue,
     payload: NotificationPayload,
   ) => void,
 ) => () => void;
@@ -29,7 +29,7 @@ export const WEBSOCKET_DEBUGGER_LOG_CAP = 200;
  * @description One Socket.IO notification captured for the live debugger feed.
  */
 export interface WebsocketDebuggerLogEntry {
-  readonly event: NotificationEventName;
+  readonly event: NotificationEventNamesValue;
   readonly id: string;
   readonly payload: NotificationPayload;
   /** ISO 8601 timestamp when the entry was recorded in the client. */

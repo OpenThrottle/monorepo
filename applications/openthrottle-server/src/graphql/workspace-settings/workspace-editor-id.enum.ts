@@ -6,16 +6,17 @@
 import { registerEnumType } from '@nestjs/graphql';
 import { WORKSPACE_EDITOR_IDS } from '@openthrottle/nestjs-repositories-server';
 
-export const WorkspaceEditorIdEnum = {
+export const WORKSPACE_EDITOR_ID = {
   CLAUDE: 'claude',
   CURSOR: 'cursor',
   VSCODE: 'vscode',
 } as const;
 
-export type WorkspaceEditorIdEnum =
-  (typeof WorkspaceEditorIdEnum)[keyof typeof WorkspaceEditorIdEnum];
+export type WorkspaceEditorIdKey = keyof typeof WORKSPACE_EDITOR_ID;
+export type WorkspaceEditorIdValue =
+  (typeof WORKSPACE_EDITOR_ID)[WorkspaceEditorIdKey];
 
-registerEnumType(WorkspaceEditorIdEnum, {
+registerEnumType(WORKSPACE_EDITOR_ID, {
   description: `Editor OpenThrottle may configure in linked local repositories (MCP, skills, rules). Supported values: ${WORKSPACE_EDITOR_IDS.join(', ')}.`,
   name: 'WorkspaceEditorId',
   valuesMap: {

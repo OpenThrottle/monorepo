@@ -1,4 +1,4 @@
-import type { PromptType } from '@openthrottle/react-router-editor';
+import type { PromptTypesValue } from '@openthrottle/react-router-editor';
 import * as React from 'react';
 import { useFetcher } from 'react-router';
 
@@ -13,11 +13,11 @@ export interface UsePromptCreateFormResult {
   handleSubmit: () => void;
   isSubmitting: boolean;
   labels: string;
-  promptType: PromptType;
+  promptType: PromptTypesValue;
   setDescription: React.Dispatch<React.SetStateAction<string>>;
   setFilePath: React.Dispatch<React.SetStateAction<string>>;
   setLabels: React.Dispatch<React.SetStateAction<string>>;
-  setPromptType: React.Dispatch<React.SetStateAction<PromptType>>;
+  setPromptType: React.Dispatch<React.SetStateAction<PromptTypesValue>>;
   setTitle: React.Dispatch<React.SetStateAction<string>>;
   title: string;
 }
@@ -34,7 +34,8 @@ export const usePromptCreateForm = (): UsePromptCreateFormResult => {
   const [description, setDescription] = React.useState('');
   const [filePath, setFilePath] = React.useState('');
   const [labels, setLabels] = React.useState('');
-  const [promptType, setPromptType] = React.useState<PromptType>('prompts');
+  const [promptType, setPromptType] =
+    React.useState<PromptTypesValue>('prompts');
   const [title, setTitle] = React.useState('');
 
   // Setup

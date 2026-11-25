@@ -36,9 +36,10 @@ export const PLUGIN_FIX_OUTCOME = {
   NO_TTY: 'no-tty',
 } as const;
 
+export type PluginFixOutcomeKey = keyof typeof PLUGIN_FIX_OUTCOME;
 /** @public */
-export type PluginFixOutcome =
-  (typeof PLUGIN_FIX_OUTCOME)[keyof typeof PLUGIN_FIX_OUTCOME];
+export type PluginFixOutcomeValue =
+  (typeof PLUGIN_FIX_OUTCOME)[PluginFixOutcomeKey];
 
 /**
  * Everything `--fix` touches outside its own logic, so tests can drive it without a terminal.
@@ -155,7 +156,7 @@ export const runPluginFix = async ({
   readonly binary: string;
   readonly io: PluginFixIo;
   readonly plan: PluginFixPlan;
-}): Promise<PluginFixOutcome> => {
+}): Promise<PluginFixOutcomeValue> => {
   if (plan.kind === 'none') {
     io.write('\n--fix: the plugin is installed and current; nothing to run.\n');
     return PLUGIN_FIX_OUTCOME.NOTHING_TO_FIX;

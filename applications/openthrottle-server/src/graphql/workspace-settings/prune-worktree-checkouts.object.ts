@@ -5,7 +5,7 @@
 
 import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
 
-export const PruneWorktreeCheckoutOutcomeEnum = {
+export const PRUNE_WORKTREE_CHECKOUT_OUTCOME = {
   NOT_FOUND: 'not-found',
   PRUNED: 'pruned',
   SKIPPED_ACTIVE_RUN: 'skipped-active-run',
@@ -13,10 +13,12 @@ export const PruneWorktreeCheckoutOutcomeEnum = {
   SKIPPED_PRIMARY: 'skipped-primary',
 } as const;
 
-export type PruneWorktreeCheckoutOutcomeEnum =
-  (typeof PruneWorktreeCheckoutOutcomeEnum)[keyof typeof PruneWorktreeCheckoutOutcomeEnum];
+export type PruneWorktreeCheckoutOutcomeKey =
+  keyof typeof PRUNE_WORKTREE_CHECKOUT_OUTCOME;
+export type PruneWorktreeCheckoutOutcomeValue =
+  (typeof PRUNE_WORKTREE_CHECKOUT_OUTCOME)[PruneWorktreeCheckoutOutcomeKey];
 
-registerEnumType(PruneWorktreeCheckoutOutcomeEnum, {
+registerEnumType(PRUNE_WORKTREE_CHECKOUT_OUTCOME, {
   description: `What happened to one requested checkout id.`,
   name: 'PruneWorktreeCheckoutOutcome',
   valuesMap: {
@@ -41,8 +43,8 @@ export class PruneWorktreeCheckoutResultObject {
   @Field(() => ID)
   checkoutId!: string;
 
-  @Field(() => PruneWorktreeCheckoutOutcomeEnum)
-  outcome!: PruneWorktreeCheckoutOutcomeEnum;
+  @Field(() => PRUNE_WORKTREE_CHECKOUT_OUTCOME)
+  outcome!: PruneWorktreeCheckoutOutcomeValue;
 
   @Field(() => String, {
     description: `The registered path, or null when the checkout was not found.`,
@@ -69,10 +71,10 @@ export class DeregisterWorktreeCheckoutPayloadObject {
   })
   checkoutId!: string | null;
 
-  @Field(() => PruneWorktreeCheckoutOutcomeEnum, {
+  @Field(() => PRUNE_WORKTREE_CHECKOUT_OUTCOME, {
     description: `PRUNED when the row was deleted; NOT_FOUND when there was nothing to deregister (the normal case for a worktree OpenThrottle never registered).`,
   })
-  outcome!: PruneWorktreeCheckoutOutcomeEnum;
+  outcome!: PruneWorktreeCheckoutOutcomeValue;
 
   @Field(() => String, {
     description: `The registered path when a row matched, else the path as given.`,

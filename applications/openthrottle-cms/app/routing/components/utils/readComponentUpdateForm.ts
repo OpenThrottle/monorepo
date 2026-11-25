@@ -1,4 +1,4 @@
-import type { CmsStatus } from '@openthrottle/react-router-cms-core';
+import type { CmsStatusValue } from '@openthrottle/react-router-cms-core';
 import { CMS_STATUS } from '@openthrottle/react-router-cms-core';
 
 /**
@@ -9,13 +9,13 @@ export interface ComponentUpdateForm {
   readonly name: string;
   readonly propsSchemaJson: string;
   /** `null` leaves the stored status alone. */
-  readonly status: CmsStatus | null;
+  readonly status: CmsStatusValue | null;
   readonly typename: string;
 }
 
 const STATUSES: readonly string[] = Object.values(CMS_STATUS);
 
-const isCmsStatus = (value: unknown): value is CmsStatus => {
+const isCmsStatus = (value: unknown): value is CmsStatusValue => {
   return typeof value === 'string' && STATUSES.includes(value);
 };
 

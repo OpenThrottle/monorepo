@@ -1,4 +1,4 @@
-import type { NotificationEventName } from '@openthrottle/openthrottle-notifications';
+import type { NotificationEventNamesValue } from '@openthrottle/openthrottle-notifications';
 import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notifications';
 
 /**
@@ -6,7 +6,7 @@ import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notificatio
  */
 export interface WebsocketDebuggerEventOption {
   readonly label: string;
-  readonly value: NotificationEventName;
+  readonly value: NotificationEventNamesValue;
 }
 
 /**
@@ -60,5 +60,5 @@ export const WEBSOCKET_DEBUGGER_EVENT_OPTIONS: readonly WebsocketDebuggerEventOp
 /**
  * @description All event names available in the debugger filter (default selection).
  */
-export const WEBSOCKET_DEBUGGER_ALL_EVENT_NAMES: readonly NotificationEventName[] =
+export const WEBSOCKET_DEBUGGER_ALL_EVENT_NAMES: readonly NotificationEventNamesValue[] =
   WEBSOCKET_DEBUGGER_EVENT_OPTIONS.map((option) => option.value);

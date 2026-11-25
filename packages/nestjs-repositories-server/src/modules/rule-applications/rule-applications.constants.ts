@@ -11,6 +11,10 @@ export const RULE_APPLICATION_STATES = {
   PRE_SATISFIED: 'pre-satisfied',
 } as const;
 
+export type RuleApplicationStatesKey = keyof typeof RULE_APPLICATION_STATES;
+export type RuleApplicationStatesValue =
+  (typeof RULE_APPLICATION_STATES)[RuleApplicationStatesKey];
+
 /**
  * @description Status an orphaned injected task is soft-closed to (reversible). Exported so the
  * re-inject/revive path can recognize a task it previously soft-closed and reopen exactly that

@@ -3,11 +3,11 @@ import { describe, expect, it } from 'vitest';
 import type {
   ConversationBackend,
   ConversationBackendRun,
-  ConversationPermissionMode,
+  ConversationPermissionModesValue,
   ConversationReasoningEffort,
-  ConversationServiceTier,
+  ConversationServiceTiersValue,
   ConversationStreamChunk,
-  ConversationStreamChunkKind,
+  ConversationStreamChunkKindsValue,
 } from '../types.ts';
 import {
   CONVERSATION_PERMISSION_MODES,
@@ -125,9 +125,9 @@ describe('CONVERSATION_STREAM_CHUNK_KINDS', () => {
 
 describe('type shapes (compile-time assignability + runtime construction)', () => {
   it('accepts a valid permission mode, reasoning effort, and service tier as literals', () => {
-    const permissionMode: ConversationPermissionMode = 'supervised';
+    const permissionMode: ConversationPermissionModesValue = 'supervised';
     const reasoning: ConversationReasoningEffort = 'high';
-    const serviceTier: ConversationServiceTier = 'fast';
+    const serviceTier: ConversationServiceTiersValue = 'fast';
 
     expect(permissionMode).toBe(CONVERSATION_PERMISSION_MODES.supervised);
     expect(reasoning).toBe(CONVERSATION_REASONING_EFFORTS.high);
@@ -135,7 +135,7 @@ describe('type shapes (compile-time assignability + runtime construction)', () =
   });
 
   it('constructs a terminal text ConversationStreamChunk', () => {
-    const kind: ConversationStreamChunkKind = 'text';
+    const kind: ConversationStreamChunkKindsValue = 'text';
     const chunk: ConversationStreamChunk = {
       delta: '',
       done: true,

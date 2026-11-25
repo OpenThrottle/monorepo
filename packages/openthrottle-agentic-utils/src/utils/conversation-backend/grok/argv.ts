@@ -10,7 +10,7 @@
 import { grokReasoningEffort } from '@openthrottle/openthrottle-drivers';
 
 import type {
-  ConversationPermissionMode,
+  ConversationPermissionModesValue,
   ConversationReasoningEffort,
 } from '../types.ts';
 import { CONVERSATION_PERMISSION_MODES } from '../types.ts';
@@ -41,7 +41,7 @@ export interface GrokArgvOptions {
    * default). A headless run cannot prompt, so nothing above `acceptEdits` is
    * granted unless explicitly requested.
    */
-  readonly permissionMode?: ConversationPermissionMode;
+  readonly permissionMode?: ConversationPermissionModesValue;
   /** The latest user message (persona goes to `--system-prompt-override`). */
   readonly prompt: string;
   /**
@@ -60,7 +60,7 @@ export interface GrokArgvOptions {
 
 /** Map a composer permission posture onto a grok `--permission-mode` value, or undefined to omit. */
 function permissionModeFlag(
-  permissionMode: ConversationPermissionMode | undefined,
+  permissionMode: ConversationPermissionModesValue | undefined,
 ): string | undefined {
   if (permissionMode === CONVERSATION_PERMISSION_MODES.fullAccess) {
     return 'bypassPermissions';

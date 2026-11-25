@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 import { DEFAULT_VIEW } from '../config/defaults';
-import type { CalendarView } from '../types';
+import type { CalendarViewValue } from '../types';
 import { temporalToDate, toPlainDate } from '../utils/datetime';
 import { normalizeDate } from '../utils/normalizeDate';
 import { shiftDate } from '../utils/shiftDate';
@@ -18,7 +18,7 @@ export interface UseCalendarOptions {
   /** Initially selected date (defaults to today). */
   defaultDate?: Date | string;
   /** Initially active view (defaults to the package default view). */
-  defaultView?: CalendarView;
+  defaultView?: CalendarViewValue;
 }
 
 /**
@@ -37,11 +37,11 @@ export interface UseCalendarResult {
   /** Jump to a specific date. */
   setDate: (date: Date | string) => void;
   /** Switch the active view. */
-  setView: (view: CalendarView) => void;
+  setView: (view: CalendarViewValue) => void;
   /** Jump to today. */
   today: () => void;
   /** Currently active view. */
-  view: CalendarView;
+  view: CalendarViewValue;
 }
 
 /**
@@ -58,7 +58,7 @@ export function useCalendar(
   const { defaultDate, defaultView } = options;
 
   // Hooks
-  const [view, setViewState] = React.useState<CalendarView>(
+  const [view, setViewState] = React.useState<CalendarViewValue>(
     defaultView ?? DEFAULT_VIEW,
   );
   const [date, setDateState] = React.useState<Date>(() =>
@@ -70,7 +70,7 @@ export function useCalendar(
 
   // Handlers
   const setView = React.useCallback(
-    (next: CalendarView) => {
+    (next: CalendarViewValue) => {
       setViewState(next);
       controls?.setView(toEngineViewName(next));
     },

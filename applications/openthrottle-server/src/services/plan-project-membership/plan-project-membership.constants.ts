@@ -6,3 +6,8 @@ export const PROJECT_PLAN_MOVE_DIRECTION = {
   DOWN: 'DOWN',
   UP: 'UP',
 } as const;
+
+export type ProjectPlanMoveDirectionKey =
+  keyof typeof PROJECT_PLAN_MOVE_DIRECTION;
+export type ProjectPlanMoveDirectionValue =
+  (typeof PROJECT_PLAN_MOVE_DIRECTION)[ProjectPlanMoveDirectionKey];

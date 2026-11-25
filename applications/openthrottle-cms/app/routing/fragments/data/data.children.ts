@@ -12,6 +12,11 @@ export const FRAGMENT_CHILD_SEARCH_PARAMS = {
   typename: 'childTypename',
 } as const;
 
+export type FragmentChildSearchParamsKey =
+  keyof typeof FRAGMENT_CHILD_SEARCH_PARAMS;
+export type FragmentChildSearchParamsValue =
+  (typeof FRAGMENT_CHILD_SEARCH_PARAMS)[FragmentChildSearchParamsKey];
+
 /**
  * @description The child picker's "every type" filter option. Radix `Select` reserves the empty
  * string, so "no filter" needs a value of its own; it never reaches the URL.

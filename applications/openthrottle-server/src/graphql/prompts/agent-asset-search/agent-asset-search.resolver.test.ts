@@ -7,7 +7,7 @@ import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { EffectiveUserResolutionService } from '../../../services/effective-user-resolution/effective-user-resolution.service.ts';
 import { EmbedderService } from '../../../services/embedder/embedder.service.ts';
-import { CustomPromptTypeEnum } from '../custom-prompt.object.ts';
+import { CUSTOM_PROMPT_TYPE } from '../custom-prompt.object.ts';
 import { AgentAssetSearchResolver } from './agent-asset-search.resolver.ts';
 
 vi.mock('@openthrottle/node-client', () => ({
@@ -108,9 +108,9 @@ describe('AgentAssetSearchResolver', () => {
       [0.1, 0.2],
       20,
       [
-        CustomPromptTypeEnum.SKILLS,
-        CustomPromptTypeEnum.RULES,
-        CustomPromptTypeEnum.PERSONAS,
+        CUSTOM_PROMPT_TYPE.SKILLS,
+        CUSTOM_PROMPT_TYPE.RULES,
+        CUSTOM_PROMPT_TYPE.PERSONAS,
       ],
       null,
       'nomic-embed-text-v1.5',
@@ -125,14 +125,14 @@ describe('AgentAssetSearchResolver', () => {
     await resolver.searchAgentAssets({
       limit: 100,
       projectId: 'project-uuid',
-      promptTypes: [CustomPromptTypeEnum.SKILLS],
+      promptTypes: [CUSTOM_PROMPT_TYPE.SKILLS],
       query: 'headless',
     });
 
     expect(searchAgentAssets).toHaveBeenCalledWith(
       [0.1],
       50,
-      [CustomPromptTypeEnum.SKILLS],
+      [CUSTOM_PROMPT_TYPE.SKILLS],
       'project-uuid',
       'nomic-embed-text-v1.5',
       'user-1',
@@ -212,7 +212,7 @@ describe('AgentAssetSearchResolver', () => {
       filePath: '.agents/skills/git-commit/SKILL.md',
       id: 'chunk-uuid',
       labels: ['git', 'commit'],
-      promptType: CustomPromptTypeEnum.SKILLS,
+      promptType: CUSTOM_PROMPT_TYPE.SKILLS,
       similarity: 0.91,
       title: 'git-commit',
     });

@@ -10,12 +10,13 @@ export const TOOL_ARGUMENT_KINDS = {
   pattern: 'pattern',
 } as const;
 
-export type ToolArgumentKind =
-  (typeof TOOL_ARGUMENT_KINDS)[keyof typeof TOOL_ARGUMENT_KINDS];
+export type ToolArgumentKindsKey = keyof typeof TOOL_ARGUMENT_KINDS;
+export type ToolArgumentKindsValue =
+  (typeof TOOL_ARGUMENT_KINDS)[ToolArgumentKindsKey];
 
 /** Input keys that hold the argument, tried in order, per kind. Event shapes differ per CLI. */
 export const TOOL_ARGUMENT_FIELDS: Readonly<
-  Record<ToolArgumentKind, readonly string[]>
+  Record<ToolArgumentKindsValue, readonly string[]>
 > = {
   command: ['command', 'cmd'],
   path: [
@@ -32,7 +33,7 @@ export const TOOL_ARGUMENT_FIELDS: Readonly<
 
 /** Lower-cased tool name to the kind of argument it shows; any other tool stays a bare name. */
 export const TOOL_ARGUMENT_KIND_BY_TOOL: Readonly<
-  Record<string, ToolArgumentKind>
+  Record<string, ToolArgumentKindsValue>
 > = {
   bash: TOOL_ARGUMENT_KINDS.command,
   command_execution: TOOL_ARGUMENT_KINDS.command,
@@ -54,7 +55,7 @@ export const TOOL_ARGUMENT_KIND_BY_TOOL: Readonly<
 
 /** Longest rendered argument per kind, in characters. */
 export const TOOL_ARGUMENT_MAX_LENGTH: Readonly<
-  Record<ToolArgumentKind, number>
+  Record<ToolArgumentKindsValue, number>
 > = {
   command: 60,
   path: 80,

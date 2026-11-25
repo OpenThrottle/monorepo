@@ -15,9 +15,11 @@ export const AGENT_ACCOUNT_CREDENTIAL_KINDS = {
   unknown: 'unknown',
 } as const;
 
+export type AgentAccountCredentialKindsKey =
+  keyof typeof AGENT_ACCOUNT_CREDENTIAL_KINDS;
 /** @public */
-export type AgentAccountCredentialKind =
-  (typeof AGENT_ACCOUNT_CREDENTIAL_KINDS)[keyof typeof AGENT_ACCOUNT_CREDENTIAL_KINDS];
+export type AgentAccountCredentialKindsValue =
+  (typeof AGENT_ACCOUNT_CREDENTIAL_KINDS)[AgentAccountCredentialKindsKey];
 
 /**
  * @public
@@ -31,9 +33,11 @@ export const AGENT_ACCOUNT_UNATTRIBUTED_REASONS = {
   unsupported: 'unsupported',
 } as const;
 
+export type AgentAccountUnattributedReasonsKey =
+  keyof typeof AGENT_ACCOUNT_UNATTRIBUTED_REASONS;
 /** @public */
-export type AgentAccountUnattributedReason =
-  (typeof AGENT_ACCOUNT_UNATTRIBUTED_REASONS)[keyof typeof AGENT_ACCOUNT_UNATTRIBUTED_REASONS];
+export type AgentAccountUnattributedReasonsValue =
+  (typeof AGENT_ACCOUNT_UNATTRIBUTED_REASONS)[AgentAccountUnattributedReasonsKey];
 
 /**
  * @public
@@ -41,7 +45,7 @@ export type AgentAccountUnattributedReason =
  * within the provider (see each adapter); every descriptive field is null when not reported.
  */
 export interface IdentifiedAgentAccount {
-  readonly credentialKind: AgentAccountCredentialKind;
+  readonly credentialKind: AgentAccountCredentialKindsValue;
   readonly email: string | null;
   readonly externalAccountId: string;
   readonly kind: 'identified';
@@ -55,7 +59,7 @@ export interface IdentifiedAgentAccount {
 export interface UnattributedAgentAccount {
   readonly kind: 'unattributed';
   readonly provider: string;
-  readonly reason: AgentAccountUnattributedReason;
+  readonly reason: AgentAccountUnattributedReasonsValue;
 }
 
 /** @public */

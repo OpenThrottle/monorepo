@@ -9,7 +9,7 @@ import {
 import * as React from 'react';
 import { useFetcher } from 'react-router';
 
-import type { PromptType } from '../config';
+import type { PromptTypesValue } from '../config';
 import { PROMPT_TYPE_OPTIONS, PROMPT_TYPE_VALUES } from '../config';
 import {
   getFilenameError,
@@ -45,7 +45,8 @@ export const EditorNewFileForm = (
 
   // Hooks
   const [filename, setFilename] = React.useState('');
-  const [promptType, setPromptType] = React.useState<PromptType>('prompts');
+  const [promptType, setPromptType] =
+    React.useState<PromptTypesValue>('prompts');
   const [error, setError] = React.useState<string>('');
   const fetcher = useFetcher<FetcherData>();
   const lastProcessedDataRef = React.useRef<FetcherData | null>(null);
@@ -64,7 +65,6 @@ export const EditorNewFileForm = (
     }
 
     setError('');
-
     const formData = new FormData();
     formData.append('_action', 'createFile');
     formData.append('filename', filename.trim());

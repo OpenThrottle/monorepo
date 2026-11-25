@@ -4,7 +4,7 @@
  */
 
 import { parseDate } from '~/global/utils/dates';
-import type { PlanRunMetaField } from '~/routing/plans/data/data.plan-run-history';
+import type { PlanRunMetaFieldsValue } from '~/routing/plans/data/data.plan-run-history';
 import { PLAN_RUN_META_FIELDS } from '~/routing/plans/data/data.plan-run-history';
 import {
   readPlanRunModel,
@@ -131,7 +131,7 @@ export const selectLatestRun = <TRun extends SectionRun>(
 };
 
 export interface PlanRunMetaItem {
-  readonly field: PlanRunMetaField;
+  readonly field: PlanRunMetaFieldsValue;
   readonly value: string;
 }
 
@@ -148,16 +148,16 @@ interface MetaRun {
  */
 export const buildPlanRunMetaItems = (
   run: MetaRun,
-  fields: readonly PlanRunMetaField[],
+  fields: readonly PlanRunMetaFieldsValue[],
 ): PlanRunMetaItem[] => {
   const driverLabel = run.driver ? formatPlanRunDriverLabel(run.driver) : null;
-  const values: Record<PlanRunMetaField, string | null> = {
+  const values: Record<PlanRunMetaFieldsValue, string | null> = {
     driver: driverLabel,
     effort: readPlanRunSnapshotEffort(run.runConfigSnapshotJson),
     model: readPlanRunModel(run),
     workspace: readPlanRunSnapshotWorkspacePath(run.runConfigSnapshotJson),
   };
-  const order: readonly PlanRunMetaField[] = [
+  const order: readonly PlanRunMetaFieldsValue[] = [
     PLAN_RUN_META_FIELDS.model,
     PLAN_RUN_META_FIELDS.effort,
     PLAN_RUN_META_FIELDS.driver,

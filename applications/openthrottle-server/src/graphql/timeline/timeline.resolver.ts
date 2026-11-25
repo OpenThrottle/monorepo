@@ -8,9 +8,12 @@ import { Args, Query, Resolver } from '@nestjs/graphql';
 import { DataSource } from 'typeorm';
 
 import {
-  TimelineLaneGrouping,
-  TimelineMarkerKind,
-  TimelineSpanKind,
+  TIMELINE_LANE_GROUPING,
+  TIMELINE_MARKER_KIND,
+  TIMELINE_SPAN_KIND,
+  TimelineLaneGroupingValue,
+  TimelineMarkerKindValue,
+  TimelineSpanKindValue,
 } from './timeline.enum.ts';
 import { WorkstreamTimelineInput } from './timeline.input.ts';
 import {
@@ -92,9 +95,10 @@ export class TimelineResolver {
 
     this.assertWindow(fromIso, toIso);
 
-    const grouping = input.grouping ?? TimelineLaneGrouping.BY_PLAN;
-    const spanKinds = input.spanKinds ?? Object.values(TimelineSpanKind);
-    const markerKinds = input.markerKinds ?? Object.values(TimelineMarkerKind);
+    const grouping = input.grouping ?? TIMELINE_LANE_GROUPING.BY_PLAN;
+    const spanKinds = input.spanKinds ?? Object.values(TIMELINE_SPAN_KIND);
+    const markerKinds =
+      input.markerKinds ?? Object.values(TIMELINE_MARKER_KIND);
 
     const q: QueryFn = (sql, params) => {
       return this.dataSource.query(sql, params);
@@ -167,14 +171,14 @@ export class TimelineResolver {
 
   private async fetchMarkerRows(
     q: QueryFn,
-    kind: TimelineMarkerKind,
+    kind: TimelineMarkerKindValue,
     fromIso: string,
     toIso: string,
     input: WorkstreamTimelineInput,
   ): Promise<MarkerRow[]> {
     const planFilter = input.planId ?? null;
 
-    if (kind === TimelineMarkerKind.TASK_ADDED) {
+    if (kind === TIMELINE_MARKER_KIND.TASK_ADDED) {
       return q<MarkerRow[]>(
         `SELECT t.id, t.created_at AS at, t.plan_id, p.title AS plan_title,
                 t.id AS task_id, t.title, NULL::text AS branch, NULL::text AS url,
@@ -190,7 +194,7 @@ export class TimelineResolver {
       );
     }
 
-    if (kind === TimelineMarkerKind.TASK_UPDATED) {
+    if (kind === TIMELINE_MARKER_KIND.TASK_UPDATED) {
       // `updated_at = created_at` means the task was never touched after
       // creation. Emitting those would stack a second glyph on every
       // TASK_ADDED marker and read as activity that never happened.
@@ -210,7 +214,7 @@ export class TimelineResolver {
       );
     }
 
-    if (kind === TimelineMarkerKind.GRILLING) {
+    if (kind === TIMELINE_MARKER_KIND.GRILLING) {
       // `user_id` (migration 110) is the real actor when ingest could resolve
       // one. It is never backfilled, so older rows stay null and fall back to
       // the git_branch/cwd heuristic — hence both are selected and neither is
@@ -237,9 +241,9 @@ export class TimelineResolver {
     // resolver's commits leg: a session with several subjects must still yield
     // exactly one marker per artifact.
     const artifactType = {
-      [TimelineMarkerKind.GIT_COMMIT]: 'git_commit',
-      [TimelineMarkerKind.PULL_REQUEST]: 'pull_request',
-      [TimelineMarkerKind.STATUS_CHANGE]: 'status_change',
+      [TIMELINE_MARKER_KIND.GIT_COMMIT]: 'git_commit',
+      [TIMELINE_MARKER_KIND.PULL_REQUEST]: 'pull_request',
+      [TIMELINE_MARKER_KIND.STATUS_CHANGE]: 'status_change',
     }[kind];
 
     return q<MarkerRow[]>(
@@ -282,14 +286,14 @@ export class TimelineResolver {
 
   private async fetchSpanRows(
     q: QueryFn,
-    kind: TimelineSpanKind,
+    kind: TimelineSpanKindValue,
     fromIso: string,
     toIso: string,
     input: WorkstreamTimelineInput,
   ): Promise<SpanRow[]> {
     // Overlap, not containment: a run that started before the window and is
     // still going is exactly the row this view exists to show.
-    if (kind === TimelineSpanKind.PLAN_RUN) {
+    if (kind === TIMELINE_SPAN_KIND.PLAN_RUN) {
       return q<SpanRow[]>(
         `SELECT pr.id,
                 pr.created_at AS starts_at,
@@ -319,7 +323,7 @@ export class TimelineResolver {
       );
     }
 
-    if (kind === TimelineSpanKind.WORK_SESSION) {
+    if (kind === TIMELINE_SPAN_KIND.WORK_SESSION) {
       // An open session (ended_at IS NULL) overlaps any window that has already
       // started, so COALESCE its end to the window end for the range predicate
       // and let `toSpan` clamp the rendered end to now.
@@ -383,9 +387,9 @@ export class TimelineResolver {
   }
 
   private toMarker(
-    kind: TimelineMarkerKind,
+    kind: TimelineMarkerKindValue,
     row: MarkerRow,
-    grouping: TimelineLaneGrouping,
+    grouping: TimelineLaneGroupingValue,
   ): TimelineMarkerObject {
     const lane = resolveTimelineLane(
       grouping,
@@ -394,7 +398,7 @@ export class TimelineResolver {
         planId: row.plan_id,
         planTitle: row.plan_title,
       },
-      kind === TimelineMarkerKind.GRILLING ? 'skills' : null,
+      kind === TIMELINE_MARKER_KIND.GRILLING ? 'skills' : null,
     );
 
     const marker = new TimelineMarkerObject();
@@ -414,9 +418,9 @@ export class TimelineResolver {
   }
 
   private toSpan(
-    kind: TimelineSpanKind,
+    kind: TimelineSpanKindValue,
     row: SpanRow,
-    grouping: TimelineLaneGrouping,
+    grouping: TimelineLaneGroupingValue,
     now: Date,
   ): TimelineSpanObject {
     const lane = resolveTimelineLane(
@@ -428,14 +432,14 @@ export class TimelineResolver {
         planId: row.plan_id,
         planTitle: row.plan_title,
       },
-      kind === TimelineSpanKind.SCHEDULED_RUN ? 'scheduled' : null,
+      kind === TIMELINE_SPAN_KIND.SCHEDULED_RUN ? 'scheduled' : null,
     );
 
     // A PLAN_RUN end is *always* derived — plan_runs records created_at,
     // updated_at and last_heartbeat_at, and none of those is a finish. The other
     // two kinds are measured unless the row is still open.
     const isOpen = row.ends_at == null;
-    const derivedEnd = kind === TimelineSpanKind.PLAN_RUN || isOpen;
+    const derivedEnd = kind === TIMELINE_SPAN_KIND.PLAN_RUN || isOpen;
     const endsAt = isOpen ? now : new Date(row.ends_at ?? row.starts_at);
 
     const span = new TimelineSpanObject();

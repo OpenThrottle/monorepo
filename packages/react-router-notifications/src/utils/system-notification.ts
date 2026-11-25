@@ -8,7 +8,7 @@
 import { isRecord } from '@openthrottle/nodejs-utils';
 import { getDesktopBridge } from '@openthrottle/openthrottle-desktop-bridge';
 import type {
-  NotificationEventName,
+  NotificationEventNamesValue,
   NotificationPayload,
 } from '@openthrottle/openthrottle-notifications';
 import { IS_BROWSER } from '@openthrottle/react-router-utils';
@@ -140,7 +140,7 @@ function isSupportedAndGranted(): boolean {
  * @public
  */
 export function showSystemNotification(
-  event: NotificationEventName,
+  event: NotificationEventNamesValue,
   payload: NotificationPayload,
   navigate?: (path: string) => void,
 ): void {

@@ -1,13 +1,13 @@
 import type { GlobalSidebarContentLinkProps } from '@openthrottle/react-router-ui-global';
 
-import type { Permission } from '~/global/config/permissions';
+import type { PermissionsValue } from '~/global/config/permissions';
 
 /**
  * @description Navigation link that may declare the permission a viewer needs
  * to see it. Links without `requiredPermission` are always shown.
  */
 export interface PermissionGatedNavigationLink extends GlobalSidebarContentLinkProps {
-  readonly requiredPermission?: Permission;
+  readonly requiredPermission?: PermissionsValue;
   /** Sub-links carry their own permission gate. */
   readonly subLinks?: readonly PermissionGatedNavigationLink[];
 }
@@ -24,7 +24,7 @@ export type PermissionGatedNavigation = Record<
  */
 export const hasPermission = (
   permissions: readonly string[],
-  permission: Permission,
+  permission: PermissionsValue,
 ): boolean => {
   return permissions.includes(permission);
 };

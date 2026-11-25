@@ -1,8 +1,8 @@
 import type {
   ChatCompletionMessage,
-  ConversationPermissionMode,
+  ConversationPermissionModesValue,
   ConversationReasoningEffort,
-  ConversationServiceTier,
+  ConversationServiceTiersValue,
 } from '@openthrottle/openthrottle-agentic-utils';
 /**
  * @description Shared shapes for the conversation streaming feature. The publish
@@ -98,7 +98,7 @@ export interface StartConversationStreamRun {
    * Permission posture selected in the composer toolbar; forwarded to CLI
    * backends, which resolve it to concrete permission flags. Null when unset.
    */
-  readonly permissionMode: ConversationPermissionMode | null;
+  readonly permissionMode: ConversationPermissionModesValue | null;
   /**
    * When false (Private mode) the turn streams ephemerally: nothing is written
    * to the DB — no assistant message, no model snapshot, no CLI-minted session
@@ -113,7 +113,7 @@ export interface StartConversationStreamRun {
   /** True when the CLI backend should resume `sessionId` rather than create it (claude). */
   readonly resumeSession: boolean;
   /** Service tier forwarded to tier-aware backends (cursor); null when unset. */
-  readonly serviceTier: ConversationServiceTier | null;
+  readonly serviceTier: ConversationServiceTiersValue | null;
   /** CLI session handle to resume (e.g. cursor chat id), or null when the CLI mints it (opencode first turn). */
   readonly sessionId: string | null;
   /** System prompt (persona) injected by CLI backends. */

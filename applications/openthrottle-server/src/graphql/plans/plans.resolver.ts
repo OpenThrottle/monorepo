@@ -99,7 +99,7 @@ import {
   EnqueuePlanRunInput,
   ForceSettlePlanRunInput,
   ListPlansByStatusInput,
-  PlanRunModeGraphQL,
+  PLAN_RUN_MODE,
   PlanRunsByPlanIdInput,
   RecordPlanRunHeartbeatInput,
   RegisterPlanRunInput,
@@ -1415,9 +1415,9 @@ export class PlansResolver {
     const { planId, taskId } = input;
 
     let mode: 'plan' | 'task' | null = null;
-    if (input.mode === PlanRunModeGraphQL.task) {
+    if (input.mode === PLAN_RUN_MODE.task) {
       mode = 'task';
-    } else if (input.mode === PlanRunModeGraphQL.plan) {
+    } else if (input.mode === PLAN_RUN_MODE.plan) {
       mode = 'plan';
     }
 

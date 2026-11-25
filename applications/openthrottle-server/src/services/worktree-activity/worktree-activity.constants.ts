@@ -11,6 +11,10 @@ export const WORKTREE_ACTIVITY = {
   RUNNING: 'RUNNING',
 } as const;
 
+export type WorktreeActivityKey = keyof typeof WORKTREE_ACTIVITY;
+export type WorktreeActivityValue =
+  (typeof WORKTREE_ACTIVITY)[WorktreeActivityKey];
+
 /**
  * How long one user's on-disk discovery (the git/fs half of {@link WORKTREE_ACTIVITY}
  * classification) is reused before the next read rescans. Discovery shells out several times per

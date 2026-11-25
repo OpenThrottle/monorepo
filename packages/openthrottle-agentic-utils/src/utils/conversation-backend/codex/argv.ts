@@ -9,7 +9,7 @@
 import { codexReasoningEffort } from '@openthrottle/openthrottle-drivers';
 
 import type {
-  ConversationPermissionMode,
+  ConversationPermissionModesValue,
   ConversationReasoningEffort,
 } from '../types.ts';
 import { CONVERSATION_PERMISSION_MODES } from '../types.ts';
@@ -45,7 +45,7 @@ export interface CodexArgvOptions {
    * no-mode default → `--sandbox read-only` (a headless `exec` cannot prompt,
    * so the safe posture is read-only unless edits were explicitly authorized).
    */
-  readonly permissionMode?: ConversationPermissionMode;
+  readonly permissionMode?: ConversationPermissionModesValue;
   /** The fully-composed prompt (persona prefix already applied by the caller). */
   readonly prompt: string;
   /**
@@ -67,7 +67,7 @@ export interface CodexArgvOptions {
 
 /** The codex sandbox policy for a composer permission posture, or null to bypass it. */
 function sandboxMode(
-  permissionMode: ConversationPermissionMode | undefined,
+  permissionMode: ConversationPermissionModesValue | undefined,
 ): 'read-only' | 'workspace-write' | null {
   if (permissionMode === CONVERSATION_PERMISSION_MODES.fullAccess) {
     return null;
@@ -87,7 +87,7 @@ function sandboxMode(
  * bypass flag is accepted by both.
  */
 function sandboxFlags(
-  permissionMode: ConversationPermissionMode | undefined,
+  permissionMode: ConversationPermissionModesValue | undefined,
   resume: boolean,
 ): string[] {
   const mode = sandboxMode(permissionMode);

@@ -1,4 +1,5 @@
-import { ChatCheckoutKind } from '../types';
+import type { ChatCheckoutKindValue } from '../types';
+import { CHAT_CHECKOUT_KIND } from '../types';
 
 /** Marks text that was shortened. One glyph, so it costs one column. */
 const ELLIPSIS = '…';
@@ -14,7 +15,7 @@ const PATH_SEPARATOR = '/';
 const HOME_PREFIX = /^\/(?:Users|home)\/[^/]+(?=\/|$)/;
 
 /**
- * Narrow the server's free-text checkout `kind` onto {@link ChatCheckoutKind}.
+ * Narrow the server's free-text checkout `kind` onto {@link CHAT_CHECKOUT_KIND}.
  * Anything unrecognized is `undefined`, which the picker reads as primary —
  * it only nests a row as a worktree when it positively knows it is one.
  *
@@ -22,9 +23,9 @@ const HOME_PREFIX = /^\/(?:Users|home)\/[^/]+(?=\/|$)/;
  */
 export function toCheckoutKind(
   kind: string | null | undefined,
-): ChatCheckoutKind | undefined {
-  if (kind === ChatCheckoutKind.primary) return ChatCheckoutKind.primary;
-  if (kind === ChatCheckoutKind.worktree) return ChatCheckoutKind.worktree;
+): ChatCheckoutKindValue | undefined {
+  if (kind === CHAT_CHECKOUT_KIND.primary) return CHAT_CHECKOUT_KIND.primary;
+  if (kind === CHAT_CHECKOUT_KIND.worktree) return CHAT_CHECKOUT_KIND.worktree;
   return undefined;
 }
 

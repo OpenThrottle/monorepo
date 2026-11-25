@@ -1,4 +1,4 @@
-import type { DocEntry, DocsSection } from './buildDocsManifest';
+import type { DocEntry, DocsSectionValue } from './buildDocsManifest';
 
 /**
  * Strip a numeric ordering prefix (`"00. "`, `"01. "`, …) from a group label
@@ -38,7 +38,7 @@ export interface DocsNavGroup {
  */
 export const buildDocsNav = (
   manifest: readonly DocEntry[],
-  section: DocsSection,
+  section: DocsSectionValue,
 ): readonly DocsNavGroup[] => {
   const groups = new Map<string, DocsNavItem[]>();
 

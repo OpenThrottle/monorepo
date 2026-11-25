@@ -15,6 +15,10 @@ export const EVAL_DATASET_TARGET = {
   SKILL: 'skill',
 } as const;
 
+export type EvalDatasetTargetKey = keyof typeof EVAL_DATASET_TARGET;
+export type EvalDatasetTargetValue =
+  (typeof EVAL_DATASET_TARGET)[EvalDatasetTargetKey];
+
 /**
  * Which side of a dataset a case sits on: `dev` for iterating, `test` held out.
  * @public
@@ -23,3 +27,6 @@ export const EVAL_SPLIT = {
   DEV: 'dev',
   TEST: 'test',
 } as const;
+
+export type EvalSplitKey = keyof typeof EVAL_SPLIT;
+export type EvalSplitValue = (typeof EVAL_SPLIT)[EvalSplitKey];

@@ -13,11 +13,11 @@ import type {
   ChatPersonaOption,
 } from '../../types';
 import {
-  ChatComposerMicState,
-  ChatComposerMode,
-  ChatPermissionMode,
-  ChatReasoningLevel,
-  ChatServiceTier,
+  CHAT_COMPOSER_MIC_STATE,
+  CHAT_COMPOSER_MODE,
+  CHAT_PERMISSION_MODE,
+  CHAT_REASONING_LEVEL,
+  CHAT_SERVICE_TIER,
 } from '../../types';
 import type { ChatComposerToolbarProps } from '../ChatComposerToolbar';
 import { ChatComposerToolbar } from '../ChatComposerToolbar';
@@ -40,12 +40,12 @@ const MODEL_GROUPS: readonly ChatModelGroup[] = [
 const CLI_CAPS: ChatBackendCapabilities = {
   maxRepositories: 1,
   permissionModes: [
-    ChatPermissionMode.supervised,
-    ChatPermissionMode.fullAccess,
+    CHAT_PERMISSION_MODE.supervised,
+    CHAT_PERMISSION_MODE.fullAccess,
   ],
-  reasoningLevels: [ChatReasoningLevel.low, ChatReasoningLevel.high],
+  reasoningLevels: [CHAT_REASONING_LEVEL.low, CHAT_REASONING_LEVEL.high],
   requiresRepository: true,
-  serviceTiers: [ChatServiceTier.standard, ChatServiceTier.fast],
+  serviceTiers: [CHAT_SERVICE_TIER.standard, CHAT_SERVICE_TIER.fast],
   supervisedGatesEdits: true,
   supportsModelFlag: true,
 };
@@ -307,7 +307,7 @@ describe('ChatComposerToolbar Component', () => {
     // The Plan/Build mode toggle is intentionally not surfaced in the composer.
     // Supplying `mode` must not render any mode control.
     test('does not render a mode toggle even when a mode is supplied', () => {
-      const component = renderToolbar({ mode: ChatComposerMode.plan });
+      const component = renderToolbar({ mode: CHAT_COMPOSER_MODE.plan });
 
       expect(
         component.queryByTestId('ChatComposerToolbar-mode-toggle'),
@@ -380,7 +380,7 @@ describe('ChatComposerToolbar Component', () => {
 
     test('reflects the recording state with a pressed, pulsing control', () => {
       const component = renderToolbar({
-        micState: ChatComposerMicState.recording,
+        micState: CHAT_COMPOSER_MIC_STATE.recording,
         onMicToggle: vi.fn(),
       });
 
@@ -393,7 +393,7 @@ describe('ChatComposerToolbar Component', () => {
 
     test('disables the control while finalizing with a transcribing affordance', () => {
       const component = renderToolbar({
-        micState: ChatComposerMicState.finalizing,
+        micState: CHAT_COMPOSER_MIC_STATE.finalizing,
         onMicToggle: vi.fn(),
       });
 
@@ -405,7 +405,7 @@ describe('ChatComposerToolbar Component', () => {
 
     test('disables the control when voice input is unavailable', () => {
       const component = renderToolbar({
-        micState: ChatComposerMicState.disabled,
+        micState: CHAT_COMPOSER_MIC_STATE.disabled,
         onMicToggle: vi.fn(),
       });
 

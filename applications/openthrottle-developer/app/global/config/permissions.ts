@@ -10,8 +10,9 @@ export const PERMISSIONS = {
   BLOG_WRITE: 'blog:write',
 } as const;
 
+export type PermissionsKey = keyof typeof PERMISSIONS;
 /** One of the permission names in {@link PERMISSIONS}. */
-export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
+export type PermissionsValue = (typeof PERMISSIONS)[PermissionsKey];
 
 /** React Router id of the root route, whose loader carries `permissions`. */
 export const ROOT_ROUTE_ID = 'root';

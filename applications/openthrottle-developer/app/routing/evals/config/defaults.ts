@@ -30,5 +30,9 @@ export const TRAJECTORY_LABEL_INTENT = {
   remove: 'removeLabel',
 } as const;
 
+export type TrajectoryLabelIntentKey = keyof typeof TRAJECTORY_LABEL_INTENT;
+export type TrajectoryLabelIntentValue =
+  (typeof TRAJECTORY_LABEL_INTENT)[TrajectoryLabelIntentKey];
+
 /** The server's cap on a label note (`LabelAgentTrajectoryInput.note`). */
 export const TRAJECTORY_NOTE_MAX_LENGTH = 4_000;

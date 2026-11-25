@@ -13,8 +13,9 @@ export const CODE_SEARCH_CASE_KIND = {
   INTENT: 'intent',
 } as const;
 
-export type CodeSearchCaseKind =
-  (typeof CODE_SEARCH_CASE_KIND)[keyof typeof CODE_SEARCH_CASE_KIND];
+export type CodeSearchCaseKindKey = keyof typeof CODE_SEARCH_CASE_KIND;
+export type CodeSearchCaseKindValue =
+  (typeof CODE_SEARCH_CASE_KIND)[CodeSearchCaseKindKey];
 
 /**
  * @description One eval case. `relevantPaths` are repo-relative POSIX paths: the existing copy or
@@ -22,7 +23,7 @@ export type CodeSearchCaseKind =
  */
 export interface CodeSearchCase {
   readonly id: string;
-  readonly kind: CodeSearchCaseKind;
+  readonly kind: CodeSearchCaseKindValue;
   readonly origin: string;
   readonly query: string;
   readonly relevantPaths: readonly string[];
@@ -39,7 +40,7 @@ export interface CodeCaseScore {
   /** @description 1-based rank of the first relevant match, or null when none is in the list. */
   readonly firstRelevantRank: number | null;
   readonly hitAtK: boolean;
-  readonly kind: CodeSearchCaseKind;
+  readonly kind: CodeSearchCaseKindValue;
   /** @description Share of the top K matches that are relevant files. */
   readonly precisionAtK: number;
   readonly reciprocalRank: number;

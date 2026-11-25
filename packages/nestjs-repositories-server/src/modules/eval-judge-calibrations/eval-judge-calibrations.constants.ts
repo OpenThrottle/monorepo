@@ -16,3 +16,7 @@ export const EVAL_CALIBRATION_STATUS = {
   NON_GATING: 'non_gating',
   UNSUPERVISED: 'unsupervised',
 } as const;
+
+export type EvalCalibrationStatusKey = keyof typeof EVAL_CALIBRATION_STATUS;
+export type EvalCalibrationStatusValue =
+  (typeof EVAL_CALIBRATION_STATUS)[EvalCalibrationStatusKey];

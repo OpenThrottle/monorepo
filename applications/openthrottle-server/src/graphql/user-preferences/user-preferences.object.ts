@@ -4,7 +4,10 @@
 
 import { Field, ObjectType } from '@nestjs/graphql';
 
-import { WorkspaceEditorIdEnum } from '../workspace-settings/workspace-editor-id.enum.ts';
+import {
+  WORKSPACE_EDITOR_ID,
+  WorkspaceEditorIdValue,
+} from '../workspace-settings/workspace-editor-id.enum.ts';
 
 @ObjectType({
   description: `The user's default agent. Driver and model always travel together, so a half-set agent cannot be represented.`,
@@ -37,9 +40,9 @@ export class UserPreferencesObject {
   })
   defaultAgent!: UserPreferencesAgentObject | null;
 
-  @Field(() => WorkspaceEditorIdEnum, {
+  @Field(() => WORKSPACE_EDITOR_ID, {
     description: `Default editor for open-in-editor links, or null for the system default (VS Code).`,
     nullable: true,
   })
-  defaultEditor!: WorkspaceEditorIdEnum | null;
+  defaultEditor!: WorkspaceEditorIdValue | null;
 }

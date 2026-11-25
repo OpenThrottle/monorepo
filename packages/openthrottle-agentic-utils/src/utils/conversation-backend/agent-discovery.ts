@@ -63,11 +63,12 @@ export const AGENT_CLI_AUTH_STATUSES = {
   unknown: 'unknown',
 } as const;
 
+export type AgentCliAuthStatusesKey = keyof typeof AGENT_CLI_AUTH_STATUSES;
 /**
  * @public
  */
-export type AgentCliAuthStatus =
-  (typeof AGENT_CLI_AUTH_STATUSES)[keyof typeof AGENT_CLI_AUTH_STATUSES];
+export type AgentCliAuthStatusesValue =
+  (typeof AGENT_CLI_AUTH_STATUSES)[AgentCliAuthStatusesKey];
 
 /**
  * Whether an agent CLI is logged in, with a short human-readable detail when
@@ -79,7 +80,7 @@ export interface AgentCliAuthState {
   /** Short explanation (e.g. the account), or null when there is none. */
   readonly detail: string | null;
   /** Authenticated, unauthenticated, or unknown when the backend is not probed. */
-  readonly status: AgentCliAuthStatus;
+  readonly status: AgentCliAuthStatusesValue;
 }
 
 /**

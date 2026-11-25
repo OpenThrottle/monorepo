@@ -89,6 +89,10 @@ export const TOKEN_USAGE_SOURCES = {
   CLAUDE_CODE: 'claude-code',
 } as const;
 
+export type TokenUsageSourcesKey = keyof typeof TOKEN_USAGE_SOURCES;
+export type TokenUsageSourcesValue =
+  (typeof TOKEN_USAGE_SOURCES)[TokenUsageSourcesKey];
+
 /** Display labels for the known source ids. */
 export const TOKEN_USAGE_SOURCE_LABELS: Readonly<Record<string, string>> = {
   [TOKEN_USAGE_SOURCES.CHAT]: `OpenThrottle chat`,
@@ -110,6 +114,11 @@ export const TOKEN_USAGE_CREDENTIAL_KINDS = {
   SUBSCRIPTION: 'subscription',
   UNKNOWN: 'unknown',
 } as const;
+
+export type TokenUsageCredentialKindsKey =
+  keyof typeof TOKEN_USAGE_CREDENTIAL_KINDS;
+export type TokenUsageCredentialKindsValue =
+  (typeof TOKEN_USAGE_CREDENTIAL_KINDS)[TokenUsageCredentialKindsKey];
 
 /** Display labels for the credential kinds. */
 export const TOKEN_USAGE_CREDENTIAL_LABELS: Readonly<Record<string, string>> = {

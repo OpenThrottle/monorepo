@@ -11,19 +11,20 @@ export const WEBHOOK_PRESET = {
   github: 'github',
 } as const;
 
-export type WebhookPreset =
-  (typeof WEBHOOK_PRESET)[keyof typeof WEBHOOK_PRESET];
+export type WebhookPresetKey = keyof typeof WEBHOOK_PRESET;
+export type WebhookPresetValue = (typeof WEBHOOK_PRESET)[WebhookPresetKey];
 
 export interface WebhookOption<TValue extends string> {
   readonly label: string;
   readonly value: TValue;
 }
 
-export const WEBHOOK_PRESET_OPTIONS: readonly WebhookOption<WebhookPreset>[] = [
-  { label: `Generic (OpenThrottle signing)`, value: WEBHOOK_PRESET.generic },
-  { label: `GitHub`, value: WEBHOOK_PRESET.github },
-  { label: `Custom`, value: WEBHOOK_PRESET.custom },
-];
+export const WEBHOOK_PRESET_OPTIONS: readonly WebhookOption<WebhookPresetValue>[] =
+  [
+    { label: `Generic (OpenThrottle signing)`, value: WEBHOOK_PRESET.generic },
+    { label: `GitHub`, value: WEBHOOK_PRESET.github },
+    { label: `Custom`, value: WEBHOOK_PRESET.custom },
+  ];
 
 export const WEBHOOK_ENCODING_OPTIONS: readonly WebhookOption<
   'base64' | 'hex'
@@ -40,6 +41,10 @@ export const WEBHOOK_FILTER_OP = {
   notExists: 'not_exists',
   prefix: 'prefix',
 } as const;
+
+export type WebhookFilterOpKey = keyof typeof WEBHOOK_FILTER_OP;
+export type WebhookFilterOpValue =
+  (typeof WEBHOOK_FILTER_OP)[WebhookFilterOpKey];
 
 export const WEBHOOK_FILTER_OP_OPTIONS: readonly WebhookOption<string>[] = [
   { label: `equals`, value: WEBHOOK_FILTER_OP.equals },
@@ -69,6 +74,9 @@ export const WEBHOOK_LIMITS = {
   toleranceMaxSeconds: 900,
   toleranceMinSeconds: 30,
 } as const;
+
+export type WebhookLimitsKey = keyof typeof WEBHOOK_LIMITS;
+export type WebhookLimitsValue = (typeof WEBHOOK_LIMITS)[WebhookLimitsKey];
 
 /** Badge hue per delivery status: accepted is green, a rejection red, everything the server chose to skip amber. */
 export const WEBHOOK_DELIVERY_STATUS_COLOR: Record<

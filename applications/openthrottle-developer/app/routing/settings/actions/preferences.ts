@@ -12,13 +12,13 @@ import {
 } from '~/__generated__/schemas';
 import type {
   PreferencesActionResult,
-  PreferencesIntent,
+  PreferencesIntentsValue,
 } from '~/routing/settings/data/data.preferences';
 import { PREFERENCES_INTENTS } from '~/routing/settings/data/data.preferences';
 
 const submitPatch = async (
   args: Route.ActionArgs,
-  intent: PreferencesIntent,
+  intent: PreferencesIntentsValue,
   input: UpdateUserPreferencesInput,
 ): Promise<PreferencesActionResult> => {
   try {

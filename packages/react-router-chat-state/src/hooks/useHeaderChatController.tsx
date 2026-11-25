@@ -1,14 +1,14 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import type {
   ChatComposerControls,
-  ChatComposerMode,
+  ChatComposerModeValue,
   ChatContextSource,
   ChatConversationSidebarProps,
   ChatMessage,
-  ChatPermissionMode,
+  ChatPermissionModeValue,
   ChatPersonaOption,
-  ChatReasoningLevel,
-  ChatServiceTier,
+  ChatReasoningLevelValue,
+  ChatServiceTierValue,
   ConversationStreamSubscriptionData,
   ConversationStreamSubscriptionVariables,
 } from '@openthrottle/react-router-chat';
@@ -158,7 +158,7 @@ export function useHeaderChatController(
   );
 
   // Handlers
-  const setMode = (mode: ChatComposerMode): void => {
+  const setMode = (mode: ChatComposerModeValue): void => {
     return setToolbarState((previous) => ({ ...previous, mode }));
   };
   const setModelId = (modelId: string): void => {
@@ -186,17 +186,17 @@ export function useHeaderChatController(
     return setToolbarState((previous) => ({ ...previous, repositoryIds }));
   };
 
-  const setPermissionMode = (permissionMode: ChatPermissionMode): void => {
+  const setPermissionMode = (permissionMode: ChatPermissionModeValue): void => {
     return setToolbarState((previous) =>
       writeChatToolbarBackendPref(previous, backendKey, { permissionMode }),
     );
   };
-  const setReasoning = (reasoning: ChatReasoningLevel): void => {
+  const setReasoning = (reasoning: ChatReasoningLevelValue): void => {
     return setToolbarState((previous) =>
       writeChatToolbarBackendPref(previous, backendKey, { reasoning }),
     );
   };
-  const setServiceTier = (serviceTier: ChatServiceTier): void => {
+  const setServiceTier = (serviceTier: ChatServiceTierValue): void => {
     return setToolbarState((previous) =>
       writeChatToolbarBackendPref(previous, backendKey, { serviceTier }),
     );

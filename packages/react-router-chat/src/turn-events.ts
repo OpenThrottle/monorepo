@@ -21,7 +21,8 @@ import type {
   ChatTurnUsageEvent,
   ChatTurnUsageLimitEvent,
 } from './types';
-import { ChatToolStatus } from './types';
+import type { ChatToolStatusValue } from './types';
+import { CHAT_TOOL_STATUS } from './types';
 import { hasUsageCounts, normalizeUsage, sumUsage } from './usage';
 import { readLegacyCodexItem } from './utils/readLegacyCodexItem';
 
@@ -681,12 +682,12 @@ interface ToolResultInput {
 }
 
 /** A resolved call's status: a call that never ran outranks its error flag. */
-const toolResultStatusOf = (input: ToolResultInput): ChatToolStatus => {
+const toolResultStatusOf = (input: ToolResultInput): ChatToolStatusValue => {
   if (input.notRun) {
-    return ChatToolStatus.notRun;
+    return CHAT_TOOL_STATUS.notRun;
   }
 
-  return input.isError ? ChatToolStatus.failed : ChatToolStatus.succeeded;
+  return input.isError ? CHAT_TOOL_STATUS.failed : CHAT_TOOL_STATUS.succeeded;
 };
 
 const resolveToolResult = (

@@ -14,6 +14,9 @@ export const OAUTH_SCOPES = {
   MCP_WRITE: 'mcp:write',
 } as const;
 
+export type OauthScopesKey = keyof typeof OAUTH_SCOPES;
+export type OauthScopesValue = (typeof OAUTH_SCOPES)[OauthScopesKey];
+
 /** @description Every scope, in the order metadata advertises them. */
 export const OAUTH_SUPPORTED_SCOPES: readonly (typeof OAUTH_SCOPES)[keyof typeof OAUTH_SCOPES][] =
   [OAUTH_SCOPES.MCP_READ, OAUTH_SCOPES.MCP_WRITE];
@@ -32,12 +35,21 @@ export const OAUTH_REGISTRATION_KINDS = {
   DCR: 'dcr',
 } as const;
 
+export type OauthRegistrationKindsKey = keyof typeof OAUTH_REGISTRATION_KINDS;
+export type OauthRegistrationKindsValue =
+  (typeof OAUTH_REGISTRATION_KINDS)[OauthRegistrationKindsKey];
+
 export const OAUTH_AUTHORIZATION_REQUEST_STATUSES = {
   APPROVED: 'approved',
   DENIED: 'denied',
   EXCHANGED: 'exchanged',
   PENDING: 'pending',
 } as const;
+
+export type OauthAuthorizationRequestStatusesKey =
+  keyof typeof OAUTH_AUTHORIZATION_REQUEST_STATUSES;
+export type OauthAuthorizationRequestStatusesValue =
+  (typeof OAUTH_AUTHORIZATION_REQUEST_STATUSES)[OauthAuthorizationRequestStatusesKey];
 
 export const OAUTH_GRANT_REVOKED_REASONS = {
   ADMIN: 'admin',
@@ -47,7 +59,16 @@ export const OAUTH_GRANT_REVOKED_REASONS = {
   USER_DISABLED: 'user_disabled',
 } as const;
 
+export type OauthGrantRevokedReasonsKey =
+  keyof typeof OAUTH_GRANT_REVOKED_REASONS;
+export type OauthGrantRevokedReasonsValue =
+  (typeof OAUTH_GRANT_REVOKED_REASONS)[OauthGrantRevokedReasonsKey];
+
 export const OAUTH_TOKEN_KINDS = {
   ACCESS: 'access',
   REFRESH: 'refresh',
 } as const;
+
+export type OauthTokenKindsKey = keyof typeof OAUTH_TOKEN_KINDS;
+export type OauthTokenKindsValue =
+  (typeof OAUTH_TOKEN_KINDS)[OauthTokenKindsKey];

@@ -1,5 +1,5 @@
 import type {
-  NotificationEventName,
+  NotificationEventNamesValue,
   NotificationPayload,
 } from '@openthrottle/openthrottle-notifications';
 import { renderHook } from '@testing-library/react';
@@ -21,7 +21,7 @@ describe('useWebsocketDebuggerSocketSubscription', () => {
     const subscribeToEvents = vi.fn(
       (
         listener: (
-          event: NotificationEventName,
+          event: NotificationEventNamesValue,
           payload: NotificationPayload,
         ) => void,
       ) => {

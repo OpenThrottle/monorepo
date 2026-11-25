@@ -10,7 +10,7 @@
  * about what a failure is.
  */
 
-import type { CursorFailureKind } from '@openthrottle/openthrottle-agentic-utils';
+import type { CursorFailureKindsValue } from '@openthrottle/openthrottle-agentic-utils';
 import {
   classifyCursorFailure,
   CURSOR_FAILURE_KINDS,
@@ -22,7 +22,9 @@ import {
  * Every entry has a concrete next step — "try again" is only acceptable where
  * trying again is genuinely the right move.
  */
-const CURSOR_STARTUP_ERROR_COPY: Readonly<Record<CursorFailureKind, string>> = {
+const CURSOR_STARTUP_ERROR_COPY: Readonly<
+  Record<CursorFailureKindsValue, string>
+> = {
   [CURSOR_FAILURE_KINDS.authRequired]: `Your cursor-agent login has expired or is unavailable. Run \`cursor-agent login\` in a terminal, then send this message again.`,
   [CURSOR_FAILURE_KINDS.notInstalled]: `cursor-agent is not installed, or is not on this server’s PATH. Install it with \`curl https://cursor.com/install -fsS | bash\`, or set OPENTHROTTLE_CURSOR_AGENT_BIN to its full path.`,
   [CURSOR_FAILURE_KINDS.timeout]: `cursor-agent did not start in time. This is usually a cold start — send the message again and it will normally succeed.`,

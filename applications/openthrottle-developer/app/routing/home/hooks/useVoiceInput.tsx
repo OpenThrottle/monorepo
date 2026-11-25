@@ -10,7 +10,7 @@
  * chunks captured before the session is live are buffered client-side so the
  * user's first words are never clipped.
  */
-import type { ChatComposerMicState } from '@openthrottle/react-router-chat';
+import type { ChatComposerMicStateValue } from '@openthrottle/react-router-chat';
 import { useAudioCapture } from '@openthrottle/react-router-ui';
 import * as React from 'react';
 
@@ -37,7 +37,7 @@ export interface UseVoiceInputResult {
   /** True while the draft should be frozen (recording or finalizing). */
   readonly isDraftFrozen: boolean;
   /** State for the toolbar mic control. */
-  readonly micState: ChatComposerMicState;
+  readonly micState: ChatComposerMicStateValue;
   /** Click handler for the mic: starts when idle, stops when recording. */
   readonly toggle: () => Promise<void>;
 }

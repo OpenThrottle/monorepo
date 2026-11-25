@@ -8,8 +8,8 @@
 import type { AgentAccountError } from '../utils/account-error.ts';
 import type { DriverHostEnv } from '../utils/child-env.ts';
 import type { UsageLimit } from '../utils/claude-output.ts';
-import type { DriverOutputFormat } from '../utils/output-format.ts';
-import type { DriverReasoningEffort } from '../utils/reasoning-effort.ts';
+import type { DriverOutputFormatsValue } from '../utils/output-format.ts';
+import type { DriverReasoningEffortsValue } from '../utils/reasoning-effort.ts';
 
 /**
  * @description One chunk of subprocess output when a driver is run through the async engine.
@@ -107,7 +107,7 @@ export interface DriverInvocationConfig {
    * `--variant`), clamping to what that CLI accepts. Omitted ⇒ no flag. CLIs with no reasoning knob
    * (cursor, antigravity) ignore it silently.
    */
-  readonly effort?: DriverReasoningEffort;
+  readonly effort?: DriverReasoningEffortsValue;
   /**
    * Optional local model-server endpoint to target; honored only by drivers advertising
    * `supportsCustomBaseUrl` (see {@link DriverEndpointConfig}). Others ignore it.
@@ -131,7 +131,7 @@ export interface DriverInvocationConfig {
    * safe through `withStructuredOutput` in `@openthrottle/openthrottle-agentic-utils`, which installs
    * the matching parser and line renderer. Claude ignores it.
    */
-  readonly outputFormat?: DriverOutputFormat;
+  readonly outputFormat?: DriverOutputFormatsValue;
   /**
    * Out-of-repo plugin directories to load for this invocation; honored only by drivers advertising
    * `pluginDir`. Already fully resolved by the caller — existence-checked, container-path-mapped,

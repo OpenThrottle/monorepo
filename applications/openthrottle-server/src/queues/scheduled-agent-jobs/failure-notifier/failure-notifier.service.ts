@@ -3,7 +3,7 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import { ScheduledAgentJobsRepository } from '@openthrottle/nestjs-repositories-server';
 import type {
   NotificationSeverity,
-  ScheduledRunFailureReason,
+  ScheduledRunFailureReasonsValue,
 } from '@openthrottle/openthrottle-notifications';
 import { SCHEDULED_RUN_FAILURE_REASONS } from '@openthrottle/openthrottle-notifications';
 
@@ -21,7 +21,7 @@ import {
 
 /** @description A missed fire is a warning (nothing broke); a failure or timeout is an error. */
 const severityFor = (
-  reason: ScheduledRunFailureReason,
+  reason: ScheduledRunFailureReasonsValue,
 ): NotificationSeverity => {
   return reason === SCHEDULED_RUN_FAILURE_REASONS.MISSED ? 'warning' : 'error';
 };

@@ -6,7 +6,7 @@
 
 import { Field, ObjectType } from '@nestjs/graphql';
 
-import type { IdRefKind } from './id-refs.enum.ts';
+import type { IdRefKindValue } from './id-refs.enum.ts';
 import { ID_REF_KIND } from './id-refs.enum.ts';
 
 @ObjectType()
@@ -19,7 +19,7 @@ export class IdRefObject {
   @Field(() => ID_REF_KIND, {
     description: `Whether this ref is a plan or a task.`,
   })
-  kind!: IdRefKind;
+  kind!: IdRefKindValue;
 
   @Field(() => String, {
     description: `Owning plan id for a TASK ref; null for a PLAN ref.`,

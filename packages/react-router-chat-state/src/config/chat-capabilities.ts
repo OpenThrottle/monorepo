@@ -1,7 +1,8 @@
 import type { ChatBackendCapabilities } from '@openthrottle/react-router-chat';
+import type { ChatPermissionModeValue } from '@openthrottle/react-router-chat';
 import {
-  ChatPermissionMode,
-  ChatReasoningLevel,
+  CHAT_PERMISSION_MODE,
+  CHAT_REASONING_LEVEL,
 } from '@openthrottle/react-router-chat';
 
 import type { ChatAgentRuntime } from '../types';
@@ -55,9 +56,9 @@ export const OPENAI_BACKEND_CAPABILITIES: ChatBackendCapabilities = {
   maxRepositories: SINGLE_REPOSITORY_CAP,
   permissionModes: [],
   reasoningLevels: [
-    ChatReasoningLevel.low,
-    ChatReasoningLevel.medium,
-    ChatReasoningLevel.high,
+    CHAT_REASONING_LEVEL.low,
+    CHAT_REASONING_LEVEL.medium,
+    CHAT_REASONING_LEVEL.high,
   ],
   requiresRepository: false,
   serviceTiers: [],
@@ -66,10 +67,10 @@ export const OPENAI_BACKEND_CAPABILITIES: ChatBackendCapabilities = {
 };
 
 /** All three composer permission postures, in UI order. */
-const ALL_PERMISSION_MODES: readonly ChatPermissionMode[] = [
-  ChatPermissionMode.supervised,
-  ChatPermissionMode.autoAcceptEdits,
-  ChatPermissionMode.fullAccess,
+const ALL_PERMISSION_MODES: readonly ChatPermissionModeValue[] = [
+  CHAT_PERMISSION_MODE.supervised,
+  CHAT_PERMISSION_MODE.autoAcceptEdits,
+  CHAT_PERMISSION_MODE.fullAccess,
 ];
 
 /**
@@ -85,9 +86,9 @@ export const DEFAULT_CLI_BACKEND_CAPABILITIES: ChatBackendCapabilities = {
   maxRepositories: SINGLE_REPOSITORY_CAP,
   permissionModes: ALL_PERMISSION_MODES,
   reasoningLevels: [
-    ChatReasoningLevel.low,
-    ChatReasoningLevel.medium,
-    ChatReasoningLevel.high,
+    CHAT_REASONING_LEVEL.low,
+    CHAT_REASONING_LEVEL.medium,
+    CHAT_REASONING_LEVEL.high,
   ],
   requiresRepository: true,
   serviceTiers: [],
@@ -127,11 +128,11 @@ export const CHAT_BACKEND_CAPABILITIES: Readonly<
     maxRepositories: MULTI_REPOSITORY_CAP,
     permissionModes: ALL_PERMISSION_MODES,
     reasoningLevels: [
-      ChatReasoningLevel.low,
-      ChatReasoningLevel.medium,
-      ChatReasoningLevel.high,
-      ChatReasoningLevel.extraHigh,
-      ChatReasoningLevel.max,
+      CHAT_REASONING_LEVEL.low,
+      CHAT_REASONING_LEVEL.medium,
+      CHAT_REASONING_LEVEL.high,
+      CHAT_REASONING_LEVEL.extraHigh,
+      CHAT_REASONING_LEVEL.max,
     ],
     requiresRepository: true,
     serviceTiers: [],
@@ -142,9 +143,9 @@ export const CHAT_BACKEND_CAPABILITIES: Readonly<
     maxRepositories: SINGLE_REPOSITORY_CAP,
     permissionModes: ALL_PERMISSION_MODES,
     reasoningLevels: [
-      ChatReasoningLevel.low,
-      ChatReasoningLevel.medium,
-      ChatReasoningLevel.high,
+      CHAT_REASONING_LEVEL.low,
+      CHAT_REASONING_LEVEL.medium,
+      CHAT_REASONING_LEVEL.high,
     ],
     requiresRepository: true,
     serviceTiers: [],
@@ -158,8 +159,8 @@ export const CHAT_BACKEND_CAPABILITIES: Readonly<
     // everything). autoAcceptEdits has no distinct edits-only flag, so it is
     // not advertised.
     permissionModes: [
-      ChatPermissionMode.supervised,
-      ChatPermissionMode.fullAccess,
+      CHAT_PERMISSION_MODE.supervised,
+      CHAT_PERMISSION_MODE.fullAccess,
     ],
     // Reasoning + service tier are NOT separate controls for cursor — they are
     // baked into the model id (`cursor-agent models` lists concrete ids like
@@ -176,9 +177,9 @@ export const CHAT_BACKEND_CAPABILITIES: Readonly<
     maxRepositories: SINGLE_REPOSITORY_CAP,
     permissionModes: ALL_PERMISSION_MODES,
     reasoningLevels: [
-      ChatReasoningLevel.low,
-      ChatReasoningLevel.medium,
-      ChatReasoningLevel.high,
+      CHAT_REASONING_LEVEL.low,
+      CHAT_REASONING_LEVEL.medium,
+      CHAT_REASONING_LEVEL.high,
     ],
     requiresRepository: true,
     serviceTiers: [],
@@ -189,10 +190,10 @@ export const CHAT_BACKEND_CAPABILITIES: Readonly<
     maxRepositories: SINGLE_REPOSITORY_CAP,
     permissionModes: ALL_PERMISSION_MODES,
     reasoningLevels: [
-      ChatReasoningLevel.low,
-      ChatReasoningLevel.medium,
-      ChatReasoningLevel.high,
-      ChatReasoningLevel.max,
+      CHAT_REASONING_LEVEL.low,
+      CHAT_REASONING_LEVEL.medium,
+      CHAT_REASONING_LEVEL.high,
+      CHAT_REASONING_LEVEL.max,
     ],
     requiresRepository: true,
     serviceTiers: [],

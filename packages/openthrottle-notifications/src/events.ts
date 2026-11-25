@@ -30,8 +30,9 @@ export const NOTIFICATION_EVENT_NAMES = {
   TASK_STATUS_CHANGED: 'task.status_changed',
 } as const;
 
-export type NotificationEventName =
-  (typeof NOTIFICATION_EVENT_NAMES)[keyof typeof NOTIFICATION_EVENT_NAMES];
+export type NotificationEventNamesKey = keyof typeof NOTIFICATION_EVENT_NAMES;
+export type NotificationEventNamesValue =
+  (typeof NOTIFICATION_EVENT_NAMES)[NotificationEventNamesKey];
 
 /**
  * @description Base payload fields present on all notification events.
@@ -124,15 +125,17 @@ export const SCHEDULED_RUN_FAILURE_REASONS = {
   TIMED_OUT: 'timed_out',
 } as const;
 
-export type ScheduledRunFailureReason =
-  (typeof SCHEDULED_RUN_FAILURE_REASONS)[keyof typeof SCHEDULED_RUN_FAILURE_REASONS];
+export type ScheduledRunFailureReasonsKey =
+  keyof typeof SCHEDULED_RUN_FAILURE_REASONS;
+export type ScheduledRunFailureReasonsValue =
+  (typeof SCHEDULED_RUN_FAILURE_REASONS)[ScheduledRunFailureReasonsKey];
 
 /**
  * @description Payload for scheduled_run.failed. Emit when a scheduled agent job run fails, times
  * out, or is recorded missed. `actorUserId` is the schedule's owner, who is the person to tell.
  */
 export interface ScheduledRunFailedPayload extends NotificationPayloadBase {
-  readonly reason: ScheduledRunFailureReason;
+  readonly reason: ScheduledRunFailureReasonsValue;
   /** How many runs this notice covers; above 1 only when a boot records several missed fires. */
   readonly runCount: number;
   /** The run, when the notice covers exactly one run whose id is known. */

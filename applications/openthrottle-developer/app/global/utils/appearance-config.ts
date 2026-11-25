@@ -5,7 +5,7 @@ import { createJSONStorage } from 'jotai/utils';
 
 import type {
   ConfigObject,
-  ReducedMotionMode,
+  ReducedMotionModesValue,
 } from '~/global/data/data.appearance-config';
 import {
   DEFAULT_APPEARANCE_CONFIG,
@@ -19,14 +19,14 @@ const isThemeMode = (value: unknown): value is ThemeMode => {
 /** Type guard for persisted / toggle-emitted motion values. */
 export const isReducedMotionMode = (
   value: unknown,
-): value is ReducedMotionMode => {
+): value is ReducedMotionModesValue => {
   return (
     value === REDUCED_MOTION_MODES.always ||
     value === REDUCED_MOTION_MODES.system
   );
 };
 
-const pickReducedMotionMode = (value: unknown): ReducedMotionMode => {
+const pickReducedMotionMode = (value: unknown): ReducedMotionModesValue => {
   if (isReducedMotionMode(value)) {
     return value;
   }

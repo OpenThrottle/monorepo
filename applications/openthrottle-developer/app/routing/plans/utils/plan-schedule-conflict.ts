@@ -14,15 +14,17 @@ export const PLAN_SCHEDULE_CONFLICT_CODE = {
   PLAN_NOT_SCHEDULABLE: 'PLAN_NOT_SCHEDULABLE',
 } as const;
 
-export type PlanScheduleConflictCode =
-  (typeof PLAN_SCHEDULE_CONFLICT_CODE)[keyof typeof PLAN_SCHEDULE_CONFLICT_CODE];
+export type PlanScheduleConflictCodeKey =
+  keyof typeof PLAN_SCHEDULE_CONFLICT_CODE;
+export type PlanScheduleConflictCodeValue =
+  (typeof PLAN_SCHEDULE_CONFLICT_CODE)[PlanScheduleConflictCodeKey];
 
 /**
  * @description A conflict as the action hands it to the client: the code plus the scheduled run the
  * server named (`null` when the plan has none). Plain strings, so it survives action serialization.
  */
 export interface PlanScheduleConflict {
-  readonly code: PlanScheduleConflictCode;
+  readonly code: PlanScheduleConflictCodeValue;
   readonly planRunId: string | null;
   readonly scheduledFor: string | null;
 }
@@ -31,7 +33,9 @@ export interface PlanScheduleConflict {
 export type PlanScheduleFailure =
   { readonly conflict: PlanScheduleConflict } | { readonly message: string };
 
-const isConflictCode = (value: unknown): value is PlanScheduleConflictCode => {
+const isConflictCode = (
+  value: unknown,
+): value is PlanScheduleConflictCodeValue => {
   return Object.values<unknown>(PLAN_SCHEDULE_CONFLICT_CODE).includes(value);
 };
 

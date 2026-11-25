@@ -8,7 +8,8 @@ export const CMS_DEVICE = {
   TABLET: 'tablet',
 } as const;
 
+export type CmsDeviceKey = keyof typeof CMS_DEVICE;
 /**
  * @public
  */
-export type CmsDevice = (typeof CMS_DEVICE)[keyof typeof CMS_DEVICE];
+export type CmsDeviceValue = (typeof CMS_DEVICE)[CmsDeviceKey];

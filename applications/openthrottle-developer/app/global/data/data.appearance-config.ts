@@ -13,12 +13,13 @@ export const REDUCED_MOTION_MODES = {
   system: 'system',
 } as const;
 
-export type ReducedMotionMode =
-  (typeof REDUCED_MOTION_MODES)[keyof typeof REDUCED_MOTION_MODES];
+export type ReducedMotionModesKey = keyof typeof REDUCED_MOTION_MODES;
+export type ReducedMotionModesValue =
+  (typeof REDUCED_MOTION_MODES)[ReducedMotionModesKey];
 
 export interface ConfigObject {
   brand: string | undefined;
-  reducedMotion: ReducedMotionMode;
+  reducedMotion: ReducedMotionModesValue;
   theme: ThemeMode;
   /** Selected palette id (`<html data-theme>`); undefined = base theme.css palette. */
   themeId: string | undefined;

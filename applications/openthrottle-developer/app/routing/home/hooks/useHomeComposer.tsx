@@ -1,14 +1,14 @@
 import type {
   ChatBackendCapabilities,
   ChatCheckoutOption,
-  ChatComposerMode,
+  ChatComposerModeValue,
   ChatMentionProvider,
   ChatModelGroup,
   ChatModelOption,
-  ChatPermissionMode,
+  ChatPermissionModeValue,
   ChatPersonaOption,
-  ChatReasoningLevel,
-  ChatServiceTier,
+  ChatReasoningLevelValue,
+  ChatServiceTierValue,
   ChatSlashCommandProvider,
 } from '@openthrottle/react-router-chat';
 import { parseFileMentions } from '@openthrottle/react-router-chat';
@@ -65,31 +65,31 @@ export interface UseHomeComposerResult {
   readonly hasRepositories: boolean;
   readonly isCliBackend: boolean;
   readonly mentionProvider: ChatMentionProvider | undefined;
-  readonly mode: ChatComposerMode;
+  readonly mode: ChatComposerModeValue;
   readonly modelGroups: ChatModelGroup[];
   readonly modelId: string | undefined;
   readonly onSubmit: (message: string) => void;
-  readonly permissionMode: ChatPermissionMode | undefined;
+  readonly permissionMode: ChatPermissionModeValue | undefined;
   readonly persist: boolean;
   readonly personaId: string | undefined;
   readonly personas: readonly ChatPersonaOption[];
   readonly promptHistory: readonly string[];
-  readonly reasoning: ChatReasoningLevel | undefined;
+  readonly reasoning: ChatReasoningLevelValue | undefined;
   readonly rememberPermissionMode: boolean;
   readonly repositoryId: string | undefined;
   readonly repositoryIds: readonly string[];
-  readonly serviceTier: ChatServiceTier | undefined;
+  readonly serviceTier: ChatServiceTierValue | undefined;
   readonly setDraft: React.Dispatch<React.SetStateAction<string>>;
-  readonly setMode: (mode: ChatComposerMode) => void;
+  readonly setMode: (mode: ChatComposerModeValue) => void;
   readonly setModelId: (modelId: string) => void;
-  readonly setPermissionMode: (permissionMode: ChatPermissionMode) => void;
+  readonly setPermissionMode: (permissionMode: ChatPermissionModeValue) => void;
   readonly setPersist: (persist: boolean) => void;
   readonly setPersonaId: (personaId: string) => void;
-  readonly setReasoning: (reasoning: ChatReasoningLevel) => void;
+  readonly setReasoning: (reasoning: ChatReasoningLevelValue) => void;
   readonly setRememberPermissionMode: (remember: boolean) => void;
   readonly setRepositoryId: (repositoryId: string) => void;
   readonly setRepositoryIds: (repositoryIds: readonly string[]) => void;
-  readonly setServiceTier: (serviceTier: ChatServiceTier) => void;
+  readonly setServiceTier: (serviceTier: ChatServiceTierValue) => void;
   readonly slashCommandProvider: ChatSlashCommandProvider;
   readonly voice: UseVoiceInputResult;
 }
@@ -218,13 +218,13 @@ export const useHomeComposer = (
   );
 
   // Handlers
-  const setMode = (mode: ChatComposerMode): void => {
+  const setMode = (mode: ChatComposerModeValue): void => {
     return setToolbarState((previous) => ({ ...previous, mode }));
   };
   const setModelId = (modelId: string): void => {
     return setToolbarState((previous) => ({ ...previous, modelId }));
   };
-  const setPermissionMode = (permissionMode: ChatPermissionMode): void => {
+  const setPermissionMode = (permissionMode: ChatPermissionModeValue): void => {
     return setToolbarState((previous) =>
       writeChatToolbarBackendPref(previous, backendKey, { permissionMode }),
     );
@@ -235,7 +235,7 @@ export const useHomeComposer = (
   const setPersonaId = (personaId: string): void => {
     return setToolbarState((previous) => ({ ...previous, personaId }));
   };
-  const setReasoning = (reasoning: ChatReasoningLevel): void => {
+  const setReasoning = (reasoning: ChatReasoningLevelValue): void => {
     return setToolbarState((previous) =>
       writeChatToolbarBackendPref(previous, backendKey, { reasoning }),
     );
@@ -255,7 +255,7 @@ export const useHomeComposer = (
   const setRepositoryIds = (repositoryIds: readonly string[]): void => {
     return setToolbarState((previous) => ({ ...previous, repositoryIds }));
   };
-  const setServiceTier = (serviceTier: ChatServiceTier): void => {
+  const setServiceTier = (serviceTier: ChatServiceTierValue): void => {
     return setToolbarState((previous) =>
       writeChatToolbarBackendPref(previous, backendKey, { serviceTier }),
     );

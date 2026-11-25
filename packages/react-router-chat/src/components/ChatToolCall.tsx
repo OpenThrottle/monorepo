@@ -10,7 +10,7 @@ import * as React from 'react';
 import { STATUS_CONFIG } from '../data/data.chat-tool-call-status-config';
 import { CHAT_TOOL_CALL_COPY } from '../data/data.copy';
 import type { ChatTurnToolEvent } from '../types';
-import { ChatToolStatus } from '../types';
+import { CHAT_TOOL_STATUS } from '../types';
 import { formatJsonPayload } from '../utils/index';
 import { ToolPayload } from './ToolPayload';
 
@@ -44,11 +44,11 @@ export const ChatToolCall = (props: ChatToolCallProps): React.ReactElement => {
   const args = formatJsonPayload(event.argsJson);
   const result = formatJsonPayload(event.resultJson);
   const hasError = event.error !== null && event.error.trim() !== '';
-  const startOpen = defaultOpen ?? event.status === ChatToolStatus.failed;
+  const startOpen = defaultOpen ?? event.status === CHAT_TOOL_STATUS.failed;
   const hasNoPayload = args === null && result === null;
-  const isRunning = event.status === ChatToolStatus.running;
-  const isSucceeded = event.status === ChatToolStatus.succeeded;
-  const isNotRun = event.status === ChatToolStatus.notRun;
+  const isRunning = event.status === CHAT_TOOL_STATUS.running;
+  const isSucceeded = event.status === CHAT_TOOL_STATUS.succeeded;
+  const isNotRun = event.status === CHAT_TOOL_STATUS.notRun;
   // A call that finished with arguments but no result says so, rather than leaving the reader to
   // guess whether the Result pane is missing or the tool returned nothing.
   const hasNoOutput = isSucceeded && args !== null && result === null;

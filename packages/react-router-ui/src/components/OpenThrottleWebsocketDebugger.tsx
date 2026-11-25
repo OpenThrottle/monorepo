@@ -1,4 +1,4 @@
-import type { NotificationEventName } from '@openthrottle/openthrottle-notifications';
+import type { NotificationEventNamesValue } from '@openthrottle/openthrottle-notifications';
 import {
   Badge,
   Button,
@@ -32,9 +32,9 @@ export interface OpenThrottleWebsocketDebuggerProps {
    */
   readonly initialEntries?: readonly WebsocketDebuggerLogEntry[];
   readonly onSelectedEventNamesChange?: (
-    names: readonly NotificationEventName[],
+    names: readonly NotificationEventNamesValue[],
   ) => void;
-  readonly selectedEventNames?: readonly NotificationEventName[];
+  readonly selectedEventNames?: readonly NotificationEventNamesValue[];
   /** @description Standalone / Storybook: attach listeners on this socket. */
   readonly socket?: WebsocketDebuggerSocket | null;
   readonly subscribeToEvents?: WebsocketDebuggerEventSubscriber;

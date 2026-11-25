@@ -7,7 +7,7 @@ import { SEARCH_RANKING_K } from './data/data.dataset.ts';
 import type {
   CaseScore,
   RankedChunk,
-  SearchCaseKind,
+  SearchCaseKindValue,
   SearchRankingCase,
   SearchTarget,
 } from './eval-case.ts';
@@ -84,7 +84,7 @@ export function scoreCase(
  */
 export function summarizeScores(
   scores: readonly CaseScore[],
-  kind: SearchCaseKind | undefined,
+  kind: SearchCaseKindValue | undefined,
 ): ScoreSummary {
   const group = scores.filter((score) => {
     return kind === undefined || score.kind === kind;

@@ -4,26 +4,26 @@ import type { RecurrenceSpec } from '../recurrence';
 import {
   buildRRule,
   parseRRule,
-  RecurrenceFrequency,
-  RecurrenceWeekday,
+  RECURRENCE_FREQUENCY,
+  RECURRENCE_WEEKDAY,
 } from '../recurrence';
 
 describe('buildRRule', () => {
   it('emits FREQ first and only the provided parts', () => {
-    expect(buildRRule({ frequency: RecurrenceFrequency.Daily }).rule).toBe(
+    expect(buildRRule({ frequency: RECURRENCE_FREQUENCY.Daily }).rule).toBe(
       'FREQ=DAILY',
     );
   });
 
   it('emits every supported part in a stable order', () => {
     const spec: RecurrenceSpec = {
-      byDay: [RecurrenceWeekday.Monday, RecurrenceWeekday.Wednesday],
+      byDay: [RECURRENCE_WEEKDAY.Monday, RECURRENCE_WEEKDAY.Wednesday],
       byMonthDay: [1, 15],
       count: 10,
-      frequency: RecurrenceFrequency.Weekly,
+      frequency: RECURRENCE_FREQUENCY.Weekly,
       interval: 2,
       until: '20261231T000000Z',
-      weekStart: RecurrenceWeekday.Monday,
+      weekStart: RECURRENCE_WEEKDAY.Monday,
     };
 
     expect(buildRRule(spec).rule).toBe(
@@ -35,7 +35,7 @@ describe('buildRRule', () => {
     expect(
       buildRRule({
         byDay: [],
-        frequency: RecurrenceFrequency.Monthly,
+        frequency: RECURRENCE_FREQUENCY.Monthly,
       }).rule,
     ).toBe('FREQ=MONTHLY');
   });
@@ -44,9 +44,9 @@ describe('buildRRule', () => {
 describe('parseRRule', () => {
   it('parses a known weekly fixture', () => {
     expect(parseRRule('FREQ=WEEKLY;BYDAY=MO,TU;COUNT=4')).toEqual({
-      byDay: [RecurrenceWeekday.Monday, RecurrenceWeekday.Tuesday],
+      byDay: [RECURRENCE_WEEKDAY.Monday, RECURRENCE_WEEKDAY.Tuesday],
       count: 4,
-      frequency: RecurrenceFrequency.Weekly,
+      frequency: RECURRENCE_FREQUENCY.Weekly,
     });
   });
 
@@ -79,7 +79,7 @@ describe('parseRRule', () => {
     // dropped silently rather than throwing or leaking onto the spec.
     expect(
       parseRRule('FREQ=DAILY;BYHOUR=9;RDATE=20260101T000000Z;X-FOO=bar'),
-    ).toEqual({ frequency: RecurrenceFrequency.Daily });
+    ).toEqual({ frequency: RECURRENCE_FREQUENCY.Daily });
   });
 
   it('keeps the last value when a key is duplicated', () => {
@@ -100,11 +100,11 @@ describe('parseRRule', () => {
 describe('round-trips', () => {
   it('build -> parse preserves a full spec', () => {
     const spec: RecurrenceSpec = {
-      byDay: [RecurrenceWeekday.Friday],
+      byDay: [RECURRENCE_WEEKDAY.Friday],
       count: 12,
-      frequency: RecurrenceFrequency.Weekly,
+      frequency: RECURRENCE_FREQUENCY.Weekly,
       interval: 1,
-      weekStart: RecurrenceWeekday.Sunday,
+      weekStart: RECURRENCE_WEEKDAY.Sunday,
     };
 
     expect(parseRRule(buildRRule(spec))).toEqual(spec);
@@ -117,7 +117,7 @@ describe('round-trips', () => {
 
   it('build -> parse round-trips an UNTIL bound', () => {
     const spec: RecurrenceSpec = {
-      frequency: RecurrenceFrequency.Daily,
+      frequency: RECURRENCE_FREQUENCY.Daily,
       until: '20261231T235959Z',
     };
     expect(parseRRule(buildRRule(spec))).toEqual(spec);

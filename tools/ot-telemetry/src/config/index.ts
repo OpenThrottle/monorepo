@@ -22,6 +22,9 @@ export const DETAIL_LEVELS = {
   IDENTIFIERS: 'identifiers',
 } as const;
 
+export type DetailLevelsKey = keyof typeof DETAIL_LEVELS;
+export type DetailLevelsValue = (typeof DETAIL_LEVELS)[DetailLevelsKey];
+
 /** Every valid `--detail` value, for CLI validation and help text. */
 export const DETAIL_LEVEL_VALUES = [
   DETAIL_LEVELS.AGGREGATE,
@@ -39,6 +42,9 @@ export const OUTPUT_FORMATS = {
   MD: 'md',
 } as const;
 
+export type OutputFormatsKey = keyof typeof OUTPUT_FORMATS;
+export type OutputFormatsValue = (typeof OUTPUT_FORMATS)[OutputFormatsKey];
+
 /** Every valid `--format` value, for CLI validation and help text. */
 export const OUTPUT_FORMAT_VALUES = [
   OUTPUT_FORMATS.BOTH,
@@ -51,6 +57,10 @@ export const REPORT_FILE_NAMES = {
   JSON: 'report.json',
   MD: 'report.md',
 } as const;
+
+export type ReportFileNamesKey = keyof typeof REPORT_FILE_NAMES;
+export type ReportFileNamesValue =
+  (typeof REPORT_FILE_NAMES)[ReportFileNamesKey];
 
 /**
  * Directory name under the OS temp dir used when `--out` is omitted — deliberately NOT inside this
@@ -86,6 +96,10 @@ export const MIGRATION_LEDGER = {
   ID_COLUMN: 'filename',
   TABLE: 'schema_migrations',
 } as const;
+
+export type MigrationLedgerKey = keyof typeof MIGRATION_LEDGER;
+export type MigrationLedgerValue =
+  (typeof MIGRATION_LEDGER)[MigrationLedgerKey];
 
 /** Max rows per Markdown table before the report shows a "top N of M" note. */
 export const TABLE_ROW_LIMIT = 15;

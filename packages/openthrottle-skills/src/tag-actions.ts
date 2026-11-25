@@ -26,9 +26,9 @@ export const TAG_ACTION_TYPES = {
   PROMOTE_TASK_TO_PLAN: 'promote-task-to-plan',
 } as const;
 
+export type TagActionTypesKey = keyof typeof TAG_ACTION_TYPES;
 /** @public */
-export type TagActionType =
-  (typeof TAG_ACTION_TYPES)[keyof typeof TAG_ACTION_TYPES];
+export type TagActionTypesValue = (typeof TAG_ACTION_TYPES)[TagActionTypesKey];
 
 const kebabSlug = z
   .string()
@@ -195,7 +195,7 @@ const PAYLOAD_SCHEMAS = {
  * @public
  */
 export const parseTagActionPayload = (
-  actionType: TagActionType,
+  actionType: TagActionTypesValue,
   payload: unknown,
 ):
   | AttachPromptActionPayload
@@ -206,10 +206,12 @@ export const parseTagActionPayload = (
 };
 
 /**
- * @description Type guard for {@link TagActionType}.
+ * @description Type guard for {@link TagActionTypesValue}.
  * @public
  */
-export const isTagActionType = (value: string): value is TagActionType => {
+export const isTagActionType = (
+  value: string,
+): value is TagActionTypesValue => {
   return (
     value === TAG_ACTION_TYPES.ATTACH_PROMPT ||
     value === TAG_ACTION_TYPES.INJECT_TASK ||
@@ -256,7 +258,7 @@ export interface TagActionRuleScope {
  */
 export interface TagActionRuleInput extends TagActionRuleScope {
   readonly actionPayload: unknown;
-  readonly actionType: TagActionType;
+  readonly actionType: TagActionTypesValue;
   /** Rule creation time; the stable tie-break when two matches rank equally. */
   readonly createdAt: Date;
   readonly enabled: boolean;
@@ -283,7 +285,7 @@ export interface TagActionEvaluationContext {
  */
 export interface MatchedTagAction {
   readonly actionPayload: unknown;
-  readonly actionType: TagActionType;
+  readonly actionType: TagActionTypesValue;
   /** The rule's creation time, carried for the ranking tie-break. */
   readonly createdAt: Date;
   /** The context tags that satisfied tag_all (equal to tagAll on match). */

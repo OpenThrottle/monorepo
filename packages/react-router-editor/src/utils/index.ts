@@ -1,4 +1,4 @@
-import type { EditorLanguage } from '../config';
+import type { FileExtensionsValue } from '../config';
 import {
   FILE_EXTENSIONS,
   PROMPT_TYPE_OPTIONS,
@@ -7,14 +7,14 @@ import {
 } from '../config';
 import type { EditorFile } from '../data/data.atom.editor';
 
-const FILE_EXTENSION_LANGUAGES: Readonly<Record<string, EditorLanguage>> =
+const FILE_EXTENSION_LANGUAGES: Readonly<Record<string, FileExtensionsValue>> =
   FILE_EXTENSIONS;
 
 /**
  * @description Get the Monaco language identifier from a file extension.
  * Accepts any raw extension string; unknown extensions fall back to `markdown`.
  */
-export const getLanguageFromExt = (ext: string): EditorLanguage => {
+export const getLanguageFromExt = (ext: string): FileExtensionsValue => {
   const language = FILE_EXTENSION_LANGUAGES[ext.toLowerCase()];
 
   if (!language) {
@@ -31,7 +31,7 @@ export const parseFilePath = (
   path: string,
 ): {
   readonly extension: string;
-  readonly language: EditorLanguage;
+  readonly language: FileExtensionsValue;
   readonly name: string;
   readonly parts: readonly string[];
   readonly path: string;

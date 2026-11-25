@@ -15,3 +15,7 @@ export const WORK_SESSION_CLOSED_BY = {
   /** Closed by the hourly abandoned-session sweeper, 24h after the session started. */
   SWEEPER: 'sweeper',
 } as const;
+
+export type WorkSessionClosedByKey = keyof typeof WORK_SESSION_CLOSED_BY;
+export type WorkSessionClosedByValue =
+  (typeof WORK_SESSION_CLOSED_BY)[WorkSessionClosedByKey];

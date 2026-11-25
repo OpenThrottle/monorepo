@@ -13,7 +13,7 @@ import { dirname, join } from 'node:path';
 
 import type { ConversationBackendRun } from '@openthrottle/openthrottle-agentic-utils';
 
-import type { SessionStrategy } from '../../config/config.backends.ts';
+import type { SessionStrategiesValue } from '../../config/config.backends.ts';
 import { SESSION_STRATEGIES } from '../../config/config.backends.ts';
 import type { Transcript } from '../../types/transcript.ts';
 import { placeholderUuid } from '../sanitizer/sanitizer.ts';
@@ -49,7 +49,7 @@ export interface PreparedReplay {
  * @public
  */
 export function replaySessionStart(
-  strategy: SessionStrategy,
+  strategy: SessionStrategiesValue,
 ): string | undefined {
   return strategy === SESSION_STRATEGIES.caller
     ? placeholderUuid(1)

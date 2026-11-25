@@ -32,7 +32,7 @@ import { QueryFailedError } from 'typeorm';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service.ts';
-import { CustomPromptTypeEnum } from './custom-prompt.object.ts';
+import { CUSTOM_PROMPT_TYPE } from './custom-prompt.object.ts';
 import {
   CUSTOM_PROMPT_ACCESS_REFUSAL,
   CUSTOM_PROMPT_WRITE_REFUSAL,
@@ -290,11 +290,11 @@ describe('CustomPromptsResolver', () => {
     test('filters by promptType when provided', async () => {
       await resolver.customPrompts(principal, {
         ...noFilters,
-        promptType: CustomPromptTypeEnum.AGENTS,
+        promptType: CUSTOM_PROMPT_TYPE.AGENTS,
       });
 
       expect(customPromptsRepository.listFiltered).toHaveBeenCalledWith(
-        expect.objectContaining({ promptType: CustomPromptTypeEnum.AGENTS }),
+        expect.objectContaining({ promptType: CUSTOM_PROMPT_TYPE.AGENTS }),
       );
     });
 
@@ -317,7 +317,7 @@ describe('CustomPromptsResolver', () => {
       filePath: mockCustomPrompt.filePath,
       labels: mockCustomPrompt.labels,
       projectId: null,
-      promptType: CustomPromptTypeEnum.AGENTS,
+      promptType: CUSTOM_PROMPT_TYPE.AGENTS,
       title: mockCustomPrompt.title,
       userId: null,
       writeToFileSystem: false,
@@ -727,7 +727,7 @@ describe('CustomPromptsResolver', () => {
           filePath: '../escaped-create.md',
           labels: [],
           projectId: null,
-          promptType: CustomPromptTypeEnum.AGENTS,
+          promptType: CUSTOM_PROMPT_TYPE.AGENTS,
           title: 'Escape',
           userId: null,
           writeToFileSystem: true,
@@ -782,7 +782,7 @@ describe('CustomPromptsResolver', () => {
           filePath: '/tmp/escaped-absolute-create.md',
           labels: [],
           projectId: null,
-          promptType: CustomPromptTypeEnum.AGENTS,
+          promptType: CUSTOM_PROMPT_TYPE.AGENTS,
           title: 'Escape',
           userId: null,
           writeToFileSystem: true,

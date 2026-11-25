@@ -14,6 +14,9 @@ export const EVAL_AUTH_MODE = {
   SUBSCRIPTION: 'subscription',
 } as const;
 
+export type EvalAuthModeKey = keyof typeof EVAL_AUTH_MODE;
+export type EvalAuthModeValue = (typeof EVAL_AUTH_MODE)[EvalAuthModeKey];
+
 /**
  * Run lifecycle. `usage_limited` is a resumable pause, not a failure.
  * @public
@@ -26,3 +29,6 @@ export const EVAL_RUN_STATUS = {
   RUNNING: 'running',
   USAGE_LIMITED: 'usage_limited',
 } as const;
+
+export type EvalRunStatusKey = keyof typeof EVAL_RUN_STATUS;
+export type EvalRunStatusValue = (typeof EVAL_RUN_STATUS)[EvalRunStatusKey];

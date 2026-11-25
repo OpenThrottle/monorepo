@@ -8,3 +8,8 @@ export const AGENT_CONVERSATION_MESSAGE_ROLES = {
   tool: 'tool',
   user: 'user',
 } as const;
+
+export type AgentConversationMessageRolesKey =
+  keyof typeof AGENT_CONVERSATION_MESSAGE_ROLES;
+export type AgentConversationMessageRolesValue =
+  (typeof AGENT_CONVERSATION_MESSAGE_ROLES)[AgentConversationMessageRolesKey];

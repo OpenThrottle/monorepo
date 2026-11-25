@@ -23,17 +23,18 @@ export const DRIVERS = {
   opencode: 'opencode',
 } as const;
 
+export type DriversKey = keyof typeof DRIVERS;
 /**
  * @description A supported agent-CLI driver id.
  * @public
  */
-export type DriverId = (typeof DRIVERS)[keyof typeof DRIVERS];
+export type DriversValue = (typeof DRIVERS)[DriversKey];
 
 /**
  * @description Canonical set of agent-CLI driver ids, in declaration order.
  * @public
  */
-export const DRIVER_IDS: readonly DriverId[] = Object.values(DRIVERS);
+export const DRIVER_IDS: readonly DriversValue[] = Object.values(DRIVERS);
 
 const DRIVER_ID_SET: ReadonlySet<string> = new Set(DRIVER_IDS);
 
@@ -41,7 +42,7 @@ const DRIVER_ID_SET: ReadonlySet<string> = new Set(DRIVER_IDS);
  * @description Default driver when none is specified (matches the legacy `DEFAULT_WORKFLOW_RUNNER`).
  * @public
  */
-export const DEFAULT_DRIVER_ID: DriverId = 'cursor';
+export const DEFAULT_DRIVER_ID: DriversValue = 'cursor';
 
 /**
  * @description Identity helper that gives a driver literal its `AgentDriver` type while keeping the
@@ -63,13 +64,13 @@ export const defineDriver = (driver: AgentDriver): AgentDriver => {
  * in `../drivers` is `Record<DriverId, AgentDriver>`.
  * @public
  */
-export type DriverRegistry = Partial<Record<DriverId, AgentDriver>>;
+export type DriverRegistry = Partial<Record<DriversValue, AgentDriver>>;
 
 /**
- * @description True when `value` is a supported {@link DriverId}.
+ * @description True when `value` is a supported {@link DriversValue}.
  * @public
  */
-export const isDriverId = (value: string): value is DriverId => {
+export const isDriverId = (value: string): value is DriversValue => {
   return DRIVER_ID_SET.has(value);
 };
 
@@ -82,7 +83,7 @@ export const isDriverId = (value: string): value is DriverId => {
 export const parseDriverId = (
   raw: string,
   source: 'cli' | 'env' | 'file' = 'cli',
-): DriverId => {
+): DriversValue => {
   const normalized = raw.trim().toLowerCase();
 
   if (normalized === '') {
@@ -110,7 +111,7 @@ export const parseDriverId = (
  */
 export const lookupDriver = (
   registry: DriverRegistry,
-  id: DriverId,
+  id: DriversValue,
 ): AgentDriver => {
   const driver = registry[id];
 

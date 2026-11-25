@@ -8,7 +8,7 @@ import type {
   TimelineMarkerRowFragment,
   TimelineSpanRowFragment,
 } from '~/__generated__/graphql';
-import type { TimelineWindowPreset } from '~/routing/timeline/config/defaults';
+import type { TimelineWindowPresetValue } from '~/routing/timeline/config/defaults';
 import {
   TIMELINE_EMPTY_COPY,
   TIMELINE_PAGE_COPY,
@@ -34,7 +34,7 @@ export interface TimelineScreenProps {
   readonly spans: readonly TimelineSpanRowFragment[];
   readonly truncation: readonly TimelineTruncation[];
   readonly windowFromIso: string;
-  readonly windowPreset: TimelineWindowPreset;
+  readonly windowPreset: TimelineWindowPresetValue;
   readonly windowToIso: string;
 }
 

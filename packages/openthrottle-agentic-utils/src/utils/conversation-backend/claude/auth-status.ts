@@ -29,11 +29,12 @@ export const CLAUDE_ACTIVE_CREDENTIALS = {
   subscription: 'subscription',
 } as const;
 
+export type ClaudeActiveCredentialsKey = keyof typeof CLAUDE_ACTIVE_CREDENTIALS;
 /**
  * @public
  */
-export type ClaudeActiveCredential =
-  (typeof CLAUDE_ACTIVE_CREDENTIALS)[keyof typeof CLAUDE_ACTIVE_CREDENTIALS];
+export type ClaudeActiveCredentialsValue =
+  (typeof CLAUDE_ACTIVE_CREDENTIALS)[ClaudeActiveCredentialsKey];
 
 /**
  * The logged-in account, plan and active credential as reported by
@@ -45,7 +46,7 @@ export interface ClaudeAuthStatus {
   /** Logged-in account email, when reported. */
   readonly accountEmail: string | null;
   /** The credential Claude runs will actually bill. */
-  readonly activeCredential: ClaudeActiveCredential;
+  readonly activeCredential: ClaudeActiveCredentialsValue;
   /** True when an API key is active AND a subscription login exists (the key wins in `-p` mode). */
   readonly apiKeyOverridesSubscription: boolean;
   /** Login method, e.g. `claude.ai`, when reported. */
@@ -114,7 +115,7 @@ function readString(
 function resolveActiveCredential(
   apiKeyActive: boolean,
   hasSubscription: boolean,
-): ClaudeActiveCredential {
+): ClaudeActiveCredentialsValue {
   if (apiKeyActive) {
     return CLAUDE_ACTIVE_CREDENTIALS.apiKey;
   }

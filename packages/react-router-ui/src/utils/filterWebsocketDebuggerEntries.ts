@@ -1,4 +1,4 @@
-import type { NotificationEventName } from '@openthrottle/openthrottle-notifications';
+import type { NotificationEventNamesValue } from '@openthrottle/openthrottle-notifications';
 
 import type { WebsocketDebuggerLogEntry } from '../components/websocket-debugger/types';
 
@@ -8,7 +8,7 @@ import type { WebsocketDebuggerLogEntry } from '../components/websocket-debugger
  */
 export const filterWebsocketDebuggerEntries = (
   entries: readonly WebsocketDebuggerLogEntry[],
-  selectedEventNames: readonly NotificationEventName[],
+  selectedEventNames: readonly NotificationEventNamesValue[],
 ): readonly WebsocketDebuggerLogEntry[] => {
   if (selectedEventNames.length === 0) {
     return [];

@@ -29,8 +29,9 @@ export const CHECK_STATUS = {
   WARN: 'WARN',
 } as const;
 
+export type CheckStatusKey = keyof typeof CHECK_STATUS;
 /** @public */
-export type CheckStatus = (typeof CHECK_STATUS)[keyof typeof CHECK_STATUS];
+export type CheckStatusValue = (typeof CHECK_STATUS)[CheckStatusKey];
 
 /**
  * Which check a result belongs to.
@@ -57,7 +58,7 @@ export interface DoctorCheck {
   readonly detail: string;
   readonly fix: string | null;
   readonly id: CheckId;
-  readonly status: CheckStatus;
+  readonly status: CheckStatusValue;
 }
 
 /**
@@ -531,7 +532,7 @@ export const checkPrivacyOptIns = ({
 export const summarizeChecks = (
   checks: readonly DoctorCheck[],
 ): DoctorSummary => {
-  const count = (status: CheckStatus): number => {
+  const count = (status: CheckStatusValue): number => {
     return checks.filter((check) => check.status === status).length;
   };
   return {

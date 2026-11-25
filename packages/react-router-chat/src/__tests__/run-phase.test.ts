@@ -7,7 +7,7 @@ import {
   RUN_PHASE_STILL_WORKING_AFTER_MS,
 } from '../run-phase';
 import type { ChatTurnEvent, ChatTurnToolEvent } from '../types';
-import { ChatRunPhase } from '../types';
+import { CHAT_RUN_PHASE } from '../types';
 
 const tool = (
   overrides: Partial<ChatTurnToolEvent> = {},
@@ -47,7 +47,7 @@ describe('deriveRunPhaseFromEvents', () => {
 
     expect(deriveRunPhaseFromEvents(events)).toEqual({
       detail: 'shell',
-      phase: ChatRunPhase.runningTool,
+      phase: CHAT_RUN_PHASE.runningTool,
     });
   });
 
@@ -63,49 +63,51 @@ describe('deriveRunPhaseFromEvents', () => {
   test('a finished tool does not force the running-tool phase', () => {
     const events = [tool({ sortOrder: 0, status: 'succeeded' }), thinking(1)];
 
-    expect(deriveRunPhaseFromEvents(events).phase).toBe(ChatRunPhase.thinking);
+    expect(deriveRunPhaseFromEvents(events).phase).toBe(
+      CHAT_RUN_PHASE.thinking,
+    );
   });
 
   test('latest event thinking → thinking', () => {
     expect(deriveRunPhaseFromEvents([text(0), thinking(1)]).phase).toBe(
-      ChatRunPhase.thinking,
+      CHAT_RUN_PHASE.thinking,
     );
   });
 
   test('falls back to waiting when the latest event is neither', () => {
     expect(deriveRunPhaseFromEvents([thinking(0), text(1)]).phase).toBe(
-      ChatRunPhase.waiting,
+      CHAT_RUN_PHASE.waiting,
     );
   });
 
   test('empty events → waiting', () => {
-    expect(deriveRunPhaseFromEvents([]).phase).toBe(ChatRunPhase.waiting);
+    expect(deriveRunPhaseFromEvents([]).phase).toBe(CHAT_RUN_PHASE.waiting);
   });
 });
 
 describe('deriveRunPhaseFromElapsed', () => {
   test('connecting before the connecting cutoff', () => {
-    expect(deriveRunPhaseFromElapsed(0)).toBe(ChatRunPhase.connecting);
+    expect(deriveRunPhaseFromElapsed(0)).toBe(CHAT_RUN_PHASE.connecting);
     expect(deriveRunPhaseFromElapsed(RUN_PHASE_CONNECTING_UNTIL_MS - 1)).toBe(
-      ChatRunPhase.connecting,
+      CHAT_RUN_PHASE.connecting,
     );
   });
 
   test('waiting in the middle band', () => {
     expect(deriveRunPhaseFromElapsed(RUN_PHASE_CONNECTING_UNTIL_MS)).toBe(
-      ChatRunPhase.waiting,
+      CHAT_RUN_PHASE.waiting,
     );
     expect(
       deriveRunPhaseFromElapsed(RUN_PHASE_STILL_WORKING_AFTER_MS - 1),
-    ).toBe(ChatRunPhase.waiting);
+    ).toBe(CHAT_RUN_PHASE.waiting);
   });
 
   test('still-working once past the escalation threshold', () => {
     expect(deriveRunPhaseFromElapsed(RUN_PHASE_STILL_WORKING_AFTER_MS)).toBe(
-      ChatRunPhase.stillWorking,
+      CHAT_RUN_PHASE.stillWorking,
     );
     expect(
       deriveRunPhaseFromElapsed(RUN_PHASE_STILL_WORKING_AFTER_MS * 4),
-    ).toBe(ChatRunPhase.stillWorking);
+    ).toBe(CHAT_RUN_PHASE.stillWorking);
   });
 });

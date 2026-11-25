@@ -24,25 +24,27 @@ export const PLAN_RUN_META_FIELDS = {
   workspace: 'workspace',
 } as const;
 
-export type PlanRunMetaField =
-  (typeof PLAN_RUN_META_FIELDS)[keyof typeof PLAN_RUN_META_FIELDS];
+export type PlanRunMetaFieldsKey = keyof typeof PLAN_RUN_META_FIELDS;
+export type PlanRunMetaFieldsValue =
+  (typeof PLAN_RUN_META_FIELDS)[PlanRunMetaFieldsKey];
 
 /** @description Upcoming blocks show everything the run was scheduled with. */
-export const PLAN_RUN_UPCOMING_META_FIELDS: readonly PlanRunMetaField[] = [
-  PLAN_RUN_META_FIELDS.driver,
-  PLAN_RUN_META_FIELDS.effort,
-  PLAN_RUN_META_FIELDS.model,
-  PLAN_RUN_META_FIELDS.workspace,
-];
+export const PLAN_RUN_UPCOMING_META_FIELDS: readonly PlanRunMetaFieldsValue[] =
+  [
+    PLAN_RUN_META_FIELDS.driver,
+    PLAN_RUN_META_FIELDS.effort,
+    PLAN_RUN_META_FIELDS.model,
+    PLAN_RUN_META_FIELDS.workspace,
+  ];
 
 /** @description Run history's Model / driver column; workspace and effort live in the expanded detail. */
-export const PLAN_RUN_HISTORY_META_FIELDS: readonly PlanRunMetaField[] = [
+export const PLAN_RUN_HISTORY_META_FIELDS: readonly PlanRunMetaFieldsValue[] = [
   PLAN_RUN_META_FIELDS.driver,
   PLAN_RUN_META_FIELDS.model,
 ];
 
 /** @description Latest run shows model · driver; provenance carries the workspace. */
-export const PLAN_RUN_LATEST_META_FIELDS: readonly PlanRunMetaField[] = [
+export const PLAN_RUN_LATEST_META_FIELDS: readonly PlanRunMetaFieldsValue[] = [
   PLAN_RUN_META_FIELDS.driver,
   PLAN_RUN_META_FIELDS.model,
 ];

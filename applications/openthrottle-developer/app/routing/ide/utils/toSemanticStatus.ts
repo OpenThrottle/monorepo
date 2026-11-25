@@ -1,8 +1,8 @@
-import type { IdeSemanticStatus } from '@openthrottle/react-router-ide';
+import type { IdeSemanticStatusValue } from '@openthrottle/react-router-ide';
 import { IDE_SEMANTIC_STATUS } from '@openthrottle/react-router-ide';
 
-/** Coerce the server's status string into the client's {@link IdeSemanticStatus} union. */
-export const toSemanticStatus = (value: string): IdeSemanticStatus => {
+/** Coerce the server's status string into the client's {@link IdeSemanticStatusValue} union. */
+export const toSemanticStatus = (value: string): IdeSemanticStatusValue => {
   switch (value) {
     case 'failed':
       return IDE_SEMANTIC_STATUS.failed;

@@ -1,4 +1,4 @@
-import type { RolloutFlagKind } from '../config/rollout-flag-kind';
+import type { RolloutFlagKindValue } from '../config/rollout-flag-kind';
 import { isRolloutFlagKind } from '../config/rollout-flag-kind';
 import type {
   RolloutEvaluation,
@@ -19,7 +19,7 @@ export type MergeRolloutEvaluationsOptions = {
 
 type MutableResolvedValues = Record<
   string,
-  RolloutFlagValueByKind[RolloutFlagKind]
+  RolloutFlagValueByKind[RolloutFlagKindValue]
 >;
 
 const defaultWarn = (message: string): void => {
@@ -71,7 +71,7 @@ export const mergeRolloutEvaluations = <TCatalog extends RolloutFlagCatalog>(
       continue;
     }
 
-    const kind: RolloutFlagKind = definition.kind;
+    const kind: RolloutFlagKindValue = definition.kind;
     const parsed = parseRolloutValueJson(kind, evaluation.valueJson);
     if (parsed === undefined) {
       onWarn(

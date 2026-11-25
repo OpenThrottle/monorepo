@@ -11,16 +11,17 @@ import { registerEnumType } from '@nestjs/graphql';
  * Spans have a start and an end. Two of the three carry measured ends;
  * `PLAN_RUN` never does — see `derivedEnd` on the span object.
  */
-export const TimelineSpanKind = {
+export const TIMELINE_SPAN_KIND = {
   PLAN_RUN: 'PLAN_RUN',
   SCHEDULED_RUN: 'SCHEDULED_RUN',
   WORK_SESSION: 'WORK_SESSION',
 } as const;
 
-export type TimelineSpanKind =
-  (typeof TimelineSpanKind)[keyof typeof TimelineSpanKind];
+export type TimelineSpanKindKey = keyof typeof TIMELINE_SPAN_KIND;
+export type TimelineSpanKindValue =
+  (typeof TIMELINE_SPAN_KIND)[TimelineSpanKindKey];
 
-registerEnumType(TimelineSpanKind, {
+registerEnumType(TIMELINE_SPAN_KIND, {
   description: `Kinds of timeline span (work with a duration).`,
   name: 'TimelineSpanKind',
   valuesMap: {
@@ -37,7 +38,7 @@ registerEnumType(TimelineSpanKind, {
 });
 
 /** Markers happened at a single instant. */
-export const TimelineMarkerKind = {
+export const TIMELINE_MARKER_KIND = {
   GIT_COMMIT: 'GIT_COMMIT',
   GRILLING: 'GRILLING',
   PULL_REQUEST: 'PULL_REQUEST',
@@ -46,10 +47,11 @@ export const TimelineMarkerKind = {
   TASK_UPDATED: 'TASK_UPDATED',
 } as const;
 
-export type TimelineMarkerKind =
-  (typeof TimelineMarkerKind)[keyof typeof TimelineMarkerKind];
+export type TimelineMarkerKindKey = keyof typeof TIMELINE_MARKER_KIND;
+export type TimelineMarkerKindValue =
+  (typeof TIMELINE_MARKER_KIND)[TimelineMarkerKindKey];
 
-registerEnumType(TimelineMarkerKind, {
+registerEnumType(TIMELINE_MARKER_KIND, {
   description: `Kinds of timeline marker (work recorded at an instant).`,
   name: 'TimelineMarkerKind',
   valuesMap: {
@@ -73,16 +75,17 @@ registerEnumType(TimelineMarkerKind, {
 });
 
 /** How lanes are keyed. Every kind resolves a lane key under every mode. */
-export const TimelineLaneGrouping = {
+export const TIMELINE_LANE_GROUPING = {
   BY_CHECKOUT: 'BY_CHECKOUT',
   BY_DRIVER: 'BY_DRIVER',
   BY_PLAN: 'BY_PLAN',
 } as const;
 
-export type TimelineLaneGrouping =
-  (typeof TimelineLaneGrouping)[keyof typeof TimelineLaneGrouping];
+export type TimelineLaneGroupingKey = keyof typeof TIMELINE_LANE_GROUPING;
+export type TimelineLaneGroupingValue =
+  (typeof TIMELINE_LANE_GROUPING)[TimelineLaneGroupingKey];
 
-registerEnumType(TimelineLaneGrouping, {
+registerEnumType(TIMELINE_LANE_GROUPING, {
   description: `How timeline rows are grouped into lanes.`,
   name: 'TimelineLaneGrouping',
   valuesMap: {

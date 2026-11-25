@@ -9,7 +9,7 @@
 export type {
   DebugPayload,
   NotificationEventMap,
-  NotificationEventName,
+  NotificationEventNamesValue,
   NotificationPayload,
   NotificationPayloadBase,
   PlanEnqueuedPayload,
@@ -18,7 +18,7 @@ export type {
   PlanWaitingForWorktreePayload,
   QueueJobCompletedPayload,
   ScheduledRunFailedPayload,
-  ScheduledRunFailureReason,
+  ScheduledRunFailureReasonsValue,
   StatusChangeBase,
   StatusChangePayload,
   SystemAlertPayload,

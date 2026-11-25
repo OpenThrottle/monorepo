@@ -12,7 +12,7 @@
  */
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import type { TagActionType } from '@openthrottle/openthrottle-skills';
+import type { TagActionTypesValue } from '@openthrottle/openthrottle-skills';
 
 import type { ActionExecutor } from './action-executor-registry.types.ts';
 
@@ -24,7 +24,7 @@ import type { ActionExecutor } from './action-executor-registry.types.ts';
  */
 @Injectable()
 export class ActionExecutorRegistry {
-  private readonly executors = new Map<TagActionType, ActionExecutor>();
+  private readonly executors = new Map<TagActionTypesValue, ActionExecutor>();
 
   constructor(private readonly logger: LoggerService) {}
 
@@ -38,7 +38,7 @@ export class ActionExecutorRegistry {
     this.executors.set(executor.actionType, executor);
   }
 
-  get(actionType: TagActionType): ActionExecutor | undefined {
+  get(actionType: TagActionTypesValue): ActionExecutor | undefined {
     return this.executors.get(actionType);
   }
 }

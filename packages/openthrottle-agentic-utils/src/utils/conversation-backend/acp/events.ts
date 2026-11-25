@@ -30,7 +30,7 @@ import { isRecord } from '@openthrottle/nodejs-utils';
 
 import type {
   ConversationStreamChunk,
-  ConversationStreamChunkKind,
+  ConversationStreamChunkKindsValue,
 } from '../types.ts';
 import {
   CONVERSATION_DENIED_ACTIONS_KEY,
@@ -146,7 +146,7 @@ export interface AcpUpdateMapperOptions {
 /** One text-like chunk for a non-empty delta, none otherwise. */
 function deltaChunks(
   delta: string,
-  kind: ConversationStreamChunkKind,
+  kind: ConversationStreamChunkKindsValue,
 ): ConversationStreamChunk[] {
   if (delta === '') {
     return [];

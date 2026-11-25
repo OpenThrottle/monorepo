@@ -15,6 +15,10 @@ export const PLAN_MESSAGE_KIND = {
   STEER: 'STEER',
 } as const;
 
+export type PlanMessageKindKey = keyof typeof PLAN_MESSAGE_KIND;
+export type PlanMessageKindValue =
+  (typeof PLAN_MESSAGE_KIND)[PlanMessageKindKey];
+
 /**
  * Lifecycle of a plan inbox message. PENDING → DELIVERED (claimed by a run; immutable) or
  * WITHDRAWN (retracted before delivery). RECORDED is the only status a FEEDBACK row takes.
@@ -26,6 +30,10 @@ export const PLAN_MESSAGE_STATUS = {
   RECORDED: 'RECORDED',
   WITHDRAWN: 'WITHDRAWN',
 } as const;
+
+export type PlanMessageStatusKey = keyof typeof PLAN_MESSAGE_STATUS;
+export type PlanMessageStatusValue =
+  (typeof PLAN_MESSAGE_STATUS)[PlanMessageStatusKey];
 
 /**
  * The kinds a run claims, in delivery order: every STEER before any QUEUE.

@@ -2,7 +2,7 @@ import { BadRequestException } from '@nestjs/common';
 import type { TokenUsageBatchRow } from '@openthrottle/nestjs-repositories-server';
 import { normalizeRemoteUrl } from '@openthrottle/nestjs-repositories-server';
 import type {
-  AgentAccountCredentialKind,
+  AgentAccountCredentialKindsValue,
   IdentifiedAgentAccount,
 } from '@openthrottle/openthrottle-agentic-utils';
 import { AGENT_ACCOUNT_CREDENTIAL_KINDS } from '@openthrottle/openthrottle-agentic-utils';
@@ -171,7 +171,7 @@ const CREDENTIAL_KINDS: ReadonlySet<string> = new Set(
 
 const isCredentialKind = (
   value: string,
-): value is AgentAccountCredentialKind => {
+): value is AgentAccountCredentialKindsValue => {
   return CREDENTIAL_KINDS.has(value);
 };
 

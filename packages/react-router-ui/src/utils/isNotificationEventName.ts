@@ -1,10 +1,10 @@
 /**
  * @description Type guard narrowing a raw string (e.g. a MultiSelect value) to
- * a known {@link NotificationEventName}. Hoisted out of
+ * a known {@link NotificationEventNamesValue}. Hoisted out of
  * OpenThrottleWebsocketDebugger per component-primitive-shape R4.
  */
 
-import type { NotificationEventName } from '@openthrottle/openthrottle-notifications';
+import type { NotificationEventNamesValue } from '@openthrottle/openthrottle-notifications';
 
 import { WEBSOCKET_DEBUGGER_EVENT_OPTIONS } from '../components/websocket-debugger';
 
@@ -14,6 +14,6 @@ const KNOWN_EVENT_NAMES = new Set<string>(
 
 export const isNotificationEventName = (
   value: string,
-): value is NotificationEventName => {
+): value is NotificationEventNamesValue => {
   return KNOWN_EVENT_NAMES.has(value);
 };

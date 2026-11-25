@@ -46,10 +46,12 @@ export const CANONICAL_APP_PORTS = {
   website: 6025,
 } as const;
 
-export type AppPortName = keyof typeof CANONICAL_APP_PORTS;
+export type CanonicalAppPortsKey = keyof typeof CANONICAL_APP_PORTS;
+export type CanonicalAppPortsValue =
+  (typeof CANONICAL_APP_PORTS)[CanonicalAppPortsKey];
 
 /** The app names in canonical order, for cast-free iteration over the map. */
-export const APP_PORT_NAMES: readonly AppPortName[] = [
+export const APP_PORT_NAMES: readonly CanonicalAppPortsKey[] = [
   'admin',
   'cms',
   'developer',
@@ -71,6 +73,9 @@ export const PORT_BASE_MAX = 7990; // ceiling while bumping (collision headroom)
  */
 export const DB_PORT_OFFSETS = { postgres: 8, redis: 9 } as const;
 
+export type DbPortOffsetsKey = keyof typeof DB_PORT_OFFSETS;
+export type DbPortOffsetsValue = (typeof DB_PORT_OFFSETS)[DbPortOffsetsKey];
+
 /** The host ports an isolated worktree's database uses. */
 export interface WorktreeDbPorts {
   readonly postgres: number;
@@ -78,7 +83,9 @@ export interface WorktreeDbPorts {
 }
 
 /** The seven app ports for a block base, preserving the canonical offsets. */
-export const portsForBase = (base: number): Record<AppPortName, number> => {
+export const portsForBase = (
+  base: number,
+): Record<CanonicalAppPortsKey, number> => {
   return {
     admin: base + 2,
     cms: base + 3,
@@ -143,7 +150,7 @@ export interface ResolvePortsOptions {
 
 export interface ResolvedPorts {
   base: number;
-  ports: Record<AppPortName, number>;
+  ports: Record<CanonicalAppPortsKey, number>;
 }
 
 const CACHE_FILENAME = '.worktree-ports';

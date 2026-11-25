@@ -88,6 +88,10 @@ export const POSTGRES_PROFILING_MODES = {
   LOGGER: 'logger',
 } as const;
 
+export type PostgresProfilingModesKey = keyof typeof POSTGRES_PROFILING_MODES;
+export type PostgresProfilingModesValue =
+  (typeof POSTGRES_PROFILING_MODES)[PostgresProfilingModesKey];
+
 export const POSTGRES_PROFILING_DISABLED_SETTINGS: PostgresProfilingSettings = {
   enabled: false,
 };
@@ -105,3 +109,8 @@ export const POSTGRES_PROFILING_ENV_VARS = {
   PROFILING: 'POSTGRES_PROFILING',
   TARGETS: 'POSTGRES_PROFILING_TARGETS',
 } as const;
+
+export type PostgresProfilingEnvVarsKey =
+  keyof typeof POSTGRES_PROFILING_ENV_VARS;
+export type PostgresProfilingEnvVarsValue =
+  (typeof POSTGRES_PROFILING_ENV_VARS)[PostgresProfilingEnvVarsKey];

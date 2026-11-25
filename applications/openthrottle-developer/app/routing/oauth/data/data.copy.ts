@@ -30,3 +30,6 @@ export const OAUTH_SCOPES = {
   read: 'mcp:read',
   write: 'mcp:write',
 } as const;
+
+export type OauthScopesKey = keyof typeof OAUTH_SCOPES;
+export type OauthScopesValue = (typeof OAUTH_SCOPES)[OauthScopesKey];

@@ -21,7 +21,8 @@ export const COLUMN_ACTION = {
   scrub: 'scrub',
 } as const;
 
-export type ColumnAction = (typeof COLUMN_ACTION)[keyof typeof COLUMN_ACTION];
+export type ColumnActionKey = keyof typeof COLUMN_ACTION;
+export type ColumnActionValue = (typeof COLUMN_ACTION)[ColumnActionKey];
 
 export const TABLE_CLASSIFICATION = {
   /** Never exported, regardless of FK closure — credential-adjacent. */
@@ -32,11 +33,12 @@ export const TABLE_CLASSIFICATION = {
   ignored: 'ignored',
 } as const;
 
-export type TableClassification =
-  (typeof TABLE_CLASSIFICATION)[keyof typeof TABLE_CLASSIFICATION];
+export type TableClassificationKey = keyof typeof TABLE_CLASSIFICATION;
+export type TableClassificationValue =
+  (typeof TABLE_CLASSIFICATION)[TableClassificationKey];
 
 export interface ColumnManifestEntry {
-  action: ColumnAction;
+  action: ColumnActionValue;
   reason: string;
   /**
    * Required on pgvector columns: the dimension the committed snapshot was

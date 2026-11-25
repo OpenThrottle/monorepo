@@ -13,7 +13,7 @@ import {
   cursorAgentConversationBackend,
   opencodeConversationBackend,
 } from '@openthrottle/openthrottle-agentic-utils';
-import type { DriverId } from '@openthrottle/openthrottle-drivers';
+import type { DriversValue } from '@openthrottle/openthrottle-drivers';
 import { getDriver } from '@openthrottle/openthrottle-drivers';
 
 import { DEFAULT_REDACT_KEYS } from '../utils/sanitizer/sanitizer.ts';
@@ -34,9 +34,10 @@ export const SESSION_STRATEGIES = {
   none: 'none',
 } as const;
 
+export type SessionStrategiesKey = keyof typeof SESSION_STRATEGIES;
 /** @public */
-export type SessionStrategy =
-  (typeof SESSION_STRATEGIES)[keyof typeof SESSION_STRATEGIES];
+export type SessionStrategiesValue =
+  (typeof SESSION_STRATEGIES)[SessionStrategiesKey];
 
 /** @public */
 export interface RecordingProfile {
@@ -61,7 +62,7 @@ export interface RecordingProfile {
    */
   readonly mintSession: ((cwd: string) => Promise<string>) | undefined;
   readonly redactKeys: readonly string[];
-  readonly sessionStrategy: SessionStrategy;
+  readonly sessionStrategy: SessionStrategiesValue;
   readonly versionArgs: readonly string[];
 }
 
@@ -131,7 +132,7 @@ function neverDrop(): boolean {
  * registry — the single source the backends and discovery also read.
  */
 function profileFor(
-  id: DriverId,
+  id: DriversValue,
   fields: Pick<
     RecordingProfile,
     | 'conversationBackend'

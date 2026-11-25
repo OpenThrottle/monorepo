@@ -1,7 +1,8 @@
 import { Lock, Pencil, Unlock } from 'lucide-react';
 import type * as React from 'react';
 
-import { ChatPermissionMode } from '../types';
+import type { ChatPermissionModeValue } from '../types';
+import { CHAT_PERMISSION_MODE } from '../types';
 
 interface PermissionModeMeta {
   readonly description: string;
@@ -15,20 +16,20 @@ interface PermissionModeMeta {
  * @public
  */
 export const PERMISSION_MODE_META: Record<
-  ChatPermissionMode,
+  ChatPermissionModeValue,
   PermissionModeMeta
 > = {
-  [ChatPermissionMode.autoAcceptEdits]: {
+  [CHAT_PERMISSION_MODE.autoAcceptEdits]: {
     description: 'Auto-approve edits, ask before other actions',
     icon: Pencil,
     label: 'Auto-accept edits',
   },
-  [ChatPermissionMode.fullAccess]: {
+  [CHAT_PERMISSION_MODE.fullAccess]: {
     description: 'Allow commands and edits without prompts',
     icon: Unlock,
     label: 'Full access',
   },
-  [ChatPermissionMode.supervised]: {
+  [CHAT_PERMISSION_MODE.supervised]: {
     description: 'Ask before commands and file changes',
     icon: Lock,
     label: 'Supervised',

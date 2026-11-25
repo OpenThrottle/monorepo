@@ -28,15 +28,15 @@ registerEnumType(PlanRunDebugCliGraphQL, {
 /**
  * @description Plan vs task-centric scope for a plan run.
  */
-export const PlanRunModeGraphQL = {
+export const PLAN_RUN_MODE = {
   plan: 'plan',
   task: 'task',
 } as const;
 
-export type PlanRunModeGraphQL =
-  (typeof PlanRunModeGraphQL)[keyof typeof PlanRunModeGraphQL];
+export type PlanRunModeKey = keyof typeof PLAN_RUN_MODE;
+export type PlanRunModeValue = (typeof PLAN_RUN_MODE)[PlanRunModeKey];
 
-registerEnumType(PlanRunModeGraphQL, {
+registerEnumType(PLAN_RUN_MODE, {
   description: `Plan-scoped run (default) or task-centric run ("task" requires taskId).`,
   name: 'PlanRunMode',
 });
@@ -356,11 +356,11 @@ export class EnqueuePlanRunInput extends PlanRunOptionsInput {
   })
   cancelScheduled?: boolean | null;
 
-  @Field(() => PlanRunModeGraphQL, {
+  @Field(() => PLAN_RUN_MODE, {
     description: `Omit or "plan" for a plan-scoped run; "task" requires taskId (task-centric run).`,
     nullable: true,
   })
-  mode?: PlanRunModeGraphQL | null;
+  mode?: PlanRunModeValue | null;
 
   @Field(() => ID, {
     description: `Required when mode is task; must belong to the plan.`,

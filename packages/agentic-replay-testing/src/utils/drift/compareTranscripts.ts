@@ -25,13 +25,14 @@ export const DRIFT_KINDS = {
   stdin: 'stdin',
 } as const;
 
+export type DriftKindsKey = keyof typeof DRIFT_KINDS;
 /** @public */
-export type DriftKind = (typeof DRIFT_KINDS)[keyof typeof DRIFT_KINDS];
+export type DriftKindsValue = (typeof DRIFT_KINDS)[DriftKindsKey];
 
 /** @public */
 export interface DriftFinding {
   readonly detail: string;
-  readonly kind: DriftKind;
+  readonly kind: DriftKindsValue;
 }
 
 /** @public */

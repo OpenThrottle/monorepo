@@ -22,3 +22,8 @@ export const PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME = {
   REMOVABLE: 'removable',
   REMOVED: 'removed',
 } as const;
+
+export type PlanRunWorktreeTeardownOutcomeKey =
+  keyof typeof PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME;
+export type PlanRunWorktreeTeardownOutcomeValue =
+  (typeof PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME)[PlanRunWorktreeTeardownOutcomeKey];

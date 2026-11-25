@@ -24,6 +24,11 @@ export const SCHEDULED_AGENT_JOB_WEBHOOK_DEFAULTS = {
   timestampToleranceSeconds: 300,
 } as const;
 
+export type ScheduledAgentJobWebhookDefaultsKey =
+  keyof typeof SCHEDULED_AGENT_JOB_WEBHOOK_DEFAULTS;
+export type ScheduledAgentJobWebhookDefaultsValue =
+  (typeof SCHEDULED_AGENT_JOB_WEBHOOK_DEFAULTS)[ScheduledAgentJobWebhookDefaultsKey];
+
 /**
  * @description The signature presets a webhook trigger supports.
  * @public

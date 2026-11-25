@@ -1,4 +1,4 @@
-import type { RolloutFlagKind } from './config/rollout-flag-kind';
+import type { RolloutFlagKindValue } from './config/rollout-flag-kind';
 
 /**
  * JSON-serializable values for `kind = json`.
@@ -31,7 +31,7 @@ export type RolloutFlagValueByKind = {
  *
  * @public
  */
-export type RolloutFlagDefinitionForKind<TKey extends RolloutFlagKind> = {
+export type RolloutFlagDefinitionForKind<TKey extends RolloutFlagKindValue> = {
   readonly defaultValue: RolloutFlagValueByKind[TKey];
   readonly kind: TKey;
 };
@@ -94,7 +94,7 @@ export type RolloutBooleanFlagKey<TCatalog extends RolloutFlagCatalog> = {
 export type RolloutEvaluation = {
   readonly enabled: boolean;
   readonly key: string;
-  readonly kind: RolloutFlagKind | string;
+  readonly kind: RolloutFlagKindValue | string;
   readonly reason?: string;
   readonly valueJson: string;
   readonly variationIndex?: number;

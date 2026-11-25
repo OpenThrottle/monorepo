@@ -1,12 +1,12 @@
-import type { ChatContextWindowTone } from '../utils/chat-context-window';
+import type { ChatContextWindowTonesValue } from '../utils/chat-context-window';
 
 /**
- * Fill-bar colour per {@link ChatContextWindowTone}, from the shared theme
+ * Fill-bar colour per {@link ChatContextWindowTonesValue}, from the shared theme
  * tokens. Literal classes so Tailwind keeps them.
  * @public
  */
 export const CHAT_CONTEXT_METER_TONE_CLASSES: Readonly<
-  Record<ChatContextWindowTone, string>
+  Record<ChatContextWindowTonesValue, string>
 > = {
   critical: 'bg-destructive',
   normal: 'bg-primary',

@@ -20,6 +20,10 @@ export const PLAN_RUN_PR_DRAFT_FILES = {
   title: 'title.txt',
 } as const;
 
+export type PlanRunPrDraftFilesKey = keyof typeof PLAN_RUN_PR_DRAFT_FILES;
+export type PlanRunPrDraftFilesValue =
+  (typeof PLAN_RUN_PR_DRAFT_FILES)[PlanRunPrDraftFilesKey];
+
 /**
  * @description Directory name the skill defaults to at the worktree root
  * (`git rev-parse --show-toplevel`). Worktree-local because the agent's working tree is the only

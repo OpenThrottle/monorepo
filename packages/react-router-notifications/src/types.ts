@@ -1,5 +1,5 @@
 import type {
-  NotificationEventName,
+  NotificationEventNamesValue,
   NotificationPayload,
 } from '@openthrottle/openthrottle-notifications';
 
@@ -8,7 +8,7 @@ export interface NotificationInstance {
   /** ISO 8601 when the app received the notification. */
   readonly createdAt: string;
   readonly dismissed: boolean;
-  readonly event: NotificationEventName;
+  readonly event: NotificationEventNamesValue;
   readonly id: string;
   readonly payload: NotificationPayload;
   readonly read: boolean;

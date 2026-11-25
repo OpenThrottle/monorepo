@@ -19,9 +19,10 @@ export const AGENT_CLI_DRIVERS = {
   opencode: 'opencode',
 } as const;
 
+export type AgentCliDriversKey = keyof typeof AGENT_CLI_DRIVERS;
 /** A driver id the setup page can display. */
-export type AgentCliDriver =
-  (typeof AGENT_CLI_DRIVERS)[keyof typeof AGENT_CLI_DRIVERS];
+export type AgentCliDriversValue =
+  (typeof AGENT_CLI_DRIVERS)[AgentCliDriversKey];
 
 /** One agent CLI the setup page can display, keyed by the driver-id driver discriminator. */
 export interface AgentCliCatalogEntry {
@@ -38,10 +39,13 @@ export interface AgentCliCatalogEntry {
 }
 
 /**
- * Display metadata per driver. Exhaustive over {@link AgentCliDriver}: a driver cannot be
+ * Display metadata per driver. Exhaustive over {@link AgentCliDriversValue}: a driver cannot be
  * listed without a label and an install link.
  */
-export const AGENT_CLI_CATALOG: Record<AgentCliDriver, AgentCliCatalogEntry> = {
+export const AGENT_CLI_CATALOG: Record<
+  AgentCliDriversValue,
+  AgentCliCatalogEntry
+> = {
   antigravity: {
     installUrl: 'https://antigravity.google/cli/install.sh',
     label: 'Antigravity',

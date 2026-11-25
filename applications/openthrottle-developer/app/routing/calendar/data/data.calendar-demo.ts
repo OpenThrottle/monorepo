@@ -1,8 +1,8 @@
 import type { CalendarEvent } from '@openthrottle/react-router-scheduling';
 import {
   buildRRule,
-  RecurrenceFrequency,
-  RecurrenceWeekday,
+  RECURRENCE_FREQUENCY,
+  RECURRENCE_WEEKDAY,
 } from '@openthrottle/react-router-scheduling';
 
 /**
@@ -158,9 +158,9 @@ export const CALENDAR_DEMO_EVENTS: CalendarEvent[] = [
     id: 'cal-021',
     location: 'Zoom',
     rrule: buildRRule({
-      byDay: [RecurrenceWeekday.Monday],
+      byDay: [RECURRENCE_WEEKDAY.Monday],
       count: 8,
-      frequency: RecurrenceFrequency.Weekly,
+      frequency: RECURRENCE_FREQUENCY.Weekly,
     }),
     start: '2026-06-15T09:00:00.000Z',
     title: 'Weekly Standup',
@@ -173,7 +173,7 @@ export const CALENDAR_DEMO_EVENTS: CalendarEvent[] = [
     rrule: buildRRule({
       byMonthDay: [1],
       count: 6,
-      frequency: RecurrenceFrequency.Monthly,
+      frequency: RECURRENCE_FREQUENCY.Monthly,
     }),
     start: '2026-06-01T15:00:00.000Z',
     title: 'Monthly Review',
@@ -183,7 +183,7 @@ export const CALENDAR_DEMO_EVENTS: CalendarEvent[] = [
     end: '2026-06-15T08:30:00.000Z',
     id: 'cal-023',
     rrule: buildRRule({
-      frequency: RecurrenceFrequency.Daily,
+      frequency: RECURRENCE_FREQUENCY.Daily,
       until: '20260630T000000Z',
     }),
     start: '2026-06-15T08:00:00.000Z',

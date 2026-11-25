@@ -23,7 +23,7 @@ import { join } from 'node:path';
 
 import { isRecord } from '@openthrottle/nodejs-utils';
 
-import type { ConversationPermissionMode } from '../types.ts';
+import type { ConversationPermissionModesValue } from '../types.ts';
 import { CONVERSATION_PERMISSION_MODES } from '../types.ts';
 
 /** opencode's per-server MCP config shape (local/stdio server). */
@@ -137,7 +137,7 @@ const toStringRecord = (value: unknown): Record<string, string> | undefined => {
  */
 function buildOpencodePermission(
   managedNames: readonly string[],
-  permissionMode: ConversationPermissionMode | undefined,
+  permissionMode: ConversationPermissionModesValue | undefined,
 ): Record<string, OpencodePermissionAction> | undefined {
   if (permissionMode === CONVERSATION_PERMISSION_MODES.fullAccess) {
     return undefined;
@@ -163,7 +163,7 @@ function buildOpencodePermission(
  */
 export function translateManagedMcpToOpencode(
   managed: Readonly<Record<string, Readonly<Record<string, unknown>>>>,
-  permissionMode?: ConversationPermissionMode,
+  permissionMode?: ConversationPermissionModesValue,
   endpoint?: OpencodeEndpointConfig,
 ): OpencodeConfig {
   const mcp: Record<string, OpencodeMcpServer> = {};
@@ -201,7 +201,7 @@ export function translateManagedMcpToOpencode(
  */
 export function writeOpencodeMcpConfig(
   managed: Readonly<Record<string, Readonly<Record<string, unknown>>>>,
-  permissionMode?: ConversationPermissionMode,
+  permissionMode?: ConversationPermissionModesValue,
   endpoint?: OpencodeEndpointConfig,
 ): OpencodeMcpConfigFile | null {
   const config = translateManagedMcpToOpencode(

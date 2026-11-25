@@ -29,6 +29,9 @@ export const DEMO_USER = {
   password: 'DemoThrottle2026!',
 } as const;
 
+export type DemoUserKey = keyof typeof DEMO_USER;
+export type DemoUserValue = (typeof DEMO_USER)[DemoUserKey];
+
 /**
  * The fictional machine the shell surfaces render.
  *
@@ -46,6 +49,9 @@ export const DEMO_MACHINE = {
   repositoryRoot: '/workspace/openthrottle',
   shellPrompt: 'openthrottle',
 } as const;
+
+export type DemoMachineKey = keyof typeof DEMO_MACHINE;
+export type DemoMachineValue = (typeof DEMO_MACHINE)[DemoMachineKey];
 
 export const DEMO_PROJECTS = [
   {
@@ -113,6 +119,9 @@ export const DEMO_EXTRA_TAG = {
   dimension: 'domain',
   tag: 'needs-review',
 } as const;
+
+export type DemoExtraTagKey = keyof typeof DEMO_EXTRA_TAG;
+export type DemoExtraTagValue = (typeof DEMO_EXTRA_TAG)[DemoExtraTagKey];
 
 /**
  * One pre-existing, enabled tag→action rule — the one that fires at video 09's

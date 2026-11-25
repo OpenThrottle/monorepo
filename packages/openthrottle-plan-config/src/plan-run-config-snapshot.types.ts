@@ -3,7 +3,7 @@
  * Captures the resolved configuration actually enqueued, not the plan defaults column.
  */
 
-import type { DriverId } from '@openthrottle/openthrottle-drivers';
+import type { DriversValue } from '@openthrottle/openthrottle-drivers';
 
 import type { PLAN_RUN_CONFIG_SNAPSHOT_VERSION } from './plan-run-config-snapshot.constants.ts';
 import type {
@@ -20,7 +20,7 @@ export type PlanRunConfigSnapshotDebugCli = 'debug' | 'omit' | 'verbose';
  */
 export interface PlanRunConfigSnapshotRunV1 extends PlanRunConfigOtLoop {
   readonly debug?: PlanRunConfigSnapshotDebugCli;
-  readonly driver: DriverId;
+  readonly driver: DriversValue;
   /** @description Reasoning-effort level (chat vocabulary: low|medium|high|extraHigh|max|ultra), validated at enqueue. */
   readonly effort?: string;
   readonly iterationTimeoutSeconds?: number;
@@ -54,7 +54,7 @@ export type PlanRunConfigSnapshot = PlanRunConfigSnapshotV1;
  */
 export interface BuildPlanRunConfigSnapshotInput {
   readonly checkoutId?: string | null;
-  readonly driver: DriverId;
+  readonly driver: DriversValue;
   readonly jobRunHooks?: PlanJobRunHooksStorage | null;
   readonly mode?: PlanRunConfigTargetMode | null;
   readonly otLoop?: PlanRunConfigOtLoop | null;

@@ -2,7 +2,7 @@ import { renderHook } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import type { CalendarEvent } from '../../types';
-import { CalendarView } from '../../types';
+import { CALENDAR_VIEW } from '../../types';
 import { useSchedule } from '../useSchedule';
 
 const event = (id: string, title: string): CalendarEvent => {
@@ -19,7 +19,7 @@ describe('useSchedule', () => {
     const { result } = renderHook(() =>
       useSchedule({
         events: [event('a', 'Alpha')],
-        views: [CalendarView.Week],
+        views: [CALENDAR_VIEW.Week],
       }),
     );
 

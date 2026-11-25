@@ -22,21 +22,24 @@ import {
   AgentAssetChunk,
   AgentAssetSearchResult,
 } from '../agent-asset-search.object.ts';
-import { CustomPromptTypeEnum } from '../custom-prompt.object.ts';
+import {
+  CUSTOM_PROMPT_TYPE,
+  CustomPromptTypeValue,
+} from '../custom-prompt.object.ts';
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
 
-const DEFAULT_PROMPT_TYPES: readonly CustomPromptTypeEnum[] = [
-  CustomPromptTypeEnum.SKILLS,
-  CustomPromptTypeEnum.RULES,
-  CustomPromptTypeEnum.PERSONAS,
+const DEFAULT_PROMPT_TYPES: readonly CustomPromptTypeValue[] = [
+  CUSTOM_PROMPT_TYPE.SKILLS,
+  CUSTOM_PROMPT_TYPE.RULES,
+  CUSTOM_PROMPT_TYPE.PERSONAS,
 ];
 
 /** Maps a stored prompt_type string back to the enum without an `as` cast. */
-const PROMPT_TYPE_BY_VALUE: Record<string, CustomPromptTypeEnum> =
+const PROMPT_TYPE_BY_VALUE: Record<string, CustomPromptTypeValue> =
   Object.fromEntries(
-    Object.values(CustomPromptTypeEnum).map((value) => [value, value]),
+    Object.values(CUSTOM_PROMPT_TYPE).map((value) => [value, value]),
   );
 
 function mapChunk(chunk: AgentAssetSearchChunk): AgentAssetChunk {
@@ -50,7 +53,7 @@ function mapChunk(chunk: AgentAssetSearchChunk): AgentAssetChunk {
   obj.labels = [...chunk.labels];
   obj.projectId = chunk.projectId;
   obj.promptType =
-    PROMPT_TYPE_BY_VALUE[chunk.promptType] ?? CustomPromptTypeEnum.SKILLS;
+    PROMPT_TYPE_BY_VALUE[chunk.promptType] ?? CUSTOM_PROMPT_TYPE.SKILLS;
   obj.similarity = chunk.similarity;
   obj.title = chunk.title;
 

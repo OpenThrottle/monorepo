@@ -5,7 +5,11 @@
 
 import { Field, Int, ObjectType } from '@nestjs/graphql';
 
-import { TimelineMarkerKind, TimelineSpanKind } from './timeline.enum.ts';
+import type {
+  TimelineMarkerKindValue,
+  TimelineSpanKindValue,
+} from './timeline.enum.ts';
+import { TIMELINE_MARKER_KIND, TIMELINE_SPAN_KIND } from './timeline.enum.ts';
 
 @ObjectType()
 export class TimelineSpanObject {
@@ -46,8 +50,8 @@ export class TimelineSpanObject {
   @Field(() => String, { description: `Stable row id.` })
   id!: string;
 
-  @Field(() => TimelineSpanKind)
-  kind!: TimelineSpanKind;
+  @Field(() => TIMELINE_SPAN_KIND)
+  kind!: TimelineSpanKindValue;
 
   @Field(() => String, {
     description: `Lane this span belongs to under the requested grouping.`,
@@ -98,8 +102,8 @@ export class TimelineMarkerObject {
   @Field(() => String, { description: `Stable row id.` })
   id!: string;
 
-  @Field(() => TimelineMarkerKind)
-  kind!: TimelineMarkerKind;
+  @Field(() => TIMELINE_MARKER_KIND)
+  kind!: TimelineMarkerKindValue;
 
   @Field(() => String, {
     description: `Lane this marker belongs to under the requested grouping.`,

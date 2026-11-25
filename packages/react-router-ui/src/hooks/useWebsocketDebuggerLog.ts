@@ -1,5 +1,5 @@
 import type {
-  NotificationEventName,
+  NotificationEventNamesValue,
   NotificationPayload,
 } from '@openthrottle/openthrottle-notifications';
 import * as React from 'react';
@@ -15,19 +15,19 @@ export interface UseWebsocketDebuggerLogOptions {
   /**
    * @description Initial multiselect filter. Defaults to all known event names.
    */
-  readonly initialSelectedEventNames?: readonly NotificationEventName[];
+  readonly initialSelectedEventNames?: readonly NotificationEventNamesValue[];
 }
 
 export interface UseWebsocketDebuggerLogResult {
   readonly append: (
-    event: NotificationEventName,
+    event: NotificationEventNamesValue,
     payload: NotificationPayload,
   ) => void;
   readonly clear: () => void;
   readonly entries: readonly WebsocketDebuggerLogEntry[];
-  readonly selectedEventNames: readonly NotificationEventName[];
+  readonly selectedEventNames: readonly NotificationEventNamesValue[];
   readonly setSelectedEventNames: (
-    names: readonly NotificationEventName[],
+    names: readonly NotificationEventNamesValue[],
   ) => void;
 }
 
@@ -44,7 +44,7 @@ export const useWebsocketDebuggerLog = (
     readonly WebsocketDebuggerLogEntry[]
   >([]);
   const [selectedEventNames, setSelectedEventNamesState] = React.useState<
-    readonly NotificationEventName[]
+    readonly NotificationEventNamesValue[]
   >(
     () =>
       options.initialSelectedEventNames ?? WEBSOCKET_DEBUGGER_ALL_EVENT_NAMES,
@@ -54,14 +54,14 @@ export const useWebsocketDebuggerLog = (
 
   // Handlers
   const setSelectedEventNames = React.useCallback(
-    (names: readonly NotificationEventName[]) => {
+    (names: readonly NotificationEventNamesValue[]) => {
       setSelectedEventNamesState([...names]);
     },
     [],
   );
 
   const append = React.useCallback(
-    (event: NotificationEventName, payload: NotificationPayload) => {
+    (event: NotificationEventNamesValue, payload: NotificationPayload) => {
       const entry: WebsocketDebuggerLogEntry = {
         event,
         id: createWebsocketDebuggerLogEntryId(),

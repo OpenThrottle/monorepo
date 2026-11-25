@@ -7,3 +7,7 @@ export const ARTIFACT_IDENTITY = {
   EVENT: 'event',
   IDEMPOTENT: 'idempotent',
 } as const;
+
+export type ArtifactIdentityKey = keyof typeof ARTIFACT_IDENTITY;
+export type ArtifactIdentityValue =
+  (typeof ARTIFACT_IDENTITY)[ArtifactIdentityKey];

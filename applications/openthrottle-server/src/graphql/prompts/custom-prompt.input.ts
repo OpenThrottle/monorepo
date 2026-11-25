@@ -4,7 +4,8 @@
 
 import { Field, ID, InputType } from '@nestjs/graphql';
 
-import { CustomPromptTypeEnum } from './custom-prompt.object.ts';
+import type { CustomPromptTypeValue } from './custom-prompt.object.ts';
+import { CUSTOM_PROMPT_TYPE } from './custom-prompt.object.ts';
 
 @InputType({ description: 'Input for creating a new custom prompt' })
 export class CreateCustomPromptInput {
@@ -17,8 +18,8 @@ export class CreateCustomPromptInput {
   @Field(() => String, { nullable: true })
   description!: string | null;
 
-  @Field(() => CustomPromptTypeEnum)
-  promptType!: CustomPromptTypeEnum;
+  @Field(() => CUSTOM_PROMPT_TYPE)
+  promptType!: CustomPromptTypeValue;
 
   @Field(() => [String], { defaultValue: [] })
   labels!: string[];
@@ -59,8 +60,8 @@ export class UpdateCustomPromptInput {
   @Field(() => String, { nullable: true })
   description!: string | null;
 
-  @Field(() => CustomPromptTypeEnum, { nullable: true })
-  promptType!: CustomPromptTypeEnum | null;
+  @Field(() => CUSTOM_PROMPT_TYPE, { nullable: true })
+  promptType!: CustomPromptTypeValue | null;
 
   @Field(() => [String], { nullable: true })
   labels!: string[] | null;
@@ -88,11 +89,11 @@ export class UpdateCustomPromptInput {
   description: 'Input for listing custom prompts with optional filters',
 })
 export class ListCustomPromptsInput {
-  @Field(() => CustomPromptTypeEnum, {
+  @Field(() => CUSTOM_PROMPT_TYPE, {
     description: 'Filter by prompt type',
     nullable: true,
   })
-  promptType!: CustomPromptTypeEnum | null;
+  promptType!: CustomPromptTypeValue | null;
 
   @Field(() => [String], {
     description: 'Filter by labels (matches any)',

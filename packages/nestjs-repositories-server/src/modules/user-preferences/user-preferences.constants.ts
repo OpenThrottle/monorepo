@@ -9,3 +9,8 @@ export const USER_PREFERENCES_ERROR_REASONS = {
   invalidAgentEffort: 'INVALID_AGENT_EFFORT',
   invalidEditor: 'INVALID_EDITOR',
 } as const;
+
+export type UserPreferencesErrorReasonsKey =
+  keyof typeof USER_PREFERENCES_ERROR_REASONS;
+export type UserPreferencesErrorReasonsValue =
+  (typeof USER_PREFERENCES_ERROR_REASONS)[UserPreferencesErrorReasonsKey];

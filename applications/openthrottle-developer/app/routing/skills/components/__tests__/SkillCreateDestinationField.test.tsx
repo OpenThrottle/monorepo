@@ -4,14 +4,14 @@ import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
-import type { SkillCreateDestination } from '~/routing/skills/config/skill-create';
+import type { SkillCreateDestinationsValue } from '~/routing/skills/config/skill-create';
 import { SKILL_CREATE_DESTINATIONS } from '~/routing/skills/config/skill-create';
 import { SKILL_CREATE_COPY } from '~/routing/skills/data/data.copy';
 
 import { SkillCreateDestinationField } from '../SkillCreateDestinationField';
 
 const renderField = (
-  destination: SkillCreateDestination = SKILL_CREATE_DESTINATIONS.personal,
+  destination: SkillCreateDestinationsValue = SKILL_CREATE_DESTINATIONS.personal,
   betaPreviewEnabled = true,
 ): { component: RenderResult; onChange: ReturnType<typeof vi.fn> } => {
   const onChange = vi.fn();

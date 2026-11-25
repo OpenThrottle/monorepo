@@ -5,16 +5,17 @@
 
 import { Field, ID, Int, ObjectType, registerEnumType } from '@nestjs/graphql';
 
-export const WorktreeActivityEnum = {
+export const WORKTREE_ACTIVITY = {
   DIRTY: 'DIRTY',
   IDLE: 'IDLE',
   RUNNING: 'RUNNING',
 } as const;
 
-export type WorktreeActivityEnum =
-  (typeof WorktreeActivityEnum)[keyof typeof WorktreeActivityEnum];
+export type WorktreeActivityKey = keyof typeof WORKTREE_ACTIVITY;
+export type WorktreeActivityValue =
+  (typeof WORKTREE_ACTIVITY)[WorktreeActivityKey];
 
-registerEnumType(WorktreeActivityEnum, {
+registerEnumType(WORKTREE_ACTIVITY, {
   description: `What a discovered worktree is doing. Never inferred from the directory merely existing.`,
   name: 'WorktreeActivity',
   valuesMap: {
@@ -28,16 +29,17 @@ registerEnumType(WorktreeActivityEnum, {
   },
 });
 
-export const WorktreeRootSourceEnum = {
+export const WORKTREE_ROOT_SOURCE = {
   CHECKOUT_ENV: 'checkout-env',
   DEFAULT: 'default',
   ENV: 'env',
 } as const;
 
-export type WorktreeRootSourceEnum =
-  (typeof WorktreeRootSourceEnum)[keyof typeof WorktreeRootSourceEnum];
+export type WorktreeRootSourceKey = keyof typeof WORKTREE_ROOT_SOURCE;
+export type WorktreeRootSourceValue =
+  (typeof WORKTREE_ROOT_SOURCE)[WorktreeRootSourceKey];
 
-registerEnumType(WorktreeRootSourceEnum, {
+registerEnumType(WORKTREE_ROOT_SOURCE, {
   description: `Which rung of the shared worktree-root ladder resolved the scanned root. The same ladder skills/ot-worktree/scripts/root.sh applies, so the page can never disagree with where the script writes.`,
   name: 'WorktreeRootSource',
   valuesMap: {
@@ -53,7 +55,7 @@ registerEnumType(WorktreeRootSourceEnum, {
   },
 });
 
-export const WorktreeDiscoveryProblemKindEnum = {
+export const WORKTREE_DISCOVERY_PROBLEM_KIND = {
   CAP_EXCEEDED: 'cap-exceeded',
   CHECKOUT_LIST_FAILED: 'checkout-list-failed',
   NOT_A_GIT_REPO: 'not-a-git-repo',
@@ -63,10 +65,12 @@ export const WorktreeDiscoveryProblemKindEnum = {
   STALE_WORKTREE_ENTRY: 'stale-worktree-entry',
 } as const;
 
-export type WorktreeDiscoveryProblemKindEnum =
-  (typeof WorktreeDiscoveryProblemKindEnum)[keyof typeof WorktreeDiscoveryProblemKindEnum];
+export type WorktreeDiscoveryProblemKindKey =
+  keyof typeof WORKTREE_DISCOVERY_PROBLEM_KIND;
+export type WorktreeDiscoveryProblemKindValue =
+  (typeof WORKTREE_DISCOVERY_PROBLEM_KIND)[WorktreeDiscoveryProblemKindKey];
 
-registerEnumType(WorktreeDiscoveryProblemKindEnum, {
+registerEnumType(WORKTREE_DISCOVERY_PROBLEM_KIND, {
   description: `What a scan noticed that was less than complete. The server decides WHAT happened; the client decides how loud it is. States that are merely the healthy default — above all a repository that has no worktrees yet — are not problems and are never reported.`,
   name: 'WorktreeDiscoveryProblemKind',
   valuesMap: {
@@ -94,15 +98,17 @@ registerEnumType(WorktreeDiscoveryProblemKindEnum, {
   },
 });
 
-export const MissingWorktreeCheckoutReasonEnum = {
+export const MISSING_WORKTREE_CHECKOUT_REASON = {
   NOT_A_WORKTREE: 'not-a-worktree',
   PATH_GONE: 'path-gone',
 } as const;
 
-export type MissingWorktreeCheckoutReasonEnum =
-  (typeof MissingWorktreeCheckoutReasonEnum)[keyof typeof MissingWorktreeCheckoutReasonEnum];
+export type MissingWorktreeCheckoutReasonKey =
+  keyof typeof MISSING_WORKTREE_CHECKOUT_REASON;
+export type MissingWorktreeCheckoutReasonValue =
+  (typeof MISSING_WORKTREE_CHECKOUT_REASON)[MissingWorktreeCheckoutReasonKey];
 
-registerEnumType(MissingWorktreeCheckoutReasonEnum, {
+registerEnumType(MISSING_WORKTREE_CHECKOUT_REASON, {
   description: `Why a registered worktree checkout has no live worktree behind it.`,
   name: 'MissingWorktreeCheckoutReason',
   valuesMap: {
@@ -183,10 +189,10 @@ export class MissingWorktreeCheckoutObject {
   })
   path!: string;
 
-  @Field(() => MissingWorktreeCheckoutReasonEnum, {
+  @Field(() => MISSING_WORKTREE_CHECKOUT_REASON, {
     description: `Whether the path is gone or merely is not a worktree.`,
   })
-  reason!: MissingWorktreeCheckoutReasonEnum;
+  reason!: MissingWorktreeCheckoutReasonValue;
 
   @Field(() => ID, { description: `The repository the row belongs to.` })
   repositoryId!: string;
@@ -201,10 +207,10 @@ export class WorktreeDiscoveryProblemObject {
   })
   detail!: string;
 
-  @Field(() => WorktreeDiscoveryProblemKindEnum, {
+  @Field(() => WORKTREE_DISCOVERY_PROBLEM_KIND, {
     description: `What happened. See WorktreeDiscoveryProblemKind.`,
   })
-  kind!: WorktreeDiscoveryProblemKindEnum;
+  kind!: WorktreeDiscoveryProblemKindValue;
 
   @Field(() => String, {
     description: `The directory the problem is about, or null when it is not about one (the cap).`,
@@ -238,10 +244,10 @@ export class ScannedWorktreeRootObject {
   })
   path!: string;
 
-  @Field(() => WorktreeRootSourceEnum, {
+  @Field(() => WORKTREE_ROOT_SOURCE, {
     description: `Which rung of the shared ladder resolved this root.`,
   })
-  source!: WorktreeRootSourceEnum;
+  source!: WorktreeRootSourceValue;
 
   @Field(() => Int, {
     description: `Linked worktrees this root contributed to the result.`,
@@ -266,10 +272,10 @@ export class DiscoveredWorktreeObject {
    */
   dirty!: boolean | null;
 
-  @Field(() => WorktreeActivityEnum, {
+  @Field(() => WORKTREE_ACTIVITY, {
     description: `RUNNING / DIRTY / IDLE. See WorktreeActivity for what does and does not count as running.`,
   })
-  activity!: WorktreeActivityEnum;
+  activity!: WorktreeActivityValue;
 
   @Field(() => String, {
     description: `Checked-out branch, or null when the worktree is on a detached HEAD or the probe failed.`,
@@ -342,11 +348,11 @@ export class DiscoveredWorktreesObject {
   })
   problems!: WorktreeDiscoveryProblemObject[];
 
-  @Field(() => WorktreeRootSourceEnum, {
+  @Field(() => WORKTREE_ROOT_SOURCE, {
     description: `Which rung of the ladder produced worktreeRoot; null when no root could be resolved.`,
     nullable: true,
   })
-  rootSource!: WorktreeRootSourceEnum | null;
+  rootSource!: WorktreeRootSourceValue | null;
 
   @Field(() => String, {
     description: `ISO timestamp of this scan. Discovery runs live on every request; there is no cached snapshot.`,

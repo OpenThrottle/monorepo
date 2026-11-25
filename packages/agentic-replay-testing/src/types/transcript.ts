@@ -25,6 +25,10 @@ export const TRANSCRIPT_LINE_TYPES = {
   outbound: 'outbound',
 } as const;
 
+export type TranscriptLineTypesKey = keyof typeof TRANSCRIPT_LINE_TYPES;
+export type TranscriptLineTypesValue =
+  (typeof TRANSCRIPT_LINE_TYPES)[TranscriptLineTypesKey];
+
 /**
  * Which stream an outbound or inbound line belongs to.
  *
@@ -37,6 +41,10 @@ export const TRANSCRIPT_CHANNELS = {
   stdout: 'stdout',
 } as const;
 
+export type TranscriptChannelsKey = keyof typeof TRANSCRIPT_CHANNELS;
+export type TranscriptChannelsValue =
+  (typeof TRANSCRIPT_CHANNELS)[TranscriptChannelsKey];
+
 /**
  * Which production seam drove the recording: a chat turn through a
  * conversation backend.
@@ -47,9 +55,10 @@ export const TRANSCRIPT_SURFACES = {
   conversation: 'conversation',
 } as const;
 
+export type TranscriptSurfacesKey = keyof typeof TRANSCRIPT_SURFACES;
 /** @public */
-export type TranscriptSurface =
-  (typeof TRANSCRIPT_SURFACES)[keyof typeof TRANSCRIPT_SURFACES];
+export type TranscriptSurfacesValue =
+  (typeof TRANSCRIPT_SURFACES)[TranscriptSurfacesKey];
 
 /**
  * First line of every transcript: what was recorded, against which CLI build.
@@ -68,7 +77,7 @@ export interface TranscriptHeader {
   /** Shared scenario slug, e.g. `simple-turn`, `tool-use`, `resume`. */
   readonly scenario: string;
   readonly schemaVersion: typeof TRANSCRIPT_SCHEMA_VERSION;
-  readonly surface: TranscriptSurface;
+  readonly surface: TranscriptSurfacesValue;
   readonly type: typeof TRANSCRIPT_LINE_TYPES.header;
 }
 

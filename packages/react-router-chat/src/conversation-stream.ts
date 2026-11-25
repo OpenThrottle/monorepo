@@ -18,7 +18,7 @@ import {
   toolLabelFromMetadataJson,
 } from './turn-events';
 import type { ChatMessage, ChatTurnEvent } from './types';
-import { ChatRunPhase } from './types';
+import { CHAT_RUN_PHASE } from './types';
 
 /**
  * Server-reported phase carried on a live-only `keepalive` ping's `metadataJson`
@@ -46,12 +46,12 @@ const serverPhaseFromKeepalive = (
 
   const tool = typeof parsed.tool === 'string' ? parsed.tool.trim() : '';
   if (tool !== '') {
-    return { detail: tool, phase: ChatRunPhase.runningTool };
+    return { detail: tool, phase: CHAT_RUN_PHASE.runningTool };
   }
 
   const model = typeof parsed.model === 'string' ? parsed.model.trim() : '';
   if (model !== '') {
-    return { detail: model, phase: ChatRunPhase.waiting };
+    return { detail: model, phase: CHAT_RUN_PHASE.waiting };
   }
 
   return null;

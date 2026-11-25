@@ -9,7 +9,7 @@ import type {
   TranscriptHeader,
   TranscriptLine,
   TranscriptParseResult,
-  TranscriptSurface,
+  TranscriptSurfacesValue,
 } from '../../types/transcript.ts';
 import {
   TRANSCRIPT_CHANNELS,
@@ -28,7 +28,7 @@ function isStringArray(value: unknown): value is string[] {
   );
 }
 
-function isSurface(value: unknown): value is TranscriptSurface {
+function isSurface(value: unknown): value is TranscriptSurfacesValue {
   return Object.values(TRANSCRIPT_SURFACES).some(
     (surface) => surface === value,
   );

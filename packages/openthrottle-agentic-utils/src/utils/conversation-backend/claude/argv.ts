@@ -9,7 +9,7 @@
 import { claudeEffortFlag } from '@openthrottle/openthrottle-drivers';
 
 import type {
-  ConversationPermissionMode,
+  ConversationPermissionModesValue,
   ConversationReasoningEffort,
 } from '../types.ts';
 import { CONVERSATION_PERMISSION_MODES } from '../types.ts';
@@ -53,7 +53,7 @@ export interface ClaudeArgvOptions {
    * `supervised` and the no-mode default → the scoped MCP allowlist only.
    * See {@link buildClaudeArgv}.
    */
-  readonly permissionMode?: ConversationPermissionMode;
+  readonly permissionMode?: ConversationPermissionModesValue;
   /** The latest user message (persona goes to `--append-system-prompt`, not here). */
   readonly prompt: string;
   /**

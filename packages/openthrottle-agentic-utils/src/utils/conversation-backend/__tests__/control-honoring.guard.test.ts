@@ -16,7 +16,7 @@ import { buildCursorAgentArgv } from '../cursor-agent/argv.ts';
 import { buildGrokArgv } from '../grok/argv.ts';
 import { buildOpencodeArgv } from '../opencode/argv.ts';
 import type {
-  ConversationPermissionMode,
+  ConversationPermissionModesValue,
   ConversationReasoningEffort,
 } from '../types.ts';
 import {
@@ -80,7 +80,7 @@ describe('control-honoring drift guard', () => {
   describe('permission: each mode changes the CLI invocation (not cosmetic)', () => {
     const permutationsFor: Record<
       string,
-      (permissionMode: ConversationPermissionMode | undefined) => string
+      (permissionMode: ConversationPermissionModesValue | undefined) => string
     > = {
       claude: (permissionMode) =>
         JSON.stringify(

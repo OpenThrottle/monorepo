@@ -15,6 +15,9 @@ export const EVAL_GRADER_KIND = {
   JUDGE: 'judge',
 } as const;
 
+export type EvalGraderKindKey = keyof typeof EVAL_GRADER_KIND;
+export type EvalGraderKindValue = (typeof EVAL_GRADER_KIND)[EvalGraderKindKey];
+
 /**
  * A grader's answer. `error` means the grader could not decide, which is not the agent failing.
  * @public
@@ -24,3 +27,7 @@ export const EVAL_GRADE_VERDICT = {
   FAIL: 'fail',
   PASS: 'pass',
 } as const;
+
+export type EvalGradeVerdictKey = keyof typeof EVAL_GRADE_VERDICT;
+export type EvalGradeVerdictValue =
+  (typeof EVAL_GRADE_VERDICT)[EvalGradeVerdictKey];

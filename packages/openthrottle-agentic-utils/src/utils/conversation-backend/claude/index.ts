@@ -6,7 +6,7 @@
 export { CLAUDE_BIN_ENV, CLAUDE_DEFAULT_BIN } from './argv.ts';
 export {
   CLAUDE_ACTIVE_CREDENTIALS,
-  type ClaudeActiveCredential,
+  type ClaudeActiveCredentialsValue,
   type ClaudeAuthStatus,
   type ClaudeAuthStatusEnv,
   parseClaudeAuthStatus,

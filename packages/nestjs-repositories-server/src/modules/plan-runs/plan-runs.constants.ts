@@ -65,6 +65,9 @@ export const PLAN_RUN_STATUS = {
    */
   USAGE_LIMITED: 'USAGE_LIMITED',
 } as const;
+
+export type PlanRunStatusKey = keyof typeof PLAN_RUN_STATUS;
+export type PlanRunStatusValue = (typeof PLAN_RUN_STATUS)[PlanRunStatusKey];
 /**
  * The `plan_runs.settled_reason` each BACKSTOP writes when it settles a run the agent never
  * settled itself. Every backstop settles to STALE, so the status alone cannot say which one

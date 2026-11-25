@@ -13,6 +13,11 @@ export const WORK_ARTIFACT_VERIFICATION = {
   VERIFIED: 'verified',
 } as const;
 
+export type WorkArtifactVerificationKey =
+  keyof typeof WORK_ARTIFACT_VERIFICATION;
+export type WorkArtifactVerificationValue =
+  (typeof WORK_ARTIFACT_VERIFICATION)[WorkArtifactVerificationKey];
+
 /**
  * @description What wrote an artifact. Mirrors `chk_work_artifacts_source`
  * (databases/openthrottle/migrations 068).
@@ -30,6 +35,10 @@ export const WORK_ARTIFACT_SOURCE = {
   /** First-party server-witnessed event (e.g. status_change). */
   SERVER: 'server',
 } as const;
+
+export type WorkArtifactSourceKey = keyof typeof WORK_ARTIFACT_SOURCE;
+export type WorkArtifactSourceValue =
+  (typeof WORK_ARTIFACT_SOURCE)[WorkArtifactSourceKey];
 
 /**
  * @description Per-plan git-work completeness. `recorded` is the strict test: at least one

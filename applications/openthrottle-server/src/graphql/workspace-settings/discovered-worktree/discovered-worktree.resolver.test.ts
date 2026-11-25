@@ -11,7 +11,7 @@ import { PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME } from '../../../services/plan-run-w
 import type { PlanRunWorktreeTeardownService } from '../../../services/plan-run-worktree-teardown/plan-run-worktree-teardown.service.ts';
 import type { WorktreeActivityService } from '../../../services/worktree-activity/worktree-activity.service.ts';
 import type { DiscoveredWorktreeObject } from '../discovered-worktrees.object.ts';
-import { WorktreeActivityEnum } from '../discovered-worktrees.object.ts';
+import { WORKTREE_ACTIVITY } from '../discovered-worktrees.object.ts';
 import { DiscoveredWorktreeResolver } from './discovered-worktree.resolver.ts';
 
 const ROOT = '/Users/matt/.openthrottle/worktrees/OpenThrottle/monorepo';
@@ -21,7 +21,7 @@ const planRunWorktree = (
   overrides: Partial<DiscoveredWorktreeObject> = {},
 ): DiscoveredWorktreeObject => {
   return {
-    activity: WorktreeActivityEnum.IDLE,
+    activity: WORKTREE_ACTIVITY.IDLE,
     branch: 'openthrottle/plan-c34e018b',
     checkoutId: 'checkout-plan',
     commonDir: '/Users/matt/Development/openthrottle/.git',

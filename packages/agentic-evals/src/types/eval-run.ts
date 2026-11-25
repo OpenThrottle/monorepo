@@ -1,6 +1,6 @@
 import type {
-  DriverId,
-  DriverReasoningEffort,
+  DriverReasoningEffortsValue,
+  DriversValue,
 } from '@openthrottle/openthrottle-drivers';
 
 /**
@@ -28,7 +28,7 @@ export interface EvalRunConfig {
   readonly authMode: EvalAuthMode;
   readonly budget: EvalBudget;
   readonly concurrency: number;
-  readonly driverId: DriverId;
-  readonly effort: DriverReasoningEffort | undefined;
+  readonly driverId: DriversValue;
+  readonly effort: DriverReasoningEffortsValue | undefined;
   readonly model: string | undefined;
 }

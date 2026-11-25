@@ -1,6 +1,6 @@
 import {
-  ChatPermissionMode,
-  ChatReasoningLevel,
+  CHAT_PERMISSION_MODE,
+  CHAT_REASONING_LEVEL,
 } from '@openthrottle/react-router-chat';
 import * as React from 'react';
 import { describe, expect, it } from 'vitest';
@@ -161,9 +161,9 @@ describe('capabilitiesForChatOption runtime overlay', () => {
     });
 
     expect(caps.permissionModes).toEqual([
-      ChatPermissionMode.supervised,
-      ChatPermissionMode.autoAcceptEdits,
-      ChatPermissionMode.fullAccess,
+      CHAT_PERMISSION_MODE.supervised,
+      CHAT_PERMISSION_MODE.autoAcceptEdits,
+      CHAT_PERMISSION_MODE.fullAccess,
     ]);
     expect(caps.supervisedGatesEdits).toBe(false);
   });
@@ -178,8 +178,8 @@ describe('capabilitiesForChatOption runtime overlay', () => {
     );
 
     expect(withoutApprovals.permissionModes).toEqual([
-      ChatPermissionMode.supervised,
-      ChatPermissionMode.fullAccess,
+      CHAT_PERMISSION_MODE.supervised,
+      CHAT_PERMISSION_MODE.fullAccess,
     ]);
     expect(withoutApprovals.supervisedGatesEdits).toBe(true);
     expect(withoutRuntime).toEqual(withoutApprovals);
@@ -195,9 +195,9 @@ describe('capabilitiesForChatOption', () => {
     expect(caps.requiresRepository).toBe(false);
     // reasoning_effort is forwarded best-effort to local reasoning models.
     expect(caps.reasoningLevels).toEqual([
-      ChatReasoningLevel.low,
-      ChatReasoningLevel.medium,
-      ChatReasoningLevel.high,
+      CHAT_REASONING_LEVEL.low,
+      CHAT_REASONING_LEVEL.medium,
+      CHAT_REASONING_LEVEL.high,
     ]);
     expect(caps.permissionModes).toEqual([]);
     expect(caps.serviceTiers).toEqual([]);
@@ -207,7 +207,7 @@ describe('capabilitiesForChatOption', () => {
     const caps = capabilitiesForChatOption(decodeChatOption('cursor'));
 
     expect(caps.requiresRepository).toBe(true);
-    expect(caps.permissionModes).toContain(ChatPermissionMode.fullAccess);
+    expect(caps.permissionModes).toContain(CHAT_PERMISSION_MODE.fullAccess);
     // cursor's reasoning + tier live in the model id (e.g. `...-high-fast`), so
     // they are not offered as separate composer controls.
     expect(caps.reasoningLevels).toEqual([]);
@@ -224,15 +224,15 @@ describe('capabilitiesForChatOption', () => {
 
   it('lets claude reach xhigh/max and opencode reach max reasoning; codex/grok cap at high', () => {
     const claude = capabilitiesForChatOption(decodeChatOption('claude'));
-    expect(claude.reasoningLevels).toContain(ChatReasoningLevel.extraHigh);
-    expect(claude.reasoningLevels).toContain(ChatReasoningLevel.max);
+    expect(claude.reasoningLevels).toContain(CHAT_REASONING_LEVEL.extraHigh);
+    expect(claude.reasoningLevels).toContain(CHAT_REASONING_LEVEL.max);
 
     const opencode = capabilitiesForChatOption(decodeChatOption('opencode'));
-    expect(opencode.reasoningLevels).toContain(ChatReasoningLevel.max);
+    expect(opencode.reasoningLevels).toContain(CHAT_REASONING_LEVEL.max);
 
     const codex = capabilitiesForChatOption(decodeChatOption('codex'));
-    expect(codex.reasoningLevels).not.toContain(ChatReasoningLevel.extraHigh);
-    expect(codex.reasoningLevels).not.toContain(ChatReasoningLevel.max);
+    expect(codex.reasoningLevels).not.toContain(CHAT_REASONING_LEVEL.extraHigh);
+    expect(codex.reasoningLevels).not.toContain(CHAT_REASONING_LEVEL.max);
   });
 
   it('treats every discovered CLI backend (claude, opencode) as a repo-scoped agent', () => {
@@ -248,7 +248,7 @@ describe('capabilitiesForChatOption', () => {
       decodeChatOption(encodeCliOptionId('claude', 'opus')),
     );
     expect(caps.requiresRepository).toBe(true);
-    expect(caps.reasoningLevels).toContain(ChatReasoningLevel.high);
+    expect(caps.reasoningLevels).toContain(CHAT_REASONING_LEVEL.high);
   });
 
   it('caps additional directories per driver: only add-dir-capable CLIs go above one', () => {
@@ -298,6 +298,6 @@ describe('capabilitiesForChatOption', () => {
     );
     // A driver targeting a local endpoint is still a repo-scoped CLI agent.
     expect(caps.requiresRepository).toBe(true);
-    expect(caps.permissionModes).toContain(ChatPermissionMode.fullAccess);
+    expect(caps.permissionModes).toContain(CHAT_PERMISSION_MODE.fullAccess);
   });
 });

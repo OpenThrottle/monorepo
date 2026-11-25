@@ -107,12 +107,12 @@ export const SIDE_EFFECT_KIND = {
   TOP_LEVEL_AWAIT: 'top-level-await',
 } as const;
 
-export type SideEffectKind =
-  (typeof SIDE_EFFECT_KIND)[keyof typeof SIDE_EFFECT_KIND];
+export type SideEffectKindKey = keyof typeof SIDE_EFFECT_KIND;
+export type SideEffectKindValue = (typeof SIDE_EFFECT_KIND)[SideEffectKindKey];
 
 /** One module-level statement that does something when evaluated. */
 export interface SideEffectFinding {
-  readonly kind: SideEffectKind;
+  readonly kind: SideEffectKindValue;
   readonly line: number;
   readonly text: string;
 }
@@ -142,7 +142,8 @@ export const VERDICT = {
   UNLISTED: 'unlisted',
 } as const;
 
-export type Verdict = (typeof VERDICT)[keyof typeof VERDICT];
+export type VerdictKey = keyof typeof VERDICT;
+export type VerdictValue = (typeof VERDICT)[VerdictKey];
 
 /** The scan of one project, with its recommendation and verdict. */
 export interface ProjectReport {
@@ -155,7 +156,7 @@ export interface ProjectReport {
   readonly recommended: false | readonly string[];
   readonly staleEntries: readonly string[];
   readonly unlisted: readonly string[];
-  readonly verdict: Verdict;
+  readonly verdict: VerdictValue;
 }
 
 const firstLine = (node: ts.Node, source: ts.SourceFile): string => {
@@ -333,7 +334,7 @@ const classifyStatement = (
   source: ts.SourceFile,
   localNames: ReadonlySet<string>,
 ): SideEffectFinding | undefined => {
-  const finding = (kind: SideEffectKind): SideEffectFinding => {
+  const finding = (kind: SideEffectKindValue): SideEffectFinding => {
     return {
       kind,
       line: lineOf(statement, source),
@@ -677,7 +678,7 @@ export const judgeProject = (input: ProjectScanInput): ProjectReport => {
     });
   });
 
-  const verdictFor = (): Verdict => {
+  const verdictFor = (): VerdictValue => {
     if (declared === undefined) {
       return VERDICT.MISSING;
     }

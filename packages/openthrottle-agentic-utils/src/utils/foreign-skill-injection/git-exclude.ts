@@ -15,7 +15,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 
-import type { GitExcludeOwner } from './types.ts';
+import type { GitExcludeOwnerValue } from './types.ts';
 
 /**
  * Marker text for an owner's block. The rendering for
@@ -23,11 +23,11 @@ import type { GitExcludeOwner } from './types.ts';
  * blocks became per-owner, so exclude files already on disk keep parsing and no repo needs
  * migrating.
  */
-const beginMarkerFor = (owner: GitExcludeOwner): string => {
+const beginMarkerFor = (owner: GitExcludeOwnerValue): string => {
   return `# BEGIN OpenThrottle ${owner} (managed — do not edit)`;
 };
 
-const endMarkerFor = (owner: GitExcludeOwner): string => {
+const endMarkerFor = (owner: GitExcludeOwnerValue): string => {
   return `# END OpenThrottle ${owner} (managed)`;
 };
 
@@ -72,7 +72,7 @@ const toLines = (content: string): string[] => {
  */
 const stripManagedBlock = (
   lines: readonly string[],
-  owner: GitExcludeOwner,
+  owner: GitExcludeOwnerValue,
 ): string[] => {
   const begin = lines.indexOf(beginMarkerFor(owner));
   if (begin === -1) {
@@ -111,7 +111,7 @@ const stripManagedBlock = (
 export const writeManagedExcludeBlock = (
   repoPath: string,
   relativePaths: readonly string[],
-  owner: GitExcludeOwner,
+  owner: GitExcludeOwnerValue,
 ): boolean => {
   const excludePath = resolveGitExcludePath(repoPath);
   if (excludePath === undefined) {
@@ -149,7 +149,7 @@ export const writeManagedExcludeBlock = (
  */
 export const removeManagedExcludeBlock = (
   repoPath: string,
-  owner: GitExcludeOwner,
+  owner: GitExcludeOwnerValue,
 ): void => {
   writeManagedExcludeBlock(repoPath, [], owner);
 };
