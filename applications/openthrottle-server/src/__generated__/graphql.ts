@@ -1109,8 +1109,10 @@ export type CodeSemanticSearchInput = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   /** Natural-language query to embed and search by vector similarity. */
   query: Scalars['String']['input'];
-  /** Registered WorkspaceLocalRepository id to search within. */
-  repositoryId: Scalars['ID']['input'];
+  /** Registered WorkspaceLocalRepository id to search within. Takes precedence over workspacePath; one of the two is required. */
+  repositoryId?: InputMaybe<Scalars['ID']['input']>;
+  /** Absolute path the caller is working in (e.g. an MCP client's cwd). Resolved to the registered repository whose checkout contains it; ignored when repositoryId is set. */
+  workspacePath?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type CodeSemanticSearchResult = {
@@ -9385,6 +9387,7 @@ export type LastActivityFragment = {
 export type SearchChunkFragment = {
   __typename?: 'SearchChunk';
   content: string;
+  fusedScore?: number | null;
   id: string;
   planId?: string | null;
   planTitle?: string | null;
@@ -10168,6 +10171,7 @@ export type SearchQuery = {
     chunks: Array<{
       __typename?: 'SearchChunk';
       content: string;
+      fusedScore?: number | null;
       id: string;
       planId?: string | null;
       planTitle?: string | null;
@@ -10191,6 +10195,7 @@ export type GetDocumentQuery = {
   getDocument?: {
     __typename?: 'SearchChunk';
     content: string;
+    fusedScore?: number | null;
     id: string;
     planId?: string | null;
     planTitle?: string | null;
@@ -11039,6 +11044,7 @@ export const SearchChunkFragmentDoc = {
         kind: 'SelectionSet',
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'fusedScore' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'planTitle' } },
@@ -13870,6 +13876,7 @@ export const SearchDocument = {
         kind: 'SelectionSet',
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'fusedScore' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'planTitle' } },
@@ -13945,6 +13952,7 @@ export const GetDocumentDocument = {
         kind: 'SelectionSet',
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'fusedScore' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'planTitle' } },

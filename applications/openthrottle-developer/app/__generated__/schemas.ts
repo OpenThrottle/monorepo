@@ -577,7 +577,8 @@ export function CodeSemanticSearchInputSchema(): z.ZodObject<
   return z.object({
     limit: z.number().nullish(),
     query: z.string().min(1),
-    repositoryId: z.string().min(1),
+    repositoryId: z.string().nullish(),
+    workspacePath: z.string().nullish(),
   });
 }
 

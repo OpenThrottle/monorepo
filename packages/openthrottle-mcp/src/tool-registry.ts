@@ -619,6 +619,13 @@ export const developerMcpToolDefinitions: readonly DeveloperMcpToolDefinition[] 
     ),
     defineTool(
       'core',
+      'code_search',
+      Th.codeSearchToolDescription,
+      Th.codeSearchToolParameters,
+      Th.codeSearchToolHandler,
+    ),
+    defineTool(
+      'core',
       'semantic_search',
       Th.semanticSearchToolDescription,
       Th.semanticSearchToolParameters,

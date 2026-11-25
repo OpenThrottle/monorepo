@@ -10,7 +10,7 @@
     "@openthrottle/openthrottle-agentic-utils": "workspace:^",
     "@openthrottle/openthrottle-mcp": "workspace:^"
   },
-  "description": "On-demand MCP eval suites for @openthrottle/openthrottle-mcp \u2014 tool selection and semantic_search ranking: cases, graders, baselines, the Anthropic and agent-CLI selectors, and the sandboxed MCP the CLIs attach to.",
+  "description": "On-demand MCP eval suites for @openthrottle/openthrottle-mcp — tool selection and semantic_search ranking: cases, graders, baselines, the Anthropic and agent-CLI selectors, and the sandboxed MCP the CLIs attach to.",
   "devDependencies": {
     "@anthropic-ai/sdk": "catalog:",
     "vitest": "catalog:"
@@ -39,6 +39,17 @@
     "targets": {
       "__build": {},
       "__build-package": {},
+      "eval-code-search": {
+        "cache": false,
+        "executor": "nx:run-commands",
+        "metadata": {
+          "description": "On-demand code_search eval: runs every case in src/code-search/data/data.cases.ts through a live openthrottle-server's GraphQL codeSemanticSearch and scores the top 5 (MRR, hit@5, precision@5). Spends no model tokens, but needs a server whose code index covers the repository (--url, default API_URL_INTERNAL or http://localhost:6021; token from OPENTHROTTLE_MCP_AUTH_TOKEN). Flags after `--`: --url, --workspace-path (default cwd), --repository-id <checkout id>, --case <id|kind,...>. Writes tmp/evals/code-search/. Exits 0 when the parseDate gate case hits in the top 5, 1 when it misses, 2 usage/connection error. Never wired into CI or check:local."
+        },
+        "options": {
+          "command": "tsx ./packages/openthrottle-mcp-evals/src/code-search/cli.ts",
+          "cwd": "{workspaceRoot}"
+        }
+      },
       "eval-search-ranking": {
         "cache": false,
         "executor": "nx:run-commands",
@@ -57,7 +68,7 @@
         ],
         "executor": "nx:run-commands",
         "metadata": {
-          "description": "On-demand MCP tool-selection eval: runs every case in src/tool-selection/data/data.cases.ts against the Claude Messages API (--driver api, the default; needs ANTHROPIC_API_KEY; spends tokens) or through agent CLIs (--driver claude,codex; spends subscription usage) with a sandboxed MCP attached in place of the real server, and compares with the same driver+model baseline in src/tool-selection/baselines/. Runs on the @openthrottle/agentic-evals core. Flags after `--`: --driver, --model, --effort, --trials, --case <id|area,...>, --tolerance, --concurrency (api only; CLI runs are sequential), --auth-mode (CLI), --timeout-ms (CLI), --write-baseline. Exits 1 on a regression, 3 if a CLI reached a server other than the sandbox. Never wired into CI or check:local \u2014 only its grader unit tests run there, through `test`."
+          "description": "On-demand MCP tool-selection eval: runs every case in src/tool-selection/data/data.cases.ts against the Claude Messages API (--driver api, the default; needs ANTHROPIC_API_KEY; spends tokens) or through agent CLIs (--driver claude,codex; spends subscription usage) with a sandboxed MCP attached in place of the real server, and compares with the same driver+model baseline in src/tool-selection/baselines/. Runs on the @openthrottle/agentic-evals core. Flags after `--`: --driver, --model, --effort, --trials, --case <id|area,...>, --tolerance, --concurrency (api only; CLI runs are sequential), --auth-mode (CLI), --timeout-ms (CLI), --write-baseline. Exits 1 on a regression, 3 if a CLI reached a server other than the sandbox. Never wired into CI or check:local — only its grader unit tests run there, through `test`."
         },
         "options": {
           "command": "tsx ./packages/openthrottle-mcp-evals/src/tool-selection/cli.ts",
@@ -92,6 +103,7 @@
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "sideEffects": [
+    "./src/code-search/cli.ts",
     "./src/sandbox/bin-sandbox.ts",
     "./src/search-ranking/cli.ts",
     "./src/tool-selection/cli.ts"

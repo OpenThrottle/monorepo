@@ -13,6 +13,7 @@ const READ_ONLY_TOOL_NAMES: ReadonlySet<string> = new Set([
   'agent_conversation_get_messages',
   'agent_conversation_list',
   'auth_status',
+  'code_search',
   'discover_agent_clis',
   'discover_local_models',
   'get_activity_by_date',
