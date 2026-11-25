@@ -22,7 +22,7 @@ import { createLogger } from './utils/logger.ts';
 const logger = createLogger();
 
 /**
- * @description Syncs the GENERATED block schemas (`packages/<pkg>/schemas/manifest.json`, written by
+ * @description Syncs the GENERATED block schemas (`packages/<pkg>/src/data/schema-manifest.json`, written by
  * `cms-schemas:write`) into the `cms` database's `schemas` table, so every generated block —
  * LayoutGrid, LayoutColumn, Card, Hero, … — has a row a fragment can be created on.
  *
@@ -80,7 +80,7 @@ const stringField = (entry: JsonValue, key: string, where: string): string => {
   return value;
 };
 
-/** Every `packages/<pkg>/schemas/manifest.json` under `root`, sorted. */
+/** Every `packages/<pkg>/src/data/schema-manifest.json` under `root`, sorted. */
 export function findCmsSchemaManifests(root: string): string[] {
   const packagesDir = join(root, 'packages');
 

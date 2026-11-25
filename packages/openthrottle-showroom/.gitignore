@@ -2,4 +2,3 @@
 # A 30-second capture is ~1500 PNG frames / 260MB — never commit these.
 output/*
 !output/.gitkeep
-spike/output/

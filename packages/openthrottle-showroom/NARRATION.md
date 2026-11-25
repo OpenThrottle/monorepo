@@ -272,9 +272,9 @@ free. The per-sentence cache is unchanged.
 Method: episode 05, payoff-first variant, 605 spoken characters, `s2.1-pro-free`,
 lexicon applied. The per-sentence path and the whole-take path (default, then
 `chunk_length` 100, 200 and 300) were each normalised by the same single gain and
-measured with ffmpeg `ebur128`. The code is `spike/fish-whole-take.ts`; its output,
+measured with ffmpeg `ebur128`. The code is `src/scripts/fish-whole-take.ts`; its output,
 including `report.md`, the raw and normalised wavs and the word timings, is in
-`spike/output/fish-whole-take/` (gitignored, so it exists only on the machine that
+`output/fish-whole-take/` (gitignored, so it exists only on the machine that
 ran it).
 
 | Take (script 05)             | Integrated | LRA    | Duration |
@@ -307,7 +307,7 @@ resampled to format.json's rate in the single normalise pass), `chunk_length: 30
 **The listen has NOT happened.** The phone-speaker A/B of per-sentence against
 whole-take (the same method as the bake-off above) is owed, and the verdict on
 whether whole-take beats per-sentence is **pending**. The files to compare are
-`spike/output/fish-whole-take/per-sentence.normalised.wav` and
+`output/fish-whole-take/per-sentence.normalised.wav` and
 `whole-default.normalised.wav` (plus `whole-100`, `whole-200`, `whole-300`) on the
 machine that ran the spike. Until a person has listened, whole-take is the default on
 the strength of the clean timings and the single-request read, not on a verdict. If

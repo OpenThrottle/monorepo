@@ -54,7 +54,7 @@ one-way: cms-ui must never import cms-core.
   boundary, not in consumers.
 - **`LayoutColumn`, `LayoutGrid`, `LogicCookies` and `LogicParams` are content blocks too**: their
   props follow the cms-ui tag contract ([../react-router-cms-ui/AGENTS.md](../react-router-cms-ui/AGENTS.md))
-  and their generated schemas live in [schemas/](schemas/) — regenerate with
+  and their generated schemas live in [src/data/](src/data/) as `schema.<block>.json` plus `schema-manifest.json` — regenerate with
   `pnpm nx run @openthrottle/react-router-cms-core:cms-schemas:write`.
   [tests/block-schemas.test.ts](tests/block-schemas.test.ts) checks both packages' schemas
   (coverage, strict Ajv, defaults) and needs `// @vitest-environment node` to read them.

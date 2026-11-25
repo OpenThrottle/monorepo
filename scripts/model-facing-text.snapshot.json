@@ -215,7 +215,7 @@
     "skill/github-squash": 6945,
     "skill/ot-client-node-boundary": 3862,
     "skill/ot-code-review": 8950,
-    "skill/ot-folders": 15385,
+    "skill/ot-folders": 15511,
     "skill/ot-generators": 6734,
     "skill/ot-loop": 16252,
     "skill/ot-onboarding": 17051,
@@ -255,6 +255,6 @@
     "mcpInstructions": 2183,
     "mcpTools": 40891,
     "prompts": 137756,
-    "skills": 163375
+    "skills": 163501
   }
 }

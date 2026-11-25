@@ -4,7 +4,7 @@
  * offsets, WAV framing and coverage reconciliation. No network, no filesystem, so
  * every one of them is testable against a checked-in fixture.
  *
- * What a measurement spike established about the stream (see spike/fish-whole-take.ts):
+ * What a measurement spike established about the stream (see src/scripts/fish-whole-take.ts):
  * - every event is `event: message` with JSON `data`; there is no done event, and
  *   the stream ends with an event whose `audio_base64` is `''`;
  * - only the very first audio carries a WAV header (placeholder data size); the rest

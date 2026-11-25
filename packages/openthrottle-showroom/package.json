@@ -85,6 +85,7 @@
     "./src/scripts/check-manifest-drift.ts",
     "./src/scripts/demo-live-run.ts",
     "./src/scripts/ensure-demo-database.ts",
+    "./src/scripts/fish-whole-take.ts",
     "./src/scripts/resolve-demo-url.ts",
     "./src/scripts/seed-demo.ts",
     "./src/scripts/snapshot-export.ts",

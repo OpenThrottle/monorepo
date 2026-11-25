@@ -44,5 +44,6 @@ its `.ts` extension.
 
 - [README.md](README.md) — commands, env keys and the **runbook**: approving drafts, skipping
   or editing a post, media posts by hand, BLOCKED reasons, OAuth re-setup, credits and cost.
-- [jobs/](jobs/) — the reviewed prompts and settings of the two scheduled jobs.
+- [src/data/job.\*.md](src/data/) — the reviewed prompts and settings of the two scheduled jobs,
+  pasted into the MCP scheduling tools by hand; no code reads them.
 - [../AGENTS.md](../AGENTS.md) — parent-tier conventions.

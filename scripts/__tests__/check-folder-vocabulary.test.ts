@@ -14,9 +14,11 @@ import {
   findBannedFolders,
   findGrandfatherDrift,
   findNestedFolders,
+  findOffRootFolders,
   findOffVocabularyFolders,
   formatHit,
   formatNestedFolderHit,
+  formatOffRootHit,
   formatOffVocabularyHit,
   GRANDFATHERED_FOLDERS,
   isAllowedNestedFolder,
@@ -245,6 +247,67 @@ describe('check-folder-vocabulary', () => {
           [{ bucket: 'nodejs', root }],
         ),
       ).toEqual([]);
+    });
+  });
+
+  describe('findOffRootFolders', () => {
+    const projects: readonly ProjectBucket[] = [
+      { bucket: 'nodejs', root: 'packages/node-pkg' },
+      { bucket: 'react-router', root: 'packages/rr-pkg' },
+    ];
+
+    it('flags a folder beside src/ that is not an allowed root', () => {
+      const hits = findOffRootFolders(
+        [
+          'packages/node-pkg/jobs/a.md',
+          'packages/node-pkg/jobs/b.md',
+          'packages/rr-pkg/schemas/manifest.json',
+          'packages/rr-pkg/spike/output/x.png',
+        ],
+        projects,
+      );
+
+      expect(hits.map((hit) => hit.path)).toEqual([
+        'packages/node-pkg/jobs',
+        'packages/rr-pkg/schemas',
+        'packages/rr-pkg/spike',
+      ]);
+    });
+
+    it('allows the root folders and files directly at the root', () => {
+      expect(
+        findOffRootFolders(
+          [
+            'packages/node-pkg/package.json',
+            'packages/node-pkg/README.md',
+            'packages/node-pkg/docs/x.md',
+            'packages/node-pkg/fixtures/a/b.json',
+            'packages/node-pkg/scripts/build.ts',
+            'packages/node-pkg/src/anything/x.ts',
+            'packages/rr-pkg/tests/x.test.ts',
+          ],
+          projects,
+        ),
+      ).toEqual([]);
+    });
+
+    it('ignores paths outside every checked project', () => {
+      expect(
+        findOffRootFolders(
+          [
+            'applications/app/public/x.png',
+            'packages/nestjs-pkg/jobs/x.md',
+            'packages/node-pkg-two/jobs/x.md',
+          ],
+          projects,
+        ),
+      ).toEqual([]);
+    });
+
+    it('formats a hit with the allowed roots', () => {
+      expect(formatOffRootHit({ path: 'packages/p/jobs' })).toBe(
+        "  packages/p/jobs/ — not an allowed project-root folder; move it under src/ (its bucket's vocabulary) or use one of docs, fixtures, scripts, src, tests",
+      );
     });
   });
 
@@ -604,6 +667,34 @@ describe('check-folder-vocabulary', () => {
         commitAll();
         write('packages/p/src/utils/__tests__/x.test.ts');
         git('add', 'packages/p/src/utils/__tests__/x.test.ts');
+
+        expect(main(repoRoot, true)).toBe(0);
+      });
+
+      it('fails on a new folder beside src/ in a tagged package', () => {
+        mkdirSync(join(repoRoot, 'packages/p'), { recursive: true });
+        writeFileSync(
+          join(repoRoot, 'packages/p/package.json'),
+          JSON.stringify({ name: 'p', nx: { tags: ['technology:nodejs'] } }),
+        );
+        write('packages/p/src/utils/x.ts');
+        commitAll();
+        write('packages/p/stuff/y.ts');
+        git('add', 'packages/p/stuff/y.ts');
+
+        expect(main(repoRoot, true)).toBe(1);
+      });
+
+      it('passes a new tests/ folder beside src/', () => {
+        mkdirSync(join(repoRoot, 'packages/p'), { recursive: true });
+        writeFileSync(
+          join(repoRoot, 'packages/p/package.json'),
+          JSON.stringify({ name: 'p', nx: { tags: ['technology:nodejs'] } }),
+        );
+        write('packages/p/src/utils/x.ts');
+        commitAll();
+        write('packages/p/tests/y.test.ts');
+        git('add', 'packages/p/tests/y.test.ts');
 
         expect(main(repoRoot, true)).toBe(0);
       });

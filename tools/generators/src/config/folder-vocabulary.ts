@@ -67,6 +67,24 @@ export const BUCKET_FOLDER_VOCABULARY = {
   ],
 } as const satisfies Readonly<Record<string, readonly string[]>>;
 
+/**
+ * @description The folders a checked project (any bucket in
+ * {@link BUCKET_FOLDER_VOCABULARY}) may have at its root, beside `src/`.
+ * Everything a package ships or runs lives under `src/` and follows its
+ * bucket's vocabulary; these are the few roots that hold something else:
+ * prose (`docs`), suites and their inputs (`tests`, `fixtures`), and build or
+ * maintenance scripts that run outside the package's own code (`scripts`).
+ * Applications are not checked, so their `public/`, `app/` and `e2e/` roots
+ * need no entry. A new word needs a reason that no existing one fits.
+ */
+export const PROJECT_ROOT_FOLDERS = [
+  'docs',
+  'fixtures',
+  'scripts',
+  'src',
+  'tests',
+] as const;
+
 /** A technology bucket whose top-level `src/` folders are checked. */
 export type CheckedBucket = keyof typeof BUCKET_FOLDER_VOCABULARY;
 

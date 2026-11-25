@@ -25,7 +25,8 @@ pnpm nx run monorepo:check-folder-vocabulary
 
 `check-folder-vocabulary` fails on any tracked path under a rule-4 junk-drawer
 folder, on a top-level `src/` folder outside its project's bucket vocabulary
-(rule 1), and on a feature folder one level below a vocabulary folder ("Below the
+(rule 1), on a folder beside `src/` at a checked project's root other than `docs`,
+`fixtures`, `scripts`, `src` and `tests` (code and data live under `src/`), and on a feature folder one level below a vocabulary folder ("Below the
 top level, stay flat": only `__tests__`, `__generated__` and PascalCase
 compound-component folders under `components/` may sit there), naming the
 replacement; `check:local` and the CI `gates` job run it too.

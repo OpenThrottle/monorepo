@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 
 /**
- * @description THROWAWAY spike — not imported by src/. Baselines a Fish Audio
+ * @description Measurement script — nothing imports it. Baselines a Fish Audio
  * whole-take read (POST /v1/tts/stream/with-timestamp, one request for the whole
  * script) against today's per-sentence path, and sweeps `chunk_length`.
  *
- *   pnpm exec tsx --env-file <primary>/.env spike/fish-whole-take.ts
+ *   pnpm exec tsx --env-file <primary>/.env src/scripts/fish-whole-take.ts
  *
- * Every hosted response is cached under spike/output/fish-whole-take/raw/, so a
+ * Every hosted response is cached under output/fish-whole-take/raw/ (the package's
+ * gitignored output/), so a
  * re-run re-analyses without re-buying a render. `--offline` refuses any request.
  *
  * Input: episode 05-connect-ot-mcp, selected variant, lexicon applied (the
@@ -31,16 +32,16 @@ import {
   fishAudioBackend,
   resolveFishAudioApiKey,
   resolveFishAudioModel,
-} from '../src/narrate/backends/fish-audio.ts';
-import { parseScript } from '../src/narrate/parseScript.ts';
-import { loadFormat } from '../src/runner/format.ts';
+} from '../narrate/backends/fish-audio.ts';
+import { parseScript } from '../narrate/parseScript.ts';
+import { loadFormat } from '../runner/format.ts';
 
 const execFileAsync = promisify(execFile);
 
 const SLUG = '05-connect-ot-mcp';
 const OUT = join(
   dirname(fileURLToPath(import.meta.url)),
-  'output',
+  '../../output',
   'fish-whole-take',
 );
 const RAW = join(OUT, 'raw');

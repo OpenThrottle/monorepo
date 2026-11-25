@@ -54,8 +54,8 @@ into bucket modules named for its subject (`utils/replay.ts`, `utils/shell-words
 exceptions: the tooling folders `__tests__`/`__generated__`, and **one PascalCase folder per
 compound component** directly under `components/` (`components/Card/` holding `Card.tsx`,
 `CardHeader.tsx`, … and its `__tests__/`). A feature too big to flatten is not a folder, it is
-a package: promote it with `ot-generators`. `data/` holds only `data.<name>.ts` and
-`mock.<name>.ts`; logic found there moves to `utils/`.
+a package: promote it with `ot-generators`. `data/` holds only `<name>.ts`, `mock.<name>.ts` and
+`schema.<name>.json` (kebab-case `<name>`); logic found there moves to `utils/`.
 
 **The bucket rule:** the moment a file imports from `react-router`, it belongs to the
 `react-router` bucket — never the `react` one. React-only packages must not reach for
@@ -113,7 +113,8 @@ is a package, and that is the whole test.
 1. **Do not invent new folders.** Use the vocabulary above. If nothing fits, the
    code probably belongs in a different bucket, not a new directory.
    That holds one level down too: see "Below the top level, stay flat" above.
-   _Enforced_ for packages' `src/` folders (top level and the level below) by
+   _Enforced_ for packages' root folders (only `docs`, `fixtures`, `scripts`, `src`,
+   `tests` beside `src/`) and `src/` folders (top level and the level below) by
    `check-folder-vocabulary`.
 2. **Bucket utils by theme**, per AGENTS.md § Code style ("prefer a bucket module").
 3. **Do not delete empty folders or their `.gitkeep`.** They are placeholders for

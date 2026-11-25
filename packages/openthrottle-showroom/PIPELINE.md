@@ -7,7 +7,7 @@ must drive the **same** selectors so the app never grows two parallel sets of te
 hooks.
 
 Format spec and scripts live in [`docs/marketing/`](../../../../docs/marketing/README.md).
-The recorder decision is in [`spike/README.md`](./spike/README.md).
+The recorder decision is in [§ The recorder decision](#the-recorder-decision).
 
 ## Layout
 
@@ -27,9 +27,51 @@ packages/openthrottle-showroom/
 ├── src/scripts/resolve-demo-url.ts
 ├── src/scripts/demo-live-run.ts     # heartbeat that holds one run live for a take
 ├── src/scripts/check-manifest-drift.ts  # CI gate: manifest vs migrated schema
-├── spike/                     # task-3 recorder comparison + verdict
+├── src/scripts/fish-whole-take.ts       # narration measurement (NARRATION.md)
 └── output/                    # captures and masters (gitignored)
 ```
+
+## The recorder decision
+
+**Playwright, recording a CDP screencast resampled to a constant 30fps — not Playwright's
+`recordVideo`, and not Maestro plus screen capture.** The task-3 spike drove the same
+reference demo (sign in → create a plan → see it listed) against a production build of
+`openthrottle-developer` down both paths. Its two throwaway drivers
+(`spike/recorder-a-maestro.yaml`, `spike/recorder-b-playwright.mjs`) were retired once
+`src/runner/` superseded them; git history keeps them.
+
+**Maestro + external capture — rejected.** The capture half cannot run unattended: macOS
+gates `ffmpeg -f avfoundation` behind an interactive Screen Recording grant per binary, it is
+macOS-only, cannot run headless, and captures the whole desktop, which is a leak vector. The
+driver half crashed inside Maestro Web (CLI 2.0.9, `CdpWebDriver.deviceInfo` NPE) before its
+first assertion. Even healthy, it has no cursor, easing, hold-on-frame or step→time manifest.
+
+**Playwright — accepted.** Ran clean and headless twice, no flakes:
+
+|                            | `recordVideo`               | CDP screencast → ffmpeg                      |
+| -------------------------- | --------------------------- | -------------------------------------------- |
+| Container / codec          | WebM / VP8                  | PNG frames → MP4 / H.264                     |
+| Resolution                 | 1920×1080                   | 1920×1080                                    |
+| Frame rate                 | **25fps, not configurable** | resampled to a constant **30fps**            |
+| Size (~32s)                | 2.4 MB                      | 732 KB final (262 MB of intermediate frames) |
+| Text crispness at 1:1      | crisp                       | crisp                                        |
+| Hold a frame for narration | no                          | yes — a long frame duration                  |
+
+Text quality is a wash, so the decision turns on frame-rate control and pacing. CDP emits a
+frame only when the page changes, so the recorder keeps each frame's
+`frame.metadata.timestamp` and writes an ffmpeg `concat` list with real per-frame durations;
+`fps=30` resamples it. A deliberate dwell becomes one long frame — the pacing control
+`recordVideo` lacks ([`src/runner/record.ts`](./src/runner/record.ts)).
+
+What the spike changed in the spec:
+
+1. **60fps → 30fps** in `format.json`: no browser-capture path delivers a true 60fps.
+2. **`recording.colorScheme: 'dark'`**: headless Chromium renders the light theme, and the
+   cards are designed on the brand near-black.
+3. **Wait for hydration, not visibility**: clicking submit before React mounts does nothing,
+   silently. The runner waits for a hydration marker, then settles.
+4. **The production build does not prefill the login form**, so flows type credentials.
+5. **A dedicated demo database is mandatory** — see the next section.
 
 ## The demo database is separate, and that is not negotiable
 
