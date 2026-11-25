@@ -13,6 +13,9 @@
  * not embedded), and a result's relevance is printed on its card rather than
  * revealed on hover. Checked live on 2026-11-22 against the regenerated
  * snapshot: both queries return ten results, identical across two runs.
+ *
+ * **Re-checked 2026-11-25.** #1014 turned the results into a table, so the
+ * relevance now sits in the top row's Relevance column instead of on a card.
  */
 
 import type { VideoEpisode } from '../types.ts';
@@ -29,7 +32,7 @@ export const episode: VideoEpisode = {
       t: '0:18',
     },
     {
-      action: 'Hold on the top result; its relevance shows on the card.',
+      action: `Hold on the top result; its relevance shows in the Relevance column.`,
       t: '0:27',
     },
     {
