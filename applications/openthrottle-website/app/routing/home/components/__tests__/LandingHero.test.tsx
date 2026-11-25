@@ -5,7 +5,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import { LANDING_HERO } from '~/routing/home/data/data.landing';
+import { LANDING_HERO } from '~/routing/home/data/landing';
 
 import { LandingHero } from '../LandingHero';
 

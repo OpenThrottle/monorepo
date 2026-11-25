@@ -7,7 +7,7 @@ import {
 import { Activity, ChevronDown } from 'lucide-react';
 import * as React from 'react';
 
-import { STATUS_CONFIG } from '../data/data.chat-tool-call-status-config';
+import { STATUS_CONFIG } from '../data/chat-tool-call-status-config';
 import type { TurnTimelineActivityGroup } from '../turn-tool-groups';
 import { activeToolOf } from '../turn-tool-groups';
 import { ChatPermissionRequest } from './ChatPermissionRequest';

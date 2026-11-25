@@ -13,7 +13,7 @@ import { GitBranchPlusIcon } from 'lucide-react';
 import * as React from 'react';
 import { Form } from 'react-router';
 
-import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
+import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/copy';
 import { useCloneRepoDialog } from '~/routing/settings/repositories/hooks/useCloneRepoDialog';
 
 export interface CloneRepoDialogProps {

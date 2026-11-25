@@ -3,7 +3,7 @@ import { Label, Switch } from '@openthrottle/react-router-shadcn';
 import { useAtom } from 'jotai';
 import * as React from 'react';
 
-import { APPEARANCE_COPY } from '~/routing/settings/data/data.copy';
+import { APPEARANCE_COPY } from '~/routing/settings/data/copy';
 
 export interface AppearanceContextMeterFieldProps {}
 

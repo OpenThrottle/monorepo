@@ -14,7 +14,7 @@ import { SITE_TITLE } from '~/global/config/settings';
 import { UsageCaptureHealth } from '~/routing/usage/components/UsageCaptureHealth';
 import { UsagePageIntroduction } from '~/routing/usage/components/UsagePageIntroduction';
 import { UsageTelemetryCoverage } from '~/routing/usage/components/UsageTelemetryCoverage';
-import { TELEMETRY_PAGE_COPY } from '~/routing/usage/data/data.telemetry-coverage-copy';
+import { TELEMETRY_PAGE_COPY } from '~/routing/usage/data/telemetry-coverage-copy';
 import { fetchTelemetryCoverage } from '~/routing/usage/utils/fetchTelemetryCoverage';
 import { forgetTelemetryMachine } from '~/routing/usage/utils/forgetTelemetryMachine';
 import { getUsageRange } from '~/routing/usage/utils/getUsageRange';

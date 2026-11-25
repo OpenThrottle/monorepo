@@ -13,7 +13,7 @@ import {
 import {
   TIMELINE_DISCLOSURE_COPY,
   TIMELINE_LEGEND_COPY,
-} from '~/routing/timeline/data/data.copy';
+} from '~/routing/timeline/data/copy';
 import { markerKindPath } from '~/routing/timeline/utils/markerGlyphPath';
 
 import type { TimelineLegendProps } from '../TimelineLegend';

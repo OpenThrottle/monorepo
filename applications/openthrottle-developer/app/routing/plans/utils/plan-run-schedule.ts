@@ -9,7 +9,7 @@
  * pin the clock; the dialog passes the browser's.
  */
 import { PLAN_RUN_SCHEDULE_MAX_DAYS } from '~/routing/plans/config/defaults';
-import { PLAN_RUN_DIALOG_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_RUN_DIALOG_COPY } from '~/routing/plans/data/copy';
 
 const MS_PER_MINUTE = 60_000;
 const MS_PER_HOUR = 60 * MS_PER_MINUTE;

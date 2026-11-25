@@ -17,8 +17,8 @@ import { RuleFormActionSection } from '~/routing/rules/components/RuleFormAction
 import { RuleFormIdentitySection } from '~/routing/rules/components/RuleFormIdentitySection';
 import { RuleFormMatchSection } from '~/routing/rules/components/RuleFormMatchSection';
 import { RuleFormPreview } from '~/routing/rules/components/RuleFormPreview';
-import { RULES_COPY } from '~/routing/rules/data/data.copy';
-import { ANY } from '~/routing/rules/data/data.rule-form-options';
+import { RULES_COPY } from '~/routing/rules/data/copy';
+import { ANY } from '~/routing/rules/data/rule-form-options';
 import { useRuleForm } from '~/routing/rules/hooks/useRuleForm';
 import type { RuleFormScopeOption } from '~/routing/rules/types';
 import type { RuleFormPromptOption } from '~/routing/rules/utils/rule-prompt-options';

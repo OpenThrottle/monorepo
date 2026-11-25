@@ -2,8 +2,8 @@ import { Badge } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { Link } from 'react-router';
 
-import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
-import { REPOSITORIES_TABLE_COPY } from '~/routing/settings/repositories/data/data.copy';
+import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/copy';
+import { REPOSITORIES_TABLE_COPY } from '~/routing/settings/repositories/data/copy';
 import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/types';
 import { planDetailPath } from '~/routing/settings/repositories/utils/paths';
 import {

@@ -5,7 +5,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { COMMANDER_ESCAPE_HEADING } from '../../data/data.copy';
+import { COMMANDER_ESCAPE_HEADING } from '../../data/copy';
 import type {
   CommanderGroup,
   CommanderItem,

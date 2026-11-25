@@ -13,14 +13,14 @@ import { parseArgs } from 'node:util';
 
 import { isRecord, toErrorMessage } from '@openthrottle/nodejs-utils';
 
-import { CODE_SEARCH_CASES } from './data/data.cases.ts';
+import { CODE_SEARCH_CASES } from './data/cases.ts';
 import {
   CODE_SEARCH_DATASET_ID,
   CODE_SEARCH_DATASET_VERSION,
   CODE_SEARCH_GATE_CASE_ID,
   CODE_SEARCH_GRADER_VERSION,
   CODE_SEARCH_K,
-} from './data/data.dataset.ts';
+} from './data/dataset.ts';
 import type {
   CodeCaseScore,
   CodeRankedMatch,

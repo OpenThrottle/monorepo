@@ -2,7 +2,7 @@ import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
-import { SCHEDULE_WEBHOOK_COPY } from '~/routing/schedule/data/data.copy';
+import { SCHEDULE_WEBHOOK_COPY } from '~/routing/schedule/data/copy';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 
 import { ScheduleWebhookCredentials } from '../ScheduleWebhookCredentials';

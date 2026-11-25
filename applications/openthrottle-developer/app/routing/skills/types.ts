@@ -1,5 +1,5 @@
 import type { UsageSkillUsageBySkillFragment } from '~/__generated__/graphql';
-import type { SkillUsageChartDatum } from '~/global/data/data.skill-usage-chart';
+import type { SkillUsageChartDatum } from '~/global/data/skill-usage-chart';
 
 /**
  * The composed invocation the parent submits through the streamed-conversation

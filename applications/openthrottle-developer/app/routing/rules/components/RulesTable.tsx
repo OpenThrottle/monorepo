@@ -9,7 +9,7 @@ import { RulesEmpty } from '~/routing/rules/components/RulesEmpty';
 import { RulesScopeBadges } from '~/routing/rules/components/RulesScopeBadges';
 import { RulesTableGroup } from '~/routing/rules/components/RulesTableGroup';
 import { RulesTableRowActions } from '~/routing/rules/components/RulesTableRowActions';
-import { RULES_COPY } from '~/routing/rules/data/data.copy';
+import { RULES_COPY } from '~/routing/rules/data/copy';
 import {
   buildRuleScopeTrail,
   summarizeRuleAction,

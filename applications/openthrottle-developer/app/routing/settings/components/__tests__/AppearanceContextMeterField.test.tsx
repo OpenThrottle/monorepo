@@ -6,7 +6,7 @@ import { createStore, Provider } from 'jotai';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
-import { APPEARANCE_COPY } from '~/routing/settings/data/data.copy';
+import { APPEARANCE_COPY } from '~/routing/settings/data/copy';
 
 import { AppearanceContextMeterField } from '../AppearanceContextMeterField';
 

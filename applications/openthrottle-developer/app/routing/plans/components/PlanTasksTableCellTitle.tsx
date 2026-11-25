@@ -5,8 +5,8 @@ import { Link } from 'react-router';
 
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { PlanManagedTaskBadge } from '~/routing/plans/components/PlanManagedTaskBadge';
-import { PLAN_INBOX_COPY } from '~/routing/plans/data/data.copy';
-import { MOBILE_CARD_TITLE_CLASS } from '~/routing/plans/data/data.mobile-card';
+import { PLAN_INBOX_COPY } from '~/routing/plans/data/copy';
+import { MOBILE_CARD_TITLE_CLASS } from '~/routing/plans/data/mobile-card';
 import { getRequirementsCount } from '~/routing/plans/utils/formatters';
 
 export interface PlanTasksTableCellTitleProps {

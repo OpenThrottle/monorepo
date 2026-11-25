@@ -4,7 +4,7 @@ import * as React from 'react';
 import { TrajectoryStep } from '~/routing/evals/components/TrajectoryStep';
 import { TrajectorySubagent } from '~/routing/evals/components/TrajectorySubagent';
 import { TRAJECTORY_STEP_BATCH_SIZE } from '~/routing/evals/config/defaults';
-import { TRAJECTORY_TIMELINE_COPY } from '~/routing/evals/data/data.copy';
+import { TRAJECTORY_TIMELINE_COPY } from '~/routing/evals/data/copy';
 import { useTrajectoryStepWindow } from '~/routing/evals/hooks/useTrajectoryStepWindow';
 import type { TrajectoryTimelineView } from '~/routing/evals/types';
 

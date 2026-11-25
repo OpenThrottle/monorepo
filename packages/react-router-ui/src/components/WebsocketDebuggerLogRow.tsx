@@ -1,7 +1,7 @@
 import { Badge } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { WEBSOCKET_DEBUGGER_EVENT_OPTIONS } from '../data/data.websocket-debugger-events';
+import { WEBSOCKET_DEBUGGER_EVENT_OPTIONS } from '../data/websocket-debugger-events';
 import type { WebsocketDebuggerLogEntry } from '../types';
 import {
   formatWebsocketDebuggerPayload,

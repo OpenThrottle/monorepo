@@ -2,7 +2,7 @@ import { Button, cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { Link } from 'react-router';
 
-import { BLOG_COPY } from '~/routing/blog/data/data.copy';
+import { BLOG_COPY } from '~/routing/blog/data/copy';
 import { buildBlogPageHref } from '~/routing/blog/utils/blog-urls';
 
 export interface BlogPaginationProps {

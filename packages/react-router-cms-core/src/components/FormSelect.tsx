@@ -8,7 +8,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { FORM_FIELD_COPY } from '../data/data.copy';
+import { FORM_FIELD_COPY } from '../data/copy';
 import { useFormField } from '../hooks/useFormField';
 import type { CmsFormBaseProps } from '../types/cms-json-schema';
 import { toEnumOptions, toInputValue } from '../utils/form-value';

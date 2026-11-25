@@ -5,7 +5,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { REPOSITORIES_TABLE_COPY } from '~/routing/settings/repositories/data/data.copy';
+import { REPOSITORIES_TABLE_COPY } from '~/routing/settings/repositories/data/copy';
 import {
   mockCheckout,
   mockRepository,

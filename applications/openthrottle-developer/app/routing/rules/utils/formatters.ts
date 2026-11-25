@@ -1,8 +1,8 @@
-import { RULES_COPY } from '~/routing/rules/data/data.copy';
+import { RULES_COPY } from '~/routing/rules/data/copy';
 import {
   ATTACH_PROMPT_ACTION_TYPE,
   DEFAULT_ATTACH_PROMPT_PLACEMENT,
-} from '~/routing/rules/data/data.rule-form-options';
+} from '~/routing/rules/data/rule-form-options';
 
 /**
  * Formatters for the rules routing area — simple, testable pure functions.

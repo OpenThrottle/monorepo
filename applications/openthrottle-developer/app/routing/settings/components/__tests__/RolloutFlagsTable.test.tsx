@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 
 import type { RolloutFlagFieldsFragment } from '~/__generated__/graphql';
 import { RolloutFlagKind } from '~/__generated__/graphql';
-import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
+import { ROLLOUT_COPY } from '~/routing/settings/data/copy';
 
 import type { RolloutFlagsTableProps } from '../RolloutFlagsTable';
 import { RolloutFlagsTable } from '../RolloutFlagsTable';

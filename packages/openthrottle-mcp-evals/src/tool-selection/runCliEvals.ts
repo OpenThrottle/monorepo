@@ -24,7 +24,7 @@ import {
   createCliToolSelectionIteration,
 } from './cli-tool-selection-core.ts';
 import type { RunResult } from './compareBaseline.ts';
-import { CLI_DEFAULT_MODEL_LABEL } from './data/data.cli-drivers.ts';
+import { CLI_DEFAULT_MODEL_LABEL } from './data/cli-drivers.ts';
 import type { ToolSelectionCase, TrialGrade } from './eval-case.ts';
 import type { ToolSelectionRun } from './runEvals.ts';
 import { toToolSelectionRun } from './runEvals.ts';

@@ -10,7 +10,7 @@ import {
   CmsComponentDetailDocument,
   UpdateCmsLibraryComponentDocument,
 } from '~/__generated__/graphql';
-import { COMPONENT_EDITOR_COPY } from '~/routing/components/data/data.copy';
+import { COMPONENT_EDITOR_COPY } from '~/routing/components/data/copy';
 
 const fetchAuthGraphql = vi.fn();
 const fetchPublicGraphql = vi.fn();

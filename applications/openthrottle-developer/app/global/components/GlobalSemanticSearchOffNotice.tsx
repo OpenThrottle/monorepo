@@ -7,8 +7,8 @@ import {
 import { SearchXIcon, X } from 'lucide-react';
 import * as React from 'react';
 
-import { SEMANTIC_SEARCH_OFF_COPY } from '~/global/data/data.copy';
-import { SEMANTIC_SEARCH_OFF_STORAGE_KEY } from '~/global/data/data.semantic-search-off';
+import { SEMANTIC_SEARCH_OFF_COPY } from '~/global/data/copy';
+import { SEMANTIC_SEARCH_OFF_STORAGE_KEY } from '~/global/data/semantic-search-off';
 
 export interface GlobalSemanticSearchOffNoticeProps {
   /** The search result's lexical-fallback `reason`, or null when the result is semantic. */

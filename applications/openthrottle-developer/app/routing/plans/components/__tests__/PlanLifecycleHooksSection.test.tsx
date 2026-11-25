@@ -8,7 +8,7 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import {
   HOOK_LIST_COPY,
   PLAN_LIFECYCLE_HOOKS_COPY,
-} from '~/routing/plans/data/data.copy';
+} from '~/routing/plans/data/copy';
 
 import type { PlanLifecycleHooksSectionProps } from '../PlanLifecycleHooksSection';
 import { PlanLifecycleHooksSection } from '../PlanLifecycleHooksSection';

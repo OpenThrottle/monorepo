@@ -5,7 +5,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { MISSING_WORKTREES_COPY } from '~/routing/settings/repositories/data/data.copy';
+import { MISSING_WORKTREES_COPY } from '~/routing/settings/repositories/data/copy';
 
 import type { PruneMissingWorktreesButtonProps } from '../PruneMissingWorktreesButton';
 import { PruneMissingWorktreesButton } from '../PruneMissingWorktreesButton';

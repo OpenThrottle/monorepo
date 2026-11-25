@@ -4,7 +4,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { X_PROFILE_BASE_URL } from '../../data/data.links';
+import { X_PROFILE_BASE_URL } from '../../data/links';
 import type { TweetProps } from '../Tweet';
 import { Tweet } from '../Tweet';
 

@@ -1,7 +1,7 @@
 import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { CHAT_ROLE_LABEL } from '../data/data.chat-thread-message-role-labels';
+import { CHAT_ROLE_LABEL } from '../data/chat-thread-message-role-labels';
 import type { ChatMessage } from '../types';
 import { formatChatTimestamp } from '../utils/index';
 import { ChatMessageBody } from './ChatMessageBody';

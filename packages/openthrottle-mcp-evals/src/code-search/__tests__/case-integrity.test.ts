@@ -3,8 +3,8 @@ import { resolve } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { CODE_SEARCH_CASES } from '../data/data.cases.ts';
-import { CODE_SEARCH_GATE_CASE_ID } from '../data/data.dataset.ts';
+import { CODE_SEARCH_CASES } from '../data/cases.ts';
+import { CODE_SEARCH_GATE_CASE_ID } from '../data/dataset.ts';
 
 const REPO_ROOT = resolve(import.meta.dirname, '../../../../..');
 

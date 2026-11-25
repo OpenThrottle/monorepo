@@ -6,7 +6,7 @@ import { RepositoryCheckoutActions } from '~/routing/settings/repositories/compo
 import {
   MISSING_WORKTREES_COPY,
   REPOSITORIES_ROW_ACTIONS_COPY,
-} from '~/routing/settings/repositories/data/data.copy';
+} from '~/routing/settings/repositories/data/copy';
 import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/types';
 import { PRUNE_WORKTREE_CHECKOUTS_INTENT } from '~/routing/settings/repositories/utils/missing-rows';
 

@@ -1,7 +1,7 @@
 import { CHAT_COMPOSER_MIC_STATE } from '@openthrottle/react-router-chat';
 import { describe, expect, it } from 'vitest';
 
-import { VOICE_PHASE } from '~/routing/home/data/data.voice';
+import { VOICE_PHASE } from '~/routing/home/data/voice';
 
 import { resolveMicState } from '../resolveMicState';
 

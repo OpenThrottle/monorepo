@@ -3,7 +3,7 @@ import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { SlidersHorizontalIcon } from 'lucide-react';
 import * as React from 'react';
 
-import { SETTINGS_PREFERENCES_COPY } from '~/routing/settings/data/data.copy';
+import { SETTINGS_PREFERENCES_COPY } from '~/routing/settings/data/copy';
 
 export interface SettingsPreferencesIntroProps {
   readonly className?: string;

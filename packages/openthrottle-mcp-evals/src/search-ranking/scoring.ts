@@ -3,7 +3,7 @@
  * chunks surface a case's gold entities, and how high.
  */
 
-import { SEARCH_RANKING_K } from './data/data.dataset.ts';
+import { SEARCH_RANKING_K } from './data/dataset.ts';
 import type {
   CaseScore,
   RankedChunk,

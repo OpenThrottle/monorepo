@@ -1,4 +1,4 @@
-import { CHAT_CONTEXT_METER_COPY } from '../data/data.copy';
+import { CHAT_CONTEXT_METER_COPY } from '../data/copy';
 import { formatTokenCount } from '../usage';
 import type { ChatContextWindowUsage } from './chat-context-window';
 

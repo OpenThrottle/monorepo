@@ -2,8 +2,8 @@ import { Button, Label } from '@openthrottle/react-router-shadcn';
 import { useAtom } from 'jotai';
 import * as React from 'react';
 
-import { onboardingStateAtom } from '~/routing/dashboard/data/data.atom-onboarding';
-import { GET_STARTED_RESTORE_COPY } from '~/routing/dashboard/data/data.copy';
+import { onboardingStateAtom } from '~/routing/dashboard/data/atom-onboarding';
+import { GET_STARTED_RESTORE_COPY } from '~/routing/dashboard/data/copy';
 
 export interface SettingsOnboardingRestoreProps {
   className?: string;

@@ -6,7 +6,7 @@ import {
 import * as React from 'react';
 import { useSearchParams } from 'react-router';
 
-import { REPOSITORIES_TABLE_COPY } from '~/routing/settings/repositories/data/data.copy';
+import { REPOSITORIES_TABLE_COPY } from '~/routing/settings/repositories/data/copy';
 
 export interface RepositoriesTableEmptyProps {
   className?: string;

@@ -4,7 +4,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
+import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/copy';
 
 import type { AddFolderCandidateProps } from '../AddFolderCandidate';
 import { AddFolderCandidate } from '../AddFolderCandidate';

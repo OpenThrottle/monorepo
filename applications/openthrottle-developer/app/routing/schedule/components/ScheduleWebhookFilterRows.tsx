@@ -11,13 +11,13 @@ import { PlusIcon, Trash2Icon } from 'lucide-react';
 import * as React from 'react';
 
 import type { ScheduleWebhookFilterFragment } from '~/__generated__/graphql';
-import { SCHEDULE_WEBHOOK_COPY } from '~/routing/schedule/data/data.copy';
+import { SCHEDULE_WEBHOOK_COPY } from '~/routing/schedule/data/copy';
 import {
   WEBHOOK_FILTER_NO_VALUE_OPS,
   WEBHOOK_FILTER_OP,
   WEBHOOK_FILTER_OP_OPTIONS,
   WEBHOOK_LIMITS,
-} from '~/routing/schedule/data/data.webhook';
+} from '~/routing/schedule/data/webhook';
 
 export interface ScheduleWebhookFilterRowsProps {
   /** The saved filters to start from; empty on create. */

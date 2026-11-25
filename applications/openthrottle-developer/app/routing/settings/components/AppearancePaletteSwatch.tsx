@@ -3,7 +3,7 @@ import { cn } from '@openthrottle/react-router-shadcn';
 import type { ResolvedThemeMode } from '@openthrottle/react-router-utils';
 import * as React from 'react';
 
-import { APPEARANCE_SWATCH_TOKEN_NAMES } from '~/routing/settings/data/data.appearance';
+import { APPEARANCE_SWATCH_TOKEN_NAMES } from '~/routing/settings/data/appearance';
 
 export interface AppearancePaletteSwatchProps {
   isSelected: boolean;

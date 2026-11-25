@@ -6,10 +6,7 @@ import * as React from 'react';
 import type { Route } from '@/app/routes/+types/docs.$';
 import { SITE_TITLE } from '~/global/config/settings';
 import { useDocsFeatureFlags } from '~/global/hooks/useDocsFeatureFlags';
-import {
-  docsBySlug,
-  docsSequence,
-} from '~/routing/docs/data/data.docs-navigation';
+import { docsBySlug, docsSequence } from '~/routing/docs/data/docs-navigation';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

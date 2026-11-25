@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { AGENT_NOT_SIGNED_IN_SUFFIX } from '../../data/data.copy';
+import { AGENT_NOT_SIGNED_IN_SUFFIX } from '../../data/copy';
 import {
   buildChatOptionsResponse,
   toAgentChatOptions,

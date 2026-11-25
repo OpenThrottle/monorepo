@@ -10,7 +10,7 @@ import {
 import * as React from 'react';
 import { Link } from 'react-router';
 
-import { OAUTH_CONSENT_UNAVAILABLE_COPY } from '~/routing/oauth/data/data.copy';
+import { OAUTH_CONSENT_UNAVAILABLE_COPY } from '~/routing/oauth/data/copy';
 
 export interface ConsentUnavailableProps {
   className?: string;

@@ -1,7 +1,7 @@
 import { Badge, cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { LANDING_ROADMAP } from '~/routing/home/data/data.landing';
+import { LANDING_ROADMAP } from '~/routing/home/data/landing';
 
 export interface LandingRoadmapProps {
   className?: string;

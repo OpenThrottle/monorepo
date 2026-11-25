@@ -7,7 +7,7 @@ import { describe, expect, test, vi } from 'vitest';
 
 import type { TimelineSpanRowFragment } from '~/__generated__/graphql';
 import { TimelineSpanKind } from '~/__generated__/graphql';
-import { TIMELINE_SPAN_TOOLTIP_COPY } from '~/routing/timeline/data/data.copy';
+import { TIMELINE_SPAN_TOOLTIP_COPY } from '~/routing/timeline/data/copy';
 import { createTimelineScale } from '~/routing/timeline/utils/scale';
 import { spanRect } from '~/routing/timeline/utils/span-geometry';
 

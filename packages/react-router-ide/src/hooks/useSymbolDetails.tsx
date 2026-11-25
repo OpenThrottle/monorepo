@@ -1,10 +1,7 @@
 import * as React from 'react';
 import { useFetcher } from 'react-router';
 
-import type {
-  ExportedSymbol,
-  IdeSymbolDetails,
-} from '../data/data.view-models';
+import type { ExportedSymbol, IdeSymbolDetails } from '../data/view-models';
 
 export interface UseSymbolDetailsOptions {
   /** The resource-route path that resolves a symbol's definition + references. */

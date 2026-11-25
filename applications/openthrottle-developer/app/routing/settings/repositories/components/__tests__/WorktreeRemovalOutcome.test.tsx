@@ -3,7 +3,7 @@ import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
 import { PlanRunWorktreeTeardownOutcome } from '~/__generated__/graphql';
-import { REMOVE_PLAN_RUN_WORKTREE_COPY } from '~/routing/settings/repositories/data/data.copy';
+import { REMOVE_PLAN_RUN_WORKTREE_COPY } from '~/routing/settings/repositories/data/copy';
 
 import { WorktreeRemovalOutcome } from '../WorktreeRemovalOutcome';
 

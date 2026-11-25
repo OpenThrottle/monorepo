@@ -5,7 +5,7 @@ import { Link } from 'react-router';
 import {
   USAGE_COMPLETION_ATTRIBUTION_CAVEAT,
   USAGE_DAILY_STATS_SERIES,
-} from '~/routing/usage/data/data.daily-stats-series-glossary';
+} from '~/routing/usage/data/daily-stats-series-glossary';
 
 export interface UsageDailyActivityOverviewProps {
   rangeDays: number;

@@ -6,7 +6,7 @@
  * component-primitive-shape R4.
  */
 
-import { PLAN_RUN_WORKSPACE_SELECTOR_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_RUN_WORKSPACE_SELECTOR_COPY } from '~/routing/plans/data/copy';
 
 export const ROOT_VALUE = 'root';
 export const CUSTOM_VALUE = 'custom';

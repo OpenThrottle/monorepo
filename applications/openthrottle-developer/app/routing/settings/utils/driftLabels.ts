@@ -4,7 +4,7 @@
  * R4; the repositories table now renders them per row.
  */
 
-import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
+import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/copy';
 
 export interface CheckoutDrift {
   branchMoved: boolean;

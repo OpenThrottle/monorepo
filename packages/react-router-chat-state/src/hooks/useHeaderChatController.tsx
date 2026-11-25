@@ -23,9 +23,9 @@ import * as React from 'react';
 import { useFetcher } from 'react-router';
 
 import { capabilitiesForChatOption } from '../config/chat-capabilities';
-import { chatContextMeterAtom } from '../data/data.atom.chat-context-meter';
-import { chatToolbarStateAtom } from '../data/data.atom.chat-toolbar';
-import { EMPTY_CHAT_OPTIONS } from '../data/data.chat-options';
+import { chatContextMeterAtom } from '../data/atom.chat-context-meter';
+import { chatToolbarStateAtom } from '../data/atom.chat-toolbar';
+import { EMPTY_CHAT_OPTIONS } from '../data/chat-options';
 import type { HeaderChatOptionsCache } from '../types';
 import { buildChatTurnFields } from '../utils/buildChatTurnFields';
 import type { ChatOptionsResponse } from '../utils/chat-discovery-options';

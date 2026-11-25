@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ProjectPlanTaskRowFragment } from '~/__generated__/graphql';
 import { PROJECT_PLAN_TASKS_VISIBLE_LIMIT } from '~/routing/projects/config/projects.defaults';
-import { PROJECT_PLAN_TASKS_COPY } from '~/routing/projects/data/data.copy';
+import { PROJECT_PLAN_TASKS_COPY } from '~/routing/projects/data/copy';
 
 import type { ProjectPlanTasksProps } from '../ProjectPlanTasks';
 import { ProjectPlanTasks } from '../ProjectPlanTasks';

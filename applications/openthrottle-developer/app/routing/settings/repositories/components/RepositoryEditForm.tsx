@@ -16,7 +16,7 @@ import * as React from 'react';
 import { Form, Link, useNavigation } from 'react-router';
 
 import type { WorkspaceRepositoryFieldsFragment } from '~/__generated__/graphql';
-import { WORKSPACE_REPOSITORY_DETAIL_COPY } from '~/routing/settings/data/data.copy';
+import { WORKSPACE_REPOSITORY_DETAIL_COPY } from '~/routing/settings/data/copy';
 import type { ProjectOption } from '~/routing/settings/repositories/components/RepositoryProjectSelect';
 import { RepositoryProjectSelect } from '~/routing/settings/repositories/components/RepositoryProjectSelect';
 import { RepositoryWorktreeOverlayToggle } from '~/routing/settings/repositories/components/RepositoryWorktreeOverlayToggle';

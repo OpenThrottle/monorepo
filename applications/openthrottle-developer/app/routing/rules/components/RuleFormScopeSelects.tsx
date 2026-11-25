@@ -12,8 +12,8 @@ import type {
   RuleFormProjectOption,
   RuleFormRepositoryOption,
 } from '~/routing/rules/components/RuleForm';
-import { RULES_COPY } from '~/routing/rules/data/data.copy';
-import { ANY } from '~/routing/rules/data/data.rule-form-options';
+import { RULES_COPY } from '~/routing/rules/data/copy';
+import { ANY } from '~/routing/rules/data/rule-form-options';
 
 export interface RuleFormScopeSelectsProps {
   readonly onProjectChange: (projectId: string) => void;

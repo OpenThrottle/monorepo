@@ -6,7 +6,7 @@ import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
 import type { UsageTokenUsageRowFragment } from '~/__generated__/graphql';
-import { TOKEN_USAGE_SOURCES } from '~/routing/usage/data/data.token-usage-copy';
+import { TOKEN_USAGE_SOURCES } from '~/routing/usage/data/token-usage-copy';
 
 import type { UsageTokenUsageSourcesProps } from '../UsageTokenUsageSources';
 import { UsageTokenUsageSources } from '../UsageTokenUsageSources';

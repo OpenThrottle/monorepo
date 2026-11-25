@@ -15,7 +15,7 @@ import {
   TRAJECTORY_ARGUMENTS_PREVIEW_CHARS,
   TRAJECTORY_CLAMP_LINES,
 } from '~/routing/evals/config/defaults';
-import { TRAJECTORY_TIMELINE_COPY } from '~/routing/evals/data/data.copy';
+import { TRAJECTORY_TIMELINE_COPY } from '~/routing/evals/data/copy';
 import type { TrajectoryToolCallView } from '~/routing/evals/types';
 import {
   formatTrajectoryArguments,

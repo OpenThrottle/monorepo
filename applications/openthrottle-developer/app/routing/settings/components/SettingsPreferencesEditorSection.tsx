@@ -20,12 +20,12 @@ import {
   WORKSPACE_EDITOR_LABELS,
   WORKSPACE_EDITOR_OPTIONS,
 } from '~/routing/settings/config/workspace-editors';
-import { SETTINGS_PREFERENCES_COPY } from '~/routing/settings/data/data.copy';
-import type { PreferencesActionResult } from '~/routing/settings/data/data.preferences';
+import { SETTINGS_PREFERENCES_COPY } from '~/routing/settings/data/copy';
+import type { PreferencesActionResult } from '~/routing/settings/data/preferences';
 import {
   PREFERENCES_INTENTS,
   SYSTEM_DEFAULT_EDITOR_VALUE,
-} from '~/routing/settings/data/data.preferences';
+} from '~/routing/settings/data/preferences';
 import {
   isDefaultEditorEnabled,
   toPreferencesFeedback,

@@ -13,8 +13,8 @@
  */
 
 import type { UsageSkillUsageBySkillFragment } from '~/__generated__/graphql';
-import type { SkillPresence } from '~/routing/usage/data/data.skill-presence';
-import { SKILL_PRESENCE } from '~/routing/usage/data/data.skill-presence';
+import type { SkillPresence } from '~/routing/usage/data/skill-presence';
+import { SKILL_PRESENCE } from '~/routing/usage/data/skill-presence';
 import { classifySkillUsagePresence } from '~/routing/usage/utils/classifySkillUsagePresence';
 
 /** A leaderboard row with its presence already resolved by the caller. */

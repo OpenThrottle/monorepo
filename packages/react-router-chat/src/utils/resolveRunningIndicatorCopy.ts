@@ -1,9 +1,9 @@
-import type { RunningIndicatorCopy } from '../data/data.chat-run-phase-copy';
+import type { RunningIndicatorCopy } from '../data/chat-run-phase-copy';
 import {
   CHAT_RUN_PHASE_LABEL,
   RUNNING_INDICATOR_SLOW_HINT,
   RUNNING_INDICATOR_SLOW_HINT_AFTER_MS,
-} from '../data/data.chat-run-phase-copy';
+} from '../data/chat-run-phase-copy';
 import type { ChatRunPhaseValue } from '../types';
 import { CHAT_RUN_PHASE } from '../types';
 

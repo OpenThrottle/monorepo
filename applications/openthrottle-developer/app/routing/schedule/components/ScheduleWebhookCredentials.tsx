@@ -9,7 +9,7 @@ import {
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import * as React from 'react';
 
-import { SCHEDULE_WEBHOOK_COPY } from '~/routing/schedule/data/data.copy';
+import { SCHEDULE_WEBHOOK_COPY } from '~/routing/schedule/data/copy';
 import { buildWebhookUrl } from '~/routing/schedule/utils/buildWebhookUrl';
 import type { WebhookCredentials } from '~/routing/schedule/utils/getWebhookCredentials';
 

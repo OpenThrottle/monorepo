@@ -4,7 +4,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { PLAN_TASK_NOT_FOUND_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_TASK_NOT_FOUND_COPY } from '~/routing/plans/data/copy';
 
 import type { PlanTaskNotFoundProps } from '../PlanTaskNotFound';
 import { PlanTaskNotFound } from '../PlanTaskNotFound';

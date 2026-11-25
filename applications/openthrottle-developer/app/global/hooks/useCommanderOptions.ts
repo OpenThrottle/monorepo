@@ -12,7 +12,7 @@ import { buildCommanderGroupsFromNavigation } from '~/global/utils/navigation-to
 /**
  * @description Commander groups for the developer app, derived from the same
  * navigation record that drives the global sidebar (`dataNavigationV2` /
- * `dataNavigationGuest`) — so a link added in `data.navigation.ts` shows up in
+ * `dataNavigationGuest`) — so a link added in `data/navigation.ts` shows up in
  * ⌘K with no second list to maintain. Beta/disabled links follow the sidebar's
  * feature-flag rules; items navigate via `useNavigate`.
  */

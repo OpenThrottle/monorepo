@@ -4,7 +4,7 @@ import * as React from 'react';
 import { Link } from 'react-router';
 
 import { isBlogEnabled } from '~/global/utils/blog-enabled';
-import { LANDING_NAV } from '~/routing/home/data/data.landing';
+import { LANDING_NAV } from '~/routing/home/data/landing';
 
 export interface LandingNavProps {
   className?: string;

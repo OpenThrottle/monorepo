@@ -1,7 +1,7 @@
 import { Badge, Button, cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { LINKED_ARTIFACTS_PANEL_COPY } from '~/routing/plans/data/data.copy';
+import { LINKED_ARTIFACTS_PANEL_COPY } from '~/routing/plans/data/copy';
 import {
   getTypeFilterLabel,
   getVerificationFilterLabel,

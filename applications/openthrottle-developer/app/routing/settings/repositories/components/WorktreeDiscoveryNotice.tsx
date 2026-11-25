@@ -10,7 +10,7 @@ import * as React from 'react';
 import { Link } from 'react-router';
 
 import type { DiscoveredWorktreesScanFragment } from '~/__generated__/graphql';
-import { WORKTREE_DISCOVERY_COPY } from '~/routing/settings/repositories/data/data.copy';
+import { WORKTREE_DISCOVERY_COPY } from '~/routing/settings/repositories/data/copy';
 import { useRescanWorktrees } from '~/routing/settings/repositories/hooks/useRescanWorktrees';
 import { configuredRoots } from '~/routing/settings/repositories/utils/configuredRoots';
 import { summarizeDiscovery } from '~/routing/settings/repositories/utils/discovery-problems';

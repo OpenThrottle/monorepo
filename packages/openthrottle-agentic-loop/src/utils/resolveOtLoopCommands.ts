@@ -8,7 +8,7 @@ import {
   NX_DEFAULT_TARGETS,
   OT_LOOP_CONFIG_PATH,
   OT_LOOP_NEEDS_VALIDATION_MESSAGE,
-} from '../data/data.constants.ts';
+} from '../data/constants.ts';
 import type {
   OtLoopTuning,
   ResolveOtLoopCommandsResult,

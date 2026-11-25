@@ -19,7 +19,7 @@ import { SkillTagVocabularyManager } from '~/routing/skills/components/SkillTagV
 import {
   SKILL_AVAILABILITY_COPY,
   SKILL_VOCABULARY_COPY,
-} from '~/routing/skills/data/data.copy';
+} from '~/routing/skills/data/copy';
 import type { SkillTagValue } from '~/routing/skills/utils/skill-availability';
 
 type HandleData = Route.ComponentProps['loaderData'];

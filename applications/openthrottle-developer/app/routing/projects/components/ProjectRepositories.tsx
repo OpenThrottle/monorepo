@@ -5,7 +5,7 @@ import * as React from 'react';
 import { useFetcher } from 'react-router';
 
 import type { ProjectRepositoryRowFragment } from '~/__generated__/graphql';
-import { PROJECT_REPOSITORIES_COPY } from '~/routing/projects/data/data.copy';
+import { PROJECT_REPOSITORIES_COPY } from '~/routing/projects/data/copy';
 
 export interface ProjectRepositoriesProps {
   readonly available: readonly ProjectRepositoryRowFragment[];

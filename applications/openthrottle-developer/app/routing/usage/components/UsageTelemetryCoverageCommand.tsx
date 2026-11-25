@@ -2,7 +2,7 @@ import { cn } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import * as React from 'react';
 
-import { TELEMETRY_COVERAGE_COPY } from '~/routing/usage/data/data.telemetry-coverage-copy';
+import { TELEMETRY_COVERAGE_COPY } from '~/routing/usage/data/telemetry-coverage-copy';
 
 export interface UsageTelemetryCoverageCommandProps {
   readonly className?: string;

@@ -5,7 +5,7 @@ import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
 
 import type { RepositoryCheckoutFieldsFragment } from '~/__generated__/graphql';
-import { REPOSITORY_AGENT_CONFIG_TRUST_COPY } from '~/routing/settings/repositories/data/data.copy';
+import { REPOSITORY_AGENT_CONFIG_TRUST_COPY } from '~/routing/settings/repositories/data/copy';
 import { mockCheckout } from '~/routing/settings/repositories/testing/mock-repositories';
 
 import { RepositoryAgentConfigTrust } from '../RepositoryAgentConfigTrust';

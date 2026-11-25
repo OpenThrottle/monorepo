@@ -1,5 +1,5 @@
-import type { ConfigObject } from '~/global/data/data.appearance-config';
-import { DEFAULT_APPEARANCE_CONFIG } from '~/global/data/data.appearance-config';
+import type { ConfigObject } from '~/global/data/appearance-config';
+import { DEFAULT_APPEARANCE_CONFIG } from '~/global/data/appearance-config';
 
 /**
  * @description How many appearance fields differ from

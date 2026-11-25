@@ -18,7 +18,7 @@ import * as React from 'react';
 import { useNavigate } from 'react-router';
 
 import type { RepositoryOption } from '~/routing/home/utils/models.server';
-import { SKILL_RUN_COPY } from '~/routing/skills/data/data.copy';
+import { SKILL_RUN_COPY } from '~/routing/skills/data/copy';
 import { useRunSkillDialog } from '~/routing/skills/hooks/useRunSkillDialog';
 import type { RunSkillPayload } from '~/routing/skills/types';
 

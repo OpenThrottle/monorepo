@@ -8,7 +8,7 @@ import type {
   PlanInboxMessageFragment,
   PlanTaskRowFragment,
 } from '~/__generated__/graphql';
-import { PLAN_INBOX_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_INBOX_COPY } from '~/routing/plans/data/copy';
 
 import type { PlanInboxPanelProps } from '../PlanInboxPanel';
 import { PlanInboxPanel } from '../PlanInboxPanel';

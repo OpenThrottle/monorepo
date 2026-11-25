@@ -19,8 +19,8 @@ import {
 import {
   FRAGMENT_EDITOR_COPY,
   FRAGMENT_EDITOR_UNAVAILABLE_COPY,
-} from '~/routing/fragments/data/data.copy';
-import { FRAGMENT_INTENT } from '~/routing/fragments/data/data.intents';
+} from '~/routing/fragments/data/copy';
+import { FRAGMENT_INTENT } from '~/routing/fragments/data/intents';
 
 const fetchAuthGraphql = vi.fn();
 const fetchPublicGraphql = vi.fn();

@@ -5,7 +5,7 @@ import {
 import { KeyRoundIcon } from 'lucide-react';
 import * as React from 'react';
 
-import { SETTINGS_KEYS_COPY } from '~/routing/settings/data/data.copy';
+import { SETTINGS_KEYS_COPY } from '~/routing/settings/data/copy';
 
 export interface SettingsKeysIntroductionProps {
   className?: string;

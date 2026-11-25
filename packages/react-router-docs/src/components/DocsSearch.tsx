@@ -14,7 +14,7 @@ import { SearchIcon } from 'lucide-react';
 import * as React from 'react';
 import { useNavigate } from 'react-router';
 
-import { DOCS_SECTION_HEADINGS } from '../data/data.copy';
+import { DOCS_SECTION_HEADINGS } from '../data/copy';
 import type { DocEntry } from '../utils/buildDocsManifest';
 import { docEntryKey } from '../utils/docEntryKey';
 import { docEntryHref, searchDocEntries } from '../utils/searchDocs';

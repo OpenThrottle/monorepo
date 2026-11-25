@@ -4,7 +4,7 @@ import * as React from 'react';
 
 import type { DiscoveredWorktreesScanFragment } from '~/__generated__/graphql';
 import { WorktreeDiscoveryNotice } from '~/routing/settings/repositories/components/WorktreeDiscoveryNotice';
-import { WORKTREE_DISCOVERY_COPY } from '~/routing/settings/repositories/data/data.copy';
+import { WORKTREE_DISCOVERY_COPY } from '~/routing/settings/repositories/data/copy';
 import { useRescanWorktrees } from '~/routing/settings/repositories/hooks/useRescanWorktrees';
 import type { RepositoriesDiscoveryStatus } from '~/routing/settings/repositories/types';
 

@@ -1,5 +1,5 @@
-import { LINKED_ARTIFACTS_PANEL_COPY } from '~/routing/plans/data/data.copy';
-import { LINKED_ARTIFACT_GROUP_LABELS } from '~/routing/plans/data/data.linked-artifacts-panel-groups';
+import { LINKED_ARTIFACTS_PANEL_COPY } from '~/routing/plans/data/copy';
+import { LINKED_ARTIFACT_GROUP_LABELS } from '~/routing/plans/data/linked-artifacts-panel-groups';
 import { ARTIFACT_FILTER_ALL } from '~/routing/plans/utils/summarizeLinkedArtifacts';
 
 /**

@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import type { RepoPersonaEntry } from '~/routing/agents/data/data.repo-personas-registry';
+import type { RepoPersonaEntry } from '~/routing/agents/data/repo-personas-registry';
 import { getRepoPersonasRegistryCount } from '~/routing/agents/utils/getRepoPersonasRegistryCount';
 
 export interface PersonasStatsProps {

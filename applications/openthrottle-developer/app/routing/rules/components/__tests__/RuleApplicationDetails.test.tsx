@@ -3,7 +3,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, describe, expect, test } from 'vitest';
 
-import { RULE_DETAIL_COPY } from '~/routing/rules/data/data.copy';
+import { RULE_DETAIL_COPY } from '~/routing/rules/data/copy';
 
 import { RuleApplicationDetails } from '../RuleApplicationDetails';
 

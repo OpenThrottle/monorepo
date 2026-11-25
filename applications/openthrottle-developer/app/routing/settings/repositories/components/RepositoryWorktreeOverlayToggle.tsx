@@ -2,7 +2,7 @@ import { Label, Switch } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import type { RepositoryCheckoutFieldsFragment } from '~/__generated__/graphql';
-import { WORKSPACE_REPOSITORY_DETAIL_COPY } from '~/routing/settings/data/data.copy';
+import { WORKSPACE_REPOSITORY_DETAIL_COPY } from '~/routing/settings/data/copy';
 
 export interface RepositoryWorktreeOverlayToggleProps {
   /** The user's checkouts of the repository; the switch renders only when one is foreign. */

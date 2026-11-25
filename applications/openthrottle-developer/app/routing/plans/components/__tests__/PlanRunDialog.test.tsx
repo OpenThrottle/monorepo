@@ -18,7 +18,7 @@ import {
 import {
   PLAN_RUN_OT_LOOP_COPY,
   PLAN_SCHEDULE_CONFIRM_COPY,
-} from '~/routing/plans/data/data.copy';
+} from '~/routing/plans/data/copy';
 import { formatPlanScheduledFor } from '~/routing/plans/utils/formatPlanScheduledFor';
 
 import { buildPlanRunConfigJson } from '../../testing/buildPlanRunConfigJson';

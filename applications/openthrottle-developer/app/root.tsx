@@ -91,13 +91,13 @@ import {
   USER_PREFERENCES_ROUTE_PATH,
 } from '~/global/config/DefaultEditorContext';
 import { SITE_TITLE } from '~/global/config/settings';
-import { CONFIG_STORAGE_KEY } from '~/global/data/data.appearance-config';
-import { configAtom } from '~/global/data/data.atom-config';
-import { userAtom } from '~/global/data/data.atom-user';
+import { CONFIG_STORAGE_KEY } from '~/global/data/appearance-config';
+import { configAtom } from '~/global/data/atom-config';
+import { userAtom } from '~/global/data/atom-user';
 import {
   dataNavigationGuest,
   dataNavigationV2,
-} from '~/global/data/data.navigation';
+} from '~/global/data/navigation';
 import { useBackgroundActivities } from '~/global/hooks/useBackgroundActivities';
 import { useCommanderOptions } from '~/global/hooks/useCommanderOptions';
 import { useHydratedAppearanceConfig } from '~/global/hooks/useHydratedAppearanceConfig';

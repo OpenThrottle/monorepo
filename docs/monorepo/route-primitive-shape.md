@@ -197,7 +197,7 @@ subtree the `folders` generator scaffolds (see
   `~/routing/skills/config/`.
 - **Hardcoded data** (option lists, column definitions, static arrays/maps) →
   `~/routing/<area>/data/`.
-- **Copy / user-facing strings** → `~/routing/<area>/data/data.copy.ts`.
+- **Copy / user-facing strings** → `~/routing/<area>/data/copy.ts`.
 - **Stateful / behavioral logic** (state, derived values, effects, handlers
   that outgrow the Component) → a co-located `use<Name>` hook in
   `~/routing/<area>/hooks/`.

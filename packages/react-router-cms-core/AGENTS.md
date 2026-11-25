@@ -18,8 +18,8 @@ one-way: cms-ui must never import cms-core.
   `CmsFragmentRecord`, `CmsSchema`), `CmsJsonSchema`, `CmsReorderListSource`, and the render/form
   types in `cms-render.ts` (`CmsComponentRegistry`, `CmsRenderProps`, `CmsFormChildrenBindings`, …).
 - [src/config/](src/config/) — `CMS_STATUS`, `CMS_DEVICE` (`as const` objects).
-- [src/data/](src/data/) — Jotai atoms (`data.atom.*.ts`), `CoreFormContext`, copy, preview sizes,
-  `CORE_COMPONENTS` (`data.registry.ts`), `FORM_FIELDS` (`data.form-fields.ts`, internal) and
+- [src/data/](src/data/) — Jotai atoms (`atom.*.ts`), `CoreFormContext`, copy, preview sizes,
+  `CORE_COMPONENTS` (`registry.ts`), `FORM_FIELDS` (`form-fields.ts`, internal) and
   `mock.*.ts` fixtures (specs only, not exported).
 - [src/utils/](src/utils/) — breadcrumbs, reorder, schema (`getSchemaProperty`, `shrinkSchema`, …),
   `getFormFieldKind`, the `read*` property narrowers and the per-block `to*Props` adapters.
@@ -30,7 +30,7 @@ one-way: cms-ui must never import cms-core.
 
 ## Invariants & gotchas
 
-- **`src/cms-safelist.css` is generated** from [src/data/data.cms-safelist.ts](src/data/data.cms-safelist.ts)
+- **`src/cms-safelist.css` is generated** from [src/data/cms-safelist.ts](src/data/cms-safelist.ts)
   by [src/utils/buildCmsSafelist.ts](src/utils/buildCmsSafelist.ts) and drift-checked by its
   `toMatchFileSnapshot` spec — never hand-edit it; regenerate with
   `pnpm nx run @openthrottle/react-router-cms-core:test -- -u buildCmsSafelist`. Why it exists and
@@ -70,8 +70,8 @@ one-way: cms-ui must never import cms-core.
 - **No app routes or form intents in the package.** Hrefs (`getFragmentHref`, `addHref`), the submit
   `intent`, the remove/reorder handlers and the phone-preview `previewUrl` all come from the caller.
 - **`src/index.ts` is the only barrel.** Import concrete files inside the package — sub-folder
-  barrels were removed, and `data.registry.ts` / `data.form-fields.ts` import components that
-  import `data/data.copy.ts`, so a `data/` barrel would reintroduce an import cycle. Stories live in
+  barrels were removed, and `registry.ts` / `form-fields.ts` import components that
+  import `data/copy.ts`, so a `data/` barrel would reintroduce an import cycle. Stories live in
   `react-router-shadcn`, not here.
 - The form edits `atomFragmentDraft` (properties only), which replaces upstream's untyped
   `atomComponent`. The app seeds it with the selected fragment's properties; `CoreFormRenderer`

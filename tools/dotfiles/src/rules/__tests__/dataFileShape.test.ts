@@ -11,38 +11,72 @@ RuleTester.itOnly = it.only;
 
 const ruleTester = new RuleTester();
 
-const DATA_FILE = 'app/routing/settings/data/data.agent-clis.ts';
+const DATA_FILE = 'app/routing/settings/data/agent-clis.ts';
 
-const BASENAME = 'data.agent-clis.ts';
+const BASENAME = 'agent-clis.ts';
 const VALUES = `export const AGENT_CLIS = ['claude', 'codex'] as const;\n`;
 
 ruleTester.run('data-file-shape', dataFileShape, {
   invalid: [
-    // A suffix where the prefix belongs.
+    // The old `data.` prefix repeats the folder.
+    {
+      code: VALUES,
+      errors: [
+        {
+          data: { basename: 'data.copy.ts', expected: 'copy.ts' },
+          messageId: 'misnamed',
+        },
+      ],
+      filename: 'src/data/data.copy.ts',
+    },
+    // A `.data` suffix repeats it too.
     {
       code: VALUES,
       errors: [
         {
           data: {
             basename: 'mcp-connectors.data.ts',
-            expected: 'data.mcp-connectors.ts',
+            expected: 'mcp-connectors.ts',
           },
           messageId: 'misnamed',
         },
       ],
       filename: 'app/routing/settings/data/mcp-connectors.data.ts',
     },
-    // No prefix at all.
     {
       code: VALUES,
       errors: [{ messageId: 'misnamed' }],
-      filename: 'src/data/chat-run-phase-copy.ts',
+      filename: 'src/data/copy.data.ts',
     },
-    // The prefix, but not kebab-case.
+    // Not kebab-case.
+    {
+      code: VALUES,
+      errors: [
+        {
+          data: { basename: 'agentClis.ts', expected: 'agent-clis.ts' },
+          messageId: 'misnamed',
+        },
+      ],
+      filename: 'src/data/agentClis.ts',
+    },
     {
       code: VALUES,
       errors: [{ messageId: 'misnamed' }],
-      filename: 'src/data/data.agentClis.ts',
+      filename: 'src/data/Copy.ts',
+    },
+    // A fixture keeps its `mock.` prefix in the suggestion.
+    {
+      code: VALUES,
+      errors: [
+        {
+          data: {
+            basename: 'mock.somePlans.ts',
+            expected: 'mock.some-plans.ts',
+          },
+          messageId: 'misnamed',
+        },
+      ],
+      filename: 'src/data/mock.somePlans.ts',
     },
     // An exported function declaration.
     {
@@ -103,7 +137,7 @@ ruleTester.run('data-file-shape', dataFileShape, {
     {
       code: `export const toRow = (id: string): { id: string } => { return { id }; };\n`,
       errors: [{ messageId: 'misnamed' }, { messageId: 'exportsFunction' }],
-      filename: 'app/routing/settings/data/url-matrix-rows.ts',
+      filename: 'app/routing/settings/data/data.url-matrix-rows.ts',
     },
   ],
   valid: [
@@ -112,13 +146,18 @@ ruleTester.run('data-file-shape', dataFileShape, {
     // Copy and fixtures.
     {
       code: `export const COPY = { title: \`Settings\` } as const;\n`,
-      filename: 'src/data/data.copy.ts',
+      filename: 'src/data/copy.ts',
     },
     { code: VALUES, filename: 'src/data/mock.plans.ts' },
+    // Kebab-case and dotted kind segments.
+    { code: VALUES, filename: 'src/data/workspace-jump-links.ts' },
+    { code: VALUES, filename: 'src/data/atom.chat-toolbar.ts' },
+    // `data` inside a word is not a repeated folder name.
+    { code: VALUES, filename: 'src/data/metadata-fields.ts' },
     // `.tsx` when the data needs JSX.
     {
       code: `export const ICON = <svg />;\n`,
-      filename: 'src/data/data.icons.tsx',
+      filename: 'src/data/workspace-jump-links.tsx',
       languageOptions: { parserOptions: { ecmaFeatures: { jsx: true } } },
     },
     // An object holding a method is a value, not an exported function; a
@@ -134,7 +173,7 @@ ruleTester.run('data-file-shape', dataFileShape, {
     },
     // A barrel is not a data file, so it keeps its name.
     {
-      code: `export * from './data.agent-clis';\n`,
+      code: `export * from './agent-clis';\n`,
       filename: 'src/data/index.ts',
     },
     // Not directly under `data/`: neither check applies.

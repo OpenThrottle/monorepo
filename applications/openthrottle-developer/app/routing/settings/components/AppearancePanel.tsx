@@ -4,8 +4,8 @@ import * as React from 'react';
 
 import { AppearancePreview } from '~/routing/settings/components/AppearancePreview';
 import { AppearanceSection } from '~/routing/settings/components/AppearanceSection';
-import { APPEARANCE_SECTIONS } from '~/routing/settings/data/data.appearance';
-import { APPEARANCE_COPY } from '~/routing/settings/data/data.copy';
+import { APPEARANCE_SECTIONS } from '~/routing/settings/data/appearance';
+import { APPEARANCE_COPY } from '~/routing/settings/data/copy';
 
 export interface AppearancePanelProps {}
 

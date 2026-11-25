@@ -15,7 +15,7 @@ import * as React from 'react';
 import { useSearchParams } from 'react-router';
 
 import { SEARCH_BASE_PATH } from '~/routing/search/config';
-import { SEARCH_TOOLBAR_COPY } from '~/routing/search/data/data.copy';
+import { SEARCH_TOOLBAR_COPY } from '~/routing/search/data/copy';
 
 export interface SearchToolbarProps {
   /** Later controls (source filter, semantic/lexical mode indicator) render here, right-aligned. */

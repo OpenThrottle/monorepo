@@ -8,7 +8,7 @@ import { PlanTasksEmpty } from '~/routing/plans/components/PlanTasksEmpty';
 import {
   MOBILE_CARD_ROW_CLASS,
   MOBILE_CARD_TABLE_CLASS,
-} from '~/routing/plans/data/data.mobile-card';
+} from '~/routing/plans/data/mobile-card';
 import { buildPlansTableColumns } from '~/routing/plans/utils/buildPlansTableColumns';
 
 export interface PlansTableProps {

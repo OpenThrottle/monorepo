@@ -6,7 +6,7 @@ import type {
   WorkspaceRepositoryFieldsFragment,
 } from '~/__generated__/graphql';
 import { WorktreeDiscoveryProblemKind } from '~/__generated__/graphql';
-import { REPOSITORIES_TABLE_COPY } from '~/routing/settings/repositories/data/data.copy';
+import { REPOSITORIES_TABLE_COPY } from '~/routing/settings/repositories/data/copy';
 import type { RepositoryCheckoutRow } from '~/routing/settings/repositories/types';
 
 /** The `kind` discriminator the server writes for worktree checkouts. */

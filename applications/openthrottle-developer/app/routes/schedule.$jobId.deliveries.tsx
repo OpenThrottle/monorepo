@@ -15,7 +15,7 @@ import type { Route } from '@/app/routes/+types/schedule.$jobId.deliveries';
 import { ScheduledAgentJobWebhookDeliveriesDocument } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
 import { ScheduleWebhookDeliveries } from '~/routing/schedule/components/ScheduleWebhookDeliveries';
-import { SCHEDULE_WEBHOOK_COPY } from '~/routing/schedule/data/data.copy';
+import { SCHEDULE_WEBHOOK_COPY } from '~/routing/schedule/data/copy';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

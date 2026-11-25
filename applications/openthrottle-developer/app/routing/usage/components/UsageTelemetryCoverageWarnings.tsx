@@ -12,7 +12,7 @@ import {
   TELEMETRY_COVERAGE_COMMANDS,
   TELEMETRY_COVERAGE_COPY,
   TELEMETRY_WARNING_KINDS,
-} from '~/routing/usage/data/data.telemetry-coverage-copy';
+} from '~/routing/usage/data/telemetry-coverage-copy';
 import type { TelemetryCoverageWarningEntry } from '~/routing/usage/utils/telemetry-coverage';
 import {
   groupTelemetryWarnings,

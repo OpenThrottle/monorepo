@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { CMS_SAFELIST_GROUPS } from '../../data/data.cms-safelist';
+import { CMS_SAFELIST_GROUPS } from '../../data/cms-safelist';
 import { buildCmsSafelist } from '../buildCmsSafelist';
 
 describe('buildCmsSafelist', () => {

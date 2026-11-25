@@ -1,11 +1,11 @@
 import { useAtomValue, useSetAtom } from 'jotai';
 import * as React from 'react';
 
-import { chatDraftsAtom } from '../data/data.atom.chat-drafts';
+import { chatDraftsAtom } from '../data/atom.chat-drafts';
 import {
   CHAT_DRAFT_NEW_CONVERSATION_KEY,
   CHAT_DRAFT_WRITE_DELAY_MS,
-} from '../data/data.chat-drafts-state';
+} from '../data/chat-drafts-state';
 import { readChatDraft, writeChatDraft } from '../utils/chat-drafts';
 
 interface PendingEdit {

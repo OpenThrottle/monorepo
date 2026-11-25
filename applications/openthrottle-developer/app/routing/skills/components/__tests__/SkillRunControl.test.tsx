@@ -6,8 +6,8 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
-import { SKILL_RUN_COPY } from '~/routing/skills/data/data.copy';
+import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import { SKILL_RUN_COPY } from '~/routing/skills/data/copy';
 
 import type { SkillRunControlProps } from '../SkillRunControl';
 import { SkillRunControl } from '../SkillRunControl';

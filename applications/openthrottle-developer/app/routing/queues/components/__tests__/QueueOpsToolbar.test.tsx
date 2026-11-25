@@ -5,7 +5,7 @@ import * as React from 'react';
 import { createRoutesStub, useSearchParams } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import { QUEUE_STATE_FILTER_COPY } from '~/routing/queues/data/data.copy';
+import { QUEUE_STATE_FILTER_COPY } from '~/routing/queues/data/copy';
 
 import type { QueueOpsToolbarProps } from '../QueueOpsToolbar';
 import { QueueOpsToolbar } from '../QueueOpsToolbar';

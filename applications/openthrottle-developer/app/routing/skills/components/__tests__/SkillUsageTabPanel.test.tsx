@@ -4,7 +4,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import { SKILL_USAGE_DETAIL_COPY } from '~/routing/skills/data/data.copy';
+import { SKILL_USAGE_DETAIL_COPY } from '~/routing/skills/data/copy';
 import type { SkillDetailUsageData } from '~/routing/skills/types';
 
 import { SkillUsageTabPanel } from '../SkillUsageTabPanel';

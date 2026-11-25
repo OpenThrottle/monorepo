@@ -7,7 +7,7 @@ import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import { WorkspaceEditorId } from '~/__generated__/graphql';
-import { SETTINGS_PREFERENCES_COPY } from '~/routing/settings/data/data.copy';
+import { SETTINGS_PREFERENCES_COPY } from '~/routing/settings/data/copy';
 
 import type { SettingsPreferencesEditorSectionProps } from '../SettingsPreferencesEditorSection';
 import { SettingsPreferencesEditorSection } from '../SettingsPreferencesEditorSection';

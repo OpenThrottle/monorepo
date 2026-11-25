@@ -4,7 +4,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
 
-import { PLAN_RUN_CANCEL_SCHEDULED_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_RUN_CANCEL_SCHEDULED_COPY } from '~/routing/plans/data/copy';
 
 import { PlanRunCancelScheduledDialog } from '../PlanRunCancelScheduledDialog';
 

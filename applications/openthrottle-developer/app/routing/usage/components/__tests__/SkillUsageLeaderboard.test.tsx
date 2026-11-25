@@ -8,11 +8,11 @@ import {
   SKILL_PRESENCE,
   SKILL_PRESENCE_LABELS,
   SKILL_PRESENCE_TOOLTIPS,
-} from '../../data/data.skill-presence';
+} from '../../data/skill-presence';
 import {
   SKILL_USAGE_COPY,
   SKILL_USAGE_SCOPES,
-} from '../../data/data.skill-usage-copy';
+} from '../../data/skill-usage-copy';
 import type { SkillUsageRowWithPresence } from '../../utils/partitionSkillUsageByPresence';
 import type { SkillUsageLeaderboardProps } from '../SkillUsageLeaderboard';
 import { SkillUsageLeaderboard } from '../SkillUsageLeaderboard';

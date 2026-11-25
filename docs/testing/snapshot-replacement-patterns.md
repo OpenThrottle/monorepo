@@ -114,17 +114,17 @@ const link = component.getByRole('link', { name: 'New prompt' });
 expect(link).toHaveAttribute('href', '/prompts/create');
 ```
 
-### When the copy IS the contract — single-source it in `data/data.copy.ts`
+### When the copy IS the contract — single-source it in `data/copy.ts`
 
 Error and empty-state messages users must read are part of the contract, so keep
 asserting them — but don't duplicate the literal. Put the string in the area's
-`data/data.copy.ts`; the component renders that constant and the spec imports the
+`data/copy.ts`; the component renders that constant and the spec imports the
 **same** one. A wording change then updates exactly one place and every spec follows
 automatically. (Components stay limited to exporting the component + its props — copy
 does not live in the component file.)
 
 ```ts
-// app/routing/projects/data/data.copy.ts
+// app/routing/projects/data/copy.ts
 export const PROJECT_NOT_FOUND_COPY = {
   description: `The project you’re looking for doesn’t exist or was removed.`,
   title: `Project not found`,
@@ -133,14 +133,14 @@ export const PROJECT_NOT_FOUND_COPY = {
 
 ```tsx
 // ProjectNotFound.tsx
-import { PROJECT_NOT_FOUND_COPY } from '~/routing/projects/data/data.copy';
+import { PROJECT_NOT_FOUND_COPY } from '~/routing/projects/data/copy';
 // <EmptyTitle>{PROJECT_NOT_FOUND_COPY.title}</EmptyTitle>
 // <EmptyDescription>{PROJECT_NOT_FOUND_COPY.description}</EmptyDescription>
 ```
 
 ```ts
 // ProjectNotFound.test.tsx — and ANY other spec that renders this state
-import { PROJECT_NOT_FOUND_COPY } from '~/routing/projects/data/data.copy';
+import { PROJECT_NOT_FOUND_COPY } from '~/routing/projects/data/copy';
 
 expect(
   component.getByRole('heading', { name: PROJECT_NOT_FOUND_COPY.title }),
@@ -152,19 +152,19 @@ expect(
 
 Notes:
 
-- Keep the copy in `data/data.copy.ts`, not co-located in the component: the component
+- Keep the copy in `data/copy.ts`, not co-located in the component: the component
   imports it (a real cross-module use reachable from a route entry), so Knip sees it as
   used with no `@public` tag needed — and the component file stays limited to its
   component + props.
 - Worked examples in `openthrottle-developer`: `ProjectNotFound`, `PlanTaskNotFound`,
   `SkillsEmpty`, `PromptsEmpty` (and the `projects.$projectId` route spec, which
   imports `PROJECT_NOT_FOUND_COPY` rather than re-typing the sentence).
-- Spot-check after refactoring: change a value in `data.copy.ts` and run the suite —
+- Spot-check after refactoring: change a value in `data/copy.ts` and run the suite —
   only fixtures that still hard-code the literal should break; constant-bound specs
   stay green.
 - Copy that comes from **data** (seeded skill descriptions, fixtures) should assert
   against the fixture object the test already defines, not a re-typed literal.
-- Don't write a dedicated spec for a pure hardcoded data file (`data.copy.ts`, a
+- Don't write a dedicated spec for a pure hardcoded data file (`data/copy.ts`, a
   static list): a test that re-states its literals is a tautology and a
   change-detector, and the consuming component/route spec already covers usage. Spec
   a data file only when it has logic or an invariant worth guarding (derivation,

@@ -7,7 +7,7 @@ import {
 import { PuzzlePieceIcon } from '@phosphor-icons/react/dist/ssr/PuzzlePiece';
 import * as React from 'react';
 
-import { PLAN_TASK_NOT_FOUND_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_TASK_NOT_FOUND_COPY } from '~/routing/plans/data/copy';
 
 export interface PlanTaskNotFoundProps {}
 

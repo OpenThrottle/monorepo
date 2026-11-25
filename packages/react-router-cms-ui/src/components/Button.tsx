@@ -1,7 +1,7 @@
 import { Button as ShadcnButton, cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { BUTTON_SIZES, BUTTON_VARIANTS } from '../data/data.button';
+import { BUTTON_SIZES, BUTTON_VARIANTS } from '../data/button';
 import type { CmsComponentDebug } from '../types';
 
 /**

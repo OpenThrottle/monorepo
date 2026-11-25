@@ -8,7 +8,7 @@ import { GlobalScreen } from '@openthrottle/react-router-ui-global';
 import * as React from 'react';
 import { Link } from 'react-router';
 
-import { PROJECT_NOT_FOUND_COPY } from '~/routing/projects/data/data.copy';
+import { PROJECT_NOT_FOUND_COPY } from '~/routing/projects/data/copy';
 
 export interface ProjectNotFoundProps {}
 

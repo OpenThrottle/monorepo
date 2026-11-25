@@ -12,7 +12,7 @@ import * as React from 'react';
 import { Form, useNavigation } from 'react-router';
 
 import { RolloutFlagFormFields } from '~/routing/settings/components/RolloutFlagFormFields';
-import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
+import { ROLLOUT_COPY } from '~/routing/settings/data/copy';
 
 export interface RolloutFlagCreateDialogProps {
   actionError?: string | null;

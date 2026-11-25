@@ -3,7 +3,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import { GLOBAL_SIDEBAR_FOOTER_COPY } from '../../data/data.copy';
+import { GLOBAL_SIDEBAR_FOOTER_COPY } from '../../data/copy';
 import { GlobalLayout } from '../GlobalLayout';
 import { GlobalProviders } from '../GlobalProviders';
 

@@ -11,7 +11,7 @@ import { Link } from 'react-router';
 
 import type { ProjectCardFragment } from '~/__generated__/graphql';
 import { ProjectsEmpty } from '~/routing/projects/components/ProjectsEmpty';
-import { PROJECTS_ROW_ACTIONS_COPY } from '~/routing/projects/data/data.copy';
+import { PROJECTS_ROW_ACTIONS_COPY } from '~/routing/projects/data/copy';
 import { getProjectPlanProgress } from '~/routing/projects/utils/projectPlans';
 
 export interface ProjectsTableProps {

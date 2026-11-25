@@ -3,7 +3,7 @@ import { HatGlassesIcon } from 'lucide-react';
 import * as React from 'react';
 import { Link } from 'react-router';
 
-import { SETTINGS_PREFERENCES_COPY } from '~/routing/settings/data/data.copy';
+import { SETTINGS_PREFERENCES_COPY } from '~/routing/settings/data/copy';
 
 export interface SettingsAgentsIntroductionProps {
   /** ISO-8601 timestamp of the discovery scan, shown as "last checked". */

@@ -9,7 +9,7 @@ import type { DashboardDailyStatsCardFragment } from '~/__generated__/graphql';
 import {
   DAILY_STATS_METRICS,
   DAILY_STATS_MODAL_COPY,
-} from '~/routing/dashboard/data/data.copy';
+} from '~/routing/dashboard/data/copy';
 
 import type { DashboardDailyStatsModalProps } from '../DashboardDailyStatsModal';
 import { DashboardDailyStatsModal } from '../DashboardDailyStatsModal';

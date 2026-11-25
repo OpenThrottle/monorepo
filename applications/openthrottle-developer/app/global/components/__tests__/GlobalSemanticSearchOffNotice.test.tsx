@@ -3,8 +3,8 @@ import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { afterEach, describe, expect, test } from 'vitest';
 
-import { SEMANTIC_SEARCH_OFF_COPY } from '~/global/data/data.copy';
-import { SEMANTIC_SEARCH_OFF_STORAGE_KEY } from '~/global/data/data.semantic-search-off';
+import { SEMANTIC_SEARCH_OFF_COPY } from '~/global/data/copy';
+import { SEMANTIC_SEARCH_OFF_STORAGE_KEY } from '~/global/data/semantic-search-off';
 
 import { GlobalSemanticSearchOffNotice } from '../GlobalSemanticSearchOffNotice';
 

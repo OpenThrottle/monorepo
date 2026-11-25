@@ -10,7 +10,7 @@ import { SearchAlertIcon } from 'lucide-react';
 import * as React from 'react';
 import { Link } from 'react-router';
 
-import { PROMPTS_EMPTY_COPY } from '~/routing/prompts/data/data.copy';
+import { PROMPTS_EMPTY_COPY } from '~/routing/prompts/data/copy';
 
 export interface PromptsEmptyProps {
   className?: string;

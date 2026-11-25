@@ -6,7 +6,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { GET_STARTED_CARD_COPY } from '~/routing/dashboard/data/data.copy';
+import { GET_STARTED_CARD_COPY } from '~/routing/dashboard/data/copy';
 import type { OnboardingCompletion } from '~/routing/dashboard/utils/onboarding-steps';
 import { ONBOARDING_STEP_ID } from '~/routing/dashboard/utils/onboarding-steps';
 

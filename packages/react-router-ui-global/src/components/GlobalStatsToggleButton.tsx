@@ -9,7 +9,7 @@ import {
 import { ChartColumnIcon, ChevronDownIcon } from 'lucide-react';
 import * as React from 'react';
 
-import { GLOBAL_STATS_TOGGLE_COPY } from '../data/data.copy';
+import { GLOBAL_STATS_TOGGLE_COPY } from '../data/copy';
 import { useRouteStatsToggle } from '../hooks/useRouteStatsToggle';
 
 export interface GlobalStatsToggleButtonProps {

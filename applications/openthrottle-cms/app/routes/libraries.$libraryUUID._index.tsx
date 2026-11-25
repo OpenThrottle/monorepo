@@ -12,12 +12,12 @@ import { CmsLibraryDetailDocument } from '~/__generated__/graphql';
 import { GlobalDetailList } from '~/global/components/GlobalDetailList';
 import { GlobalTable } from '~/global/components/GlobalTable';
 import { SITE_TITLE } from '~/global/config/settings';
-import { CMS_LIBRARY_DETAIL_FIELDS } from '~/global/data/data.cms-detail-fields';
-import { CMS_LIBRARY_COMPONENT_COLUMNS } from '~/global/data/data.cms-table-columns';
+import { CMS_LIBRARY_DETAIL_FIELDS } from '~/global/data/cms-detail-fields';
+import { CMS_LIBRARY_COMPONENT_COLUMNS } from '~/global/data/cms-table-columns';
 import { fetchPublicGraphql } from '~/global/utils/graphql.server';
 import { requireRecord } from '~/global/utils/requireRecord';
 import { getComponentRowHref } from '~/routing/components/utils/getComponentRowHref';
-import { LIBRARY_DETAIL_COPY } from '~/routing/libraries/data/data.copy';
+import { LIBRARY_DETAIL_COPY } from '~/routing/libraries/data/copy';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

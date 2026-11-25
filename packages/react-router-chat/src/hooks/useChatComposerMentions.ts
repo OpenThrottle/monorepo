@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import { CARET_MOVEMENT_KEYS } from '../data/data.chat-caret-movement-keys';
+import { CARET_MOVEMENT_KEYS } from '../data/chat-caret-movement-keys';
 import type { ActiveFileMention } from '../file-mentions';
 import { detectActiveMention, insertFileMention } from '../file-mentions';
 import type { ChatMentionProvider } from '../types';

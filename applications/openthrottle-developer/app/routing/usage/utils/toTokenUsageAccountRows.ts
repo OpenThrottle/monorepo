@@ -11,7 +11,7 @@ import {
   TOKEN_USAGE_CREDENTIAL_KINDS,
   TOKEN_USAGE_CREDENTIAL_LABELS,
   TOKEN_USAGE_UNATTRIBUTED_ACCOUNT_ID,
-} from '~/routing/usage/data/data.token-usage-copy';
+} from '~/routing/usage/data/token-usage-copy';
 import { tokenUsageProviderLabel } from '~/routing/usage/utils/token-usage-labels';
 
 /** One row of the "By account" table. */

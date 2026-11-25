@@ -4,7 +4,7 @@ import {
   ENV_FILE_PREFIX,
   EXCLUDED_BASENAMES,
   EXCLUDED_EXTENSIONS,
-} from '../data/data.stage.ts';
+} from '../data/stage.ts';
 
 /** @description True for a `.env` or `.env.<anything>` file, in any folder. */
 export const isEnvFile = (path: string): boolean => {

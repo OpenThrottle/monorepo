@@ -12,7 +12,7 @@ import {
 import * as React from 'react';
 import { useFetcher } from 'react-router';
 
-import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/data.copy';
+import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/copy';
 
 const COPY = SKILL_AVAILABILITY_COPY.rules;
 

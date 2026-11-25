@@ -2,7 +2,7 @@ import { Button, cn, Input } from '@openthrottle/react-router-shadcn';
 import { Pencil, SendHorizontal, X } from 'lucide-react';
 import * as React from 'react';
 
-import { CHAT_QUEUED_MESSAGES_COPY } from '../data/data.copy';
+import { CHAT_QUEUED_MESSAGES_COPY } from '../data/copy';
 import type { ChatQueuedMessage } from '../types';
 
 export interface ChatQueuedMessageRowProps {

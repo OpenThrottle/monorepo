@@ -2,11 +2,11 @@ import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
 import type { ScheduledJobRunRowFragment } from '~/__generated__/graphql';
-import { SCHEDULE_RUN_STATUS_CELL_COPY } from '~/routing/schedule/data/data.copy';
+import { SCHEDULE_RUN_STATUS_CELL_COPY } from '~/routing/schedule/data/copy';
 import {
   RUN_STATUS_LABEL,
   RUN_TRIGGER_LABEL,
-} from '~/routing/schedule/data/data.run-status';
+} from '~/routing/schedule/data/run-status';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 
 import { ScheduleRunsTable } from '../ScheduleRunsTable';

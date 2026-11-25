@@ -5,7 +5,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { CONNECTION_COPY } from '../data/data.copy.ts';
+import { CONNECTION_COPY } from '../data/copy.ts';
 import type { ConnectionFeedback } from '../types/connection-feedback.ts';
 
 export interface ConnectionFeedbackAlertProps {

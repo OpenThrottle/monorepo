@@ -4,7 +4,7 @@ import { Link } from 'react-router';
 
 import type { ScheduleWebhookTriggerFragment } from '~/__generated__/graphql';
 import { ScheduleWebhookConfirmAction } from '~/routing/schedule/components/ScheduleWebhookConfirmAction';
-import { SCHEDULE_WEBHOOK_COPY } from '~/routing/schedule/data/data.copy';
+import { SCHEDULE_WEBHOOK_COPY } from '~/routing/schedule/data/copy';
 import { formatWhen } from '~/routing/schedule/utils/formatWhen';
 
 export interface ScheduleWebhookStatusBarProps {

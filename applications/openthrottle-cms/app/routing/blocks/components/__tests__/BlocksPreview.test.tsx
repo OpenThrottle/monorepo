@@ -6,8 +6,8 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { BLOCK_SAMPLES } from '../../data/data.blocks';
-import { BLOCKS_COPY } from '../../data/data.copy';
+import { BLOCK_SAMPLES } from '../../data/blocks';
+import { BLOCKS_COPY } from '../../data/copy';
 import { BlocksPreview } from '../BlocksPreview';
 
 const getLayout = (component: RenderResult): HTMLElement | null => {

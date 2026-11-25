@@ -3,7 +3,7 @@ import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import * as React from 'react';
 import { Link } from 'react-router';
 
-import { SKILLS_EMPTY_COPY } from '~/routing/skills/data/data.copy';
+import { SKILLS_EMPTY_COPY } from '~/routing/skills/data/copy';
 
 export interface SkillsEmptyProps {
   className?: string;

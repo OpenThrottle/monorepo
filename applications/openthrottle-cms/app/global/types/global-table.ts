@@ -1,4 +1,4 @@
-import type { GLOBAL_TABLE_COLUMN_KIND } from '~/global/data/data.global-table';
+import type { GLOBAL_TABLE_COLUMN_KIND } from '~/global/data/global-table';
 
 /**
  * @public

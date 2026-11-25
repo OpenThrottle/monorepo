@@ -8,7 +8,7 @@ import { RolloutProvider } from '@openthrottle/react-router-rollout';
 import { APP_NAME } from '@openthrottle/react-router-utils';
 import * as React from 'react';
 
-import { developerRolloutFlags } from '~/global/data/data.rollout-flags';
+import { developerRolloutFlags } from '~/global/data/rollout-flags';
 import { fetchRolloutEvaluations } from '~/global/utils/fetchRolloutEvaluations';
 import { getOrCreateRolloutAnonymousId } from '~/global/utils/rollout-anonymous-id';
 

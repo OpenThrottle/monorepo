@@ -25,7 +25,7 @@ import {
 import { CreateRolloutFlagInputSchema } from '~/__generated__/schemas';
 import { SITE_TITLE } from '~/global/config/settings';
 import { RolloutFlagEditForm } from '~/routing/settings/components/RolloutFlagEditForm';
-import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
+import { ROLLOUT_COPY } from '~/routing/settings/data/copy';
 import {
   parseRolloutTargetRoles,
   rolloutFlagDetailPath,

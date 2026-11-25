@@ -12,7 +12,7 @@ import * as React from 'react';
 import type { Route } from '@/app/routes/+types/calendar._index';
 import { SITE_TITLE } from '~/global/config/settings';
 import { CalendarMonth } from '~/routing/calendar/components/CalendarMonth';
-import { CALENDAR_DEMO_EVENTS } from '~/routing/calendar/data/data.calendar-demo';
+import { CALENDAR_DEMO_EVENTS } from '~/routing/calendar/data/calendar-demo';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

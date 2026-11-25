@@ -14,8 +14,8 @@
  *
  * - It is `.ts` / `.tsx`, its stem has a hyphen, and the stem carries no other
  *   dotted segment than a `.server` / `.client` suffix. Any other dot means a
- *   form with its own rule (`<folder>.<kind>.ts`, `data.<name>.ts`,
- *   `mock.<name>.ts`, `*.test.ts`, `*.config.ts`, `*.d.ts`).
+ *   form with its own rule (`<folder>.<kind>.ts`, `mock.<name>.ts`,
+ *   `*.test.ts`, `*.config.ts`, `*.d.ts`).
  * - It exports exactly one **value** (const, function, class, enum, or a
  *   named re-export), or several of which one is the file's own name: the
  *   kebab stem, hyphens dropped, equals the export case-insensitively
@@ -31,7 +31,8 @@
  * - It does not live under an excluded directory: React Router route modules
  *   (`app/routes/**`), `__generated__`, build output, or directly in a
  *   `scripts/` folder (entry points stay kebab-case; `scripts/utils/**` does
- *   not).
+ *   not) or a `data/` folder (data files are always kebab-case, whatever they
+ *   export — `openthrottle/data-file-shape` owns their names).
  *
  * The file takes the export's name exactly, even when the kebab stem said
  * something else (`form-field-kind.ts` exporting `getFormFieldKind` becomes
@@ -180,7 +181,8 @@ export const isInScopePath = (relativePath: string): boolean => {
     return false;
   }
 
-  if (directories[directories.length - 1] === 'scripts') {
+  const parent = directories[directories.length - 1];
+  if (parent === 'scripts' || parent === 'data') {
     return false;
   }
 

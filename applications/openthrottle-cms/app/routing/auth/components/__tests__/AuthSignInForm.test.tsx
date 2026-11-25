@@ -4,7 +4,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import { AUTH_COPY } from '~/routing/auth/data/data.copy';
+import { AUTH_COPY } from '~/routing/auth/data/copy';
 
 import type { AuthSignInFormProps } from '../AuthSignInForm';
 import { AuthSignInForm } from '../AuthSignInForm';

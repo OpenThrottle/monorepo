@@ -8,7 +8,7 @@ Plan: **Dynamic repo skills registry from `.agents/skills`** (`fca6f044-fcb2-48f
 
 ## Problem
 
-`REPO_SKILLS_REGISTRY` in `app/routing/agents/data/data.repo-skills-registry.ts` is hand-maintained and drifts from on-disk skills (e.g. missing `ot-generators`, `ot-plans`, `ot-stack`).
+`REPO_SKILLS_REGISTRY` in `app/routing/agents/data/repo-skills-registry.ts` is hand-maintained and drifts from on-disk skills (e.g. missing `ot-generators`, `ot-plans`, `ot-stack`).
 
 ## Goals
 

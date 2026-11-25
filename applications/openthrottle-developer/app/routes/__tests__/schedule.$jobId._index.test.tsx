@@ -6,7 +6,7 @@ import type { Route } from '@/app/routes/+types/schedule.$jobId._index';
 import {
   SCHEDULE_APPROVAL_COPY,
   SCHEDULE_WEBHOOK_COPY,
-} from '~/routing/schedule/data/data.copy';
+} from '~/routing/schedule/data/copy';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 import { scheduleWebhookTriggerFixture } from '~/testing/schedule-fixtures';
 

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { TOKEN_USAGE_COPY } from '~/routing/usage/data/data.token-usage-copy';
+import { TOKEN_USAGE_COPY } from '~/routing/usage/data/token-usage-copy';
 import { tokenUsageProviderLabel } from '~/routing/usage/utils/token-usage-labels';
 
 import { tokenUsageEmptyMessage } from '../tokenUsageEmptyMessage';

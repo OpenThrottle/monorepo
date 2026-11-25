@@ -13,7 +13,7 @@ import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { SKILL_CREATE_COPY } from '~/routing/skills/data/data.copy';
+import { SKILL_CREATE_COPY } from '~/routing/skills/data/copy';
 import { syncSkillLinks } from '~/routing/skills/utils/syncSkillLinks.server';
 
 const SCRIPT_RELATIVE_PATH = 'skills/ot-skill-sync/scripts/sync.sh';

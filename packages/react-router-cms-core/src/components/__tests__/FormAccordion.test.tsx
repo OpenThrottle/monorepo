@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
-import { FORM_FIELD_COPY } from '../../data/data.copy';
+import { FORM_FIELD_COPY } from '../../data/copy';
 import { FormAccordion } from '../FormAccordion';
 import { FormAccordionPane } from '../FormAccordionPane';
 

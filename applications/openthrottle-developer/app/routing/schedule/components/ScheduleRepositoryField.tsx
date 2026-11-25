@@ -9,9 +9,9 @@ import {
 import * as React from 'react';
 import { Link } from 'react-router';
 
-import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
-import type { ScheduleRepositoryOption } from '~/routing/schedule/data/data.repositories';
-import { SCHEDULE_REPOSITORY_NONE_VALUE } from '~/routing/schedule/data/data.repositories';
+import { SCHEDULE_COPY } from '~/routing/schedule/data/copy';
+import type { ScheduleRepositoryOption } from '~/routing/schedule/data/repositories';
+import { SCHEDULE_REPOSITORY_NONE_VALUE } from '~/routing/schedule/data/repositories';
 
 export interface ScheduleRepositoryFieldProps {
   /** The caller's registered checkouts; empty renders the settings-link empty state. */

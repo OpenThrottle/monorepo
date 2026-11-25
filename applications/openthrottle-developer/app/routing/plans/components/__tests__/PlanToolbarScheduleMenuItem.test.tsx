@@ -10,7 +10,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { PLAN_TOOLBAR_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_TOOLBAR_COPY } from '~/routing/plans/data/copy';
 
 import type { PlanToolbarScheduleMenuItemProps } from '../PlanToolbarScheduleMenuItem';
 import { PlanToolbarScheduleMenuItem } from '../PlanToolbarScheduleMenuItem';

@@ -2,7 +2,7 @@ import { Button, cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import { TRAJECTORY_CLAMP_CHARS } from '~/routing/evals/config/defaults';
-import { TRAJECTORY_TIMELINE_COPY } from '~/routing/evals/data/data.copy';
+import { TRAJECTORY_TIMELINE_COPY } from '~/routing/evals/data/copy';
 import { clampTrajectoryText } from '~/routing/evals/utils/formatters';
 
 export interface TrajectoryClampedTextProps {

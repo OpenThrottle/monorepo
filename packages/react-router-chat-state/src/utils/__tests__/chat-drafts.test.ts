@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { DEFAULT_CHAT_DRAFTS_STATE } from '../../data/data.chat-drafts-state';
+import { DEFAULT_CHAT_DRAFTS_STATE } from '../../data/chat-drafts-state';
 import { readChatDraft, writeChatDraft } from '../chat-drafts';
 
 describe('writeChatDraft', () => {

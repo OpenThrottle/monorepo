@@ -10,7 +10,7 @@ import type { EvalRunComparisonReportFragment } from '~/__generated__/graphql';
 import { EvalCompareHeadline } from '~/routing/evals/components/EvalCompareHeadline';
 import { EvalCompareVerdict } from '~/routing/evals/components/EvalCompareVerdict';
 import { EvalRegressionsTable } from '~/routing/evals/components/EvalRegressionsTable';
-import { EVAL_COMPARE_COPY } from '~/routing/evals/data/data.copy';
+import { EVAL_COMPARE_COPY } from '~/routing/evals/data/copy';
 
 export interface EvalCompareRouteProps {
   readonly className?: string;

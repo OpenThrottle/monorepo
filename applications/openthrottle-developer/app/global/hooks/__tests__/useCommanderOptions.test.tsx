@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 import {
   dataNavigationGuest,
   dataNavigationV2,
-} from '~/global/data/data.navigation';
+} from '~/global/data/navigation';
 import type { NavigationRecord } from '~/global/utils/navigation-to-commander-groups';
 
 import { useCommanderOptions } from '../useCommanderOptions';

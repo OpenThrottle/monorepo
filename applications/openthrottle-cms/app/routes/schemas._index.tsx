@@ -11,7 +11,7 @@ import type { Route } from '@/app/routes/+types/schemas._index';
 import { CmsSchemasDocument } from '~/__generated__/graphql';
 import { GlobalTable } from '~/global/components/GlobalTable';
 import { SITE_TITLE } from '~/global/config/settings';
-import { CMS_SCHEMA_COLUMNS } from '~/global/data/data.cms-table-columns';
+import { CMS_SCHEMA_COLUMNS } from '~/global/data/cms-table-columns';
 import { fetchPublicGraphql } from '~/global/utils/graphql.server';
 import { getSchemaRowHref } from '~/routing/schemas/utils/getSchemaRowHref';
 

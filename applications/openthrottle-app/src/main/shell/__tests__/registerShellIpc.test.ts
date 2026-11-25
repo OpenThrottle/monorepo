@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { SHELL_IPC_CHANNELS } from '../../../bridge/data/data.shell-channels.ts';
+import { SHELL_IPC_CHANNELS } from '../../../bridge/data/shell-channels.ts';
 import { registerShellIpc } from '../registerShellIpc.ts';
 
 const SHELL_URL = 'file:///app/out/renderer/index.html';

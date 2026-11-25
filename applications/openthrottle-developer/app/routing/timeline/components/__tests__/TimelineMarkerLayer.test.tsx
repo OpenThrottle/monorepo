@@ -10,7 +10,7 @@ import {
   FIXTURE_WINDOW_FROM,
   FIXTURE_WINDOW_TO,
   TIMELINE_FIXTURE_MARKERS,
-} from '~/routing/timeline/data/data.fixtures';
+} from '~/routing/timeline/data/fixtures';
 import type {
   TimelineLane,
   TimelineMarkerCluster,

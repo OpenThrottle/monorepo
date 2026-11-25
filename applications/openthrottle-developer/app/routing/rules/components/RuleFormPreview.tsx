@@ -1,7 +1,7 @@
 import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { RULE_PREVIEW_COPY } from '~/routing/rules/data/data.copy';
+import { RULE_PREVIEW_COPY } from '~/routing/rules/data/copy';
 import type { UseRuleFormResult } from '~/routing/rules/hooks/useRuleForm';
 import { useRulePreview } from '~/routing/rules/hooks/useRulePreview';
 import { normalizeRuleFormChoice } from '~/routing/rules/utils/rule-preview-params';

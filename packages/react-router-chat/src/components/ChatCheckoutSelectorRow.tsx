@@ -2,8 +2,8 @@ import { cn, CommandItem } from '@openthrottle/react-router-shadcn';
 import { Check, FolderGit2, GitBranch, GitFork } from 'lucide-react';
 import * as React from 'react';
 
-import { CHECKOUT_ROW_MAX_CHARS } from '../data/data.checkout-row';
-import { CHAT_CHECKOUT_ROW_COPY } from '../data/data.copy';
+import { CHECKOUT_ROW_MAX_CHARS } from '../data/checkout-row';
+import { CHAT_CHECKOUT_ROW_COPY } from '../data/copy';
 import type { ChatCheckoutOption } from '../types';
 import { CHAT_CHECKOUT_KIND } from '../types';
 import {
@@ -44,7 +44,7 @@ export interface ChatCheckoutSelectorRowProps {
  * Branch names and paths are the two long values, and each is shortened where
  * its signal is: the branch middle-ellipsized (prefix AND tail survive), the
  * path collapsed to `~` and tail-fitted. Both caps live in
- * `data.checkout-row.ts`, sized to the popover's column; the full value is on
+ * `data/checkout-row.ts`, sized to the popover's column; the full value is on
  * `title` and CSS `truncate` is the backstop.
  *
  * In `multiple` mode the row labels the primary checkout (where the agent

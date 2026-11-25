@@ -9,7 +9,7 @@ import {
   PLAN_RUN_DIALOG_COPY,
   PLAN_RUN_GATING_COPY,
   PLAN_TOOLBAR_COPY,
-} from '~/routing/plans/data/data.copy';
+} from '~/routing/plans/data/copy';
 import type {
   PlanRunDialogDraft,
   PlanRunDialogMode,

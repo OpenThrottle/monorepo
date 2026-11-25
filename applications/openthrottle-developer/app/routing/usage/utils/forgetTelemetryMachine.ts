@@ -1,7 +1,7 @@
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 
 import { ForgetUsageTelemetryMachineDocument } from '~/__generated__/graphql';
-import { FORGET_TELEMETRY_MACHINE_INTENT } from '~/routing/usage/data/data.telemetry-coverage-copy';
+import { FORGET_TELEMETRY_MACHINE_INTENT } from '~/routing/usage/data/telemetry-coverage-copy';
 
 /** The machine was forgotten; `deletedCount` is how many heartbeat rows went. */
 interface ForgetTelemetryMachineSuccess {

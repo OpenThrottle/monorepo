@@ -10,7 +10,7 @@ import { CalendarSearchIcon } from 'lucide-react';
 import * as React from 'react';
 import { Link } from 'react-router';
 
-import { CALENDAR_EMPTY_VARIANTS } from '~/routing/calendar/data/data.empty-variants';
+import { CALENDAR_EMPTY_VARIANTS } from '~/routing/calendar/data/empty-variants';
 
 export interface CalendarEmptyProps {
   className?: string;

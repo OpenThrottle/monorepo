@@ -18,9 +18,9 @@ import { Form, useLocation } from 'react-router';
 import type { CmsComponentDetailFragment } from '~/__generated__/graphql';
 import { CmsActionFailureAlert } from '~/global/components/CmsActionFailureAlert';
 import { formatJson } from '~/global/utils/formatJson';
-import { AUTH_ROUTES } from '~/routing/auth/data/data.routes';
+import { AUTH_ROUTES } from '~/routing/auth/data/routes';
 import { ComponentPropsPreview } from '~/routing/components/components/ComponentPropsPreview';
-import { COMPONENT_EDITOR_COPY } from '~/routing/components/data/data.copy';
+import { COMPONENT_EDITOR_COPY } from '~/routing/components/data/copy';
 import type { ComponentActionResult } from '~/routing/components/types/component-action';
 
 export interface ComponentEditorProps {

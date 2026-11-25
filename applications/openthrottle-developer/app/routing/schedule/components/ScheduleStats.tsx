@@ -2,8 +2,8 @@ import { cn } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleStatCard } from '@openthrottle/react-router-ui';
 import * as React from 'react';
 
-import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
-import { RUN_STATUS_DOT_CLASS } from '~/routing/schedule/data/data.run-status';
+import { SCHEDULE_COPY } from '~/routing/schedule/data/copy';
+import { RUN_STATUS_DOT_CLASS } from '~/routing/schedule/data/run-status';
 
 export interface ScheduleStatsProps {
   className?: string;

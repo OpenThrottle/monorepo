@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
-import { TASK_TRAJECTORIES_COPY } from '~/routing/evals/data/data.copy';
+import { TASK_TRAJECTORIES_COPY } from '~/routing/evals/data/copy';
 import {
   MOCK_TRAJECTORY_SUMMARY,
   MOCK_UNPRICED_SESSION_SUMMARY,

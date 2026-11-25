@@ -5,8 +5,8 @@ import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { AgentSetupActionResult } from '~/routes/resources.agent-setup';
-import type { AgentCliStatus } from '~/routing/settings/data/data.agent-clis';
-import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/data.copy';
+import type { AgentCliStatus } from '~/routing/settings/data/agent-clis';
+import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/copy';
 import type { UseAgentSetupStreamResult } from '~/routing/settings/hooks/useAgentSetupStream';
 
 import { SettingsAgentsCliControls } from '../SettingsAgentsCliControls';

@@ -3,7 +3,7 @@ import { render } from '@testing-library/react';
 import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { LANDING_FEATURES } from '~/routing/home/data/data.landing';
+import { LANDING_FEATURES } from '~/routing/home/data/landing';
 
 import { LandingFeatures } from '../LandingFeatures';
 

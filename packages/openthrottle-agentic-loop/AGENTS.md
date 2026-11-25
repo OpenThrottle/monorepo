@@ -17,7 +17,7 @@ The pure OT Loop parent state machine (`runOtLoop`): selection, flips, per-task 
   the server implements it in `applications/openthrottle-server/src/queues/ot-loop/ot-loop-finalize-port.factory.ts`.
   The loop never imports a GraphQL client or generated document, and depends on `agentic-utils` and
   `drivers` only.
-- **Plan-run config** (`utils/plan-run-config.ts`, `utils/mergePlanRunTuningWithConfig.ts`): `loadPlanRunConfig` reads the optional `defaults` block of the repo's `.openthrottle/ot-loop.json` (the same file `resolveOtLoopCommands` reads for `validation`/`setup`/`finalValidation`), then env. It uses `node:fs`, so it stays out of any barrel a browser bundle reaches (the developer app does not import this package). Env-name constants live in `data/data.plan-run-config.ts`, not in the diagnostics code, which is what keeps the loader free of an import cycle.
+- **Plan-run config** (`utils/plan-run-config.ts`, `utils/mergePlanRunTuningWithConfig.ts`): `loadPlanRunConfig` reads the optional `defaults` block of the repo's `.openthrottle/ot-loop.json` (the same file `resolveOtLoopCommands` reads for `validation`/`setup`/`finalValidation`), then env. It uses `node:fs`, so it stays out of any barrel a browser bundle reaches (the developer app does not import this package). Env-name constants live in `data/plan-run-config.ts`, not in the diagnostics code, which is what keeps the loader free of an import cycle.
 - Test fakes live in `src/utils/__tests__/loop-fakes.ts`.
 
 ## Pointers

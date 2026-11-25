@@ -13,7 +13,7 @@ import { describe, expect, test } from 'vitest';
 import {
   SETTINGS_KEYS_COPY,
   SETTINGS_KEYS_ONBOARDING,
-} from '~/routing/settings/data/data.copy';
+} from '~/routing/settings/data/copy';
 
 import type { SettingsKeysIntroductionProps } from '../SettingsKeysIntroduction';
 import { SettingsKeysIntroduction } from '../SettingsKeysIntroduction';

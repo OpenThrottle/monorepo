@@ -28,7 +28,7 @@ import {
   STAGE_DEVELOPER_DIR,
   STAGE_DIR,
   STAGE_OUT_DIR,
-} from './data/data.stage.ts';
+} from './data/stage.ts';
 import { buildStagePackageJson } from './utils/buildStagePackageJson.ts';
 import { findNativeFiles } from './utils/findNativeFiles.ts';
 import { findNearestSlot } from './utils/findNearestSlot.ts';
@@ -242,7 +242,7 @@ const run = async (): Promise<void> => {
 
   if (unexpectedNative.length > 0) {
     fail(
-      `native or executable files are staged; list them in asarUnpack (electron-builder.yml) and EXPECTED_NATIVE_FILES (scripts/data/data.stage.ts):\n  ${unexpectedNative.join('\n  ')}`,
+      `native or executable files are staged; list them in asarUnpack (electron-builder.yml) and EXPECTED_NATIVE_FILES (scripts/data/stage.ts):\n  ${unexpectedNative.join('\n  ')}`,
     );
   }
 };

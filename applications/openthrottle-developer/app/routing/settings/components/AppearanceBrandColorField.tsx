@@ -6,7 +6,7 @@ import {
 import * as React from 'react';
 
 import { useHydratedAppearanceConfig } from '~/global/hooks/useHydratedAppearanceConfig';
-import { APPEARANCE_COPY } from '~/routing/settings/data/data.copy';
+import { APPEARANCE_COPY } from '~/routing/settings/data/copy';
 
 export interface AppearanceBrandColorFieldProps {}
 

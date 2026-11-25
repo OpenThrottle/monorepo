@@ -3,7 +3,7 @@ import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { MonitorCogIcon } from 'lucide-react';
 import * as React from 'react';
 
-import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/data.copy';
+import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/copy';
 
 export interface SettingsWorkspaceIntroProps {
   className?: string;

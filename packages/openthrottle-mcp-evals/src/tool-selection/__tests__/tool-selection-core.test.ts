@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { TOOL_SELECTION_CASES } from '../data/data.cases.ts';
+import { TOOL_SELECTION_CASES } from '../data/cases.ts';
 import type { Selection } from '../eval-case.ts';
 import {
   selectionFromTrajectory,

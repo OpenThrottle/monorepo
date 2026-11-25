@@ -10,9 +10,9 @@ import {
 import * as React from 'react';
 import { Form, Link, useLocation, useNavigate } from 'react-router';
 
-import { FRAGMENT_CHILD_ALL_TYPENAMES } from '~/routing/fragments/data/data.children';
-import { FRAGMENT_EDITOR_COPY } from '~/routing/fragments/data/data.copy';
-import { FRAGMENT_INTENT } from '~/routing/fragments/data/data.intents';
+import { FRAGMENT_CHILD_ALL_TYPENAMES } from '~/routing/fragments/data/children';
+import { FRAGMENT_EDITOR_COPY } from '~/routing/fragments/data/copy';
+import { FRAGMENT_INTENT } from '~/routing/fragments/data/intents';
 import type { FragmentChildPicker } from '~/routing/fragments/types/fragment-children';
 import { getChildPickerSearch } from '~/routing/fragments/utils/fragment-child-picker';
 

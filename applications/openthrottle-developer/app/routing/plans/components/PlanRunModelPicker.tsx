@@ -3,7 +3,7 @@ import { ChatModelPicker } from '@openthrottle/react-router-chat';
 import { buildModelGroups } from '@openthrottle/react-router-chat-state';
 import * as React from 'react';
 
-import { PLAN_RUN_MODEL_EFFORT_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_RUN_MODEL_EFFORT_COPY } from '~/routing/plans/data/copy';
 import type { PlanRunModelSelection } from '~/routing/plans/utils/plan-run-model-effort';
 import {
   filterPlanRunnableModels,

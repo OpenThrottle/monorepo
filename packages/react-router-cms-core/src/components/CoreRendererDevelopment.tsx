@@ -3,9 +3,9 @@ import * as React from 'react';
 import { useSearchParams } from 'react-router';
 
 import { CMS_DEVICE } from '../config/cms-device';
-import { atomFragmentDraft } from '../data/data.atom.fragment-draft';
-import { atomSettings } from '../data/data.atom.settings';
-import { PREVIEW_COPY } from '../data/data.copy';
+import { atomFragmentDraft } from '../data/atom.fragment-draft';
+import { atomSettings } from '../data/atom.settings';
+import { PREVIEW_COPY } from '../data/copy';
 import type { CmsFragment } from '../types/cms-fragment';
 import type { CmsComponentRegistry } from '../types/cms-render';
 import { applyFragmentDraft } from '../utils/applyFragmentDraft';

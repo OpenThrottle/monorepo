@@ -12,7 +12,7 @@ import { BugIcon, EllipsisVerticalIcon } from 'lucide-react';
 import * as React from 'react';
 import { Link } from 'react-router';
 
-import { GLOBAL_LAYOUT_HEADER_LINKS_COPY } from '../data/data.copy';
+import { GLOBAL_LAYOUT_HEADER_LINKS_COPY } from '../data/copy';
 
 export interface GlobalLayoutHeaderLinksProps {}
 

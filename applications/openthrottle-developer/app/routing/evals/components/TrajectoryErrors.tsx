@@ -7,7 +7,7 @@ import {
 import { TriangleAlertIcon } from 'lucide-react';
 import * as React from 'react';
 
-import { TRAJECTORY_VIEWER_COPY } from '~/routing/evals/data/data.copy';
+import { TRAJECTORY_VIEWER_COPY } from '~/routing/evals/data/copy';
 
 export interface TrajectoryErrorsProps {
   readonly className?: string;

@@ -5,13 +5,13 @@ import { describe, expect, test } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/timeline._index';
 import { TimelineLaneGrouping } from '~/__generated__/graphql';
-import { TIMELINE_PAGE_COPY } from '~/routing/timeline/data/data.copy';
+import { TIMELINE_PAGE_COPY } from '~/routing/timeline/data/copy';
 import {
   FIXTURE_WINDOW_FROM,
   FIXTURE_WINDOW_TO,
   TIMELINE_FIXTURE_MARKERS,
   TIMELINE_FIXTURE_SPANS,
-} from '~/routing/timeline/data/data.fixtures';
+} from '~/routing/timeline/data/fixtures';
 import { buildRootMatch } from '~/testing/buildRootMatch';
 
 import Component, { shouldRevalidate } from '../timeline._index';

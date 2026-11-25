@@ -112,7 +112,7 @@ Add the server's own `build/` at 2.1 MB without maps and `.d.ts`, and the develo
 3. **Nested `exports` conditions are mis-resolved.** For example, CommonJS `require('lru-cache')` needs `dist/commonjs/node/index.min.js`, which nft never emitted. Patching export leaves only moved the failure (`@graphql-tools/schema/esm/...`). Copying **whole packages** at the planned placement is what made it boot.
 4. **Runtime lookups nft cannot see:**
    - `import.meta.resolve('@tools/generators/package.json')`, called at import.
-   - `@vscode/ripgrep` 1.18 now requires the `@vscode/ripgrep-darwin-arm64` optional package. That is a native `rg` binary, another `asarUnpack` entry. `data.stage.ts` still assumes a postinstall.
+   - `@vscode/ripgrep` 1.18 now requires the `@vscode/ripgrep-darwin-arm64` optional package. That is a native `rg` binary, another `asarUnpack` entry. `data/stage.ts` still assumes a postinstall.
 
 Bloat this exposes, from the whole-package top list:
 

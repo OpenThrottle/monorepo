@@ -6,14 +6,11 @@ import { describe, expect, test } from 'vitest';
 
 import type { CmsDeviceValue } from '../../config/cms-device';
 import { CMS_DEVICE } from '../../config/cms-device';
-import { atomFragmentDraft } from '../../data/data.atom.fragment-draft';
-import {
-  atomSettings,
-  atomSettingsDefault,
-} from '../../data/data.atom.settings';
-import { PREVIEW_COPY } from '../../data/data.copy';
-import { CORE_COMPONENTS } from '../../data/data.registry';
+import { atomFragmentDraft } from '../../data/atom.fragment-draft';
+import { atomSettings, atomSettingsDefault } from '../../data/atom.settings';
+import { PREVIEW_COPY } from '../../data/copy';
 import { MOCK_FRAGMENTS } from '../../data/mock.fragments';
+import { CORE_COMPONENTS } from '../../data/registry';
 import { CoreRendererDevelopment } from '../CoreRendererDevelopment';
 
 const renderPreview = (device: CmsDeviceValue, url: string) => {

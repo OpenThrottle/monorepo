@@ -7,8 +7,8 @@ import type { SearchChunk } from '~/__generated__/graphql';
 import {
   SEARCH_PREVIEW_COPY,
   SEARCH_RESULT_COPY,
-} from '~/routing/search/data/data.copy';
-import { SEARCH_SOURCE_PILL_COLORS } from '~/routing/search/data/data.source-pills';
+} from '~/routing/search/data/copy';
+import { SEARCH_SOURCE_PILL_COLORS } from '~/routing/search/data/source-pills';
 import type { SearchResultTarget } from '~/routing/search/types/search-result-view';
 import { toSearchResultView } from '~/routing/search/utils/toSearchResultView';
 

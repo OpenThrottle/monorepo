@@ -5,11 +5,11 @@ import { RefreshCwIcon } from 'lucide-react';
 import * as React from 'react';
 import { useRevalidator, useSearchParams } from 'react-router';
 
-import { QUEUE_STATE_FILTER_COPY } from '~/routing/queues/data/data.copy';
+import { QUEUE_STATE_FILTER_COPY } from '~/routing/queues/data/copy';
 import {
   QUEUE_JOB_STATE_DOT_COLOR,
   QUEUE_JOB_STATE_DOT_FALLBACK,
-} from '~/routing/queues/data/data.queue-job-state-dot-color';
+} from '~/routing/queues/data/queue-job-state-dot-color';
 import { queueJobStateLabel } from '~/routing/queues/utils/queue-job-state';
 
 export interface QueueOpsToolbarProps {

@@ -2,7 +2,7 @@ import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
-import { LANDING_CLOSE } from '~/routing/home/data/data.landing';
+import { LANDING_CLOSE } from '~/routing/home/data/landing';
 
 import { LandingClose } from '../LandingClose';
 

@@ -1,7 +1,7 @@
 import { isRecord } from '@openthrottle/nodejs-utils';
 
 import type { ServerHealth } from '../../bridge/types/shell-bridge.ts';
-import { SERVER_HEALTH_QUERY } from '../data/data.settings.ts';
+import { SERVER_HEALTH_QUERY } from '../data/settings.ts';
 
 export type ProbeOtServerResult =
   | { readonly health: ServerHealth; readonly ok: true }

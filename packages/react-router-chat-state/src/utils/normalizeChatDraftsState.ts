@@ -1,10 +1,10 @@
 import { isRecord } from '@openthrottle/nodejs-utils';
 
-import type { ChatDraftsState } from '../data/data.chat-drafts-state';
+import type { ChatDraftsState } from '../data/chat-drafts-state';
 import {
   CHAT_DRAFTS_STATE_VERSION,
   DEFAULT_CHAT_DRAFTS_STATE,
-} from '../data/data.chat-drafts-state';
+} from '../data/chat-drafts-state';
 
 /**
  * @description Coerce unknown persisted JSON into a valid

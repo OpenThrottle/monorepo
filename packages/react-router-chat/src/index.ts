@@ -29,11 +29,11 @@ export * from './components/ChatUsageLimitNotice';
 export * from './config/near-bottom-threshold-px';
 export * from './conversation-stream';
 export * from './conversation-stream-action';
-export * from './data/data.chat-context-meter.classes';
-export * from './data/data.chat-conversation-actions';
-export * from './data/data.chat-model-picker-favorites';
-export * from './data/data.chat-turn-fetcher-intents';
-export * from './data/data.copy';
+export * from './data/chat-context-meter.classes';
+export * from './data/chat-conversation-actions';
+export * from './data/chat-model-picker-favorites';
+export * from './data/chat-turn-fetcher-intents';
+export * from './data/copy';
 export * from './file-mentions';
 export * from './hooks';
 // Legacy names for the hooks' renamed `Use<Name>Options` input interfaces.

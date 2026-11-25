@@ -6,7 +6,7 @@ import {
 import * as React from 'react';
 import { useFetcher, useSearchParams } from 'react-router';
 
-import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import { filterSkillsByQuery } from '~/routing/skills/utils/filterSkillsByQuery';
 import type { SkillSourceFilter } from '~/routing/skills/utils/filterSkillsBySource';
 import {

@@ -7,7 +7,7 @@ import type { ThemeMode } from '@openthrottle/react-router-utils';
 import { isThemeMode } from '@openthrottle/react-router-utils';
 import * as React from 'react';
 
-import { THEME_TOGGLE_OPTIONS } from '../data/data.theme-toggle-options';
+import { THEME_TOGGLE_OPTIONS } from '../data/theme-toggle-options';
 
 export interface OpenThrottleThemeToggleProps {
   /** Accessible label for the toggle group. Defaults to `Color mode`. */

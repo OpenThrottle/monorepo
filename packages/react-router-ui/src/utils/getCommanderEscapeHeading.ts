@@ -1,5 +1,5 @@
 import type { CommanderGroup } from '../components/OpenThrottleCommander';
-import { COMMANDER_ESCAPE_HEADING } from '../data/data.copy';
+import { COMMANDER_ESCAPE_HEADING } from '../data/copy';
 import { scoreCommanderRow } from './scoreCommanderRow';
 
 export interface GetCommanderEscapeHeadingOptions {

@@ -1,7 +1,7 @@
 import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { ChatPermissionResponderContext } from '../data/data.chat-permission-responder-context';
+import { ChatPermissionResponderContext } from '../data/chat-permission-responder-context';
 import { usePinnedToBottom } from '../hooks/usePinnedToBottom';
 import type { ChatMessage, ChatPermissionResponder } from '../types';
 import { findLastUserMessageId } from '../utils/findLastUserMessageId';

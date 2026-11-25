@@ -6,7 +6,7 @@ import { createRoutesStub } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { ScheduleInFlightRunFragment } from '~/__generated__/graphql';
-import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
+import { SCHEDULE_COPY } from '~/routing/schedule/data/copy';
 import { scheduleInFlightRunFixture } from '~/testing/schedule-fixtures';
 
 import { ScheduleActiveRuns } from '../ScheduleActiveRuns';

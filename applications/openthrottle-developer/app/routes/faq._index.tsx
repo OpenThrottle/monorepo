@@ -11,12 +11,9 @@ import * as React from 'react';
 import type { Route } from '@/app/routes/+types/faq._index';
 import { SITE_TITLE } from '~/global/config/settings';
 import { useDocsFeatureFlags } from '~/global/hooks/useDocsFeatureFlags';
-import { docsManifest } from '~/routing/docs/data/data.docs-manifest';
-import { FAQ_INTRO } from '~/routing/faq/data/data.copy';
-import {
-  faqCategories,
-  faqEntries,
-} from '~/routing/faq/data/data.faq-navigation';
+import { docsManifest } from '~/routing/docs/data/docs-manifest';
+import { FAQ_INTRO } from '~/routing/faq/data/copy';
+import { faqCategories, faqEntries } from '~/routing/faq/data/faq-navigation';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

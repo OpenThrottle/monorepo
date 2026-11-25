@@ -5,7 +5,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
-import { GLOBAL_POPOVER_COPY } from '../../data/data.copy';
+import { GLOBAL_POPOVER_COPY } from '../../data/copy';
 import type { GlobalPopoverAction, GlobalPopoverProps } from '../GlobalPopover';
 import { GlobalPopover } from '../GlobalPopover';
 

@@ -3,7 +3,7 @@ import { render } from '@testing-library/react';
 import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { APPEARANCE_PREVIEW_CHART_CLASSES } from '~/routing/settings/data/data.appearance';
+import { APPEARANCE_PREVIEW_CHART_CLASSES } from '~/routing/settings/data/appearance';
 
 import type { AppearancePreviewProps } from '../AppearancePreview';
 import { AppearancePreview } from '../AppearancePreview';

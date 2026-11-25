@@ -1,7 +1,7 @@
 import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { WYSIWYG_CLASSES } from '../data/data.wysiwyg';
+import { WYSIWYG_CLASSES } from '../data/wysiwyg';
 import type { CmsComponentDebug } from '../types';
 
 /**

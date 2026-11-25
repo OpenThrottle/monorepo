@@ -10,7 +10,7 @@ import type {
   BlogTagDetailFragment,
 } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
-import { BLOG_COPY } from '~/routing/blog/data/data.copy';
+import { BLOG_COPY } from '~/routing/blog/data/copy';
 
 import { toBlogIsoDate } from './blog-format';
 import {

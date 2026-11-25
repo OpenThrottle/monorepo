@@ -4,7 +4,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { CALENDAR_EVENTS } from '~/routing/calendar/data/data.events';
+import { CALENDAR_EVENTS } from '~/routing/calendar/data/events';
 
 import type { CalendarEventDetailsProps } from '../CalendarEventDetails';
 import { CalendarEventDetails } from '../CalendarEventDetails';

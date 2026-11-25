@@ -6,9 +6,9 @@ import type { LinkedArtifactRow } from '~/routing/plans/components/LinkedArtifac
 import {
   LINKED_ARTIFACT_FALLBACK_ICON,
   LINKED_ARTIFACT_ICONS,
-} from '~/routing/plans/data/data.linked-artifacts-panel-icons';
-import { LINKED_ARTIFACT_LIFECYCLE_STYLES } from '~/routing/plans/data/data.linked-artifacts-panel-lifecycle-styles';
-import { LINKED_ARTIFACT_VERIFICATION_STYLES } from '~/routing/plans/data/data.linked-artifacts-panel-verification-styles';
+} from '~/routing/plans/data/linked-artifacts-panel-icons';
+import { LINKED_ARTIFACT_LIFECYCLE_STYLES } from '~/routing/plans/data/linked-artifacts-panel-lifecycle-styles';
+import { LINKED_ARTIFACT_VERIFICATION_STYLES } from '~/routing/plans/data/linked-artifacts-panel-verification-styles';
 import { getLinkedArtifactVerifiedWhen } from '~/routing/plans/utils/getLinkedArtifactVerifiedWhen';
 import { toLinkedArtifactView } from '~/routing/plans/utils/linked-artifact-payload';
 import {

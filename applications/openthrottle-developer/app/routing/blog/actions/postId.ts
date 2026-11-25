@@ -17,7 +17,7 @@ import { BLOG_POST_SAVE_INTENT } from '~/routing/blog/config/defaults';
 import {
   BLOG_EDITOR_COPY,
   BLOG_LIFECYCLE_COPY,
-} from '~/routing/blog/data/data.copy';
+} from '~/routing/blog/data/copy';
 import type {
   BlogPostActionResult,
   BlogPostLifecycleRequest,

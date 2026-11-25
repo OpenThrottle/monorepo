@@ -6,7 +6,7 @@ import {
   TELEMETRY_COVERAGE_COPY,
   TELEMETRY_DELIVERY_LEG_LABELS,
   TELEMETRY_WARNING_KINDS,
-} from '~/routing/usage/data/data.telemetry-coverage-copy';
+} from '~/routing/usage/data/telemetry-coverage-copy';
 
 /** Characters of the machine id shown when the machine has no label. */
 const SHORT_MACHINE_ID_LENGTH = 8;

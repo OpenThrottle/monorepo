@@ -5,7 +5,7 @@ import * as React from 'react';
 import type { BlogPostEditorPostFragment } from '~/__generated__/graphql';
 import { BlogEditorBadge } from '~/routing/blog/components/BlogEditorBadge';
 import { BlogPostStateBadge } from '~/routing/blog/components/BlogPostStateBadge';
-import { BLOG_EDITOR_COPY } from '~/routing/blog/data/data.copy';
+import { BLOG_EDITOR_COPY } from '~/routing/blog/data/copy';
 
 export interface BlogPostEditorHeaderProps {
   /** The action area (save and the lifecycle controls); `null` when read-only. */

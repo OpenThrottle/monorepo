@@ -4,7 +4,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import { ROUTE_STATS_URL } from '../../data/data.route-stats';
+import { ROUTE_STATS_URL } from '../../data/route-stats';
 import { GlobalStatsPanel } from '../GlobalStatsPanel';
 import { GlobalStatsToggleButton } from '../GlobalStatsToggleButton';
 

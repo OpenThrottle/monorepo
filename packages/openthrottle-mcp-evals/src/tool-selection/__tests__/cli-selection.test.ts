@@ -11,7 +11,7 @@ import {
   isReadOnlyOtTool,
   otCallOf,
 } from '../cli-selection.ts';
-import { TOOL_SELECTION_CASES } from '../data/data.cases.ts';
+import { TOOL_SELECTION_CASES } from '../data/cases.ts';
 import type { CaseExpectation } from '../eval-case.ts';
 import { gradeCase } from '../gradeCase.ts';
 

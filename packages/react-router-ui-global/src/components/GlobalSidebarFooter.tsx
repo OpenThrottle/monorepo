@@ -11,7 +11,7 @@ import { ENV_SOURCE } from '@openthrottle/react-router-utils';
 import * as React from 'react';
 import { Link } from 'react-router';
 
-import { GLOBAL_SIDEBAR_FOOTER_COPY } from '../data/data.copy';
+import { GLOBAL_SIDEBAR_FOOTER_COPY } from '../data/copy';
 import type { GlobalBackgroundActivity } from '../utils/background-activity';
 import { buildAppReleaseHref } from '../utils/buildAppReleaseHref';
 import {

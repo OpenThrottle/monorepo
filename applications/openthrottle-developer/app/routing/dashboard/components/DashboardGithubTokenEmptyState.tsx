@@ -1,7 +1,7 @@
 import { OpenThrottleEmptyState } from '@openthrottle/react-router-ui';
 import * as React from 'react';
 
-import { GITHUB_STATS_TOKEN_EMPTY_STATE_COPY } from '~/routing/dashboard/data/data.copy';
+import { GITHUB_STATS_TOKEN_EMPTY_STATE_COPY } from '~/routing/dashboard/data/copy';
 
 export interface DashboardGithubTokenEmptyStateProps {
   className?: string;
@@ -11,7 +11,7 @@ export interface DashboardGithubTokenEmptyStateProps {
  * @description Empty state for the dashboard GitHub-stats cards, rendered when
  * the server has no `GITHUB_TOKEN` configured. Instead of showing zeroed /
  * unauthenticated charts with no explanation, it prompts the user to set
- * GITHUB_TOKEN. Copy lives in data.copy.ts.
+ * GITHUB_TOKEN. Copy lives in data/copy.ts.
  */
 export const DashboardGithubTokenEmptyState = (
   props: DashboardGithubTokenEmptyStateProps,

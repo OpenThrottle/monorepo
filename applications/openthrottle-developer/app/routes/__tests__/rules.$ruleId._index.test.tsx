@@ -5,7 +5,7 @@ import { createRoutesStub } from 'react-router';
 import { afterEach, describe, expect, test } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/rules.$ruleId._index';
-import { RULE_DETAIL_COPY } from '~/routing/rules/data/data.copy';
+import { RULE_DETAIL_COPY } from '~/routing/rules/data/copy';
 import { buildRootMatch } from '~/testing/buildRootMatch';
 
 import RuleDetail from '../rules.$ruleId._index';

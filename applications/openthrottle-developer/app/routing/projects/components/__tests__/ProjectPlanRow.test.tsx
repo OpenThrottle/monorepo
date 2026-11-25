@@ -5,7 +5,7 @@ import * as React from 'react';
 import { createRoutesStub, useLocation } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { PROJECT_PLAN_TASKS_COPY } from '~/routing/projects/data/data.copy';
+import { PROJECT_PLAN_TASKS_COPY } from '~/routing/projects/data/copy';
 import type { ProjectPlanTasksData } from '~/routing/projects/types';
 
 import type { ProjectPlanRowProps } from '../ProjectPlanRow';

@@ -1,7 +1,7 @@
 import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { DEFAULT_HEADING_TAG, HEADING_TAGS } from '../data/data.headings';
+import { DEFAULT_HEADING_TAG, HEADING_TAGS } from '../data/headings';
 import type { CmsComponentDebug } from '../types';
 
 /**

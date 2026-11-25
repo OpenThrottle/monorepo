@@ -14,7 +14,7 @@ import {
   LINKED_ARTIFACT_COLLAPSE_THRESHOLD,
   LINKED_ARTIFACT_GROUP_LABELS,
   LINKED_ARTIFACT_GROUP_ORDER,
-} from '~/routing/plans/data/data.linked-artifacts-panel-groups';
+} from '~/routing/plans/data/linked-artifacts-panel-groups';
 import { toMillis } from '~/routing/plans/utils/linked-artifacts-panel';
 
 export interface GroupableArtifact {

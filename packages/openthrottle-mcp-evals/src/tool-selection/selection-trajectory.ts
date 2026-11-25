@@ -12,7 +12,7 @@ import type {
 } from '@openthrottle/openthrottle-agentic-utils';
 import { ATIF_SCHEMA_VERSION } from '@openthrottle/openthrottle-agentic-utils';
 
-import { TOOL_SELECTION_AGENT_NAME } from './data/data.dataset.ts';
+import { TOOL_SELECTION_AGENT_NAME } from './data/dataset.ts';
 import type { SelectedCall, Selection, SelectionUsage } from './eval-case.ts';
 
 type CallsSelection = Extract<Selection, { readonly kind: 'calls' }>;

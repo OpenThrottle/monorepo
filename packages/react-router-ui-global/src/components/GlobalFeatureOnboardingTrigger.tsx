@@ -3,7 +3,7 @@ import { SparklesIcon } from 'lucide-react';
 import * as React from 'react';
 
 import { GLOBAL_FEATURE_ONBOARDING_MODAL } from '../config';
-import { GLOBAL_FEATURE_ONBOARDING_TRIGGER_LABEL } from '../data/data.copy';
+import { GLOBAL_FEATURE_ONBOARDING_TRIGGER_LABEL } from '../data/copy';
 import { useUrlSyncedOverlay } from '../hooks/useUrlSyncedOverlay';
 
 export interface GlobalFeatureOnboardingTriggerProps {

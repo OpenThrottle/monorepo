@@ -14,7 +14,7 @@ import { useDefaultEditor } from '~/global/hooks/useDefaultEditor';
 import { orderEditorsDefaultFirst } from '~/global/utils/orderEditorsDefaultFirst';
 import { PlanDeferredSection } from '~/routing/plans/components/PlanDeferredSection';
 import { PlanToolbarTagsSkeleton } from '~/routing/plans/components/PlanToolbarTagsSkeleton';
-import { PLAN_DEFERRED_SECTION_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_DEFERRED_SECTION_COPY } from '~/routing/plans/data/copy';
 import { getPlanEditorTooltip } from '~/routing/plans/utils/getPlanEditorTooltip';
 
 export interface PlanEditorActionsProps {

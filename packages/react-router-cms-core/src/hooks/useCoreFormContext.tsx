@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import { CoreFormContext } from '../data/data.core-form-context';
+import { CoreFormContext } from '../data/core-form-context';
 import type { CmsFormContextValue } from '../types/cms-render';
 
 /**

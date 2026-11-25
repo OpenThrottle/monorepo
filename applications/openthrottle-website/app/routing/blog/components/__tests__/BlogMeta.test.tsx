@@ -3,7 +3,7 @@ import { render } from '@testing-library/react';
 import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { BLOG_COPY } from '~/routing/blog/data/data.copy';
+import { BLOG_COPY } from '~/routing/blog/data/copy';
 import { MOCK_BLOG_POST_SUMMARY } from '~/routing/blog/testing/mock.blog-posts';
 
 import type { BlogMetaProps } from '../BlogMeta';

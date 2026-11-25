@@ -11,7 +11,7 @@ import {
 import { InfoIcon } from 'lucide-react';
 import * as React from 'react';
 
-import { WEBSOCKET_DEBUGGER_EVENT_OPTIONS } from '../data/data.websocket-debugger-events';
+import { WEBSOCKET_DEBUGGER_EVENT_OPTIONS } from '../data/websocket-debugger-events';
 import { useOpenThrottleWebsocketDebugger } from '../hooks/useOpenThrottleWebsocketDebugger';
 import type {
   WebsocketDebuggerConnectionStatus,

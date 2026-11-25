@@ -4,13 +4,13 @@ import { useFetcher } from 'react-router';
 
 import type { PlanInboxMessageFragment } from '~/__generated__/graphql';
 import type { action as planDetailAction } from '~/routes/plans.$planId._index';
-import { PLAN_INBOX_COPY } from '~/routing/plans/data/data.copy';
-import type { PlanInboxStatusDisplay } from '~/routing/plans/data/data.plan-inbox';
+import { PLAN_INBOX_COPY } from '~/routing/plans/data/copy';
+import type { PlanInboxStatusDisplay } from '~/routing/plans/data/plan-inbox';
 import {
   PLAN_INBOX_KIND_BADGE_COLOR,
   PLAN_INBOX_KIND_OPTIONS,
   PLAN_INBOX_STATUS_DISPLAY,
-} from '~/routing/plans/data/data.plan-inbox';
+} from '~/routing/plans/data/plan-inbox';
 import {
   formatDateShort,
   formatDurationBetween,

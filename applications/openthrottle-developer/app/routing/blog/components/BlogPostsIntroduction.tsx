@@ -2,7 +2,7 @@ import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import { BookOpenIcon } from 'lucide-react';
 import * as React from 'react';
 
-import { BLOG_COPY } from '~/routing/blog/data/data.copy';
+import { BLOG_COPY } from '~/routing/blog/data/copy';
 
 export interface BlogPostsIntroductionProps {}
 

@@ -16,7 +16,7 @@ import {
   SKILL_VOCABULARY_COPY,
   SKILLS_SEARCH_COPY,
   SKILLS_SOURCE_COPY,
-} from '~/routing/skills/data/data.copy';
+} from '~/routing/skills/data/copy';
 import type { SkillSourceFilter } from '~/routing/skills/utils/filterSkillsBySource';
 import { isSkillSourceFilter } from '~/routing/skills/utils/filterSkillsBySource';
 

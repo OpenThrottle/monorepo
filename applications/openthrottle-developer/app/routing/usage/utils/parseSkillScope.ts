@@ -1,5 +1,5 @@
-import type { SkillUsageScopeFilter } from '~/routing/usage/data/data.skill-usage-copy';
-import { SKILL_USAGE_SCOPES } from '~/routing/usage/data/data.skill-usage-copy';
+import type { SkillUsageScopeFilter } from '~/routing/usage/data/skill-usage-copy';
+import { SKILL_USAGE_SCOPES } from '~/routing/usage/data/skill-usage-copy';
 
 /**
  * Narrow a raw `skillScope` search-param value to a valid

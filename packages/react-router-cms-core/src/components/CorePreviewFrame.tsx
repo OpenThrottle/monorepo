@@ -2,8 +2,8 @@ import { cn } from '@openthrottle/react-router-shadcn';
 import { useAtomValue } from 'jotai';
 import * as React from 'react';
 
-import { atomSettings } from '../data/data.atom.settings';
-import { PREVIEW_DEVICE_CLASS_NAMES } from '../data/data.preview';
+import { atomSettings } from '../data/atom.settings';
+import { PREVIEW_DEVICE_CLASS_NAMES } from '../data/preview';
 
 /**
  * @public

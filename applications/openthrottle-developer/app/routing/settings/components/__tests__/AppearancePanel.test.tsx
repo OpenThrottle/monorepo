@@ -6,10 +6,10 @@ import { createStore, Provider } from 'jotai';
 import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import type { ConfigObject } from '~/global/data/data.appearance-config';
-import { DEFAULT_APPEARANCE_CONFIG } from '~/global/data/data.appearance-config';
-import { configAtom } from '~/global/data/data.atom-config';
-import { APPEARANCE_SECTIONS } from '~/routing/settings/data/data.appearance';
+import type { ConfigObject } from '~/global/data/appearance-config';
+import { DEFAULT_APPEARANCE_CONFIG } from '~/global/data/appearance-config';
+import { configAtom } from '~/global/data/atom-config';
+import { APPEARANCE_SECTIONS } from '~/routing/settings/data/appearance';
 
 import type { AppearancePanelProps } from '../AppearancePanel';
 import { AppearancePanel } from '../AppearancePanel';

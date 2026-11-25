@@ -1,7 +1,4 @@
-import {
-  CMS_SAFELIST_BANNER,
-  CMS_SAFELIST_GROUPS,
-} from '../data/data.cms-safelist';
+import { CMS_SAFELIST_BANNER, CMS_SAFELIST_GROUPS } from '../data/cms-safelist';
 
 /** @description Prettier's `printWidth`; a rule that fits stays on one line. */
 const PRINT_WIDTH = 80;

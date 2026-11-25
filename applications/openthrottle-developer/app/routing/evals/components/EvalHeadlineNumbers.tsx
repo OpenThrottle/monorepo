@@ -3,10 +3,7 @@ import * as React from 'react';
 
 import type { EvalRunReportNumbersFragment } from '~/__generated__/graphql';
 import { EvalStat } from '~/routing/evals/components/EvalStat';
-import {
-  EVAL_REPORT_COPY,
-  EVAL_STAT_COPY,
-} from '~/routing/evals/data/data.copy';
+import { EVAL_REPORT_COPY, EVAL_STAT_COPY } from '~/routing/evals/data/copy';
 import {
   formatCostPerSuccess,
   formatDetectionFloor,

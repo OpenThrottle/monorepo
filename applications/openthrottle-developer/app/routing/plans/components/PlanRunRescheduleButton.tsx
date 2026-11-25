@@ -2,7 +2,7 @@ import { Button } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import { PlanRunRescheduleDialog } from '~/routing/plans/components/PlanRunRescheduleDialog';
-import { PLAN_RUN_RESCHEDULE_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_RUN_RESCHEDULE_COPY } from '~/routing/plans/data/copy';
 
 export interface PlanRunRescheduleButtonProps {
   readonly planId: string;

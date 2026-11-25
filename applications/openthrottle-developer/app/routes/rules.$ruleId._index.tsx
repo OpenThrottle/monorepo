@@ -22,7 +22,7 @@ import { RULE_PREVIEW_ENVIRONMENT_PARAM } from '~/routing/rules/config/rule-prev
 import {
   RULE_DETAIL_COPY,
   RULES_NOT_FOUND_COPY,
-} from '~/routing/rules/data/data.copy';
+} from '~/routing/rules/data/copy';
 import { loadRulePreviewForRule } from '~/routing/rules/utils/rule-preview.server';
 import { parseRulePreviewEnvironment } from '~/routing/rules/utils/rule-preview-params';
 import { RulesActionFormSchema } from '~/routing/rules/utils/RulesActionFormSchema';

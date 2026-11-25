@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
-import { HOOK_LIST_COPY } from '~/routing/plans/data/data.copy';
+import { HOOK_LIST_COPY } from '~/routing/plans/data/copy';
 
 import type { HookTaskListItem } from '../HookTaskList';
 import { HookTaskList } from '../HookTaskList';

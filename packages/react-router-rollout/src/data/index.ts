@@ -1,4 +1,1 @@
-export {
-  RolloutContext,
-  type RolloutContextValue,
-} from './data.rollout.context';
+export { RolloutContext, type RolloutContextValue } from './rollout.context';

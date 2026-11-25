@@ -18,11 +18,11 @@ import { useFetcher } from 'react-router';
 
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 import type { action as planDetailAction } from '~/routes/plans.$planId._index';
-import { PLAN_INBOX_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_INBOX_COPY } from '~/routing/plans/data/copy';
 import {
   PLAN_INBOX_KIND_OPTIONS,
   PLAN_INBOX_NO_TASK_VALUE,
-} from '~/routing/plans/data/data.plan-inbox';
+} from '~/routing/plans/data/plan-inbox';
 import { filterOutHookTasks } from '~/routing/plans/utils/hook-tasks';
 import { sortPlanTasksByListOrder } from '~/routing/plans/utils/sortPlanTasksByListOrder';
 

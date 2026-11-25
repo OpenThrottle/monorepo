@@ -10,8 +10,8 @@ import {
 } from '@openthrottle/react-router-rollout';
 import * as React from 'react';
 
-import { developerRolloutFlags } from '~/global/data/data.rollout-flags';
-import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
+import { developerRolloutFlags } from '~/global/data/rollout-flags';
+import { ROLLOUT_COPY } from '~/routing/settings/data/copy';
 import { getRolloutHydrationStatusLabel } from '~/routing/settings/utils/getRolloutHydrationStatusLabel';
 
 export interface RolloutSdkHydrationStatusProps {}

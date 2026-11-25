@@ -21,7 +21,7 @@ import { Link } from 'react-router';
 
 import type { Route } from '@/app/routes/+types/about';
 import { SITE_TITLE } from '~/global/config/settings';
-import { opensource } from '~/routing/legal/data/data.opensource';
+import { opensource } from '~/routing/legal/data/opensource';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

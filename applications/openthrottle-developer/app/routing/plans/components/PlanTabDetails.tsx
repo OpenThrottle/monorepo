@@ -15,9 +15,9 @@ import {
   workflowRunIterationTimeoutTextAtom,
   workflowRunOptionsAtom,
   workflowWorkingDirectoryAtom,
-} from '~/routing/plans/data/data.atom-plan';
-import { PLAN_LIFECYCLE_HOOKS_COPY } from '~/routing/plans/data/data.copy';
-import { PLAN_DEFERRED_SECTION_COPY } from '~/routing/plans/data/data.copy';
+} from '~/routing/plans/data/atom-plan';
+import { PLAN_LIFECYCLE_HOOKS_COPY } from '~/routing/plans/data/copy';
+import { PLAN_DEFERRED_SECTION_COPY } from '~/routing/plans/data/copy';
 import { usePlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
 
 export interface PlanTabDetailsProps {

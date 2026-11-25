@@ -1,5 +1,5 @@
 import type { SearchChunk } from '~/__generated__/graphql';
-import { SEARCH_RESULT_COPY } from '~/routing/search/data/data.copy';
+import { SEARCH_RESULT_COPY } from '~/routing/search/data/copy';
 import type {
   SearchResultContext,
   SearchResultTarget,

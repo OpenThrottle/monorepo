@@ -3,7 +3,7 @@
  * 1-based attempt number as `iteration`; consecutive chunks sharing a (task, attempt) pair form
  * one attempt. Historical rows and plan-scoped chunks have no kind and stay plain.
  */
-import { OUTPUT_STREAM_COPY } from '~/routing/plans/data/data.copy';
+import { OUTPUT_STREAM_COPY } from '~/routing/plans/data/copy';
 import {
   ATTEMPT_CLOSING_SUMMARY_MAX_CHARS,
   ATTEMPT_MS_PER_SECOND,
@@ -11,7 +11,7 @@ import {
   ATTEMPT_SECONDS_PER_MINUTE,
   ATTEMPT_VALIDATION_SUMMARY_PATTERN,
   ATTEMPT_WORKER_KINDS,
-} from '~/routing/plans/data/data.output-stream-attempt';
+} from '~/routing/plans/data/output-stream-attempt';
 import type { OutputStreamChunk } from '~/routing/plans/utils/output-stream-chunks';
 import { toChunkTimeMs } from '~/routing/plans/utils/output-stream-chunks';
 

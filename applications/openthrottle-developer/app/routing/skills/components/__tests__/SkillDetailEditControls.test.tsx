@@ -5,7 +5,7 @@ import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { SKILL_DETAIL_COPY } from '~/routing/skills/data/data.copy';
+import { SKILL_DETAIL_COPY } from '~/routing/skills/data/copy';
 
 import type { SkillDetailEditControlsProps } from '../SkillDetailEditControls';
 import { SkillDetailEditControls } from '../SkillDetailEditControls';

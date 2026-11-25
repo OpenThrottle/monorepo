@@ -2,7 +2,7 @@ import type { DataTableColumnDef } from '@openthrottle/react-router-shadcn';
 import { DataTable } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { RULES_COPY } from '~/routing/rules/data/data.copy';
+import { RULES_COPY } from '~/routing/rules/data/copy';
 import type {
   RankedTagActionRule,
   RuleGroup,

@@ -1,8 +1,8 @@
 import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { CHAT_CONTEXT_METER_TONE_CLASSES } from '../data/data.chat-context-meter.classes';
-import { CHAT_CONTEXT_METER_COPY } from '../data/data.copy';
+import { CHAT_CONTEXT_METER_TONE_CLASSES } from '../data/chat-context-meter.classes';
+import { CHAT_CONTEXT_METER_COPY } from '../data/copy';
 import type { ChatTokenUsage } from '../types';
 import { resolveContextWindowUsage } from '../utils/chat-context-window';
 import { formatContextMeterLabel } from '../utils/formatContextMeterLabel';

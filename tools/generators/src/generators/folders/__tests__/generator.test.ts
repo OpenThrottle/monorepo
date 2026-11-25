@@ -54,7 +54,7 @@ describe('folders generator', () => {
     await foldersGenerator(tree, { application, folder, name: 'probe-area' });
 
     const root = `applications/${application}/app/routing/probe-area`;
-    const copy = tree.read(`${root}/data/data.copy.ts`, 'utf-8');
+    const copy = tree.read(`${root}/data/copy.ts`, 'utf-8');
     const defaults = tree.read(`${root}/config/defaults.ts`, 'utf-8');
 
     expect(copy).toContain('export const PROBE_AREA_NOT_FOUND_COPY = {');

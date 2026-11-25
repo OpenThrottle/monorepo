@@ -4,7 +4,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { RULES_COPY } from '../../data/data.copy';
+import { RULES_COPY } from '../../data/copy';
 import type { RulesStatsProps } from '../RulesStats';
 import { RulesStats } from '../RulesStats';
 

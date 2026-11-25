@@ -10,7 +10,7 @@ import * as React from 'react';
 
 import type { ScheduledJobRunRowFragment } from '~/__generated__/graphql';
 import { ScheduleRunsTable } from '~/routing/schedule/components/ScheduleRunsTable';
-import { SCHEDULE_WEBHOOK_COPY } from '~/routing/schedule/data/data.copy';
+import { SCHEDULE_WEBHOOK_COPY } from '~/routing/schedule/data/copy';
 import {
   parseScheduleDetailTab,
   SCHEDULE_DETAIL_TAB_SEARCH_PARAM,

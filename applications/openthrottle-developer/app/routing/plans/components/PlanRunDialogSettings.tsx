@@ -9,7 +9,7 @@ import { PlanRunOtLoopFields } from '~/routing/plans/components/PlanRunOtLoopFie
 import {
   PLAN_RUN_DIALOG_COPY,
   PLAN_RUN_MODEL_EFFORT_COPY,
-} from '~/routing/plans/data/data.copy';
+} from '~/routing/plans/data/copy';
 import type { PlanRunModelSelection } from '~/routing/plans/utils/plan-run-model-effort';
 import type { PlanRunDriverUi } from '~/routing/plans/utils/plan-run-options';
 

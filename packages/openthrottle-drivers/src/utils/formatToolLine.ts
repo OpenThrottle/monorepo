@@ -7,7 +7,7 @@
 
 import { isRecord } from '@openthrottle/nodejs-utils';
 
-import type { ToolArgumentKindsValue } from '../data/data.tool-argument.ts';
+import type { ToolArgumentKindsValue } from '../data/tool-argument.ts';
 import {
   TOOL_ARGUMENT_FIELDS,
   TOOL_ARGUMENT_KIND_BY_TOOL,
@@ -15,7 +15,7 @@ import {
   TOOL_ARGUMENT_MAX_LENGTH,
   TOOL_LINE_ELLIPSIS,
   TOOL_LINE_MAX_LENGTH,
-} from '../data/data.tool-argument.ts';
+} from '../data/tool-argument.ts';
 
 export interface FormatToolLineOptions {
   /** Directory absolute paths are shown relative to; defaults to `process.cwd()`. */

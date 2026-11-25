@@ -18,7 +18,7 @@ import {
   TOOL_SELECTION_GRADER_ID,
   TOOL_SELECTION_GRADER_VERSION,
   TOOL_SELECTION_TARGET,
-} from './data/data.dataset.ts';
+} from './data/dataset.ts';
 import type {
   ToolSelectionCase,
   ToolSelector,

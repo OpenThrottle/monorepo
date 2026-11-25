@@ -20,7 +20,7 @@ import { PlanWorkflowRunLatest } from '~/routing/plans/components/PlanWorkflowRu
 import { PlanWorkflowRunTransparencyAuditTable } from '~/routing/plans/components/PlanWorkflowRunTransparencyAuditTable';
 import { PlanWorkflowRunTuningSummary } from '~/routing/plans/components/PlanWorkflowRunTuningSummary';
 import { PlanWorkflowRunUpcoming } from '~/routing/plans/components/PlanWorkflowRunUpcoming';
-import { PLAN_RUN_TRANSPARENCY_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_RUN_TRANSPARENCY_COPY } from '~/routing/plans/data/copy';
 import type { PlanRunOptions } from '~/routing/plans/utils/plan-run-options';
 
 export interface PlanWorkflowRunTransparencyProps {

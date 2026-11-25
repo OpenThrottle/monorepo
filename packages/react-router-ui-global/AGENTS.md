@@ -13,7 +13,7 @@ shared per-row table Actions menu (`GlobalPopover`).
 - [src/components/GlobalProviders.tsx](src/components/GlobalProviders.tsx) — DnD + Sidebar + Tooltip + Chat providers; wires `useChatTurnFetcher` to the host app's root action (`/`).
 - [src/components/GlobalErrorBoundary.tsx](src/components/GlobalErrorBoundary.tsx) + [src/utils/client-error-rollbar.ts](src/utils/client-error-rollbar.ts) — client error reporting.
 - [src/components/GlobalPopover.tsx](src/components/GlobalPopover.tsx) — per-row Actions menu (`DropdownMenu` under the hood). Siblings: `GlobalPopoverActionItem`, `GlobalPopoverConfirmDialog`, `GlobalPopoverActionsHeader`.
-- [src/data/data.copy.ts](src/data/data.copy.ts) — `GLOBAL_POPOVER_COPY` (Actions header + default confirm labels).
+- [src/data/copy.ts](src/data/copy.ts) — `GLOBAL_POPOVER_COPY` (Actions header + default confirm labels).
 - [src/config/index.ts](src/config/index.ts) — metrics storage keys, poll-interval presets, `GLOBAL_METRICS_CHART_CONFIG`.
 - [src/components/GradientMesh.tsx](src/components/GradientMesh.tsx) — `@paper-design/shaders-react` mesh; honors `usePrefersReducedMotion`.
 

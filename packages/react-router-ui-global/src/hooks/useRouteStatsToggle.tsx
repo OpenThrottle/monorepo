@@ -1,7 +1,7 @@
 import * as React from 'react';
 import type { NavigateOptions } from 'react-router';
 
-import { ROUTE_STATS_URL } from '../data/data.route-stats';
+import { ROUTE_STATS_URL } from '../data/route-stats';
 import { useUrlSyncedOverlay } from './useUrlSyncedOverlay';
 
 export interface UseRouteStatsToggleResult {

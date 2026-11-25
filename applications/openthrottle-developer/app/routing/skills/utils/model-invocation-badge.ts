@@ -4,7 +4,7 @@
  * gating. See docs/monorepo/skill-availability-design.md ("Surfacing").
  */
 
-import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 
 export interface ModelInvocationBadge {
   readonly color: 'amber' | 'green' | 'slate';

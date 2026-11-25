@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { PLAN_EDITOR_ACTIONS_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_EDITOR_ACTIONS_COPY } from '~/routing/plans/data/copy';
 import { getPlanEditorTooltip } from '~/routing/plans/utils/getPlanEditorTooltip';
 
 describe('getPlanEditorTooltip', () => {

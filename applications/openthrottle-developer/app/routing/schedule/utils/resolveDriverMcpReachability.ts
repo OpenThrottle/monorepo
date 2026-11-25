@@ -1,8 +1,8 @@
 import type {
   DriverMcpOption,
   DriverMcpReachabilityValue,
-} from '~/routing/schedule/data/data.driver-mcp';
-import { DRIVER_MCP_REACHABILITY } from '~/routing/schedule/data/data.driver-mcp';
+} from '~/routing/schedule/data/driver-mcp';
+import { DRIVER_MCP_REACHABILITY } from '~/routing/schedule/data/driver-mcp';
 
 /**
  * @description Resolves a driver id to its reachability. Returns `unknown` when the driver is absent

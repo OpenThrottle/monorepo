@@ -1,5 +1,5 @@
-import type { RuleApplicationStateName } from '~/routing/rules/data/data.rule-application-states';
-import { RULE_APPLICATION_STATE_ORDER } from '~/routing/rules/data/data.rule-application-states';
+import type { RuleApplicationStateName } from '~/routing/rules/data/rule-application-states';
+import { RULE_APPLICATION_STATE_ORDER } from '~/routing/rules/data/rule-application-states';
 
 /** A ledger row as the rule detail page needs it (matches the loader selection). */
 export interface RuleApplicationRowData {

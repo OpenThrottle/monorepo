@@ -12,7 +12,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import type { RecordingProfile } from '../../config/config.backends.ts';
 import { CLAUDE_RECORDING_PROFILE } from '../../config/config.backends.ts';
-import { SCENARIOS } from '../../data/data.scenarios.ts';
+import { SCENARIOS } from '../../data/scenarios.ts';
 import type { Scenario } from '../../types/scenario.ts';
 import { recordScenario } from '../record.ts';
 import { placeholderUuid } from '../sanitizer.ts';

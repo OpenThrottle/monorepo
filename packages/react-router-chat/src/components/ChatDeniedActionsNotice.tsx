@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import { CHAT_DENIED_ACTIONS_COPY } from '../data/data.copy';
+import { CHAT_DENIED_ACTIONS_COPY } from '../data/copy';
 import type { ChatTurnDeniedActionsEvent } from '../types';
 
 export interface ChatDeniedActionsNoticeProps {

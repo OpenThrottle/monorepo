@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import { SCHEDULE_WEBHOOK_SIGNING_COPY } from '~/routing/schedule/data/data.copy';
+import { SCHEDULE_WEBHOOK_SIGNING_COPY } from '~/routing/schedule/data/copy';
 
 interface SigningGuide {
   readonly heading: string;

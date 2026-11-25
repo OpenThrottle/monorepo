@@ -1,7 +1,7 @@
 import { Button, cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { CHAT_QUEUED_MESSAGES_COPY } from '../data/data.copy';
+import { CHAT_QUEUED_MESSAGES_COPY } from '../data/copy';
 import type { ChatQueuedMessage } from '../types';
 import { ChatQueuedMessageRow } from './ChatQueuedMessageRow';
 

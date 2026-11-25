@@ -12,8 +12,8 @@ import {
 import * as React from 'react';
 import { Form } from 'react-router';
 
-import { FRAGMENT_EDITOR_COPY } from '~/routing/fragments/data/data.copy';
-import { FRAGMENT_INTENT } from '~/routing/fragments/data/data.intents';
+import { FRAGMENT_EDITOR_COPY } from '~/routing/fragments/data/copy';
+import { FRAGMENT_INTENT } from '~/routing/fragments/data/intents';
 
 export interface FragmentChildCreateProps {
   readonly className: string | undefined;

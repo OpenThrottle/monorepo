@@ -2,9 +2,9 @@
 
 The typed source of truth for how OpenThrottle describes itself. It holds two layers that change at different speeds:
 
-- **Positioning canon** (`PRODUCT_POSITIONING`, `src/data/data.positioning.ts`): the tagline, lede and four pillars, each in short (≤60 chars), medium (≤160) and long forms. Changes quarterly, and only by a human.
-- **Feature registry** (`PRODUCT_FEATURES`, `src/data/data.features.ts`): one entry per capability, a discriminated union on `status`. Changes weekly.
-- **Project list** (`PRODUCT_PROJECTS`, `src/data/data.projects.ts`): the workspace projects and their maturity (`stable`, `experimental`, `planned`) for the org profile's status table. Nx tags carry no maturity signal, so it is declared here; `check-surfaces` fails when a `path` no longer exists.
+- **Positioning canon** (`PRODUCT_POSITIONING`, `src/data/positioning.ts`): the tagline, lede and four pillars, each in short (≤60 chars), medium (≤160) and long forms. Changes quarterly, and only by a human.
+- **Feature registry** (`PRODUCT_FEATURES`, `src/data/features.ts`): one entry per capability, a discriminated union on `status`. Changes weekly.
+- **Project list** (`PRODUCT_PROJECTS`, `src/data/projects.ts`): the workspace projects and their maturity (`stable`, `experimental`, `planned`) for the org profile's status table. Nx tags carry no maturity signal, so it is declared here; `check-surfaces` fails when a `path` no longer exists.
 
 There is no Markdown source. Every public surface is built from this data, and none of them is ever read back as a source.
 
@@ -68,7 +68,7 @@ The two network checks skip with a warning when `gh` or the API cannot be reache
 
 ## Keeping it current
 
-The registry moves forward on its own schedule. [`.agents/prompts/Job_FeatureRegistryRefresh.md`](../../.agents/prompts/Job_FeatureRegistryRefresh.md) is a weekly, read-only audit: it reads the week's landed work (`get_activity_by_date`, merged PRs and their `Plan-Id` footers), decides which changes a user would notice (a new capability, `planned` → `in-flight` → `shipped`, stale wording, moved docs), and files one OpenThrottle plan titled `🏷️ Feature registry refresh: <date>` with the exact `data.features.ts` diff and its evidence, ready for `/ot-loop`. It never edits the registry, never touches the canon and never flips `public`; new entries are proposed private, for the owner to approve.
+The registry moves forward on its own schedule. [`.agents/prompts/Job_FeatureRegistryRefresh.md`](../../.agents/prompts/Job_FeatureRegistryRefresh.md) is a weekly, read-only audit: it reads the week's landed work (`get_activity_by_date`, merged PRs and their `Plan-Id` footers), decides which changes a user would notice (a new capability, `planned` → `in-flight` → `shipped`, stale wording, moved docs), and files one OpenThrottle plan titled `🏷️ Feature registry refresh: <date>` with the exact `data/features.ts` diff and its evidence, ready for `/ot-loop`. It never edits the registry, never touches the canon and never flips `public`; new entries are proposed private, for the owner to approve.
 
 It runs as an OpenThrottle scheduled job: **Feature registry refresh (weekly)**, provider `claude`, cron `0 9 * * 1` in `America/Los_Angeles`, repository `monorepo` (the primary checkout), with a prompt that points the agent at the file above. Manage it on the developer app's `/schedule` page.
 

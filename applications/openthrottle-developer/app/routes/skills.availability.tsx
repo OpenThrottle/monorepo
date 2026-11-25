@@ -24,7 +24,7 @@ import {
 import { SkillAvailabilityPostureCard } from '~/routing/skills/components/SkillAvailabilityPostureCard';
 import { SkillAvailabilityRulesEditor } from '~/routing/skills/components/SkillAvailabilityRulesEditor';
 import { DOGFOOD_NX_PROJECT_NAME } from '~/routing/skills/config/availability';
-import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/data.copy';
+import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/copy';
 import type {
   SkillAvailabilityRuleValue,
   SkillTagValue,

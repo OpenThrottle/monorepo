@@ -5,7 +5,7 @@ import * as React from 'react';
 import { createRoutesStub, useSearchParams } from 'react-router';
 import { afterEach, describe, expect, test } from 'vitest';
 
-import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
+import { SCHEDULE_COPY } from '~/routing/schedule/data/copy';
 
 import type { ScheduleToolbarProps } from '../ScheduleToolbar';
 import { ScheduleToolbar } from '../ScheduleToolbar';

@@ -15,7 +15,7 @@ import { SkillsIndexContent } from '~/routing/skills/components/SkillsIndexConte
 import { SkillsIndexUsage } from '~/routing/skills/components/SkillsIndexUsage';
 import { SkillsIntroduction } from '~/routing/skills/components/SkillsIntroduction';
 import { SKILL_USAGE_RANGE_DAYS } from '~/routing/skills/config/skill-usage';
-import { SKILLS_ONBOARDING } from '~/routing/skills/data/data.copy';
+import { SKILLS_ONBOARDING } from '~/routing/skills/data/copy';
 import { mergeRepoSkillsWithProjectSkills } from '~/routing/skills/utils/mergeRepoSkillsWithProjectSkills';
 import { mergeRepoSkillsWithSkillAvailability } from '~/routing/skills/utils/mergeRepoSkillsWithSkillAvailability';
 import {

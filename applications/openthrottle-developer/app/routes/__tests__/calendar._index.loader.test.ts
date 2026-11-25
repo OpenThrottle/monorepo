@@ -3,7 +3,7 @@ import { createTestRouterContext } from '@openthrottle/react-router-testing';
 import { describe, expect, test } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/calendar._index';
-import { CALENDAR_DEMO_EVENTS } from '~/routing/calendar/data/data.calendar-demo';
+import { CALENDAR_DEMO_EVENTS } from '~/routing/calendar/data/calendar-demo';
 
 import { loader } from '../calendar._index';
 

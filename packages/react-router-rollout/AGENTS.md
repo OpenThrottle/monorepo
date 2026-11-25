@@ -4,7 +4,7 @@ Client-side React Router SDK for OpenThrottle **rollout** (feature flags): typed
 catalog helpers, root provider hydration, and hooks.
 
 **Consumed by:** `openthrottle-developer` (`DeveloperRolloutProvider` + catalog
-in `app/global/data/data.rollout-flags.ts`).
+in `app/global/data/rollout-flags.ts`).
 
 ## Ownership (do not blur)
 

@@ -1,4 +1,4 @@
-import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
+import { ROLLOUT_COPY } from '~/routing/settings/data/copy';
 
 /**
  * @description The status line for the rollout SDK hydration demo. Any status other than

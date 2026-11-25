@@ -17,7 +17,7 @@ import type {
   DiscoveredFolderObject,
   WorkspacePickerCapabilitiesObject,
 } from '~/__generated__/graphql';
-import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
+import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/copy';
 import { AddFolderCandidate } from '~/routing/settings/repositories/components/AddFolderCandidate';
 import { DirectoryPicker } from '~/routing/settings/repositories/components/DirectoryPicker';
 import { NativeBrowse } from '~/routing/settings/repositories/components/NativeBrowse';

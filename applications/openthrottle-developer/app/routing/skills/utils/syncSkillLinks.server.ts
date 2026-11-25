@@ -32,7 +32,7 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { isPathInsideRoot } from '~/routing/agents/utils/skill-path-allowlist.server';
-import { SKILL_CREATE_COPY } from '~/routing/skills/data/data.copy';
+import { SKILL_CREATE_COPY } from '~/routing/skills/data/copy';
 
 /** Fixed, repo-relative. Never built from client input. */
 const SYNC_SCRIPT_RELATIVE_PATH = 'skills/ot-skill-sync/scripts/sync.sh';

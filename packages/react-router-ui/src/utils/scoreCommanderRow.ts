@@ -1,7 +1,7 @@
 import type { CommandFilter } from '@openthrottle/react-router-shadcn';
 import { commandDefaultFilter } from '@openthrottle/react-router-shadcn';
 
-import { COMMANDER_ESCAPE_ROW_KEYWORD } from '../data/data.commander';
+import { COMMANDER_ESCAPE_ROW_KEYWORD } from '../data/commander';
 
 /**
  * @description cmdk `filter` for the command palette. cmdk sorts rows and

@@ -6,7 +6,7 @@ import {
   TIMELINE_SPAN_FILL_CLASS,
   TIMELINE_SPAN_KIND_LABEL,
 } from '~/routing/timeline/config/kinds';
-import { TIMELINE_SPAN_TOOLTIP_COPY } from '~/routing/timeline/data/data.copy';
+import { TIMELINE_SPAN_TOOLTIP_COPY } from '~/routing/timeline/data/copy';
 import {
   formatTimelineDuration,
   formatTimelineTimestamp,

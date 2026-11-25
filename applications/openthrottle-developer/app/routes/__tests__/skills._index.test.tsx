@@ -6,11 +6,11 @@ import { createRoutesStub, useLocation } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/skills._index';
-import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import {
   SKILLS_EMPTY_COPY,
   SKILLS_ONBOARDING,
-} from '~/routing/skills/data/data.copy';
+} from '~/routing/skills/data/copy';
 import type { SkillsIndexUsageData } from '~/routing/skills/types';
 import { buildRootMatch } from '~/testing/buildRootMatch';
 

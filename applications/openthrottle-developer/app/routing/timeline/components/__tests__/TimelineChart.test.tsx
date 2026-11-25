@@ -9,7 +9,7 @@ import {
   FIXTURE_WINDOW_TO,
   TIMELINE_FIXTURE_MARKERS,
   TIMELINE_FIXTURE_SPANS,
-} from '~/routing/timeline/data/data.fixtures';
+} from '~/routing/timeline/data/fixtures';
 
 import type { TimelineChartProps } from '../TimelineChart';
 import { TimelineChart } from '../TimelineChart';

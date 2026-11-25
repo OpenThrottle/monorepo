@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { INITIAL_TRANSCRIPTION_SNAPSHOT } from '~/routing/home/data/data.transcription';
+import { INITIAL_TRANSCRIPTION_SNAPSHOT } from '~/routing/home/data/transcription';
 
 import { reduceTranscriptionChunk } from '../reduceTranscriptionChunk';
 

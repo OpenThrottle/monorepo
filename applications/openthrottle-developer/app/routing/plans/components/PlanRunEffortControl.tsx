@@ -9,7 +9,7 @@ import {
 import { SlidersHorizontalIcon } from 'lucide-react';
 import * as React from 'react';
 
-import { PLAN_RUN_MODEL_EFFORT_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_RUN_MODEL_EFFORT_COPY } from '~/routing/plans/data/copy';
 import { parsePlanRunEffort } from '~/routing/plans/utils/plan-run-model-effort';
 import type { PlanRunDriverUi } from '~/routing/plans/utils/plan-run-options';
 import { formatPlanRunDriverLabel } from '~/routing/plans/utils/plan-run-options';

@@ -20,7 +20,7 @@ import { getActionError } from '@openthrottle/react-router-utils';
 import * as React from 'react';
 import { useFetcher } from 'react-router';
 
-import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/data.copy';
+import { SKILL_AVAILABILITY_COPY } from '~/routing/skills/data/copy';
 import type { SkillAvailabilityPosture } from '~/routing/skills/utils/skill-availability';
 import { isSkillAvailabilityPosture } from '~/routing/skills/utils/skill-availability';
 

@@ -8,7 +8,7 @@ import { ChevronRightIcon } from 'lucide-react';
 import * as React from 'react';
 import { Link } from 'react-router';
 
-import { PLAN_RUN_TRANSPARENCY_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_RUN_TRANSPARENCY_COPY } from '~/routing/plans/data/copy';
 import { buildPlanRunTuningDiffLabels } from '~/routing/plans/utils/buildPlanRunTuningDiffLabels';
 import { PLANS_DETAIL_TAB_SEARCH_PARAM } from '~/routing/plans/utils/parsers';
 import type { PlanRunOptions } from '~/routing/plans/utils/plan-run-options';

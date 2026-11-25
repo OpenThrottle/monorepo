@@ -16,11 +16,11 @@ import {
   TRAJECTORY_CLAMP_LINES,
   TRAJECTORY_PROMPT_CLAMP_LINES,
 } from '~/routing/evals/config/defaults';
-import { TRAJECTORY_TIMELINE_COPY } from '~/routing/evals/data/data.copy';
+import { TRAJECTORY_TIMELINE_COPY } from '~/routing/evals/data/copy';
 import {
   STEP_SOURCE_BADGE_COLOR,
   STEP_SOURCE_LABEL,
-} from '~/routing/evals/data/data.step-source';
+} from '~/routing/evals/data/step-source';
 import type { TrajectoryStepView } from '~/routing/evals/types';
 
 export interface TrajectoryStepProps {

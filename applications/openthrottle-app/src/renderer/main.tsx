@@ -4,7 +4,7 @@ import * as React from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { ConnectionScreen } from './components/ConnectionScreen.tsx';
-import { CONNECTION_COPY } from './data/data.copy.ts';
+import { CONNECTION_COPY } from './data/copy.ts';
 
 const container = document.getElementById('root');
 const bridge = window.openthrottleShell;

@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
-import { PLAN_WORKFLOW_CONFIG_ACTIONS_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_WORKFLOW_CONFIG_ACTIONS_COPY } from '~/routing/plans/data/copy';
 
 import { PlanWorkflowConfigActions } from '../PlanWorkflowConfigActions';
 

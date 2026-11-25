@@ -8,11 +8,11 @@ tables, server-metrics hooks.
 
 ## Layout
 
-- [src/index.ts](src/index.ts) — public API (components, `data/data.*.ts` copy, hooks).
+- [src/index.ts](src/index.ts) — public API (components, `data/*.ts` copy, hooks).
 - [src/components/](src/components/) — one `OpenThrottle*.tsx` per component.
 - [src/hooks/](src/hooks/) — `useUrlSyncedTabValue`, `useDebouncedSearchParam`, `usePollServerMetrics`, audio/share hooks.
 - [src/tabs/](src/tabs/) — internal shared tab API (`open-throttle-tabs.api.ts`, active-class helpers), not exported directly.
-- [src/data/](src/data/) — hardcoded copy/marketing data (`data.taglines.ts`, `data.features.ts`, …) per the component/data boundary rule.
+- [src/data/](src/data/) — hardcoded copy/marketing data (`taglines.ts`, `features.ts`, …) per the component/data boundary rule.
 
 ## Invariants & gotchas
 

@@ -2,13 +2,13 @@ import { Badge } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import type { ScheduledJobRunDetailFragment } from '~/__generated__/graphql';
-import { RUN_DETAIL_COPY } from '~/routing/schedule/data/data.run-detail';
+import { RUN_DETAIL_COPY } from '~/routing/schedule/data/run-detail';
 import {
   RUN_STATUS_COLOR,
   RUN_STATUS_LABEL,
   RUN_STATUS_VARIANT,
   RUN_TRIGGER_LABEL,
-} from '~/routing/schedule/data/data.run-status';
+} from '~/routing/schedule/data/run-status';
 import {
   formatRunCost,
   formatSettingsSnapshot,

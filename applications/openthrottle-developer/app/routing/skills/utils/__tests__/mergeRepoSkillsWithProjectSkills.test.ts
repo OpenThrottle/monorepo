@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import type { ProjectSkillFlagRow } from '~/routing/skills/utils/mergeRepoSkillsWithProjectSkills';
 import { mergeRepoSkillsWithProjectSkills } from '~/routing/skills/utils/mergeRepoSkillsWithProjectSkills';
 

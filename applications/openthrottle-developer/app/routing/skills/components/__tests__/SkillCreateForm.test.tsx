@@ -7,7 +7,7 @@ import { describe, expect, test, vi } from 'vitest';
 
 import type { SkillCreateDestinationsValue } from '~/routing/skills/config/skill-create';
 import { SKILL_CREATE_DESTINATIONS } from '~/routing/skills/config/skill-create';
-import { SKILL_CREATE_COPY } from '~/routing/skills/data/data.copy';
+import { SKILL_CREATE_COPY } from '~/routing/skills/data/copy';
 import type { UseSkillCreateFormResult } from '~/routing/skills/hooks/useSkillCreateForm';
 
 import { SkillCreateForm } from '../SkillCreateForm';

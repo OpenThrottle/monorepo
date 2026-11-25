@@ -8,7 +8,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { COMMANDER_CLASS_NAME } from '../data/data.commander';
+import { COMMANDER_CLASS_NAME } from '../data/commander';
 import { useOpenThrottleCommander } from '../hooks/useOpenThrottleCommander';
 import { getCommanderEscapeHeading } from '../utils/getCommanderEscapeHeading';
 import { scoreCommanderRow } from '../utils/scoreCommanderRow';

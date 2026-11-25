@@ -6,9 +6,9 @@ import {
 import * as React from 'react';
 import { Bar, BarChart, Cell, XAxis, YAxis } from 'recharts';
 
-import { DAILY_STATS_METRICS } from '~/routing/dashboard/data/data.copy';
-import type { DailyStatsChartDatum } from '~/routing/dashboard/data/data.daily-stats-chart';
-import { DAILY_STATS_CHART_CONFIG } from '~/routing/dashboard/data/data.daily-stats-chart';
+import { DAILY_STATS_METRICS } from '~/routing/dashboard/data/copy';
+import type { DailyStatsChartDatum } from '~/routing/dashboard/data/daily-stats-chart';
+import { DAILY_STATS_CHART_CONFIG } from '~/routing/dashboard/data/daily-stats-chart';
 
 export interface DashboardDailyStatsDayChartProps {
   datum: DailyStatsChartDatum;

@@ -8,7 +8,7 @@ import type {
 } from '~/__generated__/graphql';
 import { PlanInboxComposer } from '~/routing/plans/components/PlanInboxComposer';
 import { PlanInboxMessageRow } from '~/routing/plans/components/PlanInboxMessageRow';
-import { PLAN_INBOX_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_INBOX_COPY } from '~/routing/plans/data/copy';
 
 export interface PlanInboxPanelProps {
   readonly className?: string;

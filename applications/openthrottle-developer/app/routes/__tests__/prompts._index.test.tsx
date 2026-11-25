@@ -8,7 +8,7 @@ import {
   PROMPTS_EMPTY_COPY,
   PROMPTS_ONBOARDING,
   PROMPTS_STATS_COPY,
-} from '~/routing/prompts/data/data.copy';
+} from '~/routing/prompts/data/copy';
 import { buildRootMatch } from '~/testing/buildRootMatch';
 import {
   renderRoutesStub,

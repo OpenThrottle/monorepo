@@ -4,8 +4,8 @@ import { useAtom } from 'jotai';
 import * as React from 'react';
 
 import { PlanRunOtLoopFields } from '~/routing/plans/components/PlanRunOtLoopFields';
-import { workflowOtLoopAtom } from '~/routing/plans/data/data.atom-plan';
-import { PLAN_RUN_OT_LOOP_COPY } from '~/routing/plans/data/data.copy';
+import { workflowOtLoopAtom } from '~/routing/plans/data/atom-plan';
+import { PLAN_RUN_OT_LOOP_COPY } from '~/routing/plans/data/copy';
 import {
   formatOtLoopCommandsText,
   mergeOtLoopFields,

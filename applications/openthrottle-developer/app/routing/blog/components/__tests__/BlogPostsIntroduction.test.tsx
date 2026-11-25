@@ -3,7 +3,7 @@ import { describe, expect, test } from 'vitest';
 
 import { renderRoutesStub } from '~/testing/route-fixtures';
 
-import { BLOG_COPY } from '../../data/data.copy';
+import { BLOG_COPY } from '../../data/copy';
 import { BlogPostsIntroduction } from '../BlogPostsIntroduction';
 
 describe('BlogPostsIntroduction Component', () => {

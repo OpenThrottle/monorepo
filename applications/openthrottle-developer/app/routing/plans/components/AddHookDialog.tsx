@@ -10,7 +10,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { PLAN_LIFECYCLE_HOOKS_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_LIFECYCLE_HOOKS_COPY } from '~/routing/plans/data/copy';
 
 export type HookRole = 'after' | 'before';
 export type HookScope = 'each' | 'once';

@@ -5,7 +5,7 @@ import { describe, expect, test } from 'vitest';
 import {
   SKILL_USAGE_COPY,
   SKILL_USAGE_TELEMETRY_SCOPE_DOC_HREF,
-} from '../../data/data.skill-usage-copy';
+} from '../../data/skill-usage-copy';
 import { SkillUsageNotMeasured } from '../SkillUsageNotMeasured';
 
 describe('SkillUsageNotMeasured Component', () => {

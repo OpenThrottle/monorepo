@@ -7,8 +7,8 @@ import {
 import { ChevronDown, Wrench } from 'lucide-react';
 import * as React from 'react';
 
-import { STATUS_CONFIG } from '../data/data.chat-tool-call-status-config';
-import { CHAT_TOOL_CALL_COPY } from '../data/data.copy';
+import { STATUS_CONFIG } from '../data/chat-tool-call-status-config';
+import { CHAT_TOOL_CALL_COPY } from '../data/copy';
 import type { ChatTurnToolEvent } from '../types';
 import { CHAT_TOOL_STATUS } from '../types';
 import { formatJsonPayload } from '../utils/index';

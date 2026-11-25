@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import type { PlanRunCommandRunner } from '@openthrottle/openthrottle-agentic-utils';
 
-import { FALLBACK_RUNNER, LOCKFILE_RUNNERS } from '../data/data.constants.ts';
+import { FALLBACK_RUNNER, LOCKFILE_RUNNERS } from '../data/constants.ts';
 import {
   COMMIT_HEADER_MAX_CHARS,
   COMMIT_TEMP_PREFIX,
@@ -13,7 +13,7 @@ import {
   FALLBACK_COMMIT_TYPE,
   FALLBACK_COMMIT_TYPES,
   JOB_FOOTER_KEYS,
-} from '../data/data.git.ts';
+} from '../data/git.ts';
 import type { LoopTask } from '../types/loop.ts';
 
 const FOOTER_LINE = /^([A-Za-z][A-Za-z-]*: .+|(Closes|Fixes|Resolves) #\d+)$/;

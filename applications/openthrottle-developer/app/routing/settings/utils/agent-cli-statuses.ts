@@ -4,11 +4,11 @@ import type {
   AgentCliFilter,
   AgentCliStatus,
   AvailableAgentCli,
-} from '~/routing/settings/data/data.agent-clis';
+} from '~/routing/settings/data/agent-clis';
 import {
   AGENT_CLI_CATALOG,
   AGENT_CLI_DRIVERS,
-} from '~/routing/settings/data/data.agent-clis';
+} from '~/routing/settings/data/agent-clis';
 
 /**
  * Merge the display catalog with the available (installed) CLIs from discoverAgentClis into one

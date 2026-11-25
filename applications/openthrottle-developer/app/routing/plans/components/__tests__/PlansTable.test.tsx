@@ -6,7 +6,7 @@ import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
 import type { PlanCardFragment } from '~/__generated__/graphql';
-import { PLANS_INDEX_EMPTY_COPY } from '~/routing/plans/data/data.copy';
+import { PLANS_INDEX_EMPTY_COPY } from '~/routing/plans/data/copy';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 
 import type { PlansTableProps } from '../PlansTable';

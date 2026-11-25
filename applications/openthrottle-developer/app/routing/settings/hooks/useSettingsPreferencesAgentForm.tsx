@@ -17,8 +17,8 @@ import {
   parsePlanRunModelOptionId,
   reconcilePlanRunEffort,
 } from '~/routing/plans/utils/plan-run-model-effort';
-import type { PreferencesActionResult } from '~/routing/settings/data/data.preferences';
-import { PREFERENCES_INTENTS } from '~/routing/settings/data/data.preferences';
+import type { PreferencesActionResult } from '~/routing/settings/data/preferences';
+import { PREFERENCES_INTENTS } from '~/routing/settings/data/preferences';
 import type {
   DefaultAgentDraft,
   ResolvedDefaultAgent,

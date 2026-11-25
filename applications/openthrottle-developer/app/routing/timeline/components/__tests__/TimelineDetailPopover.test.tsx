@@ -9,11 +9,11 @@ import { TimelineMarkerKind } from '~/__generated__/graphql';
 import {
   TIMELINE_DETAIL_COPY,
   TIMELINE_SPAN_TOOLTIP_COPY,
-} from '~/routing/timeline/data/data.copy';
+} from '~/routing/timeline/data/copy';
 import {
   TIMELINE_FIXTURE_MARKERS,
   TIMELINE_FIXTURE_SPANS,
-} from '~/routing/timeline/data/data.fixtures';
+} from '~/routing/timeline/data/fixtures';
 
 import type { TimelineDetailPopoverProps } from '../TimelineDetailPopover';
 import { TimelineDetailPopover } from '../TimelineDetailPopover';

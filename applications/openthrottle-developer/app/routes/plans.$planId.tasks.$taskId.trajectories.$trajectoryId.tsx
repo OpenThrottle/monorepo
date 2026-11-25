@@ -16,7 +16,7 @@ import {
 } from '~/routing/evals/actions/trajectoryId';
 import { TrajectoryViewerRoute } from '~/routing/evals/components/TrajectoryViewerRoute';
 import { TRAJECTORY_LABEL_INTENT } from '~/routing/evals/config/defaults';
-import { TRAJECTORY_VIEWER_COPY } from '~/routing/evals/data/data.copy';
+import { TRAJECTORY_VIEWER_COPY } from '~/routing/evals/data/copy';
 import { splitTrajectoryLabels } from '~/routing/evals/utils/labels';
 
 type HandleData = Route.ComponentProps['loaderData'];

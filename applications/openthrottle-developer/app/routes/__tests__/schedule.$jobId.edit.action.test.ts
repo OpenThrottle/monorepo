@@ -15,7 +15,7 @@ const { executeGraphqlWithAuth } =
 const { UpdateScheduledAgentJobDocument } =
   await import('~/__generated__/graphql');
 const { SCHEDULE_REPOSITORY_NONE_VALUE } =
-  await import('~/routing/schedule/data/data.repositories');
+  await import('~/routing/schedule/data/repositories');
 const { action } = await import('../schedule.$jobId.edit');
 
 const mockExecute = vi.mocked(executeGraphqlWithAuth);

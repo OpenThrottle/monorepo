@@ -6,11 +6,11 @@ import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import { WorktreeActivity } from '~/__generated__/graphql';
-import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
+import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/copy';
 import {
   REPOSITORIES_ONBOARDING,
   REPOSITORIES_TABLE_COPY,
-} from '~/routing/settings/repositories/data/data.copy';
+} from '~/routing/settings/repositories/data/copy';
 import {
   mockCheckout,
   mockDiscoveredWorktree,

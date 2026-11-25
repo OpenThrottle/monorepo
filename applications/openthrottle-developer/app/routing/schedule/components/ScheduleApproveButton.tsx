@@ -3,7 +3,7 @@ import * as React from 'react';
 import { useFetcher } from 'react-router';
 
 import type { action as scheduleDetailAction } from '~/routes/schedule.$jobId._index';
-import { SCHEDULE_APPROVAL_COPY } from '~/routing/schedule/data/data.copy';
+import { SCHEDULE_APPROVAL_COPY } from '~/routing/schedule/data/copy';
 
 export interface ScheduleApproveButtonProps {
   readonly jobId: string;

@@ -8,8 +8,8 @@ import { PlanRunRescheduleButton } from '~/routing/plans/components/PlanRunResch
 import { PlanRunStatusBadge } from '~/routing/plans/components/PlanRunStatusBadge';
 import { PlanRunTime } from '~/routing/plans/components/PlanRunTime';
 import { PlanWorkflowRunSection } from '~/routing/plans/components/PlanWorkflowRunSection';
-import { PLAN_RUN_TRANSPARENCY_COPY } from '~/routing/plans/data/data.copy';
-import { PLAN_RUN_UPCOMING_META_FIELDS } from '~/routing/plans/data/data.plan-run-history';
+import { PLAN_RUN_TRANSPARENCY_COPY } from '~/routing/plans/data/copy';
+import { PLAN_RUN_UPCOMING_META_FIELDS } from '~/routing/plans/data/plan-run-history';
 import type { PlanScheduledRunRef } from '~/routing/plans/utils/plan-run-sections';
 import {
   buildPlanRunMetaItems,

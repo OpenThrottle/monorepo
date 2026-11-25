@@ -4,8 +4,8 @@ import {
   DEFAULT_MAX_RETRIES,
   MAX_RETRIES_CEILING,
   MAX_RETRIES_FLOOR,
-} from '../data/data.constants.ts';
-import { LOOP_PLAN_STATUS, LOOP_TASK_STATUS } from '../data/data.loop.ts';
+} from '../data/constants.ts';
+import { LOOP_PLAN_STATUS, LOOP_TASK_STATUS } from '../data/loop.ts';
 import type {
   GitHeadState,
   LoopInboxMessage,

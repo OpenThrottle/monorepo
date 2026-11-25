@@ -11,7 +11,7 @@ import {
 } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { REPOSITORIES_TABLE_COPY } from '~/routing/settings/repositories/data/data.copy';
+import { REPOSITORIES_TABLE_COPY } from '~/routing/settings/repositories/data/copy';
 
 import type { RepositoriesToolbarProps } from '../RepositoriesToolbar';
 import { RepositoriesToolbar } from '../RepositoriesToolbar';

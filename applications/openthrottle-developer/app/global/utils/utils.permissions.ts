@@ -42,7 +42,7 @@ const isLinkAllowed = (
 /**
  * @description Drops links (and sub-links) whose `requiredPermission` the viewer lacks, and
  * sections left empty by that filtering. Declarative: adding a gated link only
- * needs a `requiredPermission` in `data.navigation.ts`, no special-casing here.
+ * needs a `requiredPermission` in `data/navigation.ts`, no special-casing here.
  * Feeds both the sidebar and the ⌘K palette, so a hidden link is hidden in both.
  */
 export const filterNavigationByPermission = (

@@ -7,7 +7,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { LOGIC_COOKIES_COPY } from '../data/data.copy';
+import { LOGIC_COOKIES_COPY } from '../data/copy';
 
 /**
  * @description Hooks into the available cookies so a layout can make decisions based on them.

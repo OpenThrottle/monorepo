@@ -20,7 +20,7 @@ import { PlanToolbarScheduleMenuItem } from '~/routing/plans/components/PlanTool
 import {
   PLAN_RUN_CANCEL_SCHEDULED_COPY,
   PLAN_TOOLBAR_COPY,
-} from '~/routing/plans/data/data.copy';
+} from '~/routing/plans/data/copy';
 import { usePlanRunNowConfirm } from '~/routing/plans/hooks/usePlanRunNowConfirm';
 import type { PlanRunDialogMode } from '~/routing/plans/types';
 import { buildPlanToolbarRunFields } from '~/routing/plans/utils/buildPlanToolbarRunFields';

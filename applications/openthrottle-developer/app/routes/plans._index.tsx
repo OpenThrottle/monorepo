@@ -19,7 +19,7 @@ import { PlansIntroduction } from '~/routing/plans/components/PlansIntroduction'
 import { PlansStats } from '~/routing/plans/components/PlansStats';
 import { PlansTable } from '~/routing/plans/components/PlansTable';
 import { PlansToolbar } from '~/routing/plans/components/PlansToolbar';
-import { PLANS_ONBOARDING } from '~/routing/plans/data/data.copy';
+import { PLANS_ONBOARDING } from '~/routing/plans/data/copy';
 import { usePlansIndexRevalidation } from '~/routing/plans/hooks/usePlansIndexRevalidation';
 import { loadPlansIndex } from '~/routing/plans/utils/loadPlansIndex.server';
 import {

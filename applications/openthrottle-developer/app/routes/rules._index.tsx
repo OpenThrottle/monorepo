@@ -24,7 +24,7 @@ import { RulesIntroduction } from '~/routing/rules/components/RulesIntroduction'
 import { RulesStats } from '~/routing/rules/components/RulesStats';
 import { RulesTable } from '~/routing/rules/components/RulesTable';
 import { RulesToolbar } from '~/routing/rules/components/RulesToolbar';
-import { RULES_COPY, RULES_ONBOARDING } from '~/routing/rules/data/data.copy';
+import { RULES_COPY, RULES_ONBOARDING } from '~/routing/rules/data/copy';
 import { attachRuleSpecificity } from '~/routing/rules/utils/attachRuleSpecificity.server';
 import {
   filterRulesList,

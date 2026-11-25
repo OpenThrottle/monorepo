@@ -1,4 +1,4 @@
-import { PLAN_RUN_STATUS_CELL_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_RUN_STATUS_CELL_COPY } from '~/routing/plans/data/copy';
 
 export interface PlanRunStatusBadgeVariant {
   readonly color:

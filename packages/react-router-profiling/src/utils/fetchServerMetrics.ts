@@ -2,7 +2,7 @@
  * @description Fetches current process metrics from openthrottle-server GET /metrics.
  */
 
-import { DEFAULT_REQUEST_TIMEOUT_MS } from '../data/data.request-timeout';
+import { DEFAULT_REQUEST_TIMEOUT_MS } from '../data/request-timeout';
 import type { ProcessMetricsSnapshot } from '../types';
 import { buildRequestSignal } from './request-timeout';
 

@@ -5,7 +5,7 @@ import { TrashIcon } from '@phosphor-icons/react/dist/ssr/Trash';
 import * as React from 'react';
 import { Link } from 'react-router';
 
-import { FORM_CHILDREN_COPY } from '../data/data.copy';
+import { FORM_CHILDREN_COPY } from '../data/copy';
 import type { CmsFragmentRecord } from '../types/cms-records';
 import type { CmsFormChildren } from '../types/cms-render';
 import { ReorderGroup } from './ReorderGroup';

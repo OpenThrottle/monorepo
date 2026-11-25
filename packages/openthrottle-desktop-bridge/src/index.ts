@@ -2,7 +2,7 @@ export {
   DESKTOP_BRIDGE_NAME,
   DESKTOP_DEEP_LINK_PROTOCOL,
   DESKTOP_IPC_CHANNELS,
-} from './data/data.desktop-bridge.ts';
+} from './data/desktop-bridge.ts';
 export type {
   DesktopHandshake,
   DesktopNotifyInput,

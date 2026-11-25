@@ -7,8 +7,8 @@ import * as React from 'react';
 
 import { useHydratedAppearanceConfig } from '~/global/hooks/useHydratedAppearanceConfig';
 import { isReducedMotionMode } from '~/global/utils/appearance-config';
-import { APPEARANCE_MOTION_OPTIONS } from '~/routing/settings/data/data.appearance';
-import { APPEARANCE_COPY } from '~/routing/settings/data/data.copy';
+import { APPEARANCE_MOTION_OPTIONS } from '~/routing/settings/data/appearance';
+import { APPEARANCE_COPY } from '~/routing/settings/data/copy';
 
 export interface AppearanceMotionFieldProps {}
 

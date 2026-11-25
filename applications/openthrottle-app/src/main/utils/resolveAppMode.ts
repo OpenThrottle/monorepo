@@ -1,4 +1,4 @@
-import { DEFAULT_DEV_URL } from '../data/data.server-env.ts';
+import { DEFAULT_DEV_URL } from '../data/server-env.ts';
 
 export type AppMode =
   | { readonly kind: 'dev'; readonly url: string }

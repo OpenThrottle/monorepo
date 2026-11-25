@@ -2,7 +2,7 @@ import type { RenderResult } from '@testing-library/react';
 import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { PROJECT_NOT_FOUND_COPY } from '~/routing/projects/data/data.copy';
+import { PROJECT_NOT_FOUND_COPY } from '~/routing/projects/data/copy';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 
 import type { ProjectNotFoundProps } from '../ProjectNotFound';

@@ -6,7 +6,7 @@ import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
 
 import type { SearchChunk } from '~/__generated__/graphql';
-import { SEARCH_SOURCE_PILL_COLORS } from '~/routing/search/data/data.source-pills';
+import { SEARCH_SOURCE_PILL_COLORS } from '~/routing/search/data/source-pills';
 
 import { SearchCard } from '../SearchCard';
 

@@ -4,7 +4,7 @@ import { Link } from 'react-router';
 
 import type { BlogPostListRowFragment } from '~/__generated__/graphql';
 import { formatDateTime } from '~/global/utils/dates';
-import { BLOG_COPY } from '~/routing/blog/data/data.copy';
+import { BLOG_COPY } from '~/routing/blog/data/copy';
 import {
   formatBlogPublishedLabel,
   isAgentEditor,

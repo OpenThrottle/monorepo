@@ -2,7 +2,7 @@ import { Label, MultiSelect } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import type { BlogEditorTagFragment } from '~/__generated__/graphql';
-import { BLOG_EDITOR_COPY } from '~/routing/blog/data/data.copy';
+import { BLOG_EDITOR_COPY } from '~/routing/blog/data/copy';
 
 export interface BlogPostTagsFieldProps {
   readonly error: string | undefined;

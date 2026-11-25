@@ -3,10 +3,10 @@ import { GlobalHeading } from '@openthrottle/react-router-ui-global';
 import * as React from 'react';
 
 import { SkillUsageDailyChart } from '~/global/components/SkillUsageDailyChart';
-import { SKILLS_INDEX_USAGE_COPY } from '~/routing/skills/data/data.copy';
+import { SKILLS_INDEX_USAGE_COPY } from '~/routing/skills/data/copy';
 import type { SkillsIndexUsageData } from '~/routing/skills/types';
 import { SkillUsageLeaderboard } from '~/routing/usage/components/SkillUsageLeaderboard';
-import { SKILL_USAGE_COPY } from '~/routing/usage/data/data.skill-usage-copy';
+import { SKILL_USAGE_COPY } from '~/routing/usage/data/skill-usage-copy';
 import { partitionSkillUsageByPresence } from '~/routing/usage/utils/partitionSkillUsageByPresence';
 
 export interface SkillsIndexUsageProps {

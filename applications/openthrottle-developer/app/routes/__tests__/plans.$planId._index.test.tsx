@@ -7,7 +7,7 @@ import { createRoutesStub, useSearchParams } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/plans.$planId._index';
-import { PLAN_TASKS_EMPTY_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_TASKS_EMPTY_COPY } from '~/routing/plans/data/copy';
 import {
   buildPlanDetailLoaderData,
   renderWithPlanDetailRouteData,

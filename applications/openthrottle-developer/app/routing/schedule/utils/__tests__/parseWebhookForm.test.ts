@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { SCHEDULE_WEBHOOK_COPY } from '~/routing/schedule/data/data.copy';
+import { SCHEDULE_WEBHOOK_COPY } from '~/routing/schedule/data/copy';
 
 import { parseWebhookForm } from '../parseWebhookForm';
 

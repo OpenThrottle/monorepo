@@ -23,7 +23,7 @@ import { SettingsKeysForm } from '~/routing/settings/components/SettingsKeysForm
 import { SettingsKeysIntroduction } from '~/routing/settings/components/SettingsKeysIntroduction';
 import { SettingsKeysTable } from '~/routing/settings/components/SettingsKeysTable';
 import { SettingsKeysToolbar } from '~/routing/settings/components/SettingsKeysToolbar';
-import { SETTINGS_KEYS_ONBOARDING } from '~/routing/settings/data/data.copy';
+import { SETTINGS_KEYS_ONBOARDING } from '~/routing/settings/data/copy';
 import type { SettingsKeysActionData } from '~/routing/settings/utils/settings-keys-action';
 import {
   resolveSelectedServiceAccountId,

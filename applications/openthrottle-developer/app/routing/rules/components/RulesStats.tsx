@@ -2,7 +2,7 @@ import { cn } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleStatCard } from '@openthrottle/react-router-ui';
 import * as React from 'react';
 
-import { RULES_COPY } from '../data/data.copy';
+import { RULES_COPY } from '../data/copy';
 
 export interface RulesStatsProps {
   className?: string;

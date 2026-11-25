@@ -1,5 +1,5 @@
-import type { RolloutFlagKindOption } from '~/routing/settings/data/data.rollout-kinds';
-import { ROLLOUT_FLAG_KINDS } from '~/routing/settings/data/data.rollout-kinds';
+import type { RolloutFlagKindOption } from '~/routing/settings/data/rollout-kinds';
+import { ROLLOUT_FLAG_KINDS } from '~/routing/settings/data/rollout-kinds';
 
 export const isRolloutFlagKind = (
   value: string,

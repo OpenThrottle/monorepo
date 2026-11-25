@@ -17,7 +17,7 @@ import { Link } from 'react-router';
 
 import type { Route } from '@/app/routes/+types/dashboard._index';
 import { SITE_TITLE } from '~/global/config/settings';
-import { ADMIN_PATHS } from '~/global/data/data.navigation';
+import { ADMIN_PATHS } from '~/global/data/navigation';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

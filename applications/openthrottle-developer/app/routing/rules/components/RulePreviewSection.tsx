@@ -5,7 +5,7 @@ import { Link } from 'react-router';
 
 import { RulePreviewConditionBadges } from '~/routing/rules/components/RulePreviewConditionBadges';
 import { RulePreviewEnvironmentSelect } from '~/routing/rules/components/RulePreviewEnvironmentSelect';
-import { RULE_PREVIEW_COPY } from '~/routing/rules/data/data.copy';
+import { RULE_PREVIEW_COPY } from '~/routing/rules/data/copy';
 import type { RulePreviewState } from '~/routing/rules/types';
 
 export interface RulePreviewSectionProps {

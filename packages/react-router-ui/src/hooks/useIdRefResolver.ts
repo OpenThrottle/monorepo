@@ -5,7 +5,7 @@ import {
 } from '@openthrottle/react-router-utils';
 import * as React from 'react';
 
-import { EMPTY_ID_REF_MATCHES } from '../data/data.id-ref-resolver';
+import { EMPTY_ID_REF_MATCHES } from '../data/id-ref-resolver';
 import type { IdRefMatch, IdRefResolverData } from '../types';
 
 /**

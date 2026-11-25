@@ -4,11 +4,8 @@ import {
   STATS_GRAPHIC_FONTS,
   STATS_GRAPHIC_LAYOUT,
   STATS_GRAPHIC_PALETTES,
-} from '../data/data.statsGraphic';
-import {
-  AGENT_CLI_DISPLAY_ORDER,
-  AGENT_CLI_NAMES,
-} from '../data/data.surfaces';
+} from '../data/stats-graphic';
+import { AGENT_CLI_DISPLAY_ORDER, AGENT_CLI_NAMES } from '../data/surfaces';
 import type {
   StatsGraphicChip,
   StatsGraphicScheme,

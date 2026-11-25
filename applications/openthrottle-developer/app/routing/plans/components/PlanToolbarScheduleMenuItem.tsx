@@ -7,7 +7,7 @@ import {
 import { CalendarClock } from 'lucide-react';
 import * as React from 'react';
 
-import { PLAN_TOOLBAR_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_TOOLBAR_COPY } from '~/routing/plans/data/copy';
 
 export interface PlanToolbarScheduleMenuItemProps {
   /** @description Why the plan cannot be scheduled (D2), or `null` when it can. Shown as a tooltip. */

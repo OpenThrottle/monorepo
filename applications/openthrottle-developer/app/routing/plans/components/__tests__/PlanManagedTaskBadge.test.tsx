@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
-import { MANAGED_TASK_BADGE_COPY } from '~/routing/plans/data/data.copy';
+import { MANAGED_TASK_BADGE_COPY } from '~/routing/plans/data/copy';
 import { renderWithProviders } from '~/testing/route-fixtures';
 
 import { PlanManagedTaskBadge } from '../PlanManagedTaskBadge';

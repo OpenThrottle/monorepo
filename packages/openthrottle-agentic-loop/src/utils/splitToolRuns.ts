@@ -1,4 +1,4 @@
-import { LOOP_OUTPUT_KIND } from '../data/data.loop.ts';
+import { LOOP_OUTPUT_KIND } from '../data/loop.ts';
 const TOOL_LINE_PATTERN = /^\s*→ /;
 const LINE_END_PATTERN = /(?<=\n)/;
 

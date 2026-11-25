@@ -3,7 +3,7 @@ import { describe, expect, test } from 'vitest';
 import {
   USAGE_COMPLETION_ATTRIBUTION_CAVEAT,
   USAGE_DAILY_STATS_SERIES,
-} from '../data.daily-stats-series-glossary';
+} from '../daily-stats-series-glossary';
 
 describe('daily-stats-series-glossary', () => {
   test('lists all six series keys used in daily stats chart', () => {

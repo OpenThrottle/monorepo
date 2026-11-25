@@ -1,7 +1,7 @@
 import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { GLOBAL_POPOVER_COPY } from '../data/data.copy';
+import { GLOBAL_POPOVER_COPY } from '../data/copy';
 
 /**
  * @public

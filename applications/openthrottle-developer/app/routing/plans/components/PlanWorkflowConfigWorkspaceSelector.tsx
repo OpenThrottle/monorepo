@@ -15,7 +15,7 @@ import * as React from 'react';
 import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/graphql';
 import { PlanWorkflowConfigWorkspace } from '~/routing/plans/components/PlanWorkflowConfigWorkspace';
 import { PlanWorkflowConfigWorkspaceHint } from '~/routing/plans/components/PlanWorkflowConfigWorkspaceHint';
-import { PLAN_RUN_WORKSPACE_SELECTOR_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_RUN_WORKSPACE_SELECTOR_COPY } from '~/routing/plans/data/copy';
 import { usePlanWorkflowConfigWorkspaceSelector } from '~/routing/plans/hooks/usePlanWorkflowConfigWorkspaceSelector';
 import { resolveDefaultRunBranch } from '~/routing/plans/utils/plan-run-branch';
 import {

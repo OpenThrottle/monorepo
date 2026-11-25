@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { WorktreeRootSource } from '~/__generated__/graphql';
-import { WORKTREE_DISCOVERY_COPY } from '~/routing/settings/repositories/data/data.copy';
+import { WORKTREE_DISCOVERY_COPY } from '~/routing/settings/repositories/data/copy';
 import { mockScannedRoot } from '~/routing/settings/repositories/testing/mock-repositories';
 
 import { configuredRoots } from '../configuredRoots';

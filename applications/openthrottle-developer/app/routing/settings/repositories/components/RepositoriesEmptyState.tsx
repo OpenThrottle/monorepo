@@ -6,7 +6,7 @@ import type {
   WorkspacePickerCapabilitiesObject,
 } from '~/__generated__/graphql';
 import { AddFolderDialog } from '~/routing/settings/repositories/components/AddFolderDialog';
-import { REPOSITORIES_ONBOARDING } from '~/routing/settings/repositories/data/data.copy';
+import { REPOSITORIES_ONBOARDING } from '~/routing/settings/repositories/data/copy';
 
 export interface RepositoriesEmptyStateProps {
   actionError?: string | null;

@@ -1,7 +1,7 @@
 import { GraphqlResponseError } from '@openthrottle/react-router-graphql';
 import { describe, expect, test } from 'vitest';
 
-import { PLAN_SCHEDULE_CONFIRM_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_SCHEDULE_CONFIRM_COPY } from '~/routing/plans/data/copy';
 
 import {
   PLAN_SCHEDULE_CONFLICT_CODE,

@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   SKILL_CREATE_COPY,
   SKILLS_SEARCH_COPY,
-} from '~/routing/skills/data/data.copy';
+} from '~/routing/skills/data/copy';
 
 import { renderRoutesStub } from '../../../../testing/route-fixtures';
 import { SkillsToolbar } from '../SkillsToolbar';

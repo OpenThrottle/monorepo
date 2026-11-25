@@ -4,7 +4,7 @@ import {
   WorktreeActivity,
   WorktreeDiscoveryProblemKind,
 } from '~/__generated__/graphql';
-import { REPOSITORIES_TABLE_COPY } from '~/routing/settings/repositories/data/data.copy';
+import { REPOSITORIES_TABLE_COPY } from '~/routing/settings/repositories/data/copy';
 import {
   mockCheckout,
   mockDiscoveredWorktree,

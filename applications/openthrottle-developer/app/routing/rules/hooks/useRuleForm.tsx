@@ -6,7 +6,7 @@ import {
   ATTACH_PROMPT_ACTION_TYPE,
   DEFAULT_ATTACH_PROMPT_PLACEMENT,
   DEFAULT_ATTACH_PROMPT_TYPE,
-} from '~/routing/rules/data/data.rule-form-options';
+} from '~/routing/rules/data/rule-form-options';
 import type { RuleFormAttachPromptState } from '~/routing/rules/types';
 import {
   buildAttachPromptPayloadJson,

@@ -2,8 +2,8 @@ import { cn } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleStatCard } from '@openthrottle/react-router-ui';
 import * as React from 'react';
 
-import type { QueueStatRowColumns } from '~/routing/queues/data/data.queue-stat-row';
-import { QUEUE_STAT_ROW_COLUMN_CLASS } from '~/routing/queues/data/data.queue-stat-row';
+import type { QueueStatRowColumns } from '~/routing/queues/data/queue-stat-row';
+import { QUEUE_STAT_ROW_COLUMN_CLASS } from '~/routing/queues/data/queue-stat-row';
 
 export interface QueueStatRowItem {
   readonly color?: string;

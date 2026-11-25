@@ -11,11 +11,11 @@ import type { Route } from '@/app/routes/+types/schemas.$uuid._index';
 import { CmsSchemaDetailDocument } from '~/__generated__/graphql';
 import { GlobalDetailList } from '~/global/components/GlobalDetailList';
 import { SITE_TITLE } from '~/global/config/settings';
-import { CMS_SCHEMA_DETAIL_FIELDS } from '~/global/data/data.cms-detail-fields';
+import { CMS_SCHEMA_DETAIL_FIELDS } from '~/global/data/cms-detail-fields';
 import { formatJson } from '~/global/utils/formatJson';
 import { fetchPublicGraphql } from '~/global/utils/graphql.server';
 import { requireRecord } from '~/global/utils/requireRecord';
-import { SCHEMA_DETAIL_COPY } from '~/routing/schemas/data/data.copy';
+import { SCHEMA_DETAIL_COPY } from '~/routing/schemas/data/copy';
 
 type HandleData = Route.ComponentProps['loaderData'];
 

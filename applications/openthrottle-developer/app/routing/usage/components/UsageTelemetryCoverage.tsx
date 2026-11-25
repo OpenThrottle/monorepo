@@ -11,7 +11,7 @@ import type { UsageTelemetryCoverageReportFragment } from '~/__generated__/graph
 import {
   TELEMETRY_COVERAGE_COMMANDS,
   TELEMETRY_COVERAGE_COPY,
-} from '~/routing/usage/data/data.telemetry-coverage-copy';
+} from '~/routing/usage/data/telemetry-coverage-copy';
 
 import { UsageTelemetryCoverageCommand } from './UsageTelemetryCoverageCommand';
 import { UsageTelemetryCoverageTable } from './UsageTelemetryCoverageTable';

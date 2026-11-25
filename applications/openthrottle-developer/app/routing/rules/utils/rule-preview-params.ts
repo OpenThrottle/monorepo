@@ -1,4 +1,4 @@
-import { ANY, ENVIRONMENTS } from '~/routing/rules/data/data.rule-form-options';
+import { ANY, ENVIRONMENTS } from '~/routing/rules/data/rule-form-options';
 
 /** The match fields a preview reads; the action payload never matters. */
 export interface RulePreviewMatch {

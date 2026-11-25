@@ -3,7 +3,7 @@ import * as React from 'react';
 import type { ScheduledJobCardFragment } from '~/__generated__/graphql';
 import { ScheduleAllowedCommands } from '~/routing/schedule/components/ScheduleAllowedCommands';
 import { ScheduleApproveButton } from '~/routing/schedule/components/ScheduleApproveButton';
-import { SCHEDULE_APPROVAL_COPY } from '~/routing/schedule/data/data.copy';
+import { SCHEDULE_APPROVAL_COPY } from '~/routing/schedule/data/copy';
 
 export interface ScheduleApprovalNoticeProps {
   readonly job: Pick<

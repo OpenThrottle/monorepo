@@ -3,7 +3,7 @@ import * as React from 'react';
 
 import type { PruneWorktreeCheckoutResultFragment } from '~/__generated__/graphql';
 import { PruneWorktreeCheckoutOutcome } from '~/__generated__/graphql';
-import { MISSING_WORKTREES_COPY } from '~/routing/settings/repositories/data/data.copy';
+import { MISSING_WORKTREES_COPY } from '~/routing/settings/repositories/data/copy';
 
 export interface PruneWorktreesOutcomeProps {
   className?: string;

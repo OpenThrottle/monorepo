@@ -14,8 +14,8 @@ import * as React from 'react';
 import {
   PERMISSION_MODE_META,
   SUPERVISED_UNGATED_EDITS_DESCRIPTION,
-} from '../data/data.chat-permission-mode-meta';
-import { CHAT_PERMISSION_REMEMBER_COPY } from '../data/data.copy';
+} from '../data/chat-permission-mode-meta';
+import { CHAT_PERMISSION_REMEMBER_COPY } from '../data/copy';
 import type { ChatBackendCapabilities } from '../types';
 import type { ChatPermissionModeValue } from '../types';
 import { CHAT_PERMISSION_MODE } from '../types';

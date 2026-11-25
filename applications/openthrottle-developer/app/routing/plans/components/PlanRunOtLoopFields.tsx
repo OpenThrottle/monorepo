@@ -2,7 +2,7 @@ import { MAX_PLAN_RUN_OT_LOOP_RETRIES } from '@openthrottle/openthrottle-plan-co
 import { cn, Input, Label, TextArea } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { PLAN_RUN_OT_LOOP_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_RUN_OT_LOOP_COPY } from '~/routing/plans/data/copy';
 import { DEFAULT_PLAN_RUN_OT_LOOP_RETRIES } from '~/routing/plans/utils/plan-run-ot-loop';
 
 export interface PlanRunOtLoopFieldsProps {

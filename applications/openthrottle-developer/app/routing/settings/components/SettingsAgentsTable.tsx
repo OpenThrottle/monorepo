@@ -9,8 +9,8 @@ import {
 import * as React from 'react';
 
 import { SettingsAgentsTableRow } from '~/routing/settings/components/SettingsAgentsTableRow';
-import type { AgentCliStatus } from '~/routing/settings/data/data.agent-clis';
-import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/data.copy';
+import type { AgentCliStatus } from '~/routing/settings/data/agent-clis';
+import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/copy';
 
 export interface SettingsAgentsTableProps {
   /** Server-computed: current user holds SETTINGS_WRITE. */

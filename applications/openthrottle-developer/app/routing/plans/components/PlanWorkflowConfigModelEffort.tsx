@@ -5,7 +5,7 @@ import * as React from 'react';
 import { PlanDeferredSection } from '~/routing/plans/components/PlanDeferredSection';
 import { PlanRunEffortControl } from '~/routing/plans/components/PlanRunEffortControl';
 import { PlanRunModelPicker } from '~/routing/plans/components/PlanRunModelPicker';
-import { PLAN_RUN_MODEL_EFFORT_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_RUN_MODEL_EFFORT_COPY } from '~/routing/plans/data/copy';
 import type { PlanRunModelSelection } from '~/routing/plans/utils/plan-run-model-effort';
 import { reconcilePlanRunEffort } from '~/routing/plans/utils/plan-run-model-effort';
 import type { PlanRunOptions } from '~/routing/plans/utils/plan-run-options';

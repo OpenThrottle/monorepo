@@ -7,7 +7,7 @@ import {
 import { PencilIcon } from 'lucide-react';
 import * as React from 'react';
 
-import { SKILL_DETAIL_COPY } from '~/routing/skills/data/data.copy';
+import { SKILL_DETAIL_COPY } from '~/routing/skills/data/copy';
 
 export interface SkillDetailEditControlsProps {
   /** Why editing is blocked; rendered in the disabled-Edit tooltip. */

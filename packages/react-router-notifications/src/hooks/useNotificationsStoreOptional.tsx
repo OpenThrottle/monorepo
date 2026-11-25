@@ -1,7 +1,7 @@
 import * as React from 'react';
 
-import type { NotificationsStoreContextValue } from '../data/data.notifications-store.context';
-import { NotificationsStoreContext } from '../data/data.notifications-store.context';
+import type { NotificationsStoreContextValue } from '../data/notifications-store.context';
+import { NotificationsStoreContext } from '../data/notifications-store.context';
 
 export interface UseNotificationsStoreOptionalOptions {}
 

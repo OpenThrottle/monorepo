@@ -2,7 +2,7 @@ import { Badge, cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import type { AgentTrajectoryLabelRowFragment } from '~/__generated__/graphql';
-import { TRAJECTORY_LABEL_COPY } from '~/routing/evals/data/data.copy';
+import { TRAJECTORY_LABEL_COPY } from '~/routing/evals/data/copy';
 import { PlanRunTime } from '~/routing/plans/components/PlanRunTime';
 
 export interface TrajectoryLabelListProps {

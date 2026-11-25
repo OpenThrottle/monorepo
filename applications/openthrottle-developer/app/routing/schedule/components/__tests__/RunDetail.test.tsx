@@ -4,7 +4,7 @@ import * as React from 'react';
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import type { ScheduledJobRunDetailFragment } from '~/__generated__/graphql';
-import { RUN_DETAIL_COPY } from '~/routing/schedule/data/data.run-detail';
+import { RUN_DETAIL_COPY } from '~/routing/schedule/data/run-detail';
 
 import type { RunDetailProps } from '../RunDetail';
 import { RunDetail } from '../RunDetail';

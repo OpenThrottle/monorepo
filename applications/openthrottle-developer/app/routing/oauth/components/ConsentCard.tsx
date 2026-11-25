@@ -15,10 +15,7 @@ import * as React from 'react';
 import { Form } from 'react-router';
 
 import type { OAuthConsentRequestFieldsFragment } from '~/__generated__/graphql';
-import {
-  OAUTH_CONSENT_COPY,
-  OAUTH_SCOPES,
-} from '~/routing/oauth/data/data.copy';
+import { OAUTH_CONSENT_COPY, OAUTH_SCOPES } from '~/routing/oauth/data/copy';
 
 const COPY = OAUTH_CONSENT_COPY;
 

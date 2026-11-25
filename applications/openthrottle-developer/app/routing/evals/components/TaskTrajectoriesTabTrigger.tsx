@@ -3,7 +3,7 @@ import { FEATURE_DELTA_PREVIEW } from '@openthrottle/react-router-utils';
 import { RouteIcon } from 'lucide-react';
 import * as React from 'react';
 
-import { TASK_TRAJECTORIES_COPY } from '~/routing/evals/data/data.copy';
+import { TASK_TRAJECTORIES_COPY } from '~/routing/evals/data/copy';
 
 export interface TaskTrajectoriesTabTriggerProps {
   readonly className?: string;

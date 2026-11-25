@@ -1,7 +1,7 @@
 import { toErrorMessage } from '@openthrottle/nodejs-utils';
 
-import { THIN_TASK_BLOCK_SUMMARY } from '../data/data.constants.ts';
-import { LOOP_TASK_STATUS } from '../data/data.loop.ts';
+import { THIN_TASK_BLOCK_SUMMARY } from '../data/constants.ts';
+import { LOOP_TASK_STATUS } from '../data/loop.ts';
 import type {
   AttemptFailure,
   GitHeadState,

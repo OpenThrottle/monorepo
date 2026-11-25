@@ -17,7 +17,7 @@ import * as React from 'react';
 import { Link } from 'react-router';
 
 import type { EvalRunListRowFragment } from '~/__generated__/graphql';
-import { EVAL_RUNS_COPY } from '~/routing/evals/data/data.copy';
+import { EVAL_RUNS_COPY } from '~/routing/evals/data/copy';
 import {
   describeRunConfig,
   formatEvalTimestamp,

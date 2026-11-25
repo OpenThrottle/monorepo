@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   LOAD_AGENT_CONVERSATION_MESSAGES_INTENT,
   SEND_AGENT_MESSAGE_INTENT,
-} from '../../data/data.chat-turn-fetcher-intents';
+} from '../../data/chat-turn-fetcher-intents';
 import type {
   ChatTurnResult,
   LoadAgentConversationMessagesResult,

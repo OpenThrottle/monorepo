@@ -6,7 +6,7 @@
  */
 
 import type { UsageTokenUsageRowFragment } from '~/__generated__/graphql';
-import { TOKEN_USAGE_SOURCES } from '~/routing/usage/data/data.token-usage-copy';
+import { TOKEN_USAGE_SOURCES } from '~/routing/usage/data/token-usage-copy';
 
 /** What {@link groupTokenUsage} buckets rows by. */
 export type TokenUsageGrouping = 'model' | 'provider' | 'source';

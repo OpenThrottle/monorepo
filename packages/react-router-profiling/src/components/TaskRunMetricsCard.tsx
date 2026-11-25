@@ -17,8 +17,8 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { TASK_RUN_INTERPRETATION_HINTS } from '../data/data.copy';
-import { METRIC_ROWS } from '../data/data.metric-rows';
+import { TASK_RUN_INTERPRETATION_HINTS } from '../data/copy';
+import { METRIC_ROWS } from '../data/metric-rows';
 import { useJobTaskRunMetrics } from '../hooks/useJobTaskRunMetrics';
 import { computeTaskRunDeltas } from '../utils/computeTaskRunDeltas';
 

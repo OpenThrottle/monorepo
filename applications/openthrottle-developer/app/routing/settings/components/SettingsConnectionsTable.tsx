@@ -4,7 +4,7 @@ import * as React from 'react';
 
 import type { OAuthGrantFieldsFragment } from '~/__generated__/graphql';
 import { SettingsConnectionsRevokeCell } from '~/routing/settings/components/SettingsConnectionsRevokeCell';
-import { SETTINGS_CONNECTIONS_COPY as COPY } from '~/routing/settings/data/data.copy';
+import { SETTINGS_CONNECTIONS_COPY as COPY } from '~/routing/settings/data/copy';
 import { formatCredentialTimestamp } from '~/routing/settings/utils/settings-keys-credential';
 
 export interface SettingsConnectionsTableProps {

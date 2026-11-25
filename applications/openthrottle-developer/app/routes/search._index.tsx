@@ -20,7 +20,7 @@ import {
   DEFAULT_SEARCH_LIMIT,
   SEARCH_LIMIT_OPTIONS,
 } from '~/routing/search/config';
-import { SEARCH_PAGINATION_COPY } from '~/routing/search/data/data.copy';
+import { SEARCH_PAGINATION_COPY } from '~/routing/search/data/copy';
 import {
   buildSearchUrl,
   parseSearchParams,

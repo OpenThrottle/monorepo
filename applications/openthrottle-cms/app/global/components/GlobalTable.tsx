@@ -4,7 +4,7 @@ import * as React from 'react';
 import { Link } from 'react-router';
 
 import { GlobalTableCell } from '~/global/components/GlobalTableCell';
-import { GLOBAL_TABLE_COPY } from '~/global/data/data.global-table';
+import { GLOBAL_TABLE_COPY } from '~/global/data/global-table';
 import type { GlobalTableColumn } from '~/global/types/global-table';
 
 export interface GlobalTableProps<TRow extends object> {

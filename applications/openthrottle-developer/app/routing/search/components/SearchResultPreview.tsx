@@ -17,8 +17,8 @@ import { SearchWhyThisResult } from '~/routing/search/components/SearchWhyThisRe
 import {
   SEARCH_PREVIEW_COPY,
   SEARCH_RESULT_COPY,
-} from '~/routing/search/data/data.copy';
-import { SEARCH_SOURCE_PILL_COLORS } from '~/routing/search/data/data.source-pills';
+} from '~/routing/search/data/copy';
+import { SEARCH_SOURCE_PILL_COLORS } from '~/routing/search/data/source-pills';
 import type { SearchRankMeta } from '~/routing/search/types/search-rank-meta';
 import { toSearchResultView } from '~/routing/search/utils/toSearchResultView';
 

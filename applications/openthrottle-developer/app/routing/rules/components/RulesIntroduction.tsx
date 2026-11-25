@@ -5,7 +5,7 @@ import {
 import { WandSparklesIcon } from 'lucide-react';
 import * as React from 'react';
 
-import { RULES_COPY } from '../data/data.copy';
+import { RULES_COPY } from '../data/copy';
 
 export interface RulesIntroductionProps {}
 

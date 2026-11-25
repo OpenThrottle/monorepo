@@ -9,14 +9,14 @@ import {
 import * as React from 'react';
 import { Link } from 'react-router';
 
-import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
 import { SkillOrphanRemoveButton } from '~/routing/skills/components/SkillOrphanRemoveButton';
 import type { SkillTagVocabularyOption } from '~/routing/skills/components/SkillTagChips';
 import {
   SKILL_RECORD_TAGS_COPY,
   SKILLS_MODEL_INVOCATION_COPY,
   SKILLS_SOURCE_COPY,
-} from '~/routing/skills/data/data.copy';
+} from '~/routing/skills/data/copy';
 import { getSkillSourceBadge } from '~/routing/skills/utils/getSkillSourceBadge';
 import { getResolvedModelInvocationDisplay } from '~/routing/skills/utils/model-invocation-badge';
 

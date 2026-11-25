@@ -130,7 +130,7 @@ repository URL' }`) or `options.messages` (replace the whole message) when the
 - Every user-visible route sets a title; **resource routes deliberately do not** (`resources.*`,
   `robots[.]txt`, `auth.logout`, `auth.ws-token`, `skills.autocomplete`).
 - Where a route builds its title from a `*_COPY.pageTitle` constant, fix the constant in its
-  `data.copy.ts` — the on-page heading shares it, and moving both together is intended.
+  `data/copy.ts` — the on-page heading shares it, and moving both together is intended.
 - Enforced by `app/routes/__tests__/route-titles.test.ts`.
 
 ## Don't

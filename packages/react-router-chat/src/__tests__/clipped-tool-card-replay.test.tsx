@@ -11,7 +11,7 @@ import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
 import { ChatToolCall } from '../components/ChatToolCall';
-import { CHAT_TOOL_CALL_COPY } from '../data/data.copy';
+import { CHAT_TOOL_CALL_COPY } from '../data/copy';
 import { foldPersistedTurnEvents } from '../turn-events';
 import type { ChatTurnEvent, ChatTurnToolEvent } from '../types';
 

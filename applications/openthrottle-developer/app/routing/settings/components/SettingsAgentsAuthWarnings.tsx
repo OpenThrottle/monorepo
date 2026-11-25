@@ -5,7 +5,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import type { AgentCliAuthWarning } from '~/routing/settings/data/data.agent-clis';
+import type { AgentCliAuthWarning } from '~/routing/settings/data/agent-clis';
 import { settingsAgentsAuthWarningTitle } from '~/routing/settings/utils/settings-agents-copy';
 
 export interface SettingsAgentsAuthWarningsProps {

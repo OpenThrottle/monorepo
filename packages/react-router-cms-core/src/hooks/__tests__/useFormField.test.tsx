@@ -3,7 +3,7 @@ import { createStore, Provider } from 'jotai';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
-import { atomFragmentDraft } from '../../data/data.atom.fragment-draft';
+import { atomFragmentDraft } from '../../data/atom.fragment-draft';
 import { MOCK_FORM_SCHEMA } from '../../data/mock.form-schema';
 import { useFormField } from '../useFormField';
 

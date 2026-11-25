@@ -4,7 +4,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import { GLOBAL_BACKGROUND_ACTIVITY_COPY } from '../../data/data.copy';
+import { GLOBAL_BACKGROUND_ACTIVITY_COPY } from '../../data/copy';
 import type { GlobalBackgroundActivityBarProps } from '../GlobalBackgroundActivityBar';
 import { GlobalBackgroundActivityBar } from '../GlobalBackgroundActivityBar';
 

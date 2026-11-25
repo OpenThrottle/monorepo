@@ -1,7 +1,7 @@
 import { coerceBoolean } from '@openthrottle/react-router-graphql';
 import { z } from 'zod/v3';
 
-import { SCHEDULE_REPOSITORY_NONE_VALUE } from '~/routing/schedule/data/data.repositories';
+import { SCHEDULE_REPOSITORY_NONE_VALUE } from '~/routing/schedule/data/repositories';
 
 import type { ParsedScheduleForm } from './missingScheduleTiming';
 

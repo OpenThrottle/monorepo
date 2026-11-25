@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
 import type { SearchChunk } from '~/__generated__/graphql';
-import { SEARCH_RESULT_COPY } from '~/routing/search/data/data.copy';
+import { SEARCH_RESULT_COPY } from '~/routing/search/data/copy';
 
 import { toSearchResultView } from '../toSearchResultView';
 

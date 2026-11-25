@@ -1,4 +1,4 @@
-import type { RepoPersonaEntry } from '~/routing/agents/data/data.repo-personas-registry';
+import type { RepoPersonaEntry } from '~/routing/agents/data/repo-personas-registry';
 
 /**
  * @description Returns the count of discovered personas for list UI stats.

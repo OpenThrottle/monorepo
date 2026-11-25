@@ -35,7 +35,7 @@ import { PlanTaskToolbar } from '~/routing/plans/components/PlanTaskToolbar';
 import { TaskDetailRouteHeader } from '~/routing/plans/components/TaskDetailRouteHeader';
 import { TaskDetails } from '~/routing/plans/components/TaskDetails';
 import { TaskTabOutput } from '~/routing/plans/components/TaskTabOutput';
-import { PLAN_LIFECYCLE_HOOKS_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_LIFECYCLE_HOOKS_COPY } from '~/routing/plans/data/copy';
 import { useTaskOutputStream } from '~/routing/plans/hooks/useTaskOutputStream';
 import {
   parseTaskDetailTab,

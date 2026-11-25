@@ -1,4 +1,4 @@
-import { IGNORED_TRACED_PATTERNS } from '../data/data.stage.ts';
+import { IGNORED_TRACED_PATTERNS } from '../data/stage.ts';
 import { findNearestSlot, slotOf } from './findNearestSlot.ts';
 import { isExcludedFile } from './isExcludedFile.ts';
 import type { StorePackage } from './parse-store-path.ts';

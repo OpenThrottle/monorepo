@@ -4,7 +4,7 @@ import { createStore, Provider } from 'jotai';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
-import { workflowRunOptionsAtom } from '~/routing/plans/data/data.atom-plan';
+import { workflowRunOptionsAtom } from '~/routing/plans/data/atom-plan';
 
 import { PlanTabConfigurationValidation } from '../PlanTabConfigurationValidation';
 

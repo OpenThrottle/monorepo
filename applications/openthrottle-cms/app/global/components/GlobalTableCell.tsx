@@ -5,7 +5,7 @@ import * as React from 'react';
 import {
   GLOBAL_TABLE_COLUMN_KIND,
   GLOBAL_TABLE_COPY,
-} from '~/global/data/data.global-table';
+} from '~/global/data/global-table';
 import type { GlobalTableColumnKind } from '~/global/types/global-table';
 
 export interface GlobalTableCellProps {

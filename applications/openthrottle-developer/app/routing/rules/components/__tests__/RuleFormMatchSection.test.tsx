@@ -4,8 +4,8 @@ import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { RULES_COPY } from '~/routing/rules/data/data.copy';
-import { ANY } from '~/routing/rules/data/data.rule-form-options';
+import { RULES_COPY } from '~/routing/rules/data/copy';
+import { ANY } from '~/routing/rules/data/rule-form-options';
 
 import type { RuleFormVocabularyOption } from '../RuleForm';
 import type { RuleFormMatchSectionProps } from '../RuleFormMatchSection';

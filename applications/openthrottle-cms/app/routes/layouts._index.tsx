@@ -11,7 +11,7 @@ import type { Route } from '@/app/routes/+types/layouts._index';
 import { CmsLayoutsDocument } from '~/__generated__/graphql';
 import { GlobalTable } from '~/global/components/GlobalTable';
 import { SITE_TITLE } from '~/global/config/settings';
-import { CMS_LAYOUT_COLUMNS } from '~/global/data/data.cms-table-columns';
+import { CMS_LAYOUT_COLUMNS } from '~/global/data/cms-table-columns';
 import { fetchAuthGraphql } from '~/global/utils/graphql.server';
 import { getLayoutRowHref } from '~/routing/layouts/utils/layout-rows';
 

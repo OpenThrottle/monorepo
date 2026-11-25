@@ -27,13 +27,13 @@ import { buildWindowOptions } from './buildWindowOptions.ts';
 import {
   DEFAULT_OT_SERVER_URL,
   SERVER_START_TIMEOUT_MS,
-} from './data/data.server-env.ts';
-import { PROBE_TIMEOUT_MS, SETTINGS_FILE_NAME } from './data/data.settings.ts';
+} from './data/server-env.ts';
+import { PROBE_TIMEOUT_MS, SETTINGS_FILE_NAME } from './data/settings.ts';
 import {
   MIN_VISIBLE_PIXELS,
   WINDOW_STATE_FILE_NAME,
   WINDOW_STATE_SAVE_DELAY_MS,
-} from './data/data.window-state.ts';
+} from './data/window-state.ts';
 import { createDeepLinkRouter } from './desktop/createDeepLinkRouter.ts';
 import { createNativeNotifier } from './desktop/createNativeNotifier.ts';
 import { decideProtocolRegistration } from './desktop/decideProtocolRegistration.ts';

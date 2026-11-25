@@ -47,7 +47,7 @@ example is a `hook`, not a `component`.
 | Category | Classifier                                                                     | Why informational                                                            |
 | -------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
 | `config` | `applications/*/app/**/config/**/*.{ts,tsx}` · `packages/*/src/**/config/**/*` | Mostly static (`defaults.ts`, feature flags, status maps).                   |
-| `data`   | `applications/*/app/**/data/**/*.{ts,tsx}` · `packages/*/src/**/data/**/*`     | Mostly static (`data.copy.ts` `*_COPY as const`, option lists, status maps). |
+| `data`   | `applications/*/app/**/data/**/*.{ts,tsx}` · `packages/*/src/**/data/**/*`     | Mostly static (`data/copy.ts` `*_COPY as const`, option lists, status maps). |
 
 `config` and `data` are **reported but never gate — not even under `--strict`.**
 They are surfaced so remediation can decide case-by-case; most entries are static

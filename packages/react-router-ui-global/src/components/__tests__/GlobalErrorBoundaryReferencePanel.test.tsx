@@ -5,7 +5,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { GLOBAL_ERROR_BOUNDARY_COPY } from '../../data/data.copy';
+import { GLOBAL_ERROR_BOUNDARY_COPY } from '../../data/copy';
 import type { GlobalErrorBoundaryReferencePanelProps } from '../GlobalErrorBoundaryReferencePanel';
 import { GlobalErrorBoundaryReferencePanel } from '../GlobalErrorBoundaryReferencePanel';
 

@@ -9,8 +9,8 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { APPEARANCE_PREVIEW_CHART_CLASSES } from '~/routing/settings/data/data.appearance';
-import { APPEARANCE_COPY } from '~/routing/settings/data/data.copy';
+import { APPEARANCE_PREVIEW_CHART_CLASSES } from '~/routing/settings/data/appearance';
+import { APPEARANCE_COPY } from '~/routing/settings/data/copy';
 
 export interface AppearancePreviewProps {}
 

@@ -1,5 +1,5 @@
-import type { RepoSkillEntry } from '~/routing/agents/data/data.repo-skills-registry';
-import { LAYOUT_PREFERENCE } from '~/routing/agents/data/data.repo-skills-registry';
+import type { RepoSkillEntry } from '~/routing/agents/data/repo-skills-registry';
+import { LAYOUT_PREFERENCE } from '~/routing/agents/data/repo-skills-registry';
 
 /**
  * @description Collapses duplicate slugs across editor layouts, preferring `.agents/skills`.

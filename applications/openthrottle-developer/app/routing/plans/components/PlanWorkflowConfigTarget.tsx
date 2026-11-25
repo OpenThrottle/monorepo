@@ -10,7 +10,7 @@ import {
 import { OpenThrottleFieldset } from '@openthrottle/react-router-ui';
 import * as React from 'react';
 
-import { PLAN_WORKFLOW_CONFIG_TARGET_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_WORKFLOW_CONFIG_TARGET_COPY } from '~/routing/plans/data/copy';
 import type {
   PlanRunOptions,
   PlanRunTargetMode,

@@ -7,7 +7,7 @@ import type {
 } from '~/routing/plans/components/PlanTagChips';
 import { PlanTagChips } from '~/routing/plans/components/PlanTagChips';
 import { PlanToolbarTagsSkeleton } from '~/routing/plans/components/PlanToolbarTagsSkeleton';
-import { PLAN_DEFERRED_SECTION_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_DEFERRED_SECTION_COPY } from '~/routing/plans/data/copy';
 
 export interface PlanToolbarTagsProps {
   readonly onAddTag?: (tag: string) => void;

@@ -69,7 +69,7 @@ Do not hand-roll `header: () => 'Actions'` or one-off padding wrappers.
 ### Example (queues column)
 
 Copy-pasteable shape from the `/queues` table (link + select). Labels belong in
-the area `data/data.copy.ts`, not inline in the column file.
+the area `data/copy.ts`, not inline in the column file.
 
 ```tsx
 import {
@@ -78,7 +78,7 @@ import {
 } from '@openthrottle/react-router-ui-global';
 import type { GlobalPopoverAction } from '@openthrottle/react-router-ui-global';
 import { PauseIcon, PlayIcon } from 'lucide-react';
-import { QUEUES_ROW_ACTIONS_COPY } from '~/routing/queues/data/data.copy';
+import { QUEUES_ROW_ACTIONS_COPY } from '~/routing/queues/data/copy';
 
 // inside a ColumnDef cell:
 const actions: GlobalPopoverAction[] = [

@@ -5,7 +5,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
-import { RULE_DETAIL_COPY } from '~/routing/rules/data/data.copy';
+import { RULE_DETAIL_COPY } from '~/routing/rules/data/copy';
 
 import type { RuleDetailHeaderProps } from '../RuleDetailHeader';
 import { RuleDetailHeader } from '../RuleDetailHeader';

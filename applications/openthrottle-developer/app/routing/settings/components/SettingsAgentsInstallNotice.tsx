@@ -1,7 +1,7 @@
 import { InfoIcon, TriangleAlertIcon } from 'lucide-react';
 import * as React from 'react';
 
-import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/data.copy';
+import { SETTINGS_AGENTS_COPY } from '~/routing/settings/data/copy';
 
 export interface SettingsAgentsInstallNoticeProps {
   /** Server-computed: OT_AGENT_CLI_INSTALL_ENABLED is on. */

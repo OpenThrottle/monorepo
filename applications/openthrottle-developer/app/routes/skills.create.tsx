@@ -20,7 +20,7 @@ import {
   isSkillCreateDestinationAvailable,
   SKILL_CREATE_FIELDS,
 } from '~/routing/skills/config/skill-create';
-import { SKILL_CREATE_COPY } from '~/routing/skills/data/data.copy';
+import { SKILL_CREATE_COPY } from '~/routing/skills/data/copy';
 import { useSkillCreateForm } from '~/routing/skills/hooks/useSkillCreateForm';
 
 type HandleData = Route.ComponentProps['loaderData'];

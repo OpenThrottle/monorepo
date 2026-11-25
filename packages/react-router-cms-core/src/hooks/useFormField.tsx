@@ -1,6 +1,6 @@
 import { useAtom } from 'jotai';
 
-import { atomFragmentDraft } from '../data/data.atom.fragment-draft';
+import { atomFragmentDraft } from '../data/atom.fragment-draft';
 import type { CmsJsonSchema, CmsParsedSchema } from '../types/cms-json-schema';
 
 /**

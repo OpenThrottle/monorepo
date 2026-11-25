@@ -2,7 +2,7 @@ import { Badge } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import type { ScheduledJobCardFragment } from '~/__generated__/graphql';
-import { SCHEDULE_APPROVAL_COPY } from '~/routing/schedule/data/data.copy';
+import { SCHEDULE_APPROVAL_COPY } from '~/routing/schedule/data/copy';
 
 export interface ScheduleJobMarkersProps {
   readonly job: Pick<ScheduledJobCardFragment, 'approvalState' | 'createdVia'>;

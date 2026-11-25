@@ -4,7 +4,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import { PLAN_WORKFLOW_CONFIG_TARGET_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_WORKFLOW_CONFIG_TARGET_COPY } from '~/routing/plans/data/copy';
 import { getDefaultPlanRunOptions } from '~/routing/plans/utils/plan-run-options';
 
 import { PlanWorkflowConfigTarget } from '../PlanWorkflowConfigTarget';

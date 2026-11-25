@@ -19,7 +19,7 @@ import {
 } from '~/routing/plans/actions/taskId';
 import { PlanTaskNotFound } from '~/routing/plans/components/PlanTaskNotFound';
 import { TaskDetailRoute } from '~/routing/plans/components/TaskDetailRoute';
-import { TASK_DETAIL_REVALIDATE_EVENTS } from '~/routing/plans/data/data.plan-lifecycle-events';
+import { TASK_DETAIL_REVALIDATE_EVENTS } from '~/routing/plans/data/plan-lifecycle-events';
 import { usePlanLifecycleRevalidation } from '~/routing/plans/hooks/usePlanLifecycleRevalidation';
 import { loadTaskDetailRelations } from '~/routing/plans/utils/loadTaskDetailRelations';
 

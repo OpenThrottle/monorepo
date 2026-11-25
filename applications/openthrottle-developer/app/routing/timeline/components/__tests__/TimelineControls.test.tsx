@@ -9,7 +9,7 @@ import { TimelineLaneGrouping } from '~/__generated__/graphql';
 import {
   TIMELINE_GROUPING_LABELS,
   TIMELINE_WINDOW_LABELS,
-} from '~/routing/timeline/data/data.copy';
+} from '~/routing/timeline/data/copy';
 import { SearchParamsProbe } from '~/testing/SearchParamsProbe';
 
 import type { TimelineControlsProps } from '../TimelineControls';

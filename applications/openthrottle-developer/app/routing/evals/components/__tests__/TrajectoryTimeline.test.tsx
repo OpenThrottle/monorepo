@@ -3,7 +3,7 @@ import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
 import { TRAJECTORY_STEP_BATCH_SIZE } from '~/routing/evals/config/defaults';
-import { TRAJECTORY_TIMELINE_COPY } from '~/routing/evals/data/data.copy';
+import { TRAJECTORY_TIMELINE_COPY } from '~/routing/evals/data/copy';
 import {
   MOCK_LONG_TRAJECTORY,
   MOCK_TRAJECTORY,

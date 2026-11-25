@@ -10,8 +10,8 @@ import {
 import * as React from 'react';
 
 import type { ScheduleWebhookTriggerFragment } from '~/__generated__/graphql';
-import { SCHEDULE_WEBHOOK_COPY } from '~/routing/schedule/data/data.copy';
-import { WEBHOOK_ENCODING_OPTIONS } from '~/routing/schedule/data/data.webhook';
+import { SCHEDULE_WEBHOOK_COPY } from '~/routing/schedule/data/copy';
+import { WEBHOOK_ENCODING_OPTIONS } from '~/routing/schedule/data/webhook';
 
 export interface ScheduleWebhookCustomFieldsProps {
   /** The existing trigger being edited; undefined on create. */

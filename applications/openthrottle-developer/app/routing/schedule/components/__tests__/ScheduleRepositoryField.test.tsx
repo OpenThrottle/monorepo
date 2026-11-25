@@ -5,7 +5,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
+import { SCHEDULE_COPY } from '~/routing/schedule/data/copy';
 
 import type { ScheduleRepositoryFieldProps } from '../ScheduleRepositoryField';
 import { ScheduleRepositoryField } from '../ScheduleRepositoryField';

@@ -5,7 +5,7 @@ import { createRoutesStub } from 'react-router';
 import { afterEach, describe, expect, test } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/rules._index';
-import { RULES_COPY, RULES_ONBOARDING } from '~/routing/rules/data/data.copy';
+import { RULES_COPY, RULES_ONBOARDING } from '~/routing/rules/data/copy';
 import type { RankedTagActionRule } from '~/routing/rules/utils/rule-groups';
 import { buildRootMatch } from '~/testing/buildRootMatch';
 

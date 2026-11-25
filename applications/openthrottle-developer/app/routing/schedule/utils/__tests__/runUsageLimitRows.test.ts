@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { RUN_DETAIL_COPY } from '~/routing/schedule/data/data.run-detail';
+import { RUN_DETAIL_COPY } from '~/routing/schedule/data/run-detail';
 
 import { runUsageLimitRows } from '../runUsageLimitRows';
 

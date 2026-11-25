@@ -1,7 +1,7 @@
 import { Badge, Button } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { SKILL_RECORD_TAGS_COPY } from '~/routing/skills/data/data.copy';
+import { SKILL_RECORD_TAGS_COPY } from '~/routing/skills/data/copy';
 
 export interface SkillTagVocabularyOption {
   readonly dimension: string;

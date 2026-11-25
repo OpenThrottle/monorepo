@@ -12,9 +12,9 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { SEMANTIC_INDEX_FAILED_COPY } from '../data/data.copy';
-import type { IdeSemanticResult } from '../data/data.view-models';
-import { IDE_SEMANTIC_STATUS } from '../data/data.view-models';
+import { SEMANTIC_INDEX_FAILED_COPY } from '../data/copy';
+import type { IdeSemanticResult } from '../data/view-models';
+import { IDE_SEMANTIC_STATUS } from '../data/view-models';
 import { formatLocationLabel } from '../utils/formatLocationLabel';
 
 export interface SemanticSearchResultsProps {

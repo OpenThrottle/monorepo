@@ -8,7 +8,7 @@ import type {
   PlanRunConfigCheckoutFragment,
   PlanRunConfigRepositoryFieldsFragment,
 } from '~/__generated__/graphql';
-import { PLAN_RUN_WORKSPACE_SELECTOR_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_RUN_WORKSPACE_SELECTOR_COPY } from '~/routing/plans/data/copy';
 
 import type { PlanWorkflowConfigWorkspaceSelectorProps } from '../PlanWorkflowConfigWorkspaceSelector';
 import { PlanWorkflowConfigWorkspaceSelector } from '../PlanWorkflowConfigWorkspaceSelector';

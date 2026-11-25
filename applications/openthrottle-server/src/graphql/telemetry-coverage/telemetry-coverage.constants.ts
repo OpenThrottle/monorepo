@@ -1,7 +1,7 @@
 /**
  * Hours after which the oldest buffered record counts as stale. Matches the
  * developer app's CAPTURE_HEALTH_STALE_AFTER_HOURS
- * (openthrottle-developer/app/routing/usage/data/data.capture-health.ts) so
+ * (openthrottle-developer/app/routing/usage/data/capture-health.ts) so
  * /usage has one definition of stale; not imported across app boundaries.
  */
 export const TELEMETRY_COVERAGE_STALE_AFTER_HOURS = 24;

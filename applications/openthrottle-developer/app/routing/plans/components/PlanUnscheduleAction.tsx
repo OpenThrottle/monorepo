@@ -5,7 +5,7 @@ import { useFetcher } from 'react-router';
 
 import type { action } from '~/routes/plans.$planId._index';
 import { PlanScheduleConfirmDialog } from '~/routing/plans/components/PlanScheduleConfirmDialog';
-import { PLAN_SCHEDULE_CONFIRM_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_SCHEDULE_CONFIRM_COPY } from '~/routing/plans/data/copy';
 import { formatPlanScheduledFor } from '~/routing/plans/utils/formatPlanScheduledFor';
 
 export interface PlanUnscheduleActionProps {

@@ -9,7 +9,7 @@ import {
 } from 'react-router';
 import { afterEach, describe, expect, test } from 'vitest';
 
-import { GLOBAL_TOOLBAR_SEARCH_COPY } from '../../data/data.copy';
+import { GLOBAL_TOOLBAR_SEARCH_COPY } from '../../data/copy';
 import type { GlobalToolbarSearchProps } from '../GlobalToolbarSearch';
 import { GlobalToolbarSearch } from '../GlobalToolbarSearch';
 

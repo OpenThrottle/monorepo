@@ -4,7 +4,7 @@ import * as React from 'react';
 import { Link } from 'react-router';
 
 import type { BlogPostDetailFragment } from '~/__generated__/graphql';
-import { BLOG_COPY } from '~/routing/blog/data/data.copy';
+import { BLOG_COPY } from '~/routing/blog/data/copy';
 import { formatBlogDate } from '~/routing/blog/utils/blog-format';
 import { BLOG_BASE_PATH } from '~/routing/blog/utils/blog-urls';
 

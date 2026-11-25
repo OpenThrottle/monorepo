@@ -11,7 +11,7 @@ import {
 import * as React from 'react';
 
 import type { EvalRunReportGraderFragment } from '~/__generated__/graphql';
-import { EVAL_REPORT_COPY } from '~/routing/evals/data/data.copy';
+import { EVAL_REPORT_COPY } from '~/routing/evals/data/copy';
 import {
   formatKappa,
   formatKappaInterval,

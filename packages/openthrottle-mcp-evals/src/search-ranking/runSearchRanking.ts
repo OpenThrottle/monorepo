@@ -4,7 +4,7 @@
  * {@link compareSearchModes}.
  */
 
-import { SEARCH_RANKING_K } from './data/data.dataset.ts';
+import { SEARCH_RANKING_K } from './data/dataset.ts';
 import type { CaseScore, RankedChunk, SearchRankingCase } from './eval-case.ts';
 import { scoreCase } from './scoring.ts';
 

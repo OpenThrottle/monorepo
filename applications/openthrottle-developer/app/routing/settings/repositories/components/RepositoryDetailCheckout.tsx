@@ -5,7 +5,7 @@ import type { RepositoryCheckoutFieldsFragment } from '~/__generated__/graphql';
 import {
   WORKSPACE_FOLDERS_COPY,
   WORKSPACE_REPOSITORY_DETAIL_COPY,
-} from '~/routing/settings/data/data.copy';
+} from '~/routing/settings/data/copy';
 import { RepositoryHookTelemetry } from '~/routing/settings/repositories/components/RepositoryHookTelemetry';
 import { deriveCheckoutInspectionBadges } from '~/routing/settings/repositories/utils/deriveCheckoutInspectionBadges';
 

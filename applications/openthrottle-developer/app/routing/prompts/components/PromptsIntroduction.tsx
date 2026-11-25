@@ -5,7 +5,7 @@ import {
 import { BrainIcon } from 'lucide-react';
 import * as React from 'react';
 
-import { PROMPTS_COPY } from '~/routing/prompts/data/data.copy';
+import { PROMPTS_COPY } from '~/routing/prompts/data/copy';
 
 export interface PromptsIntroductionProps {}
 

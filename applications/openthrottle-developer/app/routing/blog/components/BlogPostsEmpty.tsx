@@ -19,7 +19,7 @@ import {
   BLOG_EMPTY_COPY,
   BLOG_ONBOARDING,
   BLOG_SEARCH_EMPTY_COPY,
-} from '~/routing/blog/data/data.copy';
+} from '~/routing/blog/data/copy';
 
 export interface BlogPostsEmptyProps {
   /** The committed `q` query, or `null` when none is applied. */

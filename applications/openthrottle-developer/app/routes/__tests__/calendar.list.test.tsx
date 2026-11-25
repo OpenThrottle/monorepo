@@ -4,8 +4,8 @@ import { MemoryRouter } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/calendar.list';
-import { CALENDAR_INTRO_COPY } from '~/routing/calendar/data/data.copy';
-import { CALENDAR_EVENTS } from '~/routing/calendar/data/data.events';
+import { CALENDAR_INTRO_COPY } from '~/routing/calendar/data/copy';
+import { CALENDAR_EVENTS } from '~/routing/calendar/data/events';
 import { buildRootMatch } from '~/testing/buildRootMatch';
 
 import Component from '../calendar.list';

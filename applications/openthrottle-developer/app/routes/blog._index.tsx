@@ -19,7 +19,7 @@ import { BlogPostsTable } from '~/routing/blog/components/BlogPostsTable';
 import { BlogPostStateTabs } from '~/routing/blog/components/BlogPostStateTabs';
 import { BlogPostsToolbar } from '~/routing/blog/components/BlogPostsToolbar';
 import { BLOG_POSTS_PAGE_SIZE } from '~/routing/blog/config/defaults';
-import { BLOG_COPY } from '~/routing/blog/data/data.copy';
+import { BLOG_COPY } from '~/routing/blog/data/copy';
 import { parseBlogListParams } from '~/routing/blog/utils/posts';
 
 type HandleData = Route.ComponentProps['loaderData'];

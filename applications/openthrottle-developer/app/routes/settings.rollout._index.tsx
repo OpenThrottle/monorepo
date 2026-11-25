@@ -28,7 +28,7 @@ import { SITE_TITLE } from '~/global/config/settings';
 import { RolloutFlagCreateDialog } from '~/routing/settings/components/RolloutFlagCreateDialog';
 import { RolloutFlagsTable } from '~/routing/settings/components/RolloutFlagsTable';
 import { RolloutSdkHydrationStatus } from '~/routing/settings/components/RolloutSdkHydrationStatus';
-import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
+import { ROLLOUT_COPY } from '~/routing/settings/data/copy';
 import { parseRolloutTargetRoles } from '~/routing/settings/utils/rollout-action';
 import {
   parseRolloutTypedConfig,

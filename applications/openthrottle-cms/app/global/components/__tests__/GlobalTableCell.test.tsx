@@ -6,7 +6,7 @@ import { GlobalTableCell } from '~/global/components/GlobalTableCell';
 import {
   GLOBAL_TABLE_COLUMN_KIND,
   GLOBAL_TABLE_COPY,
-} from '~/global/data/data.global-table';
+} from '~/global/data/global-table';
 
 describe('GlobalTableCell', () => {
   describe('text', () => {

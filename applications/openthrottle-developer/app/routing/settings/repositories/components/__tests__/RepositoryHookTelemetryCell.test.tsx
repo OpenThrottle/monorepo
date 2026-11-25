@@ -4,7 +4,7 @@ import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
 import type { RepositoryHookTelemetryFragment } from '~/__generated__/graphql';
-import { REPOSITORY_HOOK_TELEMETRY_COPY } from '~/routing/settings/repositories/data/data.copy';
+import { REPOSITORY_HOOK_TELEMETRY_COPY } from '~/routing/settings/repositories/data/copy';
 import {
   mockCheckout,
   mockRepository,

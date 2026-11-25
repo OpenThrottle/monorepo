@@ -18,7 +18,7 @@ import { WorkspaceEditorPresenceHints } from '~/routing/settings/components/Work
 import {
   SETTINGS_PREFERENCES_COPY,
   WORKSPACE_SETTINGS_COPY,
-} from '~/routing/settings/data/data.copy';
+} from '~/routing/settings/data/copy';
 
 export interface SettingsWorkspaceEditorsFormProps {
   actionError?: string | null;

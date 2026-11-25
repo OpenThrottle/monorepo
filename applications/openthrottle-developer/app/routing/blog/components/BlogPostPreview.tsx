@@ -2,7 +2,7 @@ import { MarkdownRenderer } from '@openthrottle/react-router-markdown';
 import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { BLOG_EDITOR_COPY } from '~/routing/blog/data/data.copy';
+import { BLOG_EDITOR_COPY } from '~/routing/blog/data/copy';
 import type { BlogPostEditorValues } from '~/routing/blog/types';
 
 export interface BlogPostPreviewProps {

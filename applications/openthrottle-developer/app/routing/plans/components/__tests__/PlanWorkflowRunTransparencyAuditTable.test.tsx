@@ -10,11 +10,11 @@ import type {
   PlanRunHistoryEntryFragment,
   PlanRunJobMetricsEntryFragment,
 } from '~/__generated__/graphql';
-import { PLAN_RUN_TRANSPARENCY_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_RUN_TRANSPARENCY_COPY } from '~/routing/plans/data/copy';
 import {
   PLAN_RUN_HISTORY_FETCH_LIMIT,
   PLAN_RUN_HISTORY_INITIAL_ROWS,
-} from '~/routing/plans/data/data.plan-run-history';
+} from '~/routing/plans/data/plan-run-history';
 import { getDefaultPlanRunOptions } from '~/routing/plans/utils/plan-run-options';
 
 import { PlanWorkflowRunTransparencyAuditTable } from '../PlanWorkflowRunTransparencyAuditTable';

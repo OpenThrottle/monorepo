@@ -4,8 +4,8 @@ import * as React from 'react';
 
 import type { BlogPostEditorPostFragment } from '~/__generated__/graphql';
 import { BlogPostState } from '~/__generated__/graphql';
-import { BLOG_LIFECYCLE_COPY } from '~/routing/blog/data/data.copy';
-import { BLOG_LIFECYCLE_ACTIONS } from '~/routing/blog/data/data.lifecycle';
+import { BLOG_LIFECYCLE_COPY } from '~/routing/blog/data/copy';
+import { BLOG_LIFECYCLE_ACTIONS } from '~/routing/blog/data/lifecycle';
 import { useBlogPostLifecycle } from '~/routing/blog/hooks/useBlogPostLifecycle';
 import type { BlogPostLifecycleAction } from '~/routing/blog/types';
 

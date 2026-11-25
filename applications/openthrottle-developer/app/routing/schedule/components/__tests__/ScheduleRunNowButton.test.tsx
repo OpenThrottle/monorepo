@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
+import { SCHEDULE_COPY } from '~/routing/schedule/data/copy';
 import { renderWithMemoryRouter } from '~/testing/route-fixtures';
 
 import { ScheduleRunNowButton } from '../ScheduleRunNowButton';

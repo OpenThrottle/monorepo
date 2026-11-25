@@ -18,12 +18,12 @@ import { AgentSearchForm } from '~/routing/agent-search/components/AgentSearchFo
 import { AgentSearchIntroduction } from '~/routing/agent-search/components/AgentSearchIntroduction';
 import { AgentSearchTabs } from '~/routing/agent-search/components/AgentSearchTabs';
 import { AGENT_SEARCH_LIMIT } from '~/routing/agent-search/config';
-import { AGENT_SEARCH_COPY } from '~/routing/agent-search/data/data.copy';
-import { EMPTY_COUNTS } from '~/routing/agent-search/data/data.empty-counts';
+import { AGENT_SEARCH_COPY } from '~/routing/agent-search/data/copy';
+import { EMPTY_COUNTS } from '~/routing/agent-search/data/empty-counts';
 import {
   GQL_TO_PROMPT_TYPE,
   PROMPT_TYPE_TO_GQL,
-} from '~/routing/agent-search/data/data.prompt-type-maps';
+} from '~/routing/agent-search/data/prompt-type-maps';
 import type {
   AgentAssetResult,
   AgentSearchCounts,

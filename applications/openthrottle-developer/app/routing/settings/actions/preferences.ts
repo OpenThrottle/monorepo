@@ -13,8 +13,8 @@ import {
 import type {
   PreferencesActionResult,
   PreferencesIntentsValue,
-} from '~/routing/settings/data/data.preferences';
-import { PREFERENCES_INTENTS } from '~/routing/settings/data/data.preferences';
+} from '~/routing/settings/data/preferences';
+import { PREFERENCES_INTENTS } from '~/routing/settings/data/preferences';
 
 const submitPatch = async (
   args: Route.ActionArgs,

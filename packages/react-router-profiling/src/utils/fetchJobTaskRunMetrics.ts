@@ -4,7 +4,7 @@
 
 import { isRecord } from '@openthrottle/nodejs-utils';
 
-import { DEFAULT_REQUEST_TIMEOUT_MS } from '../data/data.request-timeout';
+import { DEFAULT_REQUEST_TIMEOUT_MS } from '../data/request-timeout';
 import type { JobWithTaskRunMetrics, ProcessMetricsSnapshot } from '../types';
 import { buildRequestSignal } from './request-timeout';
 

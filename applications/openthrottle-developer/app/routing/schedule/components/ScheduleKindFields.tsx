@@ -12,13 +12,13 @@ import * as React from 'react';
 
 import type { ScheduledJobDetailFragment } from '~/__generated__/graphql';
 import { ScheduleMisfireFields } from '~/routing/schedule/components/ScheduleMisfireFields';
-import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
-import type { ScheduleKindValue } from '~/routing/schedule/data/data.schedule-kind';
+import { SCHEDULE_COPY } from '~/routing/schedule/data/copy';
+import type { ScheduleKindValue } from '~/routing/schedule/data/schedule-kind';
 import {
   SCHEDULE_INTERVAL_DEFAULT_MINUTES,
   SCHEDULE_KIND,
   SCHEDULE_KIND_OPTIONS,
-} from '~/routing/schedule/data/data.schedule-kind';
+} from '~/routing/schedule/data/schedule-kind';
 
 export interface ScheduleKindFieldsProps {
   /** The schedule being edited; undefined on create, which starts on cron. */

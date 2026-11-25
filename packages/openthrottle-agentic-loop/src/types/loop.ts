@@ -5,10 +5,7 @@
  * validator, git) plug in from other packages and the server.
  */
 
-import type {
-  LoopPlanStatusValue,
-  LoopTaskStatusValue,
-} from '../data/data.loop.ts';
+import type { LoopPlanStatusValue, LoopTaskStatusValue } from '../data/loop.ts';
 
 /** @public */
 export interface LoopTask {

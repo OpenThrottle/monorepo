@@ -25,7 +25,7 @@ import {
   StopTranscriptionStreamDocument,
   TranscriptionStreamChunkAddedDocument,
 } from '~/__generated__/graphql';
-import { INITIAL_TRANSCRIPTION_SNAPSHOT } from '~/routing/home/data/data.transcription';
+import { INITIAL_TRANSCRIPTION_SNAPSHOT } from '~/routing/home/data/transcription';
 import type { TranscriptionSnapshot } from '~/routing/home/types';
 import { reduceTranscriptionChunk } from '~/routing/home/utils/reduceTranscriptionChunk';
 import { getGraphqlWsClient } from '~/services/getGraphqlWsClient';

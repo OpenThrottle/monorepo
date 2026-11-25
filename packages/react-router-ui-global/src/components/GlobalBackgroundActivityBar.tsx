@@ -2,7 +2,7 @@ import { cn, Progress } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { Link } from 'react-router';
 
-import { GLOBAL_BACKGROUND_ACTIVITY_COPY } from '../data/data.copy';
+import { GLOBAL_BACKGROUND_ACTIVITY_COPY } from '../data/copy';
 import type { GlobalBackgroundActivity } from '../utils/background-activity';
 import { summarizeBackgroundActivities } from '../utils/background-activity';
 import { GlobalBackgroundActivityTooltip } from './GlobalBackgroundActivityTooltip';

@@ -7,11 +7,11 @@ import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import { DashboardGetStartedCard } from '~/routing/dashboard/components/DashboardGetStartedCard';
-import { GET_STARTED_RESTORE_COPY } from '~/routing/dashboard/data/data.copy';
+import { GET_STARTED_RESTORE_COPY } from '~/routing/dashboard/data/copy';
 import {
   ONBOARDING_STATE_VERSION,
   ONBOARDING_STORAGE_KEY,
-} from '~/routing/dashboard/data/data.onboarding-state';
+} from '~/routing/dashboard/data/onboarding-state';
 import type { OnboardingCompletion } from '~/routing/dashboard/utils/onboarding-steps';
 import { ONBOARDING_STEP_ID } from '~/routing/dashboard/utils/onboarding-steps';
 

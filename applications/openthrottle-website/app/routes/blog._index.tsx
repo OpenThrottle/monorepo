@@ -7,7 +7,7 @@ import { BlogList } from '~/routing/blog/components/BlogList';
 import { BlogPageHeader } from '~/routing/blog/components/BlogPageHeader';
 import { BlogPageShell } from '~/routing/blog/components/BlogPageShell';
 import { BlogPagination } from '~/routing/blog/components/BlogPagination';
-import { BLOG_COPY } from '~/routing/blog/data/data.copy';
+import { BLOG_COPY } from '~/routing/blog/data/copy';
 import {
   loadBlogIndex,
   readBlogCursor,

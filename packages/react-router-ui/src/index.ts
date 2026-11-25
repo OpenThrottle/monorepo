@@ -30,11 +30,11 @@ export * from './components/OpenThrottleThemeToggle';
 export * from './components/OpenThrottleWebsocketDebugger';
 
 // 📦 Data
-export * from './data/data.artwork';
-export * from './data/data.features';
-export * from './data/data.introductions';
-export * from './data/data.taglines';
-export * from './data/data.websocket-debugger-events';
+export * from './data/artwork';
+export * from './data/features';
+export * from './data/introductions';
+export * from './data/taglines';
+export * from './data/websocket-debugger-events';
 export * from './utils/getRandomIntroduction';
 
 // 🏷️ Types

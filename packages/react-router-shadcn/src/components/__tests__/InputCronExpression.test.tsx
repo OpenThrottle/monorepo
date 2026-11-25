@@ -5,10 +5,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, describe, expect, test } from 'vitest';
 
-import {
-  CRON_EXPRESSION_COPY,
-  CRON_PRESETS,
-} from '../../data/data.cron-presets';
+import { CRON_EXPRESSION_COPY, CRON_PRESETS } from '../../data/cron-presets';
 import type { InputCronExpressionProps } from '../InputCronExpression';
 import { InputCronExpression } from '../InputCronExpression';
 

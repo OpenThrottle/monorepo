@@ -7,7 +7,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { CARD_FALLBACK_ICON, CARD_ICONS } from '../data/data.card-icons';
+import { CARD_FALLBACK_ICON, CARD_ICONS } from '../data/card-icons';
 import type { CmsComponentDebug } from '../types';
 
 /**

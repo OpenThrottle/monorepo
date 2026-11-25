@@ -5,7 +5,7 @@ import * as React from 'react';
 import { createRoutesStub, redirect } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { WORKSPACE_REPOSITORY_DETAIL_COPY } from '~/routing/settings/data/data.copy';
+import { WORKSPACE_REPOSITORY_DETAIL_COPY } from '~/routing/settings/data/copy';
 
 import type { RepositoryEditFormProps } from '../RepositoryEditForm';
 import { RepositoryEditForm } from '../RepositoryEditForm';

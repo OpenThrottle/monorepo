@@ -6,7 +6,7 @@ import * as React from 'react';
 import { createRoutesStub, useLocation } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import { SEARCH_TOOLBAR_COPY } from '~/routing/search/data/data.copy';
+import { SEARCH_TOOLBAR_COPY } from '~/routing/search/data/copy';
 
 import type { SearchToolbarProps } from '../SearchToolbar';
 import { SearchToolbar } from '../SearchToolbar';

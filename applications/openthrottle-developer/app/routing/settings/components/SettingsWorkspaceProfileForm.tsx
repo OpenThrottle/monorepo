@@ -5,7 +5,7 @@ import * as React from 'react';
 import { Form, useNavigation } from 'react-router';
 
 import type { UserWorkspaceProfileFieldsFragment } from '~/__generated__/graphql';
-import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/data.copy';
+import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/copy';
 
 export interface SettingsWorkspaceProfileFormProps {
   actionError?: string | null;

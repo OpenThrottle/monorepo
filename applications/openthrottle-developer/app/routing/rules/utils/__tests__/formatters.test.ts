@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { RULES_COPY } from '../../data/data.copy';
+import { RULES_COPY } from '../../data/copy';
 import { buildRuleScopeTrail, summarizeRuleAction } from '../formatters';
 
 describe('summarizeRuleAction', () => {

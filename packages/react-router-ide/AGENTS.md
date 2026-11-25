@@ -7,7 +7,7 @@ Presentational, client-safe UI for the `@openthrottle/openthrottle-ide` code-int
 ## Layout
 
 - [src/index.ts](src/index.ts) — public API surface (components, hooks, utils, view-model types).
-- [src/data/data.view-models.ts](src/data/data.view-models.ts) — the serializable transport boundary: re-exports engine leaf types verbatim and owns the envelope DTOs loaders produce.
+- [src/data/view-models.ts](src/data/view-models.ts) — the serializable transport boundary: re-exports engine leaf types verbatim and owns the envelope DTOs loaders produce.
 - [src/components/](src/components/) — one component per file; all built on `react-router-shadcn` primitives.
 - [src/hooks/useSymbolDetails.tsx](src/hooks/useSymbolDetails.tsx) — the only fetcher (definition/references via a resource route); text search is GET → loader.
 - [src/data/**tests**/engine-boundary.test.ts](src/data/__tests__/engine-boundary.test.ts) — scans every source file and fails on a value import from the engine.

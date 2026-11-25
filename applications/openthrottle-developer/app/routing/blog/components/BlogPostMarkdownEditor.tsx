@@ -3,7 +3,7 @@ import { Skeleton } from '@openthrottle/react-router-shadcn';
 import { useIsHydrated } from '@openthrottle/react-router-utils';
 import * as React from 'react';
 
-import { BLOG_EDITOR_COPY } from '~/routing/blog/data/data.copy';
+import { BLOG_EDITOR_COPY } from '~/routing/blog/data/copy';
 import { useBlogEditorTheme } from '~/routing/blog/hooks/useBlogEditorTheme';
 
 export interface BlogPostMarkdownEditorProps {

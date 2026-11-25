@@ -9,7 +9,7 @@ import { DefaultEditorContext } from '~/global/config/DefaultEditorContext';
 import {
   PLAN_DEFERRED_SECTION_COPY,
   PLAN_EDITOR_ACTIONS_COPY,
-} from '~/routing/plans/data/data.copy';
+} from '~/routing/plans/data/copy';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 
 import type { PlanEditorActionsProps } from '../PlanEditorActions';

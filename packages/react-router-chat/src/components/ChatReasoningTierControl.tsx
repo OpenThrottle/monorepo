@@ -14,7 +14,7 @@ import * as React from 'react';
 import {
   DEFAULT_REASONING_LABELS,
   DEFAULT_SERVICE_TIER_LABELS,
-} from '../data/data.chat-reasoning-tier-labels';
+} from '../data/chat-reasoning-tier-labels';
 import type { ChatReasoningLevelValue, ChatServiceTierValue } from '../types';
 import type { ChatBackendCapabilities } from '../types';
 

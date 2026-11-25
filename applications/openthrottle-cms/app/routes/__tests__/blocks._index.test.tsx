@@ -3,7 +3,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import { BLOCKS_COPY } from '~/routing/blocks/data/data.copy';
+import { BLOCKS_COPY } from '~/routing/blocks/data/copy';
 
 import BlocksIndex from '../blocks._index';
 

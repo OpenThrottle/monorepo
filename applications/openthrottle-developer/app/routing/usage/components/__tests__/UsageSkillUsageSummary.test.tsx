@@ -8,7 +8,7 @@ import type { UsageSkillUsageByScopeFragment } from '~/__generated__/graphql';
 import {
   SKILL_USAGE_COPY,
   SKILL_USAGE_SCOPES,
-} from '../../data/data.skill-usage-copy';
+} from '../../data/skill-usage-copy';
 import type { UsageSkillUsageSummaryProps } from '../UsageSkillUsageSummary';
 import { UsageSkillUsageSummary } from '../UsageSkillUsageSummary';
 

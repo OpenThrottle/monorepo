@@ -4,7 +4,7 @@ import * as React from 'react';
 import { parseDate } from '~/global/utils/dates';
 import { PlanRunStatusBadge } from '~/routing/plans/components/PlanRunStatusBadge';
 import { PlanRunTime } from '~/routing/plans/components/PlanRunTime';
-import { PLAN_RUN_STATUS_CELL_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_RUN_STATUS_CELL_COPY } from '~/routing/plans/data/copy';
 
 export interface PlanRunStatusCellProps {
   /** Present on a continuation run: the usage-limited run it picks up from. */

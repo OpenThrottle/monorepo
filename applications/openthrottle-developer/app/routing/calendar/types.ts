@@ -1,6 +1,6 @@
 /**
  * @description Shared types for the calendar routing area. Calendar list data is
- * stubbed in `data/data.events.ts` until a GraphQL source exists; swap these for
+ * stubbed in `data/events.ts` until a GraphQL source exists; swap these for
  * generated fragment types when the backend lands (plan 26594427).
  */
 

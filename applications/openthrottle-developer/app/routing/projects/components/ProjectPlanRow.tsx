@@ -12,7 +12,7 @@ import { ProjectPlanTasks } from '~/routing/projects/components/ProjectPlanTasks
 import {
   PROJECT_PLAN_TASKS_COPY,
   PROJECT_PLANS_COPY,
-} from '~/routing/projects/data/data.copy';
+} from '~/routing/projects/data/copy';
 import { useProjectPlanTasks } from '~/routing/projects/hooks/useProjectPlanTasks';
 
 export interface ProjectPlanRowProps {

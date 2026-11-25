@@ -11,11 +11,11 @@ import {
 import { describe, expect, test } from 'vitest';
 
 import type { CmsComponentDetailFragment } from '~/__generated__/graphql';
-import { AUTH_ROUTES } from '~/routing/auth/data/data.routes';
+import { AUTH_ROUTES } from '~/routing/auth/data/routes';
 import {
   COMPONENT_EDITOR_COPY,
   COMPONENT_PREVIEW_COPY,
-} from '~/routing/components/data/data.copy';
+} from '~/routing/components/data/copy';
 import type { ComponentActionResult } from '~/routing/components/types/component-action';
 
 import { ComponentEditor } from '../ComponentEditor';

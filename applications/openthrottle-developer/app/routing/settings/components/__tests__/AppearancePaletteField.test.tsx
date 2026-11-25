@@ -7,9 +7,9 @@ import * as React from 'react';
 import { renderToString } from 'react-dom/server';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import type { ConfigObject } from '~/global/data/data.appearance-config';
-import { DEFAULT_APPEARANCE_CONFIG } from '~/global/data/data.appearance-config';
-import { configAtom } from '~/global/data/data.atom-config';
+import type { ConfigObject } from '~/global/data/appearance-config';
+import { DEFAULT_APPEARANCE_CONFIG } from '~/global/data/appearance-config';
+import { configAtom } from '~/global/data/atom-config';
 
 import type { AppearancePaletteFieldProps } from '../AppearancePaletteField';
 import { AppearancePaletteField } from '../AppearancePaletteField';

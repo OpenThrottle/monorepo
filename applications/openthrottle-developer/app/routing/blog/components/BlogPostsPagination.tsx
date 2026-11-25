@@ -3,7 +3,7 @@ import * as React from 'react';
 import { Link, useSearchParams } from 'react-router';
 
 import { BLOG_CURSOR_PARAM } from '~/routing/blog/config/defaults';
-import { BLOG_COPY } from '~/routing/blog/data/data.copy';
+import { BLOG_COPY } from '~/routing/blog/data/copy';
 
 export interface BlogPostsPaginationProps {
   /** The cursor this page was fetched with, or `null` on the first page. */

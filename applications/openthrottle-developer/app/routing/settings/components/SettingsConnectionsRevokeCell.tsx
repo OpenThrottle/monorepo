@@ -18,7 +18,7 @@ import * as React from 'react';
 import { useFetcher } from 'react-router';
 
 import type { action as settingsConnectionsAction } from '~/routes/settings.connections';
-import { SETTINGS_CONNECTIONS_COPY as COPY } from '~/routing/settings/data/data.copy';
+import { SETTINGS_CONNECTIONS_COPY as COPY } from '~/routing/settings/data/copy';
 
 export interface SettingsConnectionsRevokeCellProps {
   appName: string;

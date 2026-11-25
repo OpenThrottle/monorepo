@@ -6,7 +6,7 @@ import * as React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { WorkspaceEditorId } from '~/__generated__/graphql';
-import { PLAN_CHECKOUT_SELECTOR_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_CHECKOUT_SELECTOR_COPY } from '~/routing/plans/data/copy';
 import {
   buildPlanDetailLoaderData,
   renderWithPlanDetailRouteData,

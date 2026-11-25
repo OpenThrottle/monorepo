@@ -3,8 +3,8 @@ import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
-import { SCHEDULE_RUN_STATUS_CELL_COPY } from '~/routing/schedule/data/data.copy';
-import { RUN_STATUS_LABEL } from '~/routing/schedule/data/data.run-status';
+import { SCHEDULE_RUN_STATUS_CELL_COPY } from '~/routing/schedule/data/copy';
+import { RUN_STATUS_LABEL } from '~/routing/schedule/data/run-status';
 
 import type { ScheduleRunStatusCellProps } from '../ScheduleRunStatusCell';
 import { ScheduleRunStatusCell } from '../ScheduleRunStatusCell';

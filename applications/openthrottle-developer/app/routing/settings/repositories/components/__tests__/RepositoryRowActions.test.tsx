@@ -5,12 +5,12 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
+import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/copy';
 import {
   MISSING_WORKTREES_COPY,
   REMOVE_PLAN_RUN_WORKTREE_COPY,
   REPOSITORIES_ROW_ACTIONS_COPY,
-} from '~/routing/settings/repositories/data/data.copy';
+} from '~/routing/settings/repositories/data/copy';
 import {
   mockCheckout,
   mockDiscoveredWorktree,

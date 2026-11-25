@@ -8,8 +8,8 @@ import { PlanRunProvenanceCell } from '~/routing/plans/components/PlanRunProvena
 import { PlanRunStatusCell } from '~/routing/plans/components/PlanRunStatusCell';
 import { PlanRunTime } from '~/routing/plans/components/PlanRunTime';
 import { PlanWorkflowRunSection } from '~/routing/plans/components/PlanWorkflowRunSection';
-import { PLAN_RUN_TRANSPARENCY_COPY } from '~/routing/plans/data/data.copy';
-import { PLAN_RUN_LATEST_META_FIELDS } from '~/routing/plans/data/data.plan-run-history';
+import { PLAN_RUN_TRANSPARENCY_COPY } from '~/routing/plans/data/copy';
+import { PLAN_RUN_LATEST_META_FIELDS } from '~/routing/plans/data/plan-run-history';
 import {
   buildPlanRunMetaItems,
   isActivePlanRunStatus,

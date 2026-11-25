@@ -4,7 +4,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import { BLOG_COPY } from '~/routing/blog/data/data.copy';
+import { BLOG_COPY } from '~/routing/blog/data/copy';
 import { MOCK_BLOG_POST_DETAIL } from '~/routing/blog/testing/mock.blog-posts';
 
 import type { BlogDetailsProps } from '../BlogDetails';

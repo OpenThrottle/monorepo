@@ -4,7 +4,7 @@ import { describe, expect, test } from 'vitest';
 import { BlogPostState } from '~/__generated__/graphql';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 
-import { BLOG_EMPTY_COPY, BLOG_ONBOARDING } from '../../data/data.copy';
+import { BLOG_EMPTY_COPY, BLOG_ONBOARDING } from '../../data/copy';
 import { BlogPostsEmpty } from '../BlogPostsEmpty';
 
 describe('BlogPostsEmpty Component', () => {

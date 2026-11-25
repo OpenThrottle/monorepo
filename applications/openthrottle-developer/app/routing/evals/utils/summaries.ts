@@ -1,6 +1,6 @@
 import type { AgentTrajectorySummaryFragment } from '~/__generated__/graphql';
 import { parseDate } from '~/global/utils/dates';
-import { TRAJECTORY_SUMMARY_COPY } from '~/routing/evals/data/data.copy';
+import { TRAJECTORY_SUMMARY_COPY } from '~/routing/evals/data/copy';
 import {
   formatTrajectoryCost,
   formatTrajectoryCount,

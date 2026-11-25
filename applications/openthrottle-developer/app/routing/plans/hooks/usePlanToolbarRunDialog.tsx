@@ -8,7 +8,7 @@ import { toast } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import type { PlanRunConfigRepositoryFieldsFragment } from '~/__generated__/graphql';
-import { PLAN_TOOLBAR_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_TOOLBAR_COPY } from '~/routing/plans/data/copy';
 import { usePlanDeferredValue } from '~/routing/plans/hooks/usePlanDeferredValue';
 import type {
   PlanRunDialogMode,

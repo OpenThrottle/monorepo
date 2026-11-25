@@ -198,7 +198,7 @@
     "prompt/Job_DatabaseHealth.md": 9083,
     "prompt/Job_DeadCode.md": 8432,
     "prompt/Job_DocDrift.md": 9521,
-    "prompt/Job_FeatureRegistryRefresh.md": 7585,
+    "prompt/Job_FeatureRegistryRefresh.md": 7570,
     "prompt/Job_Issue_Reporting.md": 11673,
     "prompt/Job_MemoryDrift.md": 10214,
     "prompt/Job_Performance.md": 8936,
@@ -215,7 +215,7 @@
     "skill/github-squash": 6945,
     "skill/ot-client-node-boundary": 3862,
     "skill/ot-code-review": 8950,
-    "skill/ot-folders": 15403,
+    "skill/ot-folders": 15385,
     "skill/ot-generators": 6734,
     "skill/ot-loop": 16252,
     "skill/ot-onboarding": 17051,
@@ -224,7 +224,7 @@
     "skill/ot-skill-guide": 15667,
     "skill/ot-skill-sync": 10949,
     "skill/ot-stack": 9671,
-    "skill/ot-worktree": 11297,
+    "skill/ot-worktree": 11233,
     "skillDescription/github-cleanup": 381,
     "skillDescription/github-commit": 266,
     "skillDescription/github-pull-request": 300,
@@ -254,7 +254,7 @@
     "alwaysInjected": 49026,
     "mcpInstructions": 2183,
     "mcpTools": 40891,
-    "prompts": 137771,
-    "skills": 163457
+    "prompts": 137756,
+    "skills": 163375
   }
 }

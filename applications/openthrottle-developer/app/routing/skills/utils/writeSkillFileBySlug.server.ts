@@ -32,7 +32,7 @@ import { validateAgentAssetFrontmatter } from '@openthrottle/openthrottle-skills
 import { discoverRepoSkills } from '~/routing/agents/utils/discoverRepoSkills.server';
 import { getMonorepoRoot } from '~/routing/agents/utils/resolve-monorepo-root.server';
 import { isAllowedSkillPath } from '~/routing/agents/utils/skill-path-allowlist.server';
-import { SKILL_WRITE_COPY } from '~/routing/skills/data/data.copy';
+import { SKILL_WRITE_COPY } from '~/routing/skills/data/copy';
 
 export type WriteSkillFileResult =
   { readonly error: string; readonly ok: false } | { readonly ok: true };

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { COMMANDER_ESCAPE_ROW_KEYWORD } from '../../data/data.commander';
+import { COMMANDER_ESCAPE_ROW_KEYWORD } from '../../data/commander';
 import { scoreCommanderRow } from '../scoreCommanderRow';
 
 describe('scoreCommanderRow', () => {

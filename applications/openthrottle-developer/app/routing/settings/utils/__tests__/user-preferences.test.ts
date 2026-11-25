@@ -3,7 +3,7 @@ import { describe, expect, test } from 'vitest';
 
 import { WorkspaceEditorId } from '~/__generated__/graphql';
 import { MOCK_PLAN_RUN_MODELS } from '~/routing/plans/data/mock.plan-run-models';
-import { PREFERENCES_INTENTS } from '~/routing/settings/data/data.preferences';
+import { PREFERENCES_INTENTS } from '~/routing/settings/data/preferences';
 
 import {
   clearChatToolbarAgentPicks,

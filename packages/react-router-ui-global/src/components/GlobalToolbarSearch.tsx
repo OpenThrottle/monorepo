@@ -2,7 +2,7 @@ import { Button, cn, Input } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { useSearchParams } from 'react-router';
 
-import { GLOBAL_TOOLBAR_SEARCH_COPY } from '../data/data.copy';
+import { GLOBAL_TOOLBAR_SEARCH_COPY } from '../data/copy';
 
 export interface GlobalToolbarSearchProps {
   'aria-label'?: string;

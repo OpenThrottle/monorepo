@@ -2,12 +2,12 @@ import { Badge } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import { parseDate } from '~/global/utils/dates';
-import { SCHEDULE_RUN_STATUS_CELL_COPY } from '~/routing/schedule/data/data.copy';
+import { SCHEDULE_RUN_STATUS_CELL_COPY } from '~/routing/schedule/data/copy';
 import {
   RUN_STATUS_COLOR,
   RUN_STATUS_LABEL,
   RUN_STATUS_VARIANT,
-} from '~/routing/schedule/data/data.run-status';
+} from '~/routing/schedule/data/run-status';
 
 export interface ScheduleRunStatusCellProps {
   /** Failure/limit detail shown as the badge tooltip; null when the run carries none. */

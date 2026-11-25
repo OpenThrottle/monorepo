@@ -5,7 +5,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import { FRAGMENT_PREVIEW_COPY } from '~/routing/fragments/data/data.copy';
+import { FRAGMENT_PREVIEW_COPY } from '~/routing/fragments/data/copy';
 import {
   MOCK_FRAGMENT_CHILD_PICKER,
   MOCK_FRAGMENT_EDITOR_RECORDS,

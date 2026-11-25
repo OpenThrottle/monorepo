@@ -10,11 +10,11 @@ import {
 import { useAtomValue } from 'jotai';
 import * as React from 'react';
 
-import { configAtom } from '~/global/data/data.atom-config';
+import { configAtom } from '~/global/data/atom-config';
 import { useHydratedAppearanceConfig } from '~/global/hooks/useHydratedAppearanceConfig';
 import { AppearancePaletteSwatch } from '~/routing/settings/components/AppearancePaletteSwatch';
 import { THEME_DEFAULT_OPTION } from '~/routing/settings/config/appearance';
-import { APPEARANCE_COPY } from '~/routing/settings/data/data.copy';
+import { APPEARANCE_COPY } from '~/routing/settings/data/copy';
 
 export interface AppearancePaletteFieldProps {}
 

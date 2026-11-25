@@ -4,7 +4,7 @@ import * as React from 'react';
 import type { ScheduledJobCardFragment } from '~/__generated__/graphql';
 import { ScheduleAllowedCommands } from '~/routing/schedule/components/ScheduleAllowedCommands';
 import { ScheduleJobMarkers } from '~/routing/schedule/components/ScheduleJobMarkers';
-import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
+import { SCHEDULE_COPY } from '~/routing/schedule/data/copy';
 import { describeScheduleCadence } from '~/routing/schedule/utils/describeScheduleCadence';
 
 export interface ScheduleDetailSummaryProps {

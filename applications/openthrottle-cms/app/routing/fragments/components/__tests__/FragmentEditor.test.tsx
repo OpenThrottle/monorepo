@@ -11,8 +11,8 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import { FRAGMENT_EDITOR_COPY } from '~/routing/fragments/data/data.copy';
-import { FRAGMENT_INTENT } from '~/routing/fragments/data/data.intents';
+import { FRAGMENT_EDITOR_COPY } from '~/routing/fragments/data/copy';
+import { FRAGMENT_INTENT } from '~/routing/fragments/data/intents';
 import {
   MOCK_CONTAINER_EDITOR_RECORDS,
   MOCK_FRAGMENT_CHILD_PICKER,

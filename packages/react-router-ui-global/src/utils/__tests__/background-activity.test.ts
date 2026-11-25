@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { GLOBAL_BACKGROUND_ACTIVITY_COPY } from '../../data/data.copy';
+import { GLOBAL_BACKGROUND_ACTIVITY_COPY } from '../../data/copy';
 import type { GlobalBackgroundActivity } from '../background-activity';
 import {
   describeBackgroundActivity,

@@ -1,7 +1,7 @@
 import { ChatDialog } from '@openthrottle/react-router-chat';
 import * as React from 'react';
 
-import { SKILL_RUN_COPY } from '~/routing/skills/data/data.copy';
+import { SKILL_RUN_COPY } from '~/routing/skills/data/copy';
 import type { UseRunSkillResult } from '~/routing/skills/hooks/useRunSkill';
 
 export interface SkillRunConversationProps {

@@ -11,7 +11,7 @@ import { PlusIcon } from 'lucide-react';
 import * as React from 'react';
 import { Link, useSearchParams } from 'react-router';
 
-import { RULES_COPY } from '../data/data.copy';
+import { RULES_COPY } from '../data/copy';
 import type { RulesEnabledFilter } from '../utils/parsers';
 import {
   isRulesEnabledFilter,

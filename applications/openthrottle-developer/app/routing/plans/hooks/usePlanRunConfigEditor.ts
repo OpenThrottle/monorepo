@@ -2,7 +2,7 @@
  * @description Run-config save actions for the plan detail route:
  * the two save fetchers (with pending flags + success/error toasts), reset-to-defaults,
  * and the expand/collapse handler. All form STATE lives in the route-scoped Jotai
- * atoms (`app/routing/plans/data/data.atom-plan.ts`); this hook reads the derived
+ * atoms (`app/routing/plans/data/atom-plan.ts`); this hook reads the derived
  * serialize/validation atoms to gate and build the save payloads.
  *
  * Must be called inside {@link PlanRunConfigStoreProvider} so the atom reads resolve
@@ -20,7 +20,7 @@ import {
   resetWorkflowRunToDefaultsAtom,
   runConfigJsonAtom,
   runConfigSaveBlockedAtom,
-} from '~/routing/plans/data/data.atom-plan';
+} from '~/routing/plans/data/atom-plan';
 import type { PlanRunConfigEditorPlan } from '~/routing/plans/types';
 import { readActionError } from '~/routing/plans/utils/readActionError';
 import {

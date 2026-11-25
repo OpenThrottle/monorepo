@@ -12,7 +12,7 @@ import {
   RESULT_FOLLOW_UPS_MAX,
   RESULT_REASON_MAX_CHARS,
   RESULT_SCHEMA_VERSION,
-} from '../data/data.constants.ts';
+} from '../data/constants.ts';
 import type {
   LoopFollowUp,
   WorkerResult,

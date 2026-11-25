@@ -10,7 +10,7 @@ import type {
   WorkspaceEditorId,
 } from '~/__generated__/graphql';
 import { EditorPresenceState } from '~/__generated__/graphql';
-import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/data.copy';
+import { WORKSPACE_SETTINGS_COPY } from '~/routing/settings/data/copy';
 
 /**
  * @description How loudly a presence state is allowed to speak. `positive` makes a claim,

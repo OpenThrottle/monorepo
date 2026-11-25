@@ -13,7 +13,7 @@ import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
 
 import { CoreFormRenderer } from '../src/components/CoreFormRenderer';
-import { atomFragmentDraft } from '../src/data/data.atom.fragment-draft';
+import { atomFragmentDraft } from '../src/data/atom.fragment-draft';
 import { MOCK_FRAGMENT_RECORDS } from '../src/data/mock.fragment-records';
 import type {
   CmsJsonSchema,

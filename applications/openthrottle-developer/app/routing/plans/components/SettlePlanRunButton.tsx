@@ -16,7 +16,7 @@ import * as React from 'react';
 import { useFetcher, useRevalidator } from 'react-router';
 
 import type { action as planDetailAction } from '~/routes/plans.$planId._index';
-import { PLAN_TOOLBAR_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_TOOLBAR_COPY } from '~/routing/plans/data/copy';
 
 export interface SettlePlanRunButtonProps {
   readonly planId: string;

@@ -8,7 +8,7 @@ import type { Route } from '@/app/routes/+types/skills.vocabulary';
 import {
   SKILL_AVAILABILITY_COPY,
   SKILL_VOCABULARY_COPY,
-} from '~/routing/skills/data/data.copy';
+} from '~/routing/skills/data/copy';
 import { buildRootMatch } from '~/testing/buildRootMatch';
 
 import Component from '../skills.vocabulary';

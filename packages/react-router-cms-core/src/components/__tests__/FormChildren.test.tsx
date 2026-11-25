@@ -6,7 +6,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import { createRoutesStub } from 'react-router';
 import { describe, expect, test, vi } from 'vitest';
 
-import { FORM_CHILDREN_COPY } from '../../data/data.copy';
+import { FORM_CHILDREN_COPY } from '../../data/copy';
 import { MOCK_FRAGMENT_RECORDS } from '../../data/mock.fragment-records';
 import type { CmsFragmentRecord } from '../../types/cms-records';
 import { FormChildren } from '../FormChildren';

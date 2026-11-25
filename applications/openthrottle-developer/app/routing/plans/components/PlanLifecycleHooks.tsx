@@ -2,7 +2,7 @@ import * as React from 'react';
 
 import type { HookTaskListItem } from '~/routing/plans/components/HookTaskList';
 import { HookTaskList } from '~/routing/plans/components/HookTaskList';
-import { PLAN_LIFECYCLE_HOOKS_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_LIFECYCLE_HOOKS_COPY } from '~/routing/plans/data/copy';
 
 /**
  * @description A materialized hook-task as this section needs it — the subset of

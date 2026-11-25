@@ -1,6 +1,6 @@
 import type { IpcMain, IpcMainInvokeEvent } from 'electron';
 
-import { SHELL_IPC_CHANNELS } from '../../bridge/data/data.shell-channels.ts';
+import { SHELL_IPC_CHANNELS } from '../../bridge/data/shell-channels.ts';
 import type {
   SaveServerResult,
   ShellSettings,

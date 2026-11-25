@@ -3,7 +3,7 @@ import { describe, expect, test } from 'vitest';
 import {
   PLAN_RUN_GATING_COPY,
   PLAN_TOOLBAR_COPY,
-} from '~/routing/plans/data/data.copy';
+} from '~/routing/plans/data/copy';
 
 import type { PlanToolbarRunTooltipOptions } from '../plan-toolbar-run-label';
 import {

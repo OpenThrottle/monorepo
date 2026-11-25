@@ -5,7 +5,7 @@ import * as React from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { ShellBridge } from '../../../bridge/types/shell-bridge.ts';
-import { CONNECTION_COPY } from '../../data/data.copy.ts';
+import { CONNECTION_COPY } from '../../data/copy.ts';
 import { ConnectionScreen } from '../ConnectionScreen.tsx';
 
 const HEALTH = { api: 'ok', database: 'ok', redis: 'ok', websocket: 'ok' };

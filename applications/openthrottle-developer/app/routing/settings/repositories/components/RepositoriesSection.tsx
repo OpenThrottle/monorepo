@@ -15,7 +15,7 @@ import type {
   RemovePlanRunWorktreeResultFragment,
   WorkspacePickerCapabilitiesObject,
 } from '~/__generated__/graphql';
-import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/data.copy';
+import { WORKSPACE_FOLDERS_COPY } from '~/routing/settings/data/copy';
 import { AddFolderDialog } from '~/routing/settings/repositories/components/AddFolderDialog';
 import { AddFolderResult } from '~/routing/settings/repositories/components/AddFolderResult';
 import { CloneRepoDialog } from '~/routing/settings/repositories/components/CloneRepoDialog';
@@ -27,7 +27,7 @@ import { RepositoriesTable } from '~/routing/settings/repositories/components/Re
 import { RepositoriesToolbar } from '~/routing/settings/repositories/components/RepositoriesToolbar';
 import { WorktreeDiscoveryStatus } from '~/routing/settings/repositories/components/WorktreeDiscoveryStatus';
 import { WorktreeRemovalOutcome } from '~/routing/settings/repositories/components/WorktreeRemovalOutcome';
-import { REPOSITORIES_ONBOARDING } from '~/routing/settings/repositories/data/data.copy';
+import { REPOSITORIES_ONBOARDING } from '~/routing/settings/repositories/data/copy';
 import type {
   DiscoveredFolder,
   RefreshedCheckout,

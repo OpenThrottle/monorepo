@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { PLAN_TOOLBAR_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_TOOLBAR_COPY } from '~/routing/plans/data/copy';
 
 import { getPlanScheduleDisabledReason } from '../getPlanScheduleDisabledReason';
 

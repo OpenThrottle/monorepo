@@ -2,7 +2,7 @@ import { Button, cn } from '@openthrottle/react-router-shadcn';
 import { RefreshCcwIcon } from 'lucide-react';
 import * as React from 'react';
 
-import { PLAN_WORKFLOW_CONFIG_ACTIONS_COPY } from '~/routing/plans/data/data.copy';
+import { PLAN_WORKFLOW_CONFIG_ACTIONS_COPY } from '~/routing/plans/data/copy';
 
 export interface PlanWorkflowConfigActionsProps {
   className?: string;

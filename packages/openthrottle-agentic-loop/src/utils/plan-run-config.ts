@@ -28,7 +28,7 @@ import {
   PLAN_RUN_DEFAULTS_FILENAME,
   PLAN_RUN_DEFAULTS_KEY,
   PLAN_RUN_ENV,
-} from '../data/data.plan-run-config.ts';
+} from '../data/plan-run-config.ts';
 import type {
   PlanRunDefaultsDebug,
   PlanRunDefaultsFileV1Json,

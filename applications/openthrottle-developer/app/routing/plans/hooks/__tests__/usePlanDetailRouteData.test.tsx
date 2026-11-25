@@ -3,7 +3,7 @@ import * as React from 'react';
 import { createRoutesStub, useRouteError } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import { PLAN_DETAIL_ROUTE_ID } from '~/routing/plans/data/data.plan-detail-route-id';
+import { PLAN_DETAIL_ROUTE_ID } from '~/routing/plans/data/plan-detail-route-id';
 
 import { usePlanDetailRouteData } from '../usePlanDetailRouteData';
 

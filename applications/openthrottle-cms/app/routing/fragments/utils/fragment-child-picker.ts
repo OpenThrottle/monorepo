@@ -1,7 +1,7 @@
 import {
   FRAGMENT_CHILD_PAGE_SIZE,
   FRAGMENT_CHILD_SEARCH_PARAMS,
-} from '~/routing/fragments/data/data.children';
+} from '~/routing/fragments/data/children';
 import type { FragmentChildPickerQuery } from '~/routing/fragments/types/fragment-children';
 
 /**

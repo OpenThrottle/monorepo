@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import {
   PLAN_TASKS_EMPTY_COPY,
   PLANS_INDEX_EMPTY_COPY,
-} from '~/routing/plans/data/data.copy';
+} from '~/routing/plans/data/copy';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 
 import type { PlanTasksEmptyProps } from '../PlanTasksEmpty';

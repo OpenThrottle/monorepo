@@ -10,8 +10,8 @@ import {
 } from 'react-router';
 import { describe, expect, test } from 'vitest';
 
-import { FRAGMENT_EDITOR_COPY } from '~/routing/fragments/data/data.copy';
-import { FRAGMENT_INTENT } from '~/routing/fragments/data/data.intents';
+import { FRAGMENT_EDITOR_COPY } from '~/routing/fragments/data/copy';
+import { FRAGMENT_INTENT } from '~/routing/fragments/data/intents';
 import { MOCK_FRAGMENT_CHILD_PICKER } from '~/routing/fragments/data/mock.fragment-editor';
 import type { FragmentChildPicker } from '~/routing/fragments/types/fragment-children';
 

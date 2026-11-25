@@ -28,7 +28,7 @@ import type { CaseResult, RunResult } from './compareBaseline.ts';
 import {
   TOOL_SELECTION_GRADER_ID,
   TOOL_SELECTION_GRADER_VERSION,
-} from './data/data.dataset.ts';
+} from './data/dataset.ts';
 import type {
   SelectionUsage,
   ToolSelectionCase,
