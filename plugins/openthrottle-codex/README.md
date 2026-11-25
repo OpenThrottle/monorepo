@@ -12,6 +12,11 @@ This payload is per-tool because a hook config names its own tool's events. See
 Add these to `~/.codex/config.toml` once, with the absolute path of this directory:
 
 ```toml
+[[hooks.PreToolUse]]
+[[hooks.PreToolUse.hooks]]
+type = "command"
+command = "/absolute/path/to/plugins/openthrottle-codex/hooks/skill-usage-capture.cjs"
+
 [[hooks.UserPromptSubmit]]
 [[hooks.UserPromptSubmit.hooks]]
 type = "command"
@@ -96,19 +101,22 @@ See `docs/monorepo/child-repo-hook-telemetry-contract.md` for the full contract.
 | how | effect |
 | --- | --- |
 | `OPENTHROTTLE_TELEMETRY_OFFLINE=1` | buffers locally, never sends |
+| `OPENTHROTTLE_SKILL_USAGE_DISABLED=1` | captures nothing: no send, no buffer, no start file, no heartbeat (env or `~/.openthrottle/.env`) |
 | remove the `[[hooks.…]]` blocks | stops it entirely |
 
 ## Hooks
 
 | event | handler |
 | --- | --- |
+| `PreToolUse` | `hooks/skill-usage-capture.cjs` |
 | `UserPromptSubmit` | `hooks/skill-usage-capture.cjs` |
 | `SessionStart` | `hooks/skill-usage-heartbeat.cjs` |
 | `SessionEnd` | `hooks/skill-usage-complete.cjs` |
 
 Codex reads hooks from `~/.codex/config.toml` (or a trusted project's `.codex/`), never
 from a plugin directory, so this payload ships no `hooks/hooks.json` and no driver passes
-it as `--plugin-dir`. Capture is slash-commands-only: Codex raises no tool event for a skill.
+it as `--plugin-dir`. Codex has no `Skill` tool: capture records a skill when its `Bash`
+tool runs `cat <path>/SKILL.md` (`PreToolUse`) and when a prompt opens with `/<name>`.
 
 ## Authoring
 

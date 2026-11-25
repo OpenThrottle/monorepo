@@ -286,6 +286,23 @@ var deadLetterPathFor = (filePath) => {
   return filePath.replace(/\.jsonl$/, "") + ".dead-letter.jsonl";
 };
 
+// packages/agentic-hooks/src/config/isTelemetryDisabled.ts
+var TELEMETRY_DISABLED_ENV_KEY = "OPENTHROTTLE_SKILL_USAGE_DISABLED";
+var isTruthy = (value) => {
+  const normalized = value?.trim().toLowerCase();
+  return normalized === "1" || normalized === "true";
+};
+var isTelemetryDisabled = () => {
+  if (isTruthy(process.env[TELEMETRY_DISABLED_ENV_KEY])) {
+    return true;
+  }
+  try {
+    return isTruthy(readUserEnvFile()[TELEMETRY_DISABLED_ENV_KEY]);
+  } catch {
+    return false;
+  }
+};
+
 // packages/nodejs-utils/src/utils/isRecord.ts
 var isRecord = (value) => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -901,6 +918,9 @@ var CODEX_SOURCE = "codex";
 // packages/agentic-hooks/src/adapters/codex/heartbeat.ts
 var main = async () => {
   try {
+    if (isTelemetryDisabled()) {
+      return;
+    }
     const repoRoot = resolveHookRepoRoot({
       payloadCwd: readHookPayloadCwd(readHookStdin()),
       projectDir: process.env.OPEN_THROTTLE_REPO_ROOT || process.cwd()

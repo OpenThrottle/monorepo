@@ -282,6 +282,23 @@ var deadLetterPathFor = (filePath) => {
   return filePath.replace(/\.jsonl$/, "") + ".dead-letter.jsonl";
 };
 
+// packages/agentic-hooks/src/config/isTelemetryDisabled.ts
+var TELEMETRY_DISABLED_ENV_KEY = "OPENTHROTTLE_SKILL_USAGE_DISABLED";
+var isTruthy = (value) => {
+  const normalized = value?.trim().toLowerCase();
+  return normalized === "1" || normalized === "true";
+};
+var isTelemetryDisabled = () => {
+  if (isTruthy(process.env[TELEMETRY_DISABLED_ENV_KEY])) {
+    return true;
+  }
+  try {
+    return isTruthy(readUserEnvFile()[TELEMETRY_DISABLED_ENV_KEY]);
+  } catch {
+    return false;
+  }
+};
+
 // packages/nodejs-utils/src/utils/isRecord.ts
 var isRecord = (value) => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -813,6 +830,9 @@ var sendHeartbeat = async ({
   }
 };
 
+// packages/agentic-hooks/src/utils/skill-file.ts
+var SKILL_READ_INVOCATION_PATH = "skill_read";
+
 // packages/agentic-hooks/src/adapters/cursor/heartbeat-run.ts
 var import_node_fs6 = __toESM(require("node:fs"), 1);
 var import_node_os2 = __toESM(require("node:os"), 1);
@@ -850,7 +870,7 @@ var readCursorMarketplaceInstall = (cacheDir) => {
 // packages/agentic-hooks/src/adapters/cursor/payload.ts
 var CURSOR_SOURCE = "cursor";
 var CURSOR_INVOCATION_PATHS = Object.freeze({
-  SKILL_READ: "skill_read",
+  SKILL_READ: SKILL_READ_INVOCATION_PATH,
   SLASH: "slash"
 });
 var readString = (value) => {
@@ -961,6 +981,9 @@ var readPayloadCwd = () => {
 };
 var main = async () => {
   try {
+    if (isTelemetryDisabled()) {
+      return;
+    }
     const projectDir = process.env.CURSOR_PROJECT_DIR || process.env.OPEN_THROTTLE_REPO_ROOT || process.cwd();
     const repoRoot = resolveHookRepoRoot({
       payloadCwd: readPayloadCwd(),

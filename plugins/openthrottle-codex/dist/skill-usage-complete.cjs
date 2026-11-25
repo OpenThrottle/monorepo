@@ -33,7 +33,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 
 // packages/agentic-hooks/src/adapters/codex/complete.ts
-var import_node_fs8 = __toESM(require("node:fs"), 1);
+var import_node_fs9 = __toESM(require("node:fs"), 1);
 
 // packages/agentic-hooks/src/data/jsonl.ts
 var import_node_fs2 = __toESM(require("node:fs"), 1);
@@ -452,6 +452,23 @@ var drainJsonlFileBatched = async ({
     nowFn,
     postBatch
   });
+};
+
+// packages/agentic-hooks/src/config/isTelemetryDisabled.ts
+var TELEMETRY_DISABLED_ENV_KEY = "OPENTHROTTLE_SKILL_USAGE_DISABLED";
+var isTruthy = (value) => {
+  const normalized = value?.trim().toLowerCase();
+  return normalized === "1" || normalized === "true";
+};
+var isTelemetryDisabled = () => {
+  if (isTruthy(process.env[TELEMETRY_DISABLED_ENV_KEY])) {
+    return true;
+  }
+  try {
+    return isTruthy(readUserEnvFile()[TELEMETRY_DISABLED_ENV_KEY]);
+  } catch {
+    return false;
+  }
 };
 
 // packages/nodejs-utils/src/utils/isRecord.ts
@@ -940,11 +957,58 @@ var toRecordSkillUsageOutcomeInput = (event) => {
 };
 
 // packages/agentic-hooks/src/data/persist.ts
-var import_node_fs7 = __toESM(require("node:fs"), 1);
+var import_node_fs8 = __toESM(require("node:fs"), 1);
+var import_node_path7 = __toESM(require("node:path"), 1);
+
+// packages/agentic-hooks/src/utils/warnEndpointUnreachable.ts
+var import_node_fs6 = __toESM(require("node:fs"), 1);
 var import_node_path6 = __toESM(require("node:path"), 1);
+var WARNED_DIR_BASENAME = "warned";
+var STALE_SENTINEL_MS = 24 * 60 * 60 * 1e3;
+var NO_SESSION_KEY = "no-session";
+var pruneStaleSentinels = (dir, now) => {
+  for (const name of import_node_fs6.default.readdirSync(dir)) {
+    const file = import_node_path6.default.join(dir, name);
+    if (now - import_node_fs6.default.statSync(file).mtimeMs > STALE_SENTINEL_MS) {
+      import_node_fs6.default.rmSync(file, { force: true });
+    }
+  }
+};
+var claimSessionWarning = (sessionId) => {
+  try {
+    const dir = import_node_path6.default.join(resolveTelemetryDir(), WARNED_DIR_BASENAME);
+    import_node_fs6.default.mkdirSync(dir, { recursive: true });
+    const key = sanitizeSessionId(sessionId?.trim() || NO_SESSION_KEY);
+    try {
+      import_node_fs6.default.writeFileSync(import_node_path6.default.join(dir, key), "", { flag: "wx" });
+    } catch (err) {
+      if (err instanceof Error && "code" in err && err.code === "EEXIST") {
+        return true;
+      }
+      throw err;
+    }
+    try {
+      pruneStaleSentinels(dir, Date.now());
+    } catch {
+    }
+    return false;
+  } catch {
+    return false;
+  }
+};
+var warnEndpointUnreachable = ({
+  message,
+  repoRoot,
+  sessionId
+}) => {
+  if (!isOpenThrottleCheckout(repoRoot) && claimSessionWarning(sessionId)) {
+    return;
+  }
+  logHookError(message);
+};
 
 // packages/agentic-hooks/src/data/starts.ts
-var import_node_fs6 = __toESM(require("node:fs"), 1);
+var import_node_fs7 = __toESM(require("node:fs"), 1);
 var listStartsForSession = ({
   sessionId,
   startsDir
@@ -956,10 +1020,10 @@ var listStartsForSession = ({
     }
     const dir = startsDir || defaultStartsDir();
     const filePath = startsFilePathForSession(dir, sid);
-    if (!import_node_fs6.default.existsSync(filePath)) {
+    if (!import_node_fs7.default.existsSync(filePath)) {
       return [];
     }
-    const text = import_node_fs6.default.readFileSync(filePath, "utf8");
+    const text = import_node_fs7.default.readFileSync(filePath, "utf8");
     const out = [];
     for (const line of text.split("\n")) {
       const trimmed = line.trim();
@@ -992,7 +1056,7 @@ var drainStartsForSession = ({
     }
     const dir = startsDir || defaultStartsDir();
     const filePath = startsFilePathForSession(dir, sid);
-    if (!import_node_fs6.default.existsSync(filePath)) {
+    if (!import_node_fs7.default.existsSync(filePath)) {
       return 0;
     }
     const entries = listStartsForSession({
@@ -1000,7 +1064,7 @@ var drainStartsForSession = ({
       startsDir: dir
     });
     if (!resolvedKeys) {
-      import_node_fs6.default.rmSync(filePath, { force: true });
+      import_node_fs7.default.rmSync(filePath, { force: true });
       return entries.length;
     }
     const keep = [];
@@ -1013,9 +1077,9 @@ var drainStartsForSession = ({
       }
     }
     if (keep.length === 0) {
-      import_node_fs6.default.rmSync(filePath, { force: true });
+      import_node_fs7.default.rmSync(filePath, { force: true });
     } else {
-      import_node_fs6.default.writeFileSync(
+      import_node_fs7.default.writeFileSync(
         filePath,
         `${keep.map((e) => JSON.stringify(e)).join("\n")}
 `,
@@ -1212,9 +1276,11 @@ var persistOutcomeEvent = async ({
     if (result.ok) {
       return { id: result.id, sink: "server" };
     }
-    logHookError(
-      `outcome server post failed; falling back to jsonl (${result.reason}) [endpoint ${forLog(graphqlUrl)}]`
-    );
+    warnEndpointUnreachable({
+      message: `outcome server post failed; falling back to jsonl (${result.reason}) [endpoint ${forLog(graphqlUrl)}]`,
+      repoRoot,
+      sessionId: event.session_id
+    });
     try {
       appendJsonl(outPath, event);
     } catch (err) {
@@ -1321,7 +1387,7 @@ var sweepAbandonedStarts = async ({
   const dir = startsDir || defaultStartsDir();
   let files;
   try {
-    files = import_node_fs7.default.readdirSync(dir);
+    files = import_node_fs8.default.readdirSync(dir);
   } catch {
     return { swept: 0 };
   }
@@ -1335,10 +1401,10 @@ var sweepAbandonedStarts = async ({
     if (!file.endsWith(".jsonl") || file === currentFile) {
       continue;
     }
-    const filePath = import_node_path6.default.join(dir, file);
+    const filePath = import_node_path7.default.join(dir, file);
     let mtimeMs;
     try {
-      mtimeMs = import_node_fs7.default.statSync(filePath).mtimeMs;
+      mtimeMs = import_node_fs8.default.statSync(filePath).mtimeMs;
     } catch {
       continue;
     }
@@ -1507,8 +1573,11 @@ var normalizeCodexSessionEndPayload = (raw) => {
 // packages/agentic-hooks/src/adapters/codex/complete.ts
 var main = async () => {
   try {
+    if (isTelemetryDisabled()) {
+      return;
+    }
     const repoRoot = process.env.OPEN_THROTTLE_REPO_ROOT || process.cwd();
-    const stdinBuf = import_node_fs8.default.readFileSync(0, "utf8");
+    const stdinBuf = import_node_fs9.default.readFileSync(0, "utf8");
     if (!stdinBuf || !stdinBuf.trim()) {
       return;
     }

@@ -33,8 +33,8 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 
 // packages/agentic-hooks/src/adapters/cursor/capture.ts
-var import_node_fs6 = __toESM(require("node:fs"), 1);
-var import_node_path6 = __toESM(require("node:path"), 1);
+var import_node_fs7 = __toESM(require("node:fs"), 1);
+var import_node_path7 = __toESM(require("node:path"), 1);
 
 // packages/agentic-hooks/src/data/jsonl.ts
 var import_node_fs2 = __toESM(require("node:fs"), 1);
@@ -75,8 +75,8 @@ var normalizeRemoteUrl = (raw) => {
     return null;
   }
   const host = withoutScheme.slice(0, slashIndex).toLowerCase();
-  const path7 = withoutScheme.slice(slashIndex);
-  return `https://${host}${path7}`;
+  const path8 = withoutScheme.slice(slashIndex);
+  return `https://${host}${path8}`;
 };
 
 // packages/agentic-hooks/src/config/env.ts
@@ -298,6 +298,23 @@ var sanitizeSessionId = (sessionId) => {
 };
 var startsFilePathForSession = (startsDir, sessionId) => {
   return import_node_path2.default.join(startsDir, `${sanitizeSessionId(sessionId)}.jsonl`);
+};
+
+// packages/agentic-hooks/src/config/isTelemetryDisabled.ts
+var TELEMETRY_DISABLED_ENV_KEY = "OPENTHROTTLE_SKILL_USAGE_DISABLED";
+var isTruthy = (value) => {
+  const normalized = value?.trim().toLowerCase();
+  return normalized === "1" || normalized === "true";
+};
+var isTelemetryDisabled = () => {
+  if (isTruthy(process.env[TELEMETRY_DISABLED_ENV_KEY])) {
+    return true;
+  }
+  try {
+    return isTruthy(readUserEnvFile()[TELEMETRY_DISABLED_ENV_KEY]);
+  } catch {
+    return false;
+  }
 };
 
 // packages/nodejs-utils/src/utils/isRecord.ts
@@ -830,6 +847,53 @@ var toRecordSkillUsageInput = (event) => {
   return input;
 };
 
+// packages/agentic-hooks/src/utils/warnEndpointUnreachable.ts
+var import_node_fs6 = __toESM(require("node:fs"), 1);
+var import_node_path6 = __toESM(require("node:path"), 1);
+var WARNED_DIR_BASENAME = "warned";
+var STALE_SENTINEL_MS = 24 * 60 * 60 * 1e3;
+var NO_SESSION_KEY = "no-session";
+var pruneStaleSentinels = (dir, now) => {
+  for (const name of import_node_fs6.default.readdirSync(dir)) {
+    const file = import_node_path6.default.join(dir, name);
+    if (now - import_node_fs6.default.statSync(file).mtimeMs > STALE_SENTINEL_MS) {
+      import_node_fs6.default.rmSync(file, { force: true });
+    }
+  }
+};
+var claimSessionWarning = (sessionId) => {
+  try {
+    const dir = import_node_path6.default.join(resolveTelemetryDir(), WARNED_DIR_BASENAME);
+    import_node_fs6.default.mkdirSync(dir, { recursive: true });
+    const key = sanitizeSessionId(sessionId?.trim() || NO_SESSION_KEY);
+    try {
+      import_node_fs6.default.writeFileSync(import_node_path6.default.join(dir, key), "", { flag: "wx" });
+    } catch (err) {
+      if (err instanceof Error && "code" in err && err.code === "EEXIST") {
+        return true;
+      }
+      throw err;
+    }
+    try {
+      pruneStaleSentinels(dir, Date.now());
+    } catch {
+    }
+    return false;
+  } catch {
+    return false;
+  }
+};
+var warnEndpointUnreachable = ({
+  message,
+  repoRoot,
+  sessionId
+}) => {
+  if (!isOpenThrottleCheckout(repoRoot) && claimSessionWarning(sessionId)) {
+    return;
+  }
+  logHookError(message);
+};
+
 // packages/agentic-hooks/src/data/starts.ts
 var recordSkillStart = ({
   sessionId,
@@ -932,9 +996,11 @@ var persistUsageEvent = async ({
     if (result.ok) {
       return { id: result.id, sink: "server" };
     }
-    logHookError(
-      `server post failed; falling back to jsonl (${result.reason}) [endpoint ${forLog(graphqlUrl)}]`
-    );
+    warnEndpointUnreachable({
+      message: `server post failed; falling back to jsonl (${result.reason}) [endpoint ${forLog(graphqlUrl)}]`,
+      repoRoot,
+      sessionId: event.session_id
+    });
     try {
       appendJsonl(outPath, event);
     } catch (err) {
@@ -955,13 +1021,20 @@ var persistUsageEvent = async ({
   }
 };
 
+// packages/agentic-hooks/src/utils/skill-file.ts
+var SKILL_READ_INVOCATION_PATH = "skill_read";
+var SKILL_FILE_PATTERN = /(?:^|\/)([^/]+)\/SKILL\.md$/;
+var skillNameFromSkillFilePath = (filePath) => {
+  const match = SKILL_FILE_PATTERN.exec(filePath.split("\\").join("/"));
+  return match?.[1] ?? null;
+};
+
 // packages/agentic-hooks/src/adapters/cursor/payload.ts
 var CURSOR_SOURCE = "cursor";
 var CURSOR_INVOCATION_PATHS = Object.freeze({
-  SKILL_READ: "skill_read",
+  SKILL_READ: SKILL_READ_INVOCATION_PATH,
   SLASH: "slash"
 });
-var SKILL_FILE_PATTERN = /(?:^|\/)([^/]+)\/SKILL\.md$/;
 var SLASH_COMMAND_PATTERN = /^\s*\/([A-Za-z0-9][\w.:-]*)\s*([\s\S]*)$/;
 var readString = (value) => {
   return typeof value === "string" && value ? value : null;
@@ -980,10 +1053,6 @@ var resolveCwd = (payload) => {
   }
   return null;
 };
-var skillNameFromPath = (filePath) => {
-  const match = SKILL_FILE_PATTERN.exec(filePath.split("\\").join("/"));
-  return match?.[1] ?? null;
-};
 var normalizeSkillRead = (payload) => {
   if (payload.tool_name !== "Read" || !isRecord(payload.tool_input)) {
     return null;
@@ -992,7 +1061,7 @@ var normalizeSkillRead = (payload) => {
   if (!filePath) {
     return null;
   }
-  const skillName = skillNameFromPath(filePath);
+  const skillName = skillNameFromSkillFilePath(filePath);
   if (!skillName) {
     return null;
   }
@@ -1046,8 +1115,11 @@ var normalizeCursorPayload = (raw) => {
 // packages/agentic-hooks/src/adapters/cursor/capture.ts
 var main = async () => {
   try {
+    if (isTelemetryDisabled()) {
+      return;
+    }
     const repoRoot = process.env.CURSOR_PROJECT_DIR || process.env.OPEN_THROTTLE_REPO_ROOT || process.cwd();
-    const stdinBuf = import_node_fs6.default.readFileSync(0, "utf8");
+    const stdinBuf = import_node_fs7.default.readFileSync(0, "utf8");
     if (!stdinBuf || !stdinBuf.trim()) {
       return;
     }
@@ -1080,7 +1152,7 @@ var main = async () => {
     const outPath = defaultJsonlPath();
     await persistUsageEvent({
       event,
-      jsonlPath: import_node_path6.default.resolve(outPath),
+      jsonlPath: import_node_path7.default.resolve(outPath),
       repoRoot
     });
   } catch (err) {

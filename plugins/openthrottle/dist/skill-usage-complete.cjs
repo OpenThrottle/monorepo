@@ -33,7 +33,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 
 // packages/agentic-hooks/src/adapters/claude/complete.ts
-var import_node_fs14 = __toESM(require("node:fs"), 1);
+var import_node_fs15 = __toESM(require("node:fs"), 1);
 
 // packages/agentic-hooks/src/data/jsonl.ts
 var import_node_fs2 = __toESM(require("node:fs"), 1);
@@ -74,8 +74,8 @@ var normalizeRemoteUrl = (raw) => {
     return null;
   }
   const host = withoutScheme.slice(0, slashIndex).toLowerCase();
-  const path17 = withoutScheme.slice(slashIndex);
-  return `https://${host}${path17}`;
+  const path18 = withoutScheme.slice(slashIndex);
+  return `https://${host}${path18}`;
 };
 
 // packages/agentic-hooks/src/config/env.ts
@@ -528,6 +528,23 @@ var drainJsonlFileBatched = async ({
     nowFn,
     postBatch
   });
+};
+
+// packages/agentic-hooks/src/config/isTelemetryDisabled.ts
+var TELEMETRY_DISABLED_ENV_KEY = "OPENTHROTTLE_SKILL_USAGE_DISABLED";
+var isTruthy = (value) => {
+  const normalized = value?.trim().toLowerCase();
+  return normalized === "1" || normalized === "true";
+};
+var isTelemetryDisabled = () => {
+  if (isTruthy(process.env[TELEMETRY_DISABLED_ENV_KEY])) {
+    return true;
+  }
+  try {
+    return isTruthy(readUserEnvFile()[TELEMETRY_DISABLED_ENV_KEY]);
+  } catch {
+    return false;
+  }
 };
 
 // packages/nodejs-utils/src/utils/isRecord.ts
@@ -1119,14 +1136,61 @@ var toRecordSkillUsageOutcomeInput = (event) => {
 };
 
 // packages/agentic-hooks/src/data/heartbeat.ts
-var import_node_path8 = __toESM(require("node:path"), 1);
+var import_node_path9 = __toESM(require("node:path"), 1);
 
 // packages/agentic-hooks/src/data/persist.ts
-var import_node_fs8 = __toESM(require("node:fs"), 1);
+var import_node_fs9 = __toESM(require("node:fs"), 1);
+var import_node_path8 = __toESM(require("node:path"), 1);
+
+// packages/agentic-hooks/src/utils/warnEndpointUnreachable.ts
+var import_node_fs7 = __toESM(require("node:fs"), 1);
 var import_node_path7 = __toESM(require("node:path"), 1);
+var WARNED_DIR_BASENAME = "warned";
+var STALE_SENTINEL_MS = 24 * 60 * 60 * 1e3;
+var NO_SESSION_KEY = "no-session";
+var pruneStaleSentinels = (dir, now) => {
+  for (const name of import_node_fs7.default.readdirSync(dir)) {
+    const file = import_node_path7.default.join(dir, name);
+    if (now - import_node_fs7.default.statSync(file).mtimeMs > STALE_SENTINEL_MS) {
+      import_node_fs7.default.rmSync(file, { force: true });
+    }
+  }
+};
+var claimSessionWarning = (sessionId) => {
+  try {
+    const dir = import_node_path7.default.join(resolveTelemetryDir(), WARNED_DIR_BASENAME);
+    import_node_fs7.default.mkdirSync(dir, { recursive: true });
+    const key = sanitizeSessionId(sessionId?.trim() || NO_SESSION_KEY);
+    try {
+      import_node_fs7.default.writeFileSync(import_node_path7.default.join(dir, key), "", { flag: "wx" });
+    } catch (err) {
+      if (err instanceof Error && "code" in err && err.code === "EEXIST") {
+        return true;
+      }
+      throw err;
+    }
+    try {
+      pruneStaleSentinels(dir, Date.now());
+    } catch {
+    }
+    return false;
+  } catch {
+    return false;
+  }
+};
+var warnEndpointUnreachable = ({
+  message,
+  repoRoot,
+  sessionId
+}) => {
+  if (!isOpenThrottleCheckout(repoRoot) && claimSessionWarning(sessionId)) {
+    return;
+  }
+  logHookError(message);
+};
 
 // packages/agentic-hooks/src/data/starts.ts
-var import_node_fs7 = __toESM(require("node:fs"), 1);
+var import_node_fs8 = __toESM(require("node:fs"), 1);
 var listStartsForSession = ({
   sessionId,
   startsDir
@@ -1138,10 +1202,10 @@ var listStartsForSession = ({
     }
     const dir = startsDir || defaultStartsDir();
     const filePath = startsFilePathForSession(dir, sid);
-    if (!import_node_fs7.default.existsSync(filePath)) {
+    if (!import_node_fs8.default.existsSync(filePath)) {
       return [];
     }
-    const text = import_node_fs7.default.readFileSync(filePath, "utf8");
+    const text = import_node_fs8.default.readFileSync(filePath, "utf8");
     const out = [];
     for (const line of text.split("\n")) {
       const trimmed = line.trim();
@@ -1174,7 +1238,7 @@ var drainStartsForSession = ({
     }
     const dir = startsDir || defaultStartsDir();
     const filePath = startsFilePathForSession(dir, sid);
-    if (!import_node_fs7.default.existsSync(filePath)) {
+    if (!import_node_fs8.default.existsSync(filePath)) {
       return 0;
     }
     const entries = listStartsForSession({
@@ -1182,7 +1246,7 @@ var drainStartsForSession = ({
       startsDir: dir
     });
     if (!resolvedKeys) {
-      import_node_fs7.default.rmSync(filePath, { force: true });
+      import_node_fs8.default.rmSync(filePath, { force: true });
       return entries.length;
     }
     const keep = [];
@@ -1195,9 +1259,9 @@ var drainStartsForSession = ({
       }
     }
     if (keep.length === 0) {
-      import_node_fs7.default.rmSync(filePath, { force: true });
+      import_node_fs8.default.rmSync(filePath, { force: true });
     } else {
-      import_node_fs7.default.writeFileSync(
+      import_node_fs8.default.writeFileSync(
         filePath,
         `${keep.map((e) => JSON.stringify(e)).join("\n")}
 `,
@@ -1417,9 +1481,11 @@ var persistOutcomeEvent = async ({
     if (result.ok) {
       return { id: result.id, sink: "server" };
     }
-    logHookError(
-      `outcome server post failed; falling back to jsonl (${result.reason}) [endpoint ${forLog(graphqlUrl)}]`
-    );
+    warnEndpointUnreachable({
+      message: `outcome server post failed; falling back to jsonl (${result.reason}) [endpoint ${forLog(graphqlUrl)}]`,
+      repoRoot,
+      sessionId: event.session_id
+    });
     try {
       appendJsonl(outPath, event);
     } catch (err) {
@@ -1511,9 +1577,11 @@ var persistTokenUsage = async ({
       } else {
         detail = res.reason;
         serverDown = true;
-        logHookError(
-          `token usage post failed; falling back to jsonl (${res.reason}) [endpoint ${forLog(graphqlUrl)}]`
-        );
+        warnEndpointUnreachable({
+          message: `token usage post failed; falling back to jsonl (${res.reason}) [endpoint ${forLog(graphqlUrl)}]`,
+          repoRoot,
+          sessionId: batch[0]?.session_id
+        });
         buffer(batch);
       }
     }
@@ -1613,7 +1681,7 @@ var sweepAbandonedStarts = async ({
   const dir = startsDir || defaultStartsDir();
   let files;
   try {
-    files = import_node_fs8.default.readdirSync(dir);
+    files = import_node_fs9.default.readdirSync(dir);
   } catch {
     return { swept: 0 };
   }
@@ -1627,10 +1695,10 @@ var sweepAbandonedStarts = async ({
     if (!file.endsWith(".jsonl") || file === currentFile) {
       continue;
     }
-    const filePath = import_node_path7.default.join(dir, file);
+    const filePath = import_node_path8.default.join(dir, file);
     let mtimeMs;
     try {
-      mtimeMs = import_node_fs8.default.statSync(filePath).mtimeMs;
+      mtimeMs = import_node_fs9.default.statSync(filePath).mtimeMs;
     } catch {
       continue;
     }
@@ -1782,25 +1850,25 @@ var UNKNOWN_MARKETPLACE_INSTALL = Object.freeze({
   version: null
 });
 var isPathInside = (parent, child) => {
-  const relative = import_node_path8.default.relative(import_node_path8.default.resolve(parent), import_node_path8.default.resolve(child));
-  return relative !== "" && !relative.startsWith("..") && !import_node_path8.default.isAbsolute(relative);
+  const relative = import_node_path9.default.relative(import_node_path9.default.resolve(parent), import_node_path9.default.resolve(child));
+  return relative !== "" && !relative.startsWith("..") && !import_node_path9.default.isAbsolute(relative);
 };
 
 // packages/agentic-hooks/src/data/plan-runs.ts
 var import_node_crypto2 = require("node:crypto");
-var import_node_fs9 = __toESM(require("node:fs"), 1);
-var import_node_path9 = __toESM(require("node:path"), 1);
+var import_node_fs10 = __toESM(require("node:fs"), 1);
+var import_node_path10 = __toESM(require("node:path"), 1);
 var PLAN_RUNS_DIR_BASENAME = "plan-runs";
 var PLAN_RUN_ABANDONED_MS = 6 * 60 * 60 * 1e3;
 var planRunsDir = (repoRoot) => {
-  const repoKey = (0, import_node_crypto2.createHash)("sha256").update(import_node_path9.default.resolve(repoRoot)).digest("hex").slice(0, 16);
-  return import_node_path9.default.join(resolveTelemetryDir(), PLAN_RUNS_DIR_BASENAME, repoKey);
+  const repoKey = (0, import_node_crypto2.createHash)("sha256").update(import_node_path10.default.resolve(repoRoot)).digest("hex").slice(0, 16);
+  return import_node_path10.default.join(resolveTelemetryDir(), PLAN_RUNS_DIR_BASENAME, repoKey);
 };
 var sanitizeSessionId2 = (sessionId) => {
   return String(sessionId).replace(/[^A-Za-z0-9._-]/g, "-");
 };
 var planRunFilePath = (repoRoot, sessionId) => {
-  return import_node_path9.default.join(
+  return import_node_path10.default.join(
     planRunsDir(repoRoot),
     `${sanitizeSessionId2(sessionId)}.json`
   );
@@ -1813,7 +1881,7 @@ var readPid = (value) => {
 };
 var readPlanRunRecord = (filePath) => {
   try {
-    const parsed = JSON.parse(import_node_fs9.default.readFileSync(filePath, "utf8"));
+    const parsed = JSON.parse(import_node_fs10.default.readFileSync(filePath, "utf8"));
     if (!isRecord(parsed) || typeof parsed.planRunId !== "string" || parsed.planRunId.trim() === "") {
       return null;
     }
@@ -1841,7 +1909,7 @@ var readPlanRunIdForSession = ({
 };
 
 // packages/agentic-hooks/src/data/read-new.ts
-var import_node_fs10 = __toESM(require("node:fs"), 1);
+var import_node_fs11 = __toESM(require("node:fs"), 1);
 var NEWLINE = 10;
 var readNewBytes = ({
   filePath,
@@ -1851,8 +1919,8 @@ var readNewBytes = ({
   const unchanged = { lines: [], nextOffset: offset };
   let fd = null;
   try {
-    fd = import_node_fs10.default.openSync(filePath, "r");
-    const { size } = import_node_fs10.default.fstatSync(fd);
+    fd = import_node_fs11.default.openSync(filePath, "r");
+    const { size } = import_node_fs11.default.fstatSync(fd);
     const start = offset > size || offset < 0 ? 0 : offset;
     if (size === start) {
       return { lines: [], nextOffset: start };
@@ -1867,7 +1935,7 @@ var readNewBytes = ({
     let lastNewline = -1;
     while (lastNewline < 0) {
       buffer = Buffer.alloc(window);
-      const bytesRead = import_node_fs10.default.readSync(fd, buffer, 0, window, start);
+      const bytesRead = import_node_fs11.default.readSync(fd, buffer, 0, window, start);
       lastNewline = buffer.subarray(0, bytesRead).lastIndexOf(NEWLINE);
       if (window >= remaining) {
         break;
@@ -1887,7 +1955,7 @@ var readNewBytes = ({
   } finally {
     if (fd !== null) {
       try {
-        import_node_fs10.default.closeSync(fd);
+        import_node_fs11.default.closeSync(fd);
       } catch {
       }
     }
@@ -1905,8 +1973,8 @@ var readNewLines = ({
   };
   let fd = null;
   try {
-    fd = import_node_fs10.default.openSync(filePath, "r");
-    const { size } = import_node_fs10.default.fstatSync(fd);
+    fd = import_node_fs11.default.openSync(filePath, "r");
+    const { size } = import_node_fs11.default.fstatSync(fd);
     const start = offset > size || offset < 0 ? 0 : offset;
     if (size === start) {
       return { capped: false, lines: [], nextOffset: start };
@@ -1917,7 +1985,7 @@ var readNewLines = ({
     let lastNewline = -1;
     while (lastNewline < 0) {
       buffer = Buffer.alloc(window);
-      const bytesRead = import_node_fs10.default.readSync(fd, buffer, 0, window, start);
+      const bytesRead = import_node_fs11.default.readSync(fd, buffer, 0, window, start);
       lastNewline = buffer.subarray(0, bytesRead).lastIndexOf(NEWLINE);
       if (window >= remaining) {
         break;
@@ -1947,7 +2015,7 @@ var readNewLines = ({
   } finally {
     if (fd !== null) {
       try {
-        import_node_fs10.default.closeSync(fd);
+        import_node_fs11.default.closeSync(fd);
       } catch {
       }
     }
@@ -2091,10 +2159,10 @@ var drainBufferedTrajectories = async ({
 };
 
 // packages/agentic-hooks/src/data/trajectory-uploads.ts
-var import_node_fs11 = __toESM(require("node:fs"), 1);
-var import_node_path10 = __toESM(require("node:path"), 1);
+var import_node_fs12 = __toESM(require("node:fs"), 1);
+var import_node_path11 = __toESM(require("node:path"), 1);
 var stateFilePath = (dir, sessionId) => {
-  return import_node_path10.default.join(dir, `${sanitizeSessionId(sessionId)}.json`);
+  return import_node_path11.default.join(dir, `${sanitizeSessionId(sessionId)}.json`);
 };
 var readTrajectoryUploadState = ({
   dir,
@@ -2107,7 +2175,7 @@ var readTrajectoryUploadState = ({
   };
   try {
     const parsed = JSON.parse(
-      import_node_fs11.default.readFileSync(
+      import_node_fs12.default.readFileSync(
         stateFilePath(dir || defaultTrajectoryUploadsDir(), sessionId),
         "utf8"
       )
@@ -2140,8 +2208,8 @@ var writeTrajectoryUploadState = ({
       sessionId
     );
     const temp = `${target}.tmp.${process.pid}`;
-    import_node_fs11.default.mkdirSync(import_node_path10.default.dirname(target), { recursive: true });
-    import_node_fs11.default.writeFileSync(
+    import_node_fs12.default.mkdirSync(import_node_path11.default.dirname(target), { recursive: true });
+    import_node_fs12.default.writeFileSync(
       temp,
       `${JSON.stringify({
         planRunId: state.planRunId,
@@ -2151,7 +2219,7 @@ var writeTrajectoryUploadState = ({
 `,
       "utf8"
     );
-    import_node_fs11.default.renameSync(temp, target);
+    import_node_fs12.default.renameSync(temp, target);
     return true;
   } catch (err) {
     logHookError("writeTrajectoryUploadState failed", err);
@@ -2169,11 +2237,11 @@ var resolveTrajectoryStateTtlDays = () => {
 };
 var deleteIfOlder = async (filePath, cutoffMs) => {
   try {
-    const stat = await import_node_fs11.default.promises.stat(filePath);
+    const stat = await import_node_fs12.default.promises.stat(filePath);
     if (!stat.isFile() || stat.mtimeMs >= cutoffMs) {
       return false;
     }
-    await import_node_fs11.default.promises.unlink(filePath);
+    await import_node_fs12.default.promises.unlink(filePath);
     return true;
   } catch {
     return false;
@@ -2186,22 +2254,22 @@ var sweepTrajectoryUploadState = async ({
 } = {}) => {
   try {
     const target = dir || defaultTrajectoryUploadsDir();
-    const marker = import_node_path10.default.join(target, SWEEP_MARKER_BASENAME);
+    const marker = import_node_path11.default.join(target, SWEEP_MARKER_BASENAME);
     try {
-      const { mtimeMs } = await import_node_fs11.default.promises.stat(marker);
+      const { mtimeMs } = await import_node_fs12.default.promises.stat(marker);
       if (nowMs - mtimeMs < MS_PER_DAY) {
         return { deleted: 0, skipped: true };
       }
     } catch {
     }
-    const names = await import_node_fs11.default.promises.readdir(target);
+    const names = await import_node_fs12.default.promises.readdir(target);
     const cutoffMs = nowMs - ttlDays * MS_PER_DAY;
     const results = await Promise.all(
-      names.filter((name) => name.endsWith(".json")).map((name) => deleteIfOlder(import_node_path10.default.join(target, name), cutoffMs))
+      names.filter((name) => name.endsWith(".json")).map((name) => deleteIfOlder(import_node_path11.default.join(target, name), cutoffMs))
     );
-    await import_node_fs11.default.promises.writeFile(marker, `${new Date(nowMs).toISOString()}
+    await import_node_fs12.default.promises.writeFile(marker, `${new Date(nowMs).toISOString()}
 `);
-    await import_node_fs11.default.promises.utimes(marker, new Date(nowMs), new Date(nowMs));
+    await import_node_fs12.default.promises.utimes(marker, new Date(nowMs), new Date(nowMs));
     return { deleted: results.filter(Boolean).length, skipped: false };
   } catch (err) {
     if (!(err instanceof Error && "code" in err && err.code === "ENOENT")) {
@@ -2210,6 +2278,9 @@ var sweepTrajectoryUploadState = async ({
     return { deleted: 0, skipped: false };
   }
 };
+
+// packages/agentic-hooks/src/utils/skill-file.ts
+var SKILL_READ_INVOCATION_PATH = "skill_read";
 
 // packages/openthrottle-drivers/src/registry/index.ts
 var DRIVERS = {
@@ -4930,25 +5001,25 @@ var resolveClaudeTokenUsageAccount = async (env) => {
 
 // packages/agentic-hooks/src/adapters/claude/bundle-host.ts
 var import_node_os4 = __toESM(require("node:os"), 1);
-var import_node_path13 = __toESM(require("node:path"), 1);
+var import_node_path14 = __toESM(require("node:path"), 1);
 
 // packages/agentic-hooks/src/adapters/antigravity/marketplace-install.ts
-var import_node_path11 = __toESM(require("node:path"), 1);
+var import_node_path12 = __toESM(require("node:path"), 1);
 var resolveAntigravityPluginsDir = (homeDir) => {
-  return import_node_path11.default.join(homeDir, ".gemini", "config", "plugins");
+  return import_node_path12.default.join(homeDir, ".gemini", "config", "plugins");
 };
 
 // packages/agentic-hooks/src/adapters/antigravity/payload.ts
 var ANTIGRAVITY_SOURCE = "antigravity";
 
 // packages/agentic-hooks/src/adapters/codex/marketplace-install.ts
-var import_node_path12 = __toESM(require("node:path"), 1);
+var import_node_path13 = __toESM(require("node:path"), 1);
 var resolveCodexHome = (env, homeDir) => {
   const configured = env.CODEX_HOME?.trim();
-  return configured ? import_node_path12.default.resolve(configured) : import_node_path12.default.join(homeDir, ".codex");
+  return configured ? import_node_path13.default.resolve(configured) : import_node_path13.default.join(homeDir, ".codex");
 };
 var resolveCodexMarketplaceCacheDir = (codexHome) => {
-  return import_node_path12.default.join(codexHome, "plugins", "cache");
+  return import_node_path13.default.join(codexHome, "plugins", "cache");
 };
 
 // packages/agentic-hooks/src/adapters/codex/payload.ts
@@ -4957,7 +5028,7 @@ var CODEX_SOURCE = "codex";
 // packages/agentic-hooks/src/adapters/cursor/payload.ts
 var CURSOR_SOURCE = "cursor";
 var CURSOR_INVOCATION_PATHS = Object.freeze({
-  SKILL_READ: "skill_read",
+  SKILL_READ: SKILL_READ_INVOCATION_PATH,
   SLASH: "slash"
 });
 
@@ -5003,7 +5074,7 @@ var isCursorHost = ({
   if (!cursorRoot || !claudeRoot) {
     return false;
   }
-  return import_node_path13.default.resolve(cursorRoot) === import_node_path13.default.resolve(claudeRoot) && scriptIsInside(cursorRoot, scriptPath);
+  return import_node_path14.default.resolve(cursorRoot) === import_node_path14.default.resolve(claudeRoot) && scriptIsInside(cursorRoot, scriptPath);
 };
 var detectClaudeBundleHost = ({
   env = process.env,
@@ -5027,7 +5098,7 @@ var detectClaudeBundleHost = ({
 };
 
 // packages/agentic-hooks/src/adapters/claude/session-trajectory.ts
-var import_node_path14 = __toESM(require("node:path"), 1);
+var import_node_path15 = __toESM(require("node:path"), 1);
 var SESSION_TRAJECTORY_SOURCE = "session_upload";
 var SESSION_TRAJECTORY_DRIVER = "claude";
 var MAX_SESSION_SCAN_BYTES_PER_STOP = 32 * 1024 * 1024;
@@ -5052,8 +5123,8 @@ var firstVersionOf = (events) => {
   return "unknown";
 };
 var loadSubagents = (transcriptPath, sessionId, agentIds) => {
-  const subagentsDir = import_node_path14.default.join(
-    import_node_path14.default.dirname(transcriptPath),
+  const subagentsDir = import_node_path15.default.join(
+    import_node_path15.default.dirname(transcriptPath),
     sessionId,
     "subagents"
   );
@@ -5062,7 +5133,7 @@ var loadSubagents = (transcriptPath, sessionId, agentIds) => {
       return [];
     }
     const { lines } = readNewBytes({
-      filePath: import_node_path14.default.join(subagentsDir, `agent-${agentId}.jsonl`),
+      filePath: import_node_path15.default.join(subagentsDir, `agent-${agentId}.jsonl`),
       maxBytes: MAX_SUBAGENT_TRANSCRIPT_BYTES,
       offset: 0
     });
@@ -5188,21 +5259,21 @@ var captureSessionTrajectories = async ({
 };
 
 // packages/agentic-hooks/src/adapters/claude/shadow.ts
-var import_node_fs12 = __toESM(require("node:fs"), 1);
-var import_node_path15 = __toESM(require("node:path"), 1);
+var import_node_fs13 = __toESM(require("node:fs"), 1);
+var import_node_path16 = __toESM(require("node:path"), 1);
 var CAPTURE_BUNDLE = "skill-usage-capture";
 var runningFromPlugin = (env, scriptPath) => {
   const pluginRoot = env.CLAUDE_PLUGIN_ROOT?.trim();
   if (!pluginRoot || !scriptPath) {
     return false;
   }
-  const relative = import_node_path15.default.relative(import_node_path15.default.resolve(pluginRoot), scriptPath);
+  const relative = import_node_path16.default.relative(import_node_path16.default.resolve(pluginRoot), scriptPath);
   return relative !== "" && !relative.startsWith("..");
 };
 var repoRegistersBundle = (repoRoot, bundle) => {
   try {
-    const raw = import_node_fs12.default.readFileSync(
-      import_node_path15.default.join(repoRoot, ".claude", "settings.json"),
+    const raw = import_node_fs13.default.readFileSync(
+      import_node_path16.default.join(repoRoot, ".claude", "settings.json"),
       "utf8"
     );
     const parsed = JSON.parse(raw);
@@ -5224,8 +5295,8 @@ var isShadowedByRepoHooks = ({
 };
 
 // packages/agentic-hooks/src/adapters/claude/transcript-usage.ts
-var import_node_fs13 = __toESM(require("node:fs"), 1);
-var import_node_path16 = __toESM(require("node:path"), 1);
+var import_node_fs14 = __toESM(require("node:fs"), 1);
+var import_node_path17 = __toESM(require("node:path"), 1);
 
 // packages/agentic-token-usage/src/usage.ts
 var asFiniteNumber = (value) => {
@@ -5451,10 +5522,10 @@ var MAX_TRANSCRIPT_BYTES_PER_FILE = 4 * 1024 * 1024;
 var MAX_TRANSCRIPT_BYTES_PER_STOP = 16 * 1024 * 1024;
 var SUBAGENT_FILE = /^agent-.+\.jsonl$/;
 var listSubagentTranscripts = (transcriptPath) => {
-  const { dir, name } = import_node_path16.default.parse(transcriptPath);
-  const subagentsDir = import_node_path16.default.join(dir, name, "subagents");
+  const { dir, name } = import_node_path17.default.parse(transcriptPath);
+  const subagentsDir = import_node_path17.default.join(dir, name, "subagents");
   try {
-    return import_node_fs13.default.readdirSync(subagentsDir).filter((entry) => SUBAGENT_FILE.test(entry)).sort().map((entry) => import_node_path16.default.join(subagentsDir, entry));
+    return import_node_fs14.default.readdirSync(subagentsDir).filter((entry) => SUBAGENT_FILE.test(entry)).sort().map((entry) => import_node_path17.default.join(subagentsDir, entry));
   } catch {
     return [];
   }
@@ -5556,6 +5627,9 @@ var captureTranscriptUsage = async ({
 // packages/agentic-hooks/src/adapters/claude/complete.ts
 var main = async () => {
   try {
+    if (isTelemetryDisabled()) {
+      return;
+    }
     if (detectClaudeBundleHost() !== "claude-code") {
       return;
     }
@@ -5563,7 +5637,7 @@ var main = async () => {
     if (isShadowedByRepoHooks({ repoRoot })) {
       return;
     }
-    const stdinBuf = import_node_fs14.default.readFileSync(0, "utf8");
+    const stdinBuf = import_node_fs15.default.readFileSync(0, "utf8");
     if (!stdinBuf || !stdinBuf.trim()) {
       return;
     }

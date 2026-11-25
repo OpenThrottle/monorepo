@@ -33,8 +33,8 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 
 // packages/agentic-hooks/src/adapters/claude/capture.ts
-var import_node_fs7 = __toESM(require("node:fs"), 1);
-var import_node_path11 = __toESM(require("node:path"), 1);
+var import_node_fs8 = __toESM(require("node:fs"), 1);
+var import_node_path12 = __toESM(require("node:path"), 1);
 
 // packages/agentic-hooks/src/data/jsonl.ts
 var import_node_fs2 = __toESM(require("node:fs"), 1);
@@ -75,8 +75,8 @@ var normalizeRemoteUrl = (raw) => {
     return null;
   }
   const host = withoutScheme.slice(0, slashIndex).toLowerCase();
-  const path12 = withoutScheme.slice(slashIndex);
-  return `https://${host}${path12}`;
+  const path13 = withoutScheme.slice(slashIndex);
+  return `https://${host}${path13}`;
 };
 
 // packages/agentic-hooks/src/config/env.ts
@@ -298,6 +298,23 @@ var sanitizeSessionId = (sessionId) => {
 };
 var startsFilePathForSession = (startsDir, sessionId) => {
   return import_node_path2.default.join(startsDir, `${sanitizeSessionId(sessionId)}.jsonl`);
+};
+
+// packages/agentic-hooks/src/config/isTelemetryDisabled.ts
+var TELEMETRY_DISABLED_ENV_KEY = "OPENTHROTTLE_SKILL_USAGE_DISABLED";
+var isTruthy = (value) => {
+  const normalized = value?.trim().toLowerCase();
+  return normalized === "1" || normalized === "true";
+};
+var isTelemetryDisabled = () => {
+  if (isTruthy(process.env[TELEMETRY_DISABLED_ENV_KEY])) {
+    return true;
+  }
+  try {
+    return isTruthy(readUserEnvFile()[TELEMETRY_DISABLED_ENV_KEY]);
+  } catch {
+    return false;
+  }
 };
 
 // packages/nodejs-utils/src/utils/isRecord.ts
@@ -837,7 +854,54 @@ var toRecordSkillUsageInput = (event) => {
 };
 
 // packages/agentic-hooks/src/data/heartbeat.ts
+var import_node_path7 = __toESM(require("node:path"), 1);
+
+// packages/agentic-hooks/src/utils/warnEndpointUnreachable.ts
+var import_node_fs6 = __toESM(require("node:fs"), 1);
 var import_node_path6 = __toESM(require("node:path"), 1);
+var WARNED_DIR_BASENAME = "warned";
+var STALE_SENTINEL_MS = 24 * 60 * 60 * 1e3;
+var NO_SESSION_KEY = "no-session";
+var pruneStaleSentinels = (dir, now) => {
+  for (const name of import_node_fs6.default.readdirSync(dir)) {
+    const file = import_node_path6.default.join(dir, name);
+    if (now - import_node_fs6.default.statSync(file).mtimeMs > STALE_SENTINEL_MS) {
+      import_node_fs6.default.rmSync(file, { force: true });
+    }
+  }
+};
+var claimSessionWarning = (sessionId) => {
+  try {
+    const dir = import_node_path6.default.join(resolveTelemetryDir(), WARNED_DIR_BASENAME);
+    import_node_fs6.default.mkdirSync(dir, { recursive: true });
+    const key = sanitizeSessionId(sessionId?.trim() || NO_SESSION_KEY);
+    try {
+      import_node_fs6.default.writeFileSync(import_node_path6.default.join(dir, key), "", { flag: "wx" });
+    } catch (err) {
+      if (err instanceof Error && "code" in err && err.code === "EEXIST") {
+        return true;
+      }
+      throw err;
+    }
+    try {
+      pruneStaleSentinels(dir, Date.now());
+    } catch {
+    }
+    return false;
+  } catch {
+    return false;
+  }
+};
+var warnEndpointUnreachable = ({
+  message,
+  repoRoot,
+  sessionId
+}) => {
+  if (!isOpenThrottleCheckout(repoRoot) && claimSessionWarning(sessionId)) {
+    return;
+  }
+  logHookError(message);
+};
 
 // packages/agentic-hooks/src/data/starts.ts
 var recordSkillStart = ({
@@ -941,9 +1005,11 @@ var persistUsageEvent = async ({
     if (result.ok) {
       return { id: result.id, sink: "server" };
     }
-    logHookError(
-      `server post failed; falling back to jsonl (${result.reason}) [endpoint ${forLog(graphqlUrl)}]`
-    );
+    warnEndpointUnreachable({
+      message: `server post failed; falling back to jsonl (${result.reason}) [endpoint ${forLog(graphqlUrl)}]`,
+      repoRoot,
+      sessionId: event.session_id
+    });
     try {
       appendJsonl(outPath, event);
     } catch (err) {
@@ -970,31 +1036,34 @@ var UNKNOWN_MARKETPLACE_INSTALL = Object.freeze({
   version: null
 });
 var isPathInside = (parent, child) => {
-  const relative = import_node_path6.default.relative(import_node_path6.default.resolve(parent), import_node_path6.default.resolve(child));
-  return relative !== "" && !relative.startsWith("..") && !import_node_path6.default.isAbsolute(relative);
+  const relative = import_node_path7.default.relative(import_node_path7.default.resolve(parent), import_node_path7.default.resolve(child));
+  return relative !== "" && !relative.startsWith("..") && !import_node_path7.default.isAbsolute(relative);
 };
+
+// packages/agentic-hooks/src/utils/skill-file.ts
+var SKILL_READ_INVOCATION_PATH = "skill_read";
 
 // packages/agentic-hooks/src/adapters/claude/bundle-host.ts
 var import_node_os4 = __toESM(require("node:os"), 1);
-var import_node_path9 = __toESM(require("node:path"), 1);
+var import_node_path10 = __toESM(require("node:path"), 1);
 
 // packages/agentic-hooks/src/adapters/antigravity/marketplace-install.ts
-var import_node_path7 = __toESM(require("node:path"), 1);
+var import_node_path8 = __toESM(require("node:path"), 1);
 var resolveAntigravityPluginsDir = (homeDir) => {
-  return import_node_path7.default.join(homeDir, ".gemini", "config", "plugins");
+  return import_node_path8.default.join(homeDir, ".gemini", "config", "plugins");
 };
 
 // packages/agentic-hooks/src/adapters/antigravity/payload.ts
 var ANTIGRAVITY_SOURCE = "antigravity";
 
 // packages/agentic-hooks/src/adapters/codex/marketplace-install.ts
-var import_node_path8 = __toESM(require("node:path"), 1);
+var import_node_path9 = __toESM(require("node:path"), 1);
 var resolveCodexHome = (env, homeDir) => {
   const configured = env.CODEX_HOME?.trim();
-  return configured ? import_node_path8.default.resolve(configured) : import_node_path8.default.join(homeDir, ".codex");
+  return configured ? import_node_path9.default.resolve(configured) : import_node_path9.default.join(homeDir, ".codex");
 };
 var resolveCodexMarketplaceCacheDir = (codexHome) => {
-  return import_node_path8.default.join(codexHome, "plugins", "cache");
+  return import_node_path9.default.join(codexHome, "plugins", "cache");
 };
 
 // packages/agentic-hooks/src/adapters/codex/payload.ts
@@ -1003,7 +1072,7 @@ var CODEX_SOURCE = "codex";
 // packages/agentic-hooks/src/adapters/cursor/payload.ts
 var CURSOR_SOURCE = "cursor";
 var CURSOR_INVOCATION_PATHS = Object.freeze({
-  SKILL_READ: "skill_read",
+  SKILL_READ: SKILL_READ_INVOCATION_PATH,
   SLASH: "slash"
 });
 
@@ -1086,7 +1155,7 @@ var isCursorHost = ({
   if (!cursorRoot || !claudeRoot) {
     return false;
   }
-  return import_node_path9.default.resolve(cursorRoot) === import_node_path9.default.resolve(claudeRoot) && scriptIsInside(cursorRoot, scriptPath);
+  return import_node_path10.default.resolve(cursorRoot) === import_node_path10.default.resolve(claudeRoot) && scriptIsInside(cursorRoot, scriptPath);
 };
 var detectClaudeBundleHost = ({
   env = process.env,
@@ -1110,21 +1179,21 @@ var detectClaudeBundleHost = ({
 };
 
 // packages/agentic-hooks/src/adapters/claude/shadow.ts
-var import_node_fs6 = __toESM(require("node:fs"), 1);
-var import_node_path10 = __toESM(require("node:path"), 1);
+var import_node_fs7 = __toESM(require("node:fs"), 1);
+var import_node_path11 = __toESM(require("node:path"), 1);
 var CAPTURE_BUNDLE = "skill-usage-capture";
 var runningFromPlugin = (env, scriptPath) => {
   const pluginRoot = env.CLAUDE_PLUGIN_ROOT?.trim();
   if (!pluginRoot || !scriptPath) {
     return false;
   }
-  const relative = import_node_path10.default.relative(import_node_path10.default.resolve(pluginRoot), scriptPath);
+  const relative = import_node_path11.default.relative(import_node_path11.default.resolve(pluginRoot), scriptPath);
   return relative !== "" && !relative.startsWith("..");
 };
 var repoRegistersBundle = (repoRoot, bundle) => {
   try {
-    const raw = import_node_fs6.default.readFileSync(
-      import_node_path10.default.join(repoRoot, ".claude", "settings.json"),
+    const raw = import_node_fs7.default.readFileSync(
+      import_node_path11.default.join(repoRoot, ".claude", "settings.json"),
       "utf8"
     );
     const parsed = JSON.parse(raw);
@@ -1148,6 +1217,9 @@ var isShadowedByRepoHooks = ({
 // packages/agentic-hooks/src/adapters/claude/capture.ts
 var main = async () => {
   try {
+    if (isTelemetryDisabled()) {
+      return;
+    }
     if (detectClaudeBundleHost() !== "claude-code") {
       return;
     }
@@ -1155,7 +1227,7 @@ var main = async () => {
     if (isShadowedByRepoHooks({ repoRoot: projectDir })) {
       return;
     }
-    const stdinBuf = import_node_fs7.default.readFileSync(0, "utf8");
+    const stdinBuf = import_node_fs8.default.readFileSync(0, "utf8");
     if (!stdinBuf || !stdinBuf.trim()) {
       return;
     }
@@ -1192,7 +1264,7 @@ var main = async () => {
     const outPath = defaultJsonlPath();
     await persistUsageEvent({
       event,
-      jsonlPath: import_node_path11.default.resolve(outPath),
+      jsonlPath: import_node_path12.default.resolve(outPath),
       repoRoot
     });
   } catch (err) {

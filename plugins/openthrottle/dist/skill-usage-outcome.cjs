@@ -33,7 +33,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 
 // packages/agentic-hooks/src/adapters/claude/outcome.ts
-var import_node_path6 = __toESM(require("node:path"), 1);
+var import_node_path7 = __toESM(require("node:path"), 1);
 
 // packages/agentic-hooks/src/data/jsonl.ts
 var import_node_fs2 = __toESM(require("node:fs"), 1);
@@ -259,6 +259,23 @@ var startCorrelationKey = (entry) => {
   const startedAt = typeof entry?.started_at === "string" ? entry.started_at : "";
   const disc = toolUseId || startedAt;
   return `${sid}::${skill}::${disc}`;
+};
+
+// packages/agentic-hooks/src/config/isTelemetryDisabled.ts
+var TELEMETRY_DISABLED_ENV_KEY = "OPENTHROTTLE_SKILL_USAGE_DISABLED";
+var isTruthy = (value) => {
+  const normalized = value?.trim().toLowerCase();
+  return normalized === "1" || normalized === "true";
+};
+var isTelemetryDisabled = () => {
+  if (isTruthy(process.env[TELEMETRY_DISABLED_ENV_KEY])) {
+    return true;
+  }
+  try {
+    return isTruthy(readUserEnvFile()[TELEMETRY_DISABLED_ENV_KEY]);
+  } catch {
+    return false;
+  }
 };
 
 // packages/nodejs-utils/src/utils/isRecord.ts
@@ -680,8 +697,55 @@ var toRecordSkillUsageOutcomeInput = (event) => {
   return input;
 };
 
-// packages/agentic-hooks/src/data/starts.ts
+// packages/agentic-hooks/src/utils/warnEndpointUnreachable.ts
 var import_node_fs6 = __toESM(require("node:fs"), 1);
+var import_node_path6 = __toESM(require("node:path"), 1);
+var WARNED_DIR_BASENAME = "warned";
+var STALE_SENTINEL_MS = 24 * 60 * 60 * 1e3;
+var NO_SESSION_KEY = "no-session";
+var pruneStaleSentinels = (dir, now) => {
+  for (const name of import_node_fs6.default.readdirSync(dir)) {
+    const file = import_node_path6.default.join(dir, name);
+    if (now - import_node_fs6.default.statSync(file).mtimeMs > STALE_SENTINEL_MS) {
+      import_node_fs6.default.rmSync(file, { force: true });
+    }
+  }
+};
+var claimSessionWarning = (sessionId) => {
+  try {
+    const dir = import_node_path6.default.join(resolveTelemetryDir(), WARNED_DIR_BASENAME);
+    import_node_fs6.default.mkdirSync(dir, { recursive: true });
+    const key = sanitizeSessionId(sessionId?.trim() || NO_SESSION_KEY);
+    try {
+      import_node_fs6.default.writeFileSync(import_node_path6.default.join(dir, key), "", { flag: "wx" });
+    } catch (err) {
+      if (err instanceof Error && "code" in err && err.code === "EEXIST") {
+        return true;
+      }
+      throw err;
+    }
+    try {
+      pruneStaleSentinels(dir, Date.now());
+    } catch {
+    }
+    return false;
+  } catch {
+    return false;
+  }
+};
+var warnEndpointUnreachable = ({
+  message,
+  repoRoot,
+  sessionId
+}) => {
+  if (!isOpenThrottleCheckout(repoRoot) && claimSessionWarning(sessionId)) {
+    return;
+  }
+  logHookError(message);
+};
+
+// packages/agentic-hooks/src/data/starts.ts
+var import_node_fs7 = __toESM(require("node:fs"), 1);
 var listStartsForSession = ({
   sessionId,
   startsDir
@@ -693,10 +757,10 @@ var listStartsForSession = ({
     }
     const dir = startsDir || defaultStartsDir();
     const filePath = startsFilePathForSession(dir, sid);
-    if (!import_node_fs6.default.existsSync(filePath)) {
+    if (!import_node_fs7.default.existsSync(filePath)) {
       return [];
     }
-    const text = import_node_fs6.default.readFileSync(filePath, "utf8");
+    const text = import_node_fs7.default.readFileSync(filePath, "utf8");
     const out = [];
     for (const line of text.split("\n")) {
       const trimmed = line.trim();
@@ -729,7 +793,7 @@ var drainStartsForSession = ({
     }
     const dir = startsDir || defaultStartsDir();
     const filePath = startsFilePathForSession(dir, sid);
-    if (!import_node_fs6.default.existsSync(filePath)) {
+    if (!import_node_fs7.default.existsSync(filePath)) {
       return 0;
     }
     const entries = listStartsForSession({
@@ -737,7 +801,7 @@ var drainStartsForSession = ({
       startsDir: dir
     });
     if (!resolvedKeys) {
-      import_node_fs6.default.rmSync(filePath, { force: true });
+      import_node_fs7.default.rmSync(filePath, { force: true });
       return entries.length;
     }
     const keep = [];
@@ -750,9 +814,9 @@ var drainStartsForSession = ({
       }
     }
     if (keep.length === 0) {
-      import_node_fs6.default.rmSync(filePath, { force: true });
+      import_node_fs7.default.rmSync(filePath, { force: true });
     } else {
-      import_node_fs6.default.writeFileSync(
+      import_node_fs7.default.writeFileSync(
         filePath,
         `${keep.map((e) => JSON.stringify(e)).join("\n")}
 `,
@@ -895,9 +959,11 @@ var persistOutcomeEvent = async ({
     if (result.ok) {
       return { id: result.id, sink: "server" };
     }
-    logHookError(
-      `outcome server post failed; falling back to jsonl (${result.reason}) [endpoint ${forLog(graphqlUrl)}]`
-    );
+    warnEndpointUnreachable({
+      message: `outcome server post failed; falling back to jsonl (${result.reason}) [endpoint ${forLog(graphqlUrl)}]`,
+      repoRoot,
+      sessionId: event.session_id
+    });
     try {
       appendJsonl(outPath, event);
     } catch (err) {
@@ -918,6 +984,9 @@ var persistOutcomeEvent = async ({
   }
 };
 
+// packages/agentic-hooks/src/utils/skill-file.ts
+var SKILL_READ_INVOCATION_PATH = "skill_read";
+
 // packages/agentic-hooks/src/adapters/codex/payload.ts
 var CODEX_SOURCE = "codex";
 var readCodexShellSessionId = (env) => {
@@ -933,7 +1002,7 @@ var readCursorShellSessionId = (env) => {
   return env.CURSOR_CONVERSATION_ID || null;
 };
 var CURSOR_INVOCATION_PATHS = Object.freeze({
-  SKILL_READ: "skill_read",
+  SKILL_READ: SKILL_READ_INVOCATION_PATH,
   SLASH: "slash"
 });
 
@@ -1043,6 +1112,9 @@ var resolveReporterSession = ({
 // packages/agentic-hooks/src/adapters/claude/outcome.ts
 var main = async () => {
   try {
+    if (isTelemetryDisabled()) {
+      return;
+    }
     const args = parseOutcomeArgs(process.argv.slice(2));
     const skillName = args.skill || process.env.OPENTHROTTLE_TELEMETRY_SKILL_NAME || "";
     const outcome = args.outcome || process.env.OPENTHROTTLE_TELEMETRY_OUTCOME || "";
@@ -1095,7 +1167,7 @@ var main = async () => {
     const outPath = defaultOutcomesJsonlPath();
     await persistOutcomeEvent({
       event,
-      jsonlPath: import_node_path6.default.resolve(outPath),
+      jsonlPath: import_node_path7.default.resolve(outPath),
       repoRoot
     });
   } catch (err) {
