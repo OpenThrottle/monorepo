@@ -19,6 +19,7 @@ import {
 import { PLAN_LIFECYCLE_HOOKS_COPY } from '~/routing/plans/data/copy';
 import { PLAN_DEFERRED_SECTION_COPY } from '~/routing/plans/data/copy';
 import { usePlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
+import { parseRequirementsList } from '~/routing/plans/utils/formatters';
 
 export interface PlanTabDetailsProps {
   fullscreen: boolean;
@@ -48,9 +49,9 @@ export const PlanTabDetails = (
     scheduledRunId: plan?.scheduledRunId ?? null,
   };
   const requirements = React.useMemo(() => {
-    return tasks
-      .map((task) => JSON.parse(task.requirementsJson))
-      .filter((requirement) => requirement.length > 0);
+    return tasks.flatMap((task) => {
+      return parseRequirementsList(task.requirementsJson);
+    });
   }, [tasks]);
 
   // Handlers

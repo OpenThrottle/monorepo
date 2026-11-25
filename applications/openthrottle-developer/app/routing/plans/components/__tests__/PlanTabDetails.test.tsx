@@ -6,6 +6,7 @@ import type {
   PlanDetailsFragment,
   PlanRunHistoryEntryFragment,
   PlanRunJobMetricsEntryFragment,
+  PlanTaskRowFragment,
 } from '~/__generated__/graphql';
 import {
   buildPlanDetailLoaderData,
@@ -76,5 +77,52 @@ describe('PlanTabDetails Component', () => {
     expect(
       (await findAllByText('Plan description')).length,
     ).toBeGreaterThanOrEqual(1);
+  });
+
+  test('skips a task with malformed requirementsJson instead of throwing', async () => {
+    const baseTask: PlanTaskRowFragment = {
+      __typename: 'TaskObject',
+      assignee: null,
+      category: 'feature',
+      createdAt: '2025-01-01T00:00:00Z',
+      description: null,
+      id: 'task-1',
+      planId: mockPlan.id,
+      projectRelation: null,
+      requirementsJson: '{not json',
+      sortOrder: 1000,
+      status: 'PENDING',
+      summary: null,
+      title: 'Malformed task',
+      updatedAt: '2025-01-02T00:00:00Z',
+    };
+    const validTask: PlanTaskRowFragment = {
+      ...baseTask,
+      id: 'task-2',
+      requirementsJson: '["Valid requirement"]',
+      sortOrder: 2000,
+      title: 'Valid task',
+    };
+
+    const component = renderWithPlanDetailRouteData(
+      <TooltipProvider>
+        <Tabs value="overview">
+          <PlanTabDetails fullscreen={false} setFullscreen={vi.fn()} />
+        </Tabs>
+      </TooltipProvider>,
+      buildPlanDetailLoaderData({
+        plan: mockPlan,
+        runHistory: Promise.resolve({
+          planRunAuditRows: defaultPlanRunAuditRows,
+          planRunMetrics: defaultRecent,
+        }),
+        tasks: [baseTask, validTask],
+      }),
+    );
+
+    // MarkdownRenderer compiles the requirements list asynchronously.
+    const items = await component.findAllByRole('listitem');
+    expect(items).toHaveLength(1);
+    expect(items[0]).toHaveTextContent('Valid requirement');
   });
 });

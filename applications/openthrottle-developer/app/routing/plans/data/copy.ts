@@ -61,11 +61,13 @@ export const PLAN_TASK_NOT_FOUND_COPY = {
 
 /**
  * @description Copy for the task-detail Details tab. `noDescription` fills the
- * main column when a task carries neither a description nor a summary, so the
- * issue-style layout never renders an empty body.
+ * main column when a task carries no description, summary or requirements, so
+ * the issue-style layout never renders an empty body. `requirementsHeading`
+ * titles the task's requirements list.
  */
 export const TASK_DETAIL_COPY = {
   noDescription: `No description provided yet.`,
+  requirementsHeading: `Requirements`,
 } as const;
 
 /**

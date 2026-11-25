@@ -10,6 +10,7 @@ import { Link } from 'react-router';
 import type { PlanTaskRowFragment } from '~/__generated__/graphql';
 import { TASK_DETAIL_COPY } from '~/routing/plans/data/copy';
 import { formatTaskDate } from '~/routing/plans/utils/formatTaskDate';
+import { parseRequirementsList } from '~/routing/plans/utils/formatters';
 
 export interface TaskDetailsProps {
   className?: string;
@@ -25,11 +26,15 @@ export const TaskDetails = (props: TaskDetailsProps): React.ReactElement => {
 
   // Hooks
   const [summaryExpanded, setSummaryExpanded] = React.useState(false);
+  const requirementsHeadingId = React.useId();
 
   // Setup
   const hasDescription = task.description != null && task.description !== '';
   const hasSummary = task.summary != null && task.summary !== '';
-  const hasBody = hasDescription || hasSummary;
+  const requirements = parseRequirementsList(task.requirementsJson);
+  const hasRequirements = requirements.length > 0;
+  const hasText = hasDescription || hasSummary;
+  const hasBody = hasText || hasRequirements;
   const summaryLines = hasSummary ? (task.summary!.split('\n').length ?? 0) : 0;
   const isLongSummary = summaryLines > SUMMARY_PREVIEW_LINES;
 
@@ -49,7 +54,7 @@ export const TaskDetails = (props: TaskDetailsProps): React.ReactElement => {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_16rem]">
         {/* Main column: the task body reads like an issue description. */}
         <div className="min-w-0 space-y-4">
-          {hasBody && (
+          {hasText && (
             <>
               {hasDescription && (
                 <MarkdownRenderer source={task.description ?? ''} />
@@ -70,6 +75,21 @@ export const TaskDetails = (props: TaskDetailsProps): React.ReactElement => {
                 </div>
               )}
             </>
+          )}
+          {hasRequirements && (
+            <section aria-labelledby={requirementsHeadingId}>
+              <h2
+                className="mb-2 text-sm font-semibold"
+                id={requirementsHeadingId}
+              >
+                {TASK_DETAIL_COPY.requirementsHeading}
+              </h2>
+              <ul className="list-inside list-disc space-y-1 text-sm">
+                {requirements.map((requirement, index) => (
+                  <li key={index}>{requirement}</li>
+                ))}
+              </ul>
+            </section>
           )}
           {!hasBody && (
             <p className="text-muted-foreground text-sm">
