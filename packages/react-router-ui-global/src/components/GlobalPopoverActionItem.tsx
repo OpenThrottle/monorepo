@@ -71,6 +71,20 @@ export const GlobalPopoverActionItem = (
         </DropdownMenuItem>
       )}
 
+      {action.kind === 'external' && (
+        <DropdownMenuItem asChild={true} disabled={isDisabled}>
+          <a
+            className="flex gap-2"
+            href={action.href}
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            {icon}
+            {label}
+          </a>
+        </DropdownMenuItem>
+      )}
+
       {action.kind === 'select' && (
         <DropdownMenuItem
           className="flex gap-2"

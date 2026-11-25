@@ -18,14 +18,16 @@ const LocationProbe = (): React.ReactElement => {
 };
 
 function renderToolbar(
-  props: SearchToolbarProps,
+  props: Omit<SearchToolbarProps, 'repositoryId' | 'scope'>,
   initialEntry = '/search',
+  scope: SearchToolbarProps['scope'] = 'knowledge',
+  repositoryId: string | null = null,
 ): RenderResult {
   // eslint-disable-next-line react/no-multi-comp -- test-local route wrapper beside the location probe
   const Component = (): React.ReactElement => {
     return (
       <TooltipProvider>
-        <SearchToolbar {...props} />
+        <SearchToolbar {...props} repositoryId={repositoryId} scope={scope} />
         <LocationProbe />
       </TooltipProvider>
     );
@@ -117,5 +119,44 @@ describe('SearchToolbar', () => {
     });
 
     expect(component.getByTestId('slot')).toBeInTheDocument();
+  });
+
+  describe('in code scope', () => {
+    test('keeps the scope and repository on submit and hides ranking details', () => {
+      const component = renderToolbar(
+        { defaultQuery: 'x', expandRankingDetails: false },
+        '/search?scope=code',
+        'code',
+        'repo-1',
+      );
+
+      expect(
+        component.container.querySelector('input[name="scope"][value="code"]'),
+      ).not.toBeNull();
+      expect(
+        component.container.querySelector(
+          'input[name="repositoryId"][value="repo-1"]',
+        ),
+      ).not.toBeNull();
+      expect(component.queryByTestId('SearchToolbar-ranking')).toBeNull();
+      expect(
+        component.getByRole('searchbox', {
+          name: SEARCH_TOOLBAR_COPY.queryLabel,
+        }),
+      ).toHaveAttribute('placeholder', SEARCH_TOOLBAR_COPY.codePlaceholder);
+    });
+  });
+
+  describe('in knowledge scope', () => {
+    test('carries no scope field', () => {
+      const component = renderToolbar({
+        defaultQuery: 'x',
+        expandRankingDetails: false,
+      });
+
+      expect(
+        component.container.querySelector('input[name="scope"]'),
+      ).toBeNull();
+    });
   });
 });

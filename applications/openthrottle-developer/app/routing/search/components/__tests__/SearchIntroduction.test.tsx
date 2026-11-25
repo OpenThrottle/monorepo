@@ -8,7 +8,7 @@ import { SearchIntroduction } from '../SearchIntroduction';
 
 describe('SearchIntroduction', () => {
   test('renders the page heading', () => {
-    const component = render(<SearchIntroduction hasQuery={false} />);
+    const component = render(<SearchIntroduction actions={null} />);
 
     expect(
       component.getByRole('heading', {
@@ -18,21 +18,32 @@ describe('SearchIntroduction', () => {
     ).toBeInTheDocument();
   });
 
-  test('shows the first-visit hint only without a query', () => {
-    const empty = render(<SearchIntroduction hasQuery={false} />);
+  test('always renders the description', () => {
+    const component = render(<SearchIntroduction actions={null} />);
 
-    expect(empty.getByTestId('SearchIntroduction-hint')).toBeInTheDocument();
-    empty.unmount();
-
-    const withQuery = render(<SearchIntroduction hasQuery={true} />);
-
-    expect(withQuery.queryByTestId('SearchIntroduction-hint')).toBeNull();
+    expect(
+      component.getByTestId('SearchIntroduction-description'),
+    ).toBeInTheDocument();
   });
 
-  test('owns no controls', () => {
-    const component = render(<SearchIntroduction hasQuery={true} />);
+  test('renders the actions slot beside the heading', () => {
+    const component = render(
+      <SearchIntroduction actions={<button type="button">Scope</button>} />,
+    );
 
-    expect(component.queryByRole('checkbox')).toBeNull();
-    expect(component.queryByRole('switch')).toBeNull();
+    const actions = component.getByTestId('SearchIntroduction-actions');
+
+    expect(actions).toContainElement(
+      component.getByRole('button', { name: 'Scope' }),
+    );
+  });
+
+  describe('without actions', () => {
+    test('owns no controls', () => {
+      const component = render(<SearchIntroduction actions={null} />);
+
+      expect(component.queryByRole('button')).toBeNull();
+      expect(component.queryByRole('checkbox')).toBeNull();
+    });
   });
 });

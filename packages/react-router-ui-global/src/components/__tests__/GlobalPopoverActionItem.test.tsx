@@ -53,4 +53,36 @@ describe('GlobalPopoverActionItem Component', () => {
 
     expect(onConfirmRequest).toHaveBeenCalledWith('delete');
   });
+
+  test('renders an external action as a new-tab link', () => {
+    const action: GlobalPopoverAction = {
+      href: 'https://github.com/acme/repo/blob/main/README.md',
+      id: 'github',
+      kind: 'external',
+      label: 'View on GitHub',
+    };
+
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
+    const Component = (): React.ReactElement => {
+      return (
+        <DropdownMenu defaultOpen={true}>
+          <DropdownMenuTrigger asChild={true}>
+            <button type="button">Open</button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <GlobalPopoverActionItem
+              action={action}
+              onConfirmRequest={vi.fn()}
+            />
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    };
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    const component = render(<RoutesStub />);
+    const item = component.getByRole('menuitem', { name: 'View on GitHub' });
+
+    expect(item).toHaveAttribute('href', action.href);
+    expect(item).toHaveAttribute('target', '_blank');
+  });
 });

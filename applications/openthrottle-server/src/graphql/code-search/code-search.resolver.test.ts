@@ -84,6 +84,7 @@ describe('CodeSearchResolver', () => {
   describe('codeSemanticSearch', () => {
     const input = {
       limit: null,
+      offset: null,
       query: 'find user',
       repositoryId: REPO_ID,
       workspacePath: null,
@@ -142,7 +143,7 @@ describe('CodeSearchResolver', () => {
         expect(codeSearch.codeSemanticSearch).toHaveBeenCalledWith(
           PATH,
           'find user',
-          10,
+          50,
         );
       });
 
@@ -185,7 +186,7 @@ describe('CodeSearchResolver', () => {
           expect(codeSearch.codeSemanticSearch).toHaveBeenCalledWith(
             PRIMARY,
             'find user',
-            10,
+            50,
           );
         });
 
@@ -195,7 +196,7 @@ describe('CodeSearchResolver', () => {
           expect(codeSearch.codeSemanticSearch).toHaveBeenCalledWith(
             PATH,
             'find user',
-            10,
+            50,
           );
         });
       });
@@ -231,14 +232,14 @@ describe('CodeSearchResolver', () => {
     it('returns available=false (no search) when no provider is configured', async () => {
       vi.mocked(codeSearch.isProviderConfigured).mockReturnValue(false);
       const result = await resolver.codeSemanticSearch(USER_ID, input);
-      expect(result).toEqual({ available: false, matches: [] });
+      expect(result).toEqual({ available: false, matches: [], total: 0 });
       expect(codeSearch.codeSemanticSearch).not.toHaveBeenCalled();
     });
 
     it('returns available=false (no search) when a hosted provider is not opted in', async () => {
       vi.mocked(codeSearch.codeIndexingRefusal).mockReturnValue(REFUSAL);
       const result = await resolver.codeSemanticSearch(USER_ID, input);
-      expect(result).toEqual({ available: false, matches: [] });
+      expect(result).toEqual({ available: false, matches: [], total: 0 });
       expect(codeSearch.codeSemanticSearch).not.toHaveBeenCalled();
     });
 
@@ -257,19 +258,67 @@ describe('CodeSearchResolver', () => {
       expect(codeSearch.codeSemanticSearch).toHaveBeenCalledWith(
         PATH,
         'find user',
-        10,
-      );
-      expect(result).toEqual({ available: true, matches });
-    });
-
-    it('clamps limit to the max of 50', async () => {
-      vi.mocked(codeSearch.codeSemanticSearch).mockResolvedValue([]);
-      await resolver.codeSemanticSearch(USER_ID, { ...input, limit: 999 });
-      expect(codeSearch.codeSemanticSearch).toHaveBeenCalledWith(
-        PATH,
-        'find user',
         50,
       );
+      expect(result).toEqual({ available: true, matches, total: 1 });
+    });
+
+    describe('paging', () => {
+      const ranked = Array.from({ length: 30 }, (_, index) => {
+        return {
+          content: `chunk ${index}`,
+          endLine: index + 1,
+          path: `file-${index}.ts`,
+          score: 1 - index / 100,
+          startLine: index + 1,
+        };
+      });
+
+      it('ranks one 50-candidate window regardless of limit', async () => {
+        vi.mocked(codeSearch.codeSemanticSearch).mockResolvedValue([]);
+        await resolver.codeSemanticSearch(USER_ID, { ...input, limit: 999 });
+        expect(codeSearch.codeSemanticSearch).toHaveBeenCalledWith(
+          PATH,
+          'find user',
+          50,
+        );
+      });
+
+      it('returns consecutive pages with no overlap, and the total', async () => {
+        vi.mocked(codeSearch.codeSemanticSearch).mockResolvedValue([...ranked]);
+
+        const first = await resolver.codeSemanticSearch(USER_ID, {
+          ...input,
+          limit: 10,
+        });
+        const second = await resolver.codeSemanticSearch(USER_ID, {
+          ...input,
+          limit: 10,
+          offset: 10,
+        });
+
+        expect(first.total).toBe(30);
+        expect(first.matches.map((match) => match.path)).toEqual(
+          ranked.slice(0, 10).map((match) => match.path),
+        );
+        expect(second.matches.map((match) => match.path)).toEqual(
+          ranked.slice(10, 20).map((match) => match.path),
+        );
+      });
+
+      it('returns no matches for an offset past the total', async () => {
+        vi.mocked(codeSearch.codeSemanticSearch).mockResolvedValue(
+          ranked.slice(0, 5),
+        );
+
+        const result = await resolver.codeSemanticSearch(USER_ID, {
+          ...input,
+          offset: 40,
+        });
+
+        expect(result.matches).toEqual([]);
+        expect(result.total).toBe(5);
+      });
     });
   });
 

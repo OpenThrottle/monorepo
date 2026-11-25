@@ -77,6 +77,24 @@ export class SearchChunk {
   taskTitle!: string | null;
 }
 
+/**
+ * @description How many ranked results came from each source, over the whole capped ranking
+ * (the same candidates `total` counts), not just the returned page.
+ */
+@ObjectType()
+export class SearchSourceCounts {
+  @Field(() => Int, {
+    description: `Ranked results from documentation.`,
+  })
+  documentation!: number;
+
+  @Field(() => Int, { description: `Ranked results from plans.` })
+  plan!: number;
+
+  @Field(() => Int, { description: `Ranked results from tasks.` })
+  task!: number;
+}
+
 @ObjectType()
 export class SearchResult {
   @Field(() => [SearchChunk], {
@@ -94,6 +112,11 @@ export class SearchResult {
     nullable: true,
   })
   reason!: string | null;
+
+  @Field(() => SearchSourceCounts, {
+    description: `How many ranked results came from each source (plan, task, documentation), counted over the whole capped ranking — the same candidates \`total\` counts — not just this page. They sum to \`total\`.`,
+  })
+  sourceCounts!: SearchSourceCounts;
 
   @Field(() => Int, {
     description: `How many ranked candidates the query matched, capped at 100. Page through them with \`offset\` and \`limit\`.`,

@@ -42,6 +42,12 @@ import type {
 
 const DEFAULT_SEARCH_LIMIT = 10;
 const MAX_SEARCH_LIMIT = 50;
+/**
+ * @description How many matches one query ranks: the vector-search service's own topK ceiling.
+ * Every page is a slice of that one ranking, so pages never overlap or skip, and `total` is its
+ * length.
+ */
+const CODE_SEARCH_CANDIDATE_CAP = 50;
 
 /** BullMQ job states that mean an index is in progress (not yet finished). */
 const PENDING_JOB_STATES = new Set([
@@ -83,22 +89,32 @@ export class CodeSearchResolver {
       !this.codeSearch.isProviderConfigured() ||
       this.codeSearch.codeIndexingRefusal() !== null
     ) {
-      return { available: false, matches: [] };
+      return { available: false, matches: [], total: 0 };
     }
 
     const limit = Math.min(
       Math.max(1, input.limit ?? DEFAULT_SEARCH_LIMIT),
       MAX_SEARCH_LIMIT,
     );
+    const offset = Math.min(
+      Math.max(0, input.offset ?? 0),
+      CODE_SEARCH_CANDIDATE_CAP,
+    );
     const matches = await this.codeSearch.codeSemanticSearch(
       filesystemPath,
       input.query,
-      limit,
+      CODE_SEARCH_CANDIDATE_CAP,
     );
 
-    const ranked = [...matches].sort((a, b) => b.score - a.score);
+    const ranked = [...matches]
+      .sort((a, b) => b.score - a.score)
+      .slice(0, CODE_SEARCH_CANDIDATE_CAP);
 
-    return { available: true, matches: ranked };
+    return {
+      available: true,
+      matches: ranked.slice(offset, offset + limit),
+      total: ranked.length,
+    };
   }
 
   @Query(() => CodeIndexStatusObject, {

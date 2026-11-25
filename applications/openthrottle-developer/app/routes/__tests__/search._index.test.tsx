@@ -8,6 +8,8 @@ import { describe, expect, test } from 'vitest';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 import type { SearchIndexLoaderFixture } from '~/testing/search-route-fixtures';
 import {
+  searchCodeLoaderFixture,
+  searchCodeRepositoryFixture,
   searchIndexLoaderFixture,
   searchIndexLoaderFixtureEmptyQuery,
   searchIndexLoaderFixturePaginated,
@@ -29,6 +31,8 @@ const toLoaderData = (
     page: fixture.page,
     query: fixture.query,
     results: { chunks: [...fixture.results.chunks], reason },
+    scope: fixture.scope,
+    stats: fixture.stats,
     total: fixture.total,
   };
 };
@@ -85,7 +89,7 @@ describe('routes/search._index.tsx', () => {
 
     expect(view.getByRole('heading', { name: 'Search' })).toBeInTheDocument();
     expect(view.getByTestId('SearchToolbar')).toBeInTheDocument();
-    expect(view.getByTestId('SearchCard')).toBeInTheDocument();
+    expect(view.getByTestId('SearchResultsTable')).toBeInTheDocument();
   });
 
   test('should render OpenThrottlePagination with basePath /search when multiple pages', () => {
@@ -126,7 +130,7 @@ describe('routes/search._index.tsx', () => {
     expect(href).toContain('q=test');
   });
 
-  test('should render a result card for each chunk (SearchCard delegates by source)', () => {
+  test('should render a table row for each chunk', () => {
     const view = renderRoutesStub(
       <SearchIndex
         actionData={undefined}
@@ -136,26 +140,57 @@ describe('routes/search._index.tsx', () => {
       />,
     );
 
-    const cards = view.getAllByTestId('SearchCard');
-    expect(cards).toHaveLength(1);
-    expect(view.getByTestId('SearchCard-title')).toHaveAttribute(
+    const titles = view.getAllByTestId('SearchResultsTable-title');
+    expect(titles).toHaveLength(1);
+    expect(view.getByTestId('SearchResultsTable-title')).toHaveAttribute(
       'href',
       '/plans/plan-1',
     );
   });
 
-  test('should show enter-query guidance and workspace shortcuts when query is empty', () => {
-    const view = renderRoutesStub(
-      <SearchIndex
-        actionData={undefined}
-        loaderData={toLoaderData(searchIndexLoaderFixtureEmptyQuery)}
-        matches={stubMatches()}
-        params={{}}
-      />,
+  describe('when the query is empty', () => {
+    test('shows the description and corpus stats', () => {
+      const view = render(
+        <TooltipProvider>
+          <MemoryRouter initialEntries={['/search?stats=open']}>
+            <SearchIndex
+              actionData={undefined}
+              loaderData={toLoaderData(searchIndexLoaderFixtureEmptyQuery)}
+              matches={stubMatches()}
+              params={{}}
+            />
+          </MemoryRouter>
+        </TooltipProvider>,
+      );
+
+      expect(
+        view.getByTestId('SearchIntroduction-description'),
+      ).toBeInTheDocument();
+      expect(view.getByTestId('SearchStats')).toHaveAttribute(
+        'data-kind',
+        'corpus',
+      );
+    });
+  });
+
+  test('shows result stats for a query', () => {
+    const view = render(
+      <TooltipProvider>
+        <MemoryRouter initialEntries={['/search?q=test&stats=open']}>
+          <SearchIndex
+            actionData={undefined}
+            loaderData={toLoaderData(searchIndexLoaderFixture)}
+            matches={stubMatches()}
+            params={{}}
+          />
+        </MemoryRouter>
+      </TooltipProvider>,
     );
 
-    expect(view.getByTestId('SearchIntroduction-hint')).toBeInTheDocument();
-    expect(view.getByTestId('SearchIntroduction')).toBeInTheDocument();
+    expect(view.getByTestId('SearchStats')).toHaveAttribute(
+      'data-kind',
+      'knowledge',
+    );
   });
 
   test('previews a result in a side sheet without leaving the page, returning focus on close', async () => {
@@ -168,12 +203,12 @@ describe('routes/search._index.tsx', () => {
         params={{}}
       />,
     );
-    const snippet = view.getByTestId('SearchCard-content');
+    const snippet = view.getByTestId('SearchResultsTable-snippet');
 
     await user.click(snippet);
 
     expect(await view.findByTestId('SearchResultPreview')).toBeInTheDocument();
-    expect(view.getByTestId('SearchCard')).toBeInTheDocument();
+    expect(view.getByTestId('SearchResultsTable')).toBeInTheDocument();
 
     await user.keyboard('{Escape}');
 
@@ -207,5 +242,80 @@ describe('routes/search._index.tsx', () => {
     );
 
     expect(view.queryByText('Beta:')).toBeNull();
+  });
+
+  describe('in code scope', () => {
+    test('renders the scope toggle, code matches and code stats', () => {
+      const view = render(
+        <TooltipProvider>
+          <MemoryRouter
+            initialEntries={['/search?q=settle&scope=code&stats=open']}
+          >
+            <SearchIndex
+              actionData={undefined}
+              loaderData={searchCodeLoaderFixture}
+              matches={stubMatches()}
+              params={{}}
+            />
+          </MemoryRouter>
+        </TooltipProvider>,
+      );
+
+      expect(view.getByTestId('SearchScopeToggle')).toBeInTheDocument();
+      expect(view.getByTestId('SearchCodeResultsTable')).toBeInTheDocument();
+      expect(view.queryByTestId('SearchResultsTable')).toBeNull();
+      expect(view.getByTestId('SearchStats')).toHaveAttribute(
+        'data-kind',
+        'code',
+      );
+    });
+
+    test('offers a repository picker only with several repositories', () => {
+      const single = render(
+        <TooltipProvider>
+          <MemoryRouter initialEntries={['/search?scope=code']}>
+            <SearchIndex
+              actionData={undefined}
+              loaderData={searchCodeLoaderFixture}
+              matches={stubMatches()}
+              params={{}}
+            />
+          </MemoryRouter>
+        </TooltipProvider>,
+      );
+
+      expect(single.queryByTestId('SearchCodeRepositoryPicker')).toBeNull();
+      single.unmount();
+
+      const several = render(
+        <TooltipProvider>
+          <MemoryRouter initialEntries={['/search?scope=code']}>
+            <SearchIndex
+              actionData={undefined}
+              loaderData={{
+                ...searchCodeLoaderFixture,
+                code: {
+                  ...searchCodeLoaderFixture.code,
+                  repositories: [
+                    ...searchCodeLoaderFixture.code.repositories,
+                    {
+                      ...searchCodeRepositoryFixture,
+                      displayName: 'docs',
+                      id: 'repo-2',
+                    },
+                  ],
+                },
+              }}
+              matches={stubMatches()}
+              params={{}}
+            />
+          </MemoryRouter>
+        </TooltipProvider>,
+      );
+
+      expect(
+        several.getByTestId('SearchCodeRepositoryPicker'),
+      ).toBeInTheDocument();
+    });
   });
 });

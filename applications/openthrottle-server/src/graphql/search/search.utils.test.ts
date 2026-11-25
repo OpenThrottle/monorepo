@@ -4,6 +4,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { DEFAULT_SEARCH_EMBED_BUDGET_MS } from './search.constants.ts';
 import type { SearchHybridOptions } from './search.types.ts';
 import {
+  countChunksBySource,
   embedWithinBudget,
   fuseByReciprocalRank,
   lexicalFallbackReason,
@@ -336,5 +337,34 @@ describe('when the query embed misses its budget', () => {
     } finally {
       vi.unstubAllEnvs();
     }
+  });
+});
+
+describe('countChunksBySource', () => {
+  test('counts each known source', () => {
+    expect(
+      countChunksBySource([
+        { source: 'plan' },
+        { source: 'task' },
+        { source: 'task' },
+        { source: 'documentation' },
+      ]),
+    ).toEqual({ documentation: 1, plan: 1, task: 2 });
+  });
+
+  test('is all zero for no chunks', () => {
+    expect(countChunksBySource([])).toEqual({
+      documentation: 0,
+      plan: 0,
+      task: 0,
+    });
+  });
+
+  test('ignores an unknown source', () => {
+    expect(countChunksBySource([{ source: 'code' }])).toEqual({
+      documentation: 0,
+      plan: 0,
+      task: 0,
+    });
   });
 });

@@ -14,7 +14,8 @@ import { SearchIcon } from 'lucide-react';
 import * as React from 'react';
 import { useSearchParams } from 'react-router';
 
-import { SEARCH_BASE_PATH } from '~/routing/search/config';
+import type { SearchScopeValue } from '~/routing/search/config';
+import { SEARCH_BASE_PATH, SEARCH_SCOPE } from '~/routing/search/config';
 import { SEARCH_TOOLBAR_COPY } from '~/routing/search/data/copy';
 
 export interface SearchToolbarProps {
@@ -25,6 +26,10 @@ export interface SearchToolbarProps {
   readonly defaultQuery: string;
   /** Power-user mode: `details=ranking` is on. */
   readonly expandRankingDetails: boolean;
+  /** Code scope only: the repository a submit keeps searching; null in knowledge scope. */
+  readonly repositoryId: string | null;
+  /** Kept across a submit; code scope has no ranking details, so it hides that switch. */
+  readonly scope: SearchScopeValue;
 }
 
 /**
@@ -35,7 +40,14 @@ export interface SearchToolbarProps {
 export const SearchToolbar = (
   props: SearchToolbarProps,
 ): React.ReactElement => {
-  const { children, className, defaultQuery, expandRankingDetails } = props;
+  const {
+    children,
+    className,
+    defaultQuery,
+    expandRankingDetails,
+    repositoryId,
+    scope,
+  } = props;
 
   // Hooks
   const [searchParams, setSearchParams] = useSearchParams();
@@ -43,6 +55,10 @@ export const SearchToolbar = (
 
   // Setup
   const hasQuery = defaultQuery.trim() !== '';
+  const isCode = scope === SEARCH_SCOPE.code;
+  const placeholder = isCode
+    ? SEARCH_TOOLBAR_COPY.codePlaceholder
+    : SEARCH_TOOLBAR_COPY.queryPlaceholder;
 
   // Handlers
   const handleRankingChange = (checked: boolean): void => {
@@ -58,9 +74,16 @@ export const SearchToolbar = (
   };
 
   // Markup
+  const repositoryInput = (
+    <input name="repositoryId" type="hidden" value={repositoryId ?? ''} />
+  );
   const rankingInput = expandRankingDetails ? (
     <input name="details" type="hidden" value="ranking" />
   ) : null;
+  const scopeInput = (
+    <input name="scope" type="hidden" value={SEARCH_SCOPE.code} />
+  );
+  const hasRepositoryInput = isCode && repositoryId !== null;
   const rankingSwitch = (
     <Tooltip>
       <TooltipTrigger asChild={true}>
@@ -106,6 +129,8 @@ export const SearchToolbar = (
         role="search"
       >
         {rankingInput}
+        {isCode ? scopeInput : null}
+        {hasRepositoryInput ? repositoryInput : null}
         <InputGroup className="flex-1">
           <InputGroupAddon>
             <SearchIcon aria-hidden={true} className="size-4" />
@@ -114,14 +139,14 @@ export const SearchToolbar = (
             aria-label={SEARCH_TOOLBAR_COPY.queryLabel}
             name="q"
             onChange={(event) => setQuery(event.target.value)}
-            placeholder={SEARCH_TOOLBAR_COPY.queryPlaceholder}
+            placeholder={placeholder}
             type="search"
             value={query}
           />
         </InputGroup>
         <Button type="submit">{SEARCH_TOOLBAR_COPY.submitLabel}</Button>
       </form>
-      {rankingSwitch}
+      {isCode ? null : rankingSwitch}
       {/* Slot: source filter + semantic/lexical mode indicator land here. */}
       {children}
     </div>

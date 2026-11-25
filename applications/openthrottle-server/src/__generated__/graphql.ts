@@ -1109,6 +1109,8 @@ export type CodeSearchMatch = {
 export type CodeSemanticSearchInput = {
   /** Max number of matches to return (default 10). */
   limit?: InputMaybe<Scalars['Int']['input']>;
+  /** Number of ranked matches to skip before returning `limit` (default 0). Pages are slices of one ranking of at most 50 candidates, so offsets past `total` return no matches. */
+  offset?: InputMaybe<Scalars['Int']['input']>;
   /** Natural-language query to embed and search by vector similarity. */
   query: Scalars['String']['input'];
   /** Registered WorkspaceLocalRepository id to search within. Takes precedence over workspacePath; one of the two is required. */
@@ -1121,8 +1123,10 @@ export type CodeSemanticSearchResult = {
   __typename?: 'CodeSemanticSearchResult';
   /** False when no embeddings provider is configured, or a hosted one is not opted in for code; the UI renders its gated state. */
   available: Scalars['Boolean']['output'];
-  /** Ranked code matches by similarity (empty when unavailable or no hits). */
+  /** Ranked code matches by similarity (empty when unavailable or no hits): the page selected by `offset` and `limit`. */
   matches: Array<CodeSearchMatch>;
+  /** How many ranked candidates the query matched, capped at 50. Page through them with `offset` and `limit`. */
+  total: Scalars['Int']['output'];
 };
 
 export type CommitsPerPrInput = {
@@ -7174,8 +7178,20 @@ export type SearchResult = {
   mode: Scalars['String']['output'];
   /** Why the result is lexical, or null when it is hybrid or semantic: embedder_unconfigured | embedder_dimension_mismatch | embedder_provider_error | embedder_busy | no_embeddings. */
   reason?: Maybe<Scalars['String']['output']>;
+  /** How many ranked results came from each source (plan, task, documentation), counted over the whole capped ranking — the same candidates `total` counts — not just this page. They sum to `total`. */
+  sourceCounts: SearchSourceCounts;
   /** How many ranked candidates the query matched, capped at 100. Page through them with `offset` and `limit`. */
   total: Scalars['Int']['output'];
+};
+
+export type SearchSourceCounts = {
+  __typename?: 'SearchSourceCounts';
+  /** Ranked results from documentation. */
+  documentation: Scalars['Int']['output'];
+  /** Ranked results from plans. */
+  plan: Scalars['Int']['output'];
+  /** Ranked results from tasks. */
+  task: Scalars['Int']['output'];
 };
 
 /** Server health: API reachability, OpenThrottle DB, cms DB, Redis (BullMQ), and WebSocket. Each component is ok, unconfigured, or unreachable. */

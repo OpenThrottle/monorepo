@@ -24,7 +24,7 @@ import {
   SearchResult,
 } from './search.object.ts';
 import type { RequestedSearchMode } from './search.types.ts';
-import { searchHybrid } from './search.utils.ts';
+import { countChunksBySource, searchHybrid } from './search.utils.ts';
 
 const DEFAULT_SEARCH_LIMIT = 20;
 const MAX_SEARCH_LIMIT = 50;
@@ -111,7 +111,13 @@ export class SearchResolver {
     const mode = requestedMode(input.mode ?? null);
     const query = input.query?.trim() ?? '';
     if (!query) {
-      return { chunks: [], mode, reason: null, total: 0 };
+      return {
+        chunks: [],
+        mode,
+        reason: null,
+        sourceCounts: countChunksBySource([]),
+        total: 0,
+      };
     }
 
     const candidates = SEARCH_CANDIDATE_CAP;
@@ -130,13 +136,19 @@ export class SearchResolver {
       },
     });
     const result = new SearchResult();
+    const ranking = found.chunks.slice(0, SEARCH_CANDIDATE_CAP);
 
-    result.chunks = found.chunks.slice(offset, offset + limit).map((ranked) => {
+    result.chunks = ranking.slice(offset, offset + limit).map((ranked) => {
       return mapChunkToObject(ranked.chunk, ranked.fusedScore);
     });
     result.mode = found.mode;
     result.reason = found.reason;
-    result.total = Math.min(found.chunks.length, SEARCH_CANDIDATE_CAP);
+    result.sourceCounts = countChunksBySource(
+      ranking.map((ranked) => {
+        return ranked.chunk;
+      }),
+    );
+    result.total = ranking.length;
 
     return result;
   }

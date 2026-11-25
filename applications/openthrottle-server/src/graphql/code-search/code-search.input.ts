@@ -14,6 +14,12 @@ export class CodeSemanticSearchInput {
   })
   limit!: number | null;
 
+  @Field(() => Int, {
+    description: `Number of ranked matches to skip before returning \`limit\` (default 0). Pages are slices of one ranking of at most 50 candidates, so offsets past \`total\` return no matches.`,
+    nullable: true,
+  })
+  offset!: number | null;
+
   @Field(() => String, {
     description: `Natural-language query to embed and search by vector similarity.`,
   })

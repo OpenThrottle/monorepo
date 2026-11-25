@@ -13,6 +13,7 @@ import type {
   RankedSearchChunk,
   SearchHybridOptions,
   SearchHybridResult,
+  SearchSourceCountsValue,
   SearchWithFallbackOptions,
   SearchWithFallbackResult,
 } from './search.types.ts';
@@ -233,4 +234,26 @@ export async function searchWithFallback<TChunk>(
     mode: 'lexical',
     reason: 'no_embeddings',
   };
+}
+
+/**
+ * @description Counts ranked chunks by source. A source outside plan / task / documentation is
+ * not counted, so the counts only sum to the ranking's length when every chunk is one of the three.
+ */
+export function countChunksBySource(
+  chunks: readonly { readonly source: string }[],
+): SearchSourceCountsValue {
+  const counts = { documentation: 0, plan: 0, task: 0 };
+
+  for (const chunk of chunks) {
+    if (chunk.source === 'documentation') {
+      counts.documentation += 1;
+    } else if (chunk.source === 'plan') {
+      counts.plan += 1;
+    } else if (chunk.source === 'task') {
+      counts.task += 1;
+    }
+  }
+
+  return counts;
 }

@@ -1109,6 +1109,8 @@ export type CodeSearchMatch = {
 export type CodeSemanticSearchInput = {
   /** Max number of matches to return (default 10). */
   limit?: InputMaybe<Scalars['Int']['input']>;
+  /** Number of ranked matches to skip before returning `limit` (default 0). Pages are slices of one ranking of at most 50 candidates, so offsets past `total` return no matches. */
+  offset?: InputMaybe<Scalars['Int']['input']>;
   /** Natural-language query to embed and search by vector similarity. */
   query: Scalars['String']['input'];
   /** Registered WorkspaceLocalRepository id to search within. Takes precedence over workspacePath; one of the two is required. */
@@ -1121,8 +1123,10 @@ export type CodeSemanticSearchResult = {
   __typename?: 'CodeSemanticSearchResult';
   /** False when no embeddings provider is configured, or a hosted one is not opted in for code; the UI renders its gated state. */
   available: Scalars['Boolean']['output'];
-  /** Ranked code matches by similarity (empty when unavailable or no hits). */
+  /** Ranked code matches by similarity (empty when unavailable or no hits): the page selected by `offset` and `limit`. */
   matches: Array<CodeSearchMatch>;
+  /** How many ranked candidates the query matched, capped at 50. Page through them with `offset` and `limit`. */
+  total: Scalars['Int']['output'];
 };
 
 export type CommitsPerPrInput = {
@@ -7174,8 +7178,20 @@ export type SearchResult = {
   mode: Scalars['String']['output'];
   /** Why the result is lexical, or null when it is hybrid or semantic: embedder_unconfigured | embedder_dimension_mismatch | embedder_provider_error | embedder_busy | no_embeddings. */
   reason?: Maybe<Scalars['String']['output']>;
+  /** How many ranked results came from each source (plan, task, documentation), counted over the whole capped ranking — the same candidates `total` counts — not just this page. They sum to `total`. */
+  sourceCounts: SearchSourceCounts;
   /** How many ranked candidates the query matched, capped at 100. Page through them with `offset` and `limit`. */
   total: Scalars['Int']['output'];
+};
+
+export type SearchSourceCounts = {
+  __typename?: 'SearchSourceCounts';
+  /** Ranked results from documentation. */
+  documentation: Scalars['Int']['output'];
+  /** Ranked results from plans. */
+  plan: Scalars['Int']['output'];
+  /** Ranked results from tasks. */
+  task: Scalars['Int']['output'];
 };
 
 /** Server health: API reachability, OpenThrottle DB, cms DB, Redis (BullMQ), and WebSocket. Each component is ok, unconfigured, or unreachable. */
@@ -15140,6 +15156,20 @@ export type CreateScheduledAgentJobMutation = {
   };
 };
 
+export type SearchSourceCountsFieldsFragment = {
+  __typename?: 'SearchSourceCounts';
+  documentation: number;
+  plan: number;
+  task: number;
+};
+
+export type SearchCorpusCoverageFragment = {
+  __typename?: 'EmbeddingCoverageObject';
+  embedded: number;
+  entity: string;
+  total: number;
+};
+
 export type GetSearchResultsQueryVariables = Exact<{
   input: SearchInput;
 }>;
@@ -15164,6 +15194,109 @@ export type GetSearchResultsQuery = {
       sourceSha?: string | null;
       taskId?: string | null;
       taskTitle?: string | null;
+    }>;
+    sourceCounts: {
+      __typename?: 'SearchSourceCounts';
+      documentation: number;
+      plan: number;
+      task: number;
+    };
+  };
+};
+
+export type GetSearchCorpusQueryVariables = Exact<{ [key: string]: never }>;
+
+export type GetSearchCorpusQuery = {
+  __typename?: 'Query';
+  serverHealth: {
+    __typename?: 'ServerHealthObject';
+    embeddings?: {
+      __typename?: 'EmbeddingsHealthObject';
+      status: string;
+      coverage: Array<{
+        __typename?: 'EmbeddingCoverageObject';
+        embedded: number;
+        entity: string;
+        total: number;
+      }>;
+    } | null;
+  };
+};
+
+export type SearchCodeRepositoryFragment = {
+  __typename?: 'WorkspaceLocalRepositoryObject';
+  displayName: string;
+  gitDefaultBranch?: string | null;
+  gitRemoteUrl?: string | null;
+  id: string;
+  kind: string;
+};
+
+export type SearchCodeIndexStatusFragment = {
+  __typename?: 'CodeIndexStatusObject';
+  failedReason?: string | null;
+  indexedChunks: number;
+  repositoryId: string;
+  status: string;
+};
+
+export type SearchCodeMatchFragment = {
+  __typename?: 'CodeSearchMatch';
+  content: string;
+  endLine: number;
+  path: string;
+  score: number;
+  startLine: number;
+};
+
+export type GetSearchCodeRepositoriesQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type GetSearchCodeRepositoriesQuery = {
+  __typename?: 'Query';
+  workspaceLocalRepositories: Array<{
+    __typename?: 'WorkspaceLocalRepositoryObject';
+    displayName: string;
+    gitDefaultBranch?: string | null;
+    gitRemoteUrl?: string | null;
+    id: string;
+    kind: string;
+  }>;
+};
+
+export type GetSearchCodeIndexStatusQueryVariables = Exact<{
+  repositoryId: Scalars['ID']['input'];
+}>;
+
+export type GetSearchCodeIndexStatusQuery = {
+  __typename?: 'Query';
+  codeIndexStatus: {
+    __typename?: 'CodeIndexStatusObject';
+    failedReason?: string | null;
+    indexedChunks: number;
+    repositoryId: string;
+    status: string;
+  };
+};
+
+export type GetSearchCodeResultsQueryVariables = Exact<{
+  input: CodeSemanticSearchInput;
+}>;
+
+export type GetSearchCodeResultsQuery = {
+  __typename?: 'Query';
+  codeSemanticSearch: {
+    __typename?: 'CodeSemanticSearchResult';
+    available: boolean;
+    total: number;
+    matches: Array<{
+      __typename?: 'CodeSearchMatch';
+      content: string;
+      endLine: number;
+      path: string;
+      score: number;
+      startLine: number;
     }>;
   };
 };
@@ -22307,6 +22440,116 @@ export const ScheduleRunStatsFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<ScheduleRunStatsFragment, unknown>;
+export const SearchSourceCountsFieldsFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'SearchSourceCountsFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'SearchSourceCounts' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'documentation' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'plan' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'task' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<SearchSourceCountsFieldsFragment, unknown>;
+export const SearchCorpusCoverageFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'SearchCorpusCoverage' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'EmbeddingCoverageObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'embedded' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'entity' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'total' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<SearchCorpusCoverageFragment, unknown>;
+export const SearchCodeRepositoryFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'SearchCodeRepository' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'WorkspaceLocalRepositoryObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'gitDefaultBranch' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'gitRemoteUrl' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<SearchCodeRepositoryFragment, unknown>;
+export const SearchCodeIndexStatusFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'SearchCodeIndexStatus' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'CodeIndexStatusObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'failedReason' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'indexedChunks' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<SearchCodeIndexStatusFragment, unknown>;
+export const SearchCodeMatchFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'SearchCodeMatch' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'CodeSearchMatch' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'endLine' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'score' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'startLine' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<SearchCodeMatchFragment, unknown>;
 export const AgentSetupChunkFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -40225,6 +40468,22 @@ export const GetSearchResultsDocument = {
                 },
                 { kind: 'Field', name: { kind: 'Name', value: 'mode' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'reason' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'sourceCounts' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: {
+                          kind: 'Name',
+                          value: 'SearchSourceCountsFields',
+                        },
+                      },
+                    ],
+                  },
+                },
                 { kind: 'Field', name: { kind: 'Name', value: 'total' } },
               ],
             },
@@ -40232,10 +40491,304 @@ export const GetSearchResultsDocument = {
         ],
       },
     },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'SearchSourceCountsFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'SearchSourceCounts' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'documentation' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'plan' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'task' } },
+        ],
+      },
+    },
   ],
 } as unknown as DocumentNode<
   GetSearchResultsQuery,
   GetSearchResultsQueryVariables
+>;
+export const GetSearchCorpusDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getSearchCorpus' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'serverHealth' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'embeddings' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'coverage' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'FragmentSpread',
+                              name: {
+                                kind: 'Name',
+                                value: 'SearchCorpusCoverage',
+                              },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'SearchCorpusCoverage' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'EmbeddingCoverageObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'embedded' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'entity' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'total' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetSearchCorpusQuery,
+  GetSearchCorpusQueryVariables
+>;
+export const GetSearchCodeRepositoriesDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getSearchCodeRepositories' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'workspaceLocalRepositories' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'SearchCodeRepository' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'SearchCodeRepository' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'WorkspaceLocalRepositoryObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'gitDefaultBranch' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'gitRemoteUrl' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetSearchCodeRepositoriesQuery,
+  GetSearchCodeRepositoriesQueryVariables
+>;
+export const GetSearchCodeIndexStatusDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getSearchCodeIndexStatus' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'repositoryId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'codeIndexStatus' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'repositoryId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'repositoryId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'SearchCodeIndexStatus' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'SearchCodeIndexStatus' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'CodeIndexStatusObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'failedReason' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'indexedChunks' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetSearchCodeIndexStatusQuery,
+  GetSearchCodeIndexStatusQueryVariables
+>;
+export const GetSearchCodeResultsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getSearchCodeResults' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'CodeSemanticSearchInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'codeSemanticSearch' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'available' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'matches' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'SearchCodeMatch' },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'total' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'SearchCodeMatch' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'CodeSearchMatch' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'endLine' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'score' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'startLine' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetSearchCodeResultsQuery,
+  GetSearchCodeResultsQueryVariables
 >;
 export const SettingsAgentsAgentClisDocument = {
   kind: 'Document',

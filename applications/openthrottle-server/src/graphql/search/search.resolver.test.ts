@@ -60,6 +60,7 @@ describe('SearchResolver', () => {
         chunks: [],
         mode: 'hybrid',
         reason: null,
+        sourceCounts: { documentation: 0, plan: 0, task: 0 },
         total: 0,
       });
       expect(embed).not.toHaveBeenCalled();
@@ -218,6 +219,7 @@ describe('SearchResolver', () => {
         chunks: [],
         mode: 'lexical',
         reason: 'no_embeddings',
+        sourceCounts: { documentation: 0, plan: 0, task: 0 },
         total: 0,
       });
     });
@@ -349,6 +351,36 @@ describe('SearchResolver', () => {
         expect(result.chunks.map((chunk) => chunk.id)).toEqual(
           ranked.slice(10, 15).map((chunk) => chunk.id),
         );
+      });
+
+      test('counts sources over the whole ranking, not the page', async () => {
+        const sources: SemanticSearchChunk['source'][] = [
+          'plan',
+          'task',
+          'documentation',
+        ];
+        const mixed: SemanticSearchChunk[] = ranked
+          .slice(0, 12)
+          .map((chunk, index) => {
+            return { ...chunk, source: sources[index % 3] ?? 'plan' };
+          });
+
+        embed.mockResolvedValue(embedded([0.1]));
+        vi.mocked(runSemanticSearch).mockResolvedValue(mixed);
+
+        const result = await resolver.search({
+          limit: 5,
+          mode: 'semantic',
+          offset: null,
+          query: 'test',
+        });
+
+        expect(result.chunks).toHaveLength(5);
+        expect(result.sourceCounts).toEqual({
+          documentation: 4,
+          plan: 4,
+          task: 4,
+        });
       });
 
       test('returns no chunks for an offset past the total', async () => {

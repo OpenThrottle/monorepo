@@ -10,20 +10,31 @@ import * as React from 'react';
 export interface OpenThrottleStatCardProps {
   readonly className?: string;
   readonly color?: string;
+  /** A short muted line under the value, e.g. why a status reads the way it does. */
+  readonly detail?: string;
   readonly subValue?: number;
   readonly title: string;
-  readonly value: number;
+  /** A number is locale-formatted; a string (a mode or status label) renders as is. */
+  readonly value: number | string;
 }
 
 export const OpenThrottleStatCard = (
   props: OpenThrottleStatCardProps,
 ): React.ReactElement => {
-  const { className = 'p-4 md:p-8', color, subValue, title, value } = props;
+  const {
+    className = 'p-4 md:p-8',
+    color,
+    detail,
+    subValue,
+    title,
+    value,
+  } = props;
 
   // Hooks
 
   // Setup
-  const formattedValue = value.toLocaleString();
+  const formattedValue =
+    typeof value === 'number' ? value.toLocaleString() : value;
   const formattedSubValue = subValue?.toLocaleString();
   // const formattedString =
   //   subValue !== undefined
@@ -33,6 +44,14 @@ export const OpenThrottleStatCard = (
   // Handlers
 
   // Markup
+  const detailLine = (
+    <p
+      className="text-muted-foreground text-xs"
+      data-testid="OpenThrottleStatCard-detail"
+    >
+      {detail}
+    </p>
+  );
 
   // Life Cycle
 
@@ -61,6 +80,7 @@ export const OpenThrottleStatCard = (
           </>
         )}
       </CardContent>
+      {detail ? detailLine : null}
     </Card>
   );
 };
