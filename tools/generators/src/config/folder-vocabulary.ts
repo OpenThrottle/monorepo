@@ -30,12 +30,21 @@ export type BannedFolderName = keyof typeof BANNED_FOLDER_NAMES;
 /**
  * @description The top-level `src/` folders each checked technology bucket may
  * carry, per the ot-folders "Technology buckets" table. `__tests__` and
- * `__generated__` are tooling folders, allowed in every bucket. The `nestjs`
+ * `__generated__` are tooling folders, allowed in every bucket. nodejs also
+ * allows `scripts`, for the thin CLI entry points a package's commands run. The `nestjs`
  * bucket has no entry: it is folder-per-unit (`<folder>.<kind>.ts`), so a
  * vocabulary would be wrong there, not merely strict.
  */
 export const BUCKET_FOLDER_VOCABULARY = {
-  nodejs: ['__generated__', '__tests__', 'config', 'data', 'types', 'utils'],
+  nodejs: [
+    '__generated__',
+    '__tests__',
+    'config',
+    'data',
+    'scripts',
+    'types',
+    'utils',
+  ],
   react: [
     '__generated__',
     '__tests__',
