@@ -63,19 +63,14 @@ export class PlanRunWorkspaceService {
 
   /**
    * @description Resolves the run row, provisions the worktree (OpenThrottle owns it, option A),
-   * registers its checkout, re-points the snapshot workspace, optionally preflights MCP and injects
+   * registers its checkout, re-points the snapshot workspace, optionally preflights MCP, injects
    * foreign skills, then loads the repo's workflow config from the directory the agent actually uses.
    */
   async prepare(
     params: PreparePlanRunWorkspaceParams,
   ): Promise<PreparedPlanRunWorkspace> {
-    const {
-      correlation,
-      jobData,
-      onWorktreeProvisioned,
-      skipMcpPreflight,
-      skipSkillInjection,
-    } = params;
+    const { correlation, jobData, onWorktreeProvisioned, skipMcpPreflight } =
+      params;
     const baseCheckoutCwd = getWorkflowConfigCwd(
       jobData.workingDirectory,
       process.env,
@@ -136,13 +131,16 @@ export class PlanRunWorkspaceService {
       });
     }
 
-    // Server-scoped foreign-skill injection, gated per user: materialize OT curated skills into the
-    // target repo only when the acting user has opted this checkout in (repository_checkouts flag).
-    // Idempotent + reused across runs; torn down on server shutdown, not per-run. Soft-fail so
-    // injection never aborts the agent run.
-    const injectedSkillNames = skipSkillInjection
-      ? []
-      : await this.maybeInjectForeignSkills({ configCwd, run });
+    // Foreign-skill injection into the directory the agent runs in, gated on the BASE checkout's
+    // opt-in: a plan-run worktree is a fresh directory the settings switch never reached, and its
+    // checkout row is new and off. Rule-injected "Run /<skill>" tasks need the skill on disk there.
+    // Removed with the worktree at teardown. Soft-fail so injection never aborts the agent run.
+    const injectedSkillNames = await this.maybeInjectForeignSkills({
+      baseCheckoutCwd,
+      configCwd,
+      planId: jobData.planId,
+      run,
+    });
 
     const config = loadPlanRunConfig(configCwd, process.env);
     applyPlanRunOtRootFromConfig(configCwd, process.env);
@@ -492,21 +490,23 @@ export class PlanRunWorkspaceService {
 
   /**
    * @description Foreign-run only, per-user gated: materializes OpenThrottle curated skills into the
-   * target repo and returns the injected skill names. Returns empty when the run is inside the OT
-   * monorepo, the acting user cannot be resolved, the run's checkout is not opted in
+   * directory the agent runs in (`configCwd`, the plan-run worktree when there is one) and returns
+   * the injected skill names, saying how many in plan output. Returns empty when the run is inside
+   * the OT monorepo, the acting user cannot be resolved, the BASE checkout is not opted in
    * (`repository_checkouts.foreign_skill_injection_enabled`, default false), or on any failure.
-   * The opt-in is keyed on `(actorUserId, configCwd)` — the exact on-disk path the run touches.
-   * Non-mutating and reused across runs; soft-fails so a problem never aborts the orchestrator.
    *
-   * Note: the gate reads the flag for `configCwd` specifically. A brand-new worktree checkout row
-   * created during this same run defaults to false; toggling a repository on flips the user's
-   * existing checkouts, which covers the common registered-checkout (primary) foreign case.
+   * The opt-in is read from `(actorUserId, baseCheckoutCwd)` — the row the settings switch flips —
+   * never from the worktree's own row, which is created during this run and defaults to off. The
+   * agent-config trust posture does not gate it: these are OpenThrottle's skills, not the repo's.
+   * Idempotent; soft-fails so a problem never aborts the orchestrator.
    */
   private async maybeInjectForeignSkills(params: {
+    readonly baseCheckoutCwd: string;
     readonly configCwd: string;
+    readonly planId: string;
     readonly run: PlanRun | null;
   }): Promise<readonly string[]> {
-    const { configCwd, run } = params;
+    const { baseCheckoutCwd, configCwd, planId, run } = params;
     const foreign = resolveForeignWorkspaceContext(configCwd, process.env);
     if (!foreign.isForeign || foreign.openThrottleRoot === undefined) {
       return [];
@@ -518,11 +518,12 @@ export class PlanRunWorkspaceService {
       return [];
     }
 
+    let injectedNames: readonly string[];
     try {
       const checkout =
         await this.repositoryCheckoutsRepository.findByUserAndPath(
           actorUserId,
-          configCwd,
+          baseCheckoutCwd,
         );
       if (checkout?.foreignSkillInjectionEnabled !== true) {
         // Unregistered path or explicit opt-out.
@@ -538,7 +539,7 @@ export class PlanRunWorkspaceService {
       for (const warning of result.warnings) {
         this.logger.warn(`Foreign-skill injection: ${warning}`);
       }
-      return result.injectedNames;
+      injectedNames = result.injectedNames;
     } catch (error) {
       this.logger.warn(
         `Foreign-skill injection failed for ${configCwd}: ${
@@ -546,6 +547,45 @@ export class PlanRunWorkspaceService {
         }`,
       );
       return [];
+    }
+
+    await this.narrateInjectedSkills({
+      count: injectedNames.length,
+      planId,
+      workingDirectory: configCwd,
+    });
+    return injectedNames;
+  }
+
+  /**
+   * @description One plan_output line naming how many OpenThrottle skills a run's directory got, so
+   * "the worker could not find /x" is diagnosable from the run. Silent when none. Soft-fails.
+   */
+  private async narrateInjectedSkills(params: {
+    readonly count: number;
+    readonly planId: string;
+    readonly workingDirectory: string;
+  }): Promise<void> {
+    const { count, planId, workingDirectory } = params;
+    if (count === 0) {
+      return;
+    }
+
+    const noun = count === 1 ? 'skill' : 'skills';
+    const content = `🧩 Injected ${count} OpenThrottle ${noun} into ${workingDirectory}`;
+    try {
+      await this.planOutputStreamRepository.create({
+        content,
+        iteration: null,
+        planId,
+      });
+    } catch (error) {
+      this.logger.warn(
+        `Soft-fail narrating injected skills for plan ${planId}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+        PlanRunWorkspaceService.name,
+      );
     }
   }
 

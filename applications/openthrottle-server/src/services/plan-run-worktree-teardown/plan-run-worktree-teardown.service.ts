@@ -28,6 +28,7 @@ import {
   PlanRunsRepository,
   RepositoryCheckoutsRepository,
 } from '@openthrottle/nestjs-repositories-server';
+import { teardown as teardownForeignSkillLayer } from '@openthrottle/openthrottle-agentic-utils';
 import { In } from 'typeorm';
 
 import { OT_WORKTREE_ACTION } from '../ot-worktree-script/ot-worktree-script.constants.ts';
@@ -163,6 +164,7 @@ export class PlanRunWorktreeTeardownService {
     }
 
     await this.stopServedProcesses(worktreePath);
+    this.removeForeignSkillLayer(worktreePath);
 
     this.logger.log(
       `[${this.name}] removing ${worktreePath} via ${script.scriptPath} (rung: ${script.rung})`,
@@ -195,6 +197,24 @@ export class PlanRunWorktreeTeardownService {
       outcome: PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME.REMOVED,
       worktreePath,
     };
+  }
+
+  /**
+   * @description Removes the OpenThrottle skills injected into this worktree at run start, and its
+   * ledger, before the worktree goes. The shared `info/exclude` block keeps the base checkout's
+   * paths. A no-op when nothing was injected; never throws, since a leftover layer only costs a
+   * stale ledger that the next boot reap clears.
+   */
+  private removeForeignSkillLayer(worktreePath: string): void {
+    try {
+      teardownForeignSkillLayer({ env: process.env, repoPath: worktreePath });
+    } catch (error) {
+      this.logger.warn(
+        `[${this.name}] ${worktreePath}: could not remove injected skills: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
   }
 
   private async evaluateGuards(

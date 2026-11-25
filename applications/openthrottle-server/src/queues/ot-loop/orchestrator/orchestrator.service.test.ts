@@ -246,14 +246,11 @@ describe('OtLoopOrchestratorService', () => {
   };
 
   describe('workspace', () => {
-    it('prepares the shared workspace without the MCP preflight or skill injection', async () => {
+    it('prepares the shared workspace without the MCP preflight', async () => {
       await runJob();
 
       expect(prepare).toHaveBeenCalledWith(
-        expect.objectContaining({
-          skipMcpPreflight: true,
-          skipSkillInjection: true,
-        }),
+        expect.objectContaining({ skipMcpPreflight: true }),
       );
     });
 

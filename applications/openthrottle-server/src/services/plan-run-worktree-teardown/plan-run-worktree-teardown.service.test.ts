@@ -26,6 +26,7 @@ const {
   mockRealpathSync,
   mockResolveRoot,
   mockResolveScript,
+  mockSkillTeardown,
   mockStatSync,
 } = vi.hoisted(() => ({
   mockExecFile: vi.fn(),
@@ -33,10 +34,14 @@ const {
   mockRealpathSync: vi.fn(),
   mockResolveRoot: vi.fn(),
   mockResolveScript: vi.fn(),
+  mockSkillTeardown: vi.fn(),
   mockStatSync: vi.fn(),
 }));
 
 vi.mock('node:child_process', () => ({ execFile: mockExecFile }));
+vi.mock('@openthrottle/openthrottle-agentic-utils', () => ({
+  teardown: mockSkillTeardown,
+}));
 vi.mock('node:fs', () => ({
   readFileSync: mockReadFileSync,
   realpathSync: mockRealpathSync,
@@ -223,6 +228,7 @@ const MONOREPO_MANIFEST = {
 describe('PlanRunWorktreeTeardownService', () => {
   beforeEach(() => {
     mockExecFile.mockReset();
+    mockSkillTeardown.mockReset();
     mockRealpathSync.mockReset();
     mockRealpathSync.mockImplementation((path: string) => path);
     mockResolveRoot.mockReset();
@@ -283,6 +289,42 @@ describe('PlanRunWorktreeTeardownService', () => {
 
       expect(result.outcome).toBe(PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME.REMOVABLE);
       expect(commandCalls()).toEqual([]);
+    });
+
+    it('removes the injected skill layer before destroy.sh runs', async () => {
+      withGit(CLEAN_PUSHED);
+      const { service } = build({ checkouts: [] });
+      let destroyedFirst = false;
+      mockSkillTeardown.mockImplementation(() => {
+        destroyedFirst = commandCalls().some((call) => {
+          return call.startsWith('bash ');
+        });
+      });
+
+      await service.teardown({
+        baseCheckoutPath: BASE,
+        worktreePath: WORKTREE,
+      });
+
+      expect(mockSkillTeardown).toHaveBeenCalledWith(
+        expect.objectContaining({ repoPath: WORKTREE }),
+      );
+      expect(destroyedFirst).toBe(false);
+    });
+
+    it('still removes the worktree when the skill teardown throws', async () => {
+      withGit(CLEAN_PUSHED);
+      const { service } = build({ checkouts: [] });
+      mockSkillTeardown.mockImplementation(() => {
+        throw new Error('ledger unreadable');
+      });
+
+      const result = await service.teardown({
+        baseCheckoutPath: BASE,
+        worktreePath: WORKTREE,
+      });
+
+      expect(result.outcome).toBe(PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME.REMOVED);
     });
 
     it('never passes --force or --delete-branch', async () => {
@@ -450,6 +492,7 @@ describe('PlanRunWorktreeTeardownService', () => {
       expect(result.outcome).toBe(
         PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME.KEPT_DIRTY,
       );
+      expect(mockSkillTeardown).not.toHaveBeenCalled();
     });
   });
 

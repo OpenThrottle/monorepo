@@ -14,8 +14,9 @@ import {
  * @description On-demand "apply now" side of the per-checkout foreign-skill injection toggle.
  * Turning injection on/off for a repository projects (enabled) or removes (disabled) OpenThrottle's
  * curated skills into every one of that user's checkouts immediately, without waiting for a run — so
- * the switch takes effect the moment it is saved. Complements the run-time gate in
- * `PlanRunWorkspaceService` (skipped by OT Loop, which injects no skills).
+ * the switch takes effect the moment it is saved. Complements the run-start gate in
+ * `PlanRunWorkspaceService`, which reads the base checkout's flag and injects into the run's
+ * plan-run worktree — a directory created after the switch was saved, so this never reaches it.
  *
  * Per-checkout soft-fail: only foreign checkouts are touched (the OT monorepo already has its skills),
  * and a filesystem problem is logged, never thrown, so the settings mutation still succeeds. Both

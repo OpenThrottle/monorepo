@@ -13,7 +13,7 @@ export type PlanRunWorkspaceConfig = ReturnType<typeof loadPlanRunConfig>;
 
 /**
  * @description Inputs to {@link PlanRunWorkspaceService.prepare}. The OT Loop runner passes the
- * job payload and correlation plus the two `skip*` flags.
+ * job payload and correlation plus the `skipMcpPreflight` flag.
  */
 export interface PreparePlanRunWorkspaceParams {
   readonly correlation: WorkflowCorrelation | undefined;
@@ -26,8 +26,6 @@ export interface PreparePlanRunWorkspaceParams {
     ((worktree: ProvisionedPlanRunWorktree) => void) | undefined;
   /** True skips the MCP/.env preflight (the OT Loop worker uses no MCP). */
   readonly skipMcpPreflight: boolean;
-  /** True skips foreign-skill injection (the OT Loop worker uses no skills). */
-  readonly skipSkillInjection: boolean;
 }
 
 /** @description What a run needs once its workspace is ready. */
@@ -40,7 +38,10 @@ export interface PreparedPlanRunWorkspace {
   readonly agentConfigTrust: AgentConfigTrust;
   /** The repo's workflow config, with the OT root applied to the process env. */
   readonly config: PlanRunWorkspaceConfig;
-  /** Names of foreign OT skills materialized for this run; empty when none (or skipped). */
+  /**
+   * Names of OT skills materialized into the run's directory; empty when the checkout is not
+   * foreign, its base checkout is not opted in, or injection failed.
+   */
   readonly injectedSkillNames: readonly string[];
   /** The `plan_runs` row resolved from the correlation, or null when unresolved. */
   readonly run: PlanRun | null;
