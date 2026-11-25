@@ -38,10 +38,14 @@ the consumer to an internal path that is free to move. If something is not
 exported from `index.ts`, it is not public — re-export it there rather than
 reaching past it.
 
-**One barrel per package.** `src/index.ts` is the only barrel: never add a sub-folder
-`index.ts` (`src/utils/index.ts`) in a package, or a barrel anywhere in an application.
-Import the concrete file, and re-export public symbols from `src/index.ts` directly.
-Existing sub-folder barrels are legacy; do not add new ones.
+**One barrel per package.** A barrel is an `index.ts` that only imports and re-exports.
+`src/index.ts` is the only one: never add another, in a package's sub-folder or in an
+application. Import the concrete file, and re-export public symbols from `src/index.ts`
+directly. Existing barrels are legacy; do not add new ones.
+
+An `index.ts` that holds real code is not a barrel, and it is how a folder starts: put the
+first utils in `utils/index.ts`. Split them into subject files (`utils/formatters.ts`) only
+once it grows or clear subjects appear.
 
 Exports that are genuinely public API need a JSDoc `@public` tag so Knip does not
 report them as dead code.

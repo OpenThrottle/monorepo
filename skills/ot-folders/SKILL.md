@@ -144,7 +144,8 @@ is a package, and that is the whole test.
 - **Let the folder carry the kind.** A file never repeats its folder in its name: `utils/auth.ts`,
   not `utils/utils.auth.ts` or `utils/auth-utils.ts`. The mandated forms are the exception:
   `data.<name>.ts`, `mock.<name>.ts` and NestJS `<folder>.<kind>.ts`. Existing `utils.<x>.ts` files
-  are legacy; do not add new ones.
+  are legacy; do not add new ones. A folder's first code goes in its `index.ts`; split it into
+  subject files (`utils/formatters.ts`) once it grows ([the barrel rule](references/Packages.md#the-barrel-rule)).
 - **A component file's export name matches its file name.** The
   `component-primitive-shape` rule computes the expected name as the basename
   without extension — except for `index.tsx`/`index.ts`, where it resolves to the

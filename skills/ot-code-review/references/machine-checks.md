@@ -92,5 +92,5 @@ Honor-system rules deliberately left out of the catalog, with the reason.
 - **Conventional commits and the PR template**: Machine-checked by commitlint and the PR template; not a property of the diff.
 - **Server, GraphQL and NestJS conventions (resolver return types, deprecate-never-remove schema changes, entity and service testing)**: Owned by [`ot-stack`](https://github.com/openthrottle/monorepo/blob/main/skills/ot-stack/SKILL.md); schema removals are caught by `check-graphql-breaking-changes` and `check:local:graphql-schema`. Review those with that skill.
 - **`explicit-function-return-type` on every function**: Deliberately `off`; only module boundaries are warned (`exemplar-05`). Flagging inner functions would contradict the config.
-- **Existing enums, sub-folder barrels and `utils.<x>.ts` files**: Grandfathered or legacy; a diff that does not touch them is not a finding. Only new instances are (`place-09`, `naming-01`).
+- **Existing enums, re-export-only barrels and `utils.<x>.ts` files**: Grandfathered or legacy; a diff that does not touch them is not a finding. Only new instances are (`place-09`, `naming-01`).
 - **Cross-agent parity of MCP sets and permissions**: Machine-checked by `check:local:agent-config-parity`; the hand-edit symptom is `place-11`.
