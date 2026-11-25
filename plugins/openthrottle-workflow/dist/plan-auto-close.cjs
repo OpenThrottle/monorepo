@@ -205,7 +205,7 @@ var resolveAuthToken = (repoRoot, options) => {
   }) ?? "";
 };
 
-// packages/nodejs-utils/src/utils/isRecord.ts
+// packages/nodejs-utils/src/utils/guards.ts
 var isRecord = (value) => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 };

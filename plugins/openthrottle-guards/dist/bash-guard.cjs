@@ -47,6 +47,11 @@ var logHookError = (message, err) => {
   }
 };
 
+// packages/nodejs-utils/src/utils/guards.ts
+var isRecord = (value) => {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+};
+
 // packages/agentic-hooks/src/data/bash-guard/shell-words.ts
 var import_node_path = __toESM(require("node:path"), 1);
 var isBlank = (char) => {
@@ -447,13 +452,6 @@ var createFsGlobMatcher = (options = {
 
 // packages/agentic-hooks/src/data/bash-guard/gh-pr-lookup.ts
 var import_node_child_process = require("node:child_process");
-
-// packages/nodejs-utils/src/utils/isRecord.ts
-var isRecord = (value) => {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-};
-
-// packages/agentic-hooks/src/data/bash-guard/gh-pr-lookup.ts
 var GH_PR_LOOKUP_TIMEOUT_MS = 3e3;
 var UNKNOWN = { kind: "unknown" };
 var runFile = (file, args, { cwd, timeoutMs }) => {

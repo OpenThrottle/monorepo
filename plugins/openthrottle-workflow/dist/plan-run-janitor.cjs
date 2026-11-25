@@ -214,7 +214,7 @@ var resolveTelemetryDir = () => {
   return process.env.OPENTHROTTLE_TELEMETRY_DIR?.trim() || import_node_path2.default.join(userConfigDir(), TELEMETRY_DIR_BASENAME);
 };
 
-// packages/nodejs-utils/src/utils/isRecord.ts
+// packages/nodejs-utils/src/utils/guards.ts
 var isRecord = (value) => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 };

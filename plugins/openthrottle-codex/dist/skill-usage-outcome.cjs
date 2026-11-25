@@ -261,6 +261,18 @@ var startCorrelationKey = (entry) => {
   return `${sid}::${skill}::${disc}`;
 };
 
+// packages/nodejs-utils/src/utils/errors.ts
+var toErrorMessage = (error, fallback = void 0) => {
+  const message = error instanceof Error ? error.message : String(error);
+  const isBlank = message.trim().length === 0;
+  return fallback !== void 0 && isBlank ? fallback : message;
+};
+
+// packages/nodejs-utils/src/utils/guards.ts
+var isRecord = (value) => {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+};
+
 // packages/agentic-hooks/src/config/isTelemetryDisabled.ts
 var TELEMETRY_DISABLED_ENV_KEY = "OPENTHROTTLE_SKILL_USAGE_DISABLED";
 var isTruthy = (value) => {
@@ -276,11 +288,6 @@ var isTelemetryDisabled = () => {
   } catch {
     return false;
   }
-};
-
-// packages/nodejs-utils/src/utils/isRecord.ts
-var isRecord = (value) => {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 };
 
 // packages/agentic-hooks/src/data/graphql.ts
@@ -391,7 +398,7 @@ var postMutationOnce = async ({
     return {
       ok: false,
       permanent: isPermanentHttpStatus(response.status),
-      reason: `invalid json (${response.status}): ${err instanceof Error ? err.message : String(err)}`
+      reason: `invalid json (${response.status}): ${toErrorMessage(err)}`
     };
   }
   const errors = readGraphqlErrors(payload);
@@ -978,7 +985,7 @@ var persistOutcomeEvent = async ({
       logHookError("outcome jsonl append failed", appendErr);
     }
     return {
-      detail: err instanceof Error ? err.message : String(err),
+      detail: toErrorMessage(err),
       sink: "jsonl"
     };
   }

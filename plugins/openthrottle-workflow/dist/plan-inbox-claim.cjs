@@ -217,7 +217,14 @@ var sanitizeSessionId = (sessionId) => {
   return String(sessionId).replace(/[^A-Za-z0-9._-]/g, "-");
 };
 
-// packages/nodejs-utils/src/utils/isRecord.ts
+// packages/nodejs-utils/src/utils/errors.ts
+var toErrorMessage = (error, fallback = void 0) => {
+  const message = error instanceof Error ? error.message : String(error);
+  const isBlank = message.trim().length === 0;
+  return fallback !== void 0 && isBlank ? fallback : message;
+};
+
+// packages/nodejs-utils/src/utils/guards.ts
 var isRecord = (value) => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 };
@@ -330,7 +337,7 @@ var postMutationOnce = async ({
     return {
       ok: false,
       permanent: isPermanentHttpStatus(response.status),
-      reason: `invalid json (${response.status}): ${err instanceof Error ? err.message : String(err)}`
+      reason: `invalid json (${response.status}): ${toErrorMessage(err)}`
     };
   }
   const errors = readGraphqlErrors(payload);

@@ -530,6 +530,18 @@ var drainJsonlFileBatched = async ({
   });
 };
 
+// packages/nodejs-utils/src/utils/errors.ts
+var toErrorMessage = (error, fallback = void 0) => {
+  const message = error instanceof Error ? error.message : String(error);
+  const isBlank = message.trim().length === 0;
+  return fallback !== void 0 && isBlank ? fallback : message;
+};
+
+// packages/nodejs-utils/src/utils/guards.ts
+var isRecord = (value) => {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+};
+
 // packages/agentic-hooks/src/config/isTelemetryDisabled.ts
 var TELEMETRY_DISABLED_ENV_KEY = "OPENTHROTTLE_SKILL_USAGE_DISABLED";
 var isTruthy = (value) => {
@@ -545,11 +557,6 @@ var isTelemetryDisabled = () => {
   } catch {
     return false;
   }
-};
-
-// packages/nodejs-utils/src/utils/isRecord.ts
-var isRecord = (value) => {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 };
 
 // packages/agentic-hooks/src/data/checkpoints.ts
@@ -770,7 +777,7 @@ var postMutationOnce = async ({
     return {
       ok: false,
       permanent: isPermanentHttpStatus(response.status),
-      reason: `invalid json (${response.status}): ${err instanceof Error ? err.message : String(err)}`
+      reason: `invalid json (${response.status}): ${toErrorMessage(err)}`
     };
   }
   const errors = readGraphqlErrors(payload);
@@ -1500,7 +1507,7 @@ var persistOutcomeEvent = async ({
       logHookError("outcome jsonl append failed", appendErr);
     }
     return {
-      detail: err instanceof Error ? err.message : String(err),
+      detail: toErrorMessage(err),
       sink: "jsonl"
     };
   }
@@ -1590,7 +1597,7 @@ var persistTokenUsage = async ({
     logHookError("persistTokenUsage failed", err);
     return {
       ...tally,
-      detail: err instanceof Error ? err.message : String(err)
+      detail: toErrorMessage(err)
     };
   }
 };
@@ -2110,7 +2117,7 @@ var persistTrajectory = async (input, {
   } catch (err) {
     logHookError("persistTrajectory failed", err);
     return {
-      reason: err instanceof Error ? err.message : String(err),
+      reason: toErrorMessage(err),
       sink: "dropped"
     };
   }
@@ -2300,9 +2307,6 @@ var ACCOUNT_ERROR_KINDS = {
   billingError: "billing_error",
   permissionError: "permission_error"
 };
-var isRecord2 = (value) => {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-};
 var WIRE_ERROR_KINDS = {
   authentication_error: ACCOUNT_ERROR_KINDS.authenticationError,
   authentication_failed: ACCOUNT_ERROR_KINDS.authenticationError,
@@ -2314,7 +2318,7 @@ var STATUS_ERROR_KINDS = {
   403: ACCOUNT_ERROR_KINDS.permissionError
 };
 var kindOfWireError = (value) => {
-  const name = isRecord2(value) ? value.type : value;
+  const name = isRecord(value) ? value.type : value;
   if (typeof name !== "string") {
     return null;
   }
@@ -2322,12 +2326,12 @@ var kindOfWireError = (value) => {
 };
 var assistantText = (event) => {
   const message = event.message;
-  const content = isRecord2(message) ? message.content : void 0;
+  const content = isRecord(message) ? message.content : void 0;
   if (!Array.isArray(content)) {
     return null;
   }
   const text = content.filter((block) => {
-    return isRecord2(block) && block.type === "text";
+    return isRecord(block) && block.type === "text";
   }).map((block) => {
     return typeof block.text === "string" ? block.text : "";
   }).join("\n").trim();
@@ -2335,7 +2339,7 @@ var assistantText = (event) => {
 };
 var fromAssistant = (event) => {
   const message = event.message;
-  const kind = kindOfWireError(event.error) ?? (isRecord2(message) ? kindOfWireError(message.error) : null);
+  const kind = kindOfWireError(event.error) ?? (isRecord(message) ? kindOfWireError(message.error) : null);
   return kind === null ? null : { kind, message: assistantText(event) };
 };
 var fromResult = (event) => {
@@ -2349,7 +2353,7 @@ var fromResult = (event) => {
   return kind === null ? null : { kind, message: text === "" ? null : text };
 };
 var parseClaudeAccountError = (event) => {
-  if (!isRecord2(event)) {
+  if (!isRecord(event)) {
     return null;
   }
   if (event.type === "assistant") {
@@ -2361,16 +2365,13 @@ var parseClaudeAccountError = (event) => {
   return null;
 };
 var parseClaudeApiKeySource = (event) => {
-  if (!isRecord2(event) || event.type !== "system" || event.subtype !== "init") {
+  if (!isRecord(event) || event.type !== "system" || event.subtype !== "init") {
     return null;
   }
   return typeof event.apiKeySource === "string" ? event.apiKeySource : null;
 };
 
 // packages/openthrottle-drivers/src/utils/claude-output.ts
-var isRecord3 = (value) => {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-};
 var epochSecondsToIso = (value) => {
   if (typeof value !== "number" || !Number.isFinite(value)) {
     return null;
@@ -2379,7 +2380,7 @@ var epochSecondsToIso = (value) => {
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
 };
 var parseClaudeRateLimitInfo = (value) => {
-  if (!isRecord3(value) || value.status !== "rejected") {
+  if (!isRecord(value) || value.status !== "rejected") {
     return null;
   }
   return {
@@ -2388,7 +2389,7 @@ var parseClaudeRateLimitInfo = (value) => {
   };
 };
 var isClaudeUsageLimitResult = (event) => {
-  return isRecord3(event) && event.type === "result" && event.is_error === true && event.api_error_status === 429;
+  return isRecord(event) && event.type === "result" && event.is_error === true && event.api_error_status === 429;
 };
 
 // packages/openthrottle-agentic-utils/src/utils/conversation-backend/types.ts
@@ -2642,13 +2643,10 @@ var CLAUDE_ACTIVE_CREDENTIALS = {
 };
 var API_KEY_ENV_NAME = "ANTHROPIC_API_KEY";
 var CLAUDE_AI_AUTH_METHOD = "claude.ai";
-function isRecord4(value) {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
 function readRecord(stdout) {
   try {
     const parsed = JSON.parse(stdout);
-    return isRecord4(parsed) ? parsed : null;
+    return isRecord(parsed) ? parsed : null;
   } catch {
     return null;
   }
