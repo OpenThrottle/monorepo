@@ -13,7 +13,7 @@ Platform-specific prebuilt binaries (packages that declare `os`/`cpu`, e.g.
 `@rollup/rollup-linux-x64-gnu`, `fsevents`) are omitted: which ones install depends on
 the host OS, and each shares the license of the cross-platform toolchain already listed.
 
-**2053** third-party packages.
+**2055** third-party packages.
 
 ## License summary
 
@@ -28,6 +28,7 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | Unlicense | 4 |
 | (WTFPL OR MIT) | 2 |
 | LicenseRef-PolyForm-Shield-1.0.0 | 2 |
+| OFL-1.1 | 2 |
 | (AFL-2.1 OR BSD-3-Clause) | 1 |
 | (Apache-2.0 AND BSD-3-Clause) | 1 |
 | (Apache-2.0 OR MPL-1.1) | 1 |
@@ -260,6 +261,8 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@floating-ui/dom` | 1.8.0 | MIT | [atomiks](https://floating-ui.com) |
 | `@floating-ui/react-dom` | 2.1.9 | MIT | [atomiks](https://floating-ui.com/docs/react-dom) |
 | `@floating-ui/utils` | 0.2.12 | MIT | [atomiks](https://floating-ui.com) |
+| `@fontsource/inter` | 5.3.0 | OFL-1.1 | [Google Inc.](https://fontsource.org/fonts/inter) |
+| `@fontsource/jetbrains-mono` | 5.3.0 | OFL-1.1 | [Google Inc.](https://fontsource.org/fonts/jetbrains-mono) |
 | `@golevelup/ts-vitest` | 4.0.1 | MIT | [Jesse Carter](https://github.com/golevelup/nestjs#readme) |
 | `@google-cloud/paginator` | 5.0.2 | Apache-2.0 | [Google Inc.](https://github.com/googleapis/nodejs-paginator#readme) |
 | `@google-cloud/projectify` | 4.0.0 | Apache-2.0 | [Google Inc.](https://github.com/googleapis/nodejs-projectify#readme) |

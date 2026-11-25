@@ -126,6 +126,27 @@ describe('blog-seo', () => {
       );
     });
 
+    describe('cover image alt text', () => {
+      test('uses the cover alt so the root share alt is overridden', () => {
+        const meta = buildBlogPostMeta(MOCK_BLOG_POST_DETAIL);
+        const alt = MOCK_BLOG_POST_DETAIL.coverImageAlt;
+
+        expect(findContent(meta, 'property', 'og:image:alt')).toBe(alt);
+        expect(findContent(meta, 'name', 'twitter:image:alt')).toBe(alt);
+      });
+
+      test('falls back to the post title when the cover has no alt', () => {
+        const meta = buildBlogPostMeta({
+          ...MOCK_BLOG_POST_DETAIL,
+          coverImageAlt: null,
+        });
+
+        expect(findContent(meta, 'property', 'og:image:alt')).toBe(
+          MOCK_BLOG_POST_DETAIL.title,
+        );
+      });
+    });
+
     test('omits og:image and the published time when the post has neither', () => {
       const meta = buildBlogPostMeta({
         ...MOCK_BLOG_POST_DETAIL,

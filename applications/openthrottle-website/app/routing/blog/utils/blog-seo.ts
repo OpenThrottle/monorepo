@@ -24,6 +24,11 @@ interface BlogPageMetaConfig {
   readonly description: string;
   /** Absolute image URL; omitted so the root share image is inherited. */
   readonly image: string | null | undefined;
+  /**
+   * Alt text for `image`. It must be set whenever `image` is: otherwise the
+   * root's share image alt is inherited and describes the wrong picture.
+   */
+  readonly imageAlt: string | null;
   readonly pathname: string;
   /** ISO timestamp; only set on article pages. */
   readonly publishedTime: string | null;
@@ -43,7 +48,8 @@ const buildBlogFeedLink = (): MetaDescriptor => {
 };
 
 const buildBlogPageMeta = (config: BlogPageMetaConfig): MetaDescriptor[] => {
-  const { description, image, pathname, publishedTime, title, type } = config;
+  const { description, image, imageAlt, pathname, publishedTime, title, type } =
+    config;
 
   return [
     ...buildSeoMeta({
@@ -52,7 +58,7 @@ const buildBlogPageMeta = (config: BlogPageMetaConfig): MetaDescriptor[] => {
       title,
       type,
       url: buildCanonicalUrl(pathname),
-      ...(image ? { image } : {}),
+      ...(image ? { image, imageAlt: imageAlt ?? title } : {}),
     }),
     canonicalMeta(pathname),
     buildBlogFeedLink(),
@@ -67,6 +73,7 @@ export const buildBlogIndexMeta = (): MetaDescriptor[] => {
   return buildBlogPageMeta({
     description: BLOG_COPY.routes.index.description,
     image: null,
+    imageAlt: null,
     pathname: BLOG_BASE_PATH,
     publishedTime: null,
     title: `${BLOG_COPY.routes.index.title} | ${SITE_TITLE}`,
@@ -81,6 +88,7 @@ export const buildBlogTagMeta = (
   return buildBlogPageMeta({
     description: tag.description || BLOG_COPY.routes.tag.description(tag.name),
     image: null,
+    imageAlt: null,
     pathname: buildBlogTagPath(tag.slug),
     publishedTime: null,
     title: `${BLOG_COPY.routes.tag.title(tag.name)} | ${SITE_TITLE}`,
@@ -101,6 +109,7 @@ export const buildBlogPostMeta = (
     description:
       post.seoDescription || post.excerpt || BLOG_COPY.routes.index.description,
     image: post.coverImageUrl,
+    imageAlt: post.coverImageAlt || post.title,
     pathname: buildBlogPostPath(post.slug),
     publishedTime: toBlogIsoDate(post.publishedAt),
     title: post.seoTitle || `${post.title} | ${SITE_TITLE}`,

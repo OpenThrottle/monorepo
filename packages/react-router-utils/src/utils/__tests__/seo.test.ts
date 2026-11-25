@@ -76,6 +76,46 @@ describe('buildSeoMeta', () => {
       withoutImage.some((m) => 'property' in m && m.property === 'og:image'),
     ).toBe(false);
   });
+
+  describe('image alt text', () => {
+    test('emits og:image:alt and twitter:image:alt with an image', () => {
+      const meta = buildSeoMeta({
+        description: 'D',
+        image: 'https://openthrottle.ai/og.png',
+        imageAlt: 'The hero',
+        title: 'T',
+      });
+
+      expect(meta).toContainEqual({
+        content: 'The hero',
+        property: 'og:image:alt',
+      });
+      expect(meta).toContainEqual({
+        content: 'The hero',
+        name: 'twitter:image:alt',
+      });
+    });
+
+    test('emits no alt tags without an image', () => {
+      const meta = buildSeoMeta({
+        description: 'D',
+        imageAlt: 'The hero',
+        title: 'T',
+      });
+
+      expect(JSON.stringify(meta)).not.toContain('image:alt');
+    });
+
+    test('emits no alt tags without alt text', () => {
+      const meta = buildSeoMeta({
+        description: 'D',
+        image: 'https://openthrottle.ai/og.png',
+        title: 'T',
+      });
+
+      expect(JSON.stringify(meta)).not.toContain('image:alt');
+    });
+  });
 });
 
 describe('JSON-LD builders', () => {

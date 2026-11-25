@@ -18,6 +18,7 @@ import {
   isLandedFeature,
   isUpcomingFeature,
 } from './features';
+import { renderHeroAlt } from './hero-graphic';
 import { escapeXml, renderStatsAlt } from './stats-graphic';
 
 const ORG_PROFILE_COLUMNS = 3;
@@ -142,7 +143,7 @@ export const replaceMarkedSection = (
 
 const renderOrgProfileHeader = (input: SurfaceInput): string[] => {
   const { repositoryUrl, websiteUrl } = input;
-  const alt = `OpenThrottle: ${input.positioning.tagline.short}`;
+  const alt = renderHeroAlt(input.positioning);
 
   return [
     '<p align="center">',
