@@ -1,4 +1,5 @@
-@import './commander.css';
+/* Layered so Tailwind utilities on the Command* primitives beat these defaults. */
+@import './commander.css' layer(components);
 
 /**
 * Theme-only entry: CSS variables and Tailwind @theme mapping.

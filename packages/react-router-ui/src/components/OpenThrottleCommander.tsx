@@ -174,7 +174,7 @@ export const OpenThrottleCommander = (
         value={search}
       />
 
-      <CommandList className="m-0! p-0! pt-4!">
+      <CommandList className="m-0! max-h-[400px] p-0! pt-4!">
         {groups.map((group, groupIndex) => (
           <React.Fragment key={group.heading}>
             {groupIndex > 0 ? (

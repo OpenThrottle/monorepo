@@ -28,7 +28,7 @@ export const CommandInput = React.forwardRef<
   return (
     <CmdkCommandInput
       className={cn(
-        'border-input bg-background ring-offset-background placeholder:text-muted-foreground focus:ring-ring flex w-full rounded-md border text-sm focus:ring-2 focus:ring-offset-0 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50',
+        'bg-background border-border placeholder:text-muted-foreground flex w-full border-b px-3 py-2.5 text-sm outline-none disabled:cursor-not-allowed disabled:opacity-50',
         className,
       )}
       ref={ref}

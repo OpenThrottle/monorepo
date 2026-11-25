@@ -28,7 +28,7 @@ export const CommandItem = React.forwardRef<
   return (
     <CmdkCommandItem
       className={cn(
-        'data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground relative flex cursor-default items-center rounded-sm px-2 py-1.5 text-sm outline-none select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50',
+        'data-[selected=true]:bg-muted data-[selected=true]:text-foreground relative flex cursor-default items-center rounded-sm px-2 py-1.5 text-sm outline-none select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50',
         className,
       )}
       ref={ref}

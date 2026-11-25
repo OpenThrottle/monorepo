@@ -136,7 +136,10 @@ export const ChatCheckoutSelectorRow = (
 
   return (
     <CommandItem
-      className="overflow-hidden"
+      className={cn(
+        'items-start gap-2 overflow-hidden py-2',
+        nested ? 'pl-5' : null,
+      )}
       data-kind={
         isWorktree ? CHAT_CHECKOUT_KIND.worktree : CHAT_CHECKOUT_KIND.primary
       }
@@ -147,37 +150,26 @@ export const ChatCheckoutSelectorRow = (
       onSelect={() => onSelect(id)}
       value={id}
     >
-      {/* Layout lives on this wrapper, not the item: the shadcn package's
-          unlayered `[cmdk-item]` rule (commander.css) sets padding and
-          align-items, and unlayered CSS beats Tailwind utilities — `pl-*`,
-          `py-*` and `items-start` on the item are silently dropped. */}
-      <div
-        className={cn(
-          'flex w-full min-w-0 items-start gap-2 py-2',
-          nested ? 'pl-5' : null,
-        )}
-      >
-        <KindIcon
-          aria-hidden={!isWorktree}
-          aria-label={isWorktree ? CHAT_CHECKOUT_ROW_COPY.worktree : undefined}
-          className="text-muted-foreground mt-0.5 size-4 shrink-0"
-        />
-        <span className="flex min-w-0 flex-1 flex-col gap-1">
-          <span className="flex min-w-0 items-center gap-2">
-            <span className="truncate">{label}</span>
-            {showPrimary ? primaryNode : null}
-            {showContext ? contextNode : null}
-          </span>
-          {hasBranch ? branchNode : null}
-          {location === undefined ? null : locationNode}
+      <KindIcon
+        aria-hidden={!isWorktree}
+        aria-label={isWorktree ? CHAT_CHECKOUT_ROW_COPY.worktree : undefined}
+        className="text-muted-foreground mt-0.5 size-4 shrink-0"
+      />
+      <span className="flex min-w-0 flex-1 flex-col gap-1">
+        <span className="flex min-w-0 items-center gap-2">
+          <span className="truncate">{label}</span>
+          {showPrimary ? primaryNode : null}
+          {showContext ? contextNode : null}
         </span>
-        <Check
-          className={cn(
-            'mt-0.5 size-4 shrink-0',
-            isSelected ? 'opacity-100' : 'opacity-0',
-          )}
-        />
-      </div>
+        {hasBranch ? branchNode : null}
+        {location === undefined ? null : locationNode}
+      </span>
+      <Check
+        className={cn(
+          'mt-0.5 size-4 shrink-0',
+          isSelected ? 'opacity-100' : 'opacity-0',
+        )}
+      />
     </CommandItem>
   );
 };
