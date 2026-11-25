@@ -2,7 +2,7 @@
  * @description Resolver for Project queries and mutations. Injects ProjectsRepository from @openthrottle/nestjs-repositories-server and ProjectsLoaders. ResolveField for plans and tasks use ProjectsLoaders to avoid N+1.
  */
 
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, UseGuards } from '@nestjs/common';
 import {
   Args,
   ID,
@@ -12,12 +12,15 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
+import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
+import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { assertPagination } from '@openthrottle/nestjs-graphql';
 import {
   hasNextPage,
   PAGINATION_DEFAULT_LIMIT,
   PAGINATION_MAX_LIMIT,
 } from '@openthrottle/nestjs-postgres';
+import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
 import type {
   Plan,
   Project,
@@ -29,8 +32,11 @@ import {
   ProjectRepositoriesRepository,
   ProjectsRepository,
   RepositoriesRepository,
+  UserFavoriteProjectsRepository,
 } from '@openthrottle/nestjs-repositories-server';
+import { GraphQLError } from 'graphql';
 
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { PlanProjectMembershipService } from '../../services/plan-project-membership/plan-project-membership.service.ts';
 import { PlanObject } from '../plans/plan.object.ts';
 import { TaskObject } from '../tasks/task.object.ts';
@@ -49,6 +55,7 @@ import {
   UpdateProjectInput,
 } from './project.input.ts';
 import { ProjectObject } from './project.object.ts';
+import { SetProjectFavoriteResult } from './project-favorite.object.ts';
 import { ProjectPlansPageResultObject } from './project-plans-page.object.ts';
 import { ProjectRepositoryObject } from './project-repository.object.ts';
 
@@ -61,7 +68,26 @@ export class ProjectsResolver {
     private readonly projectRepositoriesRepository: ProjectRepositoriesRepository,
     private readonly projectsRepository: ProjectsRepository,
     private readonly repositoriesRepository: RepositoriesRepository,
+    private readonly userFavoriteProjectsRepository: UserFavoriteProjectsRepository,
   ) {}
+
+  @ResolveField(() => Boolean, {
+    description: `Whether the current user has starred this project. False when unauthenticated. Clients sort starred projects first; list queries do not reorder.`,
+  })
+  async isFavorite(
+    @Parent() parent: Project,
+    @CurrentUser() principal: AuthPrincipal | undefined,
+  ): Promise<boolean> {
+    if (principal == null) {
+      return false;
+    }
+
+    const favoriteIds =
+      await this.projectRelationLoaders.favoriteProjectIdsByUserIdLoader.load(
+        principal.sub,
+      );
+    return favoriteIds.has(parent.id);
+  }
 
   // @ProfileResponseTime('ProjectsResolver.repositories')
   @ResolveField(() => [RepositoryObject], {
@@ -296,5 +322,39 @@ export class ProjectsResolver {
       input.projectId,
       input.planIds,
     );
+  }
+
+  // @ProfileResponseTime('ProjectsResolver.setProjectFavorite')
+  @Mutation(() => SetProjectFavoriteResult, {
+    description: `Star or unstar a project for the current user. Idempotent: starring a starred project or unstarring an unstarred one succeeds unchanged. Presence-as-favorite: favorite=true records the star, favorite=false clears it. Gated by SETTINGS_WRITE (projects have no permission of their own); fails with NOT_FOUND when the project does not exist.`,
+  })
+  @UseGuards(GqlPermissionsGuard)
+  @Permissions(PERMISSIONS.SETTINGS_WRITE)
+  async setProjectFavorite(
+    @CurrentUser() principal: AuthPrincipal | undefined,
+    @Args('projectId', { type: () => ID }) projectId: string,
+    @Args('favorite', { type: () => Boolean }) favorite: boolean,
+  ): Promise<SetProjectFavoriteResult> {
+    if (principal == null) {
+      throw new GraphQLError('An authenticated user is required.', {
+        extensions: { code: 'FORBIDDEN' },
+      });
+    }
+
+    const project = await this.projectsRepository.findOne({
+      where: { id: projectId },
+    });
+    if (!project) {
+      throw new GraphQLError(`Project not found: ${projectId}`, {
+        extensions: { code: 'NOT_FOUND' },
+      });
+    }
+
+    await this.userFavoriteProjectsRepository.setProjectFavorite(
+      principal.sub,
+      projectId,
+      favorite,
+    );
+    return { favorite, projectId };
   }
 }

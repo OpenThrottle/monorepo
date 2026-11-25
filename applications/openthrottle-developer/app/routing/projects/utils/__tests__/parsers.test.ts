@@ -17,6 +17,7 @@ function apiProject(
     __typename: 'ProjectObject',
     createdAt: '2024-01-01T00:00:00.000Z',
     description: null,
+    isFavorite: false,
     nxProjectName: null,
     plans: null,
     tasks: null,
@@ -30,12 +31,14 @@ describe('parseProjectWithStats', () => {
     const input = apiProject({
       description: 'Desc',
       id: 'p-1',
+      isFavorite: false,
       name: 'My project',
     });
     const result = parseProjectWithStats(input);
     expect(result).toMatchObject({
       description: 'Desc',
       id: 'p-1',
+      isFavorite: false,
       lastActivityAt: null,
       name: 'My project',
       planCount: null,
@@ -50,6 +53,7 @@ describe('parseProjectsBySearch', () => {
       createdAt: null,
       description: 'Contains FOOBAR in description',
       id: '1',
+      isFavorite: false,
       lastActivityAt: null,
       name: 'Alpha',
       nxProjectName: null,
@@ -63,6 +67,7 @@ describe('parseProjectsBySearch', () => {
       createdAt: null,
       description: null,
       id: '2',
+      isFavorite: false,
       lastActivityAt: null,
       name: 'Other',
       nxProjectName: 'packages/foo-bar',

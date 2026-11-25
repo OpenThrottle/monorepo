@@ -499,6 +499,7 @@ query PlanDetailProjectOptions {
 
 fragment PlanProjectOption on ProjectObject {
   id
+  isFavorite
   name
 }
 

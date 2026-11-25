@@ -176,4 +176,74 @@ describe('Combobox', () => {
       );
     });
   });
+
+  describe('when options carry a group', () => {
+    const groupedOptions = [
+      { group: 'Starred', label: 'Website', value: 'website' },
+      { group: 'All projects', label: 'Admin', value: 'admin' },
+      { group: 'Starred', label: 'Developer', value: 'developer' },
+    ];
+
+    const openGrouped = async (): Promise<HTMLElement> => {
+      const user = userEvent.setup();
+      const component = render(
+        <Combobox
+          options={[
+            ...groupedOptions,
+            {
+              group: 'All projects',
+              icon: <svg data-testid="ProjectIcon" />,
+              label: 'Email',
+              value: 'email',
+            },
+          ]}
+        />,
+      );
+      await user.click(component.getByRole('combobox'));
+
+      return component.findByRole('listbox');
+    };
+
+    it('lists groups in first-appearance order under their headings', async () => {
+      const listbox = await openGrouped();
+      const groups = listbox.querySelectorAll('[cmdk-group]');
+      const headings = [...groups].map((group) => {
+        return group.querySelector('[cmdk-group-heading]')?.textContent;
+      });
+
+      expect(headings).toEqual(['Starred', 'All projects']);
+      expect(groups[0]).toHaveTextContent('WebsiteDeveloper');
+      expect(listbox.querySelectorAll('[cmdk-separator]')).toHaveLength(1);
+    });
+
+    it('renders an option icon', async () => {
+      const listbox = await openGrouped();
+
+      expect(
+        listbox.querySelector('[data-testid="ProjectIcon"]'),
+      ).toBeInTheDocument();
+    });
+
+    it('hides a group with no match while searching', async () => {
+      const user = userEvent.setup();
+      const component = render(<Combobox options={groupedOptions} />);
+      await user.click(component.getByRole('combobox'));
+      const input = await component.findByRole('combobox', {
+        name: (_name, element) => element.hasAttribute('cmdk-input'),
+      });
+
+      await user.type(input, 'Admin');
+
+      await waitFor(() => {
+        const visibleHeadings = [
+          ...component.baseElement.querySelectorAll('[cmdk-group]'),
+        ]
+          .filter((group) => !group.hasAttribute('hidden'))
+          .map((group) => {
+            return group.querySelector('[cmdk-group-heading]')?.textContent;
+          });
+        expect(visibleHeadings).toEqual(['All projects']);
+      });
+    });
+  });
 });

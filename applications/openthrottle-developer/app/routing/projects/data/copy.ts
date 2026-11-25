@@ -15,6 +15,12 @@ export const PROJECTS_ROW_ACTIONS_COPY = {
   view: `View project`,
 } as const;
 
+/** Fallback names for a project row whose name is missing. */
+export const PROJECTS_TABLE_COPY = {
+  untitled: `Untitled`,
+  untitledProject: `Untitled project`,
+} as const;
+
 export const PROJECT_REPOSITORIES_COPY = {
   addButton: `Link`,
   addLabel: `Link a repository`,
@@ -100,4 +106,10 @@ export const PROJECT_DELETE_COPY = {
   description: `Removes the project from your workspace. Its plans are kept and become unassigned.`,
   heading: `Delete project`,
   trigger: `Delete project`,
+} as const;
+
+export const PROJECT_FAVORITE_COPY = {
+  missingProject: `Missing project id.`,
+  starLabelPrefix: `Star project`,
+  unstarLabelPrefix: `Unstar project`,
 } as const;

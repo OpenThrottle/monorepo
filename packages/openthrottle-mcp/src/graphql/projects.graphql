@@ -6,6 +6,7 @@
 fragment McpProjectSummary on ProjectObject {
   description
   id
+  isFavorite
   name
   plans {
     id

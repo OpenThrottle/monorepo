@@ -2,6 +2,7 @@ fragment ProjectCard on ProjectObject {
   createdAt
   description
   id
+  isFavorite
   name
   nxProjectName
   plans {
@@ -17,5 +18,12 @@ fragment ProjectCard on ProjectObject {
 query getProjects {
   projects {
     ...ProjectCard
+  }
+}
+
+mutation ProjectSetFavorite($favorite: Boolean!, $projectId: ID!) {
+  setProjectFavorite(favorite: $favorite, projectId: $projectId) {
+    favorite
+    projectId
   }
 }

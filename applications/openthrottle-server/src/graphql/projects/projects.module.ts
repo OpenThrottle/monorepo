@@ -8,9 +8,12 @@ import {
   ProjectRepositoriesModule,
   ProjectsModule,
   RepositoriesModule,
+  RolesModule,
   TasksModule,
+  UserFavoriteProjectsModule,
 } from '@openthrottle/nestjs-repositories-server';
 
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { PlanProjectMembershipModule } from '../../services/plan-project-membership/plan-project-membership.module.ts';
 import { ProjectsLoaders } from './loaders/loaders.service.ts';
 import { ProjectsResolver } from './projects.resolver.ts';
@@ -22,8 +25,10 @@ import { ProjectsResolver } from './projects.resolver.ts';
     ProjectRepositoriesModule,
     ProjectsModule,
     RepositoriesModule,
+    RolesModule,
     TasksModule,
+    UserFavoriteProjectsModule,
   ],
-  providers: [ProjectsLoaders, ProjectsResolver],
+  providers: [GqlPermissionsGuard, ProjectsLoaders, ProjectsResolver],
 })
 export class ProjectsGraphqlModule {}

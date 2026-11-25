@@ -217,7 +217,7 @@ Two caveats:
   an unexpanded `${...}` placeholder is treated as unset, so a client that does not know the
   variable falls back to the cwd rather than sending the literal.
 
-> **When to set `project`/`projectId`:** set `projectId` to file the plan under a project (a cross-repo initiative); never set the free-text `project` label. To resolve a project by name, call `list_projects` with `name` (a case-insensitive substring), then pass the returned `id` as `projectId` to `create_plan` — or call `add_plan_to_project` for a plan that already exists. `get_project` reads one project by id; `create_project` and `update_project` are in the `admin` toolset, and project names are not unique, so look before you create.
+> **When to set `project`/`projectId`:** set `projectId` to file the plan under a project (a cross-repo initiative); never set the free-text `project` label. To resolve a project by name, call `list_projects` with `name` (a case-insensitive substring), then pass the returned `id` as `projectId` to `create_plan` — or call `add_plan_to_project` for a plan that already exists. `list_projects` lists the projects you starred in the developer app first (`isFavorite: true`), so your usual projects lead the list. `get_project` reads one project by id; `create_project` and `update_project` are in the `admin` toolset, and project names are not unique, so look before you create.
 
 ### Create many plans atomically — `create_plans`
 

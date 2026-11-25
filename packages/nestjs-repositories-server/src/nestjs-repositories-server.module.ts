@@ -54,6 +54,7 @@ import { TasksModule } from './modules/tasks/tasks.module.ts';
 import { TelemetryHeartbeatsModule } from './modules/telemetry-heartbeats/telemetry-heartbeats.module.ts';
 import { UserDisabledAgentClisModule } from './modules/user-disabled-agent-clis/user-disabled-agent-clis.module.ts';
 import { UserFavoriteAgentModelsModule } from './modules/user-favorite-agent-models/user-favorite-agent-models.module.ts';
+import { UserFavoriteProjectsModule } from './modules/user-favorite-projects/user-favorite-projects.module.ts';
 import { UserPreferencesModule } from './modules/user-preferences/user-preferences.module.ts';
 import { UserWorkspaceSettingsModule } from './modules/user-workspace-settings/user-workspace-settings.module.ts';
 import { UsersModule } from './modules/users/users.module.ts';
@@ -126,6 +127,7 @@ import { WorktreeRemovalsModule } from './modules/worktree-removals/worktree-rem
     TelemetryHeartbeatsModule,
     UserDisabledAgentClisModule,
     UserFavoriteAgentModelsModule,
+    UserFavoriteProjectsModule,
     UserPreferencesModule,
     UserWorkspaceSettingsModule,
     UsersModule,
@@ -189,6 +191,7 @@ import { WorktreeRemovalsModule } from './modules/worktree-removals/worktree-rem
     TelemetryHeartbeatsModule,
     UserDisabledAgentClisModule,
     UserFavoriteAgentModelsModule,
+    UserFavoriteProjectsModule,
     UserPreferencesModule,
     UserWorkspaceSettingsModule,
     UsersModule,

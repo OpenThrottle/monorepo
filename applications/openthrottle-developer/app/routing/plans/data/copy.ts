@@ -742,11 +742,13 @@ export const PLAN_WORKFLOW_CONFIG_TARGET_COPY = {
  */
 export const PLAN_PROJECT_COPY = {
   add: `Add to project`,
+  allGroup: `All projects`,
   badgeAriaPrefix: `Project:`,
   change: `Move`,
+  current: `Current`,
   empty: `No projects match.`,
   loading: `Loading projects…`,
-  noOtherProjects: `No other projects yet.`,
   remove: `Remove from project`,
   search: `Search projects…`,
+  starredGroup: `Starred`,
 } as const;

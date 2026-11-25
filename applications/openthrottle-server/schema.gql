@@ -676,6 +676,11 @@ type ProjectObject {
   tasks: [TaskObject!]
   updatedAt: DateTime!
 
+  """
+  Whether the current user has starred this project. False when unauthenticated. Clients sort starred projects first; list queries do not reorder.
+  """
+  isFavorite: Boolean!
+
   """Tags attached to this project, alphabetically by tag."""
   tags: [ProjectTagObject!]!
 }
@@ -4109,6 +4114,17 @@ type ProjectSkillsResult {
   Slugs ingested previously that are no longer on disk. Suggest an explicit removeProjectSkill; ingest does not delete these rows.
   """
   orphanSlugs: [String!]!
+}
+
+"""
+Result of setProjectFavorite: the current user's star state for one project after the toggle.
+"""
+type SetProjectFavoriteResult {
+  """The star state after the toggle: true = starred, false = not starred."""
+  favorite: Boolean!
+
+  """The project whose star state was toggled."""
+  projectId: ID!
 }
 
 type ProjectPlansPageResultObject {
@@ -8528,6 +8544,11 @@ type Mutation {
   Reorder the plans of a project. The listed plans take the projectSortOrder values they already hold, in planIds order; plans not listed keep their place. A full list reorders the whole project; a partial list (e.g. one page) reorders only itself, in place. Atomic. Returns every live plan of the project in the new order.
   """
   reorderProjectPlans(input: ReorderProjectPlansInput!): [PlanObject!]!
+
+  """
+  Star or unstar a project for the current user. Idempotent: starring a starred project or unstarring an unstarred one succeeds unchanged. Presence-as-favorite: favorite=true records the star, favorite=false clears it. Gated by SETTINGS_WRITE (projects have no permission of their own); fails with NOT_FOUND when the project does not exist.
+  """
+  setProjectFavorite(projectId: ID!, favorite: Boolean!): SetProjectFavoriteResult!
 
   """Create a role"""
   createRole(input: CreateRoleInput!): RoleObject!

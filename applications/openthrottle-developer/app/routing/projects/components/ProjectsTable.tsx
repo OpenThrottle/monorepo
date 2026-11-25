@@ -10,8 +10,12 @@ import * as React from 'react';
 import { Link } from 'react-router';
 
 import type { ProjectCardFragment } from '~/__generated__/graphql';
+import { ProjectFavorite } from '~/routing/projects/components/ProjectFavorite';
 import { ProjectsEmpty } from '~/routing/projects/components/ProjectsEmpty';
-import { PROJECTS_ROW_ACTIONS_COPY } from '~/routing/projects/data/copy';
+import {
+  PROJECTS_ROW_ACTIONS_COPY,
+  PROJECTS_TABLE_COPY,
+} from '~/routing/projects/data/copy';
 import { getProjectPlanProgress } from '~/routing/projects/utils/projectPlans';
 
 export interface ProjectsTableProps {
@@ -58,11 +62,28 @@ ProjectsTable.buildTable = (): DataTableColumnDef<
 >[] => {
   return [
     {
+      accessorKey: 'isFavorite',
+      cell: ({ row }) => {
+        const project = row.original;
+
+        return (
+          <div className="flex items-center justify-center p-2">
+            <ProjectFavorite
+              favorite={project.isFavorite}
+              projectId={project.id}
+              projectName={project.name ?? PROJECTS_TABLE_COPY.untitled}
+            />
+          </div>
+        );
+      },
+      header: () => <div className="p-2" />,
+    },
+    {
       accessorKey: 'details',
       cell: ({ row }) => {
         const project = row.original;
         const projectHref = `/projects/${project.id}`;
-        const name = project.name ?? 'Untitled';
+        const name = project.name ?? PROJECTS_TABLE_COPY.untitled;
 
         return (
           <div className="w-full flex-1 overflow-hidden p-4 py-2">
@@ -109,7 +130,7 @@ ProjectsTable.buildTable = (): DataTableColumnDef<
       accessorKey: 'actions',
       cell: ({ row }) => {
         const project = row.original;
-        const name = project.name ?? 'Untitled project';
+        const name = project.name ?? PROJECTS_TABLE_COPY.untitledProject;
         const actions: GlobalPopoverAction[] = [
           {
             id: 'view',

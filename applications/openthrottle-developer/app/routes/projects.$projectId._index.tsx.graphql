@@ -2,6 +2,7 @@ fragment ProjectPageDetails on ProjectObject {
   createdAt
   description
   id
+  isFavorite
   name
   repositories {
     ...ProjectRepositoryRow

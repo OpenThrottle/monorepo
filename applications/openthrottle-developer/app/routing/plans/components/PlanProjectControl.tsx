@@ -1,12 +1,23 @@
+import type { ComboboxOption } from '@openthrottle/react-router-shadcn';
 import { Badge, Button, cn, Combobox } from '@openthrottle/react-router-shadcn';
-import { FolderGit2Icon, XIcon } from 'lucide-react';
+import {
+  FolderGit2Icon,
+  FolderInputIcon,
+  FolderPlusIcon,
+  StarIcon,
+  XIcon,
+} from 'lucide-react';
 import * as React from 'react';
 import { Link, useFetcher } from 'react-router';
 
-import type { ProjectDetailsFragment } from '~/__generated__/graphql';
+import type {
+  PlanProjectOptionFragment,
+  ProjectDetailsFragment,
+} from '~/__generated__/graphql';
 import { PLAN_PROJECT_COPY } from '~/routing/plans/data/copy';
 import { usePlanDeferredValue } from '~/routing/plans/hooks/usePlanDeferredValue';
 import { usePlanDetailRouteData } from '~/routing/plans/hooks/usePlanDetailRouteData';
+import { groupProjectPickerOptions } from '~/routing/plans/utils/groupProjectPickerOptions';
 
 export interface PlanProjectControlProps {
   readonly className?: string;
@@ -17,7 +28,9 @@ export interface PlanProjectControlProps {
 /**
  * @description The plan header's project slot: a badge linking to the plan's
  * project, a picker that adds the plan to a project (or moves it to another,
- * landing at the end of that project's order), and a remove button. Posts
+ * landing at the end of that project's order), and a remove button. The picker
+ * lists the user's starred projects first, then every other project, each by
+ * name; the current project is marked and picking it does nothing. Posts
  * `assignPlanProject` / `removePlanProject` to the plan route action. Picker
  * candidates come from the route's deferred `projects` loader key.
  */
@@ -35,18 +48,17 @@ export const PlanProjectControl = (
   // Setup
   const isPending = fetcher.state !== 'idle';
   const isLoading = options === undefined;
-  const candidates = (options ?? [])
-    .filter((option) => option.id !== project?.id)
-    .map((option) => ({ label: option.name, value: option.id }));
+  const { others, starred } = groupProjectPickerOptions(options ?? []);
   const triggerLabel = project
     ? PLAN_PROJECT_COPY.change
     : PLAN_PROJECT_COPY.add;
-  const emptyText = project
-    ? PLAN_PROJECT_COPY.noOtherProjects
-    : PLAN_PROJECT_COPY.empty;
+  const TriggerIcon = project ? FolderInputIcon : FolderPlusIcon;
 
   // Handlers
   const handleAssign = (projectId: string): void => {
+    if (projectId === project?.id) {
+      return;
+    }
     fetcher.submit(
       { intent: 'assignPlanProject', projectId },
       { method: 'post' },
@@ -57,6 +69,46 @@ export const PlanProjectControl = (
   };
 
   // Markup
+  const starredIcon = (
+    <StarIcon
+      aria-hidden={true}
+      className="size-4 shrink-0 fill-yellow-400 text-yellow-400"
+    />
+  );
+  const projectIcon = (
+    <FolderGit2Icon
+      aria-hidden={true}
+      className="text-muted-foreground size-4 shrink-0"
+    />
+  );
+  const toOption = (
+    option: PlanProjectOptionFragment,
+    group: string,
+  ): ComboboxOption => {
+    const icon = option.isFavorite ? starredIcon : projectIcon;
+
+    return {
+      group,
+      hint: option.id === project?.id ? PLAN_PROJECT_COPY.current : undefined,
+      icon,
+      label: option.name,
+      value: option.id,
+    };
+  };
+  const candidates = [
+    ...starred.map((option) => {
+      return toOption(option, PLAN_PROJECT_COPY.starredGroup);
+    }),
+    ...others.map((option) => {
+      return toOption(option, PLAN_PROJECT_COPY.allGroup);
+    }),
+  ];
+  const triggerMarkup = (
+    <span className="inline-flex items-center gap-1.5">
+      <TriggerIcon aria-hidden={true} className="size-3.5" />
+      {triggerLabel}
+    </span>
+  );
   const badgeMarkup = project && (
     <span className="inline-flex items-center gap-0.5">
       <Badge
@@ -76,7 +128,7 @@ export const PlanProjectControl = (
       </Badge>
       <Button
         aria-label={PLAN_PROJECT_COPY.remove}
-        className="text-muted-foreground size-5"
+        className="text-muted-foreground hover:text-foreground size-6"
         disabled={isPending}
         onClick={handleRemove}
         size="icon"
@@ -84,7 +136,7 @@ export const PlanProjectControl = (
         type="button"
         variant="ghost"
       >
-        <XIcon aria-hidden={true} className="size-3" />
+        <XIcon aria-hidden={true} className="size-3.5" />
       </Button>
     </span>
   );
@@ -95,7 +147,7 @@ export const PlanProjectControl = (
 
   return (
     <span
-      className={cn('inline-flex items-center gap-1', className)}
+      className={cn('inline-flex items-center gap-1.5', className)}
       data-testid="PlanProjectControl"
     >
       {badgeMarkup}
@@ -103,16 +155,16 @@ export const PlanProjectControl = (
         {triggerLabel}
       </label>
       <Combobox
-        className="text-muted-foreground h-6 w-auto gap-1 border-dashed px-2 text-xs"
-        contentClassName="w-auto min-w-64 max-w-96"
+        className="text-muted-foreground hover:text-foreground h-7 w-auto gap-1.5 border-dashed px-2.5 text-xs"
+        contentClassName="w-96"
         disabled={isPending}
-        emptyText={emptyText}
+        emptyText={PLAN_PROJECT_COPY.empty}
         id={pickerId}
         loading={isLoading}
         loadingText={PLAN_PROJECT_COPY.loading}
         onValueChange={handleAssign}
         options={candidates}
-        placeholder={triggerLabel}
+        placeholder={triggerMarkup}
         searchPlaceholder={PLAN_PROJECT_COPY.search}
       />
     </span>

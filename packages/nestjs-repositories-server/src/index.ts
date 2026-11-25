@@ -306,6 +306,10 @@ export * from './modules/user-favorite-agent-models/user-favorite-agent-model.en
 export * from './modules/user-favorite-agent-models/user-favorite-agent-models.module.ts';
 export * from './modules/user-favorite-agent-models/user-favorite-agent-models.repository.ts';
 export type * from './modules/user-favorite-agent-models/user-favorite-agent-models.types.ts';
+export * from './modules/user-favorite-projects/user-favorite-project.entity.ts';
+export * from './modules/user-favorite-projects/user-favorite-projects.module.ts';
+export * from './modules/user-favorite-projects/user-favorite-projects.repository.ts';
+export type * from './modules/user-favorite-projects/user-favorite-projects.types.ts';
 export * from './modules/user-preferences/preferences-patch/preferences-patch.utils.ts';
 export * from './modules/user-preferences/user-preferences.constants.ts';
 export * from './modules/user-preferences/user-preferences.entity.ts';

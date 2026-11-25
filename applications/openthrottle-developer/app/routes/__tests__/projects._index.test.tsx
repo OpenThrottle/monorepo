@@ -18,6 +18,7 @@ const mockProjects: ProjectWithStats[] = [
     createdAt: '2025-01-01T00:00:00Z',
     description: 'First project',
     id: 'proj-1',
+    isFavorite: false,
     name: 'First Project',
     nxProjectName: 'applications/openthrottle-developer',
     plans: [{ __typename: 'PlanObject', id: 'plan-a', status: 'COMPLETED' }],
@@ -82,16 +83,20 @@ const ProjectsRoute = (): React.ReactElement => {
 
 describe('routes/projects._index.tsx', () => {
   test('should render with projects (table view)', () => {
-    const component = render(
-      <MemoryRouter>
-        <Index
-          actionData={undefined}
-          loaderData={mockLoaderDataWithProjects}
-          matches={matches}
-          params={{}}
-        />
-      </MemoryRouter>,
-    );
+    // ProjectFavorite uses a fetcher, which needs a data router.
+    const component = renderWithMemoryRouter([
+      {
+        element: (
+          <Index
+            actionData={undefined}
+            loaderData={mockLoaderDataWithProjects}
+            matches={matches}
+            params={{}}
+          />
+        ),
+        path: '/',
+      },
+    ]);
     expect(
       component.getByRole('heading', { name: 'Projects' }),
     ).toBeInTheDocument();
@@ -122,16 +127,20 @@ describe('routes/projects._index.tsx', () => {
   });
 
   test('should offer a New project action when projects exist', () => {
-    const component = render(
-      <MemoryRouter>
-        <Index
-          actionData={undefined}
-          loaderData={mockLoaderDataWithProjects}
-          matches={matches}
-          params={{}}
-        />
-      </MemoryRouter>,
-    );
+    // ProjectFavorite uses a fetcher, which needs a data router.
+    const component = renderWithMemoryRouter([
+      {
+        element: (
+          <Index
+            actionData={undefined}
+            loaderData={mockLoaderDataWithProjects}
+            matches={matches}
+            params={{}}
+          />
+        ),
+        path: '/',
+      },
+    ]);
 
     expect(
       component.getByRole('link', { name: PROJECTS_INDEX_COPY.newProject }),

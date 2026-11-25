@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { FolderGit2Icon, StarIcon } from 'lucide-react';
 import * as React from 'react';
 
 import { Combobox } from './Combobox';
@@ -131,6 +132,50 @@ export const AsyncLoading: Story = {
     options: [],
     searchValue: 'us-',
     shouldFilter: false,
+  },
+  render: (args) => (
+    <div className="w-64">
+      <Combobox {...args} />
+    </div>
+  ),
+};
+
+/**
+ * Options with a `group` render under headings, in the order each group first
+ * appears, with a rule between groups. An `icon` leads the label. Searching hides
+ * a group with no match.
+ */
+export const Grouped: Story = {
+  args: {
+    contentClassName: 'w-72',
+    options: [
+      {
+        group: 'Starred',
+        icon: <StarIcon className="size-4 fill-yellow-400 text-yellow-400" />,
+        label: 'OpenThrottle Developer',
+        value: 'developer',
+      },
+      {
+        group: 'Starred',
+        icon: <StarIcon className="size-4 fill-yellow-400 text-yellow-400" />,
+        label: 'OpenThrottle Website',
+        value: 'website',
+      },
+      {
+        group: 'All projects',
+        icon: <FolderGit2Icon className="text-muted-foreground size-4" />,
+        label: 'OpenThrottle Admin',
+        value: 'admin',
+      },
+      {
+        group: 'All projects',
+        icon: <FolderGit2Icon className="text-muted-foreground size-4" />,
+        label: 'OpenThrottle Email',
+        value: 'email',
+      },
+    ],
+    placeholder: 'Move to project',
+    searchPlaceholder: 'Search projects…',
   },
   render: (args) => (
     <div className="w-64">
