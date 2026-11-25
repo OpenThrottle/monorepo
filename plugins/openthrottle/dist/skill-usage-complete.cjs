@@ -531,10 +531,8 @@ var drainJsonlFileBatched = async ({
 };
 
 // packages/nodejs-utils/src/utils/errors.ts
-var toErrorMessage = (error, fallback = void 0) => {
-  const message = error instanceof Error ? error.message : String(error);
-  const isBlank = message.trim().length === 0;
-  return fallback !== void 0 && isBlank ? fallback : message;
+var toErrorMessage = (error) => {
+  return error instanceof Error ? error.message : String(error);
 };
 
 // packages/nodejs-utils/src/utils/guards.ts
