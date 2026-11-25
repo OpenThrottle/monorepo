@@ -4,22 +4,24 @@ import { useRequiredRolloutContext } from './useRequiredRolloutContext';
 /**
  * Returns whether a **boolean** catalog flag is enabled.
  *
- * Non-boolean keys are rejected at the type level when the catalog is supplied:
+ * Non-boolean keys are rejected at the type level:
  *
  * @example
  * ```ts
- * const enabled = useIsRolloutEnabled<typeof flags>('billing.invoices');
- * // useIsRolloutEnabled<typeof flags>('theme.mode') // type error
+ * const enabled = useIsRolloutEnabled(flags, 'billing.invoices');
+ * // useIsRolloutEnabled(flags, 'theme.mode') // type error
  * ```
  *
  * @public
  */
 export const useIsRolloutEnabled = <TCatalog extends RolloutFlagCatalog>(
+  flags: TCatalog,
   key: RolloutBooleanFlagKey<TCatalog>,
 ): boolean => {
   // Hooks
-  const { catalog, values } = useRequiredRolloutContext<TCatalog>(
+  const { catalog, values } = useRequiredRolloutContext(
     'useIsRolloutEnabled',
+    flags,
   );
 
   // Setup

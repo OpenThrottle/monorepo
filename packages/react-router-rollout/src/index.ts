@@ -9,11 +9,7 @@ export {
 } from './config';
 export type { RolloutContextValue } from './data';
 export { RolloutContext } from './data';
-export type {
-  UseRolloutContextOptions,
-  UseRolloutProviderOptions,
-  UseRolloutResult,
-} from './hooks';
+export type { UseRolloutProviderOptions, UseRolloutResult } from './hooks';
 export {
   useIsRolloutEnabled,
   useRollout,

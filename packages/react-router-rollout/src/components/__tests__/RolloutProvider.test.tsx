@@ -14,7 +14,7 @@ const flags = defineRolloutFlags({
 });
 
 const Probe = (): React.ReactElement => {
-  const { hydration, values } = useRolloutContext<typeof flags>();
+  const { hydration, values } = useRolloutContext(flags);
 
   return (
     <div>

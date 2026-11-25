@@ -10,7 +10,7 @@ import {
 } from '@openthrottle/react-router-rollout';
 import * as React from 'react';
 
-import type { DeveloperRolloutFlags } from '~/global/data/data.rollout-flags';
+import { developerRolloutFlags } from '~/global/data/data.rollout-flags';
 import { ROLLOUT_COPY } from '~/routing/settings/data/data.copy';
 import { getRolloutHydrationStatusLabel } from '~/routing/settings/utils/getRolloutHydrationStatusLabel';
 
@@ -20,8 +20,8 @@ export const RolloutSdkHydrationStatus = (
   _props: RolloutSdkHydrationStatusProps,
 ): React.ReactElement | null => {
   // Hooks
-  const showDemo = useIsRolloutEnabled<DeveloperRolloutFlags>('beta');
-  const { applicationKey, hydration } = useRollout<DeveloperRolloutFlags>();
+  const showDemo = useIsRolloutEnabled(developerRolloutFlags, 'beta');
+  const { applicationKey, hydration } = useRollout(developerRolloutFlags);
 
   // Setup
   const statusLabel = getRolloutHydrationStatusLabel(hydration.status);

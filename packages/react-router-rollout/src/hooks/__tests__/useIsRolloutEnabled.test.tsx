@@ -51,7 +51,7 @@ describe('useIsRolloutEnabled', () => {
     ]);
 
     const { result } = renderHook(
-      () => useIsRolloutEnabled<Flags>('billing.invoices'),
+      () => useIsRolloutEnabled(flags, 'billing.invoices'),
       { wrapper: createWrapper(fetchEvaluations) },
     );
 
@@ -66,7 +66,7 @@ describe('useIsRolloutEnabled', () => {
 
   test('throws when used outside RolloutProvider', () => {
     expect(() =>
-      renderHook(() => useIsRolloutEnabled<Flags>('billing.invoices')),
+      renderHook(() => useIsRolloutEnabled(flags, 'billing.invoices')),
     ).toThrow('useIsRolloutEnabled must be used within a RolloutProvider');
   });
 
@@ -74,7 +74,7 @@ describe('useIsRolloutEnabled', () => {
     expectTypeOf<
       RolloutBooleanFlagKey<Flags>
     >().toEqualTypeOf<'billing.invoices'>();
-    type EnabledKey = Parameters<typeof useIsRolloutEnabled<Flags>>[0];
+    type EnabledKey = Parameters<typeof useIsRolloutEnabled<Flags>>[1];
     expectTypeOf<EnabledKey>().toEqualTypeOf<'billing.invoices'>();
   });
 });

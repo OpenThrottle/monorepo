@@ -11,8 +11,6 @@ const flags = defineRolloutFlags({
   'theme.mode': { defaultValue: 'system', kind: 'string' },
 });
 
-type Flags = typeof flags;
-
 const createWrapper = (
   fetchEvaluations: () => Promise<
     ReadonlyArray<{
@@ -49,7 +47,7 @@ describe('useRollout', () => {
       },
     ]);
 
-    const { result } = renderHook(() => useRollout<Flags>(), {
+    const { result } = renderHook(() => useRollout(flags), {
       wrapper: createWrapper(fetchEvaluations),
     });
 
@@ -72,7 +70,7 @@ describe('useRollout', () => {
   });
 
   test('throws when used outside RolloutProvider', () => {
-    expect(() => renderHook(() => useRollout())).toThrow(
+    expect(() => renderHook(() => useRollout(flags))).toThrow(
       'useRollout must be used within a RolloutProvider',
     );
   });

@@ -8,6 +8,7 @@ export {
   type RolloutResolvedValues,
 } from './defaultsFromCatalog';
 export { defineRolloutFlags } from './defineRolloutFlags';
+export { isRolloutContextForCatalog } from './isRolloutContextForCatalog';
 export { mergeRolloutEvaluations } from './mergeRolloutEvaluations';
 export { parseRolloutValueJson } from './parseRolloutValueJson';
 export {

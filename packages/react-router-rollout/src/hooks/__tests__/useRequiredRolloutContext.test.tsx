@@ -15,7 +15,7 @@ describe('useRequiredRolloutContext', () => {
     const fetchEvaluations = vi.fn(async () => []);
 
     const { result } = renderHook(
-      () => useRequiredRolloutContext<typeof flags>('useSomething'),
+      () => useRequiredRolloutContext('useSomething', flags),
       {
         wrapper: ({ children }) => (
           <RolloutProvider
@@ -34,7 +34,30 @@ describe('useRequiredRolloutContext', () => {
 
   test('names the calling hook when used outside RolloutProvider', () => {
     expect(() =>
-      renderHook(() => useRequiredRolloutContext('useSomething')),
+      renderHook(() => useRequiredRolloutContext('useSomething', flags)),
     ).toThrow('useSomething must be used within a RolloutProvider');
+  });
+
+  test('throws when given a catalog other than the provider flags', () => {
+    const fetchEvaluations = vi.fn(async () => []);
+    const otherFlags = defineRolloutFlags({
+      'billing.invoices': { defaultValue: false, kind: 'boolean' },
+    });
+
+    expect(() =>
+      renderHook(() => useRequiredRolloutContext('useSomething', otherFlags), {
+        wrapper: ({ children }) => (
+          <RolloutProvider
+            applicationKey="required-app"
+            fetchEvaluations={fetchEvaluations}
+            flags={flags}
+          >
+            {children}
+          </RolloutProvider>
+        ),
+      }),
+    ).toThrow(
+      "useSomething was given a different flag catalog than its RolloutProvider's `flags`",
+    );
   });
 });

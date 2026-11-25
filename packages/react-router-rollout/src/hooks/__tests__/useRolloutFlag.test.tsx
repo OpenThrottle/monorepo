@@ -58,8 +58,8 @@ describe('useRolloutFlag', () => {
 
     const { result } = renderHook(
       () => ({
-        invoices: useRolloutFlag<Flags, 'billing.invoices'>('billing.invoices'),
-        theme: useRolloutFlag<Flags, 'theme.mode'>('theme.mode'),
+        invoices: useRolloutFlag(flags, 'billing.invoices'),
+        theme: useRolloutFlag(flags, 'theme.mode'),
       }),
       { wrapper: createWrapper(fetchEvaluations) },
     );
@@ -78,9 +78,7 @@ describe('useRolloutFlag', () => {
 
   test('throws when used outside RolloutProvider', () => {
     expect(() =>
-      renderHook(() =>
-        useRolloutFlag<Flags, 'billing.invoices'>('billing.invoices'),
-      ),
+      renderHook(() => useRolloutFlag(flags, 'billing.invoices')),
     ).toThrow('useRolloutFlag must be used within a RolloutProvider');
   });
 
