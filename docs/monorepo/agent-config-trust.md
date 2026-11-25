@@ -2,7 +2,7 @@
 
 **Related:** [child-repo-hook-overlay.md](./child-repo-hook-overlay.md) (how OT's own hooks reach a
 foreign checkout), [foreign-workspace-skill-injection.md](./foreign-workspace-skill-injection.md)
-(how OT's skills do). OT plan `01a204c6`.
+(how OT's skills do). OT plans `01a204c6` (plan runs) and `63a99eb4` (scheduled jobs).
 
 ## The problem
 
@@ -61,11 +61,27 @@ iteration (`refuseUnlessDriverHonoursPosture`), with the reason in plan output. 
 refuses the same invocation too (`checkRepoAgentConfig`), so no caller can spawn it by mistake. To
 run such a repository, either trust it or run it with Claude Code.
 
+## Scheduled agent jobs
+
+A scheduled agent job resolves its posture on every run, after re-resolving its directory, through
+`AgentConfigTrustService` (`applications/openthrottle-server/src/services/agent-config-trust/`).
+The rule is the same `resolveAgentConfigTrust`, with the schedule's owner as the acting user:
+
+| Run directory                                                         | Posture             |
+| --------------------------------------------------------------------- | ------------------- |
+| The OpenThrottle install itself, or a worktree of it                  | trusted (no lookup) |
+| The targeted checkout, trusted by the schedule's owner                | trusted             |
+| A legacy `cwd`-only job whose directory the owner registered, trusted | trusted             |
+| Anything else: untrusted, unregistered, no owner, or a failed lookup  | isolated            |
+
+An isolated job runs with the checkout's own hooks and MCP servers suppressed, and the worker logs
+that it did. On a driver that cannot isolate, the processor refuses the job before it takes the
+directory lock: the run is recorded `failed` with `Run refused: <reason>` as its error, and the
+owner gets the usual failure notification. `runAgentPrompt` refuses the same combination with a
+`DriverCapabilityError`, so no other caller can spawn it either.
+
 ## What the gate does not cover
 
-- **Scheduled agent jobs.** A job that targets a registered checkout spawns in it with no posture,
-  so that checkout's own config still loads. Creating the job is a deliberate act, but it is not the
-  trust flag; bringing scheduled jobs under the gate is open work.
 - **Job-run and lifecycle hook agents.** They spawn in the server's own checkout, never in a
   foreign one.
 - **Instructions.** `CLAUDE.md`, `AGENTS.md` and repo skills still load. They are prompt content,

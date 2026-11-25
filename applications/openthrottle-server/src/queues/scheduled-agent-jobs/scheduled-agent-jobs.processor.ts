@@ -14,16 +14,21 @@ import {
   ScheduledAgentJobRunsRepository,
   ScheduledAgentJobsRepository,
 } from '@openthrottle/nestjs-repositories-server';
+import { AGENT_CONFIG_POSTURE } from '@openthrottle/openthrottle-agentic-utils';
 import type {
+  AgentDriver,
+  DriverRepoAgentConfig,
   RunAgentStatus,
   UsageLimit,
 } from '@openthrottle/openthrottle-drivers';
 import {
+  checkRepoAgentConfig,
   DRIVER_REGISTRY,
   RUN_AGENT_STATUS,
 } from '@openthrottle/openthrottle-drivers';
 import { SCHEDULED_RUN_FAILURE_REASONS } from '@openthrottle/openthrottle-notifications';
 
+import { AgentConfigTrustService } from '../../services/agent-config-trust/agent-config-trust.service.ts';
 import { CheckoutPathService } from '../../services/checkout-path/checkout-path.service.ts';
 import { closeRunOutputForJob } from '../bullmq-keyed-run-logging/bullmq-keyed-run-logging.utils.ts';
 import { BULLMQ_RUN_OUTPUT_WRITER } from '../bullmq-run-output/bullmq-run-output-writer.token.ts';
@@ -187,6 +192,7 @@ export class ScheduledAgentJobsProcessor
     private readonly retention: BullMqRunOutputRetentionService,
     private readonly scheduler: ScheduledAgentJobSchedulerService,
     private readonly failureNotifier: ScheduledAgentJobFailureNotifierService,
+    private readonly agentConfigTrust: AgentConfigTrustService,
     @Optional()
     @Inject(BULLMQ_RUN_OUTPUT_WRITER)
     private readonly writer: KeyedJsonlWriter | undefined,
@@ -292,6 +298,16 @@ export class ScheduledAgentJobsProcessor
       // what makes "the checkout moved" legible in the run's error_message.
       await this.assertUsableCwd(target, repositoryCheckoutId);
 
+      // The trust gate (docs/monorepo/agent-config-trust.md): an untrusted checkout runs without its
+      // own hooks and MCP servers, and a driver that cannot suppress them is refused here, before the
+      // directory lock, so the reason lands on the run row instead of an opaque driver error.
+      const repoAgentConfig = await this.resolveRepoAgentConfig({
+        driverId,
+        runRowId,
+        scheduleId,
+        target,
+      });
+
       const runTimeoutMs = resolveScheduledAgentJobTimeoutMs(timeoutMs);
 
       // Worker concurrency is > 1, so two runs can reach the same directory at once — which is the
@@ -336,6 +352,7 @@ export class ScheduledAgentJobsProcessor
             });
           },
           prompt,
+          repoAgentConfig,
           settings: settings ?? undefined,
           signal,
           timeoutMs: runTimeoutMs,
@@ -753,6 +770,52 @@ export class ScheduledAgentJobsProcessor
       cwd: resolveScheduledAgentJobRunCwd({ explicitCwd: payloadCwd }),
       repositoryCheckoutId: null,
     };
+  }
+
+  /**
+   * @description Resolves the run directory's agent-config trust into the driver posture. The owner
+   * is read only when the directory is not OpenThrottle's own. Throws (so `process()`'s catch
+   * records the reason on the run row) when the posture is isolated and the driver cannot honour it.
+   */
+  private async resolveRepoAgentConfig(params: {
+    readonly driverId: ScheduledAgentJobBullJob['data']['driverId'];
+    readonly runRowId: string;
+    readonly scheduleId: string;
+    readonly target: {
+      readonly cwd: string;
+      readonly repositoryCheckoutId: string | null;
+    };
+  }): Promise<DriverRepoAgentConfig> {
+    const { driverId, runRowId, scheduleId, target } = params;
+    const trust = await this.agentConfigTrust.resolve({
+      checkoutId: target.repositoryCheckoutId,
+      directory: target.cwd,
+      loadOwnerUserId: async () => {
+        const schedule = await this.jobsRepository.findJobById(scheduleId);
+
+        return schedule?.ownerUserId ?? null;
+      },
+    });
+    const repoAgentConfig = this.agentConfigTrust.toRepoAgentConfig(trust);
+
+    // The id is stored as text: an unknown one has no capabilities to check, and runAgentPrompt
+    // rejects it with its own UnknownDriverError.
+    const driver: AgentDriver | undefined = DRIVER_REGISTRY[driverId];
+    if (driver !== undefined) {
+      const check = checkRepoAgentConfig(driver, { repoAgentConfig });
+      if (!check.ok) {
+        throw new Error(`Run refused: ${check.reason}`);
+      }
+    }
+
+    if (trust.posture === AGENT_CONFIG_POSTURE.ISOLATED) {
+      this.logger.info(
+        `Scheduled agent job ${scheduleId} run ${runRowId}: checkout ${target.cwd} is not trusted (${trust.reason}); its own hooks and MCP servers are suppressed`,
+        ScheduledAgentJobsProcessor.name,
+      );
+    }
+
+    return repoAgentConfig;
   }
 
   /**
