@@ -6,6 +6,8 @@ import {
 } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
 import * as React from 'react';
+import type { ShouldRevalidateFunction } from 'react-router';
+import { useSearchParams } from 'react-router';
 
 import type { Route } from '@/app/routes/+types/settings.mcp._index';
 import { GetSettingsMcpDocument } from '~/__generated__/graphql';
@@ -41,6 +43,20 @@ export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
   return [{ title: `MCP connectors | Settings | ${SITE_TITLE}` }];
 });
 
+/**
+ * @description The loader reads no search params, so opening or closing a
+ * Manage panel (`?manage=<key>`) never refetches the catalog. Form and fetcher
+ * submissions still revalidate.
+ */
+export const shouldRevalidate: ShouldRevalidateFunction = (args) => {
+  const { currentUrl, defaultShouldRevalidate, formMethod, nextUrl } = args;
+
+  if (formMethod != null) {
+    return defaultShouldRevalidate;
+  }
+  return currentUrl.pathname !== nextUrl.pathname;
+};
+
 export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
@@ -48,8 +64,10 @@ export default function Component(
   const { connections, connectors } = loaderData;
 
   // Hooks
+  const [searchParams] = useSearchParams();
 
   // Setup
+  const manageKey = searchParams.get('manage');
 
   // Handlers
 
@@ -62,7 +80,11 @@ export default function Component(
   return (
     <GlobalScreen beta={true}>
       <SettingsMcpIntroduction />
-      <SettingsMcpCatalog connections={connections} connectors={connectors} />
+      <SettingsMcpCatalog
+        connections={connections}
+        connectors={connectors}
+        manageKey={manageKey}
+      />
     </GlobalScreen>
   );
 }

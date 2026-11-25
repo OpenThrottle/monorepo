@@ -6,10 +6,13 @@ import type {
 } from '~/__generated__/graphql';
 
 import {
+  formatTimeAgo,
+  getConnectionSummary,
   getConnectorStatus,
   getProviderLabel,
   groupConnectorsByProvider,
   indexConnectionsByKey,
+  partitionConnectors,
 } from '../settings-mcp-connection';
 
 const connector = (
@@ -90,5 +93,64 @@ describe('groupConnectorsByProvider', () => {
       'vendor-remote',
       'mystery',
     ]);
+  });
+});
+
+describe('partitionConnectors', () => {
+  it('splits connected from available, both in provider order', () => {
+    const result = partitionConnectors(
+      [
+        connector('postgres', 'mcp-registry'),
+        connector('github', 'anthropic-directory'),
+        connector('slack', 'anthropic-directory'),
+      ],
+      [connection('postgres', false)],
+    );
+
+    expect(result.connected.map((entry) => entry.connector.key)).toEqual([
+      'postgres',
+    ]);
+    expect(result.available.map((entry) => entry.key)).toEqual([
+      'github',
+      'slack',
+    ]);
+  });
+});
+
+describe('formatTimeAgo', () => {
+  const now = new Date('2026-02-05T10:00:00.000Z');
+
+  it('is null for a missing or invalid value', () => {
+    expect(formatTimeAgo(null, now)).toBeNull();
+    expect(formatTimeAgo('not a date', now)).toBeNull();
+  });
+
+  it('formats a past time relative to now', () => {
+    expect(formatTimeAgo('2026-02-02T10:00:00.000Z', now)).toBe('3 days ago');
+  });
+
+  it('says just now for a time at or after now', () => {
+    expect(formatTimeAgo('2026-02-05T10:00:00.000Z', now)).toBe('just now');
+  });
+});
+
+describe('getConnectionSummary', () => {
+  const now = new Date('2026-02-05T10:00:00.000Z');
+
+  it('summarises an unused enabled connection', () => {
+    expect(getConnectionSummary(connection('github', true), now)).toBe(
+      'Connected 3 days ago · not used yet',
+    );
+  });
+
+  it('leads with Disabled and includes last use', () => {
+    const disabled = {
+      ...connection('github', false),
+      lastUsedAt: '2026-02-05T08:00:00.000Z',
+    };
+
+    expect(getConnectionSummary(disabled, now)).toBe(
+      'Disabled · Connected 3 days ago · last used 2 hours ago',
+    );
   });
 });

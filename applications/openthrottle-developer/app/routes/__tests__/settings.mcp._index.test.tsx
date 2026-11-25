@@ -53,6 +53,7 @@ const githubConnection: McpConnectorConnectionFieldsFragment = {
 const renderRoute = (
   connectors: McpConnectorFieldsFragment[],
   connections: McpConnectorConnectionFieldsFragment[],
+  initialEntry = '/settings/mcp',
 ) => {
   const Stub = createRoutesStub([
     {
@@ -61,59 +62,37 @@ const renderRoute = (
       path: '/settings/mcp',
     },
   ]);
-  return render(<Stub initialEntries={['/settings/mcp']} />);
+  return render(<Stub initialEntries={[initialEntry]} />);
 };
 
 describe('routes/settings.mcp._index.tsx', () => {
-  test('groups connectors by provider with their catalog names', async () => {
+  test('lists connected connectors as rows and the rest as chips', async () => {
     const component = renderRoute(
       [githubConnector, postgresConnector],
       [githubConnection],
     );
 
-    expect(
-      await component.findByText('Anthropic connector directory'),
-    ).toBeInTheDocument();
-    expect(component.getByText('Official MCP registry')).toBeInTheDocument();
+    const rows = await component.findAllByTestId('SettingsMcpConnectedRow');
+    expect(rows).toHaveLength(1);
+    const [githubRow] = rows;
+    if (githubRow === undefined) {
+      throw new Error('expected the GitHub row');
+    }
+    expect(within(githubRow).getByText('GitHub')).toBeInTheDocument();
 
-    // The route renders inside a beta GlobalScreen, whose banner carries its own
-    // "GitHub" link, so scope connector-name lookups to the connector cards.
-    const cards = component.getAllByTestId('SettingsMcpConnectorCard');
-
-    expect(
-      cards.some((card) => within(card).queryByText('GitHub') !== null),
-    ).toBe(true);
-    expect(
-      cards.some((card) => within(card).queryByText('Postgres') !== null),
-    ).toBe(true);
+    const chips = component.getAllByTestId('SettingsMcpAvailableChip');
+    expect(chips.map((chip) => chip.textContent)).toEqual(['Postgres']);
   });
 
-  test('shows connected/not-connected status and a manage link per connector', async () => {
+  test('opens the Manage panel named in the URL', async () => {
     const component = renderRoute(
       [githubConnector, postgresConnector],
       [githubConnection],
+      '/settings/mcp?manage=github',
     );
 
-    const cards = await component.findAllByTestId('SettingsMcpConnectorCard');
-    expect(cards).toHaveLength(2);
-
-    // Groups sort by provider order: anthropic-directory (GitHub) then
-    // mcp-registry (Postgres).
-    const [githubCard, postgresCard] = cards;
-    if (githubCard === undefined || postgresCard === undefined) {
-      throw new Error('expected both connector cards');
-    }
-
-    expect(within(githubCard).getByText('GitHub')).toBeInTheDocument();
-    expect(within(githubCard).getByText('Connected')).toBeInTheDocument();
     expect(
-      within(githubCard).getByTestId('SettingsMcpConnectorCard-manage'),
-    ).toHaveAttribute('href', '/settings/mcp/github');
-
-    expect(within(postgresCard).getByText('Postgres')).toBeInTheDocument();
-    expect(within(postgresCard).getByText('Not connected')).toBeInTheDocument();
-    expect(
-      within(postgresCard).getByTestId('SettingsMcpConnectorCard-manage'),
-    ).toHaveAttribute('href', '/settings/mcp/postgres');
+      await component.findByTestId('SettingsMcpManagePanel'),
+    ).toBeInTheDocument();
   });
 });
