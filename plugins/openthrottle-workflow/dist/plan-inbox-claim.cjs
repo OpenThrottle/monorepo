@@ -420,7 +420,7 @@ var claimPlanInbox = async ({
   }
 };
 
-// packages/agentic-hooks/src/data/data.destructive-commands.ts
+// packages/agentic-hooks/src/data/destructive-commands.ts
 var AT_COMMAND = String.raw`(?:^|[;&|({\n]|\b(?:sudo|xargs|then|do|else))\s*`;
 var GIT = String.raw`git\s+(?:-[cC]\s+\S+\s+)*`;
 var ANY_ARGS = String.raw`[^;&|\n]*`;

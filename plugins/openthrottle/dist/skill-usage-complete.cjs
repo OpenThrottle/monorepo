@@ -2622,7 +2622,7 @@ function mapCursorEvent(event) {
 // packages/agentic-conversation-backend/src/utils/claude-auth-status.ts
 var import_node_child_process2 = require("node:child_process");
 
-// packages/agentic-conversation-backend/src/data/data.copy.ts
+// packages/agentic-conversation-backend/src/data/copy.ts
 var CLAUDE_NOT_LOGGED_IN_WARNING = `Claude is not logged in and no API key is set. Run \`claude auth login\` (or set ANTHROPIC_API_KEY) before starting a Claude run.`;
 function claudeApiKeyOverrideWarning(subscriptionType, keySource) {
   const typedPlan = `${subscriptionType} subscription`;
