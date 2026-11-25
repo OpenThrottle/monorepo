@@ -20,7 +20,34 @@ import {
 } from '../utils/shell.ts';
 import { appendWorktreeShellFlags } from '../utils/shell-flags.ts';
 
+/**
+ * @description One `--allow "Bash(<pattern>)"` per allowed command, each shell-escaped. Empty when
+ * the list is empty or omitted, which keeps every existing command byte-identical.
+ */
+const buildGrokAllowFlags = (
+  allowedCommands: readonly string[] | undefined,
+): string => {
+  if (allowedCommands === undefined || allowedCommands.length === 0) {
+    return '';
+  }
+
+  return allowedCommands
+    .map((pattern) => {
+      return ` --allow ${escapeShellArg(`Bash(${pattern})`)}`;
+    })
+    .join('');
+};
+
 const capabilities: DriverCapabilities = {
+  /**
+   * Verified against grok 1.0.92 (2026-11-25): `--allow <RULE>` (compat alias `--allowedTools`)
+   * takes one permission rule in the `Bash(<pattern>)` syntax Grok shares with Claude Code, and is
+   * repeatable; a headless `-p` run given `--allow 'Bash(node -e *)'` ran that command. On the
+   * verifying machine a run WITHOUT the rule ran it too, so whether Grok gates a headless shell
+   * command at all depends on the user's own Grok and Claude settings; the flag guarantees the
+   * listed commands are pre-approved, not that others are refused. See {@link buildGrokAllowFlags}.
+   */
+  allowedCommands: true,
   /**
    * Reads the workspace's `.mcp.json` — verified against grok 1.0.0 (3cd0d0cbcebe) via
    * `grok mcp doctor`, which lists `.mcp.json` as a first-class config source and handshakes
@@ -118,7 +145,8 @@ export const grokDriver = defineDriver({
       config,
       '--output-format streaming-json',
     );
-    const base = `${endpointPrefix}${escapeShellArg(config.bin ?? 'grok')} -p "${safePrompt}"${outputFlag} --permission-mode acceptEdits${modelFlag}${effortFlag}`;
+    const allowFlags = buildGrokAllowFlags(config.allowedCommands);
+    const base = `${endpointPrefix}${escapeShellArg(config.bin ?? 'grok')} -p "${safePrompt}"${outputFlag} --permission-mode acceptEdits${modelFlag}${effortFlag}${allowFlags}`;
 
     return appendWorktreeShellFlags(base, capabilities, config.worktree);
   },

@@ -11,7 +11,7 @@ describe('ScheduleApprovalNotice Component', () => {
     test('explains the gate and offers Approve', () => {
       const view = renderRoutesStub(
         <ScheduleApprovalNotice
-          job={{ approvalState: 'pending', id: 'job-1' }}
+          job={{ allowedCommands: [], approvalState: 'pending', id: 'job-1' }}
         />,
       );
 
@@ -26,13 +26,33 @@ describe('ScheduleApprovalNotice Component', () => {
     });
   });
 
+  describe('when the pending job has allowed commands', () => {
+    test('shows them next to Approve', () => {
+      const view = renderRoutesStub(
+        <ScheduleApprovalNotice
+          job={{
+            allowedCommands: ['pnpm run social:x-post *'],
+            approvalState: 'pending',
+            id: 'job-1',
+          }}
+        />,
+      );
+
+      expect(
+        view.getByRole('list', {
+          name: SCHEDULE_APPROVAL_COPY.allowedCommandsLabel,
+        }),
+      ).toHaveTextContent('pnpm run social:x-post *');
+    });
+  });
+
   describe('when the job is not pending', () => {
     test.each(['approved', 'not_required'])(
       'renders nothing for %s',
       (state) => {
         const view = renderRoutesStub(
           <ScheduleApprovalNotice
-            job={{ approvalState: state, id: 'job-1' }}
+            job={{ allowedCommands: [], approvalState: state, id: 'job-1' }}
           />,
         );
 

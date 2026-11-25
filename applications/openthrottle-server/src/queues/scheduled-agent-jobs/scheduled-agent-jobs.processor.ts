@@ -211,6 +211,7 @@ export class ScheduledAgentJobsProcessor
 
   async process(job: ScheduledAgentJobBullJob): Promise<void> {
     const {
+      allowedCommands,
       cwd,
       driverId,
       model,
@@ -247,6 +248,7 @@ export class ScheduledAgentJobsProcessor
     // run's history. driver/model/run-config is all a scheduled job carries today (no reasoning
     // tier / permission mode in the schedule model); `settings` holds any endpoint/worktree knobs.
     const settingsSnapshot: ScheduledAgentJobRunSettingsSnapshot = {
+      allowedCommands: allowedCommands ?? [],
       driverId,
       model: model ?? null,
       settings: settings ?? null,
@@ -342,6 +344,7 @@ export class ScheduledAgentJobsProcessor
 
       try {
         const result = await this.runner.run({
+          allowedCommands: allowedCommands ?? [],
           cwd: target.cwd,
           driverId,
           model: model ?? undefined,

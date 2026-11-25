@@ -109,6 +109,7 @@ export const SCHEDULE_ONBOARDING = {
 export const SCHEDULE_APPROVAL_COPY = {
   agentCreatedBadge: `Agent-created`,
   agentCreatedHint: `Created by an agent through the MCP scheduling tools.`,
+  allowedCommandsLabel: `May run these commands without asking:`,
   approveAction: `Approve`,
   approveError: `Could not approve the schedule.`,
   approveSubmitting: `Approving…`,

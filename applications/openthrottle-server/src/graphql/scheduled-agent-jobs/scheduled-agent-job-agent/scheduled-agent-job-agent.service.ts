@@ -44,7 +44,9 @@ export class ScheduledAgentJobAgentService {
   /**
    * @description Creates an agent job, or returns the one an earlier call with the same
    * `(owner, idempotencyKey)` made (the retry's other fields are not compared). Under
-   * `SCHEDULED_AGENT_JOBS_MCP_REQUIRE_APPROVAL=true` the job is stored disabled and `pending`.
+   * `SCHEDULED_AGENT_JOBS_MCP_REQUIRE_APPROVAL=true` the job is stored disabled and `pending`, and so
+   * is any job with a non-empty `allowedCommands` whatever the env says: an agent must not widen its
+   * own run's shell access without a human seeing the list.
    */
   async create(
     ownerUserId: string,
@@ -60,12 +62,14 @@ export class ScheduledAgentJobAgentService {
     }
 
     const { mcpRequireApproval } = resolveScheduledAgentJobLimits(process.env);
+    const hasAllowedCommands = (input.allowedCommands ?? []).length > 0;
+    const requiresApproval = mcpRequireApproval || hasAllowedCommands;
     try {
       return await this.jobs.create({
         ...input,
-        approvalState: mcpRequireApproval ? 'pending' : 'not_required',
+        approvalState: requiresApproval ? 'pending' : 'not_required',
         createdVia: 'mcp',
-        enabled: mcpRequireApproval ? false : input.enabled,
+        enabled: requiresApproval ? false : input.enabled,
         idempotencyKey,
         ownerUserId,
       });
@@ -87,7 +91,9 @@ export class ScheduledAgentJobAgentService {
   /**
    * @description Updates an agent-created job the caller owns. With approval required, changing an
    * approved job's content sends it back to `pending` and disables it, so an approved schedule
-   * cannot be rewritten into something nobody approved.
+   * cannot be rewritten into something nobody approved. A job whose resulting `allowedCommands` is
+   * non-empty is held to that rule whatever the env says, including one that never needed approval
+   * before the list was added.
    */
   async update(
     ownerUserId: string,
@@ -104,10 +110,13 @@ export class ScheduledAgentJobAgentService {
       return value !== undefined;
     });
     const { mcpRequireApproval } = resolveScheduledAgentJobLimits(process.env);
-    const needsReapproval =
-      mcpRequireApproval &&
-      existing.approvalState === 'approved' &&
-      changesContent;
+    const nextAllowedCommands =
+      input.allowedCommands ?? existing.allowedCommands;
+    const gatedByEnv =
+      mcpRequireApproval && existing.approvalState === 'approved';
+    const gatedByAllowlist =
+      nextAllowedCommands.length > 0 && existing.approvalState !== 'pending';
+    const needsReapproval = changesContent && (gatedByEnv || gatedByAllowlist);
     const nextApprovalState = needsReapproval ? 'pending' : undefined;
     const nextEnabled = needsReapproval ? false : enabled;
 

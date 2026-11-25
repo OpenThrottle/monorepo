@@ -35,6 +35,7 @@ import {
 const CURSOR_MCP_FLAGS: readonly string[] = ['--approve-mcps', '--trust'];
 
 const capabilities: DriverCapabilities = {
+  allowedCommands: false,
   /**
    * Reads the workspace's `.cursor/mcp.json`. Requires {@link CURSOR_MCP_FLAGS} to actually attach,
    * and requires the run to happen in the checkout root — Cursor discovers the config by walking up

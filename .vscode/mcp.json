@@ -16,7 +16,7 @@
       "type": "stdio"
     },
     "openthrottle-mcp": {
-      "args": ["./scripts/run-openthrottle-mcp.sh"],
+      "args": ["./scripts/run-openthrottle-mcp.sh", "--toolsets=scheduling"],
       "command": "bash",
       "type": "stdio"
     },

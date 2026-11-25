@@ -130,6 +130,7 @@ describe('ScheduleForm Component', () => {
   describe('update mode', () => {
     const job: ScheduledJobDetailFragment = {
       __typename: 'ScheduledAgentJobObject',
+      allowedCommands: [],
       approvalState: 'not_required',
       createdAt: '2026-08-01T00:00:00.000Z',
       createdVia: 'ui',
@@ -230,6 +231,7 @@ describe('ScheduleForm Component', () => {
     test('never blocks submission — the submit button stays enabled while warning', () => {
       const codexJob: ScheduledJobDetailFragment = {
         __typename: 'ScheduledAgentJobObject',
+        allowedCommands: [],
         approvalState: 'not_required',
         createdAt: '2026-08-01T00:00:00.000Z',
         createdVia: 'ui',

@@ -18,6 +18,7 @@ const job = (
 ): ScheduledJobCardFragment => {
   return {
     __typename: 'ScheduledAgentJobObject',
+    allowedCommands: [],
     approvalState: 'not_required',
     createdVia: 'ui',
     cronPattern: '0 9 * * *',

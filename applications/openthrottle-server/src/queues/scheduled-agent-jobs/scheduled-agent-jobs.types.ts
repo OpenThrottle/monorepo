@@ -12,6 +12,11 @@ import type { Job } from 'bullmq';
  */
 export interface ScheduledAgentJobPayload {
   /**
+   * Shell command patterns the run may execute unprompted. Optional, so scheduler payloads already
+   * sitting in Redis from before migration 205 still decode (as none).
+   */
+  readonly allowedCommands?: readonly string[];
+  /**
    * Set only on the explicit catch-up the boot reconcile enqueues under the misfire policy: the cron
    * slot (epoch ms) it runs for. The reconcile already applied the policy, so the processor runs it
    * without re-gating. A scheduler fire leaves this unset; its slot is read from the job id.

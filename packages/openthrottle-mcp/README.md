@@ -179,11 +179,12 @@ deepest containing checkout wins) and ignores anything it cannot own. It never f
 Opt-in: the [`scheduling` toolset](#toolsets). `create_scheduled_job`, `list_scheduled_jobs`, `update_scheduled_job`, `delete_scheduled_job`, `run_scheduled_job_now` schedule agent runs through the server's `…AsAgent` GraphQL operations, which enforce the guardrails (threat T10 in [webhook-triggered-agent-jobs.md](../../docs/openthrottle/webhook-triggered-agent-jobs.md)):
 
 - **Acts as a user.** The usual `ot_sa_…` service-account token acts as its linked acting user (`pnpm run database:bootstrap-service-accounts` links `openthrottle-mcp` to the default user); a service account with no acting user is refused.
-- **The caller is the ceiling.** Same `settings:read` / `settings:write` as the UI, owner is the calling user, and the target `repositoryCheckoutId` must be the user's own. There is no tool for webhook triggers.
+- **The caller is the ceiling.** Needs `schedules:read` / `schedules:write` (held by the `mcp` role and the human roles; the UI's own operations stay on `settings:*`), owner is the calling user, and the target `repositoryCheckoutId` must be the user's own. There is no tool for webhook triggers.
 - **Marked and fenced.** Jobs made here are `created_via = 'mcp'`; update and delete work only on those. Jobs a person made in the UI can be listed and run, not changed.
 - **Idempotent create.** `idempotencyKey` is required; the same key returns the existing job.
 - **Capped.** At most 25 jobs per user (`SCHEDULED_AGENT_JOBS_MAX_PER_OWNER`), 10 of them created here. Over the cap the create fails loudly.
 - **Optional approval.** With `SCHEDULED_AGENT_JOBS_MCP_REQUIRE_APPROVAL=true` on the server, a created job is stored disabled (`approvalState: pending`) until a person approves it in the Developer UI, and run-now is refused until then.
+- **Per-job command allowlist.** `allowedCommands` lists the shell command patterns a job's headless run may execute without a permission prompt, in Claude Code `Bash(<pattern>)` syntax without the wrapper (`pnpm run social:x-post *`). Claude and Grok only: any other driver refuses a non-empty list (see the per-driver table in [webhook-triggered-agent-jobs.md](../../docs/openthrottle/webhook-triggered-agent-jobs.md)). A job with a non-empty list is always stored pending for approval, whatever the operator setting, and changing its content sends it back to pending: an agent cannot widen its own run's shell access unreviewed. The approval notice in the Developer UI shows the list.
 
 ## Agent conversation read tools
 

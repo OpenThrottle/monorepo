@@ -774,6 +774,7 @@ export function CreateScheduledAgentJobAsAgentInputTypeSchema(): z.ZodObject<
   Properties<CreateScheduledAgentJobAsAgentInputType>
 > {
   return z.object({
+    allowedCommands: z.array(z.string().min(1)).nullish(),
     cronPattern: z.string().nullish(),
     driverId: z.string().min(1),
     enabled: z.boolean().nullish(),
@@ -796,6 +797,7 @@ export function CreateScheduledAgentJobInputTypeSchema(): z.ZodObject<
   Properties<CreateScheduledAgentJobInputType>
 > {
   return z.object({
+    allowedCommands: z.array(z.string().min(1)).nullish(),
     cronPattern: z.string().nullish(),
     cwd: z.string().nullish(),
     driverId: z.string().min(1),
@@ -2267,6 +2269,7 @@ export function UpdateScheduledAgentJobAsAgentInputTypeSchema(): z.ZodObject<
   Properties<UpdateScheduledAgentJobAsAgentInputType>
 > {
   return z.object({
+    allowedCommands: z.array(z.string().min(1)).nullish(),
     cronPattern: z.string().nullish(),
     driverId: z.string().nullish(),
     enabled: z.boolean().nullish(),
@@ -2289,6 +2292,7 @@ export function UpdateScheduledAgentJobInputTypeSchema(): z.ZodObject<
   Properties<UpdateScheduledAgentJobInputType>
 > {
   return z.object({
+    allowedCommands: z.array(z.string().min(1)).nullish(),
     cronPattern: z.string().nullish(),
     cwd: z.string().nullish(),
     driverId: z.string().nullish(),

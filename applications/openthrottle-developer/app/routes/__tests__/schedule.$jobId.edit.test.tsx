@@ -12,6 +12,7 @@ import EditSchedule from '../schedule.$jobId.edit';
 
 const job: ScheduledJobDetailFragment = {
   __typename: 'ScheduledAgentJobObject',
+  allowedCommands: [],
   approvalState: 'not_required',
   createdAt: '2026-07-31T00:00:00.000Z',
   createdVia: 'ui',

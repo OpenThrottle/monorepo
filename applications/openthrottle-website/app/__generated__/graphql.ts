@@ -1429,6 +1429,8 @@ export type CreateRolloutFlagInput = {
 };
 
 export type CreateScheduledAgentJobAsAgentInputType = {
+  /** Shell commands the headless run may execute unprompted, as Bash(<pattern>) patterns without the wrapper (e.g. "pnpm run x *"). At most 20; claude and grok only. A non-empty list needs human approval. */
+  allowedCommands?: InputMaybe<Array<Scalars['String']['input']>>;
   /** 5- or 6-field cron pattern (may not fire every minute or sub-minute). Required when scheduleKind is cron (the default); ignored otherwise. */
   cronPattern?: InputMaybe<Scalars['String']['input']>;
   /** Agent driver id (antigravity | claude | codex | cursor | grok | opencode). */
@@ -1462,6 +1464,8 @@ export type CreateScheduledAgentJobAsAgentInputType = {
 };
 
 export type CreateScheduledAgentJobInputType = {
+  /** Shell commands the headless run may execute unprompted, as Bash(<pattern>) patterns without the wrapper (e.g. "pnpm run x *"). At most 20; claude and grok only. A non-empty list needs human approval. */
+  allowedCommands?: InputMaybe<Array<Scalars['String']['input']>>;
   /** 5- or 6-field cron pattern (may not fire every minute or sub-minute). Required when scheduleKind is cron (the default); ignored otherwise. */
   cronPattern?: InputMaybe<Scalars['String']['input']>;
   /**
@@ -6856,6 +6860,8 @@ export type SchedulePlanRunResultObject = {
 /** A user-defined scheduled agent job: a prompt run with a driver/model/settings on a cron, interval or run-once schedule via one shared BullMQ queue. */
 export type ScheduledAgentJobObject = {
   __typename?: 'ScheduledAgentJobObject';
+  /** Shell command patterns the job's headless run may execute without a permission prompt (Claude Code Bash(<pattern>) syntax without the wrapper). Empty adds nothing. */
+  allowedCommands: Array<Scalars['String']['output']>;
   /** not_required, pending (an agent-created job awaiting human approval; disabled until approved) or approved. */
   approvalState: Scalars['String']['output'];
   createdAt: Scalars['DateTime']['output'];
@@ -8534,6 +8540,8 @@ export type UpdateRolloutFlagInput = {
 };
 
 export type UpdateScheduledAgentJobAsAgentInputType = {
+  /** Replaces the allowlist (see create); [] clears it. A non-empty list needs human approval. */
+  allowedCommands?: InputMaybe<Array<Scalars['String']['input']>>;
   cronPattern?: InputMaybe<Scalars['String']['input']>;
   driverId?: InputMaybe<Scalars['String']['input']>;
   /** Enable or disable the job. Cannot enable a job that is still awaiting human approval. */
@@ -8560,6 +8568,8 @@ export type UpdateScheduledAgentJobAsAgentInputType = {
 };
 
 export type UpdateScheduledAgentJobInputType = {
+  /** Replaces the allowlist (see create); [] clears it. A non-empty list needs human approval. */
+  allowedCommands?: InputMaybe<Array<Scalars['String']['input']>>;
   cronPattern?: InputMaybe<Scalars['String']['input']>;
   /** @deprecated Use repositoryCheckoutId to target a registered repository checkout; cwd is only consulted when no checkout is set. */
   cwd?: InputMaybe<Scalars['String']['input']>;

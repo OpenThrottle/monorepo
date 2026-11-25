@@ -15,6 +15,7 @@ export const buildScheduledAgentJobPayload = (
   resolvedCheckoutPath?: string | null,
 ): ScheduledAgentJobPayload => {
   return {
+    allowedCommands: job.allowedCommands,
     cwd: resolvedCheckoutPath ?? job.cwd,
     driverId: job.driverId,
     model: job.model,

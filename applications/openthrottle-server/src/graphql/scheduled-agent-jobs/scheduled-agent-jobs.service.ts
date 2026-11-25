@@ -47,11 +47,13 @@ import { resolveScheduleSpec } from './schedule-spec/schedule-spec.utils.ts';
 import { SCHEDULED_AGENT_JOB_LIMIT_CODES } from './scheduled-agent-jobs.constants.ts';
 import {
   createScheduledAgentJobGuardrailError,
+  parseAllowedCommands,
   resolveScheduledAgentJobLimits,
 } from './scheduled-agent-jobs.utils.ts';
 
 /** Shape a create request arrives in (settings already validated/parsed). */
 interface CreateArgs extends ScheduleSpecRequest {
+  readonly allowedCommands?: readonly string[] | null;
   readonly approvalState?: ScheduledAgentJobApprovalState;
   /** Defaults to `ui`; only the agent service passes `mcp`. */
   readonly createdVia?: ScheduledAgentJobCreatedVia;
@@ -72,6 +74,7 @@ interface CreateArgs extends ScheduleSpecRequest {
 }
 
 interface UpdateArgs extends ScheduleSpecRequest {
+  readonly allowedCommands?: readonly string[] | null;
   readonly approvalState?: ScheduledAgentJobApprovalState;
   readonly cwd?: string | null;
   readonly driverId?: string;
@@ -138,7 +141,9 @@ export class ScheduledAgentJobsGraphqlService {
   }
 
   async create(args: CreateArgs): Promise<ScheduledAgentJob> {
+    const allowedCommands = parseAllowedCommands(args.allowedCommands) ?? [];
     const driverId = this.validateDriver(args.driverId, {
+      allowedCommands,
       model: args.model,
       settingsJson: args.settingsJson,
     });
@@ -154,6 +159,7 @@ export class ScheduledAgentJobsGraphqlService {
     );
     const job = await this.insertWithinOwnerCaps({
       ...spec,
+      allowedCommands,
       approvalState: args.approvalState,
       createdVia: args.createdVia,
       cwd: args.cwd ?? null,
@@ -178,8 +184,10 @@ export class ScheduledAgentJobsGraphqlService {
 
   async update(id: string, args: UpdateArgs): Promise<ScheduledAgentJob> {
     const existing = await this.requireJob(id);
+    const allowedCommands = parseAllowedCommands(args.allowedCommands);
 
     const driverId = this.validateDriver(args.driverId ?? existing.driverId, {
+      allowedCommands: allowedCommands ?? existing.allowedCommands,
       existingSettings: existing.settings,
       model: args.model === undefined ? existing.model : args.model,
       settingsJson: args.settingsJson,
@@ -208,6 +216,7 @@ export class ScheduledAgentJobsGraphqlService {
 
     const updated = await this.jobsRepository.updateJob(id, {
       ...spec,
+      allowedCommands,
       approvalState: args.approvalState,
       cwd: args.cwd,
       driverId: nextDriverId,
@@ -522,6 +531,7 @@ export class ScheduledAgentJobsGraphqlService {
   private validateDriver(
     rawDriverId: string,
     opts: {
+      readonly allowedCommands: readonly string[];
       readonly existingSettings?: ScheduledAgentJobSettings;
       readonly model?: string | null;
       readonly settingsJson?: string | null;
@@ -557,6 +567,14 @@ export class ScheduledAgentJobsGraphqlService {
     if (settings?.worktree && !driver.capabilities.worktree) {
       throw new BadRequestException(
         `Driver "${driverId}" does not support worktrees`,
+      );
+    }
+    if (
+      opts.allowedCommands.length > 0 &&
+      !driver.capabilities.allowedCommands
+    ) {
+      throw new BadRequestException(
+        `Driver "${driverId}" does not support a command allowlist`,
       );
     }
 

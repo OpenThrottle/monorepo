@@ -18,6 +18,7 @@ export const scheduledAgentJobsFactory = Factory.define<ScheduledAgentJob>(
     const id = faker.string.uuid();
 
     return {
+      allowedCommands: [],
       approvalState: 'not_required',
       createdAt: faker.date.past(),
       createdVia: 'ui',

@@ -163,7 +163,12 @@ export class ScheduledAgentJobsRepository extends BaseRepository<
     const existing = await this.findJobById(id);
     if (existing === null) return null;
 
-    this.repository.merge(existing, input);
+    const { allowedCommands, ...rest } = input;
+    const keepsAllowedCommands = allowedCommands === undefined;
+    const allowedCommandsPatch = keepsAllowedCommands
+      ? {}
+      : { allowedCommands: [...allowedCommands] };
+    this.repository.merge(existing, { ...rest, ...allowedCommandsPatch });
     return this.repository.save(existing);
   }
 
@@ -216,6 +221,7 @@ export class ScheduledAgentJobsRepository extends BaseRepository<
     input: CreateScheduledAgentJobInput,
   ): Promise<ScheduledAgentJob> {
     const draft = manager.create(ScheduledAgentJob, {
+      allowedCommands: [...(input.allowedCommands ?? [])],
       ...(input.approvalState === undefined
         ? {}
         : { approvalState: input.approvalState }),

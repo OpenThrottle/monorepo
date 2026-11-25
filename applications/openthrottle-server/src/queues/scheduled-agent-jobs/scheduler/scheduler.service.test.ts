@@ -18,6 +18,7 @@ const makeJob = (
   overrides: Partial<ScheduledAgentJob> = {},
 ): ScheduledAgentJob => {
   return createMock<ScheduledAgentJob>({
+    allowedCommands: [],
     cronPattern: '0 9 * * *',
     cwd: null,
     driverId: 'claude',
@@ -65,6 +66,7 @@ describe('ScheduledAgentJobSchedulerService', () => {
   it('builds a run snapshot with no runId (scheduled fire creates its own row)', () => {
     const payload = buildScheduledAgentJobPayload(makeJob());
     expect(payload).toEqual({
+      allowedCommands: [],
       cwd: null,
       driverId: 'claude',
       model: 'opus',

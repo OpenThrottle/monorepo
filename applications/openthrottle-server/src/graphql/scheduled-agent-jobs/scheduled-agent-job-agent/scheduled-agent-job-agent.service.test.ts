@@ -18,6 +18,7 @@ const jobFixture = (
   overrides: Partial<ScheduledAgentJob>,
 ): ScheduledAgentJob => {
   return createMock<ScheduledAgentJob>({
+    allowedCommands: [],
     approvalState: 'not_required',
     createdVia: 'mcp',
     id: 'j1',
@@ -120,6 +121,94 @@ describe('ScheduledAgentJobAgentService', () => {
 
       expect(jobs.create).toHaveBeenCalledWith(
         expect.objectContaining({ approvalState: 'pending', enabled: false }),
+      );
+    });
+  });
+
+  describe('create with allowedCommands', () => {
+    it('stores the job disabled and pending even when approval is not required', async () => {
+      await service.create('user-1', {
+        ...createInput,
+        allowedCommands: ['pnpm run social:x-post *'],
+        enabled: true,
+      });
+
+      expect(jobs.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          allowedCommands: ['pnpm run social:x-post *'],
+          approvalState: 'pending',
+          enabled: false,
+        }),
+      );
+    });
+
+    it('needs no approval for an empty list when approval is not required', async () => {
+      await service.create('user-1', { ...createInput, allowedCommands: [] });
+
+      expect(jobs.create).toHaveBeenCalledWith(
+        expect.objectContaining({ approvalState: 'not_required' }),
+      );
+    });
+  });
+
+  describe('update with allowedCommands', () => {
+    it('sends a job that never needed approval to pending when a list is added', async () => {
+      await service.update('user-1', {
+        allowedCommands: ['pnpm run social:x-post *'],
+        id: 'j1',
+      });
+
+      expect(jobs.update).toHaveBeenCalledWith(
+        'j1',
+        expect.objectContaining({ approvalState: 'pending', enabled: false }),
+      );
+    });
+
+    it('sends an approved job with a list back to pending when its prompt changes', async () => {
+      vi.mocked(jobs.get).mockResolvedValue(
+        jobFixture({
+          allowedCommands: ['pnpm run social:x-post *'],
+          approvalState: 'approved',
+        }),
+      );
+
+      await service.update('user-1', { id: 'j1', prompt: 'new prompt' });
+
+      expect(jobs.update).toHaveBeenCalledWith(
+        'j1',
+        expect.objectContaining({ approvalState: 'pending', enabled: false }),
+      );
+    });
+
+    it('keeps an approved job with a list approved when only enabled changes', async () => {
+      vi.mocked(jobs.get).mockResolvedValue(
+        jobFixture({
+          allowedCommands: ['pnpm run social:x-post *'],
+          approvalState: 'approved',
+        }),
+      );
+
+      await service.update('user-1', { enabled: true, id: 'j1' });
+
+      expect(jobs.update).toHaveBeenCalledWith(
+        'j1',
+        expect.objectContaining({ approvalState: undefined, enabled: true }),
+      );
+    });
+
+    it('lets clearing the list through without approval', async () => {
+      vi.mocked(jobs.get).mockResolvedValue(
+        jobFixture({
+          allowedCommands: ['pnpm run social:x-post *'],
+          approvalState: 'approved',
+        }),
+      );
+
+      await service.update('user-1', { allowedCommands: [], id: 'j1' });
+
+      expect(jobs.update).toHaveBeenCalledWith(
+        'j1',
+        expect.objectContaining({ approvalState: undefined }),
       );
     });
   });

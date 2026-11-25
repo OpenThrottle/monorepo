@@ -20,6 +20,7 @@ import {
 } from '../utils/shell.ts';
 
 const capabilities: DriverCapabilities = {
+  allowedCommands: false,
   /**
    * Stays `false`: no workspace file is guaranteed to reach a codex run. Since codex-cli 0.167.0
    * (verified 2026-11-12) Codex does load a project `.codex/config.toml` (`[mcp_servers.*]`,

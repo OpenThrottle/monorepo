@@ -10,37 +10,39 @@ Roles and permissions are defined in the package and used by guards (see task �
 
 ### Roles
 
-| Role          | Description                                                            |
-| ------------- | ---------------------------------------------------------------------- |
-| `admin`       | Full settings + users access.                                          |
-| `user`        | Read/write settings, read users.                                       |
-| `viewer`      | Read-only (settings and users).                                        |
-| `mcp`         | Read/write plans, draft blog posts, search code (MCP service account). |
-| `plan-runner` | Read/write plans (plan-run worker account).                            |
+| Role          | Description                                                                                           |
+| ------------- | ----------------------------------------------------------------------------------------------------- |
+| `admin`       | Full settings + users access.                                                                         |
+| `user`        | Read/write settings, read users.                                                                      |
+| `viewer`      | Read-only (settings and users).                                                                       |
+| `mcp`         | Read/write plans, draft blog posts, search code, manage its own scheduled jobs (MCP service account). |
+| `plan-runner` | Read/write plans (plan-run worker account).                                                           |
 
 ### Permissions
 
-| Permission       | Description                                                                     |
-| ---------------- | ------------------------------------------------------------------------------- |
-| `blog:draft`     | Create/edit DRAFT blog posts; read all blog posts, tags and authors.            |
-| `blog:write`     | Publish/unpublish/archive posts; edit non-draft posts; manage authors and tags. |
-| `cms:write`      | Create/update/delete cms content: fragments, their edges, layouts, components.  |
-| `code:read`      | Search a registered repository's indexed code and read its index status.        |
-| `flags:read`     | Read feature flags.                                                             |
-| `flags:write`    | Create/update/delete flags.                                                     |
-| `plans:read`     | Read plans.                                                                     |
-| `plans:write`    | Create/update/delete plans.                                                     |
-| `settings:read`  | Read app settings.                                                              |
-| `settings:write` | Change app settings.                                                            |
-| `users:read`     | Read user list/details.                                                         |
-| `users:write`    | Create/update/delete users.                                                     |
+| Permission        | Description                                                                       |
+| ----------------- | --------------------------------------------------------------------------------- |
+| `blog:draft`      | Create/edit DRAFT blog posts; read all blog posts, tags and authors.              |
+| `blog:write`      | Publish/unpublish/archive posts; edit non-draft posts; manage authors and tags.   |
+| `cms:write`       | Create/update/delete cms content: fragments, their edges, layouts, components.    |
+| `code:read`       | Search a registered repository's indexed code and read its index status.          |
+| `flags:read`      | Read feature flags.                                                               |
+| `flags:write`     | Create/update/delete flags.                                                       |
+| `plans:read`      | Read plans.                                                                       |
+| `plans:write`     | Create/update/delete plans.                                                       |
+| `schedules:read`  | List the caller's scheduled agent jobs through the agent (`…AsAgent`) operations. |
+| `schedules:write` | Create/update/delete/run-now scheduled agent jobs through the agent operations.   |
+| `settings:read`   | Read app settings.                                                                |
+| `settings:write`  | Change app settings.                                                              |
+| `users:read`      | Read user list/details.                                                           |
+| `users:write`     | Create/update/delete users.                                                       |
 
 ### Mapping (role → permissions)
 
 - **admin:** every defined permission (full superset — derived from `PERMISSIONS`, so new permissions are granted automatically)
-- **user:** `code:read`, `flags:read`, `settings:read`, `settings:write`, `users:read`
-- **viewer:** `code:read`, `flags:read`, `settings:read`, `users:read`
-- **mcp:** `blog:draft`, `code:read`, `plans:read`, `plans:write`
+- **user:** `code:read`, `flags:read`, `schedules:read`, `schedules:write`, `settings:read`, `settings:write`, `users:read`
+- **viewer:** `code:read`, `flags:read`, `schedules:read`, `settings:read`, `users:read`
+- **mcp:** `blog:draft`, `code:read`, `plans:read`, `plans:write`, `schedules:read`, `schedules:write`
 - **plan-runner:** `plans:read`, `plans:write`
 
 Usage (for guards and app code):

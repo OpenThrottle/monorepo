@@ -22,7 +22,11 @@
       "type": "local"
     },
     "openthrottle-mcp": {
-      "command": ["bash", "./scripts/run-openthrottle-mcp.sh"],
+      "command": [
+        "bash",
+        "./scripts/run-openthrottle-mcp.sh",
+        "--toolsets=scheduling"
+      ],
       "enabled": true,
       "type": "local"
     },

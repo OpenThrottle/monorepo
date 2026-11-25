@@ -33,6 +33,7 @@ const userToken = 'user-token';
 
 const job = (overrides: Record<string, unknown> = {}) => {
   return {
+    allowedCommands: [],
     approvalState: 'not_required',
     createdAt: '2026-11-03T08:00:00.000Z',
     createdVia: 'mcp',
@@ -114,6 +115,23 @@ describe('scheduling MCP tools', () => {
           { input: createArgs },
         );
         expect(result).toMatchObject({ structuredContent: { job: created } });
+      });
+
+      it('names how many commands a job may run unprompted', async () => {
+        vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
+          createScheduledAgentJobAsAgent: job({
+            allowedCommands: [
+              'pnpm run social:x-post *',
+              'git fetch origin main',
+            ],
+            approvalState: 'pending',
+            enabled: false,
+          }),
+        });
+
+        const result = await createScheduledJobToolHandler(createArgs);
+
+        expect(result.content[0]?.text).toContain('2 allowed command(s)');
       });
 
       it('says so when the job is waiting for approval', async () => {

@@ -4,23 +4,24 @@ Created through the OpenThrottle MCP scheduling tools (`OPENTHROTTLE_MCP_TOOLSET
 so it lands at `approvalState=pending` and does not fire until a human approves it in the
 developer app. Prompt and settings below are the reviewed copy: change them here first.
 
-| Setting              | Value                                                     |
-| -------------------- | --------------------------------------------------------- |
-| name                 | `@openthrottleai daily poster`                            |
-| driverId             | `claude`                                                  |
-| model                | `sonnet` (the cheap tier: the job only runs two commands) |
-| scheduleKind         | `cron`                                                    |
-| cronPattern          | `0 7 * * *`                                               |
-| timezone             | `America/Los_Angeles`                                     |
-| misfirePolicy        | `skip` (a late fire never posts yesterday's tweet)        |
-| timeoutMs            | `600000` (10 minutes)                                     |
-| repositoryCheckoutId | the primary OpenThrottle checkout, on `main`              |
+| Setting              | Value                                                                                                            |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| name                 | `@openthrottleai daily poster`                                                                                   |
+| driverId             | `claude`                                                                                                         |
+| model                | `sonnet` (the cheap tier: the job only runs two commands)                                                        |
+| scheduleKind         | `cron`                                                                                                           |
+| cronPattern          | `0 7 * * *`                                                                                                      |
+| timezone             | `America/Los_Angeles`                                                                                            |
+| misfirePolicy        | `skip` (a late fire never posts yesterday's tweet)                                                               |
+| timeoutMs            | `600000` (10 minutes)                                                                                            |
+| repositoryCheckoutId | the primary OpenThrottle checkout, on `main`                                                                     |
+| allowedCommands      | `pnpm run social:x-post`, `pnpm run social:x-post *`, `pnpm run social:x-metrics`, `pnpm run social:x-metrics *` |
 
 Prerequisites: this package merged to `main` in that checkout; `OPENTHROTTLE_SOCIAL_PLAN_ID`,
 `X_CLIENT_ID` and `X_REFRESH_TOKEN` in `~/.openthrottle/.env` (see the runbook).
 
-Before approving, fire it once with run-now using the **dry-run prompt** (the same text with
-`-- --dry-run` after each command), check its run history, then switch to the real prompt.
+Run-now refuses a pending job, so approve it first, then fire it once with run-now using the **dry-run prompt** (the same text with
+`-- --dry-run` after each command), check its run history, then switch to the real prompt, which sends the job back for one more approval.
 
 ## Prompt
 

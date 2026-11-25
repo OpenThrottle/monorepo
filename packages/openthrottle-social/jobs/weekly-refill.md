@@ -5,24 +5,25 @@ and does not fire until a human approves it. The job **drafts only**: every task
 `BACKLOG`, and a human approves each one (`BACKLOG` → `PENDING`) before the daily poster will
 send it. Prompt and settings below are the reviewed copy: change them here first.
 
-| Setting              | Value                                                                        |
-| -------------------- | ---------------------------------------------------------------------------- |
-| name                 | `@openthrottleai weekly draft refill`                                        |
-| driverId             | `claude`                                                                     |
-| model                | `opus` (this is public copy: taste ≥ 8 per CLAUDE.md; `sonnet` is the floor) |
-| scheduleKind         | `cron`                                                                       |
-| cronPattern          | `0 6 * * 1` (Mondays, 06:00)                                                 |
-| timezone             | `America/Los_Angeles`                                                        |
-| misfirePolicy        | `skip`                                                                       |
-| timeoutMs            | `1800000` (30 minutes)                                                       |
-| repositoryCheckoutId | the primary OpenThrottle checkout, on `main`                                 |
+| Setting              | Value                                                                              |
+| -------------------- | ---------------------------------------------------------------------------------- |
+| name                 | `@openthrottleai weekly draft refill`                                              |
+| driverId             | `claude`                                                                           |
+| model                | `opus` (this is public copy: taste ≥ 8 per CLAUDE.md; `sonnet` is the floor)       |
+| scheduleKind         | `cron`                                                                             |
+| cronPattern          | `0 6 * * 1` (Mondays, 06:00)                                                       |
+| timezone             | `America/Los_Angeles`                                                              |
+| misfirePolicy        | `skip`                                                                             |
+| timeoutMs            | `1800000` (30 minutes)                                                             |
+| repositoryCheckoutId | the primary OpenThrottle checkout, on `main`                                       |
+| allowedCommands      | `git fetch origin main`, `git fetch origin main *`, `pnpm run social:x-validate *` |
 
 The agent needs the openthrottle-mcp server (plans and tasks) and git in the checkout. Replace
 `<SOCIAL_PLAN_ID>` with the posts plan's id when creating the job.
 
-Before approving, fire the **dry-run prompt** once with run-now: the same text with the line
+Run-now refuses a pending job, so approve it first, then fire the **dry-run prompt** once with run-now: the same text with the line
 `DRY RUN: create nothing.` added at the top. Its run history must show drafts and no
-`create_tasks` call.
+`create_tasks` call. Switching to the real prompt sends the job back for one more approval.
 
 ## Prompt
 
@@ -48,7 +49,7 @@ Any kind may add "firstReply" (posted as a reply; put links here, never in the m
    - Saturday: a lighter question or a poll (2 to 4 options, each at most 25 characters).
    Voice: plain, concrete and confident; first person plural; no hype words ("revolutionary", "game-changer"), no hashtags, at most one emoji. Each tweet at most 280 characters as X counts them (a URL counts 23, an emoji 2). Do not repeat a point an existing task already makes.
 4. Facts: every claim must trace to a commit, PR or plan you gathered in step 1. If you cannot trace it, cut it. Never invent numbers, users, quotes or features.
-5. Validate: write the payloads as one JSON array to a temporary file outside the repository and run `pnpm run social:x-validate -- <that file>`. Fix and re-run until every line says ok. Delete the file.
+5. Validate: write the payloads as one JSON array to `.openthrottle/social-drafts.json` (gitignored) and run `pnpm run social:x-validate -- .openthrottle/social-drafts.json`. Fix and re-run until every line says ok. Delete the file.
 6. Create all the drafts with ONE create_tasks call on plan <SOCIAL_PLAN_ID>. Each task has status "BACKLOG" (never PENDING or anything else), a short title naming the post, requirements set to [payload], and a description that starts with "Sources:" and lists the PR or plan URL behind every fact (https://github.com/OpenThrottle/monorepo/pull/<n>, or the plan id). Do not update, delete or re-order any existing task.
 7. Reply with a short report: the dates you filled, one line per draft (date, kind, title), and any date you left empty and why.
 ```

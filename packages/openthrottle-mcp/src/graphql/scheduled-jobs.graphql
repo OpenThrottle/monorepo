@@ -4,6 +4,7 @@
 # "MCP scheduling tools".
 
 fragment ScheduledJob on ScheduledAgentJobObject {
+  allowedCommands
   approvalState
   createdAt
   createdVia

@@ -2,6 +2,7 @@ import { Badge } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import type { ScheduledJobCardFragment } from '~/__generated__/graphql';
+import { ScheduleAllowedCommands } from '~/routing/schedule/components/ScheduleAllowedCommands';
 import { ScheduleJobMarkers } from '~/routing/schedule/components/ScheduleJobMarkers';
 import { SCHEDULE_COPY } from '~/routing/schedule/data/data.copy';
 import { describeScheduleCadence } from '~/routing/schedule/utils/describeScheduleCadence';
@@ -9,6 +10,7 @@ import { describeScheduleCadence } from '~/routing/schedule/utils/describeSchedu
 export interface ScheduleDetailSummaryProps {
   job: Pick<
     ScheduledJobCardFragment,
+    | 'allowedCommands'
     | 'approvalState'
     | 'createdVia'
     | 'cronPattern'
@@ -34,6 +36,8 @@ export const ScheduleDetailSummary = (
   // Hooks
 
   // Setup
+  // A pending job shows its list in the approval notice instead, next to Approve.
+  const showsAllowedCommands = job.approvalState !== 'pending';
 
   // Handlers
 
@@ -58,6 +62,7 @@ export const ScheduleDetailSummary = (
         {SCHEDULE_COPY.repositoryColumnLabel}:{' '}
         {job.repository?.displayName ?? SCHEDULE_COPY.repositoryNoneOption}
       </p>
+      {showsAllowedCommands && <ScheduleAllowedCommands job={job} />}
     </div>
   );
 };

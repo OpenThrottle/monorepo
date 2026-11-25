@@ -1,9 +1,11 @@
 /**
  * @description GraphQL surface behind the openthrottle-mcp scheduling tools. Separate mutations
  * rather than a client flag because the server must decide who is an agent: every job created here
- * is stamped `created_via = 'mcp'`, and edits are limited to those jobs. Same permissions as the UI
- * (settings:read / settings:write); a service account acts as its linked user (see
- * `agentOwnerUserIdFor`), so the ceiling is the caller's roles and that user's jobs.
+ * is stamped `created_via = 'mcp'`, and edits are limited to those jobs. Gated on the narrow
+ * schedules:read / schedules:write (held by the human roles and the mcp service-account role), not
+ * the UI's settings:*, so the MCP can manage jobs without settings:write. A service account acts as
+ * its linked user (see `agentOwnerUserIdFor`), so the ceiling is the caller's roles and that user's
+ * jobs.
  * Nothing here reaches webhook triggers.
  */
 import { UseGuards } from '@nestjs/common';
@@ -49,7 +51,7 @@ export class ScheduledAgentJobAgentResolver {
   @Query(() => [ScheduledAgentJobObject], {
     description: `The calling user's own scheduled agent jobs, newest first (agent-created and human-created). Agent tools only; a service account lists its acting user's jobs.`,
   })
-  @Permissions(PERMISSIONS.SETTINGS_READ)
+  @Permissions(PERMISSIONS.SCHEDULES_READ)
   async scheduledAgentJobsAsAgent(
     @CurrentUser() principal: AuthPrincipal,
   ): Promise<ScheduledAgentJobObject[]> {
@@ -60,7 +62,7 @@ export class ScheduledAgentJobAgentResolver {
   @Mutation(() => ScheduledAgentJobObject, {
     description: `Create a scheduled agent job on behalf of an agent. Always owned by the caller and marked created_via=mcp. Requires an idempotencyKey (a retry returns the existing job). Fails when the owner is at SCHEDULED_AGENT_JOBS_MAX_PER_OWNER jobs (default 25) or 10 agent-created jobs. With SCHEDULED_AGENT_JOBS_MCP_REQUIRE_APPROVAL=true the job is stored disabled and pending until a human approves it. A service account acts as its linked user; one with no acting user is refused.`,
   })
-  @Permissions(PERMISSIONS.SETTINGS_WRITE)
+  @Permissions(PERMISSIONS.SCHEDULES_WRITE)
   async createScheduledAgentJobAsAgent(
     @CurrentUser() principal: AuthPrincipal,
     @Args('input', { type: () => CreateScheduledAgentJobAsAgentInputType })
@@ -80,7 +82,7 @@ export class ScheduledAgentJobAgentResolver {
   @Mutation(() => ScheduledAgentJobObject, {
     description: `Update a scheduled agent job that an agent created and the caller owns; human-created jobs are refused. A job awaiting approval cannot be enabled here.`,
   })
-  @Permissions(PERMISSIONS.SETTINGS_WRITE)
+  @Permissions(PERMISSIONS.SCHEDULES_WRITE)
   async updateScheduledAgentJobAsAgent(
     @CurrentUser() principal: AuthPrincipal,
     @Args('input', { type: () => UpdateScheduledAgentJobAsAgentInputType })
@@ -102,7 +104,7 @@ export class ScheduledAgentJobAgentResolver {
   @Mutation(() => Boolean, {
     description: `Delete a scheduled agent job that an agent created and the caller owns; human-created jobs are refused. Returns whether a row was removed.`,
   })
-  @Permissions(PERMISSIONS.SETTINGS_WRITE)
+  @Permissions(PERMISSIONS.SCHEDULES_WRITE)
   async deleteScheduledAgentJobAsAgent(
     @CurrentUser() principal: AuthPrincipal,
     @Args('id', { type: () => ID }) id: string,
@@ -113,7 +115,7 @@ export class ScheduledAgentJobAgentResolver {
   @Mutation(() => ScheduledAgentJobRunObject, {
     description: `Enqueue an immediate run of one of the caller's own jobs (agent- or human-created). Refused while the job awaits approval.`,
   })
-  @Permissions(PERMISSIONS.SETTINGS_WRITE)
+  @Permissions(PERMISSIONS.SCHEDULES_WRITE)
   async runScheduledAgentJobNowAsAgent(
     @CurrentUser() principal: AuthPrincipal,
     @Args('id', { type: () => ID }) id: string,

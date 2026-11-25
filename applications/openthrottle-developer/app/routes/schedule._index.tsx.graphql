@@ -1,4 +1,5 @@
 fragment ScheduledJobCard on ScheduledAgentJobObject {
+  allowedCommands
   approvalState
   createdVia
   cronPattern

@@ -92,6 +92,12 @@ export class CreateScheduledAgentJobInputType {
   })
   repositoryCheckoutId?: string;
 
+  @Field(() => [String], {
+    description: `Shell commands the headless run may execute unprompted, as Bash(<pattern>) patterns without the wrapper (e.g. "pnpm run x *"). At most 20; claude and grok only. A non-empty list needs human approval.`,
+    nullable: true,
+  })
+  allowedCommands?: string[];
+
   @Field(() => Boolean, {
     description: `Whether the schedule starts enabled (default true).`,
     nullable: true,
@@ -172,6 +178,12 @@ export class UpdateScheduledAgentJobInputType {
     nullable: true,
   })
   repositoryCheckoutId?: string;
+
+  @Field(() => [String], {
+    description: `Replaces the allowlist (see create); [] clears it. A non-empty list needs human approval.`,
+    nullable: true,
+  })
+  allowedCommands?: string[];
 }
 
 @InputType()

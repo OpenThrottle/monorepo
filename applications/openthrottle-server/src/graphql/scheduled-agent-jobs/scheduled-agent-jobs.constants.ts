@@ -8,3 +8,9 @@ export type ScheduledAgentJobLimitCodesKey =
   keyof typeof SCHEDULED_AGENT_JOB_LIMIT_CODES;
 export type ScheduledAgentJobLimitCodesValue =
   (typeof SCHEDULED_AGENT_JOB_LIMIT_CODES)[ScheduledAgentJobLimitCodesKey];
+
+/** Most command patterns one job may pre-approve (`allowed_commands`, migration 205). */
+export const SCHEDULED_AGENT_JOB_MAX_ALLOWED_COMMANDS = 20;
+
+/** Longest single command pattern, in characters. */
+export const SCHEDULED_AGENT_JOB_MAX_ALLOWED_COMMAND_LENGTH = 200;
