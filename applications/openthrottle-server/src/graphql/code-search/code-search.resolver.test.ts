@@ -1,18 +1,35 @@
 /**
  * @description Tests for CodeSearchResolver: repository resolution + provider gating for
  * codeSemanticSearch, status derivation for codeIndexStatus, and enqueue/dedup for
- * indexCodeRepository. Services + the BullMQ queue are mocked.
+ * indexCodeRepository, and the authorization contract: the REAL GqlPermissionsGuard driven off the
+ * resolver's REAL metadata lets the mcp service account search but not re-index. Services + the
+ * BullMQ queue are mocked.
  */
 
 import { createMock } from '@golevelup/ts-vitest';
+import type { ExecutionContext } from '@nestjs/common';
+import { ForbiddenException } from '@nestjs/common';
+import { GUARDS_METADATA } from '@nestjs/common/constants';
+import { Reflector } from '@nestjs/core';
+import { authPrincipalFromServiceAccountId } from '@openthrottle/nestjs-auth';
+import {
+  PERMISSIONS,
+  PERMISSIONS_KEY,
+  ROLE_PERMISSIONS,
+  ROLES,
+} from '@openthrottle/nestjs-rbac';
 import type {
   RepositoryCheckout,
   RepositoryCheckoutsRepository,
+  RolesRepository,
 } from '@openthrottle/nestjs-repositories-server';
+import type { RolesRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import { createRolesRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import type { CodeSearchService } from '@openthrottle/nestjs-vector-search';
 import type { Queue } from 'bullmq';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import type { CheckoutPathResolutionService } from '../../services/checkout-path-resolution/checkout-path-resolution.service.ts';
 import type { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service.ts';
 import type { WorkspaceLocalRepositoriesService } from '../../services/workspace-local-repositories/workspace-local-repositories.service.ts';
@@ -257,6 +274,41 @@ describe('CodeSearchResolver', () => {
   });
 
   describe('codeIndexStatus', () => {
+    describe('when the caller is a service account', () => {
+      it('scopes the repository lookup to the user it acts for', async () => {
+        vi.mocked(
+          effectiveUserResolution.resolveEffectiveUserId,
+        ).mockResolvedValue('human-1');
+        vi.mocked(codeSearch.indexedChunkCount).mockResolvedValue(3);
+
+        const result = await resolver.codeIndexStatus(
+          'service-account-1',
+          REPO_ID,
+        );
+
+        expect(repositories.findByIdForUser).toHaveBeenCalledWith(
+          REPO_ID,
+          'human-1',
+        );
+        expect(result.status).toBe('ready');
+      });
+    });
+
+    describe('when the caller acts for no one', () => {
+      it('looks the repository up under its own sub', async () => {
+        vi.mocked(
+          effectiveUserResolution.resolveEffectiveUserId,
+        ).mockResolvedValue(null);
+
+        await resolver.codeIndexStatus(USER_ID, REPO_ID);
+
+        expect(repositories.findByIdForUser).toHaveBeenCalledWith(
+          REPO_ID,
+          USER_ID,
+        );
+      });
+    });
+
     it('is unavailable when no provider is configured', async () => {
       vi.mocked(codeSearch.isProviderConfigured).mockReturnValue(false);
       const result = await resolver.codeIndexStatus(USER_ID, REPO_ID);
@@ -365,6 +417,92 @@ describe('CodeSearchResolver', () => {
 
       expect(remove).toHaveBeenCalledOnce();
       expect(queue.add).toHaveBeenCalledOnce();
+    });
+  });
+});
+
+describe('CodeSearchResolver authorization', () => {
+  const SERVICE_ACCOUNT_ID = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+  const READ_OPERATIONS = ['codeIndexStatus', 'codeSemanticSearch'] as const;
+
+  let roles: RolesRepositoryMock;
+  let guard: GqlPermissionsGuard;
+
+  /** The execution context the guard sees for a service-account call to `method`. */
+  const serviceAccountContextFor = (
+    method: (typeof READ_OPERATIONS)[number] | 'indexCodeRepository',
+  ): ExecutionContext => {
+    const req = { user: authPrincipalFromServiceAccountId(SERVICE_ACCOUNT_ID) };
+    return createMock<ExecutionContext>({
+      getClass: vi.fn().mockReturnValue(CodeSearchResolver),
+      getHandler: vi.fn().mockReturnValue(CodeSearchResolver.prototype[method]),
+      getType: vi.fn().mockReturnValue('http'),
+      switchToHttp: vi.fn().mockReturnValue({ getRequest: () => req }),
+    });
+  };
+
+  beforeEach(() => {
+    roles = createRolesRepositoryMock();
+    roles.getPermissionsForServiceAccount.mockResolvedValue([
+      ...ROLE_PERMISSIONS[ROLES.MCP],
+    ]);
+    guard = new GqlPermissionsGuard(
+      new Reflector(),
+      createMock<RolesRepository>(roles),
+    );
+  });
+
+  it('applies GqlPermissionsGuard at the class level', () => {
+    expect(Reflect.getMetadata(GUARDS_METADATA, CodeSearchResolver)).toEqual([
+      GqlPermissionsGuard,
+    ]);
+  });
+
+  it.each(READ_OPERATIONS)('%s requires exactly code:read', (method) => {
+    expect(
+      Reflect.getMetadata(
+        PERMISSIONS_KEY,
+        CodeSearchResolver.prototype[method],
+      ),
+    ).toEqual([PERMISSIONS.CODE_READ]);
+  });
+
+  it('indexCodeRepository requires exactly settings:write', () => {
+    expect(
+      Reflect.getMetadata(
+        PERMISSIONS_KEY,
+        CodeSearchResolver.prototype.indexCodeRepository,
+      ),
+    ).toEqual([PERMISSIONS.SETTINGS_WRITE]);
+  });
+
+  describe('when the caller is a service account holding the mcp role', () => {
+    it.each(READ_OPERATIONS)('%s is allowed', async (method) => {
+      await expect(
+        guard.canActivate(serviceAccountContextFor(method)),
+      ).resolves.toBe(true);
+
+      expect(roles.getPermissionsForServiceAccount).toHaveBeenCalledWith(
+        SERVICE_ACCOUNT_ID,
+      );
+    });
+
+    it('indexCodeRepository is refused', async () => {
+      await expect(
+        guard.canActivate(serviceAccountContextFor('indexCodeRepository')),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+    });
+  });
+
+  describe('when the service account holds no code:read', () => {
+    it('codeSemanticSearch is refused with the missing permission named', async () => {
+      roles.getPermissionsForServiceAccount.mockResolvedValue([
+        PERMISSIONS.PLANS_READ,
+      ]);
+
+      await expect(
+        guard.canActivate(serviceAccountContextFor('codeSemanticSearch')),
+      ).rejects.toThrow('Missing permission: code:read');
     });
   });
 });

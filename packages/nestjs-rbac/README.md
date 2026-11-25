@@ -10,13 +10,13 @@ Roles and permissions are defined in the package and used by guards (see task â€
 
 ### Roles
 
-| Role          | Description                                               |
-| ------------- | --------------------------------------------------------- |
-| `admin`       | Full settings + users access.                             |
-| `user`        | Read/write settings, read users.                          |
-| `viewer`      | Read-only (settings and users).                           |
-| `mcp`         | Read/write plans, draft blog posts (MCP service account). |
-| `plan-runner` | Read/write plans (plan-run worker account).               |
+| Role          | Description                                                            |
+| ------------- | ---------------------------------------------------------------------- |
+| `admin`       | Full settings + users access.                                          |
+| `user`        | Read/write settings, read users.                                       |
+| `viewer`      | Read-only (settings and users).                                        |
+| `mcp`         | Read/write plans, draft blog posts, search code (MCP service account). |
+| `plan-runner` | Read/write plans (plan-run worker account).                            |
 
 ### Permissions
 
@@ -25,6 +25,7 @@ Roles and permissions are defined in the package and used by guards (see task â€
 | `blog:draft`     | Create/edit DRAFT blog posts; read all blog posts, tags and authors.            |
 | `blog:write`     | Publish/unpublish/archive posts; edit non-draft posts; manage authors and tags. |
 | `cms:write`      | Create/update/delete cms content: fragments, their edges, layouts, components.  |
+| `code:read`      | Search a registered repository's indexed code and read its index status.        |
 | `flags:read`     | Read feature flags.                                                             |
 | `flags:write`    | Create/update/delete flags.                                                     |
 | `plans:read`     | Read plans.                                                                     |
@@ -37,9 +38,9 @@ Roles and permissions are defined in the package and used by guards (see task â€
 ### Mapping (role â†’ permissions)
 
 - **admin:** every defined permission (full superset â€” derived from `PERMISSIONS`, so new permissions are granted automatically)
-- **user:** `flags:read`, `settings:read`, `settings:write`, `users:read`
-- **viewer:** `flags:read`, `settings:read`, `users:read`
-- **mcp:** `blog:draft`, `plans:read`, `plans:write`
+- **user:** `code:read`, `flags:read`, `settings:read`, `settings:write`, `users:read`
+- **viewer:** `code:read`, `flags:read`, `settings:read`, `users:read`
+- **mcp:** `blog:draft`, `code:read`, `plans:read`, `plans:write`
 - **plan-runner:** `plans:read`, `plans:write`
 
 Usage (for guards and app code):
