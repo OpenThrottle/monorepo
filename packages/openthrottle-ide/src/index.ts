@@ -1,3 +1,7 @@
+export {
+  DEFAULT_SEMANTIC_EXCLUDE_GLOBS,
+  semanticExcludeGlobs,
+} from './config/semantic-excludes.ts';
 export type {
   ResolvedWorkspaceConfig,
   WorkspaceConfig,
@@ -20,6 +24,7 @@ export type {
   IndexWorkspaceResult,
   SemanticMatch,
   SemanticSearchOptions,
+  SkippedChunk,
   StoredChunk,
   VectorMatch,
   VectorStore,

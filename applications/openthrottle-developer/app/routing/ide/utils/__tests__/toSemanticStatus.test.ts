@@ -5,6 +5,7 @@ import { toSemanticStatus } from '~/routing/ide/utils/toSemanticStatus';
 
 describe('toSemanticStatus', () => {
   test('maps each known server status string to its client union member', () => {
+    expect(toSemanticStatus('failed')).toBe(IDE_SEMANTIC_STATUS.failed);
     expect(toSemanticStatus('indexing')).toBe(IDE_SEMANTIC_STATUS.indexing);
     expect(toSemanticStatus('notIndexed')).toBe(IDE_SEMANTIC_STATUS.notIndexed);
     expect(toSemanticStatus('ready')).toBe(IDE_SEMANTIC_STATUS.ready);

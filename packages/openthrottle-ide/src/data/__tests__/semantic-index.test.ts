@@ -141,4 +141,68 @@ describe('indexWorkspace', () => {
       expect(call[0]).toHaveLength(1);
     }
   });
+
+  describe('when one chunk fails on its own', () => {
+    it('skips and reports that chunk, and stores the rest', async () => {
+      const store = createMemoryStore();
+      const provider = fakeProvider();
+      provider.embed.mockImplementation(async (texts: string[]) => {
+        if (texts.some((text) => text.includes('c = 3'))) {
+          throw new Error('input rejected');
+        }
+        return texts.map((text) => [text.length, 0, 0]);
+      });
+
+      const result = await indexWorkspace({ root }, { provider, store });
+
+      expect(result.skipped).toEqual([
+        expect.objectContaining({ path: 'src/c.ts', reason: 'input rejected' }),
+      ]);
+      expect(result.embedded).toBe(2);
+      const paths = new Set([...store.byId.values()].map((r) => r.chunk.path));
+      expect(paths).toEqual(new Set(['src/a.ts']));
+    });
+  });
+
+  describe('when every chunk of a batch fails', () => {
+    it('rethrows, so a dead provider fails the run loudly', async () => {
+      const store = createMemoryStore();
+      const provider = fakeProvider();
+      provider.embed.mockRejectedValue(new Error('provider down'));
+
+      await expect(
+        indexWorkspace({ root }, { provider, store }),
+      ).rejects.toThrow('provider down');
+    });
+  });
+
+  describe('when the store rejects one chunk', () => {
+    it('skips that chunk instead of failing the run', async () => {
+      const store = createMemoryStore();
+      const upsert = store.upsert;
+      store.upsert = async (workspaceRoot, records): Promise<void> => {
+        if (records.some((record) => record.chunk.path === 'src/c.ts')) {
+          throw new Error('invalid byte sequence');
+        }
+        await upsert(workspaceRoot, records);
+      };
+
+      const result = await indexWorkspace(
+        { root },
+        { provider: fakeProvider(), store },
+      );
+
+      expect(result.skipped.map((chunk) => chunk.path)).toEqual(['src/c.ts']);
+      expect(result.embedded).toBe(2);
+    });
+  });
+
+  it('reports nothing skipped on a clean run', async () => {
+    const result = await indexWorkspace(
+      { root },
+      { provider: fakeProvider(), store: createMemoryStore() },
+    );
+
+    expect(result.skipped).toEqual([]);
+  });
 });

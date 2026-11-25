@@ -19,6 +19,8 @@ export interface CodeIndexJobResult {
   readonly embedded: number;
   /** Echoed for the client. */
   readonly repositoryId: string;
+  /** Chunks left out because the embedder or the store rejected them on their own. */
+  readonly skipped: number;
 }
 
 /** BullMQ job type for the code-index queue. */

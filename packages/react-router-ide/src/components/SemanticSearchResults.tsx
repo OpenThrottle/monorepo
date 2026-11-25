@@ -12,6 +12,7 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
+import { SEMANTIC_INDEX_FAILED_COPY } from '../data/data.copy';
 import type { IdeSemanticResult } from '../data/data.view-models';
 import { IDE_SEMANTIC_STATUS } from '../data/data.view-models';
 import { formatLocationLabel } from '../utils/formatLocationLabel';
@@ -27,7 +28,7 @@ export interface SemanticSearchResultsProps {
 /**
  * Renders the semantic tier by `result.status`: a gated "index unavailable" `Empty`
  * (`unavailable`), a gated "hosted provider not opted in" `Empty` (`hostedOptInRequired`), a "not indexed yet" prompt (`notIndexed`), an indexing-in-progress
- * affordance (`indexing`), or — when `ready` — a loading `Skeleton`, an empty state,
+ * affordance (`indexing`), the failure reason of the last index job (`failed`), or — when `ready` — a loading `Skeleton`, an empty state,
  * or the ranked matches (similarity score, `path:startLine` location, snippet).
  * Presentational; data arrives via props.
  *
@@ -91,6 +92,24 @@ export const SemanticSearchResults = (
             {`Index ${result.repository.displayName} to enable natural-language code search. Use the Index action above.`}
           </EmptyDescription>
         </EmptyHeader>
+      </Empty>
+    );
+  }
+
+  if (result.status === IDE_SEMANTIC_STATUS.failed) {
+    return (
+      <Empty className={className} data-testid="SemanticSearchResults">
+        <EmptyHeader>
+          <EmptyTitle>{SEMANTIC_INDEX_FAILED_COPY.title}</EmptyTitle>
+          <EmptyDescription>
+            {SEMANTIC_INDEX_FAILED_COPY.description}
+          </EmptyDescription>
+        </EmptyHeader>
+        {result.failedReason !== null && (
+          <pre className="bg-muted text-muted-foreground max-w-full overflow-auto rounded-md p-2 text-left font-mono text-xs">
+            {result.failedReason}
+          </pre>
+        )}
       </Empty>
     );
   }

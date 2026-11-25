@@ -7,6 +7,7 @@ import {
   diffSnapshots,
   hashWorkspace,
   indexWorkspace,
+  semanticExcludeGlobs,
   semanticSearch,
 } from '@openthrottle/openthrottle-ide';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -27,6 +28,7 @@ vi.mock('@openthrottle/openthrottle-ide', async (importActual) => {
     diffSnapshots: vi.fn(),
     hashWorkspace: vi.fn(),
     indexWorkspace: vi.fn(),
+    semanticExcludeGlobs: vi.fn(),
     semanticSearch: vi.fn(),
   };
 });
@@ -41,6 +43,8 @@ const PRIOR_SNAPSHOT: WorkspaceFileHash[] = [
 ];
 
 const WORKSPACE = '/Users/dev/repo';
+const EXCLUDES = ['pnpm-lock.yaml'];
+const INDEX_CONFIG = { exclude: EXCLUDES, root: WORKSPACE };
 
 /** The service hands the engine an adapter over the embedder; assert its shape, not identity. */
 const ADAPTED_PROVIDER = { embed: expect.any(Function) };
@@ -82,6 +86,7 @@ describe('CodeSearchService', () => {
 
   beforeEach(() => {
     vi.mocked(hashWorkspace).mockResolvedValue(NEXT_SNAPSHOT);
+    vi.mocked(semanticExcludeGlobs).mockResolvedValue(EXCLUDES);
     embedder = createMock<CodeEmbedder>();
     vi.mocked(embedder.getConfig).mockReturnValue(CONFIG);
     setState('ok');
@@ -165,16 +170,17 @@ describe('CodeSearchService', () => {
     });
 
     it('runs a FULL index (no diff) when there is no prior snapshot, then persists the snapshot', async () => {
-      const result = { deletedPaths: 0, embedded: 17 };
+      const result = { deletedPaths: 0, embedded: 17, skipped: [] };
       vi.mocked(snapshotStore.load).mockResolvedValue(null);
       vi.mocked(indexWorkspace).mockResolvedValue(result);
 
       const out = await service.indexCodeWorkspace(WORKSPACE);
 
-      expect(indexWorkspace).toHaveBeenCalledWith(
-        { root: WORKSPACE },
-        { provider: ADAPTED_PROVIDER, store },
-      );
+      expect(indexWorkspace).toHaveBeenCalledWith(INDEX_CONFIG, {
+        provider: ADAPTED_PROVIDER,
+        store,
+      });
+      expect(hashWorkspace).toHaveBeenCalledWith(INDEX_CONFIG);
       expect(diffSnapshots).not.toHaveBeenCalled();
       expect(snapshotStore.save).toHaveBeenCalledWith(WORKSPACE, NEXT_SNAPSHOT);
       expect(out).toEqual(result);
@@ -182,7 +188,7 @@ describe('CodeSearchService', () => {
 
     it('runs an INCREMENTAL index with the computed diff when a prior snapshot exists', async () => {
       const diff = { added: [], changed: ['b.ts'], removed: [] };
-      const result = { deletedPaths: 1, embedded: 3 };
+      const result = { deletedPaths: 1, embedded: 3, skipped: [] };
       vi.mocked(snapshotStore.load).mockResolvedValue(PRIOR_SNAPSHOT);
       vi.mocked(diffSnapshots).mockReturnValue(diff);
       vi.mocked(indexWorkspace).mockResolvedValue(result);
@@ -190,10 +196,11 @@ describe('CodeSearchService', () => {
       const out = await service.indexCodeWorkspace(WORKSPACE);
 
       expect(diffSnapshots).toHaveBeenCalledWith(PRIOR_SNAPSHOT, NEXT_SNAPSHOT);
-      expect(indexWorkspace).toHaveBeenCalledWith(
-        { root: WORKSPACE },
-        { diff, provider: ADAPTED_PROVIDER, store },
-      );
+      expect(indexWorkspace).toHaveBeenCalledWith(INDEX_CONFIG, {
+        diff,
+        provider: ADAPTED_PROVIDER,
+        store,
+      });
       expect(snapshotStore.save).toHaveBeenCalledWith(WORKSPACE, NEXT_SNAPSHOT);
       expect(out).toEqual(result);
     });
@@ -226,7 +233,7 @@ describe('CodeSearchService', () => {
       });
       vi.mocked(indexWorkspace).mockImplementation(async (_config, options) => {
         expect(await options.provider.embed(['some chunk'])).toEqual(vectors);
-        return { deletedPaths: 0, embedded: 1 };
+        return { deletedPaths: 0, embedded: 1, skipped: [] };
       });
 
       await service.indexCodeWorkspace(WORKSPACE);
@@ -243,7 +250,7 @@ describe('CodeSearchService', () => {
       });
       vi.mocked(indexWorkspace).mockImplementation(async (_config, options) => {
         await options.provider.embed(['some chunk']);
-        return { deletedPaths: 0, embedded: 1 };
+        return { deletedPaths: 0, embedded: 1, skipped: [] };
       });
 
       await expect(service.indexCodeWorkspace(WORKSPACE)).rejects.toThrow(

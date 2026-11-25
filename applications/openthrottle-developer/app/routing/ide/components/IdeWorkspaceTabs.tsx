@@ -106,6 +106,7 @@ export const IdeWorkspaceTabs = (
           result={
             workspace.semanticData ?? {
               available: true,
+              failedReason: null,
               indexedChunks: 0,
               matches: [],
               query: workspace.semanticQuery,

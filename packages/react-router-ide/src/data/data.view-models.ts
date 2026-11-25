@@ -130,10 +130,13 @@ export interface IdeSymbolRef {
  *   opted code in with `CODE_EMBEDDINGS_ALLOW_HOSTED=true`, so code is never sent to it (gated)
  * - `notIndexed`: provider configured, nothing indexed yet (offer the Index action)
  * - `indexing`: a code-index job is running (in-progress affordance)
+ * - `failed`: the last code-index job failed (show the reason and offer the Index action again);
+ *   any indexed chunks are a partial index
  * - `ready`: the repository is indexed and searchable
  * @public
  */
 export const IDE_SEMANTIC_STATUS = {
+  failed: 'failed',
   hostedOptInRequired: 'hostedOptInRequired',
   indexing: 'indexing',
   notIndexed: 'notIndexed',
@@ -153,6 +156,8 @@ export type IdeSemanticStatus =
 export interface IdeSemanticResult {
   /** False when the semantic index/provider is unavailable (render the gated state). Equivalent to `status` being `unavailable` or `hostedOptInRequired`. */
   available: boolean;
+  /** Why the last index job failed, when `status` is `failed`; null otherwise. */
+  readonly failedReason: string | null;
   /** Number of indexed chunks for the repository (0 when not indexed). */
   indexedChunks: number;
   /** Semantic matches (engine leaf type, passed through). */

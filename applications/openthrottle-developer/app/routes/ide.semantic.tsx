@@ -49,7 +49,7 @@ export const loader = async (
     { repositoryId: repository.repositoryId },
   );
   const status = toSemanticStatus(statusResult.codeIndexStatus.status);
-  const indexedChunks = statusResult.codeIndexStatus.indexedChunks;
+  const { failedReason, indexedChunks } = statusResult.codeIndexStatus;
 
   let matches: SemanticMatch[] = [];
   let available =
@@ -72,7 +72,15 @@ export const loader = async (
     }));
   }
 
-  return { available, indexedChunks, matches, query, repository, status };
+  return {
+    available,
+    failedReason: failedReason ?? null,
+    indexedChunks,
+    matches,
+    query,
+    repository,
+    status,
+  };
 };
 
 /** Enqueue a (re)index for the posted repositoryId. */
