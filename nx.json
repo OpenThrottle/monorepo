@@ -290,7 +290,7 @@
       "cache": false,
       "executor": "nx:run-commands",
       "metadata": {
-        "description": "Fail when any tracked path has a directory segment named lib, helpers, common, shared or misc (ot-folders rule 4), via scripts/check-folder-vocabulary.ts. Whole-segment matching, so library.ts and common.ts pass; each hit names the folder to use instead. Never cached: the input is the whole tracked file list, which no `inputs` glob short of the entire tree can hash, and `git ls-files` is fast enough not to need it."
+        "description": "Fail when any tracked path has a directory segment named lib, helpers, common, shared or misc (ot-folders rule 4), or when a top-level src/ folder of a packages/* or tools/* project is outside its technology bucket's vocabulary (rule 1; legacy folders in a shrink-only GRANDFATHERED_FOLDERS list), via scripts/check-folder-vocabulary.ts. Whole-segment matching, so library.ts and common.ts pass; each hit names the folder or words to use instead. Never cached: the input is the whole tracked file list, which no `inputs` glob short of the entire tree can hash, and `git ls-files` is fast enough not to need it."
       },
       "options": {
         "command": "tsx ./scripts/check-folder-vocabulary.ts",

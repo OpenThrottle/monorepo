@@ -40,12 +40,12 @@ metadata:
 Every project in this Nx monorepo belongs to one of four stacks. The bucket decides
 which folder vocabulary applies and, via `technology:` tags, what may import it.
 
-| Bucket         | What lives there                                                 | Folder vocabulary                                          |
-| -------------- | ---------------------------------------------------------------- | ---------------------------------------------------------- |
-| `nestjs`       | Applications and modules many NestJS applications may consume    | `modules` `services` `guards` `config` — no components     |
-| `nodejs`       | Server/client-agnostic code consumed by both API and client apps | `config` `data` `utils` — no components, no hooks          |
-| `react`        | Client code using React but **never** importing `react-router`   | `components` `config` `data` `hooks` `utils`               |
-| `react-router` | Client code coupled to the React Router framework                | `components` `config` `data` `hooks` `utils` (+ `actions`) |
+| Bucket         | What lives there                                                 | Folder vocabulary                                           |
+| -------------- | ---------------------------------------------------------------- | ----------------------------------------------------------- |
+| `nestjs`       | Applications and modules many NestJS applications may consume    | `modules` `services` `guards` `config` — no components      |
+| `nodejs`       | Server/client-agnostic code consumed by both API and client apps | `config` `data` `scripts` `utils` — no components, no hooks |
+| `react`        | Client code using React but **never** importing `react-router`   | `components` `config` `data` `hooks` `utils`                |
+| `react-router` | Client code coupled to the React Router framework                | `components` `config` `data` `hooks` `utils` (+ `actions`)  |
 
 **The bucket rule:** the moment a file imports from `react-router`, it belongs to the
 `react-router` bucket — never the `react` one. React-only packages must not reach for
@@ -102,6 +102,7 @@ is a package, and that is the whole test.
 
 1. **Do not invent new folders.** Use the vocabulary above. If nothing fits, the
    code probably belongs in a different bucket, not a new directory.
+   _Enforced_ for packages' top-level `src/` folders by `check-folder-vocabulary`.
 2. **Bucket utils by theme**, per AGENTS.md § Code style ("prefer a bucket module").
 3. **Do not delete empty folders or their `.gitkeep`.** They are placeholders for
    functionality that is coming, and removing them makes the next generator run
@@ -134,6 +135,7 @@ is a package, and that is the whole test.
 - **`utils`** — logic lifted out of components so it can be tested in isolation.
   A function that takes params and does not depend on external state is always a
   candidate to move here.
+- **`scripts`** — thin CLI entry points; their logic lives in `utils`. nodejs only.
 - **`actions`** — React Router actions for one route area.
 - **`testing`** — helpers and fixtures for the tests of that area.
 

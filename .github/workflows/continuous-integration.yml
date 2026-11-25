@@ -1009,9 +1009,10 @@ jobs:
 
       # Whole-tree `git ls-files` scan, so a `gates` job step like its neighbours.
       # Fails when a tracked path sits under a lib/, helpers/, common/, shared/ or
-      # misc/ directory — ot-folders rule 4. Pre-commit checks only newly added
-      # paths; this is the authoritative whole-tree copy.
-      - name: '🗂️ Folder vocabulary (no junk-drawer folders)'
+      # misc/ directory (ot-folders rule 4), or a package's top-level src/ folder
+      # is outside its bucket's vocabulary (rule 1). Pre-commit checks only newly
+      # added paths; this is the authoritative whole-tree copy.
+      - name: '🗂️ Folder vocabulary (junk-drawer + per-bucket src/ folders)'
         run: pnpm exec nx run monorepo:check-folder-vocabulary
 
       # Static and build-free (the TypeScript compiler API over each CMS block
