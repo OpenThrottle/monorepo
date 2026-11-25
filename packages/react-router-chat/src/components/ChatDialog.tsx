@@ -14,8 +14,8 @@ import {
 } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import type { ChatComposerControls } from '../context/ChatProvider';
 import { useChatDialog } from '../hooks/useChatDialog';
+import type { ChatComposerControls } from '../types';
 import type { ChatMessage } from '../types';
 import { ChatComposer } from './ChatComposer';
 import { ChatComposerToolbar } from './ChatComposerToolbar';

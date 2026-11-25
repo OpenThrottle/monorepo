@@ -7,8 +7,8 @@
 
 import { toErrorMessage } from '@openthrottle/nodejs-utils';
 
-import type { LoopOutcome, RunOtLoopOptions } from '../contract/index.ts';
-import { LOOP_TASK_STATUS } from '../contract/index.ts';
+import { LOOP_TASK_STATUS } from '../data/data.loop.ts';
+import type { LoopOutcome, RunOtLoopOptions } from '../types/loop.ts';
 import {
   claimGuidance,
   clampMaxRetries,

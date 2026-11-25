@@ -3,20 +3,20 @@ import { join } from 'node:path';
 
 import { isRecord, toErrorMessage } from '@openthrottle/nodejs-utils';
 
-import type {
-  DriverModelLister,
-  LoopTask,
-  ModelRoutingPolicy,
-  ModelRoutingPolicyResult,
-  ModelRoutingTier,
-  RouteTaskModelResult,
-} from '../contract/index.ts';
 import {
   MODEL_ROUTING_DEFAULT_TIER,
   MODEL_ROUTING_POLICY_RELATIVE_PATH,
   MODEL_ROUTING_POLICY_VERSION,
   MODEL_ROUTING_REVIEW_TIER,
 } from '../data/data.model-routing.ts';
+import type { LoopTask } from '../types/loop.ts';
+import type {
+  DriverModelLister,
+  ModelRoutingPolicy,
+  ModelRoutingPolicyResult,
+  ModelRoutingTier,
+  RouteTaskModelResult,
+} from '../types/model-routing.ts';
 
 const invalid = (reason: string): ModelRoutingPolicyResult => {
   return { kind: 'invalid', reason };

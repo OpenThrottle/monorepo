@@ -6,9 +6,9 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { ChatDialog } from '../../components/ChatDialog';
 import { useChat } from '../../hooks/useChat';
 import type { ChatMessage } from '../../types';
+import { ChatDialog } from '../ChatDialog';
 import { ChatProvider } from '../ChatProvider';
 
 describe('ChatProvider', () => {

@@ -1,5 +1,7 @@
 import { toErrorMessage } from '@openthrottle/nodejs-utils';
 
+import { THIN_TASK_BLOCK_SUMMARY } from '../data/data.constants.ts';
+import { LOOP_TASK_STATUS } from '../data/data.loop.ts';
 import type {
   AttemptFailure,
   GitHeadState,
@@ -8,9 +10,7 @@ import type {
   LoopTask,
   WorkerAttemptResult,
   WorkerResult,
-} from '../contract/index.ts';
-import { LOOP_TASK_STATUS } from '../contract/index.ts';
-import { THIN_TASK_BLOCK_SUMMARY } from '../data/data.constants.ts';
+} from '../types/loop.ts';
 import { describeAttemptFailure } from './describeAttemptFailure.ts';
 import {
   claimGuidance,

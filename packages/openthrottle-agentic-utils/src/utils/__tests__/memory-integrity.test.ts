@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { checkIndexIntegrity, formatIntegrityReport } from '../integrity.ts';
+import {
+  checkIndexIntegrity,
+  formatIntegrityReport,
+} from '../memory-integrity.ts';
 
 const run = (input: {
   archives?: ReadonlyMap<string, string>;

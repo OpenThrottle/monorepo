@@ -3,8 +3,10 @@ import {
   THEME_SAFELIST_HOVER_PREFIXES,
   THEME_SAFELIST_PREFIXES,
   THEME_TOKEN_COLOR_ALIASES,
-} from './data/data.theme-safelist';
-import { THEME_TOKEN_NAMES } from './theme-contract';
+} from '../data/data.theme-safelist';
+import { THEME_TOKEN_NAMES } from '../data/data.theme-tokens';
+import { THEMES } from '../data/data.themes';
+import type { Theme, ThemeTokens } from '../types/theme';
 
 const braces = (items: readonly string[]): string => {
   return `{${items.join(',')}}`;
@@ -58,4 +60,42 @@ export const buildThemeSafelist = (): string => {
     ...getThemeSafelistPatterns().map(rule),
     '',
   ].join('\n');
+};
+
+const renderTokenBlock = (tokens: ThemeTokens): string => {
+  return THEME_TOKEN_NAMES.map((name) => `  --${name}: ${tokens[name]};`).join(
+    '\n',
+  );
+};
+
+/**
+ * @public
+ * @description Builds the CSS for a set of {@link Theme}s as scoped token
+ * overrides. Each theme emits an `html[data-theme="id"]` block (light) and an
+ * `html[data-theme="id"].dark` block (dark), whose selector specificity beats
+ * the base `:root` / `prefers-color-scheme` rules in `theme.css`. Render the
+ * result in a single SSR `<style>` in the document head so the palette is
+ * present on first paint (no flash), then set `data-theme` / `.dark` on
+ * `<html>` to activate a theme.
+ */
+export const buildThemeStylesheet = (themes: readonly Theme[]): string => {
+  return themes
+    .map(
+      (theme) =>
+        `html[data-theme="${theme.id}"] {\n${renderTokenBlock(theme.light)}\n}\n` +
+        `html[data-theme="${theme.id}"].dark {\n${renderTokenBlock(theme.dark)}\n}`,
+    )
+    .join('\n\n');
+};
+
+/** @public Looks up a theme by id. */
+export const getTheme = (id: string): Theme | undefined => {
+  return THEMES.find((theme) => theme.id === id);
+};
+
+/** @public Type guard: whether `value` is a registered theme id. */
+export const isThemeId = (value: unknown): value is string => {
+  return (
+    typeof value === 'string' && THEMES.some((theme) => theme.id === value)
+  );
 };

@@ -3,11 +3,6 @@ import { join } from 'node:path';
 
 import { isRecord, toErrorMessage } from '@openthrottle/nodejs-utils';
 
-import type {
-  LoopFollowUp,
-  WorkerResult,
-  WorkerResultRead,
-} from '../contract/index.ts';
 import {
   RESULT_DIR_GITIGNORE,
   RESULT_DIR_NAME,
@@ -18,6 +13,11 @@ import {
   RESULT_REASON_MAX_CHARS,
   RESULT_SCHEMA_VERSION,
 } from '../data/data.constants.ts';
+import type {
+  LoopFollowUp,
+  WorkerResult,
+  WorkerResultRead,
+} from '../types/loop.ts';
 
 type Parsed<T> =
   | { readonly error: string; readonly ok: false }

@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { isErrorWithCode, toErrorMessage } from '@openthrottle/nodejs-utils';
 
 import { parseSkillFrontmatterForValidation } from './agent-asset-frontmatter.ts';
-import { skillFrontmatterSchema } from './schemas/agent-asset-frontmatter.schemas.ts';
+import { skillFrontmatterSchema } from './utils/agent-asset-frontmatter-schemas.ts';
 
 /**
  * A single skill directory discovered under a source root — the on-disk unit

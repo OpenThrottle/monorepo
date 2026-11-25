@@ -1,19 +1,19 @@
 import type { ZodError } from 'zod';
 
-import {
-  parseYamlFrontmatter,
-  parseYamlFrontmatterMetadata,
-} from './frontmatter/frontmatter.ts';
 import type {
   AgentAssetKind,
   AgentAssetValidationIssue,
   SkillOutcomeTelemetry,
-} from './schemas/agent-asset-frontmatter.schemas.ts';
+} from './utils/agent-asset-frontmatter-schemas.ts';
 import {
   personaFrontmatterSchema,
   SKILL_OUTCOME_TELEMETRY,
   skillFrontmatterSchema,
-} from './schemas/agent-asset-frontmatter.schemas.ts';
+} from './utils/agent-asset-frontmatter-schemas.ts';
+import {
+  parseYamlFrontmatter,
+  parseYamlFrontmatterMetadata,
+} from './utils/frontmatter.ts';
 
 const OUTCOME_TELEMETRY_KEY = 'outcome-telemetry';
 

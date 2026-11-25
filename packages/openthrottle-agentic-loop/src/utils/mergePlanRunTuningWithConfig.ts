@@ -5,7 +5,7 @@
 
 import type { WorkflowConfigDebug } from '@openthrottle/openthrottle-agentic-utils';
 
-import type { PlanRunResolvedDefaults } from '../contract/index.ts';
+import type { PlanRunResolvedDefaults } from '../types/plan-run-config.ts';
 
 /**
  * @description Subset of the job's run tuning that the defaults can fill in.

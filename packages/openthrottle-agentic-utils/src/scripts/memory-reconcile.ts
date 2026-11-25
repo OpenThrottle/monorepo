@@ -10,24 +10,15 @@ import path from 'node:path';
 
 import { toErrorMessage } from '@openthrottle/nodejs-utils';
 
-import {
-  parseIndexClaims,
-  parseIndexEntries,
-} from '../memory-reconcile/claims.ts';
-import { findDemotionCandidates } from '../memory-reconcile/demotion.ts';
+import { listAllPlans } from '../utils/listAllPlans.ts';
+import { parseIndexClaims, parseIndexEntries } from '../utils/memory-claims.ts';
+import { findDemotionCandidates } from '../utils/memory-demotion.ts';
 import {
   checkIndexIntegrity,
   formatIntegrityReport,
-} from '../memory-reconcile/integrity.ts';
-import { listAllPlans } from '../memory-reconcile/listAllPlans.ts';
-import type {
-  ObservedPlan,
-  ObservedPr,
-} from '../memory-reconcile/reconcile.ts';
-import {
-  formatReconcileReport,
-  reconcile,
-} from '../memory-reconcile/reconcile.ts';
+} from '../utils/memory-integrity.ts';
+import type { ObservedPlan, ObservedPr } from '../utils/memory-reconcile.ts';
+import { formatReconcileReport, reconcile } from '../utils/memory-reconcile.ts';
 
 interface Args {
   readonly index: string;

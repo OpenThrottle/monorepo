@@ -18,8 +18,8 @@ import type {
   PlanStatusClaim,
   PrReferenceClaim,
   PrStateClaim,
-} from './claims.ts';
-import { planStatusClaim, prStateClaim } from './claims.ts';
+} from './memory-claims.ts';
+import { planStatusClaim, prStateClaim } from './memory-claims.ts';
 
 /** Observed state of a pull request. */
 export interface ObservedPr {

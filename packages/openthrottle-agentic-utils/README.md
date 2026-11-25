@@ -2,7 +2,7 @@
 
 **Pure, well-named utilities** extracted incrementally from overlapping helpers in `@openthrottle/node-client` and the earlier workflow tooling. This package is the shared **runtime helper** layer for the OT Loop job, nested spawns, and agentic CLIs: Postgres URL resolution, monorepo root discovery, workflow transport/config cwd, subprocess PATH, debug env parsing, and wall-clock / child-process metrics.
 
-It is **not** a home for OpenThrottle GraphQL/Postgres CRUD. It does hold the job-run lifecycle hooks (types, validation, `hook-task-to-job-run-hook`, `executeJobRunHooksPhase`), the plan-run run settings the hooks share (`PlanRunTuningSettings`, `PlanRunRuntimeSeed`, `mergePlanRunTuningWithDriver`, prompt resolution), and one small bin, `workflow-memory-reconcile` (`src/bin/memory-reconcile.ts`, run it as `pnpm exec workflow-memory-reconcile --index <MEMORY.md>`).
+It is **not** a home for OpenThrottle GraphQL/Postgres CRUD. It does hold the job-run lifecycle hooks (types, validation, `hook-task-to-job-run-hook`, `executeJobRunHooksPhase`), the plan-run run settings the hooks share (`PlanRunTuningSettings`, `PlanRunRuntimeSeed`, `mergePlanRunTuningWithDriver`, prompt resolution), and one small bin, `workflow-memory-reconcile` (`src/scripts/memory-reconcile.ts`, run it as `pnpm exec workflow-memory-reconcile --index <MEMORY.md>`).
 
 ## Where this fits
 

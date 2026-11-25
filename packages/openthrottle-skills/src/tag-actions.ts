@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { AGENT_ASSET_SLUG_PATTERN } from './schemas/agent-asset-frontmatter.schemas.ts';
+import { AGENT_ASSET_SLUG_PATTERN } from './utils/agent-asset-frontmatter-schemas.ts';
 
 /**
  * @description Zod schemas for `tag_action_rules.action_payload`, keyed by

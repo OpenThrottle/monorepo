@@ -24,16 +24,16 @@ import {
   readWorkflowDebugLevelFromEnv,
 } from '@openthrottle/openthrottle-agentic-utils';
 
-import type {
-  PlanRunDefaultsDebug,
-  PlanRunDefaultsFileV1Json,
-  PlanRunResolvedDefaults,
-} from '../contract/index.ts';
 import {
   PLAN_RUN_DEFAULTS_FILENAME,
   PLAN_RUN_DEFAULTS_KEY,
   PLAN_RUN_ENV,
 } from '../data/data.plan-run-config.ts';
+import type {
+  PlanRunDefaultsDebug,
+  PlanRunDefaultsFileV1Json,
+  PlanRunResolvedDefaults,
+} from '../types/plan-run-config.ts';
 
 const V1_KNOWN_ROOT_KEYS = new Set([
   'debug',

@@ -15,11 +15,11 @@
  * disposes. A false positive here deletes a memory's visibility, so every
  * condition must be affirmatively true — an unknown is never treated as a yes.
  */
-import type { PlanReferenceClaim, PrReferenceClaim } from './claims.ts';
-import { planStatusClaim } from './claims.ts';
-import { prStateClaim } from './claims.ts';
-import type { ObservedPlan, ObservedPr } from './reconcile.ts';
-import { observedPrState } from './reconcile.ts';
+import type { PlanReferenceClaim, PrReferenceClaim } from './memory-claims.ts';
+import { planStatusClaim } from './memory-claims.ts';
+import { prStateClaim } from './memory-claims.ts';
+import type { ObservedPlan, ObservedPr } from './memory-reconcile.ts';
+import { observedPrState } from './memory-reconcile.ts';
 
 /**
  * Phrases marking work still owed on an entry whose plan has landed.

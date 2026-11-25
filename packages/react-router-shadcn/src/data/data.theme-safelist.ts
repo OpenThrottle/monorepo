@@ -1,4 +1,4 @@
-import type { ThemeTokenName } from '../theme-contract';
+import type { ThemeTokenName } from '../types/theme';
 
 /**
  * @description Tailwind color-utility prefixes safelisted for every theme token,
@@ -40,4 +40,4 @@ export const THEME_TOKEN_COLOR_ALIASES: Readonly<
 };
 
 /** @description Header stamped into the generated `src/theme-safelist.css`. */
-export const THEME_SAFELIST_BANNER = `GENERATED — DO NOT EDIT. Regenerate with \`pnpm nx run @openthrottle/react-router-shadcn:test -- -u buildThemeSafelist\` (src/themes/buildThemeSafelist.ts).`; // prettier-ignore
+export const THEME_SAFELIST_BANNER = `GENERATED — DO NOT EDIT. Regenerate with \`pnpm nx run @openthrottle/react-router-shadcn:test -- -u theme-safelist\` (src/utils/theme.ts).`; // prettier-ignore
