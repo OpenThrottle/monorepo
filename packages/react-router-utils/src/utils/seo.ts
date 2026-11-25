@@ -36,6 +36,8 @@ export interface SeoMetaOptions {
   readonly description: string;
   /** Absolute OG/Twitter image URL. Omit to skip image tags. */
   readonly image?: string;
+  /** Alt text for `image` (`og:image:alt`, `twitter:image:alt`); ignored without `image`. */
+  readonly imageAlt?: string;
   /** Site name for `og:site_name`. */
   readonly siteName?: string;
   /** Page title (used for `<title>`, `og:title`, `twitter:title`). */
@@ -53,12 +55,13 @@ export interface SeoMetaOptions {
  * @description Builds the OpenGraph + Twitter meta descriptor array for a route
  * `meta()`, parameterized per app. Emits `<title>`, `description`, the
  * `og:*` set, and the `twitter:*` set; image tags are included only when
- * `image` is provided.
+ * `image` is provided, and their alt tags only when `imageAlt` is too.
  */
 export function buildSeoMeta(options: SeoMetaOptions): MetaDescriptor[] {
   const {
     description,
     image,
+    imageAlt,
     siteName,
     title,
     twitterCard = 'summary_large_image',
@@ -74,8 +77,13 @@ export function buildSeoMeta(options: SeoMetaOptions): MetaDescriptor[] {
     { content: type, property: 'og:type' },
   ];
 
+  const hasImageAlt = image != null && imageAlt != null;
+
   if (image != null) {
     meta.push({ content: image, property: 'og:image' });
+  }
+  if (hasImageAlt) {
+    meta.push({ content: imageAlt, property: 'og:image:alt' });
   }
   if (siteName != null) {
     meta.push({ content: siteName, property: 'og:site_name' });
@@ -91,6 +99,9 @@ export function buildSeoMeta(options: SeoMetaOptions): MetaDescriptor[] {
   );
   if (image != null) {
     meta.push({ content: image, name: 'twitter:image' });
+  }
+  if (hasImageAlt) {
+    meta.push({ content: imageAlt, name: 'twitter:image:alt' });
   }
 
   return meta;

@@ -3,6 +3,8 @@
  * - the marker-delimited section of the root README.md (committed, gated);
  * - out/org-profile/README.md, for a separate owner-approved PR to
  *   OpenThrottle/.github (this script never pushes);
+ * - out/org-profile/assets/hero-{dark,light}.svg and, with stats,
+ *   stats-{dark,light}.svg, the org profile's graphics;
  * - out/linkedin.md, a paste block for LinkedIn.
  * `out/` is gitignored. Stats are computed here (gh api, nx show projects,
  * the driver registry) and never typed by hand.
@@ -29,6 +31,7 @@ import type {
   SurfaceInput,
   SurfaceStats,
 } from '../types/surfaces';
+import { renderHeroSvg } from '../utils/hero-graphic';
 import {
   renderLinkedInBlock,
   renderOrgProfile,
@@ -121,6 +124,12 @@ const main = async (): Promise<number> => {
     writeFile(linkedInUrl, renderLinkedInBlock(input)),
   ];
 
+  for (const scheme of STATS_GRAPHIC_SCHEMES) {
+    const heroUrl = new URL(`hero-${scheme}.svg`, assetsUrl);
+
+    writes.push(writeFile(heroUrl, renderHeroSvg(scheme, 'banner')));
+  }
+
   if (stats !== undefined) {
     for (const scheme of STATS_GRAPHIC_SCHEMES) {
       const svgUrl = new URL(`stats-${scheme}.svg`, assetsUrl);
@@ -134,6 +143,7 @@ const main = async (): Promise<number> => {
   console.log(`README.md features section written.`);
   console.log(`Org profile: ${orgProfileUrl.pathname}`);
   console.log(`LinkedIn block: ${linkedInUrl.pathname}`);
+  console.log(`Hero graphics: ${assetsUrl.pathname}hero-{dark,light}.svg`);
 
   if (stats !== undefined) {
     console.log(`Stats graphics: ${assetsUrl.pathname}stats-{dark,light}.svg`);

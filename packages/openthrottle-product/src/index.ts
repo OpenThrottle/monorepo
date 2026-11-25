@@ -1,4 +1,5 @@
 export * from './data/features';
+export * from './data/hero-graphic';
 export * from './data/positioning';
 export * from './data/projects';
 export * from './data/stats-graphic';
@@ -6,6 +7,7 @@ export * from './data/surfaces';
 export * from './types/product';
 export * from './types/surfaces';
 export * from './utils/features';
+export * from './utils/hero-graphic';
 export * from './utils/render';
 export * from './utils/stats-graphic';
 export * from './utils/validate';
