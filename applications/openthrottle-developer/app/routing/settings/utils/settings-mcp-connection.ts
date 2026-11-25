@@ -4,6 +4,8 @@
  * group the catalog by provider for display.
  */
 
+import { formatDistanceStrict } from 'date-fns';
+
 import type {
   McpConnectorConnectionFieldsFragment,
   McpConnectorFieldsFragment,
@@ -74,4 +76,74 @@ export function groupConnectorsByProvider(
       label: getProviderLabel(provider),
       provider,
     }));
+}
+
+/** A catalog connector paired with the current user's connection to it. */
+export interface McpConnectedConnector {
+  readonly connection: McpConnectorConnectionFieldsFragment;
+  readonly connector: McpConnectorFieldsFragment;
+}
+
+/** The catalog split into what the user has connected and what they could add. */
+export interface McpConnectorPartition {
+  readonly available: readonly McpConnectorFieldsFragment[];
+  readonly connected: readonly McpConnectedConnector[];
+}
+
+/**
+ * @description Splits the catalog into connected and available connectors, both
+ * in provider display order (see {@link groupConnectorsByProvider}).
+ */
+export function partitionConnectors(
+  connectors: readonly McpConnectorFieldsFragment[],
+  connections: readonly McpConnectorConnectionFieldsFragment[],
+): McpConnectorPartition {
+  const connectionByKey = indexConnectionsByKey(connections);
+  const ordered = groupConnectorsByProvider(connectors).flatMap(
+    (group) => group.connectors,
+  );
+  const connected: McpConnectedConnector[] = [];
+  const available: McpConnectorFieldsFragment[] = [];
+  for (const connector of ordered) {
+    const connection = connectionByKey.get(connector.key);
+    if (connection) {
+      connected.push({ connection, connector });
+    } else {
+      available.push(connector);
+    }
+  }
+  return { available, connected };
+}
+
+/** Formats a timestamp as "3 days ago", or null when it is missing or invalid. */
+export function formatTimeAgo(
+  value: string | null | undefined,
+  now: Date = new Date(),
+): string | null {
+  if (!value) {
+    return null;
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+  if (date.getTime() >= now.getTime()) {
+    return 'just now';
+  }
+  return `${formatDistanceStrict(date, now, { roundingMethod: 'floor' })} ago`;
+}
+
+/** One-line summary for a connected row: "Connected 3 days ago · last used 2 hours ago". */
+export function getConnectionSummary(
+  connection: McpConnectorConnectionFieldsFragment,
+  now: Date = new Date(),
+): string {
+  const connectedAgo = formatTimeAgo(connection.connectedAt, now);
+  const lastUsedAgo = formatTimeAgo(connection.lastUsedAt, now);
+  const parts = [
+    connection.enabled ? null : 'Disabled',
+    connectedAgo ? `Connected ${connectedAgo}` : 'Connected',
+    lastUsedAgo ? `last used ${lastUsedAgo}` : 'not used yet',
+  ];
+  return parts.filter((part) => part !== null).join(' · ');
 }

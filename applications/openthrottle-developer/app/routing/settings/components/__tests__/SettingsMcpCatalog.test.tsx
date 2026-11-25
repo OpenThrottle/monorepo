@@ -1,89 +1,95 @@
-import type { RenderResult } from '@testing-library/react';
 import * as React from 'react';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 
-import type {
-  McpConnectorConnectionFieldsFragment,
-  McpConnectorFieldsFragment,
-} from '~/__generated__/graphql';
+import {
+  MOCK_GITHUB_CONNECTION,
+  MOCK_GITHUB_CONNECTOR,
+  MOCK_POSTGRES_CONNECTOR,
+  MOCK_SLACK_CONNECTOR,
+} from '~/routing/settings/data/mock.mcp-connectors';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 
-import type { SettingsMcpCatalogProps } from '../SettingsMcpCatalog';
 import { SettingsMcpCatalog } from '../SettingsMcpCatalog';
 
-const connectorA: McpConnectorFieldsFragment = {
-  __typename: 'McpConnectorObject',
-  authType: 'oauth',
-  category: 'productivity',
-  description: 'Official MCP registry entry',
-  docsUrl: 'https://example.com/docs',
-  endpointUrl: null,
-  iconHint: 'registry',
-  key: 'mcp-registry-connector',
-  name: 'Registry Connector',
-  provider: 'mcp-registry',
-  transport: 'remote-http',
-};
-
-const connectorB: McpConnectorFieldsFragment = {
-  __typename: 'McpConnectorObject',
-  authType: 'api_token',
-  category: 'productivity',
-  description: 'Anthropic directory entry',
-  docsUrl: 'https://example.com/docs2',
-  endpointUrl: null,
-  iconHint: 'anthropic',
-  key: 'anthropic-connector',
-  name: 'Anthropic Connector',
-  provider: 'anthropic-directory',
-  transport: 'local-stdio',
-};
-
-const connection: McpConnectorConnectionFieldsFragment = {
-  __typename: 'McpConnectorConnectionObject',
-  authType: 'oauth',
-  connectedAt: '2026-01-01T00:00:00Z',
-  connectorKey: 'mcp-registry-connector',
-  credentialLabel: null,
-  credentialPrefix: null,
-  enabled: true,
-  id: 'connection-1',
-  lastUsedAt: null,
-};
+const connectors = [
+  MOCK_POSTGRES_CONNECTOR,
+  MOCK_SLACK_CONNECTOR,
+  MOCK_GITHUB_CONNECTOR,
+];
 
 describe('SettingsMcpCatalog Component', () => {
-  let component: RenderResult;
-  let props: SettingsMcpCatalogProps;
+  test('splits connected rows from available chips', () => {
+    const component = renderRoutesStub(
+      <SettingsMcpCatalog
+        connections={[MOCK_GITHUB_CONNECTION]}
+        connectors={connectors}
+        manageKey={null}
+      />,
+    );
 
-  beforeEach(() => {
-    props = { connections: [connection], connectors: [connectorA, connectorB] };
-    component = renderRoutesStub(<SettingsMcpCatalog {...props} />);
+    expect(component.getAllByTestId('SettingsMcpConnectedRow')).toHaveLength(1);
+    expect(
+      component
+        .getAllByTestId('SettingsMcpAvailableChip')
+        .map((chip) => chip.textContent),
+    ).toEqual(['Slack', 'Postgres']);
   });
 
-  test('renders the catalog container', () => {
-    expect(component.getByTestId('SettingsMcpCatalog')).toBeInTheDocument();
-  });
+  test('opens only the panel named by manageKey', () => {
+    const component = renderRoutesStub(
+      <SettingsMcpCatalog
+        connections={[
+          MOCK_GITHUB_CONNECTION,
+          { ...MOCK_GITHUB_CONNECTION, connectorKey: 'slack', id: 'c-2' },
+        ]}
+        connectors={connectors}
+        manageKey="slack"
+      />,
+    );
 
-  test('renders a card for each connector', () => {
-    expect(component.getByText('Registry Connector')).toBeInTheDocument();
-    expect(component.getByText('Anthropic Connector')).toBeInTheDocument();
-  });
-
-  test('groups connectors by provider with display labels, ordered by provider order', () => {
-    const headings = component
-      .getAllByRole('heading', { level: 2 })
-      .map((heading) => heading.textContent);
-
-    expect(headings).toEqual([
-      'Anthropic connector directory',
-      'Official MCP registry',
+    const rows = component.getAllByTestId('SettingsMcpConnectedRow');
+    // Both are anthropic-directory, so they keep their incoming order.
+    expect(rows.map((row) => row.getAttribute('data-state'))).toEqual([
+      'open',
+      'closed',
     ]);
+    expect(component.getAllByTestId('SettingsMcpManagePanel')).toHaveLength(1);
+  });
+
+  test('shows an empty state when nothing is connected', () => {
+    const component = renderRoutesStub(
+      <SettingsMcpCatalog
+        connections={[]}
+        connectors={connectors}
+        manageKey={null}
+      />,
+    );
+
+    expect(
+      component.getByTestId('SettingsMcpCatalog-connectedEmpty'),
+    ).toBeInTheDocument();
+    expect(component.getAllByTestId('SettingsMcpAvailableChip')).toHaveLength(
+      3,
+    );
+  });
+
+  test('hides the available section when everything is connected', () => {
+    const component = renderRoutesStub(
+      <SettingsMcpCatalog
+        connections={[MOCK_GITHUB_CONNECTION]}
+        connectors={[MOCK_GITHUB_CONNECTOR]}
+        manageKey={null}
+      />,
+    );
+
+    expect(
+      component.queryByTestId('SettingsMcpAvailableChip'),
+    ).not.toBeInTheDocument();
   });
 
   test('renders nothing when there are no connectors', () => {
-    component.unmount();
-    component = renderRoutesStub(
-      <SettingsMcpCatalog connections={[]} connectors={[]} />,
+    const component = renderRoutesStub(
+      <SettingsMcpCatalog connections={[]} connectors={[]} manageKey={null} />,
     );
 
     expect(component.getByTestId('SettingsMcpCatalog')).toBeEmptyDOMElement();

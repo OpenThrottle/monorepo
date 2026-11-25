@@ -44,3 +44,28 @@ export const MCP_PROVIDER_FALLBACK_LABEL = 'Other';
 
 /** Sort order used for providers not present in {@link MCP_PROVIDER_DISPLAY}. */
 export const MCP_PROVIDER_FALLBACK_ORDER = Number.MAX_SAFE_INTEGER;
+
+/** Placeholder shown for a connection fact that has no value. */
+export const MCP_FACT_EMPTY = '—';
+
+/** User-facing copy for the Connected / Available catalog. */
+export const MCP_CATALOG_COPY = {
+  addToken: 'Add API token',
+  availableHeading: 'Available',
+  brokeredEndpoint: 'Brokered',
+  close: 'Close',
+  connect: 'Connect',
+  connectedEmpty: `Nothing connected yet. Pick a connector below to get started.`,
+  connectedHeading: 'Connected',
+  disconnect: 'Disconnect',
+  docs: 'Docs',
+  factConnected: 'Connected',
+  factCredential: 'Credential',
+  factEndpoint: 'Endpoint',
+  factLastUsed: 'Last used',
+  factTransport: 'Transport',
+  manage: 'Manage',
+  neverUsed: 'Never',
+  reconnect: 'Reconnect',
+  updateToken: 'Update token',
+} as const;
