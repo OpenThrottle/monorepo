@@ -45,7 +45,7 @@ fragments off the old hand-written `1.0.0` schemas once. It is synthetic — no 
 
 Before the sample rows it **syncs the generated block schemas**
 ([`scripts/openthrottle-database-sync-cms-schemas.ts`](../../scripts/openthrottle-database-sync-cms-schemas.ts)):
-every `packages/<pkg>/schemas/manifest.json` written by `cms-schemas:write` is upserted by
+every `packages/<pkg>/src/data/schema-manifest.json` written by `cms-schemas:write` is upserted by
 `(typename, version)` — version being the schema's content hash — and that version is left the one
 ACTIVE schema per typename (older live versions go `DISABLED`; fragments pinned to them keep them).
 A stale manifest, or a typename two packages both generate, fails the sync. Re-running it with
@@ -270,24 +270,24 @@ What the sync has to guarantee:
 
 ### 4. How the server reads the manifests: copied into the package's `dist/` at build time
 
-The manifests are committed under `packages/react-router-cms-ui/schemas/` and
-`packages/react-router-cms-core/schemas/` (`manifest.json` plus `<Typename>.schema.json`, written by
+The manifests are committed under `packages/react-router-cms-ui/src/data/` and
+`packages/react-router-cms-core/src/data/` (`schema-manifest.json` plus `schema.<typename-kebab>.json`, written by
 `cms-schemas:write`). The server reads them as **JSON files**, never through those packages'
 source-first TypeScript entries.
 
-**Decision:** the `build` target of `@openthrottle/nestjs-repositories-cms` copies both folders into
+**Decision:** the `build` target of `@openthrottle/nestjs-repositories-cms` copies both packages' generated files into
 its own output, using the `@nx/js:tsc` `assets` option (the
 [package generator template](../../tools/generators/src/generators/package/files/tools/package.json)
 already uses it):
 
 ```text
-packages/react-router-cms-ui/schemas/*.json   → packages/nestjs-repositories-cms/dist/schemas/react-router-cms-ui/
-packages/react-router-cms-core/schemas/*.json → packages/nestjs-repositories-cms/dist/schemas/react-router-cms-core/
+packages/react-router-cms-ui/src/data/schema{.*,-manifest}.json   → packages/nestjs-repositories-cms/dist/schemas/react-router-cms-ui/
+packages/react-router-cms-core/src/data/schema{.*,-manifest}.json → packages/nestjs-repositories-cms/dist/schemas/react-router-cms-core/
 ```
 
 At runtime the sync finds them relative to its own compiled file, with
 `new URL('…/schemas/', import.meta.url)`. It never uses a path from the repository root and never
-resolves either React package. The build's `inputs` name both `schemas/` folders, so editing a block
+resolves either React package. The build's `inputs` name both packages' `src/data/schema*.json` files, so editing a block
 schema invalidates the Nx cache and the copy cannot go stale.
 
 Why this survives the production image: `Dockerfile.NestJS` builds every package, then ships only the

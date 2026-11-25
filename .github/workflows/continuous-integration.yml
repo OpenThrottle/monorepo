@@ -1016,7 +1016,7 @@ jobs:
         run: pnpm exec nx run monorepo:check-folder-vocabulary
 
       # Static and build-free (the TypeScript compiler API over each CMS block
-      # package). Fails when a package's committed schemas/ no longer match its
+      # package). Fails when a package's committed src/data/schema.*.json no longer match its
       # block props interfaces — the JSON Schemas the CMS validates fragment
       # properties against. Fix with `pnpm nx run <project>:cms-schemas:write`.
       - name: '🧩 CMS block schema drift guard'

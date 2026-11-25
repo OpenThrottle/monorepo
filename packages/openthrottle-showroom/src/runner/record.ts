@@ -3,8 +3,8 @@
  * list carrying each frame's real duration.
  *
  * Why not Playwright's `recordVideo`: it is locked to 25fps VP8 with no knob, and
- * it cannot hold a frame. The task-3 spike measured both
- * (`../spike/README.md`).
+ * it cannot hold a frame. The task-3 spike measured both (`PIPELINE.md`
+ * § The recorder decision).
  *
  * The timestamps are the whole point. CDP emits a frame only when the page
  * changes, so assembling the frames at a fixed rate would play idle stretches fast

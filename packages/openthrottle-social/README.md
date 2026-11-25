@@ -34,7 +34,11 @@ X_CLIENT_SECRET=…                 # only for a confidential client
 X_REFRESH_TOKEN=…                 # written by social:x-auth, rotated by every run
 ```
 
-The scheduled jobs' reviewed prompts and settings are in [jobs/](jobs/).
+The two scheduled jobs' reviewed prompts and settings are
+[src/data/job.daily-poster.md](src/data/job.daily-poster.md) and
+[src/data/job.weekly-refill.md](src/data/job.weekly-refill.md). No code reads them: they are the
+copy a human (or an agent with `OPENTHROTTLE_MCP_TOOLSETS=scheduling`) pastes into the
+OpenThrottle MCP scheduling tools to create or update each job. Change the file first, then the job.
 
 ## Development
 

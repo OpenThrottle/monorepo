@@ -8,7 +8,7 @@
  * The first flow in the season whose subject is not the app. Six of eight beats are
  * a command line, so they run against typeset surfaces (`../surfaces/shell.ts`)
  * staged in the recording browser rather than against a page — the recorder decision
- * in `../spike/README.md` stands, and this is the browser-side answer to it. The
+ * in `PIPELINE.md` § The recorder decision stands, and this is the browser-side answer to it. The
  * text on those surfaces is real DOM, so the per-beat dump gates them exactly as it
  * gates an app page.
  *

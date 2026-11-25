@@ -37,20 +37,28 @@ const readJson = (path: string): unknown => {
 
 const require = createRequire(import.meta.url);
 const SCHEMA_DIRS = [
-  join(import.meta.dirname, '../schemas'),
-  join(dirname(require.resolve('@openthrottle/react-router-cms-ui/package.json')), 'schemas'), // prettier-ignore
+  join(import.meta.dirname, '../src/data'),
+  join(dirname(require.resolve('@openthrottle/react-router-cms-ui/package.json')), 'src/data'), // prettier-ignore
 ];
 
-const readTypenames = (dir: string): readonly string[] => {
-  const manifest = readJson(join(dir, 'manifest.json'));
+interface ManifestEntry {
+  readonly file: string;
+  readonly typename: string;
+}
+
+const readManifest = (dir: string): readonly ManifestEntry[] => {
+  const manifest = readJson(join(dir, 'schema-manifest.json'));
   const schemas = isRecord(manifest) ? manifest['schemas'] : undefined;
 
   if (!Array.isArray(schemas)) return [];
 
   return schemas.flatMap((entry) => {
+    const file = isRecord(entry) ? entry['file'] : undefined;
     const typename = isRecord(entry) ? entry['typename'] : undefined;
 
-    return typeof typename === 'string' ? [typename] : [];
+    return typeof file === 'string' && typeof typename === 'string'
+      ? [{ file, typename }]
+      : [];
   });
 };
 
@@ -71,8 +79,8 @@ const toParsedSchema = (
 };
 
 const SCHEMAS = SCHEMA_DIRS.flatMap((dir) => {
-  return readTypenames(dir).flatMap((typename) => {
-    const jsonSchema = readJson(join(dir, `${typename}.schema.json`));
+  return readManifest(dir).flatMap(({ file, typename }) => {
+    const jsonSchema = readJson(join(dir, file));
 
     return isCmsJsonSchema(jsonSchema)
       ? [{ schema: toParsedSchema(typename, jsonSchema), typename }]

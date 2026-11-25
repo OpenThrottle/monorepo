@@ -31,6 +31,11 @@
  * layout has its own audits. Folders that predate the check are listed in
  * {@link GRANDFATHERED_FOLDERS}, which only ever shrinks.
  *
+ * At the project root it enforces the same rule beside `src/`: a checked
+ * project may only have the folders in `PROJECT_ROOT_FOLDERS` (`docs`,
+ * `fixtures`, `scripts`, `src`, `tests`) at its root, so code and data cannot
+ * escape the vocabulary by sitting next to `src/` ({@link findOffRootFolders}).
+ *
  * One level further down it enforces "Below the top level, stay flat": a
  * vocabulary folder (`src/utils/`, `src/data/`, …) holds files, not feature
  * folders. Only `NESTED_TOOLING_FOLDERS` (`__tests__`, `__generated__`) and, in
@@ -46,8 +51,8 @@
  *   - **Names, not intent.** A tool's own specific term is allowed even when it
  *     sounds generic, but only the five names in BANNED_FOLDER_NAMES are
  *     banned everywhere; a sixth vague name needs adding there deliberately.
- *     The bucket check covers the top-level `src/` folders of checked
- *     projects and the level below them — deeper folders, NestJS and
+ *     The bucket check covers the root folders of checked projects, their
+ *     top-level `src/` folders and the level below those — deeper folders, NestJS and
  *     applications stay honor system.
  *   - **Shrink-only is enforced here, not in the spec.** The whole-tree run
  *     also fails on a {@link GRANDFATHERED_FOLDERS} entry that no tracked file
@@ -65,6 +70,7 @@ import {
   COMPOUND_COMPONENT_FOLDER,
   FOLDER_VOCABULARY_SKILL_POINTER,
   NESTED_TOOLING_FOLDERS,
+  PROJECT_ROOT_FOLDERS,
 } from '@tools/generators';
 
 import { hasFlag } from './utils/args.ts';
@@ -359,6 +365,50 @@ export const findOffVocabularyFolders = (
   return [...hits.values()].sort((a, b) => a.path.localeCompare(b.path));
 };
 
+const ROOT_FOLDERS: readonly string[] = PROJECT_ROOT_FOLDERS;
+
+/** A folder at a checked project's root that `PROJECT_ROOT_FOLDERS` does not allow. */
+export interface OffRootHit {
+  /** `<project>/<folder>`. */
+  readonly path: string;
+}
+
+/**
+ * @description Every folder in `paths` that sits at a checked project's root,
+ * beside `src/`, and is not in `PROJECT_ROOT_FOLDERS`. Files at the root
+ * (`package.json`, `README.md`) are never hits; hits are deduped and sorted.
+ */
+export const findOffRootFolders = (
+  paths: readonly string[],
+  projects: readonly ProjectBucket[],
+): OffRootHit[] => {
+  const hits = new Map<string, OffRootHit>();
+
+  for (const project of projects) {
+    const prefix = `${project.root}/`;
+
+    for (const path of paths) {
+      const rest = path.startsWith(prefix) ? path.slice(prefix.length) : '';
+      const folder = rest.includes('/') ? rest.split('/')[0] : undefined;
+      if (folder === undefined || ROOT_FOLDERS.includes(folder)) {
+        continue;
+      }
+
+      const folderPath = `${prefix}${folder}`;
+      if (!isAllowlisted(path)) {
+        hits.set(folderPath, { path: folderPath });
+      }
+    }
+  }
+
+  return [...hits.values()].sort((a, b) => a.path.localeCompare(b.path));
+};
+
+/** The failure line for one off-root folder: the path and the allowed roots. */
+export const formatOffRootHit = (hit: OffRootHit): string => {
+  return `  ${hit.path}/ — not an allowed project-root folder; move it under src/ (its bucket's vocabulary) or use one of ${ROOT_FOLDERS.join(', ')}`;
+};
+
 const TOOLING_FOLDERS: readonly string[] = NESTED_TOOLING_FOLDERS;
 const PASCAL_CASE_FOLDER = /^[A-Z][\dA-Za-z]*$/;
 
@@ -541,6 +591,7 @@ export const main = (
   const projects = listProjectBuckets(cwd, trackedPaths);
   const hits = findBannedFolders(paths);
   const offVocabulary = findOffVocabularyFolders(paths, projects);
+  const offRoot = findOffRootFolders(paths, projects);
   const nested = findNestedFolders(paths, projects, grandfathered);
   const scope = staged ? 'staged added/renamed' : 'tracked';
   // Drift is a whole-tree question: a staged run sees only part of the tree.
@@ -553,6 +604,7 @@ export const main = (
   const isClean =
     hits.length === 0 &&
     offVocabulary.length === 0 &&
+    offRoot.length === 0 &&
     nested.length === 0 &&
     driftCount === 0;
   if (isClean) {
@@ -588,6 +640,19 @@ export const main = (
     );
     logger.info(
       'per skills/ot-folders/SKILL.md (rule 1, "Do not invent new folders").',
+    );
+  }
+
+  if (offRoot.length > 0) {
+    logger.blank();
+    logger.fail(`${offRoot.length} folder(s) sit beside src/ at a project root:`); // prettier-ignore
+    for (const hit of offRoot) {
+      logger.info(formatOffRootHit(hit));
+    }
+
+    logger.blank();
+    logger.info(
+      'Code and data live under src/, per skills/ot-folders/SKILL.md (rule 1).',
     );
   }
 

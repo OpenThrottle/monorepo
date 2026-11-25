@@ -1076,15 +1076,17 @@ name ([`ot-folders` § Naming](../../skills/ot-folders/SKILL.md#naming)).
 
 A `.ts` file directly under a `data/` folder is named `<name>.ts` in kebab-case (`.tsx` only
 when it needs JSX), and it exports **values, not functions**. User-facing copy goes in
-`copy.ts` and mock fixtures in `mock.<name>.ts`, as
+`copy.ts`, mock fixtures in `mock.<name>.ts` and JSON Schema documents in
+`schema.<name>.json`, as
 [Component and data boundaries](#component-and-data-boundaries) already says. A function —
 a merge, a filter, a formatter, a row builder — belongs in the sibling `utils/`, even when
 it only ever reads that data. Spec files under `__tests__/` are exempt.
 
 **Why.** The folder already says the file is data, so the name only has to say what data:
-`data/copy.ts`, not `data/copy.ts`. Data files used to carry a `data.` prefix; it was
+`data/copy.ts`, not `data/data.copy.ts`. Data files used to carry a `data.` prefix; it was
 dropped because it repeated the folder and every import path said "data" twice. `mock.` stays,
-because it says something the folder cannot: that the values are fixtures, not shipped data.
+because it says something the folder cannot: that the values are fixtures, not shipped data. `schema.` stays for the same reason: the file is a
+JSON Schema document that describes data, not the values themselves.
 A function in `data/` is logic hiding where nobody
 looks for it, and it is exactly the case [Testing data files](#component-and-data-boundaries)
 says _does_ need a spec.

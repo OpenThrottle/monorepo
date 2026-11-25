@@ -17,16 +17,16 @@ pages are assembled from, ported from the RocketCMS library
   `@tools/generators:react` (`--destination=@openthrottle/react-router-cms-ui`).
 - [src/types.ts](src/types.ts) — `CmsComponentDebug`, the shape of every component's `debug` static.
 - [src/data/](src/data/) — copy (`data/copy.ts`) and lookup tables the components read (button
-  sizes/variants, card icons, heading tags, Wysiwyg descendant classes). Not exported.
-- [schemas/](schemas/) — **generated**: one `<Block>.schema.json` (JSON Schema draft 7) per block
-  plus `manifest.json` (`typename`, content-hash `version`, `file`). Never hand-edit; regenerate
+  sizes/variants, card icons, heading tags, Wysiwyg descendant classes). Not exported. It also holds
+  the **generated** block schemas: one `schema.<block-kebab>.json` (JSON Schema draft 7) per block
+  plus `schema-manifest.json` (`typename`, content-hash `version`, `file`). Never hand-edit; regenerate
   with `pnpm nx run @openthrottle/react-router-cms-ui:cms-schemas:write`. CI runs
   `cms-schemas:check` and fails on drift.
 
 ## Invariants & gotchas — do not "clean these up"
 
 - **Prop doc-comment tags are a JSON Schema contract.** `scripts/generate-cms-schemas.ts` turns
-  each block's `<Name>Props` into `schemas/<Name>.schema.json`, so the tags stay even where the
+  each block's `<Name>Props` into `src/data/schema.<name>.json`, so the tags stay even where the
   repo's "JSDoc only when not self-evident" rule would drop them:
   - `@description` → `description`; `@default` → `default`, parsed as JSON (`"md"`, `[]`, `{}`),
     non-JSON text such as HTML kept as a string. Keep each `@default` equal to the runtime default,

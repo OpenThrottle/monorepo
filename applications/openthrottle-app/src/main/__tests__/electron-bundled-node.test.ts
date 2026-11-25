@@ -1,6 +1,6 @@
 /**
  * @description Guards the Node the desktop app's embedded developer server runs on: Electron's own,
- * recorded in `data.electron-node.ts`. An Electron bump has to update the record, and the recorded
+ * recorded in `data/electron-node.ts`. An Electron bump has to update the record, and the recorded
  * Node has to satisfy every `>=` floor in the `engines.node` of the packages the embedded server
  * loads. A range in any other form fails the test, so a person reads it rather than a guess.
  */

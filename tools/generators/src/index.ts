@@ -10,5 +10,6 @@ export {
   COMPOUND_COMPONENT_FOLDER,
   FOLDER_VOCABULARY_SKILL_POINTER,
   NESTED_TOOLING_FOLDERS,
+  PROJECT_ROOT_FOLDERS,
 } from './config/folder-vocabulary.ts';
 export { getNxProjectNames } from './utils/projects.ts';

@@ -6,7 +6,7 @@ import type { QueryResultRow } from 'pg';
 import { describe, expect, it } from 'vitest';
 
 import type { JsonObject } from '../generate-cms-schemas.ts';
-import { schemaVersion } from '../generate-cms-schemas.ts';
+import { cmsSchemaFileName, schemaVersion } from '../generate-cms-schemas.ts';
 import type { CmsSchemaSyncClient } from '../openthrottle-database-sync-cms-schemas.ts';
 import {
   CmsSchemaSyncError,
@@ -28,20 +28,20 @@ interface FakePackage {
   ])[];
 }
 
-/** A throwaway repo root with `packages/<name>/schemas/` per package. */
+/** A throwaway repo root with `packages/<name>/src/data/` per package. */
 const makeRoot = (packages: readonly FakePackage[]): string => {
   const root = mkdtempSync(join(tmpdir(), 'cms-schema-sync-'));
   mkdirSync(join(root, 'packages', 'no-schemas'), { recursive: true });
 
   for (const pkg of packages) {
-    const dir = join(root, 'packages', pkg.name, 'schemas');
+    const dir = join(root, 'packages', pkg.name, 'src', 'data');
     mkdirSync(dir, { recursive: true });
     const entries = pkg.schemas.map(([typename, schema, version]) => {
-      writeFileSync(join(dir, `${typename}.schema.json`), JSON.stringify({ $comment: 'GENERATED', ...schema })); // prettier-ignore
+      writeFileSync(join(dir, cmsSchemaFileName(typename)), JSON.stringify({ $comment: 'GENERATED', ...schema })); // prettier-ignore
 
-      return { file: `${typename}.schema.json`, typename, version: version ?? schemaVersion(schema) }; // prettier-ignore
+      return { file: cmsSchemaFileName(typename), typename, version: version ?? schemaVersion(schema) }; // prettier-ignore
     });
-    writeFileSync(join(dir, 'manifest.json'), JSON.stringify({ schemas: entries })); // prettier-ignore
+    writeFileSync(join(dir, 'schema-manifest.json'), JSON.stringify({ schemas: entries })); // prettier-ignore
   }
 
   return root;
@@ -77,15 +77,15 @@ const makeClient = (
 };
 
 describe('findCmsSchemaManifests', () => {
-  it('lists only packages that have schemas/manifest.json, sorted', () => {
+  it('lists only packages that have src/data/schema-manifest.json, sorted', () => {
     const root = makeRoot([
       { name: 'ui', schemas: [['Hero', HERO, undefined]] },
       { name: 'core', schemas: [] },
     ]);
 
     expect(findCmsSchemaManifests(root)).toEqual([
-      join(root, 'packages', 'core', 'schemas', 'manifest.json'),
-      join(root, 'packages', 'ui', 'schemas', 'manifest.json'),
+      join(root, 'packages', 'core', 'src', 'data', 'schema-manifest.json'),
+      join(root, 'packages', 'ui', 'src', 'data', 'schema-manifest.json'),
     ]);
   });
 });
@@ -93,7 +93,7 @@ describe('findCmsSchemaManifests', () => {
 describe('readCmsSchemaManifest', () => {
   it('reads each schema without its $comment banner', () => {
     const root = makeRoot([{ name: 'ui', schemas: [['Hero', HERO, undefined]] }]); // prettier-ignore
-    const [entry] = readCmsSchemaManifest(join(root, 'packages', 'ui', 'schemas', 'manifest.json')); // prettier-ignore
+    const [entry] = readCmsSchemaManifest(join(root, 'packages', 'ui', 'src', 'data', 'schema-manifest.json')); // prettier-ignore
 
     expect(entry?.typename).toBe('Hero');
     expect(entry?.version).toBe(schemaVersion(HERO));
@@ -103,7 +103,7 @@ describe('readCmsSchemaManifest', () => {
   it('refuses a manifest whose version no longer matches the schema file', () => {
     const root = makeRoot([{ name: 'ui', schemas: [['Hero', HERO, 'stale0000000000']] }]); // prettier-ignore
 
-    expect(() => readCmsSchemaManifest(join(root, 'packages', 'ui', 'schemas', 'manifest.json'))).toThrow(CmsSchemaSyncError); // prettier-ignore
+    expect(() => readCmsSchemaManifest(join(root, 'packages', 'ui', 'src', 'data', 'schema-manifest.json'))).toThrow(CmsSchemaSyncError); // prettier-ignore
   });
 });
 
@@ -126,7 +126,7 @@ describe('readCmsSchemaEntries', () => {
 });
 
 describe('syncCmsSchemas', () => {
-  const entries = [{ jsonSchema: HERO, source: 'Hero.schema.json', typename: 'Hero', version: 'abc' }]; // prettier-ignore
+  const entries = [{ jsonSchema: HERO, source: 'schema.hero.json', typename: 'Hero', version: 'abc' }]; // prettier-ignore
 
   it('inserts, re-activates and disables inside one locked transaction', async () => {
     const { client, queries } = makeClient((text) => {

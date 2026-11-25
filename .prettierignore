@@ -83,4 +83,3 @@ tools/generators/src/generators/*/files/**
 # Screencast-pipeline capture artifacts (raw frames, manifests, assembled mp4s).
 # Generated per run and gitignored; never format or commit them.
 packages/openthrottle-showroom/output/
-packages/openthrottle-showroom/spike/output/

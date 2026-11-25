@@ -205,9 +205,6 @@
         "src/validate/validate.ts",
       ],
       "ignore": [
-        // Recorder spike: committed as evidence for the decision, deliberately not
-        // imported by the pipeline. See spike/README.md.
-        "spike/**",
         // Leak scanner for the committed snapshot; exercised only by snapshot-data.test.ts.
         "src/snapshot/scanSnapshotText.ts",
       ],

@@ -3,8 +3,10 @@ import { describe, expect, it } from 'vitest';
 import {
   canonicalize,
   CMS_WIDGET_KEYWORD,
+  cmsSchemaFileName,
   diffSchemaFiles,
   generatePackageSchemas,
+  isCmsSchemaFile,
   parseDefault,
   schemaVersion,
 } from '../generate-cms-schemas.ts';
@@ -73,23 +75,41 @@ describe('canonicalize', () => {
   });
 });
 
+describe('cmsSchemaFileName', () => {
+  it('kebab-cases the typename behind a schema. prefix', () => {
+    expect(cmsSchemaFileName('Button')).toBe('schema.button.json');
+    expect(cmsSchemaFileName('LayoutColumn')).toBe('schema.layout-column.json');
+    expect(cmsSchemaFileName('HTMLBlock')).toBe('schema.html-block.json');
+  });
+});
+
+describe('isCmsSchemaFile', () => {
+  it('claims only the generated files, never the data modules beside them', () => {
+    expect(isCmsSchemaFile('schema-manifest.json')).toBe(true);
+    expect(isCmsSchemaFile('schema.layout-grid.json')).toBe(true);
+    expect(isCmsSchemaFile('copy.ts')).toBe(false);
+    expect(isCmsSchemaFile('mock.schemas.ts')).toBe(false);
+    expect(isCmsSchemaFile('other.json')).toBe(false);
+  });
+});
+
 describe('diffSchemaFiles', () => {
   it('reports changed, missing and orphan files', () => {
     const actual = new Map([
-      ['A.schema.json', 'same'],
-      ['B.schema.json', 'old'],
-      ['Orphan.schema.json', 'x'],
+      ['schema.a.json', 'same'],
+      ['schema.b.json', 'old'],
+      ['schema.orphan.json', 'x'],
     ]);
     const expected = new Map([
-      ['A.schema.json', 'same'],
-      ['B.schema.json', 'new'],
-      ['C.schema.json', 'y'],
+      ['schema.a.json', 'same'],
+      ['schema.b.json', 'new'],
+      ['schema.c.json', 'y'],
     ]);
 
     expect(diffSchemaFiles(actual, expected)).toEqual([
-      'B.schema.json',
-      'C.schema.json',
-      'Orphan.schema.json',
+      'schema.b.json',
+      'schema.c.json',
+      'schema.orphan.json',
     ]);
   });
 });

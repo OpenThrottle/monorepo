@@ -25,21 +25,35 @@ const readJson = (path: string): unknown => {
 
 const require = createRequire(import.meta.url);
 const SCHEMA_DIRS = {
-  core: join(import.meta.dirname, '../schemas'),
-  ui: join(dirname(require.resolve('@openthrottle/react-router-cms-ui/package.json')), 'schemas'), // prettier-ignore
+  core: join(import.meta.dirname, '../src/data'),
+  ui: join(dirname(require.resolve('@openthrottle/react-router-cms-ui/package.json')), 'src/data'), // prettier-ignore
 };
 
-const readManifest = (dir: string): readonly string[] => {
-  const manifest = readJson(join(dir, 'manifest.json'));
+interface ManifestEntry {
+  readonly file: string;
+  readonly typename: string;
+}
+
+const readManifest = (dir: string): readonly ManifestEntry[] => {
+  const manifest = readJson(join(dir, 'schema-manifest.json'));
   const schemas = isRecord(manifest) ? manifest['schemas'] : undefined;
 
   if (!Array.isArray(schemas)) return [];
 
   return schemas.flatMap((entry) => {
+    const file = isRecord(entry) ? entry['file'] : undefined;
     const typename = isRecord(entry) ? entry['typename'] : undefined;
 
-    return typeof typename === 'string' ? [typename] : [];
+    return typeof file === 'string' && typeof typename === 'string'
+      ? [{ file, typename }]
+      : [];
   });
+};
+
+const readTypenames = (dir: string): readonly string[] => {
+  return readManifest(dir)
+    .map((entry) => entry.typename)
+    .toSorted();
 };
 
 const blockNames = (
@@ -52,8 +66,8 @@ const blockNames = (
 };
 
 const SCHEMAS = Object.entries(SCHEMA_DIRS).flatMap(([pkg, dir]) => {
-  return readManifest(dir).map((typename) => {
-    return { pkg, schema: readJson(join(dir, `${typename}.schema.json`)), typename }; // prettier-ignore
+  return readManifest(dir).map(({ file, typename }) => {
+    return { pkg, schema: readJson(join(dir, file)), typename };
   });
 });
 
@@ -73,11 +87,11 @@ const createAjv = (): Ajv => {
 
 describe('block schemas: coverage', () => {
   test('every cms-ui block has a schema, and no schema is an orphan', () => {
-    expect(readManifest(SCHEMA_DIRS.ui).toSorted()).toStrictEqual(blockNames(CmsUi)); // prettier-ignore
+    expect(readTypenames(SCHEMA_DIRS.ui)).toStrictEqual(blockNames(CmsUi)); // prettier-ignore
   });
 
   test('every cms-core block has a schema, and no schema is an orphan', () => {
-    expect(readManifest(SCHEMA_DIRS.core).toSorted()).toStrictEqual(blockNames(CmsCore)); // prettier-ignore
+    expect(readTypenames(SCHEMA_DIRS.core)).toStrictEqual(blockNames(CmsCore)); // prettier-ignore
   });
 
   test('covers the 10 cms-ui blocks and the 4 layout/logic blocks', () => {

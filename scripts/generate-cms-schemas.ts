@@ -43,11 +43,35 @@ const logger = createLogger();
 /** The custom keyword a widget hint is emitted under. */
 export const CMS_WIDGET_KEYWORD = 'x-cms-widget';
 
-/** Folder, under the package root, the schemas are written to. */
-export const CMS_SCHEMAS_DIR = 'schemas';
+/**
+ * @description Folder, under the package root, the schemas are written to. It is the package's
+ * `src/data/`, which also holds hand-written data modules, so the generator only ever reads, writes
+ * or deletes the files {@link isCmsSchemaFile} claims.
+ */
+export const CMS_SCHEMAS_DIR = 'src/data';
 
-/** The manifest file, inside {@link CMS_SCHEMAS_DIR}. */
-export const CMS_SCHEMAS_MANIFEST = 'manifest.json';
+/**
+ * @description The manifest file, inside {@link CMS_SCHEMAS_DIR}: an index of the package's block
+ * schemas rather than a schema itself, so it does not take the `schema.` qualifier prefix.
+ */
+export const CMS_SCHEMAS_MANIFEST = 'schema-manifest.json';
+
+/** A block schema's file name: `schema.<typename-kebab>.json` (`LayoutColumn` → `schema.layout-column.json`). */
+export const cmsSchemaFileName = (typename: string): string => {
+  const kebab = typename
+    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1-$2')
+    .toLowerCase();
+
+  return `schema.${kebab}.json`;
+};
+
+/** True for a file name the generator owns inside {@link CMS_SCHEMAS_DIR}. */
+export const isCmsSchemaFile = (name: string): boolean => {
+  return (
+    name === CMS_SCHEMAS_MANIFEST || /^schema\.[a-z0-9-]+\.json$/.test(name)
+  );
+};
 
 /** Stamped into every emitted file so check-generated-attributes recognises it. */
 export const CMS_SCHEMAS_BANNER = `GENERATED — DO NOT EDIT. Regenerate with \`pnpm nx run <project>:cms-schemas:write\` (scripts/generate-cms-schemas.ts).`; // prettier-ignore
@@ -481,7 +505,7 @@ const formatJson = async (
   return prettier.format(JSON.stringify(value), { ...config, filepath });
 };
 
-/** The files a package's schemas folder should hold, by file name. */
+/** The generated files a package's schemas folder should hold, by file name. */
 export const renderSchemaFiles = async (
   schemasDir: string,
   blocks: readonly CmsBlockSchema[],
@@ -489,13 +513,13 @@ export const renderSchemaFiles = async (
   const manifest: JsonObject = {
     $comment: CMS_SCHEMAS_BANNER,
     schemas: blocks.map((block) => {
-      return { file: `${block.typename}.schema.json`, typename: block.typename, version: block.version }; // prettier-ignore
+      return { file: cmsSchemaFileName(block.typename), typename: block.typename, version: block.version }; // prettier-ignore
     }),
   };
 
   const files = await Promise.all([
     ...blocks.map(async (block) => {
-      const name = `${block.typename}.schema.json`;
+      const name = cmsSchemaFileName(block.typename);
 
       return [
         name,
@@ -513,7 +537,7 @@ export const renderSchemaFiles = async (
 const readDir = (dir: string): ReadonlyMap<string, string> => {
   if (!existsSync(dir)) return new Map();
 
-  const names = readdirSync(dir).filter((name) => name.endsWith('.json'));
+  const names = readdirSync(dir).filter(isCmsSchemaFile);
 
   return new Map(
     names.map((name) => [name, readFileSync(join(dir, name), 'utf8')]),
@@ -560,8 +584,10 @@ const main = async (): Promise<number> => {
     return 1;
   }
 
-  rmSync(schemasDir, { force: true, recursive: true });
   mkdirSync(schemasDir, { recursive: true });
+  for (const name of readdirSync(schemasDir).filter(isCmsSchemaFile)) {
+    rmSync(join(schemasDir, name), { force: true });
+  }
   for (const [name, contents] of expected) {
     writeFileSync(join(schemasDir, name), contents);
   }
