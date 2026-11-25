@@ -2287,6 +2287,20 @@ var sweepTrajectoryUploadState = async ({
 // packages/agentic-hooks/src/utils/skill-file.ts
 var SKILL_READ_INVOCATION_PATH = "skill_read";
 
+// packages/agentic-conversation-backend/src/types/agent-account.ts
+var AGENT_ACCOUNT_CREDENTIAL_KINDS = {
+  apiKey: "api_key",
+  subscription: "subscription",
+  unknown: "unknown"
+};
+var AGENT_ACCOUNT_UNATTRIBUTED_REASONS = {
+  notLoggedIn: "not_logged_in",
+  probeFailed: "probe_failed",
+  unknownProvider: "unknown_provider",
+  unsupported: "unsupported"
+};
+var AGENT_ACCOUNT_API_KEY_ID = "api_key";
+
 // packages/openthrottle-drivers/src/registry/index.ts
 var DRIVERS = {
   antigravity: "antigravity",
@@ -2390,7 +2404,7 @@ var isClaudeUsageLimitResult = (event) => {
   return isRecord(event) && event.type === "result" && event.is_error === true && event.api_error_status === 429;
 };
 
-// packages/openthrottle-agentic-utils/src/utils/conversation-backend/types.ts
+// packages/agentic-conversation-backend/src/types/conversation-backend.ts
 var CONVERSATION_STREAM_CHUNK_KINDS = {
   accountError: "account_error",
   keepalive: "keepalive",
@@ -2407,7 +2421,7 @@ var CONVERSATION_DENIED_ACTIONS_KEY = "deniedActions";
 var CONVERSATION_TOOL_NOT_RUN_KEY = "notRun";
 var CONVERSATION_TOOL_DENIED_ERROR = `Permission denied: the tool call was refused.`;
 
-// packages/openthrottle-agentic-utils/src/utils/conversation-backend/host-env.ts
+// packages/agentic-conversation-backend/src/utils/host-env.ts
 var CHAT_BASE_ENV_KEYS = [
   "HOME",
   "LANG",
@@ -2419,7 +2433,7 @@ var CHAT_BASE_ENV_KEYS = [
   "USER"
 ];
 
-// packages/openthrottle-agentic-utils/src/utils/conversation-backend/cursor-agent/events.ts
+// packages/agentic-conversation-backend/src/utils/mapCursorEvent.ts
 var asString = (value) => {
   const isString = typeof value === "string";
   return isString ? value : void 0;
@@ -2605,10 +2619,18 @@ function mapCursorEvent(event) {
   }
 }
 
-// packages/openthrottle-agentic-utils/src/utils/conversation-backend/claude/auth-status.ts
+// packages/agentic-conversation-backend/src/utils/claude-auth-status.ts
 var import_node_child_process2 = require("node:child_process");
 
-// packages/openthrottle-agentic-utils/src/utils/conversation-backend/claude/config-dir.ts
+// packages/agentic-conversation-backend/src/data/data.copy.ts
+var CLAUDE_NOT_LOGGED_IN_WARNING = `Claude is not logged in and no API key is set. Run \`claude auth login\` (or set ANTHROPIC_API_KEY) before starting a Claude run.`;
+function claudeApiKeyOverrideWarning(subscriptionType, keySource) {
+  const typedPlan = `${subscriptionType} subscription`;
+  const plan = subscriptionType === null ? "subscription" : typedPlan;
+  return `${keySource} is set, so Claude runs bill the API key, not your ${plan}. Unset it to use the subscription.`;
+}
+
+// packages/agentic-conversation-backend/src/utils/claude-config-dir.ts
 var CLAUDE_CONFIG_DIR_ENV = "OPENTHROTTLE_CLAUDE_CONFIG_DIR";
 var CLAUDE_CONFIG_DIR_KEY = "CLAUDE_CONFIG_DIR";
 var CLAUDE_HOST_ENV_KEYS = CHAT_BASE_ENV_KEYS;
@@ -2625,15 +2647,7 @@ function resolveEffectiveClaudeConfigDir(env = process.env) {
   return inherited !== void 0 && inherited !== "" ? inherited : void 0;
 }
 
-// packages/openthrottle-agentic-utils/src/utils/conversation-backend/claude/data/data.copy.ts
-var CLAUDE_NOT_LOGGED_IN_WARNING = `Claude is not logged in and no API key is set. Run \`claude auth login\` (or set ANTHROPIC_API_KEY) before starting a Claude run.`;
-function claudeApiKeyOverrideWarning(subscriptionType, keySource) {
-  const typedPlan = `${subscriptionType} subscription`;
-  const plan = subscriptionType === null ? "subscription" : typedPlan;
-  return `${keySource} is set, so Claude runs bill the API key, not your ${plan}. Unset it to use the subscription.`;
-}
-
-// packages/openthrottle-agentic-utils/src/utils/conversation-backend/claude/auth-status.ts
+// packages/agentic-conversation-backend/src/utils/claude-auth-status.ts
 var CLAUDE_ACTIVE_CREDENTIALS = {
   apiKey: "apiKey",
   none: "none",
@@ -2738,21 +2752,7 @@ function probeClaudeAuthStatus(options) {
   });
 }
 
-// packages/openthrottle-agentic-utils/src/utils/conversation-backend/agent-account/types.ts
-var AGENT_ACCOUNT_CREDENTIAL_KINDS = {
-  apiKey: "api_key",
-  subscription: "subscription",
-  unknown: "unknown"
-};
-var AGENT_ACCOUNT_UNATTRIBUTED_REASONS = {
-  notLoggedIn: "not_logged_in",
-  probeFailed: "probe_failed",
-  unknownProvider: "unknown_provider",
-  unsupported: "unsupported"
-};
-var AGENT_ACCOUNT_API_KEY_ID = "api_key";
-
-// packages/openthrottle-agentic-utils/src/utils/conversation-backend/agent-account/parse.ts
+// packages/agentic-conversation-backend/src/utils/agent-account-parse.ts
 function apiKeyAccount(provider) {
   return {
     credentialKind: AGENT_ACCOUNT_CREDENTIAL_KINDS.apiKey,
@@ -2799,7 +2799,7 @@ function toClaudeAgentAccount(status) {
   };
 }
 
-// packages/openthrottle-agentic-utils/src/utils/conversation-backend/antigravity/events.ts
+// packages/agentic-conversation-backend/src/utils/createAntigravityEventMapper.ts
 var TERMINAL_STEP_STATES = /* @__PURE__ */ new Set(["DONE", "ERROR"]);
 var asString2 = (value) => {
   return typeof value === "string" ? value : void 0;
@@ -2992,7 +2992,7 @@ function createAntigravityEventMapper() {
   };
 }
 
-// packages/openthrottle-agentic-utils/src/utils/conversation-backend/claude/events.ts
+// packages/agentic-conversation-backend/src/utils/claude-events.ts
 var asString3 = (value) => {
   const isString = typeof value === "string";
   return isString ? value : void 0;
@@ -3173,7 +3173,7 @@ function mapClaudeEvent(event) {
   }
 }
 
-// packages/openthrottle-agentic-utils/src/utils/conversation-backend/codex/tool-items.ts
+// packages/agentic-conversation-backend/src/utils/codex-tool-items.ts
 var asString4 = (value) => {
   const isString = typeof value === "string";
   return isString ? value : void 0;
@@ -3269,7 +3269,7 @@ var readCodexToolItem = (kind, item) => {
   }
 };
 
-// packages/openthrottle-agentic-utils/src/utils/conversation-backend/codex/events.ts
+// packages/agentic-conversation-backend/src/utils/createCodexEventMapper.ts
 var asString5 = (value) => {
   const isString = typeof value === "string";
   return isString ? value : void 0;
@@ -3393,7 +3393,7 @@ function mapTurnEvent(event) {
   }
 }
 
-// packages/openthrottle-agentic-utils/src/utils/conversation-backend/grok/events.ts
+// packages/agentic-conversation-backend/src/utils/createGrokEventMapper.ts
 var CANCELLED_TOOL_PATTERN = /^User cancelled the execution for tool `([^`]+)`/;
 function cancelledTurnError(blockedTools) {
   if (blockedTools.length === 0) {
@@ -3556,7 +3556,7 @@ function createGrokEventMapper() {
   };
 }
 
-// packages/openthrottle-agentic-utils/src/utils/conversation-backend/opencode/events.ts
+// packages/agentic-conversation-backend/src/utils/createOpencodeEventMapper.ts
 var asString7 = (value) => {
   const isString = typeof value === "string";
   return isString ? value : void 0;
@@ -3664,86 +3664,136 @@ function createOpencodeEventMapper() {
   };
 }
 
-// packages/openthrottle-agentic-utils/src/utils/structured-output/chunk-reader.ts
-var listOf2 = (chunk) => {
-  return chunk === null ? [] : [chunk];
-};
-var textChunk = (delta) => {
-  return { delta, done: false, kind: CONVERSATION_STREAM_CHUNK_KINDS.text };
-};
-var consolidatedText = (event) => {
-  if (!isRecord(event) || event.type !== "assistant") {
-    return [];
-  }
-  const message = isRecord(event.message) ? event.message : void 0;
-  const content = Array.isArray(message?.content) ? message.content : [];
-  return content.flatMap((block) => {
-    const isText = isRecord(block) && block.type === "text";
-    const text = isText ? block.text : void 0;
-    return typeof text === "string" && text !== "" ? [textChunk(text)] : [];
-  });
-};
-var withConsolidatedText = (map) => {
-  return (event) => {
-    const isPartial = isRecord(event) && event.timestamp_ms !== void 0;
-    const text = isPartial ? [] : consolidatedText(event);
-    return [...text, ...map(event)];
+// packages/agentic-hooks/src/adapters/claude/account.ts
+var CLAUDE_ACCOUNT_PROBE_TIMEOUT_MS = 3e3;
+var CLAUDE_BIN_ENV = "OPENTHROTTLE_CLAUDE_BIN";
+var toTokenUsageAccount = (account) => {
+  return {
+    credential_kind: account.credentialKind,
+    email: account.email,
+    external_account_id: account.externalAccountId,
+    org_id: account.orgId,
+    org_name: account.orgName,
+    plan: account.plan
   };
 };
-var opencodeErrorOf = (event) => {
-  if (!isRecord(event) || event.type !== "error") {
-    return void 0;
-  }
-  const error = isRecord(event.error) ? event.error : {};
-  const data = isRecord(error.data) ? error.data : {};
-  const message = data.message ?? error.message ?? error.name;
-  return typeof message === "string" ? message : "opencode reported an error";
-};
-var createStructuredChunkReader = (driverId) => {
-  switch (driverId) {
-    case DRIVERS.antigravity:
-      return createAntigravityEventMapper();
-    case DRIVERS.claude:
-      return withConsolidatedText(mapClaudeEvent);
-    case DRIVERS.codex: {
-      const mapper = createCodexEventMapper();
-      return (event) => {
-        return mapper.map(event);
-      };
-    }
-    case DRIVERS.cursor:
-      return withConsolidatedText((event) => {
-        return listOf2(mapCursorEvent(event));
-      });
-    case DRIVERS.grok: {
-      const mapper = createGrokEventMapper();
-      return (event) => {
-        return mapper.map(event);
-      };
-    }
-    case DRIVERS.opencode: {
-      const mapper = createOpencodeEventMapper();
-      return (event) => {
-        const error = opencodeErrorOf(event);
-        if (error === void 0) {
-          return mapper.map(event);
-        }
-        return [
-          {
-            delta: "",
-            done: true,
-            error,
-            kind: CONVERSATION_STREAM_CHUNK_KINDS.usage
-          }
-        ];
-      };
-    }
-    default:
-      return void 0;
+var resolveClaudeTokenUsageAccount = async (env) => {
+  try {
+    const override = env[CLAUDE_BIN_ENV]?.trim();
+    const status = await probeClaudeAuthStatus({
+      binary: override !== void 0 && override !== "" ? override : "claude",
+      env,
+      timeoutMs: CLAUDE_ACCOUNT_PROBE_TIMEOUT_MS
+    });
+    const account = toClaudeAgentAccount(status);
+    return account.kind === "identified" ? toTokenUsageAccount(account) : null;
+  } catch {
+    return null;
   }
 };
 
-// packages/openthrottle-agentic-utils/src/utils/trajectory/normalizeUsage.ts
+// packages/agentic-hooks/src/adapters/claude/bundle-host.ts
+var import_node_os4 = __toESM(require("node:os"), 1);
+var import_node_path14 = __toESM(require("node:path"), 1);
+
+// packages/agentic-hooks/src/adapters/antigravity/marketplace-install.ts
+var import_node_path12 = __toESM(require("node:path"), 1);
+var resolveAntigravityPluginsDir = (homeDir) => {
+  return import_node_path12.default.join(homeDir, ".gemini", "config", "plugins");
+};
+
+// packages/agentic-hooks/src/adapters/antigravity/payload.ts
+var ANTIGRAVITY_SOURCE = "antigravity";
+
+// packages/agentic-hooks/src/adapters/codex/marketplace-install.ts
+var import_node_path13 = __toESM(require("node:path"), 1);
+var resolveCodexHome = (env, homeDir) => {
+  const configured = env.CODEX_HOME?.trim();
+  return configured ? import_node_path13.default.resolve(configured) : import_node_path13.default.join(homeDir, ".codex");
+};
+var resolveCodexMarketplaceCacheDir = (codexHome) => {
+  return import_node_path13.default.join(codexHome, "plugins", "cache");
+};
+
+// packages/agentic-hooks/src/adapters/codex/payload.ts
+var CODEX_SOURCE = "codex";
+
+// packages/agentic-hooks/src/adapters/cursor/payload.ts
+var CURSOR_SOURCE = "cursor";
+var CURSOR_INVOCATION_PATHS = Object.freeze({
+  SKILL_READ: SKILL_READ_INVOCATION_PATH,
+  SLASH: "slash"
+});
+
+// packages/agentic-hooks/src/adapters/claude/payload.ts
+var CLAUDE_SOURCE = "claude-code";
+var nonEmptyString = (value) => {
+  return typeof value === "string" && value.trim() !== "" ? value : null;
+};
+var resolvesSkillStarts = (hookEventName) => {
+  return hookEventName === "SessionEnd";
+};
+var normalizeClaudeStopPayload = (raw) => {
+  if (!isRecord(raw)) {
+    return null;
+  }
+  const sessionId = typeof raw.session_id === "string" ? raw.session_id.trim() : "";
+  if (!sessionId) {
+    return null;
+  }
+  return {
+    agent_transcript_path: nonEmptyString(raw.agent_transcript_path),
+    cwd: nonEmptyString(raw.cwd),
+    hook_event_name: typeof raw.hook_event_name === "string" ? raw.hook_event_name : "Stop",
+    session_id: sessionId,
+    transcript_path: nonEmptyString(raw.transcript_path)
+  };
+};
+
+// packages/agentic-hooks/src/adapters/claude/bundle-host.ts
+var scriptIsInside = (dir, scriptPath) => {
+  const root = dir?.trim();
+  if (!root || !scriptPath) {
+    return false;
+  }
+  return isPathInside(root, scriptPath);
+};
+var isCursorHost = ({
+  env,
+  scriptPath
+}) => {
+  const cursorRoot = env.CURSOR_PLUGIN_ROOT?.trim();
+  const claudeRoot = env.CLAUDE_PLUGIN_ROOT?.trim();
+  if (!cursorRoot || !claudeRoot) {
+    return false;
+  }
+  return import_node_path14.default.resolve(cursorRoot) === import_node_path14.default.resolve(claudeRoot) && scriptIsInside(cursorRoot, scriptPath);
+};
+var detectClaudeBundleHost = ({
+  env = process.env,
+  homeDir = import_node_os4.default.homedir(),
+  scriptPath = process.argv[1]
+} = {}) => {
+  const context = { env, homeDir, scriptPath };
+  if (scriptIsInside(resolveAntigravityPluginsDir(homeDir), scriptPath)) {
+    return ANTIGRAVITY_SOURCE;
+  }
+  const codexCache = resolveCodexMarketplaceCacheDir(
+    resolveCodexHome(env, homeDir)
+  );
+  if (scriptIsInside(codexCache, scriptPath)) {
+    return CODEX_SOURCE;
+  }
+  if (isCursorHost(context)) {
+    return CURSOR_SOURCE;
+  }
+  return CLAUDE_SOURCE;
+};
+
+// packages/agentic-hooks/src/adapters/claude/session-trajectory.ts
+var import_node_path15 = __toESM(require("node:path"), 1);
+
+// packages/openthrottle-agentic-utils/src/utils/normalizeUsage.ts
 var EXCLUSIVE_CACHE_DRIVERS = /* @__PURE__ */ new Set([
   DRIVERS.claude,
   DRIVERS.cursor,
@@ -3800,7 +3850,7 @@ var normalizeUsage = (driverId, chunk) => {
   };
 };
 
-// packages/openthrottle-agentic-utils/src/utils/trajectory/tool-metadata.ts
+// packages/openthrottle-agentic-utils/src/utils/trajectory-tool-metadata.ts
 var CODEX_ITEM_BOOKKEEPING = /* @__PURE__ */ new Set([
   "aggregated_output",
   "exit_code",
@@ -3883,7 +3933,7 @@ var isToolResultError = (chunk) => {
   return hasChunkError || metadata.isError === true || typeof toolCall.error === "string" && toolCall.error !== "" || typeof exitCode === "number" && exitCode !== 0;
 };
 
-// packages/openthrottle-agentic-utils/src/utils/trajectory/chunksToAtif.ts
+// packages/openthrottle-agentic-utils/src/utils/chunksToAtif.ts
 var ATIF_SCHEMA_VERSION = "ATIF-v1.8";
 var emptyDraft = () => {
   return { calls: [], message: "", reasoning: "", results: [] };
@@ -4051,7 +4101,86 @@ var chunksToAtif = (input) => {
   };
 };
 
-// packages/openthrottle-agentic-utils/src/utils/trajectory/sanitize.ts
+// packages/openthrottle-agentic-utils/src/utils/structured-output-chunk-reader.ts
+var listOf2 = (chunk) => {
+  return chunk === null ? [] : [chunk];
+};
+var textChunk = (delta) => {
+  return { delta, done: false, kind: CONVERSATION_STREAM_CHUNK_KINDS.text };
+};
+var consolidatedText = (event) => {
+  if (!isRecord(event) || event.type !== "assistant") {
+    return [];
+  }
+  const message = isRecord(event.message) ? event.message : void 0;
+  const content = Array.isArray(message?.content) ? message.content : [];
+  return content.flatMap((block) => {
+    const isText = isRecord(block) && block.type === "text";
+    const text = isText ? block.text : void 0;
+    return typeof text === "string" && text !== "" ? [textChunk(text)] : [];
+  });
+};
+var withConsolidatedText = (map) => {
+  return (event) => {
+    const isPartial = isRecord(event) && event.timestamp_ms !== void 0;
+    const text = isPartial ? [] : consolidatedText(event);
+    return [...text, ...map(event)];
+  };
+};
+var opencodeErrorOf = (event) => {
+  if (!isRecord(event) || event.type !== "error") {
+    return void 0;
+  }
+  const error = isRecord(event.error) ? event.error : {};
+  const data = isRecord(error.data) ? error.data : {};
+  const message = data.message ?? error.message ?? error.name;
+  return typeof message === "string" ? message : "opencode reported an error";
+};
+var createStructuredChunkReader = (driverId) => {
+  switch (driverId) {
+    case DRIVERS.antigravity:
+      return createAntigravityEventMapper();
+    case DRIVERS.claude:
+      return withConsolidatedText(mapClaudeEvent);
+    case DRIVERS.codex: {
+      const mapper = createCodexEventMapper();
+      return (event) => {
+        return mapper.map(event);
+      };
+    }
+    case DRIVERS.cursor:
+      return withConsolidatedText((event) => {
+        return listOf2(mapCursorEvent(event));
+      });
+    case DRIVERS.grok: {
+      const mapper = createGrokEventMapper();
+      return (event) => {
+        return mapper.map(event);
+      };
+    }
+    case DRIVERS.opencode: {
+      const mapper = createOpencodeEventMapper();
+      return (event) => {
+        const error = opencodeErrorOf(event);
+        if (error === void 0) {
+          return mapper.map(event);
+        }
+        return [
+          {
+            delta: "",
+            done: true,
+            error,
+            kind: CONVERSATION_STREAM_CHUNK_KINDS.usage
+          }
+        ];
+      };
+    }
+    default:
+      return void 0;
+  }
+};
+
+// packages/openthrottle-agentic-utils/src/utils/trajectory-sanitize.ts
 var DEFAULT_TRAJECTORY_LIMITS = {
   observationBytes: 16 * 1024,
   totalBytes: 4 * 1024 * 1024
@@ -4162,10 +4291,10 @@ var redactSecrets = (value) => {
   return out;
 };
 
-// packages/openthrottle-agentic-utils/src/utils/trajectory/trajectory-record.ts
+// packages/openthrottle-agentic-utils/src/utils/trajectory-record.ts
 var TRAJECTORY_TRANSPORT_BYTES = 640 * 1024;
 
-// packages/openthrottle-agentic-utils/src/utils/trajectory/claude-session.ts
+// packages/openthrottle-agentic-utils/src/utils/trajectory-claude-session.ts
 var BEGIN_TASK_TOOL = "__begin_task_session";
 var CLAIM_MESSAGES_TOOL = "__claim_plan_messages";
 var REGISTER_RUN_TOOL = "__register_plan_run";
@@ -4967,134 +5096,7 @@ var buildClaudeSessionTrajectory = (input) => {
   };
 };
 
-// packages/agentic-hooks/src/adapters/claude/account.ts
-var CLAUDE_ACCOUNT_PROBE_TIMEOUT_MS = 3e3;
-var CLAUDE_BIN_ENV = "OPENTHROTTLE_CLAUDE_BIN";
-var toTokenUsageAccount = (account) => {
-  return {
-    credential_kind: account.credentialKind,
-    email: account.email,
-    external_account_id: account.externalAccountId,
-    org_id: account.orgId,
-    org_name: account.orgName,
-    plan: account.plan
-  };
-};
-var resolveClaudeTokenUsageAccount = async (env) => {
-  try {
-    const override = env[CLAUDE_BIN_ENV]?.trim();
-    const status = await probeClaudeAuthStatus({
-      binary: override !== void 0 && override !== "" ? override : "claude",
-      env,
-      timeoutMs: CLAUDE_ACCOUNT_PROBE_TIMEOUT_MS
-    });
-    const account = toClaudeAgentAccount(status);
-    return account.kind === "identified" ? toTokenUsageAccount(account) : null;
-  } catch {
-    return null;
-  }
-};
-
-// packages/agentic-hooks/src/adapters/claude/bundle-host.ts
-var import_node_os4 = __toESM(require("node:os"), 1);
-var import_node_path14 = __toESM(require("node:path"), 1);
-
-// packages/agentic-hooks/src/adapters/antigravity/marketplace-install.ts
-var import_node_path12 = __toESM(require("node:path"), 1);
-var resolveAntigravityPluginsDir = (homeDir) => {
-  return import_node_path12.default.join(homeDir, ".gemini", "config", "plugins");
-};
-
-// packages/agentic-hooks/src/adapters/antigravity/payload.ts
-var ANTIGRAVITY_SOURCE = "antigravity";
-
-// packages/agentic-hooks/src/adapters/codex/marketplace-install.ts
-var import_node_path13 = __toESM(require("node:path"), 1);
-var resolveCodexHome = (env, homeDir) => {
-  const configured = env.CODEX_HOME?.trim();
-  return configured ? import_node_path13.default.resolve(configured) : import_node_path13.default.join(homeDir, ".codex");
-};
-var resolveCodexMarketplaceCacheDir = (codexHome) => {
-  return import_node_path13.default.join(codexHome, "plugins", "cache");
-};
-
-// packages/agentic-hooks/src/adapters/codex/payload.ts
-var CODEX_SOURCE = "codex";
-
-// packages/agentic-hooks/src/adapters/cursor/payload.ts
-var CURSOR_SOURCE = "cursor";
-var CURSOR_INVOCATION_PATHS = Object.freeze({
-  SKILL_READ: SKILL_READ_INVOCATION_PATH,
-  SLASH: "slash"
-});
-
-// packages/agentic-hooks/src/adapters/claude/payload.ts
-var CLAUDE_SOURCE = "claude-code";
-var nonEmptyString = (value) => {
-  return typeof value === "string" && value.trim() !== "" ? value : null;
-};
-var resolvesSkillStarts = (hookEventName) => {
-  return hookEventName === "SessionEnd";
-};
-var normalizeClaudeStopPayload = (raw) => {
-  if (!isRecord(raw)) {
-    return null;
-  }
-  const sessionId = typeof raw.session_id === "string" ? raw.session_id.trim() : "";
-  if (!sessionId) {
-    return null;
-  }
-  return {
-    agent_transcript_path: nonEmptyString(raw.agent_transcript_path),
-    cwd: nonEmptyString(raw.cwd),
-    hook_event_name: typeof raw.hook_event_name === "string" ? raw.hook_event_name : "Stop",
-    session_id: sessionId,
-    transcript_path: nonEmptyString(raw.transcript_path)
-  };
-};
-
-// packages/agentic-hooks/src/adapters/claude/bundle-host.ts
-var scriptIsInside = (dir, scriptPath) => {
-  const root = dir?.trim();
-  if (!root || !scriptPath) {
-    return false;
-  }
-  return isPathInside(root, scriptPath);
-};
-var isCursorHost = ({
-  env,
-  scriptPath
-}) => {
-  const cursorRoot = env.CURSOR_PLUGIN_ROOT?.trim();
-  const claudeRoot = env.CLAUDE_PLUGIN_ROOT?.trim();
-  if (!cursorRoot || !claudeRoot) {
-    return false;
-  }
-  return import_node_path14.default.resolve(cursorRoot) === import_node_path14.default.resolve(claudeRoot) && scriptIsInside(cursorRoot, scriptPath);
-};
-var detectClaudeBundleHost = ({
-  env = process.env,
-  homeDir = import_node_os4.default.homedir(),
-  scriptPath = process.argv[1]
-} = {}) => {
-  const context = { env, homeDir, scriptPath };
-  if (scriptIsInside(resolveAntigravityPluginsDir(homeDir), scriptPath)) {
-    return ANTIGRAVITY_SOURCE;
-  }
-  const codexCache = resolveCodexMarketplaceCacheDir(
-    resolveCodexHome(env, homeDir)
-  );
-  if (scriptIsInside(codexCache, scriptPath)) {
-    return CODEX_SOURCE;
-  }
-  if (isCursorHost(context)) {
-    return CURSOR_SOURCE;
-  }
-  return CLAUDE_SOURCE;
-};
-
 // packages/agentic-hooks/src/adapters/claude/session-trajectory.ts
-var import_node_path15 = __toESM(require("node:path"), 1);
 var SESSION_TRAJECTORY_SOURCE = "session_upload";
 var SESSION_TRAJECTORY_DRIVER = "claude";
 var MAX_SESSION_SCAN_BYTES_PER_STOP = 32 * 1024 * 1024;

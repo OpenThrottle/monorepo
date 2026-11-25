@@ -173,7 +173,7 @@ var readNewBytes = ({
 var import_node_fs2 = __toESM(require("node:fs"), 1);
 var import_node_os = __toESM(require("node:os"), 1);
 
-// packages/openthrottle-agentic-utils/src/utils/trajectory/claude-session.ts
+// packages/openthrottle-agentic-utils/src/utils/trajectory-claude-session.ts
 var REGISTER_RUN_TOOL = "__register_plan_run";
 var SUBAGENT_TRANSPORT_BYTES = 160 * 1024;
 var stringOf = (value) => {

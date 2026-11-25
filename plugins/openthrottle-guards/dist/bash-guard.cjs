@@ -52,7 +52,10 @@ var isRecord = (value) => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 };
 
-// packages/agentic-hooks/src/data/bash-guard/shell-words.ts
+// packages/agentic-hooks/src/utils/bash-guard-types.ts
+var BASH_RULE_ALLOW = { decision: "allow" };
+
+// packages/agentic-hooks/src/utils/shell-words.ts
 var import_node_path = __toESM(require("node:path"), 1);
 var isBlank = (char) => {
   return char === " " || char === "	";
@@ -251,10 +254,7 @@ var parseBashCommand = (command, cwd) => {
   return { raw: command, segments };
 };
 
-// packages/agentic-hooks/src/data/bash-guard/types.ts
-var BASH_RULE_ALLOW = { decision: "allow" };
-
-// packages/agentic-hooks/src/data/bash-guard/bsd-sed-inplace.ts
+// packages/agentic-hooks/src/utils/bsd-sed-inplace.ts
 var VALUE_FLAGS = /* @__PURE__ */ new Set(["-e", "-f"]);
 var INPLACE_FLAG = /^-[Ealnrsu]*i$/;
 var SUFFIX_WORD = /^\.[\w.-]*$/;
@@ -294,19 +294,538 @@ var bsdSedInPlaceRule = {
   id: "bsd-sed-inplace"
 };
 
-// packages/agentic-hooks/src/data/bash-guard/fs-glob-matcher.ts
+// packages/agentic-hooks/src/utils/masked-exit.ts
+var MASKED_EXIT_TRAILING_RULE_ID = "masked-exit-trailing";
+var MASKED_EXIT_PIPELINE_RULE_ID = "masked-exit-pipeline";
+var UNCONDITIONAL_OR_ON_FAILURE = /* @__PURE__ */ new Set([
+  ";",
+  "||"
+]);
+var PIPES = /* @__PURE__ */ new Set(["|", "|&"]);
+var ECHOES = /* @__PURE__ */ new Set(["echo", "printf"]);
+var NO_OPS = /* @__PURE__ */ new Set([":", "true"]);
+var FILTERS = /* @__PURE__ */ new Set(["grep", "head", "tail"]);
+var VALIDATORS = /* @__PURE__ */ new Set([
+  "eslint",
+  "nx",
+  "tsc",
+  "vitest"
+]);
+var PNPM_VALIDATING_SUBCOMMANDS = /* @__PURE__ */ new Set([
+  "exec",
+  "nx",
+  "run",
+  ...VALIDATORS
+]);
+var LAST_STATUS = /\$(\?|\{\?\})/;
+var SUGGESTED_TRAILER = "`cmd; rc=$?; echo exit=$rc; exit $rc`";
+var bareWords = (segment) => {
+  return stripCommandPrefixes(segment.words).words;
+};
+var describeTrailing = (segment) => {
+  const [head, ...rest] = bareWords(segment);
+  if (head === void 0) return null;
+  const isAfterAnything = segment.precededBy !== null && UNCONDITIONAL_OR_ON_FAILURE.has(segment.precededBy);
+  if (!isAfterAnything) return null;
+  if (ECHOES.has(head) && rest.some((word) => LAST_STATUS.test(word))) {
+    return { isDeniable: true, what: `ends with \`${head} … $?\`` };
+  }
+  if (NO_OPS.has(head) && rest.length === 0) {
+    const what = `ends with \`${segment.precededBy} ${head}\``;
+    return { isDeniable: false, what };
+  }
+  return null;
+};
+var trailingReason = (what, background) => {
+  const consequence = background ? "It runs in the background, where that exit status is the only result anyone sees." : "Only you can read the echoed number; the harness records success.";
+  return [
+    `This command ${what}, so the shell exits 0 whatever the work before it did.`,
+    consequence,
+    `Keep the status: ${SUGGESTED_TRAILER}.`
+  ].join(" ");
+};
+var evaluateTrailing = async (command, context) => {
+  const last = command.segments.at(-1);
+  if (last === void 0 || command.segments.length < 2) {
+    return BASH_RULE_ALLOW;
+  }
+  const mask = describeTrailing(last);
+  if (mask === null) return BASH_RULE_ALLOW;
+  const reason = trailingReason(mask.what, context.background);
+  const isDenied = context.background && mask.isDeniable;
+  return isDenied ? { decision: "deny", reason } : { decision: "warn", reason };
+};
+var maskedExitTrailingRule = {
+  evaluate: evaluateTrailing,
+  id: MASKED_EXIT_TRAILING_RULE_ID
+};
+var isValidation = (segment) => {
+  const words = bareWords(segment);
+  if (words.some((word) => word.includes("check:local"))) return true;
+  const [head, sub] = words;
+  if (head === void 0) return false;
+  if (VALIDATORS.has(head)) return true;
+  const isRunner = head === "pnpm" || head === "npx";
+  return isRunner && sub !== void 0 && PNPM_VALIDATING_SUBCOMMANDS.has(sub);
+};
+var enablesPipefail = (segment) => {
+  const [head, ...rest] = bareWords(segment);
+  if (head === "setopt") return rest.includes("pipefail");
+  if (head !== "set") return false;
+  const index = rest.indexOf("pipefail");
+  const flag = index > 0 ? rest[index - 1] : void 0;
+  return flag !== void 0 && /^-[a-z]*o$/.test(flag);
+};
+var filterAfter = (segments, index) => {
+  for (const segment of segments.slice(index + 1)) {
+    if (!PIPES.has(segment.precededBy)) return null;
+    const head = bareWords(segment)[0];
+    if (head !== void 0 && FILTERS.has(head)) return head;
+  }
+  return null;
+};
+var evaluatePipeline = async (command) => {
+  if (!/\|/.test(command.raw)) return BASH_RULE_ALLOW;
+  const { segments } = command;
+  const pipefailAt = segments.findIndex(enablesPipefail);
+  const hit = segments.findIndex((segment2, index) => {
+    const isGuarded = pipefailAt !== -1 && pipefailAt < index;
+    return !isGuarded && isValidation(segment2) && filterAfter(segments, index);
+  });
+  const segment = segments[hit];
+  if (segment === void 0) return BASH_RULE_ALLOW;
+  const filter = filterAfter(segments, hit) ?? "a filter";
+  const reason = [
+    `\`${bareWords(segment).slice(0, 3).join(" ")}\` is piped into \`${filter}\`, so the pipeline exits with \`${filter}\`'s status, not the validation's.`,
+    "Prefix the command with `set -o pipefail;` (bash and zsh) before reporting it as passing."
+  ].join(" ");
+  return { decision: "warn", reason };
+};
+var maskedExitPipelineRule = {
+  evaluate: evaluatePipeline,
+  id: MASKED_EXIT_PIPELINE_RULE_ID
+};
+
+// packages/agentic-hooks/src/utils/stale-pr-write.ts
+var STALE_PR_WRITE_RULE_ID = "stale-pr-write";
+var VALUE_FLAGS2 = {
+  close: /* @__PURE__ */ new Set(["-c", "--comment"]),
+  comment: /* @__PURE__ */ new Set(["--attach", "-b", "--body", "-F", "--body-file"]),
+  edit: /* @__PURE__ */ new Set([
+    "--add-assignee",
+    "--add-label",
+    "--add-project",
+    "--add-reviewer",
+    "--attach",
+    "-B",
+    "--base",
+    "-b",
+    "--body",
+    "-F",
+    "--body-file",
+    "-m",
+    "--milestone",
+    "--remove-assignee",
+    "--remove-label",
+    "--remove-project",
+    "--remove-reviewer",
+    "-t",
+    "--title"
+  ]),
+  merge: /* @__PURE__ */ new Set([
+    "-A",
+    "--author-email",
+    "-b",
+    "--body",
+    "-F",
+    "--body-file",
+    "--match-head-commit",
+    "-t",
+    "--subject"
+  ]),
+  ready: /* @__PURE__ */ new Set([]),
+  review: /* @__PURE__ */ new Set(["-b", "--body", "-F", "--body-file"])
+};
+var BOOLEAN_FLAGS = {
+  close: /* @__PURE__ */ new Set(["-d", "--delete-branch"]),
+  comment: /* @__PURE__ */ new Set([
+    "--create-if-none",
+    "--delete-last",
+    "--edit-last",
+    "-e",
+    "--editor",
+    "-w",
+    "--web",
+    "--yes"
+  ]),
+  edit: /* @__PURE__ */ new Set(["--remove-milestone"]),
+  merge: /* @__PURE__ */ new Set([
+    "--admin",
+    "--auto",
+    "-d",
+    "--delete-branch",
+    "--disable-auto",
+    "-m",
+    "--merge",
+    "-r",
+    "--rebase",
+    "-s",
+    "--squash"
+  ]),
+  ready: /* @__PURE__ */ new Set(["--undo"]),
+  review: /* @__PURE__ */ new Set([
+    "-a",
+    "--approve",
+    "-c",
+    "--comment",
+    "-r",
+    "--request-changes"
+  ])
+};
+var REPO_FLAGS = /* @__PURE__ */ new Set(["-R", "--repo"]);
+var TERMINAL_STATES = /* @__PURE__ */ new Set(["CLOSED", "MERGED"]);
+var NONE = { kind: "none" };
+var UNPARSEABLE = { kind: "unparseable" };
+var isGhBinary = (word) => {
+  return word === "gh" || (word?.endsWith("/gh") ?? false);
+};
+var isDynamic = (word) => {
+  return word.includes("$") || word.includes("`");
+};
+var parseGhPrWrite = (rawWords) => {
+  const { assignments, words } = stripCommandPrefixes(rawWords);
+  if (!isGhBinary(words[0]) || words[1] !== "pr") return NONE;
+  const subcommand = words[2] ?? "";
+  const valueFlags = VALUE_FLAGS2[subcommand];
+  const booleanFlags = BOOLEAN_FLAGS[subcommand];
+  if (valueFlags === void 0 || booleanFlags === void 0) return NONE;
+  let repo = assignments.get("GH_REPO") ?? null;
+  const positionals = [];
+  let index = 3;
+  while (index < words.length) {
+    const word = words[index] ?? "";
+    index += 1;
+    if (word === "--") {
+      positionals.push(...words.slice(index));
+      break;
+    }
+    if (!word.startsWith("-") || word === "-") {
+      positionals.push(word);
+      continue;
+    }
+    if (word === "-h" || word === "--help") return NONE;
+    const equals = word.indexOf("=");
+    const flag = equals === -1 ? word : word.slice(0, equals);
+    const inlineValue = equals === -1 ? null : word.slice(equals + 1);
+    if (REPO_FLAGS.has(flag)) {
+      repo = inlineValue ?? words[index] ?? null;
+      if (inlineValue === null) index += 1;
+    } else if (valueFlags.has(flag)) {
+      if (inlineValue === null) index += 1;
+    } else if (!booleanFlags.has(flag)) {
+      return UNPARSEABLE;
+    }
+  }
+  const selector = positionals[0] ?? null;
+  const isUnreadable = positionals.length > 1 || selector !== null && isDynamic(selector) || repo !== null && isDynamic(repo);
+  if (isUnreadable) return UNPARSEABLE;
+  return { kind: "write", repo, selector, subcommand };
+};
+var UNKNOWN = { kind: "unknown" };
+var lookupWithin = async (context, query) => {
+  let timer;
+  const timeout = new Promise((resolve) => {
+    timer = setTimeout(() => {
+      resolve(UNKNOWN);
+    }, context.lookupTimeoutMs);
+  });
+  try {
+    return await Promise.race([context.lookupPullRequest(query), timeout]);
+  } catch (err) {
+    logHookError(`${STALE_PR_WRITE_RULE_ID}: PR lookup failed`, err);
+    return UNKNOWN;
+  } finally {
+    clearTimeout(timer);
+  }
+};
+var describeTarget = (query) => {
+  return query.selector === null ? "the current branch's PR" : `\`${query.selector}\``;
+};
+var formatDeny = (subcommand, query, state) => {
+  const verb = state.state === "MERGED" ? "merged" : "closed";
+  const when = state.changedAt === null ? "" : ` (${verb} ${state.changedAt})`;
+  const repo = query.repo === null ? "" : ` in ${query.repo}`;
+  return [
+    `Refusing \`gh pr ${subcommand}\` on PR #${state.number}${repo}: GitHub reports it ${state.state}${when}.`,
+    `The command targets ${describeTarget(query)}, and acting on it now would rest on a stale premise.`,
+    "A chained `gh pr view … && …` does not protect against this: `&&` checks the exit code, not the state the view printed.",
+    "Re-check the PR and what you meant to do. If you do mean to reopen it, `gh pr reopen` is not guarded."
+  ].join(" ");
+};
+var toGuardedWrite = (segment) => {
+  const write = parseGhPrWrite(segment.words);
+  if (write.kind !== "write" || segment.cwd === null) return null;
+  return {
+    query: { cwd: segment.cwd, repo: write.repo, selector: write.selector },
+    subcommand: write.subcommand
+  };
+};
+var evaluate = async (command, context) => {
+  if (!/\bgh\b/.test(command.raw) || !/\bpr\b/.test(command.raw)) {
+    return BASH_RULE_ALLOW;
+  }
+  const writes = command.segments.map(toGuardedWrite).filter((write) => write !== null);
+  if (writes.length === 0) return BASH_RULE_ALLOW;
+  const states = await Promise.all(
+    writes.map((write) => lookupWithin(context, write.query))
+  );
+  const reasons = writes.flatMap((write, index) => {
+    const state = states[index];
+    if (state?.kind !== "found" || !TERMINAL_STATES.has(state.state)) {
+      return [];
+    }
+    return [formatDeny(write.subcommand, write.query, state)];
+  });
+  return reasons.length === 0 ? BASH_RULE_ALLOW : { decision: "deny", reason: reasons.join("\n") };
+};
+var stalePrWriteRule = {
+  evaluate,
+  id: STALE_PR_WRITE_RULE_ID
+};
+
+// packages/agentic-hooks/src/utils/readQuotedChars.ts
+var readQuotedChars = (raw) => {
+  const chars = [];
+  let quote = null;
+  let index = 0;
+  while (index < raw.length) {
+    const char = raw.charAt(index);
+    const next = raw.charAt(index + 1);
+    if (quote === "single") {
+      if (char === "'") quote = null;
+      else chars.push({ char, quote: "single" });
+    } else if (quote === "ansi") {
+      if (char === "'") {
+        quote = null;
+      } else if (char === "\\" && next !== "") {
+        chars.push({ char: next, quote: "single" });
+        index += 1;
+      } else {
+        chars.push({ char, quote: "single" });
+      }
+    } else if (quote === "double") {
+      if (char === '"') {
+        quote = null;
+      } else if (char === "\\" && '"\\$`'.includes(next) && next !== "") {
+        chars.push({ char: next, quote: "escaped" });
+        index += 1;
+      } else {
+        chars.push({ char, quote: "double" });
+      }
+    } else if (char === "'") {
+      quote = "single";
+    } else if (char === "$" && next === "'") {
+      quote = "ansi";
+      index += 1;
+    } else if (char === '"') {
+      quote = "double";
+    } else if (char === "\\") {
+      if (next !== "" && next !== "\n") {
+        chars.push({ char: next, quote: "escaped" });
+      }
+      index += 1;
+    } else {
+      chars.push({ char, quote: "none" });
+    }
+    index += 1;
+  }
+  return chars;
+};
+
+// packages/agentic-hooks/src/utils/zsh-unquoted-glob.ts
+var GLOB_CHARS = "*?[";
+var GLOB_META = "*?[]\\";
+var ASSIGNMENT_BUILTINS = /* @__PURE__ */ new Set([
+  "declare",
+  "export",
+  "float",
+  "integer",
+  "local",
+  "readonly",
+  "typeset"
+]);
+var PATTERN_COMMANDS = /* @__PURE__ */ new Set(["[[", "case", "noglob"]);
+var findUnquotedGlob = (raw) => {
+  const chars = readQuotedChars(raw);
+  let firstGlob = -1;
+  let firstEquals = -1;
+  chars.forEach(({ char, quote }, index) => {
+    if (quote !== "none") return;
+    if (char === "=" && firstEquals === -1) firstEquals = index;
+    if (firstGlob !== -1 || !GLOB_CHARS.includes(char)) return;
+    const closesBracket = char !== "[" || chars.some((later, laterIndex) => {
+      return laterIndex > index + 1 && later.char === "]" && later.quote === "none";
+    });
+    if (closesBracket) firstGlob = index;
+  });
+  if (firstGlob === -1) return null;
+  const isUnevaluable = chars.some(({ char, quote }, index) => {
+    if (char === "`" || char === "$" && quote !== "single") return true;
+    if (quote !== "none") return false;
+    return char === "{" || char === "~" && index === 0;
+  });
+  if (isUnevaluable) return null;
+  const pattern = chars.map(({ char, quote }) => {
+    const isLiteral = quote !== "none" && GLOB_META.includes(char);
+    return isLiteral ? `\\${char}` : char;
+  }).join("");
+  const isFlagValue = firstEquals !== -1 && firstEquals < firstGlob;
+  return { kind: isFlagValue ? "flag-value" : "path", pattern };
+};
+var quoteFlagValue = (word) => {
+  const equals = word.indexOf("=");
+  if (equals === -1 || word.includes("'")) return `'${word}'`;
+  return `${word.slice(0, equals + 1)}'${word.slice(equals + 1)}'`;
+};
+var globCandidates = (segment) => {
+  const { words: bare } = stripCommandPrefixes(segment.words);
+  const command = bare[0];
+  if (command === void 0) return [];
+  if (PATTERN_COMMANDS.has(command) || ASSIGNMENT_BUILTINS.has(command)) {
+    return [];
+  }
+  const offset = segment.words.length - bare.length;
+  const candidates = [];
+  segment.rawWords.slice(offset + 1).forEach((raw, index) => {
+    const glob = findUnquotedGlob(raw);
+    if (glob !== null) candidates.push({ glob, word: bare[index + 1] ?? raw });
+  });
+  return candidates;
+};
+var checkSegment = async (segment, context) => {
+  const candidates = globCandidates(segment);
+  const flagValue = candidates.find(({ glob }) => glob.kind === "flag-value");
+  if (flagValue) {
+    return `zsh treats the unquoted \`${flagValue.word}\` as a filename pattern and aborts with "no matches found" before the command runs. Quote the value: \`${quoteFlagValue(flagValue.word)}\`.`;
+  }
+  const { cwd } = segment;
+  if (cwd === null) return null;
+  const paths = candidates.filter(({ glob }) => glob.kind === "path");
+  const matches = await Promise.all(
+    paths.map(({ glob }) => context.globMatches(glob.pattern, cwd))
+  );
+  const unmatched = paths.find((_, index) => matches[index] === false);
+  if (!unmatched) return null;
+  return `zsh aborts with "no matches found": the unquoted glob \`${unmatched.word}\` matches nothing in ${cwd}. Quote it if the program should receive the pattern itself, or fix the path.`;
+};
+var zshUnquotedGlobRule = {
+  evaluate: async (command, context) => {
+    if (context.shell !== "zsh") return BASH_RULE_ALLOW;
+    if (command.raw.includes("((")) return BASH_RULE_ALLOW;
+    const reasons = await Promise.all(
+      command.segments.map((segment) => checkSegment(segment, context))
+    );
+    const reason = reasons.find((found) => found !== null);
+    return reason ? { decision: "deny", reason } : BASH_RULE_ALLOW;
+  },
+  id: "zsh-unquoted-glob"
+};
+
+// packages/agentic-hooks/src/utils/zsh-var-modifier.ts
+var MODIFIER_LETTERS = "hterlaAuqQ";
+var NAME_START = /[A-Za-z_]/;
+var NAME_CHAR = /[A-Za-z0-9_]/;
+var findZshModifierExpansions = (raw) => {
+  const chars = readQuotedChars(raw);
+  const found = [];
+  chars.forEach(({ char, quote }, index) => {
+    if (char !== "$" || quote === "single" || quote === "escaped") return;
+    if (!NAME_START.test(chars[index + 1]?.char ?? "")) return;
+    let end = index + 1;
+    while (NAME_CHAR.test(chars[end]?.char ?? "")) end += 1;
+    const colon = chars[end];
+    const modifier = chars[end + 1];
+    if (colon?.char !== ":" || colon.quote !== quote) return;
+    if (modifier === void 0 || modifier.quote !== quote) return;
+    if (!MODIFIER_LETTERS.includes(modifier.char)) return;
+    const name = chars.slice(index + 1, end).map((entry) => entry.char).join("");
+    found.push(`$${name}:${modifier.char}`);
+  });
+  return found;
+};
+var zshVarModifierRule = {
+  evaluate: async (command, context) => {
+    if (context.shell !== "zsh") return BASH_RULE_ALLOW;
+    const hits = command.segments.flatMap((segment) => {
+      return segment.rawWords.flatMap(findZshModifierExpansions);
+    });
+    const first = hits[0];
+    if (first === void 0) return BASH_RULE_ALLOW;
+    const colon = first.indexOf(":");
+    const name = first.slice(1, colon);
+    const letter = first.slice(colon + 1);
+    return {
+      decision: "warn",
+      reason: `zsh reads \`${first}…\` as \`$${name}\` with the \`:${letter}\` modifier applied, even inside double quotes. If you meant the variable followed by a colon, write \`\${${name}}:\`.`
+    };
+  },
+  id: "zsh-var-modifier"
+};
+
+// packages/agentic-hooks/src/utils/bash-guard.ts
+var BASH_GUARD_RULES = [
+  bsdSedInPlaceRule,
+  maskedExitPipelineRule,
+  maskedExitTrailingRule,
+  stalePrWriteRule,
+  zshUnquotedGlobRule,
+  zshVarModifierRule
+];
+var runRule = async (rule, command, context) => {
+  try {
+    return await rule.evaluate(command, context);
+  } catch (err) {
+    logHookError(`bash-guard: rule ${rule.id} threw`, err);
+    return { decision: "allow" };
+  }
+};
+var evaluateBashGuard = async (command, context, rules = BASH_GUARD_RULES) => {
+  if (command.trim() === "") return { decision: "allow" };
+  const parsed = parseBashCommand(command, context.cwd);
+  const verdicts = await Promise.all(
+    rules.map((rule) => runRule(rule, parsed, context))
+  );
+  const denies = [];
+  const warns = [];
+  verdicts.forEach((verdict, index) => {
+    const ruleId = rules[index]?.id ?? "unknown";
+    if (verdict.decision === "deny") {
+      denies.push({ reason: verdict.reason, ruleId });
+    } else if (verdict.decision === "warn") {
+      warns.push({ reason: verdict.reason, ruleId });
+    }
+  });
+  if (denies.length > 0) return { decision: "deny", findings: denies };
+  if (warns.length > 0) return { decision: "warn", findings: warns };
+  return { decision: "allow" };
+};
+var formatBashGuardFindings = (findings) => {
+  return findings.map((finding) => `[bash-guard:${finding.ruleId}] ${finding.reason}`).join("\n");
+};
+
+// packages/agentic-hooks/src/utils/fs-glob-matcher.ts
 var import_promises = __toESM(require("node:fs/promises"), 1);
 var import_node_path2 = __toESM(require("node:path"), 1);
 var FS_GLOB_MAX_ENTRIES = 5e3;
 var FS_GLOB_TIMEOUT_MS = 750;
 var GlobBudgetExceeded = class extends Error {
 };
-var GLOB_CHARS = /(^|[^\\])[*?[]/;
+var GLOB_CHARS2 = /(^|[^\\])[*?[]/;
 var escapeRegex = (char) => {
   return /[\\^$.*+?()[\]{}|/]/.test(char) ? `\\${char}` : char;
 };
 var globSegmentToRegExp = (segment) => {
-  if (!GLOB_CHARS.test(segment)) return null;
+  if (!GLOB_CHARS2.test(segment)) return null;
   let source = "";
   let index = 0;
   while (index < segment.length) {
@@ -450,10 +969,10 @@ var createFsGlobMatcher = (options = {
   };
 };
 
-// packages/agentic-hooks/src/data/bash-guard/gh-pr-lookup.ts
+// packages/agentic-hooks/src/utils/gh-pr-lookup.ts
 var import_node_child_process = require("node:child_process");
 var GH_PR_LOOKUP_TIMEOUT_MS = 3e3;
-var UNKNOWN = { kind: "unknown" };
+var UNKNOWN2 = { kind: "unknown" };
 var runFile = (file, args, { cwd, timeoutMs }) => {
   return new Promise((resolve, reject) => {
     (0, import_node_child_process.execFile)(
@@ -491,11 +1010,11 @@ var parseGhPrView = (stdout) => {
   try {
     payload = JSON.parse(stdout);
   } catch {
-    return UNKNOWN;
+    return UNKNOWN2;
   }
-  if (!isRecord(payload)) return UNKNOWN;
+  if (!isRecord(payload)) return UNKNOWN2;
   const { closedAt, mergedAt, number, state } = payload;
-  if (typeof state !== "string" || typeof number !== "number") return UNKNOWN;
+  if (typeof state !== "string" || typeof number !== "number") return UNKNOWN2;
   let changedAt = null;
   if (state === "MERGED") changedAt = readTimestamp(mergedAt);
   else if (state === "CLOSED") changedAt = readTimestamp(closedAt);
@@ -514,531 +1033,12 @@ var createGhPrLookup = ({
       });
       return parseGhPrView(stdout);
     } catch {
-      return UNKNOWN;
+      return UNKNOWN2;
     }
   };
 };
 
-// packages/agentic-hooks/src/data/bash-guard/masked-exit.ts
-var MASKED_EXIT_TRAILING_RULE_ID = "masked-exit-trailing";
-var MASKED_EXIT_PIPELINE_RULE_ID = "masked-exit-pipeline";
-var UNCONDITIONAL_OR_ON_FAILURE = /* @__PURE__ */ new Set([
-  ";",
-  "||"
-]);
-var PIPES = /* @__PURE__ */ new Set(["|", "|&"]);
-var ECHOES = /* @__PURE__ */ new Set(["echo", "printf"]);
-var NO_OPS = /* @__PURE__ */ new Set([":", "true"]);
-var FILTERS = /* @__PURE__ */ new Set(["grep", "head", "tail"]);
-var VALIDATORS = /* @__PURE__ */ new Set([
-  "eslint",
-  "nx",
-  "tsc",
-  "vitest"
-]);
-var PNPM_VALIDATING_SUBCOMMANDS = /* @__PURE__ */ new Set([
-  "exec",
-  "nx",
-  "run",
-  ...VALIDATORS
-]);
-var LAST_STATUS = /\$(\?|\{\?\})/;
-var SUGGESTED_TRAILER = "`cmd; rc=$?; echo exit=$rc; exit $rc`";
-var bareWords = (segment) => {
-  return stripCommandPrefixes(segment.words).words;
-};
-var describeTrailing = (segment) => {
-  const [head, ...rest] = bareWords(segment);
-  if (head === void 0) return null;
-  const isAfterAnything = segment.precededBy !== null && UNCONDITIONAL_OR_ON_FAILURE.has(segment.precededBy);
-  if (!isAfterAnything) return null;
-  if (ECHOES.has(head) && rest.some((word) => LAST_STATUS.test(word))) {
-    return { isDeniable: true, what: `ends with \`${head} … $?\`` };
-  }
-  if (NO_OPS.has(head) && rest.length === 0) {
-    const what = `ends with \`${segment.precededBy} ${head}\``;
-    return { isDeniable: false, what };
-  }
-  return null;
-};
-var trailingReason = (what, background) => {
-  const consequence = background ? "It runs in the background, where that exit status is the only result anyone sees." : "Only you can read the echoed number; the harness records success.";
-  return [
-    `This command ${what}, so the shell exits 0 whatever the work before it did.`,
-    consequence,
-    `Keep the status: ${SUGGESTED_TRAILER}.`
-  ].join(" ");
-};
-var evaluateTrailing = async (command, context) => {
-  const last = command.segments.at(-1);
-  if (last === void 0 || command.segments.length < 2) {
-    return BASH_RULE_ALLOW;
-  }
-  const mask = describeTrailing(last);
-  if (mask === null) return BASH_RULE_ALLOW;
-  const reason = trailingReason(mask.what, context.background);
-  const isDenied = context.background && mask.isDeniable;
-  return isDenied ? { decision: "deny", reason } : { decision: "warn", reason };
-};
-var maskedExitTrailingRule = {
-  evaluate: evaluateTrailing,
-  id: MASKED_EXIT_TRAILING_RULE_ID
-};
-var isValidation = (segment) => {
-  const words = bareWords(segment);
-  if (words.some((word) => word.includes("check:local"))) return true;
-  const [head, sub] = words;
-  if (head === void 0) return false;
-  if (VALIDATORS.has(head)) return true;
-  const isRunner = head === "pnpm" || head === "npx";
-  return isRunner && sub !== void 0 && PNPM_VALIDATING_SUBCOMMANDS.has(sub);
-};
-var enablesPipefail = (segment) => {
-  const [head, ...rest] = bareWords(segment);
-  if (head === "setopt") return rest.includes("pipefail");
-  if (head !== "set") return false;
-  const index = rest.indexOf("pipefail");
-  const flag = index > 0 ? rest[index - 1] : void 0;
-  return flag !== void 0 && /^-[a-z]*o$/.test(flag);
-};
-var filterAfter = (segments, index) => {
-  for (const segment of segments.slice(index + 1)) {
-    if (!PIPES.has(segment.precededBy)) return null;
-    const head = bareWords(segment)[0];
-    if (head !== void 0 && FILTERS.has(head)) return head;
-  }
-  return null;
-};
-var evaluatePipeline = async (command) => {
-  if (!/\|/.test(command.raw)) return BASH_RULE_ALLOW;
-  const { segments } = command;
-  const pipefailAt = segments.findIndex(enablesPipefail);
-  const hit = segments.findIndex((segment2, index) => {
-    const isGuarded = pipefailAt !== -1 && pipefailAt < index;
-    return !isGuarded && isValidation(segment2) && filterAfter(segments, index);
-  });
-  const segment = segments[hit];
-  if (segment === void 0) return BASH_RULE_ALLOW;
-  const filter = filterAfter(segments, hit) ?? "a filter";
-  const reason = [
-    `\`${bareWords(segment).slice(0, 3).join(" ")}\` is piped into \`${filter}\`, so the pipeline exits with \`${filter}\`'s status, not the validation's.`,
-    "Prefix the command with `set -o pipefail;` (bash and zsh) before reporting it as passing."
-  ].join(" ");
-  return { decision: "warn", reason };
-};
-var maskedExitPipelineRule = {
-  evaluate: evaluatePipeline,
-  id: MASKED_EXIT_PIPELINE_RULE_ID
-};
-
-// packages/agentic-hooks/src/data/bash-guard/readQuotedChars.ts
-var readQuotedChars = (raw) => {
-  const chars = [];
-  let quote = null;
-  let index = 0;
-  while (index < raw.length) {
-    const char = raw.charAt(index);
-    const next = raw.charAt(index + 1);
-    if (quote === "single") {
-      if (char === "'") quote = null;
-      else chars.push({ char, quote: "single" });
-    } else if (quote === "ansi") {
-      if (char === "'") {
-        quote = null;
-      } else if (char === "\\" && next !== "") {
-        chars.push({ char: next, quote: "single" });
-        index += 1;
-      } else {
-        chars.push({ char, quote: "single" });
-      }
-    } else if (quote === "double") {
-      if (char === '"') {
-        quote = null;
-      } else if (char === "\\" && '"\\$`'.includes(next) && next !== "") {
-        chars.push({ char: next, quote: "escaped" });
-        index += 1;
-      } else {
-        chars.push({ char, quote: "double" });
-      }
-    } else if (char === "'") {
-      quote = "single";
-    } else if (char === "$" && next === "'") {
-      quote = "ansi";
-      index += 1;
-    } else if (char === '"') {
-      quote = "double";
-    } else if (char === "\\") {
-      if (next !== "" && next !== "\n") {
-        chars.push({ char: next, quote: "escaped" });
-      }
-      index += 1;
-    } else {
-      chars.push({ char, quote: "none" });
-    }
-    index += 1;
-  }
-  return chars;
-};
-
-// packages/agentic-hooks/src/data/bash-guard/stale-pr-write.ts
-var STALE_PR_WRITE_RULE_ID = "stale-pr-write";
-var VALUE_FLAGS2 = {
-  close: /* @__PURE__ */ new Set(["-c", "--comment"]),
-  comment: /* @__PURE__ */ new Set(["--attach", "-b", "--body", "-F", "--body-file"]),
-  edit: /* @__PURE__ */ new Set([
-    "--add-assignee",
-    "--add-label",
-    "--add-project",
-    "--add-reviewer",
-    "--attach",
-    "-B",
-    "--base",
-    "-b",
-    "--body",
-    "-F",
-    "--body-file",
-    "-m",
-    "--milestone",
-    "--remove-assignee",
-    "--remove-label",
-    "--remove-project",
-    "--remove-reviewer",
-    "-t",
-    "--title"
-  ]),
-  merge: /* @__PURE__ */ new Set([
-    "-A",
-    "--author-email",
-    "-b",
-    "--body",
-    "-F",
-    "--body-file",
-    "--match-head-commit",
-    "-t",
-    "--subject"
-  ]),
-  ready: /* @__PURE__ */ new Set([]),
-  review: /* @__PURE__ */ new Set(["-b", "--body", "-F", "--body-file"])
-};
-var BOOLEAN_FLAGS = {
-  close: /* @__PURE__ */ new Set(["-d", "--delete-branch"]),
-  comment: /* @__PURE__ */ new Set([
-    "--create-if-none",
-    "--delete-last",
-    "--edit-last",
-    "-e",
-    "--editor",
-    "-w",
-    "--web",
-    "--yes"
-  ]),
-  edit: /* @__PURE__ */ new Set(["--remove-milestone"]),
-  merge: /* @__PURE__ */ new Set([
-    "--admin",
-    "--auto",
-    "-d",
-    "--delete-branch",
-    "--disable-auto",
-    "-m",
-    "--merge",
-    "-r",
-    "--rebase",
-    "-s",
-    "--squash"
-  ]),
-  ready: /* @__PURE__ */ new Set(["--undo"]),
-  review: /* @__PURE__ */ new Set([
-    "-a",
-    "--approve",
-    "-c",
-    "--comment",
-    "-r",
-    "--request-changes"
-  ])
-};
-var REPO_FLAGS = /* @__PURE__ */ new Set(["-R", "--repo"]);
-var TERMINAL_STATES = /* @__PURE__ */ new Set(["CLOSED", "MERGED"]);
-var NONE = { kind: "none" };
-var UNPARSEABLE = { kind: "unparseable" };
-var isGhBinary = (word) => {
-  return word === "gh" || (word?.endsWith("/gh") ?? false);
-};
-var isDynamic = (word) => {
-  return word.includes("$") || word.includes("`");
-};
-var parseGhPrWrite = (rawWords) => {
-  const { assignments, words } = stripCommandPrefixes(rawWords);
-  if (!isGhBinary(words[0]) || words[1] !== "pr") return NONE;
-  const subcommand = words[2] ?? "";
-  const valueFlags = VALUE_FLAGS2[subcommand];
-  const booleanFlags = BOOLEAN_FLAGS[subcommand];
-  if (valueFlags === void 0 || booleanFlags === void 0) return NONE;
-  let repo = assignments.get("GH_REPO") ?? null;
-  const positionals = [];
-  let index = 3;
-  while (index < words.length) {
-    const word = words[index] ?? "";
-    index += 1;
-    if (word === "--") {
-      positionals.push(...words.slice(index));
-      break;
-    }
-    if (!word.startsWith("-") || word === "-") {
-      positionals.push(word);
-      continue;
-    }
-    if (word === "-h" || word === "--help") return NONE;
-    const equals = word.indexOf("=");
-    const flag = equals === -1 ? word : word.slice(0, equals);
-    const inlineValue = equals === -1 ? null : word.slice(equals + 1);
-    if (REPO_FLAGS.has(flag)) {
-      repo = inlineValue ?? words[index] ?? null;
-      if (inlineValue === null) index += 1;
-    } else if (valueFlags.has(flag)) {
-      if (inlineValue === null) index += 1;
-    } else if (!booleanFlags.has(flag)) {
-      return UNPARSEABLE;
-    }
-  }
-  const selector = positionals[0] ?? null;
-  const isUnreadable = positionals.length > 1 || selector !== null && isDynamic(selector) || repo !== null && isDynamic(repo);
-  if (isUnreadable) return UNPARSEABLE;
-  return { kind: "write", repo, selector, subcommand };
-};
-var UNKNOWN2 = { kind: "unknown" };
-var lookupWithin = async (context, query) => {
-  let timer;
-  const timeout = new Promise((resolve) => {
-    timer = setTimeout(() => {
-      resolve(UNKNOWN2);
-    }, context.lookupTimeoutMs);
-  });
-  try {
-    return await Promise.race([context.lookupPullRequest(query), timeout]);
-  } catch (err) {
-    logHookError(`${STALE_PR_WRITE_RULE_ID}: PR lookup failed`, err);
-    return UNKNOWN2;
-  } finally {
-    clearTimeout(timer);
-  }
-};
-var describeTarget = (query) => {
-  return query.selector === null ? "the current branch's PR" : `\`${query.selector}\``;
-};
-var formatDeny = (subcommand, query, state) => {
-  const verb = state.state === "MERGED" ? "merged" : "closed";
-  const when = state.changedAt === null ? "" : ` (${verb} ${state.changedAt})`;
-  const repo = query.repo === null ? "" : ` in ${query.repo}`;
-  return [
-    `Refusing \`gh pr ${subcommand}\` on PR #${state.number}${repo}: GitHub reports it ${state.state}${when}.`,
-    `The command targets ${describeTarget(query)}, and acting on it now would rest on a stale premise.`,
-    "A chained `gh pr view … && …` does not protect against this: `&&` checks the exit code, not the state the view printed.",
-    "Re-check the PR and what you meant to do. If you do mean to reopen it, `gh pr reopen` is not guarded."
-  ].join(" ");
-};
-var toGuardedWrite = (segment) => {
-  const write = parseGhPrWrite(segment.words);
-  if (write.kind !== "write" || segment.cwd === null) return null;
-  return {
-    query: { cwd: segment.cwd, repo: write.repo, selector: write.selector },
-    subcommand: write.subcommand
-  };
-};
-var evaluate = async (command, context) => {
-  if (!/\bgh\b/.test(command.raw) || !/\bpr\b/.test(command.raw)) {
-    return BASH_RULE_ALLOW;
-  }
-  const writes = command.segments.map(toGuardedWrite).filter((write) => write !== null);
-  if (writes.length === 0) return BASH_RULE_ALLOW;
-  const states = await Promise.all(
-    writes.map((write) => lookupWithin(context, write.query))
-  );
-  const reasons = writes.flatMap((write, index) => {
-    const state = states[index];
-    if (state?.kind !== "found" || !TERMINAL_STATES.has(state.state)) {
-      return [];
-    }
-    return [formatDeny(write.subcommand, write.query, state)];
-  });
-  return reasons.length === 0 ? BASH_RULE_ALLOW : { decision: "deny", reason: reasons.join("\n") };
-};
-var stalePrWriteRule = {
-  evaluate,
-  id: STALE_PR_WRITE_RULE_ID
-};
-
-// packages/agentic-hooks/src/data/bash-guard/zsh-unquoted-glob.ts
-var GLOB_CHARS2 = "*?[";
-var GLOB_META = "*?[]\\";
-var ASSIGNMENT_BUILTINS = /* @__PURE__ */ new Set([
-  "declare",
-  "export",
-  "float",
-  "integer",
-  "local",
-  "readonly",
-  "typeset"
-]);
-var PATTERN_COMMANDS = /* @__PURE__ */ new Set(["[[", "case", "noglob"]);
-var findUnquotedGlob = (raw) => {
-  const chars = readQuotedChars(raw);
-  let firstGlob = -1;
-  let firstEquals = -1;
-  chars.forEach(({ char, quote }, index) => {
-    if (quote !== "none") return;
-    if (char === "=" && firstEquals === -1) firstEquals = index;
-    if (firstGlob !== -1 || !GLOB_CHARS2.includes(char)) return;
-    const closesBracket = char !== "[" || chars.some((later, laterIndex) => {
-      return laterIndex > index + 1 && later.char === "]" && later.quote === "none";
-    });
-    if (closesBracket) firstGlob = index;
-  });
-  if (firstGlob === -1) return null;
-  const isUnevaluable = chars.some(({ char, quote }, index) => {
-    if (char === "`" || char === "$" && quote !== "single") return true;
-    if (quote !== "none") return false;
-    return char === "{" || char === "~" && index === 0;
-  });
-  if (isUnevaluable) return null;
-  const pattern = chars.map(({ char, quote }) => {
-    const isLiteral = quote !== "none" && GLOB_META.includes(char);
-    return isLiteral ? `\\${char}` : char;
-  }).join("");
-  const isFlagValue = firstEquals !== -1 && firstEquals < firstGlob;
-  return { kind: isFlagValue ? "flag-value" : "path", pattern };
-};
-var quoteFlagValue = (word) => {
-  const equals = word.indexOf("=");
-  if (equals === -1 || word.includes("'")) return `'${word}'`;
-  return `${word.slice(0, equals + 1)}'${word.slice(equals + 1)}'`;
-};
-var globCandidates = (segment) => {
-  const { words: bare } = stripCommandPrefixes(segment.words);
-  const command = bare[0];
-  if (command === void 0) return [];
-  if (PATTERN_COMMANDS.has(command) || ASSIGNMENT_BUILTINS.has(command)) {
-    return [];
-  }
-  const offset = segment.words.length - bare.length;
-  const candidates = [];
-  segment.rawWords.slice(offset + 1).forEach((raw, index) => {
-    const glob = findUnquotedGlob(raw);
-    if (glob !== null) candidates.push({ glob, word: bare[index + 1] ?? raw });
-  });
-  return candidates;
-};
-var checkSegment = async (segment, context) => {
-  const candidates = globCandidates(segment);
-  const flagValue = candidates.find(({ glob }) => glob.kind === "flag-value");
-  if (flagValue) {
-    return `zsh treats the unquoted \`${flagValue.word}\` as a filename pattern and aborts with "no matches found" before the command runs. Quote the value: \`${quoteFlagValue(flagValue.word)}\`.`;
-  }
-  const { cwd } = segment;
-  if (cwd === null) return null;
-  const paths = candidates.filter(({ glob }) => glob.kind === "path");
-  const matches = await Promise.all(
-    paths.map(({ glob }) => context.globMatches(glob.pattern, cwd))
-  );
-  const unmatched = paths.find((_, index) => matches[index] === false);
-  if (!unmatched) return null;
-  return `zsh aborts with "no matches found": the unquoted glob \`${unmatched.word}\` matches nothing in ${cwd}. Quote it if the program should receive the pattern itself, or fix the path.`;
-};
-var zshUnquotedGlobRule = {
-  evaluate: async (command, context) => {
-    if (context.shell !== "zsh") return BASH_RULE_ALLOW;
-    if (command.raw.includes("((")) return BASH_RULE_ALLOW;
-    const reasons = await Promise.all(
-      command.segments.map((segment) => checkSegment(segment, context))
-    );
-    const reason = reasons.find((found) => found !== null);
-    return reason ? { decision: "deny", reason } : BASH_RULE_ALLOW;
-  },
-  id: "zsh-unquoted-glob"
-};
-
-// packages/agentic-hooks/src/data/bash-guard/zsh-var-modifier.ts
-var MODIFIER_LETTERS = "hterlaAuqQ";
-var NAME_START = /[A-Za-z_]/;
-var NAME_CHAR = /[A-Za-z0-9_]/;
-var findZshModifierExpansions = (raw) => {
-  const chars = readQuotedChars(raw);
-  const found = [];
-  chars.forEach(({ char, quote }, index) => {
-    if (char !== "$" || quote === "single" || quote === "escaped") return;
-    if (!NAME_START.test(chars[index + 1]?.char ?? "")) return;
-    let end = index + 1;
-    while (NAME_CHAR.test(chars[end]?.char ?? "")) end += 1;
-    const colon = chars[end];
-    const modifier = chars[end + 1];
-    if (colon?.char !== ":" || colon.quote !== quote) return;
-    if (modifier === void 0 || modifier.quote !== quote) return;
-    if (!MODIFIER_LETTERS.includes(modifier.char)) return;
-    const name = chars.slice(index + 1, end).map((entry) => entry.char).join("");
-    found.push(`$${name}:${modifier.char}`);
-  });
-  return found;
-};
-var zshVarModifierRule = {
-  evaluate: async (command, context) => {
-    if (context.shell !== "zsh") return BASH_RULE_ALLOW;
-    const hits = command.segments.flatMap((segment) => {
-      return segment.rawWords.flatMap(findZshModifierExpansions);
-    });
-    const first = hits[0];
-    if (first === void 0) return BASH_RULE_ALLOW;
-    const colon = first.indexOf(":");
-    const name = first.slice(1, colon);
-    const letter = first.slice(colon + 1);
-    return {
-      decision: "warn",
-      reason: `zsh reads \`${first}…\` as \`$${name}\` with the \`:${letter}\` modifier applied, even inside double quotes. If you meant the variable followed by a colon, write \`\${${name}}:\`.`
-    };
-  },
-  id: "zsh-var-modifier"
-};
-
-// packages/agentic-hooks/src/data/bash-guard/registry.ts
-var BASH_GUARD_RULES = [
-  bsdSedInPlaceRule,
-  maskedExitPipelineRule,
-  maskedExitTrailingRule,
-  stalePrWriteRule,
-  zshUnquotedGlobRule,
-  zshVarModifierRule
-];
-var runRule = async (rule, command, context) => {
-  try {
-    return await rule.evaluate(command, context);
-  } catch (err) {
-    logHookError(`bash-guard: rule ${rule.id} threw`, err);
-    return { decision: "allow" };
-  }
-};
-var evaluateBashGuard = async (command, context, rules = BASH_GUARD_RULES) => {
-  if (command.trim() === "") return { decision: "allow" };
-  const parsed = parseBashCommand(command, context.cwd);
-  const verdicts = await Promise.all(
-    rules.map((rule) => runRule(rule, parsed, context))
-  );
-  const denies = [];
-  const warns = [];
-  verdicts.forEach((verdict, index) => {
-    const ruleId = rules[index]?.id ?? "unknown";
-    if (verdict.decision === "deny") {
-      denies.push({ reason: verdict.reason, ruleId });
-    } else if (verdict.decision === "warn") {
-      warns.push({ reason: verdict.reason, ruleId });
-    }
-  });
-  if (denies.length > 0) return { decision: "deny", findings: denies };
-  if (warns.length > 0) return { decision: "warn", findings: warns };
-  return { decision: "allow" };
-};
-var formatBashGuardFindings = (findings) => {
-  return findings.map((finding) => `[bash-guard:${finding.ruleId}] ${finding.reason}`).join("\n");
-};
-
-// packages/agentic-hooks/src/data/bash-guard/shell-environment.ts
+// packages/agentic-hooks/src/utils/shell-environment.ts
 var import_node_path3 = __toESM(require("node:path"), 1);
 var readShellName = (shell) => {
   const trimmed = shell?.trim() ?? "";
