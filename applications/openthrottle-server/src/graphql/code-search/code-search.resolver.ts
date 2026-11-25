@@ -1,9 +1,9 @@
 /**
  * @description GraphQL resolver for code semantic search over a registered repository. Resolves
  * repositoryId → filesystemPath server-side (user-scoped; never trusts a client path) — for search,
- * also from a caller's workspacePath and as the human a service account acts for — runs search
- * via @openthrottle/nestjs-vector-search, enqueues async full re-index on the code-index BullMQ
- * queue, and derives index status. Backs the /ide Semantic tab.
+ * also from a caller's workspacePath; search and status run as the human a service account acts
+ * for — runs search via @openthrottle/nestjs-vector-search, enqueues async full re-index on the
+ * code-index BullMQ queue, and derives index status. Backs the /ide Semantic tab.
  */
 
 import { InjectQueue } from '@nestjs/bullmq';
@@ -68,7 +68,7 @@ export class CodeSearchResolver {
   @Query(() => CodeSemanticSearchResult, {
     description: `Natural-language code semantic search over a registered repository's indexed code. available=false when no embeddings provider is configured, or a hosted one is not opted in for code.`,
   })
-  @Permissions(PERMISSIONS.SETTINGS_READ)
+  @Permissions(PERMISSIONS.CODE_READ)
   async codeSemanticSearch(
     @CurrentUser('sub') userId: string,
     @Args('input', { type: () => CodeSemanticSearchInput })
@@ -104,14 +104,14 @@ export class CodeSearchResolver {
   @Query(() => CodeIndexStatusObject, {
     description: `Index status for a registered repository: unavailable, hostedOptInRequired, indexing, ready, or notIndexed.`,
   })
-  @Permissions(PERMISSIONS.SETTINGS_READ)
+  @Permissions(PERMISSIONS.CODE_READ)
   async codeIndexStatus(
-    @CurrentUser('sub') userId: string,
+    @CurrentUser('sub') sub: string,
     @Args('repositoryId', { type: () => ID }) repositoryId: string,
   ): Promise<CodeIndexStatusObject> {
     const filesystemPath = await this.resolveRepositoryPath(
       repositoryId,
-      userId,
+      await this.actingUserId(sub),
     );
 
     if (!this.codeSearch.isProviderConfigured()) {
@@ -216,18 +216,28 @@ export class CodeSearchResolver {
   }
 
   /**
+   * @description The user whose repositories a read is scoped to. A service account (the MCP's
+   * usual caller) owns no repositories itself, so it resolves to the human it acts for; a human
+   * sub is returned unchanged.
+   */
+  private async actingUserId(sub: string): Promise<string> {
+    return (
+      (await this.effectiveUserResolution.resolveEffectiveUserId(sub)) ?? sub
+    );
+  }
+
+  /**
    * @description The repository path a search runs over. The sub may be a service account (the
-   * MCP's usual caller), which owns no repositories itself, so it resolves to the human it acts
-   * for first. An explicit repositoryId wins; otherwise workspacePath is resolved against that
-   * user's registered checkouts (the deepest one containing it), falling back to an indexed
-   * checkout of the same repository when that one has no index.
+   * MCP's usual caller), which is resolved to the human it acts for first. An explicit
+   * repositoryId wins; otherwise workspacePath is resolved against that user's registered
+   * checkouts (the deepest one containing it), falling back to an indexed checkout of the same
+   * repository when that one has no index.
    */
   private async resolveSearchRepositoryPath(
     input: CodeSemanticSearchInput,
     sub: string,
   ): Promise<string> {
-    const userId =
-      (await this.effectiveUserResolution.resolveEffectiveUserId(sub)) ?? sub;
+    const userId = await this.actingUserId(sub);
     const repositoryId = input.repositoryId?.trim() ?? '';
     if (repositoryId !== '') {
       return this.resolveRepositoryPath(repositoryId, userId);

@@ -81,10 +81,25 @@ describe('roles', () => {
       }
     });
 
-    it('mcp has blog draft plus plans read/write only', () => {
+    it('code:read is held by every role but plan-runner', () => {
+      for (const role of [
+        ROLES.ADMIN,
+        ROLES.MCP,
+        ROLES.USER,
+        ROLES.VIEWER,
+      ] as const) {
+        expect(ROLE_PERMISSIONS[role]).toContain(PERMISSIONS.CODE_READ);
+      }
+      expect(ROLE_PERMISSIONS[ROLES.PLAN_RUNNER]).not.toContain(
+        PERMISSIONS.CODE_READ,
+      );
+    });
+
+    it('mcp has blog draft, code read and plans read/write only', () => {
       const perms = ROLE_PERMISSIONS[ROLES.MCP];
       expect(perms).toEqual([
         PERMISSIONS.BLOG_DRAFT,
+        PERMISSIONS.CODE_READ,
         PERMISSIONS.PLANS_READ,
         PERMISSIONS.PLANS_WRITE,
       ]);
