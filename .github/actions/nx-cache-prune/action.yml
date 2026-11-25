@@ -20,8 +20,9 @@
 #   The current commit's own key is never deleted: on a re-run actions/cache
 #   skips the save on an exact hit, so that entry has to survive.
 #
-#   Pull requests only. A `main` entry is what every PR restores from, and a
-#   merge-queue ref saves nothing. Needs `actions: write` on the job (the
+#   Pull requests only. A merge-queue ref saves nothing, and `main`'s
+#   superseded `-warm` entries are pruned by cache-cleanup.yml's
+#   `prune-nx-warm` job on every push, which keeps the newest one. Needs `actions: write` on the job (the
 #   `build` and `gates` jobs already hold it for their ⏏️ step). A fork PR's
 #   read-only token is refused; that is tolerated, and its caches still go when
 #   the PR closes or the LRU reaches them.

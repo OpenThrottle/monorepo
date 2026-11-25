@@ -117,13 +117,40 @@ export async function listSourcesToolHandler(
   });
 }
 
+/**
+ * @description The score a chunk is ranked by: its fused score in hybrid mode, else the single
+ * retriever's similarity. A hybrid chunk's own `similarity` is a cosine OR a ts_rank (whichever
+ * retriever found it), so it is not comparable across chunks and must not be read as the order.
+ */
+const rankingScore = (chunk: SearchChunkFragment): number => {
+  return chunk.fusedScore ?? chunk.similarity;
+};
+
+/**
+ * @description Orders chunks best first by {@link rankingScore}. The server already ranks them;
+ * this keeps the order and the printed score in step whatever arrives.
+ */
+export const rankSearchChunks = (
+  chunks: readonly SearchChunkFragment[],
+): SearchChunkFragment[] => {
+  return [...chunks].sort((a, b) => rankingScore(b) - rankingScore(a));
+};
+
+const formatChunkScore = (chunk: SearchChunkFragment): string => {
+  if (chunk.fusedScore == null) {
+    return `similarity: ${chunk.similarity.toFixed(3)}`;
+  }
+
+  return `score: ${chunk.fusedScore.toFixed(4)}`;
+};
+
 function searchModeHeader(mode: string, reason: string | null): string {
   if (mode === 'lexical') {
     return `Mode: lexical (full-text fallback; reason: ${reason ?? 'unknown'}). Similarity is a ts_rank, not a cosine score.\n\n`;
   }
 
   if (mode === 'hybrid') {
-    return `Mode: hybrid (vector + full-text, ranked by reciprocal rank fusion). Similarity is the retriever's own score.\n\n`;
+    return `Mode: hybrid (vector + full-text, ranked by reciprocal rank fusion). Score is the fused score results are ordered by.\n\n`;
   }
 
   return '';
@@ -152,13 +179,13 @@ export async function semanticSearchToolHandler(
       input: { limit, query },
     });
 
-    const chunks = result?.search?.chunks ?? [];
+    const chunks = rankSearchChunks(result?.search?.chunks ?? []);
     const mode = result?.search?.mode ?? 'semantic';
     const reason = result?.search?.reason ?? null;
     const textSummary = chunks
       .map(
         (c) =>
-          `[${c.source}] ${c.planTitle ?? ''} ${c.taskTitle ?? ''} (similarity: ${c.similarity.toFixed(3)})\n${c.content}`,
+          `[${c.source}] ${c.planTitle ?? ''} ${c.taskTitle ?? ''} (${formatChunkScore(c)})\n${c.content}`,
       )
       .join('\n\n---\n\n');
 

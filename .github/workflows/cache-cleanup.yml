@@ -24,6 +24,16 @@
 #   this job runs, so the entry kept is the one the next run will restore, and
 #   `main` holds at most two (one live, one landing).
 #
+#   `prune-nx-warm` — on every push to `main`. CI's `warm-cache` job saves a
+#   ~250 MB `cache-nx-Linux-*-warm` entry on `main` per merged PR, and PRs
+#   restore only the newest (GitHub returns the most recent prefix match).
+#   nx-cache-prune is PR-only, so on 2026-11-25 `main` held 14 of them (~3.5 GB)
+#   and the repo sat at 10.5 GB, over quota, with the LRU evicting (OT plan
+#   5656aac1). Same shape as the CodeQL job: keep the newest, delete the rest.
+#   The push's own `warm-cache` saves after this runs, so `main` holds at most
+#   two. A red `warm-cache` saves nothing, so the entry kept is always the
+#   last good one.
+#
 #   💰 A few `gh` calls on a standard runner, with no checkout and no install.
 #
 ################################################################################
@@ -80,6 +90,31 @@ jobs:
           set -euo pipefail
           ids="$(gh cache list --ref "$REF" --key "$PREFIX" --sort created_at --order desc --limit 100 --json id --jq '.[].id')"
           echo "$(printf '%s\n' "$ids" | sed '/^$/d' | wc -l | tr -d ' ') ${PREFIX}* entries on $REF; keeping the newest."
+          printf '%s\n' "$ids" | sed '/^$/d' | tail -n +2 | while read -r id; do
+            echo "🗑️ deleting cache $id"
+            gh cache delete "$id"
+          done
+
+  prune-nx-warm:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    concurrency:
+      group: prune-nx-warm
+      cancel-in-progress: true
+    steps:
+      - name: '🧹 Keep only the newest warm Nx cache on main'
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+          PREFIX: cache-nx-Linux-
+          REF: refs/heads/main
+          SUFFIX: -warm
+        run: |
+          set -euo pipefail
+          ids="$(gh cache list --ref "$REF" --key "$PREFIX" --sort created_at --order desc --limit 100 --json id,key \
+            --jq '.[] | select(.key | endswith(env.SUFFIX)) | .id')"
+          echo "$(printf '%s\n' "$ids" | sed '/^$/d' | wc -l | tr -d ' ') ${PREFIX}*${SUFFIX} entries on $REF; keeping the newest."
           printf '%s\n' "$ids" | sed '/^$/d' | tail -n +2 | while read -r id; do
             echo "🗑️ deleting cache $id"
             gh cache delete "$id"

@@ -15,6 +15,7 @@ import path from 'node:path';
 
 import {
   detectDeliveryLegFromScript,
+  isTelemetryDisabled,
   logHookError,
   readHookPayloadCwd,
   readHookStdin,
@@ -30,6 +31,10 @@ import { ANTIGRAVITY_SOURCE } from './payload.ts';
 
 const main = async (): Promise<void> => {
   try {
+    if (isTelemetryDisabled()) {
+      return;
+    }
+
     const repoRoot = resolveHookRepoRoot({
       payloadCwd: readHookPayloadCwd(readHookStdin()),
       projectDir: process.env.OPEN_THROTTLE_REPO_ROOT || process.cwd(),

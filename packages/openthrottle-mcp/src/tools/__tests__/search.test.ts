@@ -137,6 +137,47 @@ describe('semanticSearchToolHandler', () => {
         structuredContent: { mode: 'hybrid', reason: null },
       });
     });
+
+    it('ranks and scores by fusedScore, not the mixed-scale similarity', async () => {
+      // A full-text-only hit carries a ts_rank (here 0.9999999) in `similarity`, a vector hit a
+      // cosine; only fusedScore is comparable across them.
+      const chunk = (title: string, similarity: number, fusedScore: number) => {
+        return {
+          content: 'Plan body',
+          fusedScore,
+          id: chunkId,
+          planTitle: title,
+          similarity,
+          source: 'plan',
+          taskTitle: null,
+        };
+      };
+      vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
+        search: {
+          chunks: [
+            chunk('Lexical only', 0.9999999, 0.0161),
+            chunk('Both retrievers', 0.62, 0.0325),
+          ],
+          mode: 'hybrid',
+          reason: null,
+        },
+      });
+
+      const result = await semanticSearchToolHandler({ query: 'parseDate' });
+
+      expect('structuredContent' in result).toBe(true);
+      if (!('structuredContent' in result)) return;
+      expect(result.structuredContent.chunks.map((c) => c.planTitle)).toEqual([
+        'Both retrievers',
+        'Lexical only',
+      ]);
+      const text = result.content[0]?.text ?? '';
+      expect(text).toMatch(/Both retrievers\s+\(score: 0\.0325\)/);
+      expect(text).not.toContain('0.9999999');
+      expect(text.indexOf('Both retrievers')).toBeLessThan(
+        text.indexOf('Lexical only'),
+      );
+    });
   });
 
   describe('when GraphQL returns no chunks', () => {

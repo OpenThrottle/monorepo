@@ -8,6 +8,7 @@
  * exits 0, silent when no endpoint resolves.
  */
 import {
+  isTelemetryDisabled,
   logHookError,
   readHookStdin,
   resolveHookRepoRoot,
@@ -30,6 +31,10 @@ const readPayloadCwd = (): string | null => {
 
 const main = async (): Promise<void> => {
   try {
+    if (isTelemetryDisabled()) {
+      return;
+    }
+
     const projectDir =
       process.env.CURSOR_PROJECT_DIR ||
       process.env.OPEN_THROTTLE_REPO_ROOT ||

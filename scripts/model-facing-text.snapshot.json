@@ -17,6 +17,7 @@
     "mcp.tool/auth_status": 697,
     "mcp.tool/begin_task_session": 1371,
     "mcp.tool/claim_plan_messages": 699,
+    "mcp.tool/code_search": 852,
     "mcp.tool/create_blog_post": 1365,
     "mcp.tool/create_note": 479,
     "mcp.tool/create_plan": 2297,
@@ -112,6 +113,7 @@
     "mcp.toolDescription/auth_status": 485,
     "mcp.toolDescription/begin_task_session": 595,
     "mcp.toolDescription/claim_plan_messages": 346,
+    "mcp.toolDescription/code_search": 270,
     "mcp.toolDescription/create_blog_post": 739,
     "mcp.toolDescription/create_note": 171,
     "mcp.toolDescription/create_plan": 1513,
@@ -244,14 +246,14 @@
     "mcpToolset/admin": 18806,
     "mcpToolset/agents": 3068,
     "mcpToolset/blog": 7444,
-    "mcpToolset/core": 40039,
+    "mcpToolset/core": 40891,
     "mcpToolset/scheduling": 5256,
-    "mcpToolsFull": 74613
+    "mcpToolsFull": 75465
   },
   "totals": {
-    "alwaysInjected": 48174,
+    "alwaysInjected": 49026,
     "mcpInstructions": 2183,
-    "mcpTools": 40039,
+    "mcpTools": 40891,
     "prompts": 137790,
     "skills": 162418
   }

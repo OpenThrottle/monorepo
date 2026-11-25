@@ -121,13 +121,16 @@ Considered and rejected. They are (a) **non-uniform** across CLIs (each CLI name
 CLIs only discover skills from in-tree dirs (no out-of-repo pointer), and the property we want is "OT skills present and visible **while the server is running**." So the layer's lifetime tracks the **server**, not the run — deliberately not the run, and not run-scoped ephemeral.
 
 - **Materialize on toggle (apply now, per-repo):** flipping the per-checkout injection switch on projects the layer into every one of that user's checkouts of the repository **immediately**, without waiting for a run; flipping it off removes it. `ForeignSkillMaterializationService.applyForRepository` (`applications/openthrottle-server/src/services/foreign-skill-injection/materialization/materialization.service.ts`), called from `WorkspaceFoldersService`. This is what makes the layer usable by a **human** — someone who opts a repo in and then opens Claude Code in it themselves gets OT's skills there, with no OT-driven run in the picture. Per-checkout soft-fail; the settings mutation still succeeds.
-- **Materialize on run start (lazy backstop, per-repo):** on any foreign run that touches a given repo. `ensureMaterialized(repo)` is **idempotent** — a cheap no-op when the layer is already present — so it is safe to call at the start of every run and is **reused across all subsequent runs** at zero per-run setup cost. This is the backstop that restores the layer after a server restart cleared it, and covers worktrees created after the toggle was flipped.
-  - **Insertion point:** `PlanRunWorkspaceService` (`applications/openthrottle-server/src/services/plan-run-workspace/plan-run-workspace.service.ts`), alongside the existing soft-fail `maybeRegisterWorktreeCheckout({ filesystemPath: configCwd })`. This runs exactly once per server-side run, before the loop starts. It is the single foreign-workspace choke point on the server path.
+- **Materialize on run start (into the plan-run worktree):** every OT Loop run in a foreign repo injects the layer into the directory its agent runs in, the plan-run worktree `<root>/<org>/<repo>/plan-<8>`. The layer is untracked, so `git worktree add` never carries it there, and the toggle cannot reach a directory created after it was saved. Without this, a rule-injected "Run /&lt;skill&gt;" task would find no such skill (decided 2026-11-24, OT plan `624a1036` task 11.5).
+  - **Gate:** the **base checkout's** `foreign_skill_injection_enabled` for the run's acting user, the row the toggle flips. The worktree's own checkout row is created mid-run and defaults to off, so it is never read. Agent-config trust does not gate it: these are OpenThrottle's skills, not the repo's config.
+  - **Insertion point:** `PlanRunWorkspaceService.maybeInjectForeignSkills` (`applications/openthrottle-server/src/services/plan-run-workspace/plan-run-workspace.service.ts`), once per run, before the loop starts. A run with skills says so in one plan_output line (`🧩 Injected N OpenThrottle skills into <path>`); a run without says nothing.
+  - **Not the restart backstop.** Restart recovery is the boot reconcile below; the run-start step only covers the worktree.
   - A run the user starts inside the foreign checkout themselves (for example `/ot-loop`) already runs there; it is out of scope for server-managed injection (the user owns that tree). Server-orchestrated runs are the target.
-- **Teardown (server shutdown):** on `OnApplicationShutdown` (already wired via `app.enableShutdownHooks(['SIGTERM','SIGINT'])` in `applications/openthrottle-server/src/main.ts`). Teardown removes exactly and only the ledger-recorded paths and their `.git/info/exclude` entries. Teardown is **NOT** per-run — a run finishing does not remove the layer, because the next run reuses it.
-- **Boot reaper (missed teardowns):** see §4. A crash means shutdown teardown never ran, so a startup sweep reconciles stranded ledgers.
+- **Teardown (plan-run worktree removal):** `PlanRunWorktreeTeardownService` removes the worktree's layer and ledger immediately before `destroy.sh`, once every guard has passed. A kept worktree keeps its skills. This is the one teardown that acts on a single checkout, which is why the exclude block is shared-aware (§8.1).
+- **Teardown (server shutdown):** on `OnApplicationShutdown` (already wired via `app.enableShutdownHooks(['SIGTERM','SIGINT'])` in `applications/openthrottle-server/src/main.ts`). Teardown removes exactly and only the ledger-recorded paths and their `.git/info/exclude` entries. A run finishing does not remove a base checkout's layer, because the next run and any human session reuse it.
+- **Boot reaper (missed teardowns):** see §4. A crash means shutdown teardown never ran, so a startup sweep reconciles stranded ledgers. A ledger whose worktree folder is already gone (removed by something other than the teardown service) tears down quietly: nothing to remove, and git cannot be asked about a missing folder.
 
-Materialize triggers: **toggle on** (apply now) + **run start** (idempotent ensure). Teardown triggers: **toggle off** (apply now) + **server shutdown** (graceful) + **boot reaper** (crash recovery). Not: run terminal states.
+Materialize triggers: **toggle on** (apply now) + **run start** (the plan-run worktree only) + **boot reconcile**. Teardown triggers: **toggle off** (apply now) + **plan-run worktree removal** + **server shutdown** (graceful) + **boot reaper** (crash recovery).
 
 - **Boot reconcile (restart recovery):** immediately after the boot reaper, every checkout still flagged for injection has its layer re-projected — `ForeignSkillMaterializationService.remateralizeEnabledCheckouts`, called from `PlanRunsStaleSweepRepeatableService.onModuleInit`. Order is load-bearing: reap clears stranded ledgers, reconcile rebuilds what the flags say should exist; reversed, the reap would delete what reconcile had just built. Without this the flag and the disk disagree after every restart, and a user who opted a repo in would find OT's skills missing until their next run or toggle. Per-checkout soft-fail, and the whole step is wrapped so an unreachable repo cannot block boot.
   - Inherits the reaper's role gating (`PROCESS_ROLE` worker/all, where `PlanRunsStaleSweepQueueModule` loads) — deliberately, so reap and reconcile always run in the same process.
@@ -428,10 +431,11 @@ That is **deliberate, and stays that way.** The overlay is applied to the base c
   per-worktree: `git rev-parse --git-path info/exclude` resolves to the repository's _common_ git
   dir from every linked worktree. Both checkouts would write the same `worktree-skill-overlay` block
   into one file, so when the worktree's ledger is torn down (before `destroy.sh`, or by the boot
-  reaper after the directory is gone) `removeManagedExcludeBlock` would strip the block that also
-  hides the **base checkout's** overlay, and the base checkout's `git status` would show
-  `.agents/skills/ot-worktree`. Doing this safely needs the block to be reference-counted across
-  every worktree of the repo, which is a ledger-format change, not a call-site change.
+  reaper after the directory is gone) a plain `removeManagedExcludeBlock` would strip the block that
+  also hides the **base checkout's** overlay. Since 2026-11-24 the materializer writes every block
+  from the union of the same layer's ledgers that resolve to one exclude file (`syncSharedExcludeBlock`
+  in `materialize.ts`), so this hazard no longer stands for either layer. The overlay still stays
+  out of the worktree, for the two reasons below.
 - **The agent in the worktree has no use for it.** `ot-worktree` creates, heals and destroys
   worktrees. A plan-run worktree's whole lifecycle belongs to OpenThrottle (provisioned at job
   start, torn down by `PlanRunWorktreeTeardownService`), and the run already keeps the agent CLI's
@@ -445,9 +449,10 @@ So the guarantee is: **the base checkout — where people and agents start workt
 shared and its paths are anchored to each worktree's root, a human who links the skill into a
 worktree by hand still gets a clean `git status` there.
 
-The same shared-file property applies to the curated layer, which materializes into the run's
-`configCwd` (the worktree). It is harmless there today because every curated teardown path tears
-down the repository's checkouts together (toggle off, shutdown, boot reap followed by reconcile),
-never one worktree alone. A worktree's curated ledger does outlive `destroy.sh` until the next boot
-reap, which skips its missing paths. Any future change that tears down a single checkout's layer
-must account for the shared block first.
+The curated layer **does** go into the plan-run worktree (§3), and it is torn down for that one
+worktree before `destroy.sh`. That is safe only because of the shared-aware block:
+`ensureMaterialized` and `teardown` both rewrite the layer's block from their own paths plus every
+path the same layer has ledgered in another checkout sharing the exclude file, and remove it only
+when none are left. A ledger whose folder is gone resolves no exclude file and is left out. Covered
+against a real linked worktree, in both teardown orders, by
+`packages/openthrottle-agentic-utils/src/utils/foreign-skill-injection/__tests__/linked-worktree.test.ts`.

@@ -1111,8 +1111,10 @@ export type CodeSemanticSearchInput = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   /** Natural-language query to embed and search by vector similarity. */
   query: Scalars['String']['input'];
-  /** Registered WorkspaceLocalRepository id to search within. */
-  repositoryId: Scalars['ID']['input'];
+  /** Registered WorkspaceLocalRepository id to search within. Takes precedence over workspacePath; one of the two is required. */
+  repositoryId?: InputMaybe<Scalars['ID']['input']>;
+  /** Absolute path the caller is working in (e.g. an MCP client's cwd). Resolved to the registered repository whose checkout contains it; ignored when repositoryId is set. */
+  workspacePath?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type CodeSemanticSearchResult = {
@@ -9886,6 +9888,35 @@ export type SetBlogPostTagsMutation = {
       };
 };
 
+export type CodeSearchMatchFragment = {
+  __typename?: 'CodeSearchMatch';
+  content: string;
+  endLine: number;
+  path: string;
+  score: number;
+  startLine: number;
+};
+
+export type SearchCodeQueryVariables = Exact<{
+  input: CodeSemanticSearchInput;
+}>;
+
+export type SearchCodeQuery = {
+  __typename?: 'Query';
+  codeSemanticSearch: {
+    __typename?: 'CodeSemanticSearchResult';
+    available: boolean;
+    matches: Array<{
+      __typename?: 'CodeSearchMatch';
+      content: string;
+      endLine: number;
+      path: string;
+      score: number;
+      startLine: number;
+    }>;
+  };
+};
+
 export type EmbeddingsHealthFragment = {
   __typename?: 'EmbeddingsHealthObject';
   detail?: string | null;
@@ -10274,6 +10305,7 @@ export type LastActivityFragment = {
 export type SearchChunkFragment = {
   __typename?: 'SearchChunk';
   content: string;
+  fusedScore?: number | null;
   id: string;
   planId?: string | null;
   planTitle?: string | null;
@@ -11057,6 +11089,7 @@ export type SearchQuery = {
     chunks: Array<{
       __typename?: 'SearchChunk';
       content: string;
+      fusedScore?: number | null;
       id: string;
       planId?: string | null;
       planTitle?: string | null;
@@ -11080,6 +11113,7 @@ export type GetDocumentQuery = {
   getDocument?: {
     __typename?: 'SearchChunk';
     content: string;
+    fusedScore?: number | null;
     id: string;
     planId?: string | null;
     planTitle?: string | null;
@@ -13332,6 +13366,29 @@ export const SetBlogPostTagsResultFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<SetBlogPostTagsResultFragment, unknown>;
+export const CodeSearchMatchFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'CodeSearchMatch' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'CodeSearchMatch' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'endLine' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'score' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'startLine' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<CodeSearchMatchFragment, unknown>;
 export const EmbeddingsHealthFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -14021,6 +14078,7 @@ export const SearchChunkFragmentDoc = {
         kind: 'SelectionSet',
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'fusedScore' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'planTitle' } },
@@ -16209,6 +16267,88 @@ export const SetBlogPostTagsDocument = {
   SetBlogPostTagsMutation,
   SetBlogPostTagsMutationVariables
 >;
+export const SearchCodeDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'SearchCode' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'CodeSemanticSearchInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'codeSemanticSearch' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'available' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'matches' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'CodeSearchMatch' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'CodeSearchMatch' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'CodeSearchMatch' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'endLine' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'score' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'startLine' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<SearchCodeQuery, SearchCodeQueryVariables>;
 export const GetServerHealthWithEmbeddingsDocument = {
   kind: 'Document',
   definitions: [
@@ -18984,6 +19124,7 @@ export const SearchDocument = {
         kind: 'SelectionSet',
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'fusedScore' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'planTitle' } },
@@ -19059,6 +19200,7 @@ export const GetDocumentDocument = {
         kind: 'SelectionSet',
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'fusedScore' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
           { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
           { kind: 'Field', name: { kind: 'Name', value: 'planTitle' } },

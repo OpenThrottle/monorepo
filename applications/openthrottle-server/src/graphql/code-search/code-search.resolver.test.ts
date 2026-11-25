@@ -5,10 +5,16 @@
  */
 
 import { createMock } from '@golevelup/ts-vitest';
+import type {
+  RepositoryCheckout,
+  RepositoryCheckoutsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import type { CodeSearchService } from '@openthrottle/nestjs-vector-search';
 import type { Queue } from 'bullmq';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { CheckoutPathResolutionService } from '../../services/checkout-path-resolution/checkout-path-resolution.service.ts';
+import type { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service.ts';
 import type { WorkspaceLocalRepositoriesService } from '../../services/workspace-local-repositories/workspace-local-repositories.service.ts';
 import type { WorkspaceLocalRepository } from '../../services/workspace-local-repositories/workspace-local-repositories.types.ts';
 import { CodeSearchResolver } from './code-search.resolver.ts';
@@ -25,6 +31,9 @@ function repoStub(): WorkspaceLocalRepository {
 describe('CodeSearchResolver', () => {
   let codeSearch: CodeSearchService;
   let repositories: WorkspaceLocalRepositoriesService;
+  let checkoutPathResolution: CheckoutPathResolutionService;
+  let checkouts: RepositoryCheckoutsRepository;
+  let effectiveUserResolution: EffectiveUserResolutionService;
   let queue: Queue;
   let resolver: CodeSearchResolver;
 
@@ -32,19 +41,167 @@ describe('CodeSearchResolver', () => {
     codeSearch = createMock<CodeSearchService>();
     repositories = createMock<WorkspaceLocalRepositoriesService>();
     queue = createMock<Queue>();
+    checkoutPathResolution = createMock<CheckoutPathResolutionService>();
+    checkouts = createMock<RepositoryCheckoutsRepository>();
+    vi.mocked(checkouts.findByRepositoryIdForUser).mockResolvedValue([]);
+    effectiveUserResolution = createMock<EffectiveUserResolutionService>();
+    vi.mocked(effectiveUserResolution.resolveEffectiveUserId).mockResolvedValue(
+      USER_ID,
+    );
+    vi.mocked(checkoutPathResolution.resolveCheckoutForPath).mockResolvedValue(
+      null,
+    );
     vi.mocked(codeSearch.isProviderConfigured).mockReturnValue(true);
     vi.mocked(codeSearch.codeIndexingRefusal).mockReturnValue(null);
     vi.mocked(repositories.findByIdForUser).mockResolvedValue(repoStub());
-    resolver = new CodeSearchResolver(codeSearch, repositories, queue);
+    resolver = new CodeSearchResolver(
+      codeSearch,
+      repositories,
+      checkoutPathResolution,
+      checkouts,
+      effectiveUserResolution,
+      queue,
+    );
   });
 
   describe('codeSemanticSearch', () => {
-    const input = { limit: null, query: 'find user', repositoryId: REPO_ID };
+    const input = {
+      limit: null,
+      query: 'find user',
+      repositoryId: REPO_ID,
+      workspacePath: null,
+    };
 
-    it('throws when repositoryId is blank', async () => {
+    it('throws when neither repositoryId nor workspacePath is given', async () => {
       await expect(
         resolver.codeSemanticSearch(USER_ID, { ...input, repositoryId: '  ' }),
-      ).rejects.toThrow('repositoryId is required');
+      ).rejects.toThrow('A repositoryId or a workspacePath is required');
+    });
+
+    describe('when the caller is a service account', () => {
+      it('scopes the repository lookup to the user it acts for', async () => {
+        vi.mocked(
+          effectiveUserResolution.resolveEffectiveUserId,
+        ).mockResolvedValue('human-1');
+        vi.mocked(codeSearch.codeSemanticSearch).mockResolvedValue([]);
+
+        await resolver.codeSemanticSearch('service-account-1', input);
+
+        expect(repositories.findByIdForUser).toHaveBeenCalledWith(
+          REPO_ID,
+          'human-1',
+        );
+      });
+    });
+
+    describe('when only a workspacePath is given', () => {
+      const byPath = {
+        ...input,
+        repositoryId: null,
+        workspacePath: '/Users/dev/repo-worktree',
+      };
+
+      it('searches the registered checkout containing it', async () => {
+        vi.mocked(
+          checkoutPathResolution.resolveCheckoutForPath,
+        ).mockResolvedValue({
+          checkoutId: REPO_ID,
+          repositoryId: 'repository-row-1',
+        });
+        vi.mocked(codeSearch.codeSemanticSearch).mockResolvedValue([]);
+
+        await resolver.codeSemanticSearch(USER_ID, byPath);
+
+        expect(
+          checkoutPathResolution.resolveCheckoutForPath,
+        ).toHaveBeenCalledWith({
+          path: '/Users/dev/repo-worktree',
+          userId: USER_ID,
+        });
+        expect(repositories.findByIdForUser).toHaveBeenCalledWith(
+          REPO_ID,
+          USER_ID,
+        );
+        expect(codeSearch.codeSemanticSearch).toHaveBeenCalledWith(
+          PATH,
+          'find user',
+          10,
+        );
+      });
+
+      describe('when that checkout has no index', () => {
+        const PRIMARY = '/Users/dev/primary';
+        const checkoutAt = (
+          filesystemPath: string,
+          kind: RepositoryCheckout['kind'],
+        ): RepositoryCheckout => {
+          return createMock<RepositoryCheckout>({ filesystemPath, kind });
+        };
+
+        beforeEach(() => {
+          vi.mocked(
+            checkoutPathResolution.resolveCheckoutForPath,
+          ).mockResolvedValue({
+            checkoutId: REPO_ID,
+            repositoryId: 'repository-row-1',
+          });
+          vi.mocked(codeSearch.codeSemanticSearch).mockResolvedValue([]);
+          vi.mocked(codeSearch.indexedChunkCount).mockImplementation(
+            async (path: string) => {
+              return path === PRIMARY ? 960 : 0;
+            },
+          );
+        });
+
+        it('searches the indexed primary checkout of the same repository', async () => {
+          vi.mocked(checkouts.findByRepositoryIdForUser).mockResolvedValue([
+            checkoutAt('/Users/dev/other-worktree', 'worktree'),
+            checkoutAt(PRIMARY, 'primary'),
+          ]);
+
+          await resolver.codeSemanticSearch(USER_ID, byPath);
+
+          expect(checkouts.findByRepositoryIdForUser).toHaveBeenCalledWith(
+            'repository-row-1',
+            USER_ID,
+          );
+          expect(codeSearch.codeSemanticSearch).toHaveBeenCalledWith(
+            PRIMARY,
+            'find user',
+            10,
+          );
+        });
+
+        it('keeps the resolved checkout when no sibling is indexed', async () => {
+          await resolver.codeSemanticSearch(USER_ID, byPath);
+
+          expect(codeSearch.codeSemanticSearch).toHaveBeenCalledWith(
+            PATH,
+            'find user',
+            10,
+          );
+        });
+      });
+
+      it('throws when no registered checkout contains it', async () => {
+        await expect(
+          resolver.codeSemanticSearch(USER_ID, byPath),
+        ).rejects.toThrow('No registered checkout contains');
+      });
+    });
+
+    it('returns matches sorted by score, highest first', async () => {
+      vi.mocked(codeSearch.codeSemanticSearch).mockResolvedValue([
+        { content: 'a', endLine: 1, path: 'a.ts', score: 0.4, startLine: 1 },
+        { content: 'b', endLine: 1, path: 'b.ts', score: 0.9, startLine: 1 },
+      ]);
+
+      const result = await resolver.codeSemanticSearch(USER_ID, input);
+
+      expect(result.matches.map((match) => match.path)).toEqual([
+        'b.ts',
+        'a.ts',
+      ]);
     });
 
     it('throws when the repository is unknown for the user', async () => {

@@ -1,0 +1,20 @@
+# MCP-only GraphQL document: code semantic search over a registered
+# repository's indexed code (codeSemanticSearch in openthrottle-server's
+# code-search.resolver.ts). Selection sets are alphabetized.
+
+fragment CodeSearchMatch on CodeSearchMatch {
+  content
+  endLine
+  path
+  score
+  startLine
+}
+
+query SearchCode($input: CodeSemanticSearchInput!) {
+  codeSemanticSearch(input: $input) {
+    available
+    matches {
+      ...CodeSearchMatch
+    }
+  }
+}

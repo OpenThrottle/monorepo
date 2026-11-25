@@ -91,6 +91,7 @@ See `docs/monorepo/child-repo-hook-telemetry-contract.md` for the full contract.
 | how | effect |
 | --- | --- |
 | `OPENTHROTTLE_TELEMETRY_OFFLINE=1` | buffers locally, never sends |
+| `OPENTHROTTLE_SKILL_USAGE_DISABLED=1` | captures nothing: no send, no buffer, no start file, no heartbeat (env or `~/.openthrottle/.env`) |
 | `/plugin uninstall openthrottle` | removes it entirely |
 
 ## Diagnosing

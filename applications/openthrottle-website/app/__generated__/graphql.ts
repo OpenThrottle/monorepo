@@ -1111,8 +1111,10 @@ export type CodeSemanticSearchInput = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   /** Natural-language query to embed and search by vector similarity. */
   query: Scalars['String']['input'];
-  /** Registered WorkspaceLocalRepository id to search within. */
-  repositoryId: Scalars['ID']['input'];
+  /** Registered WorkspaceLocalRepository id to search within. Takes precedence over workspacePath; one of the two is required. */
+  repositoryId?: InputMaybe<Scalars['ID']['input']>;
+  /** Absolute path the caller is working in (e.g. an MCP client's cwd). Resolved to the registered repository whose checkout contains it; ignored when repositoryId is set. */
+  workspacePath?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type CodeSemanticSearchResult = {

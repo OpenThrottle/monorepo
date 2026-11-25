@@ -27,6 +27,7 @@ import {
   buildOutcomeEvent,
   claimLatestStart,
   defaultOutcomesJsonlPath,
+  isTelemetryDisabled,
   logHookError,
   persistOutcomeEvent,
   resolveHookRepoRoot,
@@ -38,6 +39,10 @@ import { resolveReporterSession } from './reporter-host.ts';
 
 const main = async (): Promise<void> => {
   try {
+    if (isTelemetryDisabled()) {
+      return;
+    }
+
     const args = parseOutcomeArgs(process.argv.slice(2));
     const skillName =
       args.skill || process.env.OPENTHROTTLE_TELEMETRY_SKILL_NAME || '';

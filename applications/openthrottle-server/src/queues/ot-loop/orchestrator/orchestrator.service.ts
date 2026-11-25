@@ -120,8 +120,8 @@ const compareByOrder = (a: LoopTask, b: LoopTask): number => {
  * @description The OT Loop runner (docs/workflows/ot-loop-job.md): the BullMQ job is the ot-loop
  * parent and the agent CLI is the step-2 worker. This service builds the loop package's
  * dependencies over the server's worker-scoped GraphQL executor, the shared
- * {@link PlanRunWorkspaceService} (worktree, checkout registration, config; no MCP preflight or skill
- * injection), `runDriverAsync` and the shell, runs the pure state machine, then closes: it writes the
+ * {@link PlanRunWorkspaceService} (worktree, checkout registration, foreign-skill injection, config;
+ * no MCP preflight), `runDriverAsync` and the shell, runs the pure state machine, then closes: it writes the
  * final plan status itself, runs the whole-plan validation, and hands push and the draft PR to
  * `finalizeOtLoopRun`. It returns a `WorkflowRunResult`, so `PlansProcessor` settles
  * every exit through its existing branches. A failure at start (no commands, red setup) is a
@@ -153,7 +153,6 @@ export class OtLoopOrchestratorService {
       jobData,
       onWorktreeProvisioned,
       skipMcpPreflight: true,
-      skipSkillInjection: true,
     });
     const cwd = workspace.workingDirectory;
     const output = createPlanOutputWriter({

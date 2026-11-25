@@ -7478,8 +7478,15 @@ input CodeSemanticSearchInput {
   """Natural-language query to embed and search by vector similarity."""
   query: String!
 
-  """Registered WorkspaceLocalRepository id to search within."""
-  repositoryId: ID!
+  """
+  Registered WorkspaceLocalRepository id to search within. Takes precedence over workspacePath; one of the two is required.
+  """
+  repositoryId: ID
+
+  """
+  Absolute path the caller is working in (e.g. an MCP client's cwd). Resolved to the registered repository whose checkout contains it; ignored when repositoryId is set.
+  """
+  workspacePath: String
 }
 
 """Input for semantic search over agent-asset (custom_prompt) embeddings."""

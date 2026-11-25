@@ -189,6 +189,7 @@ fragment LastActivity on LastActivityResultObject {
 
 fragment SearchChunk on SearchChunk {
   content
+  fusedScore
   id
   planId
   planTitle

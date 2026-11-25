@@ -17,6 +17,7 @@ import fs from 'node:fs';
 import {
   completeOpenStartsForSession,
   drainBufferedUsage,
+  isTelemetryDisabled,
   logHookError,
   sweepAbandonedStarts,
 } from '../../index.ts';
@@ -28,6 +29,10 @@ import {
 
 const main = async (): Promise<void> => {
   try {
+    if (isTelemetryDisabled()) {
+      return;
+    }
+
     const repoRoot =
       process.env.CURSOR_PROJECT_DIR ||
       process.env.OPEN_THROTTLE_REPO_ROOT ||

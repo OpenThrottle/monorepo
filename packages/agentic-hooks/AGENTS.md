@@ -29,9 +29,13 @@ marketplace installs them from `plugins-dist`. Hooks ship nowhere else: there ar
   `transcript-backfill.ts`, `transcript-skills.ts` and `transcript-projects.ts`; see the README's
   "Backfilling from transcripts".
 - `src/utils/` — `scope.ts` (ours | personal | third-party), `privacy.ts` (truncation + secret redaction),
-  `logging.ts`.
+  `logging.ts`, `warnEndpointUnreachable.ts` (an unreachable endpoint warns once per session outside
+  an OpenThrottle checkout), `skill-file.ts` (skill name from a `SKILL.md` path, for producers with no
+  skill tool).
 - `src/config/` — `env.ts`: endpoint resolution by location, the OpenThrottle-checkout
-  predicate, git branch, the disable switches.
+  predicate, git branch, `OPENTHROTTLE_TELEMETRY_OFFLINE`. `isTelemetryDisabled.ts`: the total off
+  switch (`OPENTHROTTLE_SKILL_USAGE_DISABLED`), which every telemetry entrypoint checks first and no
+  guard or workflow hook does.
 - `src/data/` — `events.ts` (event construction + GraphQL inputs), `persist.ts` (POST → JSONL
   fallback, correlation, drain), `starts.ts` (identifiers-only start records used to compute
   duration), `jsonl.ts`, `plan-runs.ts` (backstop notes under `~/.openthrottle/skill-usage/plan-runs/<repo-hash>/`, never `<repo>/.cache/`). Token usage: `token-usage.ts` (row mapping + batch POST,
