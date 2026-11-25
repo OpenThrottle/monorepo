@@ -1,0 +1,55 @@
+{
+  "author": {
+    "email": "matthew.scholta@gmail.com",
+    "name": "Matthew Scholta",
+    "url": "https://mattscholta.com"
+  },
+  "dependencies": {
+    "@openthrottle/nodejs-utils": "workspace:^"
+  },
+  "description": "Scheduled X posting for @openthrottleai from a rolling OpenThrottle social plan: the tweet-task contract, its parser, and the scripts the scheduled jobs run.",
+  "devDependencies": {
+    "vitest": "catalog:"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "main": "./src/index.ts",
+  "name": "@openthrottle/openthrottle-social",
+  "module": "./src/index.ts",
+  "nx": {
+    "$schema": "{workspaceRoot}/node_modules/nx/schemas/project-schema.json",
+    "projectType": "library",
+    "sourceRoot": "./",
+    "tags": [
+      "name:@openthrottle/openthrottle-social",
+      "production:true",
+      "publish:false",
+      "technology:nodejs",
+      "type:package"
+    ],
+    "targets": {
+      "__build": {},
+      "__build-package": {},
+      "lint": {},
+      "test": {},
+      "typecheck": {}
+    }
+  },
+  "peerDependencies": {},
+  "private": true,
+  "repository": "git://github.com/OpenThrottle/monorepo.git",
+  "scripts": {},
+  "sideEffects": [
+    "./src/scripts/x-auth.ts",
+    "./src/scripts/x-metrics.ts",
+    "./src/scripts/x-post.ts",
+    "./src/scripts/x-validate.ts"
+  ],
+  "type": "module",
+  "types": "./src/index.ts",
+  "version": "1.0.0"
+}

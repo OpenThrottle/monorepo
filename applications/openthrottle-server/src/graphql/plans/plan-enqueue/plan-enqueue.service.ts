@@ -27,6 +27,7 @@ import {
   PlanRun,
   PlanRunsRepository,
   PlansRepository,
+  PlanTag,
   TasksRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import { toErrorMessage } from '@openthrottle/nodejs-utils';
@@ -86,6 +87,10 @@ import {
   decidePlanSchedulability,
   isOneScheduledRunViolation,
 } from './plan-enqueue.utils.ts';
+import {
+  createPlanRunExcludedError,
+  findRunExcludingTag,
+} from './run-excluded-tags/run-excluded-tags.utils.ts';
 import { ENQUEUE_TASK_STATUSES_TO_RESET } from './runnable-tasks/runnable-tasks.constants.ts';
 import { countRunnablePlanTasks } from './runnable-tasks/runnable-tasks.utils.ts';
 
@@ -540,6 +545,17 @@ export class PlanEnqueueService {
 
     if (!plan) {
       throw new NotFoundException(`🟡 1 - Plan not found: ${planId}`);
+    }
+
+    // Before anything else: a plan whose tasks are not coding work (one tagged `no-plan-run`, like the posts plan) must
+    // never reach the status writes below, which would reset its approval gate to QUEUED.
+    const planTags = await this.dataSource.manager
+      .getRepository(PlanTag)
+      .find({ where: { planId } });
+    const excludingTag = findRunExcludingTag(planTags.map((row) => row.tag));
+
+    if (excludingTag !== undefined) {
+      throw createPlanRunExcludedError({ planId, tag: excludingTag });
     }
 
     // A whole-plan run (mode 'plan' or unset) with nothing to pick up would start an orchestrator

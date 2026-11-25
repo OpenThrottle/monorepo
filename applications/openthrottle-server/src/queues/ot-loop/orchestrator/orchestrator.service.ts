@@ -1,6 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { PlanRunsRepository } from '@openthrottle/nestjs-repositories-server';
+import {
+  PlanRunsRepository,
+  PlanTagsRepository,
+} from '@openthrottle/nestjs-repositories-server';
 import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import type {
   CommandSequenceResult,
@@ -57,6 +60,7 @@ import {
 } from '@openthrottle/openthrottle-drivers';
 
 import { CreateTaskDocument } from '../../../__generated__/graphql.ts';
+import { findRunExcludingTag } from '../../../graphql/plans/plan-enqueue/run-excluded-tags/run-excluded-tags.utils.ts';
 import { PlanRunWorkspaceService } from '../../../services/plan-run-workspace/plan-run-workspace.service.ts';
 import {
   OT_LOOP_DEFAULT_BASE_BRANCH,
@@ -136,6 +140,7 @@ export class OtLoopOrchestratorService {
     private readonly logger: LoggerService,
     private readonly planRunsRepository: PlanRunsRepository,
     private readonly planRunWorkspaceService: PlanRunWorkspaceService,
+    private readonly planTagsRepository: PlanTagsRepository,
   ) {}
 
   /**
@@ -148,14 +153,6 @@ export class OtLoopOrchestratorService {
       params;
     const { planId } = jobData;
     const signal = params.signal ?? new AbortController().signal;
-
-    const workspace = await this.planRunWorkspaceService.prepare({
-      correlation,
-      jobData,
-      onWorktreeProvisioned,
-      skipMcpPreflight: true,
-    });
-    const cwd = workspace.workingDirectory;
     const output = createPlanOutputWriter({
       executeGraphqlV2: this.executeGraphqlV2,
       planId,
@@ -168,6 +165,32 @@ export class OtLoopOrchestratorService {
         text: formatNarration(OT_LOOP_NARRATION_PREFIX, message),
       });
     };
+
+    // Belt and braces behind the enqueue guard: a run that reached the queue some other way still
+    // never provisions a worktree or works the tasks of a plan whose tasks are not code.
+    const planTags = await this.planTagsRepository.listByPlanId(planId);
+    const excludingTag = findRunExcludingTag(planTags.map((tag) => tag.tag));
+
+    if (excludingTag !== undefined) {
+      this.logger.warn(
+        `OT Loop refused plan ${planId}: it is tagged ${excludingTag}`,
+        OtLoopOrchestratorService.name,
+      );
+      say(
+        `refused: this plan is tagged \`${excludingTag}\`, and its tasks are not coding work`,
+      );
+      await output.settled();
+
+      return failed('workflow_input_required');
+    }
+
+    const workspace = await this.planRunWorkspaceService.prepare({
+      correlation,
+      jobData,
+      onWorktreeProvisioned,
+      skipMcpPreflight: true,
+    });
+    const cwd = workspace.workingDirectory;
 
     try {
       return await this.execute({

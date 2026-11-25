@@ -227,6 +227,10 @@
       "entry": ["src/index.ts", "scripts/*.ts"],
     },
     // check-surfaces.ts and generate-surfaces.ts are run by this package's Nx targets.
+    "packages/openthrottle-social": {
+      // The scheduled jobs and the setup run these with `node` (pnpm run social:*).
+      "entry": ["src/index.ts", "src/scripts/*.ts"],
+    },
     "packages/openthrottle-product": {
       "entry": ["src/index.ts", "src/scripts/*.ts"],
     },
