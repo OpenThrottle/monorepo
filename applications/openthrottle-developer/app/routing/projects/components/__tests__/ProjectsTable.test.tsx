@@ -1,5 +1,5 @@
 import type { RenderResult } from '@testing-library/react';
-import { render } from '@testing-library/react';
+import { render, within } from '@testing-library/react';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
@@ -16,6 +16,7 @@ const mockProjects: ProjectCardFragment[] = [
     createdAt: '2025-01-01T00:00:00Z',
     description: 'First project description',
     id: 'proj-1',
+    isFavorite: false,
     name: 'First Project',
     nxProjectName: 'applications/openthrottle-developer',
     plans: [
@@ -34,6 +35,7 @@ const mockProjects: ProjectCardFragment[] = [
     createdAt: '2025-01-03T00:00:00Z',
     description: null,
     id: 'proj-2',
+    isFavorite: false,
     name: 'Second Project',
     nxProjectName: null,
     plans: [],
@@ -131,5 +133,25 @@ describe('ProjectsTable Component', () => {
     expect(
       getByRole('progressbar', { name: 'First Project plan progress' }),
     ).toHaveAttribute('aria-valuenow', '50');
+  });
+
+  test('renders a star toggle per project, first in the row, reflecting its starred state', () => {
+    const projects = mockProjects.map((project) => {
+      return { ...project, isFavorite: project.id === 'proj-2' };
+    });
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
+    const Component = () => {
+      return <ProjectsTable projects={projects} />;
+    };
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    const { container } = render(<RoutesStub />);
+
+    const rows = within(container).getAllByRole('row').slice(1);
+    const firstCellButtons = rows.map((row) => {
+      return within(row).getAllByRole('button')[0];
+    });
+    expect(
+      firstCellButtons.map((b) => b?.getAttribute('aria-pressed')),
+    ).toEqual(['false', 'true']);
   });
 });

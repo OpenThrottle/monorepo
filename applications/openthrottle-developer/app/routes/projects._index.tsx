@@ -18,6 +18,7 @@ import * as React from 'react';
 import type { Route } from '@/app/routes/+types/projects._index';
 import { GetProjectsDocument } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
+import { runSetProjectFavoriteIntent } from '~/routing/projects/actions/projectFavorite';
 import { ProjectsIndexHeader } from '~/routing/projects/components/ProjectsIndexHeader';
 import { ProjectsStats } from '~/routing/projects/components/ProjectsStats';
 import { ProjectsTable } from '~/routing/projects/components/ProjectsTable';
@@ -182,7 +183,11 @@ export const shouldRevalidate = shouldRevalidateIgnoringParams([
   ROUTE_STATS_URL.param,
 ]);
 
-export const action = async (_args: Route.ActionArgs) => {
+export const action = async (args: Route.ActionArgs) => {
+  const formData = await args.request.formData();
+  if (formData.get('intent') === 'setProjectFavorite') {
+    return runSetProjectFavoriteIntent(args.request, formData);
+  }
   return {};
 };
 

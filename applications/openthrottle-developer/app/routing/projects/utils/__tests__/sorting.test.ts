@@ -18,6 +18,7 @@ function project(
     __typename: 'ProjectObject',
     createdAt: '2024-01-01T00:00:00.000Z',
     description: null,
+    isFavorite: false,
     lastActivityAt: null,
     nxProjectName: null,
     planCount: null,
@@ -106,5 +107,24 @@ describe('sortProjects', () => {
     ];
     const sorted = sortProjects(projects, asMock<SortBy>('unknown'), 'asc');
     expect(sorted.map((p) => p.id)).toEqual(['1', '2']);
+  });
+
+  describe('when some projects are starred', () => {
+    const projects: ProjectWithStats[] = [
+      project({ id: '1', isFavorite: false, name: 'Alpha' }),
+      project({ id: '2', isFavorite: true, name: 'Zulu' }),
+      project({ id: '3', isFavorite: true, name: 'Mike' }),
+      project({ id: '4', isFavorite: false, name: 'Bravo' }),
+    ];
+
+    test('keeps starred first, then sorts by name ascending', () => {
+      const sorted = sortProjects(projects, 'name', 'asc');
+      expect(sorted.map((p) => p.id)).toEqual(['3', '2', '1', '4']);
+    });
+
+    test('keeps starred first when the sort is descending', () => {
+      const sorted = sortProjects(projects, 'name', 'desc');
+      expect(sorted.map((p) => p.id)).toEqual(['2', '3', '4', '1']);
+    });
   });
 });

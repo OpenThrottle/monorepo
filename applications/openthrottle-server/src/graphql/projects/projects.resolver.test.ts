@@ -1,15 +1,20 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
+import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
+import { AUTH_PRINCIPAL_KIND_USER } from '@openthrottle/nestjs-auth';
 import type {
   Plan,
+  PlansRepository,
   Project,
   Task,
+  TasksRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import {
   ProjectRepositoriesRepository,
   ProjectsRepository,
   RepositoriesRepository,
+  UserFavoriteProjectsRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import type {
   ProjectRepositoriesRepositoryMock,
@@ -17,15 +22,20 @@ import type {
   RepositoriesRepositoryMock,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import {
+  createPlansRepositoryMock,
   createProjectRepositoriesRepositoryMock,
   createProjectsRepositoryMock,
   createRepositoriesRepositoryMock,
+  createTasksRepositoryMock,
+  createUserFavoriteProjectsRepositoryMock,
   projectRepositoriesFactory,
   repositoriesFactory,
 } from '@openthrottle/nestjs-repositories-server/testing';
+import { asMock } from '@openthrottle/nestjs-testing';
 import { getDefaultPlanRunConfigStorage } from '@openthrottle/openthrottle-plan-config';
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
+import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { PlanProjectMembershipService } from '../../services/plan-project-membership/plan-project-membership.service.ts';
 import { ProjectsLoaders } from './loaders/loaders.service.ts';
 import { ProjectsResolver } from './projects.resolver.ts';
@@ -116,8 +126,15 @@ describe('ProjectsResolver', () => {
           useValue: projectRepositoriesRepository,
         },
         { provide: RepositoriesRepository, useValue: repositoriesRepository },
+        {
+          provide: UserFavoriteProjectsRepository,
+          useValue: createUserFavoriteProjectsRepositoryMock(),
+        },
       ],
-    }).compile();
+    })
+      .overrideGuard(GqlPermissionsGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
 
     resolver = app.get<ProjectsResolver>(ProjectsResolver);
   });
@@ -485,6 +502,164 @@ describe('ProjectsResolver', () => {
         'b',
         'a',
       ]);
+    });
+  });
+
+  describe('project favorites', () => {
+    const principal: AuthPrincipal = {
+      kind: AUTH_PRINCIPAL_KIND_USER,
+      sub: 'user-1',
+    };
+
+    const buildFavoriteResolver = () => {
+      const favorites = createUserFavoriteProjectsRepositoryMock();
+      const projects = createProjectsRepositoryMock();
+      const loaders = new ProjectsLoaders(
+        asMock<PlansRepository>(createPlansRepositoryMock()),
+        asMock<ProjectRepositoriesRepository>(
+          createProjectRepositoriesRepositoryMock(),
+        ),
+        asMock<TasksRepository>(createTasksRepositoryMock()),
+        asMock<UserFavoriteProjectsRepository>(favorites),
+      );
+      const favoriteResolver = new ProjectsResolver(
+        asMock<PlanProjectMembershipService>(membership),
+        loaders,
+        asMock<ProjectRepositoriesRepository>(
+          createProjectRepositoriesRepositoryMock(),
+        ),
+        asMock<ProjectsRepository>(projects),
+        asMock<RepositoriesRepository>(createRepositoriesRepositoryMock()),
+        asMock<UserFavoriteProjectsRepository>(favorites),
+      );
+      return { favoriteResolver, favorites, projects };
+    };
+
+    describe('isFavorite', () => {
+      test('is true for a starred project and false for an unstarred one', async () => {
+        const { favorites, favoriteResolver } = buildFavoriteResolver();
+        favorites.listFavoriteProjectIds.mockResolvedValue(['starred']);
+
+        const starred = await favoriteResolver.isFavorite(
+          { ...mockProject, id: 'starred' },
+          principal,
+        );
+        const plain = await favoriteResolver.isFavorite(
+          { ...mockProject, id: 'plain' },
+          principal,
+        );
+
+        expect(starred).toBe(true);
+        expect(plain).toBe(false);
+      });
+
+      test('reads the favorites once for several projects in one request', async () => {
+        const { favorites, favoriteResolver } = buildFavoriteResolver();
+        favorites.listFavoriteProjectIds.mockResolvedValue(['a']);
+
+        const results = await Promise.all(
+          ['a', 'b', 'c'].map((id) => {
+            return favoriteResolver.isFavorite(
+              { ...mockProject, id },
+              principal,
+            );
+          }),
+        );
+
+        expect(results).toEqual([true, false, false]);
+        expect(favorites.listFavoriteProjectIds).toHaveBeenCalledTimes(1);
+        expect(favorites.listFavoriteProjectIds).toHaveBeenCalledWith('user-1');
+      });
+
+      test('is false without querying when there is no authenticated user', async () => {
+        const { favorites, favoriteResolver } = buildFavoriteResolver();
+
+        const result = await favoriteResolver.isFavorite(
+          mockProject,
+          undefined,
+        );
+
+        expect(result).toBe(false);
+        expect(favorites.listFavoriteProjectIds).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('setProjectFavorite', () => {
+      test('stars a project', async () => {
+        const { favorites, favoriteResolver, projects } =
+          buildFavoriteResolver();
+        projects.findOne.mockResolvedValue(mockProject);
+
+        const result = await favoriteResolver.setProjectFavorite(
+          principal,
+          mockProject.id,
+          true,
+        );
+
+        expect(result).toEqual({ favorite: true, projectId: mockProject.id });
+        expect(favorites.setProjectFavorite).toHaveBeenCalledWith(
+          'user-1',
+          mockProject.id,
+          true,
+        );
+      });
+
+      test('unstars a project', async () => {
+        const { favorites, favoriteResolver, projects } =
+          buildFavoriteResolver();
+        projects.findOne.mockResolvedValue(mockProject);
+
+        const result = await favoriteResolver.setProjectFavorite(
+          principal,
+          mockProject.id,
+          false,
+        );
+
+        expect(result).toEqual({ favorite: false, projectId: mockProject.id });
+        expect(favorites.setProjectFavorite).toHaveBeenCalledWith(
+          'user-1',
+          mockProject.id,
+          false,
+        );
+      });
+
+      test('is idempotent: a repeated star succeeds with the same result', async () => {
+        const { favoriteResolver, projects } = buildFavoriteResolver();
+        projects.findOne.mockResolvedValue(mockProject);
+
+        const first = await favoriteResolver.setProjectFavorite(
+          principal,
+          mockProject.id,
+          true,
+        );
+        const second = await favoriteResolver.setProjectFavorite(
+          principal,
+          mockProject.id,
+          true,
+        );
+
+        expect(second).toEqual(first);
+      });
+
+      test('rejects an unknown project with a NOT_FOUND code and writes nothing', async () => {
+        const { favorites, favoriteResolver, projects } =
+          buildFavoriteResolver();
+        projects.findOne.mockResolvedValue(null);
+
+        await expect(
+          favoriteResolver.setProjectFavorite(principal, 'missing', true),
+        ).rejects.toMatchObject({ extensions: { code: 'NOT_FOUND' } });
+        expect(favorites.setProjectFavorite).not.toHaveBeenCalled();
+      });
+
+      test('rejects an unauthenticated caller with a FORBIDDEN code and writes nothing', async () => {
+        const { favorites, favoriteResolver } = buildFavoriteResolver();
+
+        await expect(
+          favoriteResolver.setProjectFavorite(undefined, mockProject.id, true),
+        ).rejects.toMatchObject({ extensions: { code: 'FORBIDDEN' } });
+        expect(favorites.setProjectFavorite).not.toHaveBeenCalled();
+      });
     });
   });
 });

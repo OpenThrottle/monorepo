@@ -165,6 +165,9 @@ export * from '../modules/user-disabled-agent-clis/user-disabled-agent-clis.util
 export * from '../modules/user-favorite-agent-models/user-favorite-agent-models.factory.ts';
 export type * from '../modules/user-favorite-agent-models/user-favorite-agent-models.types.ts';
 export * from '../modules/user-favorite-agent-models/user-favorite-agent-models.utils.ts';
+export * from '../modules/user-favorite-projects/user-favorite-projects.factory.ts';
+export type * from '../modules/user-favorite-projects/user-favorite-projects.types.ts';
+export * from '../modules/user-favorite-projects/user-favorite-projects.utils.ts';
 export * from '../modules/user-preferences/user-preferences.factory.ts';
 export * from '../modules/user-preferences/user-preferences.utils.ts';
 export * from '../modules/user-workspace-settings/user-workspace-settings.factory.ts';

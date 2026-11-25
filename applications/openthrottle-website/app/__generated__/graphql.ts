@@ -3306,6 +3306,8 @@ export type Mutation = {
   setMcpConnectorEnabled?: Maybe<McpConnectorConnectionResultObject>;
   /** Set a plan's status (e.g. COMPLETED). Convenience mutation for Mark Complete; equivalent to updatePlan with { id, status }. */
   setPlanStatus?: Maybe<PlanObject>;
+  /** Star or unstar a project for the current user. Idempotent: starring a starred project or unstarring an unstarred one succeeds unchanged. Presence-as-favorite: favorite=true records the star, favorite=false clears it. Gated by SETTINGS_WRITE (projects have no permission of their own); fails with NOT_FOUND when the project does not exist. */
+  setProjectFavorite: SetProjectFavoriteResult;
   /** Enable or disable a scheduled agent job (owner only); registers/removes its scheduler. */
   setScheduledAgentJobEnabled: ScheduledAgentJobObject;
   /**
@@ -4023,6 +4025,11 @@ export type MutationSetMcpConnectorEnabledArgs = {
 
 export type MutationSetPlanStatusArgs = {
   input: SetPlanStatusInput;
+};
+
+export type MutationSetProjectFavoriteArgs = {
+  favorite: Scalars['Boolean']['input'];
+  projectId: Scalars['ID']['input'];
 };
 
 export type MutationSetScheduledAgentJobEnabledArgs = {
@@ -4752,6 +4759,8 @@ export type ProjectObject = {
   createdAt: Scalars['DateTime']['output'];
   description?: Maybe<Scalars['String']['output']>;
   id: Scalars['String']['output'];
+  /** Whether the current user has starred this project. False when unauthenticated. Clients sort starred projects first; list queries do not reorder. */
+  isFavorite: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
   /**
    * NX project name (e.g. applications/openthrottle-server)
@@ -7327,6 +7336,15 @@ export type SetPlanStatusInput = {
   status?: InputMaybe<Scalars['String']['input']>;
   /** New plan status as the typed PlanTaskStatus enum (preferred over status). Provide this OR status. */
   statusEnum?: InputMaybe<PlanTaskStatus>;
+};
+
+/** Result of setProjectFavorite: the current user's star state for one project after the toggle. */
+export type SetProjectFavoriteResult = {
+  __typename?: 'SetProjectFavoriteResult';
+  /** The star state after the toggle: true = starred, false = not starred. */
+  favorite: Scalars['Boolean']['output'];
+  /** The project whose star state was toggled. */
+  projectId: Scalars['ID']['output'];
 };
 
 export type SetScheduledAgentJobEnabledInputType = {

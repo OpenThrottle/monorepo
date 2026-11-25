@@ -19,6 +19,7 @@ import {
   MoveProjectPlanInputSchema,
   RemoveProjectTagInputSchema,
 } from '~/__generated__/schemas';
+import { runSetProjectFavoriteIntent } from '~/routing/projects/actions/projectFavorite';
 import { PROJECT_PLANS_COPY } from '~/routing/projects/data/copy';
 
 const parseProjectTagForm = (
@@ -140,6 +141,10 @@ export const runProjectDetailAction = async (args: Route.ActionArgs) => {
 
   const formData = await args.request.formData();
   const intent = formData.get('intent');
+
+  if (intent === 'setProjectFavorite') {
+    return runSetProjectFavoriteIntent(args.request, formData);
+  }
 
   if (intent === 'addProjectTag' || intent === 'removeProjectTag') {
     // `projectId` is a route param; validate only `tag` from the generated

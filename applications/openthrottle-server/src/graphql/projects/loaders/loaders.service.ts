@@ -15,6 +15,7 @@ import {
   PlansRepository,
   ProjectRepositoriesRepository,
   TasksRepository,
+  UserFavoriteProjectsRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import DataLoader from 'dataloader';
 
@@ -24,6 +25,14 @@ import DataLoader from 'dataloader';
  */
 @Injectable({ scope: Scope.REQUEST })
 export class ProjectsLoaders {
+  /**
+   * The set of project ids each user has starred. Keyed by user id so every Project.isFavorite in a
+   * request shares one `listFavoriteProjectIds` query per user.
+   */
+  readonly favoriteProjectIdsByUserIdLoader: DataLoader<
+    string,
+    ReadonlySet<string>
+  >;
   /** Plans grouped by projectId, each ordered by createdAt DESC. */
   readonly plansByProjectIdLoader: DataLoader<string, Plan[]>;
   /** Live repositories linked to each project through project_repositories, oldest link first. */
@@ -35,7 +44,20 @@ export class ProjectsLoaders {
     plansRepository: PlansRepository,
     projectRepositoriesRepository: ProjectRepositoriesRepository,
     tasksRepository: TasksRepository,
+    userFavoriteProjectsRepository: UserFavoriteProjectsRepository,
   ) {
+    this.favoriteProjectIdsByUserIdLoader = new DataLoader<
+      string,
+      ReadonlySet<string>
+    >(async (userIds) => {
+      return Promise.all(
+        userIds.map(async (userId) => {
+          const projectIds =
+            await userFavoriteProjectsRepository.listFavoriteProjectIds(userId);
+          return new Set(projectIds);
+        }),
+      );
+    });
     this.repositoriesByProjectIdLoader = new DataLoader<string, Repository[]>(
       async (projectIds) => {
         const grouped =

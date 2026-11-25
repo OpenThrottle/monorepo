@@ -8,12 +8,14 @@
  * `/search` is the app's own results page, reachable with
  * `FEATURE_BETA_PREVIEW` off. The query embeds locally, so both searches
  * return the same results on every take (checked 2026-11-22 against the
- * regenerated snapshot: ten cards per query, identical across two runs).
+ * regenerated snapshot: ten results per query, identical across two runs).
+ * Since #1014 the results are a table (type, result, relevance, actions)
+ * rather than cards; the beats are unchanged, only the selectors moved.
  *
  * Clearing the field is select-all plus Backspace, then the new query is typed
  * and submitted with Enter: the toolbar is a plain GET form, so the reveal is
  * a real navigation rather than a client-side filter. The top result for the
- * retries query is a task, and its card links to its plan at that task
+ * retries query is a task, and its title links to its plan at that task
  * (`/plans/<id>#task-<id>`), which is the "plan from months ago" beat 4 opens.
  *
  * Six flow beats, one fewer than the episode's seven, because the assembler
@@ -34,26 +36,31 @@ import {
 
 const SEARCH_INPUT = '[data-testid="SearchToolbar-form"] input[name="q"]';
 
-/** The runner resolves every selector to its first match, so this is the top card. */
-const FIRST_CARD = '[data-testid="SearchCard"]';
+/**
+ * The runner resolves every selector to its first match, so each of these is
+ * the top result's cell: rows render in relevance order.
+ */
+const TOP_TITLE = '[data-testid="SearchResultsTable-title"]';
+const TOP_RELEVANCE = '[data-testid="SearchResultsTable-relevance"]';
+const RESULTS_TABLE = '[data-testid="SearchResultsTable"]';
 
 export const flow: DemoFlow = {
   id: '07-semantic-search',
-  // Result cards are full-width rows; cropping them clips the titles at both
-  // edges. Fit and letterbox, as 04 does for tables.
+  // The results table is full width; cropping it clips the titles and the
+  // relevance column. Fit and letterbox, as 04 does for tables.
   portraitStrategy: 'fit',
   regionOfInterest: {
     hold: '[data-testid="GlobalHeading"]',
-    hook: '[data-testid="SearchCard"]',
+    hook: RESULTS_TABLE,
     open: '[data-testid="GlobalHeading"]',
     query: '[data-testid="SearchToolbar-form"]',
-    reason: FIRST_CARD,
-    results: '[data-testid="SearchCard"]',
+    reason: TOP_RELEVANCE,
+    results: RESULTS_TABLE,
   },
   steps: [
     // 0:00 — /search already showing results for `rate limiting`.
     navigate('/search?q=rate%20limiting', 'hook'),
-    waitFor('[data-testid="SearchCard"]'),
+    waitFor(TOP_TITLE),
     dwell(5_000),
 
     // 0:08 — clear the field; describe the problem instead of naming it.
@@ -68,16 +75,16 @@ export const flow: DemoFlow = {
     waitForUrl('**/search?q=how*'),
 
     // 0:18 — the results, none of which contain the phrase.
-    waitFor('[data-testid="SearchCard"]', 'results'),
+    waitFor(TOP_TITLE, 'results'),
     dwell(6_000),
 
-    // 0:27 — the top result's relevance, printed on its card.
-    waitFor(`${FIRST_CARD} [data-testid="SearchCard-relevance"]`, 'reason'),
-    highlight(`${FIRST_CARD} [data-testid="SearchCard-relevance"]`, 2_400),
+    // 0:27 — the top result's relevance, in its Relevance column.
+    waitFor(TOP_RELEVANCE, 'reason'),
+    highlight(TOP_RELEVANCE, 2_400),
     dwell(4_000),
 
     // 0:36 — open it: the plan, at the task that matched.
-    click(`${FIRST_CARD} a`, 'open'),
+    click(TOP_TITLE, 'open'),
     waitFor('[data-testid="GlobalHeading"]'),
     dwell(6_500),
 

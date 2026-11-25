@@ -41,10 +41,18 @@ export const PlanDetailRouteHeader = (
   const assigneeSuffix = plan.assignee ? ` → ${plan.assignee}` : '';
   const authorLabel = `${plan.author}${assigneeSuffix}`;
   const authorLine = plan.author && (
-    <span aria-label={`Author: ${plan.author}`}>{authorLabel}</span>
+    <span
+      aria-label={`Author: ${plan.author}`}
+      className="border-border border-l pl-3"
+    >
+      {authorLabel}
+    </span>
   );
   const assigneeOnlyLine = !plan.author && plan.assignee && (
-    <span aria-label={`Assignee: ${plan.assignee}`}>
+    <span
+      aria-label={`Assignee: ${plan.assignee}`}
+      className="border-border border-l pl-3"
+    >
       Assignee: {plan.assignee}
     </span>
   );
@@ -58,7 +66,7 @@ export const PlanDetailRouteHeader = (
       <GlobalHeading className="mb-4" icon={NotebookTextIcon} title={title} />
 
       <div className="flex flex-col gap-2">
-        <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+        <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
           <PlanStatusBadge
             scheduledRunAt={plan.scheduledRunAt}
             status={status}

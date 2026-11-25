@@ -23,6 +23,7 @@ const {
   ProjectDetailRemovePlanDocument,
   ProjectDetailRemoveProjectTagDocument,
   ProjectDetailUnlinkRepositoryDocument,
+  ProjectSetFavoriteDocument,
 } = await import('~/__generated__/graphql');
 const { runProjectDetailAction } = await import('../projectId');
 
@@ -209,6 +210,32 @@ describe('projects/actions/projectId tag parser', () => {
       );
 
       expect(result).toEqual({ projectError: 'boom' });
+    });
+  });
+
+  describe('setProjectFavorite intent', () => {
+    test('stars or unstars the project for the current user', async () => {
+      mockExecute.mockResolvedValue(
+        asMock<Awaited<ReturnType<typeof executeGraphqlWithAuth>>>({
+          setProjectFavorite: { favorite: false, projectId: 'proj-1' },
+        }),
+      );
+      const result = await runProjectDetailAction(
+        actionArgs(
+          form({
+            favorite: 'false',
+            intent: 'setProjectFavorite',
+            projectId: 'proj-1',
+          }),
+        ),
+      );
+
+      expect(mockExecute).toHaveBeenCalledWith(
+        expect.anything(),
+        ProjectSetFavoriteDocument,
+        { favorite: false, projectId: 'proj-1' },
+      );
+      expect(result).toEqual({ favorite: false, projectId: 'proj-1' });
     });
   });
 });

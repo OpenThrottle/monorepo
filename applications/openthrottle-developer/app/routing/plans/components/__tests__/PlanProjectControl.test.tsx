@@ -16,8 +16,24 @@ import type { PlanProjectControlProps } from '../PlanProjectControl';
 import { PlanProjectControl } from '../PlanProjectControl';
 
 const options: PlanProjectOptionFragment[] = [
-  { __typename: 'ProjectObject', id: 'project-1', name: 'Atlas' },
-  { __typename: 'ProjectObject', id: 'project-2', name: 'Beacon' },
+  {
+    __typename: 'ProjectObject',
+    id: 'project-1',
+    isFavorite: false,
+    name: 'Atlas',
+  },
+  {
+    __typename: 'ProjectObject',
+    id: 'project-2',
+    isFavorite: false,
+    name: 'Beacon',
+  },
+  {
+    __typename: 'ProjectObject',
+    id: 'project-3',
+    isFavorite: true,
+    name: 'Cairn',
+  },
 ];
 
 const atlas: ProjectDetailsFragment = {
@@ -79,8 +95,30 @@ describe('PlanProjectControl Component', () => {
     });
   });
 
+  describe('when the user has starred a project', () => {
+    test('lists the starred group before every other project', async () => {
+      const user = userEvent.setup();
+      const { component } = renderControl({
+        project: null,
+      });
+
+      await user.click(
+        component.getByRole('combobox', { name: PLAN_PROJECT_COPY.add }),
+      );
+      const listbox = await component.findByRole('listbox');
+      const groups = [...listbox.querySelectorAll('[cmdk-group]')];
+      const groupOptionNames = groups.map((group) => {
+        return [...group.querySelectorAll('[cmdk-item]')].map((item) => {
+          return item.getAttribute('data-value');
+        });
+      });
+
+      expect(groupOptionNames).toEqual([['Cairn'], ['Atlas', 'Beacon']]);
+    });
+  });
+
   describe('when the plan has a project', () => {
-    test('links the badge and offers only the other projects to move to', async () => {
+    test('links the badge and marks the current project in the picker', async () => {
       const user = userEvent.setup();
       const { component } = renderControl({
         project: atlas,
@@ -94,9 +132,27 @@ describe('PlanProjectControl Component', () => {
       await user.click(
         component.getByRole('combobox', { name: PLAN_PROJECT_COPY.change }),
       );
+      const current = await component.findByRole('option', {
+        name: new RegExp(`^Atlas.*${PLAN_PROJECT_COPY.current}$`),
+      });
 
-      expect(await component.findByText('Beacon')).toBeInTheDocument();
-      expect(component.getAllByText('Atlas')).toHaveLength(1);
+      expect(current).toBeInTheDocument();
+    });
+
+    test('does not move the plan when the current project is picked', async () => {
+      const user = userEvent.setup();
+      const { component, submitted } = renderControl({
+        project: atlas,
+      });
+
+      await user.click(
+        component.getByRole('combobox', { name: PLAN_PROJECT_COPY.change }),
+      );
+      await user.click(
+        await component.findByRole('option', { name: /^Atlas/ }),
+      );
+
+      expect(submitted).toHaveLength(0);
     });
 
     test('removes the plan from its project', async () => {

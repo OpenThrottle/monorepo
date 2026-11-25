@@ -3306,6 +3306,8 @@ export type Mutation = {
   setMcpConnectorEnabled?: Maybe<McpConnectorConnectionResultObject>;
   /** Set a plan's status (e.g. COMPLETED). Convenience mutation for Mark Complete; equivalent to updatePlan with { id, status }. */
   setPlanStatus?: Maybe<PlanObject>;
+  /** Star or unstar a project for the current user. Idempotent: starring a starred project or unstarring an unstarred one succeeds unchanged. Presence-as-favorite: favorite=true records the star, favorite=false clears it. Gated by SETTINGS_WRITE (projects have no permission of their own); fails with NOT_FOUND when the project does not exist. */
+  setProjectFavorite: SetProjectFavoriteResult;
   /** Enable or disable a scheduled agent job (owner only); registers/removes its scheduler. */
   setScheduledAgentJobEnabled: ScheduledAgentJobObject;
   /**
@@ -4023,6 +4025,11 @@ export type MutationSetMcpConnectorEnabledArgs = {
 
 export type MutationSetPlanStatusArgs = {
   input: SetPlanStatusInput;
+};
+
+export type MutationSetProjectFavoriteArgs = {
+  favorite: Scalars['Boolean']['input'];
+  projectId: Scalars['ID']['input'];
 };
 
 export type MutationSetScheduledAgentJobEnabledArgs = {
@@ -4752,6 +4759,8 @@ export type ProjectObject = {
   createdAt: Scalars['DateTime']['output'];
   description?: Maybe<Scalars['String']['output']>;
   id: Scalars['String']['output'];
+  /** Whether the current user has starred this project. False when unauthenticated. Clients sort starred projects first; list queries do not reorder. */
+  isFavorite: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
   /**
    * NX project name (e.g. applications/openthrottle-server)
@@ -7327,6 +7336,15 @@ export type SetPlanStatusInput = {
   status?: InputMaybe<Scalars['String']['input']>;
   /** New plan status as the typed PlanTaskStatus enum (preferred over status). Provide this OR status. */
   statusEnum?: InputMaybe<PlanTaskStatus>;
+};
+
+/** Result of setProjectFavorite: the current user's star state for one project after the toggle. */
+export type SetProjectFavoriteResult = {
+  __typename?: 'SetProjectFavoriteResult';
+  /** The star state after the toggle: true = starred, false = not starred. */
+  favorite: Scalars['Boolean']['output'];
+  /** The project whose star state was toggled. */
+  projectId: Scalars['ID']['output'];
 };
 
 export type SetScheduledAgentJobEnabledInputType = {
@@ -12441,12 +12459,18 @@ export type PlanDetailProjectOptionsQueryVariables = Exact<{
 
 export type PlanDetailProjectOptionsQuery = {
   __typename?: 'Query';
-  projects: Array<{ __typename?: 'ProjectObject'; id: string; name: string }>;
+  projects: Array<{
+    __typename?: 'ProjectObject';
+    id: string;
+    isFavorite: boolean;
+    name: string;
+  }>;
 };
 
 export type PlanProjectOptionFragment = {
   __typename?: 'ProjectObject';
   id: string;
+  isFavorite: boolean;
   name: string;
 };
 
@@ -12970,6 +12994,7 @@ export type ProjectPageDetailsFragment = {
   createdAt: any;
   description?: string | null;
   id: string;
+  isFavorite: boolean;
   name: string;
   updatedAt: any;
   repositories: Array<{
@@ -13014,6 +13039,7 @@ export type GetProjectByIdQuery = {
     createdAt: any;
     description?: string | null;
     id: string;
+    isFavorite: boolean;
     name: string;
     updatedAt: any;
     repositories: Array<{
@@ -13222,6 +13248,7 @@ export type ProjectCardFragment = {
   createdAt: any;
   description?: string | null;
   id: string;
+  isFavorite: boolean;
   name: string;
   nxProjectName?: string | null;
   updatedAt: any;
@@ -13242,6 +13269,7 @@ export type GetProjectsQuery = {
     createdAt: any;
     description?: string | null;
     id: string;
+    isFavorite: boolean;
     name: string;
     nxProjectName?: string | null;
     updatedAt: any;
@@ -13252,6 +13280,20 @@ export type GetProjectsQuery = {
     }> | null;
     tasks?: Array<{ __typename?: 'TaskObject'; title: string }> | null;
   }>;
+};
+
+export type ProjectSetFavoriteMutationVariables = Exact<{
+  favorite: Scalars['Boolean']['input'];
+  projectId: Scalars['ID']['input'];
+}>;
+
+export type ProjectSetFavoriteMutation = {
+  __typename?: 'Mutation';
+  setProjectFavorite: {
+    __typename?: 'SetProjectFavoriteResult';
+    favorite: boolean;
+    projectId: string;
+  };
 };
 
 export type GetProjectCreateOptionsQueryVariables = Exact<{
@@ -20745,6 +20787,7 @@ export const PlanProjectOptionFragmentDoc = {
         kind: 'SelectionSet',
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'isFavorite' } },
           { kind: 'Field', name: { kind: 'Name', value: 'name' } },
         ],
       },
@@ -21119,6 +21162,7 @@ export const ProjectPageDetailsFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'description' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'isFavorite' } },
           { kind: 'Field', name: { kind: 'Name', value: 'name' } },
           {
             kind: 'Field',
@@ -21272,6 +21316,7 @@ export const ProjectCardFragmentDoc = {
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'description' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'isFavorite' } },
           { kind: 'Field', name: { kind: 'Name', value: 'name' } },
           { kind: 'Field', name: { kind: 'Name', value: 'nxProjectName' } },
           {
@@ -32948,6 +32993,7 @@ export const PlanDetailProjectOptionsDocument = {
         kind: 'SelectionSet',
         selections: [
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'isFavorite' } },
           { kind: 'Field', name: { kind: 'Name', value: 'name' } },
         ],
       },
@@ -34637,6 +34683,7 @@ export const GetProjectByIdDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'description' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'isFavorite' } },
           { kind: 'Field', name: { kind: 'Name', value: 'name' } },
           {
             kind: 'Field',
@@ -35279,6 +35326,7 @@ export const GetProjectsDocument = {
           { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
           { kind: 'Field', name: { kind: 'Name', value: 'description' } },
           { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'isFavorite' } },
           { kind: 'Field', name: { kind: 'Name', value: 'name' } },
           { kind: 'Field', name: { kind: 'Name', value: 'nxProjectName' } },
           {
@@ -35308,6 +35356,80 @@ export const GetProjectsDocument = {
     },
   ],
 } as unknown as DocumentNode<GetProjectsQuery, GetProjectsQueryVariables>;
+export const ProjectSetFavoriteDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'ProjectSetFavorite' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'favorite' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'Boolean' },
+            },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'projectId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'setProjectFavorite' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'favorite' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'favorite' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'projectId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'projectId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'favorite' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  ProjectSetFavoriteMutation,
+  ProjectSetFavoriteMutationVariables
+>;
 export const GetProjectCreateOptionsDocument = {
   kind: 'Document',
   definitions: [

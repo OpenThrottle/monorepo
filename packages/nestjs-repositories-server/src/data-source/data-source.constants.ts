@@ -57,6 +57,7 @@ import { Task } from '../modules/tasks/task.entity.ts';
 import { TelemetryHeartbeat } from '../modules/telemetry-heartbeats/telemetry-heartbeat.entity.ts';
 import { UserDisabledAgentCli } from '../modules/user-disabled-agent-clis/user-disabled-agent-cli.entity.ts';
 import { UserFavoriteAgentModel } from '../modules/user-favorite-agent-models/user-favorite-agent-model.entity.ts';
+import { UserFavoriteProject } from '../modules/user-favorite-projects/user-favorite-project.entity.ts';
 import { UserPreferences } from '../modules/user-preferences/user-preferences.entity.ts';
 import { UserWorkspaceSettings } from '../modules/user-workspace-settings/user-workspace-settings.entity.ts';
 import { User } from '../modules/users/user.entity.ts';
@@ -132,6 +133,7 @@ export const OPENTHROTTLE_ENTITIES = [
   User,
   UserDisabledAgentCli,
   UserFavoriteAgentModel,
+  UserFavoriteProject,
   UserPreferences,
   UserSkillTag,
   UserWorkspaceSettings,

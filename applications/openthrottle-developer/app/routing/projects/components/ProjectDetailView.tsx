@@ -16,6 +16,7 @@ import { Link, useFetcher } from 'react-router';
 import type { Route } from '@/app/routes/+types/projects.$projectId._index';
 import type { ProjectPageDetailsFragment } from '~/__generated__/graphql';
 import { PlanTagChips } from '~/routing/plans/components/PlanTagChips';
+import { ProjectFavorite } from '~/routing/projects/components/ProjectFavorite';
 import { ProjectPlanAdd } from '~/routing/projects/components/ProjectPlanAdd';
 import { ProjectPlansList } from '~/routing/projects/components/ProjectPlansList';
 import { ProjectRepositories } from '~/routing/projects/components/ProjectRepositories';
@@ -73,6 +74,11 @@ export const ProjectDetailView = (
       <Card aria-labelledby="project-overview-heading">
         <CardHeader className="flex flex-row items-start justify-between gap-4">
           <div className="flex flex-wrap items-center gap-2">
+            <ProjectFavorite
+              favorite={project.isFavorite}
+              projectId={project.id}
+              projectName={project.name}
+            />
             <h1
               className="text-lg leading-none tracking-tight"
               id="project-overview-heading"

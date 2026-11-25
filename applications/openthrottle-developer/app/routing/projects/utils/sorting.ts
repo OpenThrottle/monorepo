@@ -1,6 +1,12 @@
 import type { SortBy, SortOrder } from '~/routing/projects/config';
 import type { ProjectWithStats } from '~/routing/projects/types';
 
+/**
+ * @description Sorts projects with starred ones first under every sort: the
+ * favorite flag is the primary key, and `sortBy` / `sortOrder` (what
+ * `ProjectsSortDropdown` picks) only order projects within the starred group and
+ * within the unstarred group. Returns a new array.
+ */
 export function sortProjects(
   projects: ProjectWithStats[],
   sortBy: SortBy,
@@ -10,6 +16,10 @@ export function sortProjects(
   const mult = sortOrder === 'asc' ? 1 : -1;
 
   copy.sort((a, b) => {
+    if (a.isFavorite !== b.isFavorite) {
+      return a.isFavorite ? -1 : 1;
+    }
+
     let aVal: string | undefined;
     let bVal: string | undefined;
 

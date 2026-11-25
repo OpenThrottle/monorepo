@@ -20,11 +20,16 @@ vi.mock('@openthrottle/nodejs-graphql', () => ({
 const projectId = 'd37426aa-3d3e-469e-9d27-9f9bbbd1f13e';
 const serviceAccountToken = '***REMOVED-OT-TOKEN***';
 
-const buildProject = (name: string, id: string = projectId) => {
+const buildProject = (
+  name: string,
+  id: string = projectId,
+  isFavorite = false,
+) => {
   return {
     createdAt: '2026-11-01T00:00:00.000Z',
     description: null,
     id,
+    isFavorite,
     name,
     plans: [{ id: 'plan-1' }, { id: 'plan-2' }],
     repositories: [
@@ -88,6 +93,28 @@ describe('listProjectsToolHandler', () => {
         expect.anything(),
         {},
       );
+    });
+  });
+
+  describe('when the user starred a project', () => {
+    it('lists starred projects first and keeps the rest in server order', async () => {
+      vi.mocked(executeGraphqlWithAuth).mockResolvedValue({
+        projects: [
+          buildProject('Newest', 'p1'),
+          buildProject('Starred', 'p2', true),
+          buildProject('Oldest', 'p3'),
+        ],
+      });
+
+      const result = await listProjectsToolHandler({});
+
+      if (!('structuredContent' in result)) {
+        throw new Error('expected a success result');
+      }
+      expect(
+        result.structuredContent.projects.map((project) => project.id),
+      ).toEqual(['p2', 'p1', 'p3']);
+      expect(result.structuredContent.projects[0]?.isFavorite).toBe(true);
     });
   });
 

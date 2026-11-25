@@ -1276,6 +1276,10 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
     classification: 'ignored',
     reason: 'per-user preference — the demo user configures its own',
   },
+  user_favorite_projects: {
+    classification: 'ignored',
+    reason: 'per-user preference — the demo user stars its own projects',
+  },
   user_preferences: {
     classification: 'ignored',
     reason: `per-user preference — the demo user configures its own`,

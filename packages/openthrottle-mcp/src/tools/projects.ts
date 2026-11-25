@@ -35,6 +35,8 @@ type ProjectRepositorySummary = {
 type ProjectSummary = {
   readonly description: string | null;
   readonly id: string;
+  /** Whether the acting user starred the project; list_projects lists starred ones first. */
+  readonly isFavorite: boolean;
   readonly name: string;
   readonly planCount: number;
   readonly repositories: readonly ProjectRepositorySummary[];
@@ -61,6 +63,7 @@ const toProjectSummary = (
   return {
     description: project.description ?? null,
     id: project.id,
+    isFavorite: project.isFavorite,
     name: project.name,
     planCount: project.plans?.length ?? 0,
     repositories,
@@ -96,7 +99,7 @@ export const listProjectsToolParameters = z
   })
   .strict();
 
-export const listProjectsToolDescription = `List OpenThrottle projects (cross-repo initiatives), newest first. Optional name filters by case-insensitive substring. Each entry carries id, name, description, planCount and linked repositories. Use it to resolve a project by name, then pass its id as projectId to create_plan or add_plan_to_project.`;
+export const listProjectsToolDescription = `List OpenThrottle projects (cross-repo initiatives), starred first, then newest. Optional name filters by case-insensitive substring. Each has id, name, description, isFavorite, planCount, repositories. Resolve a project by name, then pass its id as projectId to create_plan or add_plan_to_project.`;
 
 export async function listProjectsToolHandler(
   args: z.infer<typeof listProjectsToolParameters>,
@@ -118,7 +121,11 @@ export async function listProjectsToolHandler(
       .filter((project) => {
         return needle === null || project.name.toLowerCase().includes(needle);
       })
-      .map(toProjectSummary);
+      .map(toProjectSummary)
+      // Stable sort: starred projects first, otherwise the server's newest-first order.
+      .sort((a, b) => {
+        return Number(b.isFavorite) - Number(a.isFavorite);
+      });
     const filterText = needle === null ? '' : ` matching "${needle}"`;
     const text = `Projects${filterText} (${projects.length}):\n${JSON.stringify(projects, null, 2)}`;
 

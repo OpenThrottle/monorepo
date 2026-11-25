@@ -12,6 +12,7 @@ const mockProject: ProjectDetailViewProps['project'] = {
   createdAt: '2026-01-01T00:00:00.000Z',
   description: 'A test project.',
   id: 'project-1',
+  isFavorite: false,
   name: 'Test Project',
   repositories: [],
   tags: [],
@@ -59,6 +60,14 @@ describe('ProjectDetailView Component', () => {
       component.getByRole('heading', { name: 'Test Project' }),
     ).toBeInTheDocument();
     expect(component.getByText('A test project.')).toBeInTheDocument();
+  });
+
+  test('renders the star toggle next to the title, pressed when starred', () => {
+    props = { ...props, project: { ...mockProject, isFavorite: true } };
+    renderView();
+    expect(
+      component.getByRole('button', { pressed: true }),
+    ).toBeInTheDocument();
   });
 
   test('renders the repositories and plans sections, with no tasks table', () => {
