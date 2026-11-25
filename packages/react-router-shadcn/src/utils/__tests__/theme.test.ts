@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildThemeStylesheet } from '../buildThemeStylesheet';
-import { getTheme, isThemeId, THEMES } from '../registry';
-import { THEME_TOKEN_NAMES } from '../theme-contract';
+import { THEME_TOKEN_NAMES } from '../../data/data.theme-tokens';
+import { THEMES } from '../../data/data.themes';
+import { buildThemeStylesheet, getTheme, isThemeId } from '../theme';
 
 describe('theme registry', () => {
   it('includes the OpenThrottle reference theme', () => {

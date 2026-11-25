@@ -3,13 +3,19 @@
  * of the per-task discipline; this package is a DELIBERATE RESTATEMENT of it in code. A change to
  * that section must land here in the same PR. See docs/workflows/ot-loop-job.md.
  */
-export * from './contract/index.ts';
 export * from './data/data.ansi.ts';
 export * from './data/data.constants.ts';
 export * from './data/data.git.ts';
+export * from './data/data.loop.ts';
 export * from './data/data.model-routing.ts';
 export * from './data/data.plan-run-config.ts';
 export * from './data/data.validation-summary.ts';
+export * from './types/loop.ts';
+export * from './types/model-routing.ts';
+export * from './types/plan-run-config.ts';
+export * from './types/plan-run-finalize-port.ts';
+export * from './types/validation.ts';
+export * from './types/workflow-run-result.ts';
 export * from './utils/command-output.ts';
 export * from './utils/command-validator.ts';
 export * from './utils/commit.ts';

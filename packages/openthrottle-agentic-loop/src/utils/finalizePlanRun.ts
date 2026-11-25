@@ -18,11 +18,11 @@ import type {
 } from '@openthrottle/openthrottle-agentic-utils';
 import { getOpenThrottleRoot } from '@openthrottle/openthrottle-agentic-utils';
 
+import type { PlanRunFinalizePort } from '../types/plan-run-finalize-port.ts';
 import type {
-  PlanRunFinalizePort,
   WorkflowFinishedReason,
   WorkflowRunResult,
-} from '../contract/index.ts';
+} from '../types/workflow-run-result.ts';
 import type { PlanRunPrPlan, PlanRunPrTask } from './plan-run-pr-body.ts';
 import {
   buildPlanRunPrBody,

@@ -1,9 +1,9 @@
-import type { AttemptFailure } from '../contract/index.ts';
 import {
   FAILURE_REASON_ERROR_PATTERN,
   FAILURE_REASON_MAX_CHARS,
 } from '../data/data.constants.ts';
 import { SUMMARY_LABEL_ELLIPSIS } from '../data/data.validation-summary.ts';
+import type { AttemptFailure } from '../types/loop.ts';
 import { labelForCommand, stripAnsi } from './command-output.ts';
 
 const cap = (line: string): string => {

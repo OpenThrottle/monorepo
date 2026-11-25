@@ -1,13 +1,17 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseIndexClaims, planStatusClaim, prStateClaim } from '../claims.ts';
-import type { ObservedPlan, ObservedPr } from '../reconcile.ts';
+import {
+  parseIndexClaims,
+  planStatusClaim,
+  prStateClaim,
+} from '../memory-claims.ts';
+import type { ObservedPlan, ObservedPr } from '../memory-reconcile.ts';
 import {
   formatReconcileReport,
   observedPrState,
   prClaimConflicts,
   reconcile,
-} from '../reconcile.ts';
+} from '../memory-reconcile.ts';
 
 const pr = (
   number: number,

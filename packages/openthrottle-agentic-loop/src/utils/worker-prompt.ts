@@ -1,4 +1,3 @@
-import type { AttemptFailure, LoopTask } from '../contract/index.ts';
 import {
   FAILURE_TAIL_MAX_BYTES,
   FAILURE_TAIL_MAX_LINES,
@@ -9,6 +8,7 @@ import {
   WORKER_PROMPT_REPOSITORY_RULES,
   WORKER_PROMPT_RESULT_INSTRUCTIONS,
 } from '../data/data.worker-prompt.ts';
+import type { AttemptFailure, LoopTask } from '../types/loop.ts';
 import { stripAnsi } from './command-output.ts';
 
 /** @public */

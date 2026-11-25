@@ -12,7 +12,7 @@ import {
 import type {
   AgentAssetKind,
   AgentAssetValidationIssue,
-} from './schemas/agent-asset-frontmatter.schemas.ts';
+} from './utils/agent-asset-frontmatter-schemas.ts';
 
 export interface AgentAssetFileEntry {
   /**

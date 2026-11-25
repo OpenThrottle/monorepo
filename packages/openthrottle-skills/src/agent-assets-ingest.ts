@@ -18,7 +18,7 @@ import { deriveSkillSourceUrl } from './parse-skills-lock.ts';
 import type {
   SkillOutcomeTelemetry,
   SkillSource,
-} from './schemas/agent-asset-frontmatter.schemas.ts';
+} from './utils/agent-asset-frontmatter-schemas.ts';
 
 export type AgentAssetPromptType = 'personas' | 'prompts' | 'skills';
 

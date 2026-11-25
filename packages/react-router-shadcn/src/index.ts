@@ -71,7 +71,11 @@ export * from './data/data.faceted-filter';
 export * from './hooks/useCarousel';
 
 // Themes
-export * from './themes/index';
+export * from './data/data.cursor-themes';
+export * from './data/data.theme-tokens';
+export * from './data/data.themes';
+export * from './types/theme';
+export * from './utils/theme';
 
 // Utilities
 export * from './utils/cn';

@@ -6,14 +6,14 @@ export type {
   SkillFrontmatter,
   SkillOutcomeTelemetry,
   SkillSource,
-} from './schemas/agent-asset-frontmatter.schemas.ts';
+} from './utils/agent-asset-frontmatter-schemas.ts';
 export {
   AGENT_ASSET_SLUG_PATTERN,
   personaFrontmatterSchema,
   SKILL_OUTCOME_TELEMETRY,
   SKILL_SOURCES,
   skillFrontmatterSchema,
-} from './schemas/agent-asset-frontmatter.schemas.ts';
+} from './utils/agent-asset-frontmatter-schemas.ts';
 
 /** @public */
 export type {
@@ -110,13 +110,13 @@ export {
   extractFrontmatterBody,
   parseYamlFrontmatter,
   splitFrontmatter,
-} from './frontmatter/frontmatter.ts';
+} from './utils/frontmatter.ts';
 /** @public */
 export type {
   FrontmatterScalar,
   ParsedYamlFrontmatter,
   SplitFrontmatterResult,
-} from './frontmatter/frontmatter.ts';
+} from './utils/frontmatter.ts';
 
 /** @public */
 export type { SkillsLockEntry, SkillsLockMap } from './parse-skills-lock.ts';

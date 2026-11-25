@@ -3,8 +3,8 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
-import type { ModelRoutingPolicy } from '../../contract/index.ts';
 import { MODEL_ROUTING_REVIEW_TIER } from '../../data/data.model-routing.ts';
+import type { ModelRoutingPolicy } from '../../types/model-routing.ts';
 import {
   createModelRouter,
   parseModelRoutingPolicy,

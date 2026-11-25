@@ -1,4 +1,4 @@
-import type { LoopDeps } from '../contract/index.ts';
+import type { LoopDeps } from '../types/loop.ts';
 
 /** @description Mutable per-run bookkeeping; never exposed outside the package. */
 export interface LoopRunTracker {

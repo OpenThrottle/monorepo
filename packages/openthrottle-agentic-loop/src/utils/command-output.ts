@@ -1,8 +1,3 @@
-import type {
-  BatchedChunkSink,
-  BatchedChunkSinkOptions,
-  ScheduleClock,
-} from '../contract/index.ts';
 import { ANSI_PARTIAL_TAIL_PATTERN, ANSI_PATTERN } from '../data/data.ansi.ts';
 import {
   NX_TARGET_FLAG_PATTERN,
@@ -15,6 +10,11 @@ import {
   SUMMARY_SEPARATOR,
   SUMMARY_TIMED_OUT_WORD,
 } from '../data/data.validation-summary.ts';
+import type {
+  BatchedChunkSink,
+  BatchedChunkSinkOptions,
+  ScheduleClock,
+} from '../types/validation.ts';
 
 export interface AnsiStripStream {
   /** Drops a truncated trailing escape; call once at the end of the stream. */

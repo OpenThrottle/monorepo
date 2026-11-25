@@ -10,8 +10,7 @@ import type {
 } from '@openthrottle/openthrottle-agentic-utils';
 import { createPlanRunCommandRunner } from '@openthrottle/openthrottle-agentic-utils';
 
-import type { PlanRunFinalizePort } from '../../contract/index.ts';
-
+import type { PlanRunFinalizePort } from '../../types/plan-run-finalize-port.ts';
 const execFileAsync = promisify(execFile);
 
 /** Runs git in `cwd`, returning trimmed stdout; throws on a non-zero exit. */

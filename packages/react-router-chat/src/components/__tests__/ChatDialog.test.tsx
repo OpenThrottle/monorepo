@@ -6,12 +6,12 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { ChatComposerControls } from '../../context/ChatProvider';
-import { ChatProvider } from '../../context/ChatProvider';
+import type { ChatComposerControls } from '../../types';
 import type { ChatMessage } from '../../types';
 import { CHAT_COMPOSER_MODE } from '../../types';
 import type { ChatDialogProps } from '../ChatDialog';
 import { ChatDialog } from '../ChatDialog';
+import { ChatProvider } from '../ChatProvider';
 
 describe('ChatDialog Component', () => {
   let component: RenderResult | undefined;

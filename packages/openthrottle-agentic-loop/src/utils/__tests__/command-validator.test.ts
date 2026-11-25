@@ -6,7 +6,7 @@ import type {
   ScheduleClock,
   SpawnCommand,
   ValidationChunk,
-} from '../../contract/index.ts';
+} from '../../types/validation.ts';
 import {
   createCommandValidator,
   runCommandSequence,

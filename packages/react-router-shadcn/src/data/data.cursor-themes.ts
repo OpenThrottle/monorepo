@@ -1,8 +1,8 @@
-import type { Theme } from './theme-contract';
+import type { Theme } from '../types/theme';
 
 /**
  * Ported popular Cursor/VS Code themes, each a light + dark pair mapped onto the
- * token contract. Follows the OPENTHROTTLE_THEME template in `registry.ts`.
+ * token contract. Follows the OPENTHROTTLE_THEME template in `data.themes.ts`.
  */
 export const CURSOR_THEMES: readonly Theme[] = [
   {

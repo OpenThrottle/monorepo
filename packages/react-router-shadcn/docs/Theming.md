@@ -154,7 +154,7 @@ Dark mode is automatically supported through the `.dark` class. To enable dark m
 }
 ```
 
-## Multi-theme registry (`src/themes`)
+## Multi-theme registry (`src/data/data.themes.ts`)
 
 On top of the single default palette in `theme.css`, the package ships a typed
 registry of named themes (each a light + dark pair) that apply by swapping one
@@ -163,7 +163,7 @@ attribute on `<html>`.
 ### Token contract
 
 A theme must define every semantic token in `THEME_TOKEN_NAMES`
-(`src/themes/theme-contract.ts`) — the color tokens from `theme.css`
+(`src/data/data.theme-tokens.ts`; the `Theme` type is in `src/types/theme.ts`) — the color tokens from `theme.css`
 (`background`, `foreground`, `card`, `primary`, `accent`, `border`, `ring`,
 `chart-1..5`, the `sidebar-*` set, `brand`, `overlay-background`, …). Structural
 tokens defined once in `theme.css` (`--radius`, `--tw-ring-color`, the
@@ -202,9 +202,9 @@ HTML, there is no flash and no hydration mismatch (the `<html>` element uses
 
 ### Adding a theme
 
-Add a `Theme` entry to `src/themes/cursor-themes.ts` (or a new module the
+Add a `Theme` entry to `src/data/data.cursor-themes.ts` (or a new module the
 registry aggregates), following the `OPENTHROTTLE_THEME` template in
-`registry.ts`: alphabetized token keys, `hsl(H S% L%)` values, readable
+`data.themes.ts`: alphabetized token keys, `hsl(H S% L%)` values, readable
 contrast (foreground vs background/card, `*-foreground` vs its surface).
 
 ## Resources

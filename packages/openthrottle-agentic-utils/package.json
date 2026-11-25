@@ -8,7 +8,7 @@
     "url": "https://mattscholta.com"
   },
   "bin": {
-    "workflow-memory-reconcile": "./src/bin/memory-reconcile.ts"
+    "workflow-memory-reconcile": "./src/scripts/memory-reconcile.ts"
   },
   "dependencies": {
     "@agentclientprotocol/sdk": "catalog:",
@@ -76,7 +76,7 @@
   "repository": "git://github.com/OpenThrottle/monorepo.git",
   "scripts": {},
   "sideEffects": [
-    "./src/bin/memory-reconcile.ts"
+    "./src/scripts/memory-reconcile.ts"
   ],
   "type": "module",
   "types": "./src/index.ts"

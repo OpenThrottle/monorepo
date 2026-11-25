@@ -64,7 +64,7 @@ Output is meant to be usable as-is — it typechecks, lints, and renders without
 
 The toolbar has two independent axes — palette and light/dark — because every `Theme` in the registry carries both variants.
 
-The palette list is built by mapping `THEMES` from [`themes/registry.ts`](../../packages/react-router-shadcn/src/themes/registry.ts), so **adding a theme there surfaces it in the toolbar with no change to this app**. The decorator applies a selection exactly the way a consuming app does: `buildThemeStylesheet(THEMES)` injected once into the head, then `data-theme` plus the `dark` class on `<html>` — mirroring `openthrottle-developer`'s `root.tsx`.
+The palette list is built by mapping `THEMES` from [`data/data.themes.ts`](../../packages/react-router-shadcn/src/data/data.themes.ts), so **adding a theme there surfaces it in the toolbar with no change to this app**. The decorator applies a selection exactly the way a consuming app does: `buildThemeStylesheet(THEMES)` injected once into the head, then `data-theme` plus the `dark` class on `<html>` — mirroring `openthrottle-developer`'s `root.tsx`.
 
 `@storybook/addon-themes` is deliberately not used: both of its decorators bind the same `theme` global, so the two axes collide.
 

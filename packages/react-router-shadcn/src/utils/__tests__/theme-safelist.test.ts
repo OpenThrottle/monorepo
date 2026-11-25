@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
+import { THEME_TOKEN_NAMES } from '../../data/data.theme-tokens';
 import {
   buildThemeSafelist,
   getThemeColorNames,
   getThemeSafelistPatterns,
-} from '../buildThemeSafelist';
-import { THEME_TOKEN_NAMES } from '../theme-contract';
+} from '../theme';
 
 describe('getThemeColorNames', () => {
   it('maps every theme token to a color name', () => {

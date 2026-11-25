@@ -2,11 +2,6 @@ import { join } from 'node:path';
 
 import { isRecord } from '@openthrottle/nodejs-utils';
 
-import type {
-  OtLoopTuning,
-  ResolveOtLoopCommandsResult,
-  ResolverFs,
-} from '../contract/index.ts';
 import {
   FALLBACK_RUNNER,
   LOCKFILE_RUNNERS,
@@ -14,6 +9,11 @@ import {
   OT_LOOP_CONFIG_PATH,
   OT_LOOP_NEEDS_VALIDATION_MESSAGE,
 } from '../data/data.constants.ts';
+import type {
+  OtLoopTuning,
+  ResolveOtLoopCommandsResult,
+  ResolverFs,
+} from '../types/validation.ts';
 
 export interface ResolveOtLoopCommandsInput {
   readonly fs: ResolverFs;

@@ -1,7 +1,6 @@
 import { access, readFile } from 'node:fs/promises';
 
-import type { ResolverFs, ScheduleClock } from '../contract/index.ts';
-
+import type { ResolverFs, ScheduleClock } from '../types/validation.ts';
 const isNotFound = (error: unknown): boolean => {
   return (
     typeof error === 'object' &&

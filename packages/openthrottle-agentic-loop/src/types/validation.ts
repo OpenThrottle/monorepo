@@ -1,7 +1,7 @@
 /**
  * Types for validation command resolution, command running and output batching
  * (docs/workflows/ot-loop-job.md §§ 6, 9, 10). The injected `LoopValidator` itself lives in
- * `loop-contract.ts`.
+ * `types/loop.ts`.
  */
 
 /** @public */

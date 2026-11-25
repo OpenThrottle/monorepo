@@ -1,16 +1,16 @@
 import { toErrorMessage } from '@openthrottle/nodejs-utils';
 
-import type {
-  GitHeadState,
-  LoopInboxMessage,
-  LoopTask,
-} from '../contract/index.ts';
-import { LOOP_PLAN_STATUS, LOOP_TASK_STATUS } from '../contract/index.ts';
 import {
   DEFAULT_MAX_RETRIES,
   MAX_RETRIES_CEILING,
   MAX_RETRIES_FLOOR,
 } from '../data/data.constants.ts';
+import { LOOP_PLAN_STATUS, LOOP_TASK_STATUS } from '../data/data.loop.ts';
+import type {
+  GitHeadState,
+  LoopInboxMessage,
+  LoopTask,
+} from '../types/loop.ts';
 import type { LoopRunContext } from './loop-run-context.ts';
 
 /** @description Plan-output narration; task-scoped lines carry the tracker's attempt number; a narration failure never stops the loop. */

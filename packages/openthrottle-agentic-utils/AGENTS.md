@@ -106,7 +106,7 @@ Every streaming path is bounded so a wedged backend can't hang a chat turn:
 
 ## Don't
 
-- Not a home for OpenThrottle GraphQL/Postgres CRUD. The one bin here is `workflow-memory-reconcile` (`src/bin/memory-reconcile.ts`; it talks to OT over plain `fetch`, no GraphQL client) and, being a top-level-executing file, it is listed in `sideEffects`.
+- Not a home for OpenThrottle GraphQL/Postgres CRUD. The one bin here is `workflow-memory-reconcile` (`src/scripts/memory-reconcile.ts`; it talks to OT over plain `fetch`, no GraphQL client) and, being a top-level-executing file, it is listed in `sideEffects`.
 - The job-run lifecycle hooks (`types/job-run-lifecycle-hooks.ts`, `utils/job-run-*.ts`, `utils/hook-task-to-job-run-hook.ts`) and the run settings they share (`PlanRunTuningSettings`, `PlanRunRuntimeSeed`, `DEFAULT_PLAN_RUN_*`) live here; nothing here imports `agentic-loop`.
 - The cached NestJS wrapper over model discovery is `@openthrottle/nestjs-model-discovery`; don't
   add ConfigService/caching here.

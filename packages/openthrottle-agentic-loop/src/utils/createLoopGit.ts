@@ -7,17 +7,17 @@ import type {
   PlanRunCommandRunner,
 } from '@openthrottle/openthrottle-agentic-utils';
 
-import type {
-  DiscardTaskChangesResult,
-  GitCommitResult,
-  GitHeadState,
-  LoopGit,
-} from '../contract/index.ts';
 import {
   COMMIT_TEMP_PREFIX,
   LOOP_DIR_PREFIX,
   LOOP_PATCHES_DIR,
 } from '../data/data.git.ts';
+import type {
+  DiscardTaskChangesResult,
+  GitCommitResult,
+  GitHeadState,
+  LoopGit,
+} from '../types/loop.ts';
 import type { CommitMessageLinter } from './commit.ts';
 import { appendCommitFooters, buildFallbackCommitMessage } from './commit.ts';
 import { prepareResultDir } from './worker-result.ts';

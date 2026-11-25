@@ -1,8 +1,8 @@
 import { spawn } from 'node:child_process';
 
-import type { SpawnCommand } from '../contract/index.ts';
 import { UNCOLORED_ENV } from '../data/data.ansi.ts';
 import { KILL_GRACE_MS } from '../data/data.constants.ts';
+import type { SpawnCommand } from '../types/validation.ts';
 
 const EXIT_COMMAND_NOT_RUNNABLE = 127;
 

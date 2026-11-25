@@ -1,14 +1,14 @@
-import type {
-  CommandSequenceResult,
-  LoopValidator,
-  ScheduleClock,
-  SpawnCommand,
-  ValidationChunk,
-} from '../contract/index.ts';
 import {
   COMMAND_TIMEOUT_EXIT_CODE,
   OUTPUT_BUFFER_MAX_CHARS,
 } from '../data/data.constants.ts';
+import type { LoopValidator } from '../types/loop.ts';
+import type {
+  CommandSequenceResult,
+  ScheduleClock,
+  SpawnCommand,
+  ValidationChunk,
+} from '../types/validation.ts';
 import { summarizeCommand } from './command-output.ts';
 import { substituteTaskStartSha } from './shell-command.ts';
 import { tailForRetry } from './worker-prompt.ts';

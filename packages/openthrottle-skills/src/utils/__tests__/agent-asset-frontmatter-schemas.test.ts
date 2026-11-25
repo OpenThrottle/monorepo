@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { skillFrontmatterSchema } from '../agent-asset-frontmatter.schemas.js';
+import { skillFrontmatterSchema } from '../agent-asset-frontmatter-schemas.js';
 
 describe('skillFrontmatterSchema tags (permissive, not vocabulary-checked)', () => {
   const base = {

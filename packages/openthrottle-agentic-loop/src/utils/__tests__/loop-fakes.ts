@@ -1,3 +1,4 @@
+import type { LoopTaskStatusValue } from '../../data/data.loop.ts';
 import type {
   GitCommitResult,
   GitHeadState,
@@ -5,12 +6,10 @@ import type {
   LoopFollowUp,
   LoopInboxMessage,
   LoopTask,
-  LoopTaskStatusValue,
   ValidationResult,
   WorkerAttemptInput,
   WorkerAttemptResult,
-} from '../../contract/index.ts';
-
+} from '../../types/loop.ts';
 export const GOOD_REASON = `Implemented the whole thing and its tests, as asked.`;
 
 export const makeTask = (

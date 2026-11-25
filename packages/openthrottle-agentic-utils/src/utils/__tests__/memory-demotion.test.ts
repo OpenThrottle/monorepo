@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseIndexClaims } from '../claims.ts';
+import { parseIndexClaims } from '../memory-claims.ts';
 import {
   carriesGotcha,
   findDemotionCandidates,
   hasOwedFollowup,
-} from '../demotion.ts';
-import type { ObservedPlan, ObservedPr } from '../reconcile.ts';
+} from '../memory-demotion.ts';
+import type { ObservedPlan, ObservedPr } from '../memory-reconcile.ts';
 
 const DONE_PLAN: ObservedPlan = {
   id: 'a634f338-0000-4000-8000-000000000000',

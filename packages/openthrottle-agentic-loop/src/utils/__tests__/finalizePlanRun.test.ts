@@ -18,7 +18,7 @@ import type {
 } from '@openthrottle/openthrottle-agentic-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { PlanRunFinalizePort } from '../../contract/index.ts';
+import type { PlanRunFinalizePort } from '../../types/plan-run-finalize-port.ts';
 import {
   finalizePlanRun,
   preparePlanRunPrDraftDir,

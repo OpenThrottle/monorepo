@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ScheduleClock } from '../../contract/index.ts';
+import type { ScheduleClock } from '../../types/validation.ts';
 import {
   createAnsiStripStream,
   createBatchedChunkSink,
