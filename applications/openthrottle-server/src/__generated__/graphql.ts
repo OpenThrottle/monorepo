@@ -1429,7 +1429,7 @@ export type CreateRolloutFlagInput = {
 };
 
 export type CreateScheduledAgentJobAsAgentInputType = {
-  /** Shell command patterns the run may execute without a permission prompt, in Claude Code Bash(<pattern>) syntax without the wrapper (e.g. "pnpm run social:x-post *"). At most 20, each 1-200 characters with no newline or parentheses. Needs a driver with a command allowlist (claude or grok). An agent-created job with a non-empty list waits for human approval. Omit for none. */
+  /** Shell commands the headless run may execute unprompted, as Bash(<pattern>) patterns without the wrapper (e.g. "pnpm run x *"). At most 20; claude and grok only. A non-empty list needs human approval. */
   allowedCommands?: InputMaybe<Array<Scalars['String']['input']>>;
   /** 5- or 6-field cron pattern (may not fire every minute or sub-minute). Required when scheduleKind is cron (the default); ignored otherwise. */
   cronPattern?: InputMaybe<Scalars['String']['input']>;
@@ -1464,7 +1464,7 @@ export type CreateScheduledAgentJobAsAgentInputType = {
 };
 
 export type CreateScheduledAgentJobInputType = {
-  /** Shell command patterns the run may execute without a permission prompt, in Claude Code Bash(<pattern>) syntax without the wrapper (e.g. "pnpm run social:x-post *"). At most 20, each 1-200 characters with no newline or parentheses. Needs a driver with a command allowlist (claude or grok). An agent-created job with a non-empty list waits for human approval. Omit for none. */
+  /** Shell commands the headless run may execute unprompted, as Bash(<pattern>) patterns without the wrapper (e.g. "pnpm run x *"). At most 20; claude and grok only. A non-empty list needs human approval. */
   allowedCommands?: InputMaybe<Array<Scalars['String']['input']>>;
   /** 5- or 6-field cron pattern (may not fire every minute or sub-minute). Required when scheduleKind is cron (the default); ignored otherwise. */
   cronPattern?: InputMaybe<Scalars['String']['input']>;
@@ -8540,7 +8540,7 @@ export type UpdateRolloutFlagInput = {
 };
 
 export type UpdateScheduledAgentJobAsAgentInputType = {
-  /** Shell command patterns the run may execute without a permission prompt, in Claude Code Bash(<pattern>) syntax without the wrapper (e.g. "pnpm run social:x-post *"). At most 20, each 1-200 characters with no newline or parentheses. Needs a driver with a command allowlist (claude or grok). An agent-created job with a non-empty list waits for human approval. Replaces the whole list; [] clears it. Omit to keep it. */
+  /** Replaces the allowlist (see create); [] clears it. A non-empty list needs human approval. */
   allowedCommands?: InputMaybe<Array<Scalars['String']['input']>>;
   cronPattern?: InputMaybe<Scalars['String']['input']>;
   driverId?: InputMaybe<Scalars['String']['input']>;
@@ -8568,7 +8568,7 @@ export type UpdateScheduledAgentJobAsAgentInputType = {
 };
 
 export type UpdateScheduledAgentJobInputType = {
-  /** Shell command patterns the run may execute without a permission prompt, in Claude Code Bash(<pattern>) syntax without the wrapper (e.g. "pnpm run social:x-post *"). At most 20, each 1-200 characters with no newline or parentheses. Needs a driver with a command allowlist (claude or grok). An agent-created job with a non-empty list waits for human approval. Replaces the whole list; [] clears it. Omit to keep it. */
+  /** Replaces the allowlist (see create); [] clears it. A non-empty list needs human approval. */
   allowedCommands?: InputMaybe<Array<Scalars['String']['input']>>;
   cronPattern?: InputMaybe<Scalars['String']['input']>;
   /** @deprecated Use repositoryCheckoutId to target a registered repository checkout; cwd is only consulted when no checkout is set. */

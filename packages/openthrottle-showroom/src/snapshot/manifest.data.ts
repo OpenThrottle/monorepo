@@ -908,6 +908,10 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
   scheduled_agent_jobs: {
     classification: 'exported',
     columns: {
+      allowed_commands: {
+        action: 'drop',
+        reason: `shell command patterns (text[]): scrub and the secret detector only see strings, so drop rather than export it unchecked`,
+      },
       approval_state: { action: 'keep', reason: `structural enum (text)` },
       created_at: {
         action: 'keep',
