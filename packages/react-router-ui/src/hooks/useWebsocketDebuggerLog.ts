@@ -4,9 +4,9 @@ import type {
 } from '@openthrottle/openthrottle-notifications';
 import * as React from 'react';
 
-import { WEBSOCKET_DEBUGGER_ALL_EVENT_NAMES } from '../components/websocket-debugger/event-options';
-import type { WebsocketDebuggerLogEntry } from '../components/websocket-debugger/types';
-import { WEBSOCKET_DEBUGGER_LOG_CAP } from '../components/websocket-debugger/types';
+import { WEBSOCKET_DEBUGGER_LOG_CAP } from '../config/websocket-debugger';
+import { WEBSOCKET_DEBUGGER_ALL_EVENT_NAMES } from '../data/data.websocket-debugger-events';
+import type { WebsocketDebuggerLogEntry } from '../types';
 import { createWebsocketDebuggerLogEntryId } from '../utils/createWebsocketDebuggerLogEntryId';
 
 export interface UseWebsocketDebuggerLogOptions {

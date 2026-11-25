@@ -1,4 +1,5 @@
 import { createMock } from '@golevelup/ts-vitest';
+import type { ChatCompletionMessage } from '@openthrottle/agentic-conversation-backend';
 import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
 import {
   AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
@@ -27,10 +28,7 @@ import {
   createCustomPromptsRepositoryMock,
   createUserDisabledAgentClisRepositoryMock,
 } from '@openthrottle/nestjs-repositories-server/testing';
-import type {
-  ChatCompletionMessage,
-  DiscoveryResult,
-} from '@openthrottle/openthrottle-agentic-utils';
+import type { DiscoveryResult } from '@openthrottle/openthrottle-agentic-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CheckoutPathService } from '../../services/checkout-path/checkout-path.service.ts';
@@ -45,13 +43,16 @@ const { createCursorAgentSessionMock, resolveAcpPermissionMock } = vi.hoisted(
   }),
 );
 
-vi.mock('@openthrottle/openthrottle-agentic-utils', async (importOriginal) => ({
-  ...(await importOriginal<
-    typeof import('@openthrottle/openthrottle-agentic-utils')
-  >()),
-  createCursorAgentSession: createCursorAgentSessionMock,
-  resolveAcpPermission: resolveAcpPermissionMock,
-}));
+vi.mock(
+  '@openthrottle/agentic-conversation-backend',
+  async (importOriginal) => ({
+    ...(await importOriginal<
+      typeof import('@openthrottle/agentic-conversation-backend')
+    >()),
+    createCursorAgentSession: createCursorAgentSessionMock,
+    resolveAcpPermission: resolveAcpPermissionMock,
+  }),
+);
 
 const human: AuthPrincipal = { kind: AUTH_PRINCIPAL_KIND_USER, sub: 'user-1' };
 const serviceAccount: AuthPrincipal = {

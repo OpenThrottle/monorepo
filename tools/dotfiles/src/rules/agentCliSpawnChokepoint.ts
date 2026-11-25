@@ -32,7 +32,7 @@ interface RuleOptions {
 }
 
 const DEFAULT_ALLOWED_FILES: readonly string[] = [
-  'openthrottle-agentic-utils/src/utils/conversation-backend/',
+  'agentic-conversation-backend/src/',
   'openthrottle-drivers/src/',
 ];
 

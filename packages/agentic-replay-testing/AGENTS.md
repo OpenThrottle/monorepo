@@ -13,16 +13,16 @@ service and backend with no agentic-utils mock (ids seeded, `Date` frozen).
 
 - [src/types/transcript.ts](src/types/transcript.ts) — the schema: header, outbound argv/stdin,
   inbound stdout/stderr, exit.
-- [src/utils/transcript/](src/utils/transcript/) — `parseTranscript` (result type, never throws) and
+- [src/utils/transcript.ts](src/utils/transcript.ts) — `parseTranscript` (result type, never throws) and
   `serializeTranscript`.
-- [src/utils/sanitizer/](src/utils/sanitizer/) — `createSanitizer`, `findSanitizerLeaks`,
+- [src/utils/sanitizer.ts](src/utils/sanitizer.ts) — `createSanitizer`, `findSanitizerLeaks`,
   `placeholderUuid`.
-- [src/utils/record/](src/utils/record/) — `recordScenario` (drives the production backend) and
-  `runRecordingShim` (the `*_BIN` stand-in that runs the real CLI and captures it).
-- [src/utils/replay/](src/utils/replay/) — `runReplayBin` (the strict `*_BIN` stand-in),
+- [src/utils/record.ts](src/utils/record.ts) — `recordScenario` (drives the production backend) and
+  `runRecordingShim` (`runRecordingShim.ts`, the `*_BIN` stand-in that runs the real CLI and captures it).
+- `src/utils/replay-bin.ts`, `replay.ts`, `installReplayBin.ts`, `prepareReplay.ts`, `replayPaths.ts` — `runReplayBin` (the strict `*_BIN` stand-in),
   `installReplayBin`, `replayFixture` / `replayFixturePath`, and `replayPaths` (the path tokens
   recorder and replay must agree on).
-- [src/utils/scenario/](src/utils/scenario/) — `scenarioRun`: the ONE place a scenario turn becomes
+- [src/utils/scenarioRun.ts](src/utils/scenarioRun.ts) (+ `drive-turn.ts`) — `scenarioRun`: the ONE place a scenario turn becomes
   a `ConversationBackendRun`, shared by recorder and replay so their argv can only differ for real.
 - [src/config/config.backends.ts](src/config/config.backends.ts) — per-backend recording profiles:
   bin env, redact keys, host-only stdout lines to drop.
@@ -31,7 +31,7 @@ service and backend with no agentic-utils mock (ids seeded, `Date` frozen).
   production claude backend. [tests/replay-coverage.guard.test.ts](tests/replay-coverage.guard.test.ts)
   fails when a transcript is not named literally (`replayFixturePath('<backend>', '<stem>')`) by a
   test in this package.
-- [src/utils/drift/](src/utils/drift/) — `compareTranscripts` / `stdoutShape`, the structural
+- [src/utils/compareTranscripts.ts](src/utils/compareTranscripts.ts) — `compareTranscripts` / `stdoutShape`, the structural
   drift comparison behind [scripts/check-drift.ts](scripts/check-drift.ts) (the `check-drift`
   target, run weekly by `.agents/prompts/Job_ReplayDrift.md`).
 - [scripts/record.ts](scripts/record.ts) — the `record` target. [fixtures/](fixtures/) — committed

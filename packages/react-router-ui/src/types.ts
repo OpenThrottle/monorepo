@@ -1,3 +1,8 @@
+import type {
+  NotificationEventNamesValue,
+  NotificationPayload,
+} from '@openthrottle/openthrottle-notifications';
+
 /**
  * @public
  * @description Lifecycle of a microphone capture session started by `useAudioCapture`.
@@ -59,4 +64,48 @@ export type IdRefMatch = PlanIdRefMatch | TaskIdRefMatch;
 export interface IdRefResolverData {
   readonly matches: readonly IdRefMatch[];
   readonly ref: string;
+}
+
+/**
+ * @description Connection status for the debugger header chip (aligned with notifications socket).
+ */
+export type WebsocketDebuggerConnectionStatus =
+  'connected' | 'connecting' | 'disconnected' | 'error' | 'reconnecting';
+
+/**
+ * @description Multiselect option for filtering debugger events by Socket.IO event name.
+ */
+export interface WebsocketDebuggerEventOption {
+  readonly label: string;
+  readonly value: NotificationEventNamesValue;
+}
+
+/**
+ * @description Minimal Socket.IO client surface used for standalone debugger mode.
+ */
+export interface WebsocketDebuggerSocket {
+  off(event: string, handler: (payload: NotificationPayload) => void): void;
+  on(event: string, handler: (payload: NotificationPayload) => void): void;
+}
+
+/**
+ * @description Transport-agnostic fan-out of notification events: registers a
+ * listener and returns its unsubscribe function.
+ */
+export type WebsocketDebuggerEventSubscriber = (
+  listener: (
+    event: NotificationEventNamesValue,
+    payload: NotificationPayload,
+  ) => void,
+) => () => void;
+
+/**
+ * @description One Socket.IO notification captured for the live debugger feed.
+ */
+export interface WebsocketDebuggerLogEntry {
+  readonly event: NotificationEventNamesValue;
+  readonly id: string;
+  readonly payload: NotificationPayload;
+  /** ISO 8601 timestamp when the entry was recorded in the client. */
+  readonly receivedAt: string;
 }

@@ -10,6 +10,7 @@
   "dependencies": {
     "@graphql-codegen/cli": "catalog:",
     "@nestjs/cli": "catalog:",
+    "@openthrottle/agentic-conversation-backend": "workspace:^",
     "@openthrottle/agentic-evals": "workspace:^",
     "@openthrottle/agentic-hooks": "workspace:^",
     "@openthrottle/agentic-replay-testing": "workspace:^",

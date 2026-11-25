@@ -8,8 +8,8 @@
  * record that it is OT's is the injection ledger, which lives outside every target repo.
  *
  * The ledger format is vendored, not imported: the source of truth is
- * `packages/openthrottle-agentic-utils/src/utils/foreign-skill-injection/` (`ledger.ts` for the
- * directory, `types.ts` for the entry shape, `materialize.ts` for the fingerprint), but that
+ * `packages/openthrottle-agentic-utils/src/utils/foreign-skill-*.ts` (`foreign-skill-ledger.ts` for the
+ * directory, `types/foreign-skill-injection.ts` for the entry shape, `foreign-skill-materialize.ts` for the fingerprint), but that
  * package's barrel pulls in `openai`, the drivers package and postgres, and these hooks are
  * esbuild-bundled into committed `.cjs` files that must stay runtime-dependency-free — the same
  * reason `scope.ts` vendors the personal skills root. Change one, change both.

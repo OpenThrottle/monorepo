@@ -52,7 +52,7 @@ const capabilities: DriverCapabilities = {
   attachesWorkspaceMcp: false,
   /**
    * Wired to `antigravityConversationBackend` in `openthrottle-agentic-utils`
-   * (conversation-backend/antigravity) — prompt in argv as the `-p` value, NDJSON stream-json mapper
+   * (agentic-conversation-backend `antigravity.ts`) — prompt in argv as the `-p` value, NDJSON stream-json mapper
    * over the verified `init`/`step_update`/`result` events, and real id-based multi-turn resume via
    * `--conversation` (rather than a flattened history). A guard test keeps this in lockstep with
    * `CONVERSATION_CLI_BACKENDS`.

@@ -10,12 +10,12 @@
  * about what a failure is.
  */
 
-import type { CursorFailureKindsValue } from '@openthrottle/openthrottle-agentic-utils';
+import type { CursorFailureKindsValue } from '@openthrottle/agentic-conversation-backend';
 import {
   classifyCursorFailure,
   CURSOR_FAILURE_KINDS,
   stripAnsi,
-} from '@openthrottle/openthrottle-agentic-utils';
+} from '@openthrottle/agentic-conversation-backend';
 
 /**
  * One sentence naming what happened, then one naming what to do about it.

@@ -119,8 +119,8 @@ upgrade.
 
 ## Decision 4 — One converter, reusing the chat path's parsers
 
-The chat path already solved per-CLI parsing. `packages/openthrottle-agentic-utils/src/utils/
-conversation-backend/<cli>/events.ts` maps each CLI's structured output (claude `stream-json`,
+The chat path already solved per-CLI parsing. `packages/agentic-conversation-backend/src/utils/<cli>-events.ts`
+maps each CLI's structured output (claude `stream-json`,
 `codex exec --json`, cursor/antigravity `stream-json`, opencode and grok JSON) onto one
 `ConversationStreamChunk` stream: `text`, `thinking`, `tool_call`, `tool_result`, `usage`,
 `session`.
@@ -143,10 +143,10 @@ _As built (task 2, 2026-11-06):_
   capability. Text stays the default, so a caller that does not opt in can never receive NDJSON it
   cannot read.
 - **The wrapper.** `withStructuredOutput(driver)` in `agentic-utils`
-  (`src/utils/structured-output/`) switches the flag on and installs the matching `parseOutput` and
+  (`src/utils/structured-output-chunk-reader.ts`, `src/utils/withStructuredOutput.ts`) switches the flag on and installs the matching `parseOutput` and
   `renderOutputLine`, both built on the chat mappers.
 - **The converter.** `chunksToAtif` and the ATIF types live in `agentic-utils` as well
-  (`src/utils/trajectory/`, `src/types/atif.ts`), not in the eval package. Capturing a trajectory
+  (`src/utils/trajectory-*.ts`, `src/utils/chunksToAtif.ts`, `src/types/atif.ts`), not in the eval package. Capturing a trajectory
   is not eval-specific, and the server already depends on `agentic-utils`. The eval core
   (Decision 7) builds on it.
 

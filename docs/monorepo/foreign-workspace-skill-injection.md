@@ -1,6 +1,6 @@
 # Foreign-workspace skill injection
 
-**Related:** [agent-editor-folders.md](./agent-editor-folders.md), `skills/ot-skill-sync/scripts/` (the in-repo SSOT fan-out this extends), `packages/openthrottle-drivers/src/drivers/` (the supported CLI set §2 is measured against). Implementation: `packages/openthrottle-agentic-utils/src/utils/foreign-skill-injection/`.
+**Related:** [agent-editor-folders.md](./agent-editor-folders.md), `skills/ot-skill-sync/scripts/` (the in-repo SSOT fan-out this extends), `packages/openthrottle-drivers/src/drivers/` (the supported CLI set §2 is measured against). Implementation: `packages/openthrottle-agentic-utils/src/utils/foreign-skill-*.ts` and `src/types/foreign-skill-injection.ts`.
 
 **Trust gate:** a foreign checkout's own hooks and MCP servers load in a plan run only once the user trusts it; skills are unaffected. See [agent-config-trust.md](./agent-config-trust.md).
 
@@ -455,4 +455,4 @@ worktree before `destroy.sh`. That is safe only because of the shared-aware bloc
 path the same layer has ledgered in another checkout sharing the exclude file, and remove it only
 when none are left. A ledger whose folder is gone resolves no exclude file and is left out. Covered
 against a real linked worktree, in both teardown orders, by
-`packages/openthrottle-agentic-utils/src/utils/foreign-skill-injection/__tests__/linked-worktree.test.ts`.
+`packages/openthrottle-agentic-utils/src/utils/__tests__/foreign-skill-linked-worktree.test.ts`.

@@ -4,8 +4,8 @@
  * literal `replayFixturePath(...)` calls in the test files themselves.
  */
 
-import type { ConversationStreamChunk } from '@openthrottle/openthrottle-agentic-utils';
-import { CONVERSATION_STREAM_CHUNK_KINDS } from '@openthrottle/openthrottle-agentic-utils';
+import type { ConversationStreamChunk } from '@openthrottle/agentic-conversation-backend';
+import { CONVERSATION_STREAM_CHUNK_KINDS } from '@openthrottle/agentic-conversation-backend';
 import { expect } from 'vitest';
 
 import type { ReplayFixtureResult, ReplayProfile } from '../../src/index.ts';

@@ -6,20 +6,23 @@
 
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
+import type { AgentCliDiscoveryResult } from '@openthrottle/agentic-conversation-backend';
+import { discoverAgentClis } from '@openthrottle/agentic-conversation-backend';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import type { AgentCliDiscoveryResult } from '@openthrottle/openthrottle-agentic-utils';
-import { discoverAgentClis } from '@openthrottle/openthrottle-agentic-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AgentDiscoveryService } from './agent-discovery.service.ts';
 
-vi.mock('@openthrottle/openthrottle-agentic-utils', async (importOriginal) => {
-  const actual =
-    await importOriginal<
-      typeof import('@openthrottle/openthrottle-agentic-utils')
-    >();
-  return { ...actual, discoverAgentClis: vi.fn() };
-});
+vi.mock(
+  '@openthrottle/agentic-conversation-backend',
+  async (importOriginal) => {
+    const actual =
+      await importOriginal<
+        typeof import('@openthrottle/agentic-conversation-backend')
+      >();
+    return { ...actual, discoverAgentClis: vi.fn() };
+  },
+);
 
 const discoverAgentClisMock = vi.mocked(discoverAgentClis);
 

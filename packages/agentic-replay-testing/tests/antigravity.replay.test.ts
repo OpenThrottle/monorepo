@@ -4,7 +4,7 @@
  * conversation id; the resume turn gets it from turn 1.
  */
 
-import { CONVERSATION_STREAM_CHUNK_KINDS as KINDS } from '@openthrottle/openthrottle-agentic-utils';
+import { CONVERSATION_STREAM_CHUNK_KINDS as KINDS } from '@openthrottle/agentic-conversation-backend';
 import { describe, expect, it } from 'vitest';
 
 import {

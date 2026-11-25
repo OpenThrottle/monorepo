@@ -38,7 +38,7 @@ Facts that change the analysis:
    - **Model variance**: same version, shape-only, and gone or different on a second run. Drop it, but count it.
    - **Our drift**: argv or stdin changed and `pnpm nx run agentic-replay-testing:test` also fails. This is a repo change that forgot to re-record, not a CLI change.
    - **Environment**: recording failed for auth, quota or account reasons.
-3. For each CLI-drift finding, open the backend's parser (`packages/openthrottle-agentic-utils/src/utils/conversation-backend/<backend>/events.ts`) and say whether the new or removed shape is handled, ignored, or mis-mapped.
+3. For each CLI-drift finding, open the backend's parser (`packages/agentic-conversation-backend/src/utils/<backend>-events.ts`) and say whether the new or removed shape is handled, ignored, or mis-mapped.
 
 ## Ranking
 

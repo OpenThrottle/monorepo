@@ -8,7 +8,7 @@
  * `edit`/`bash: ask` into the temp config, which a headless run auto-rejects.
  */
 
-import { CONVERSATION_STREAM_CHUNK_KINDS as KINDS } from '@openthrottle/openthrottle-agentic-utils';
+import { CONVERSATION_STREAM_CHUNK_KINDS as KINDS } from '@openthrottle/agentic-conversation-backend';
 import { describe, expect, it } from 'vitest';
 
 import { OPENCODE_RECORDING_PROFILE, replayFixturePath } from '../src/index.ts';

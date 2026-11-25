@@ -6,6 +6,7 @@
  */
 
 import { createMock } from '@golevelup/ts-vitest';
+import type { AgentCliDiscoveryResult } from '@openthrottle/agentic-conversation-backend';
 import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
 import { AUTH_PRINCIPAL_KIND_USER } from '@openthrottle/nestjs-auth';
 import type {
@@ -20,7 +21,6 @@ import {
   createUserDisabledAgentClisRepositoryMock,
   createUserFavoriteAgentModelsRepositoryMock,
 } from '@openthrottle/nestjs-repositories-server/testing';
-import type { AgentCliDiscoveryResult } from '@openthrottle/openthrottle-agentic-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AgentDiscoveryResolver } from './agent-discovery.resolver.ts';

@@ -11,6 +11,7 @@
  */
 
 import { createMock } from '@golevelup/ts-vitest';
+import { CLAUDE_BIN_ENV } from '@openthrottle/agentic-conversation-backend';
 import type { PreparedReplay } from '@openthrottle/agentic-replay-testing';
 import {
   prepareReplay,
@@ -29,7 +30,6 @@ import {
   createAgentConversationsRepositoryMock,
   createAgentTokenUsageRepositoryMock,
 } from '@openthrottle/nestjs-repositories-server/testing';
-import { CLAUDE_BIN_ENV } from '@openthrottle/openthrottle-agentic-utils';
 import type { Mock } from 'vitest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 

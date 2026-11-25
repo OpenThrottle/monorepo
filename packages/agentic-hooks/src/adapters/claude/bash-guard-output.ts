@@ -1,6 +1,6 @@
 /**
  * Claude Code half of the bash guard (see `./bash-guard.ts`, the PreToolUse
- * entrypoint). Rules live in the neutral core (`data/bash-guard/`); this module
+ * entrypoint). Rules live in the neutral core (`utils/`); this module
  * only knows where Claude Code puts the command in a `Bash` PreToolUse payload
  * and how a verdict is rendered back. Kept apart from the entrypoint so it can
  * be tested without the entrypoint's `process.exit`.

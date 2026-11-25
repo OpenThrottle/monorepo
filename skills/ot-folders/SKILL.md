@@ -9,8 +9,8 @@ description: >-
   scaffolding: generate the file with ot-generators first.
 metadata:
   author: openthrottle
-  last-reviewed: '2026-11-22'
-  version: '2.4.0'
+  last-reviewed: '2026-11-25'
+  version: '2.5.0'
 ---
 
 # OpenThrottle Folders
@@ -46,6 +46,16 @@ which folder vocabulary applies and, via `technology:` tags, what may import it.
 | `nodejs`       | Server/client-agnostic code consumed by both API and client apps | `config` `data` `scripts` `utils` — no components, no hooks |
 | `react`        | Client code using React but **never** importing `react-router`   | `components` `config` `data` `hooks` `utils`                |
 | `react-router` | Client code coupled to the React Router framework                | `components` `config` `data` `hooks` `utils` (+ `actions`)  |
+
+**Below the top level, stay flat.** In the `nodejs`, `react` and `react-router`
+buckets a vocabulary folder holds files, not feature folders: `src/utils/<feature>/`,
+`src/data/<feature>/` and `src/config/<feature>/` are off-vocabulary. Flatten the feature
+into bucket modules named for its subject (`utils/replay.ts`, `utils/shell-words.ts`). Two
+exceptions: the tooling folders `__tests__`/`__generated__`, and **one PascalCase folder per
+compound component** directly under `components/` (`components/Card/` holding `Card.tsx`,
+`CardHeader.tsx`, … and its `__tests__/`). A feature too big to flatten is not a folder, it is
+a package: promote it with `ot-generators`. `data/` holds only `data.<name>.ts` and
+`mock.<name>.ts`; logic found there moves to `utils/`.
 
 **The bucket rule:** the moment a file imports from `react-router`, it belongs to the
 `react-router` bucket — never the `react` one. React-only packages must not reach for
@@ -102,7 +112,9 @@ is a package, and that is the whole test.
 
 1. **Do not invent new folders.** Use the vocabulary above. If nothing fits, the
    code probably belongs in a different bucket, not a new directory.
-   _Enforced_ for packages' top-level `src/` folders by `check-folder-vocabulary`.
+   That holds one level down too: see "Below the top level, stay flat" above.
+   _Enforced_ for packages' `src/` folders (top level and the level below) by
+   `check-folder-vocabulary`.
 2. **Bucket utils by theme**, per AGENTS.md § Code style ("prefer a bucket module").
 3. **Do not delete empty folders or their `.gitkeep`.** They are placeholders for
    functionality that is coming, and removing them makes the next generator run

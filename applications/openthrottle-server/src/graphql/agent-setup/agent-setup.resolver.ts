@@ -25,6 +25,7 @@ import {
   Resolver,
   Subscription,
 } from '@nestjs/graphql';
+import type { AgentSetupMode } from '@openthrottle/agentic-conversation-backend';
 import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
 import {
   AUTH_PRINCIPAL_KIND_SERVICE_ACCOUNT,
@@ -37,7 +38,6 @@ import {
   UserDisabledAgentClisRepository,
   UserFavoriteAgentModelsRepository,
 } from '@openthrottle/nestjs-repositories-server';
-import type { AgentSetupMode } from '@openthrottle/openthrottle-agentic-utils';
 import { isDriverId } from '@openthrottle/openthrottle-drivers';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';

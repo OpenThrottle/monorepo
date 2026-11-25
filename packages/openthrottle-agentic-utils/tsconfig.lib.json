@@ -24,6 +24,9 @@
       "path": "../nodejs-utils/tsconfig.lib.json"
     },
     {
+      "path": "../agentic-conversation-backend/tsconfig.lib.json"
+    },
+    {
       "path": "../../tools/dotfiles/tsconfig.lib.json"
     }
   ]

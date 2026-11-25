@@ -23,10 +23,10 @@
  */
 import type { OnApplicationBootstrap } from '@nestjs/common';
 import { Injectable } from '@nestjs/common';
+import type { AgentCliDiscoveryResult } from '@openthrottle/agentic-conversation-backend';
+import { discoverAgentClis } from '@openthrottle/agentic-conversation-backend';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { toErrorMessage } from '@openthrottle/nodejs-utils';
-import type { AgentCliDiscoveryResult } from '@openthrottle/openthrottle-agentic-utils';
-import { discoverAgentClis } from '@openthrottle/openthrottle-agentic-utils';
 import { StaleWhileRevalidateCache } from '@openthrottle/openthrottle-agentic-utils';
 
 const DEFAULT_CACHE_TTL_MS = 60_000;

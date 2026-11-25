@@ -26,7 +26,7 @@ import {
   isTagCountList,
   isTasksMetrics,
   isWorkSessionsMetrics,
-} from './metrics/type-guards.ts';
+} from './metrics-guards.ts';
 
 /**
  * @description Renders a {@link ReportEnvelope} into the human-readable `report.md` companion to

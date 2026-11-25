@@ -8,6 +8,7 @@
 
 import { ForbiddenException, UseGuards } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import type { IdentifiedAgentAccount } from '@openthrottle/agentic-conversation-backend';
 import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
 import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
@@ -20,7 +21,6 @@ import {
   AgentAccountsRepository,
   AgentTokenUsageRepository,
 } from '@openthrottle/nestjs-repositories-server';
-import type { IdentifiedAgentAccount } from '@openthrottle/openthrottle-agentic-utils';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
 import { AgentAccountStampingService } from '../../services/agent-account-stamping/agent-account-stamping.service.ts';

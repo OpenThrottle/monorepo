@@ -1,12 +1,12 @@
 import { Badge } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import type { WebsocketDebuggerLogEntry } from './websocket-debugger';
+import { WEBSOCKET_DEBUGGER_EVENT_OPTIONS } from '../data/data.websocket-debugger-events';
+import type { WebsocketDebuggerLogEntry } from '../types';
 import {
   formatWebsocketDebuggerPayload,
   formatWebsocketDebuggerReceivedAt,
-  WEBSOCKET_DEBUGGER_EVENT_OPTIONS,
-} from './websocket-debugger';
+} from '../utils/websocket-debugger';
 
 export interface WebsocketDebuggerLogRowProps {
   readonly entry: WebsocketDebuggerLogEntry;

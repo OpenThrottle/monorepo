@@ -1,11 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { LoggerService } from '@openthrottle/nestjs-modules';
-import { AgentAccountsRepository } from '@openthrottle/nestjs-repositories-server';
-import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import type {
   AgentAccountIdentity,
   AgentAccountResolver,
-} from '@openthrottle/openthrottle-agentic-utils';
+} from '@openthrottle/agentic-conversation-backend';
+import { LoggerService } from '@openthrottle/nestjs-modules';
+import { AgentAccountsRepository } from '@openthrottle/nestjs-repositories-server';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 
 import { AGENT_ACCOUNT_RESOLVER } from './agent-account-stamping.constants.ts';
 

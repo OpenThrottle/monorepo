@@ -1,10 +1,10 @@
 import { createMock } from '@golevelup/ts-vitest';
 import { Test } from '@nestjs/testing';
+import type { AgentAccountIdentity } from '@openthrottle/agentic-conversation-backend';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { AgentAccountsRepository } from '@openthrottle/nestjs-repositories-server';
 import type { AgentAccountsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
 import { createAgentAccountsRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
-import type { AgentAccountIdentity } from '@openthrottle/openthrottle-agentic-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AGENT_ACCOUNT_RESOLVER } from './agent-account-stamping.constants.ts';

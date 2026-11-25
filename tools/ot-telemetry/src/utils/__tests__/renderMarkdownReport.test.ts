@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { DETAIL_LEVELS } from '../../config/index.ts';
 import type { ReportEnvelope } from '../../types/index.ts';
-import type { PlansMetrics } from '../metrics/plans.ts';
+import type { PlansMetrics } from '../metrics-plans.ts';
 import { renderMarkdownReport } from '../renderMarkdownReport.ts';
 
 const BASE_WINDOW = {

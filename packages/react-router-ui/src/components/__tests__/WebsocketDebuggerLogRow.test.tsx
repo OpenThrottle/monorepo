@@ -4,7 +4,7 @@ import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
-import type { WebsocketDebuggerLogEntry } from '../websocket-debugger';
+import type { WebsocketDebuggerLogEntry } from '../../types';
 import { WebsocketDebuggerLogRow } from '../WebsocketDebuggerLogRow';
 
 const planUpdatedPayload = {

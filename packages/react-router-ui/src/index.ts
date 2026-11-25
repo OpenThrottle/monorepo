@@ -28,16 +28,17 @@ export * from './components/OpenThrottleTabs';
 export * from './components/OpenThrottleTabsNav';
 export * from './components/OpenThrottleThemeToggle';
 export * from './components/OpenThrottleWebsocketDebugger';
-export * from './components/websocket-debugger';
 
 // 📦 Data
 export * from './data/data.artwork';
 export * from './data/data.features';
 export * from './data/data.introductions';
 export * from './data/data.taglines';
+export * from './data/data.websocket-debugger-events';
 export * from './utils/getRandomIntroduction';
 
 // 🏷️ Types
+export * from './config/websocket-debugger';
 export type {
   AudioCaptureStatus,
   IdRefMatch,
@@ -45,7 +46,14 @@ export type {
   IdRefResolverData,
   PlanIdRefMatch,
   TaskIdRefMatch,
+  WebsocketDebuggerConnectionStatus,
+  WebsocketDebuggerEventOption,
+  WebsocketDebuggerEventSubscriber,
+  WebsocketDebuggerLogEntry,
+  WebsocketDebuggerSocket,
 } from './types';
+export * from './utils/filterWebsocketDebuggerEntries';
+export * from './utils/websocket-debugger';
 
 // 🪝 React Hooks
 export * from './hooks/fetchServerMetrics';
@@ -56,3 +64,5 @@ export * from './hooks/useIdRefResolver';
 export * from './hooks/usePollServerMetrics';
 export * from './hooks/useShare';
 export * from './hooks/useUrlSyncedTabValue';
+export * from './hooks/useWebsocketDebuggerLog';
+export * from './hooks/useWebsocketDebuggerSocketSubscription';

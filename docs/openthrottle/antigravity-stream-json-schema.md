@@ -305,7 +305,7 @@ something was denied.
 
 `.env.default` sets `OPENTHROTTLE_CHAT_ACP_BACKENDS="all"`, so antigravity chat runs over `agy acp`
 and the stream-json mapper above never sees it. The ACP mapper
-(`conversation-backend/acp/events.ts`) does. agy 1.5.9 on 2026-11-15, running the 4-call parallel
+(`acp-events.ts` in `@openthrottle/agentic-conversation-backend`) does. agy 1.5.9 on 2026-11-15, running the 4-call parallel
 probe (pwd, read `package.json`, an MCP call, a read of a missing file):
 
 - **Tool steps are standard `tool_call` / `tool_call_update` updates**, plus agy-only `name` (the

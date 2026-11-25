@@ -66,7 +66,7 @@ ruleTester.run('agent-cli-spawn-chokepoint', agentCliSpawnChokepoint, {
     },
     {
       code: "import { spawn } from 'node:child_process';\nspawn('claude', []);",
-      filename: `/repo/packages/openthrottle-agentic-utils/src/utils/conversation-backend/claude/claude.ts`,
+      filename: `/repo/packages/agentic-conversation-backend/src/utils/claude.ts`,
     },
     {
       // Non-agent binaries are out of scope.

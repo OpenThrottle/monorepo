@@ -110,6 +110,9 @@
       "path": "../../packages/agentic-evals/tsconfig.lib.json"
     },
     {
+      "path": "../../packages/agentic-conversation-backend/tsconfig.lib.json"
+    },
+    {
       "path": "../../packages/nestjs-testing/tsconfig.lib.json"
     },
     {

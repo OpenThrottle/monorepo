@@ -4,7 +4,7 @@
  * is replayed after turn 1, which supplies it.
  */
 
-import { CONVERSATION_STREAM_CHUNK_KINDS as KINDS } from '@openthrottle/openthrottle-agentic-utils';
+import { CONVERSATION_STREAM_CHUNK_KINDS as KINDS } from '@openthrottle/agentic-conversation-backend';
 import { describe, expect, it } from 'vitest';
 
 import { CODEX_RECORDING_PROFILE, replayFixturePath } from '../src/index.ts';

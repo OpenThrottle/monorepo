@@ -1,7 +1,7 @@
 # codex stream-json schema
 
 The headless event stream the `codex` chat backend
-(`packages/openthrottle-agentic-utils/src/utils/conversation-backend/codex/`) and the `codex` plan-run
+(`packages/agentic-conversation-backend/src/utils/codex*.ts`) and the `codex` plan-run
 driver (`packages/openthrottle-drivers/src/drivers/codex.ts`) are built against. codex calls it
 `--json` (JSONL "thread events"), not `stream-json`.
 

@@ -2,7 +2,7 @@
  * Claude Code bash guard (PreToolUse hook, matcher `Bash`).
  *
  * Evaluates every shell command against the neutral bash-guard rule registry
- * (`data/bash-guard/`) before it runs: one hook, many rules. A deny prints the
+ * (`utils/`) before it runs: one hook, many rules. A deny prints the
  * PreToolUse `permissionDecision: "deny"` JSON on stdout; a warn prints
  * `additionalContext`; an allow prints nothing. The payload handling and
  * rendering live in `./bash-guard-output.ts`.

@@ -3,7 +3,7 @@ import { NOTIFICATION_EVENT_NAMES } from '@openthrottle/openthrottle-notificatio
 import { act, renderHook } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 
-import type { WebsocketDebuggerLogEntry } from '../../components/websocket-debugger/types';
+import type { WebsocketDebuggerLogEntry } from '../../types';
 import { filterWebsocketDebuggerEntries } from '../../utils/filterWebsocketDebuggerEntries';
 import { useWebsocketDebuggerLog } from '../useWebsocketDebuggerLog';
 

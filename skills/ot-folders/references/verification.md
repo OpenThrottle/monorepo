@@ -24,8 +24,11 @@ pnpm nx run monorepo:check-folder-vocabulary
 ```
 
 `check-folder-vocabulary` fails on any tracked path under a rule-4 junk-drawer
-folder, and on a top-level `src/` folder outside its project's bucket vocabulary
-(rule 1), naming the replacement; `check:local` and the CI `gates` job run it too.
+folder, on a top-level `src/` folder outside its project's bucket vocabulary
+(rule 1), and on a feature folder one level below a vocabulary folder ("Below the
+top level, stay flat": only `__tests__`, `__generated__` and PascalCase
+compound-component folders under `components/` may sit there), naming the
+replacement; `check:local` and the CI `gates` job run it too.
 `pnpm run check:local:audit` runs every `audit:*:strict` except test-coverage (the
 same glob as CI's `audit:strict`), and `check:local` runs it. Note what `--strict` actually gates:
 the component audit exits non-zero on **R4/R5/R6** (hoist violations,

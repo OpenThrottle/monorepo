@@ -1,7 +1,7 @@
 # cursor-agent stream-json schema
 
 The headless event stream the `cursor-agent` chat backend
-(`packages/openthrottle-agentic-utils/src/utils/conversation-backend/cursor-agent/`) and the `cursor`
+(`packages/agentic-conversation-backend/src/utils/cursor-agent*.ts`) and the `cursor`
 plan-run driver (`packages/openthrottle-drivers/src/drivers/cursor.ts`) are built against.
 
 > **Provenance.** Event shapes are from a **recorded** plan-run capture on cursor-agent

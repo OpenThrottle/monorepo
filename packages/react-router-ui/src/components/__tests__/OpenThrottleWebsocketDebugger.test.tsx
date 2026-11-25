@@ -9,9 +9,9 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test } from 'vitest';
 
+import type { WebsocketDebuggerLogEntry } from '../../types';
 import type { OpenThrottleWebsocketDebuggerProps } from '../OpenThrottleWebsocketDebugger';
 import { OpenThrottleWebsocketDebugger } from '../OpenThrottleWebsocketDebugger';
-import type { WebsocketDebuggerLogEntry } from '../websocket-debugger';
 
 const systemAlertPayload = {
   message: 'Test alert',

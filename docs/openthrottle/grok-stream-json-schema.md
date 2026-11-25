@@ -1,13 +1,13 @@
 # grok streaming-json schema
 
 The headless event stream the `grok` chat backend
-(`packages/openthrottle-agentic-utils/src/utils/conversation-backend/grok/`) and the `grok` plan-run
+(`packages/agentic-conversation-backend/src/utils/grok*.ts`) and the `grok` plan-run
 driver (`packages/openthrottle-drivers/src/drivers/grok.ts`) are built against. grok calls the format
 `streaming-json` (JSONL).
 
 > **Provenance, stated honestly.** Three sources, and they do not cover the same ground.
 >
-> - **Live grok 1.x captures** (`conversation-backend/grok/__tests__/grok-1-tool-calls.fixture.ts`):
+> - **Live grok 1.x captures** (`packages/agentic-conversation-backend/src/utils/__tests__/grok-1-tool-calls.fixture.ts`):
 >   grok **1.0.77**, model grok-4.7, the chat argv with no `--permission-mode`, captured 2026-11-14.
 >   One turn runs three parallel tool calls (two complete, one fails); the other hits a call that needs
 >   approval and ends `cancelled`. These are the source for every tool, `usage`, `available_commands`

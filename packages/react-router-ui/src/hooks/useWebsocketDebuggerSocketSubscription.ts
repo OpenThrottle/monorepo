@@ -4,11 +4,11 @@ import type {
 } from '@openthrottle/openthrottle-notifications';
 import * as React from 'react';
 
-import { WEBSOCKET_DEBUGGER_ALL_EVENT_NAMES } from '../components/websocket-debugger/event-options';
+import { WEBSOCKET_DEBUGGER_ALL_EVENT_NAMES } from '../data/data.websocket-debugger-events';
 import type {
   WebsocketDebuggerEventSubscriber,
   WebsocketDebuggerSocket,
-} from '../components/websocket-debugger/types';
+} from '../types';
 
 export interface UseWebsocketDebuggerSocketSubscriptionOptions {
   readonly append: (

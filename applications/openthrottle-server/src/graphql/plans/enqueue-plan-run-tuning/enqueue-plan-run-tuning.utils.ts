@@ -3,19 +3,21 @@
  * and builds the `RunPlanOrchestratorJobData` payload for the plans queue.
  */
 
+import type { ConversationReasoningEffort } from '@openthrottle/agentic-conversation-backend';
+import {
+  CONVERSATION_REASONING_EFFORTS,
+  toConversationReasoningEffort,
+} from '@openthrottle/agentic-conversation-backend';
 import type {
-  ConversationReasoningEffort,
   JobRunHookEntry,
   PlanRunTuningSettings,
   WorkflowConfigDebug,
   WorkflowConfigRunner,
 } from '@openthrottle/openthrottle-agentic-utils';
 import {
-  CONVERSATION_REASONING_EFFORTS,
   getWorkspacePathMapping,
   parseWorkflowRunnerId,
   toContainerPath,
-  toConversationReasoningEffort,
 } from '@openthrottle/openthrottle-agentic-utils';
 import type {
   PlanJobRunHooksStorage,

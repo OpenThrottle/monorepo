@@ -39,7 +39,7 @@ const SKILL_LINK_DIR = path.join('.agents', 'skills');
 /**
  * Where a person's skills live. Vendored deliberately: the source of truth is
  * `resolvePersonalSkillsRoot` in
- * `packages/openthrottle-agentic-utils/src/utils/foreign-skill-injection/personal-skills-config.ts`,
+ * `packages/openthrottle-agentic-utils/src/utils/foreign-skill-personal-config.ts`,
  * but that package's only export is a barrel pulling in `openai`, the drivers package and
  * postgres — and these hooks are esbuild-bundled into committed `.cjs` files that must stay
  * runtime-dependency-free. A third implementation of the same six lines already exists in bash
