@@ -84,4 +84,63 @@ describe('TaskDetails Component', () => {
     // Status lives in the always-visible route header; the rail still shows Plan.
     expect(scoped.getByText('Plan')).toBeInTheDocument();
   });
+
+  describe('requirements', () => {
+    const renderScoped = (
+      overrides: Partial<PlanTaskRowFragment>,
+    ): ReturnType<typeof within> => {
+      const task: PlanTaskRowFragment = { ...mockTask, ...overrides };
+      const rendered = renderTaskDetails({ planId: 'plan-1', task });
+      // Scope to this render — the beforeEach also mounts a TaskDetails in body.
+      return within(rendered.container);
+    };
+
+    test('lists each requirement under a Requirements heading', () => {
+      const scoped = renderScoped({
+        requirementsJson: '["First requirement","Second requirement"]',
+      });
+      const section = scoped.getByRole('region', {
+        name: TASK_DETAIL_COPY.requirementsHeading,
+      });
+      const items = within(section).getAllByRole('listitem');
+
+      expect(items).toHaveLength(2);
+      expect(items[0]).toHaveTextContent('First requirement');
+      expect(items[1]).toHaveTextContent('Second requirement');
+    });
+
+    test('renders no requirements section when the list is empty', () => {
+      const scoped = renderScoped({ requirementsJson: '[]' });
+
+      expect(
+        scoped.queryByRole('heading', {
+          name: TASK_DETAIL_COPY.requirementsHeading,
+        }),
+      ).not.toBeInTheDocument();
+    });
+
+    test('renders no requirements section and does not throw on malformed JSON', () => {
+      const scoped = renderScoped({ requirementsJson: '{not json' });
+
+      expect(scoped.getByTestId('TaskDetails')).toBeInTheDocument();
+      expect(
+        scoped.queryByRole('heading', {
+          name: TASK_DETAIL_COPY.requirementsHeading,
+        }),
+      ).not.toBeInTheDocument();
+    });
+
+    test('a requirements-only task does not show the empty-body copy', () => {
+      const scoped = renderScoped({
+        description: null,
+        requirementsJson: '["Only requirement"]',
+        summary: null,
+      });
+
+      expect(scoped.getAllByRole('listitem')).toHaveLength(1);
+      expect(
+        scoped.queryByText(TASK_DETAIL_COPY.noDescription),
+      ).not.toBeInTheDocument();
+    });
+  });
 });
