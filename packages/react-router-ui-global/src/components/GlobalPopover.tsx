@@ -29,7 +29,7 @@ export interface GlobalPopoverConfirm {
  * @public
  * Discriminated row-action union for {@link GlobalPopover}. Mirrors what
  * `RepositoryRowActions` and the queues column already do: Form submit (optional
- * confirm), Link navigation, and client `onSelect`.
+ * confirm), Link navigation, an external link in a new tab, and client `onSelect`.
  */
 export type GlobalPopoverAction =
   | {
@@ -58,6 +58,16 @@ export type GlobalPopoverAction =
       readonly navigate?: boolean;
       readonly pending?: boolean;
       readonly pendingLabel?: string;
+      readonly separatorBefore?: boolean;
+    }
+  | {
+      readonly disabled?: boolean;
+      /** An absolute URL outside the app; opens in a new tab. */
+      readonly href: string;
+      readonly icon?: React.ReactNode;
+      readonly id: string;
+      readonly kind: 'external';
+      readonly label: string;
       readonly separatorBefore?: boolean;
     }
   | {

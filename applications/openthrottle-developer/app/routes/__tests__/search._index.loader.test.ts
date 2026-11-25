@@ -3,6 +3,7 @@ import { createTestRouterContext } from '@openthrottle/react-router-testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/search._index';
+import { GetSearchCorpusDocument } from '~/__generated__/graphql';
 import { searchChunkFixture } from '~/testing/search-route-fixtures';
 
 vi.mock('@openthrottle/react-router-graphql', () => ({
@@ -29,7 +30,13 @@ function buildArgs(search: string): Route.LoaderArgs {
 
 function searchResult(total: number): unknown {
   return {
-    search: { chunks: [searchChunkFixture], total },
+    search: {
+      chunks: [searchChunkFixture],
+      mode: 'hybrid',
+      reason: null,
+      sourceCounts: { documentation: 0, plan: total, task: 0 },
+      total,
+    },
   };
 }
 
@@ -38,10 +45,17 @@ describe('routes/search._index loader', () => {
     mockExecute.mockReset();
   });
 
-  test('skips the API for an empty query', async () => {
+  test('asks only for corpus coverage on an empty query', async () => {
+    mockExecute.mockResolvedValue({ serverHealth: { embeddings: null } });
+
     const data = await loader(buildArgs('?q=%20'));
 
-    expect(mockExecute).not.toHaveBeenCalled();
+    expect(mockExecute).toHaveBeenCalledTimes(1);
+    expect(mockExecute).toHaveBeenCalledWith(
+      expect.any(Request),
+      GetSearchCorpusDocument,
+      {},
+    );
     expect(data.total).toBe(0);
   });
 
@@ -56,7 +70,11 @@ describe('routes/search._index loader', () => {
       { input: { limit: 20, offset: 40, query: 'cms' } },
     );
     expect(data.total).toBe(45);
-    expect(data.results.chunks).toHaveLength(1);
+    expect(data.scope).toBe('knowledge');
+
+    if (data.scope === 'knowledge') {
+      expect(data.results.chunks).toHaveLength(1);
+    }
   });
 
   test('redirects a page past the end to the last page, keeping q, limit and details', async () => {

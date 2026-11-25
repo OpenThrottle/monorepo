@@ -10,3 +10,12 @@ export const SEARCH_LIMIT_OPTIONS = [10, 20, 50] as const;
 
 /** Base path for the search route (used by URL utils). */
 export const SEARCH_BASE_PATH = '/search';
+
+/** Which corpus /search queries: OpenThrottle's knowledge (plans, tasks, docs) or a repository's code. */
+export const SEARCH_SCOPE = {
+  code: 'code',
+  knowledge: 'knowledge',
+} as const;
+
+export type SearchScopeKey = keyof typeof SEARCH_SCOPE;
+export type SearchScopeValue = (typeof SEARCH_SCOPE)[SearchScopeKey];

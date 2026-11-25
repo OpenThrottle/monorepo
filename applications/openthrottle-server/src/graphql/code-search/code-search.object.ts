@@ -38,9 +38,14 @@ export class CodeSemanticSearchResult {
   available!: boolean;
 
   @Field(() => [CodeSearchMatch], {
-    description: `Ranked code matches by similarity (empty when unavailable or no hits).`,
+    description: `Ranked code matches by similarity (empty when unavailable or no hits): the page selected by \`offset\` and \`limit\`.`,
   })
   matches!: CodeSearchMatch[];
+
+  @Field(() => Int, {
+    description: `How many ranked candidates the query matched, capped at 50. Page through them with \`offset\` and \`limit\`.`,
+  })
+  total!: number;
 }
 
 @ObjectType()

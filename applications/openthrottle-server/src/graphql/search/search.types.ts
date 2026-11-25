@@ -62,3 +62,10 @@ export interface SearchHybridResult<TChunk> {
   readonly mode: SearchMode;
   readonly reason: LexicalFallbackReason | null;
 }
+
+/** @description Ranked results per source, as `SearchResult.sourceCounts` reports them. */
+export interface SearchSourceCountsValue {
+  readonly documentation: number;
+  readonly plan: number;
+  readonly task: number;
+}

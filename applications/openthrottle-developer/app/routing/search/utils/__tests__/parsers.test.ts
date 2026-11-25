@@ -5,7 +5,7 @@ import {
   SEARCH_BASE_PATH,
 } from '~/routing/search/config';
 
-import { buildSearchUrl, parseSearchParams } from '../parsers';
+import { buildSearchUrl, parseSearchParams, withStatsParam } from '../parsers';
 
 describe('parseSearchParams', () => {
   test('should set expandRankingDetails when details=ranking', () => {
@@ -25,6 +25,8 @@ describe('parseSearchParams', () => {
       limit: DEFAULT_SEARCH_LIMIT,
       page: 1,
       q: '',
+      repositoryId: null,
+      scope: 'knowledge',
     });
   });
 
@@ -69,5 +71,69 @@ describe('buildSearchUrl', () => {
 
   test('should include page when greater than 1', () => {
     expect(buildSearchUrl('a', 3, 10)).toContain('page=3');
+  });
+});
+
+describe('scope', () => {
+  describe('parseSearchParams', () => {
+    test('defaults to knowledge with no repository', () => {
+      const parsed = parseSearchParams(new URLSearchParams('q=x'));
+
+      expect(parsed.scope).toBe('knowledge');
+      expect(parsed.repositoryId).toBeNull();
+    });
+
+    test('reads scope=code and its repository', () => {
+      const parsed = parseSearchParams(
+        new URLSearchParams('scope=code&repositoryId=repo-1'),
+      );
+
+      expect(parsed.scope).toBe('code');
+      expect(parsed.repositoryId).toBe('repo-1');
+    });
+
+    test('treats an unknown scope as knowledge', () => {
+      expect(
+        parseSearchParams(new URLSearchParams('scope=everything')).scope,
+      ).toBe('knowledge');
+    });
+  });
+
+  describe('buildSearchUrl', () => {
+    test('carries scope=code and the repository', () => {
+      const url = buildSearchUrl('x', 1, undefined, {
+        repositoryId: 'repo-1',
+        scope: 'code',
+      });
+
+      expect(url).toContain('scope=code');
+      expect(url).toContain('repositoryId=repo-1');
+    });
+
+    test('leaves the default knowledge scope and its repository out', () => {
+      const url = buildSearchUrl('x', 1, undefined, {
+        repositoryId: 'repo-1',
+        scope: 'knowledge',
+      });
+
+      expect(url).toBe(`${SEARCH_BASE_PATH}?q=x`);
+    });
+  });
+});
+
+describe('withStatsParam', () => {
+  test('carries an open stats panel', () => {
+    expect(
+      withStatsParam('/search?q=x', new URLSearchParams('stats=open&page=2')),
+    ).toBe('/search?q=x&stats=open');
+    expect(withStatsParam('/search', new URLSearchParams('stats=open'))).toBe(
+      '/search?stats=open',
+    );
+  });
+
+  test('leaves the URL alone without one', () => {
+    expect(withStatsParam('/search?q=x', new URLSearchParams())).toBe(
+      '/search?q=x',
+    );
   });
 });

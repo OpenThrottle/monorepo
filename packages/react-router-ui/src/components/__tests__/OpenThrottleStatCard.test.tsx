@@ -39,4 +39,32 @@ describe('OpenThrottleStatCard Component', () => {
     expect(component.getByText('/')).toBeInTheDocument();
     expect(component.getByText('Heap (MB)')).toBeInTheDocument();
   });
+
+  test('should render a string value as is, with its detail line', () => {
+    props = {
+      detail: 'Embedder unconfigured',
+      title: 'Ranking',
+      value: 'Lexical',
+    };
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
+    const Component = () => {
+      return <OpenThrottleStatCard {...props} />;
+    };
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    component = render(<RoutesStub />);
+    expect(component.getByText('Lexical')).toBeInTheDocument();
+    expect(
+      component.getByTestId('OpenThrottleStatCard-detail'),
+    ).toHaveTextContent('Embedder unconfigured');
+  });
+
+  test('should render no detail line without a detail', () => {
+    // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
+    const Component = () => {
+      return <OpenThrottleStatCard {...props} />;
+    };
+    const RoutesStub = createRoutesStub([{ Component, path: '/' }]);
+    component = render(<RoutesStub />);
+    expect(component.queryByTestId('OpenThrottleStatCard-detail')).toBeNull();
+  });
 });
