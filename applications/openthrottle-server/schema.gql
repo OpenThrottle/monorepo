@@ -1123,8 +1123,26 @@ type LastActivityResultObject {
   taskUpdate: LastActivityTaskUpdatePartObject
 }
 
+type AgentConversationGroupObject {
+  createdAt: DateTime!
+  id: String!
+
+  """Display name; trimmed, 1 to 80 characters"""
+  name: String!
+
+  """Position among the caller's groups, ascending"""
+  sortOrder: Int!
+  updatedAt: DateTime!
+  userId: String!
+}
+
 type AgentConversationObject {
   createdAt: DateTime!
+
+  """
+  The user-defined conversation group this chat sits in, or null when ungrouped
+  """
+  groupId: String
   id: String!
 
   """JSON string of optional conversation metadata object"""
@@ -1135,6 +1153,11 @@ type AgentConversationObject {
 
   """Last router LLM provider when heuristic-only routing was not used"""
   modelProvider: String
+
+  """
+  True when the chat is pinned to the top of the sidebar; never together with groupId
+  """
+  pinned: Boolean!
 
   """Optional linked plan UUID"""
   planId: String
@@ -6718,6 +6741,11 @@ type Query {
   lastActivity(input: LastActivityInput!): LastActivityResultObject
 
   """
+  List the authenticated human user's conversation groups in sidebar order (sortOrder ascending).
+  """
+  listAgentConversationGroups: [AgentConversationGroupObject!]!
+
+  """
   List agent conversations for the authenticated human user (default status=active, limit 20 max 100).
   """
   listAgentConversations(input: ListAgentConversationsInput): ListAgentConversationsResultObject!
@@ -8119,6 +8147,26 @@ type Mutation {
   """
   enqueueAgenticWorkflowMock: EnqueueAgenticWorkflowMockResultObject!
 
+  """
+  Create a conversation group at the end of the caller's list. The name is trimmed and must be 1 to 80 characters (BAD_USER_INPUT otherwise).
+  """
+  createAgentConversationGroup(input: CreateAgentConversationGroupInput!): AgentConversationGroupObject!
+
+  """
+  Rename an owned conversation group. The name is trimmed and must be 1 to 80 characters (BAD_USER_INPUT otherwise).
+  """
+  renameAgentConversationGroup(input: RenameAgentConversationGroupInput!): AgentConversationGroupObject!
+
+  """
+  Delete an owned conversation group. Its conversations are kept and become ungrouped. Returns the deleted group.
+  """
+  deleteAgentConversationGroup(input: DeleteAgentConversationGroupInput!): AgentConversationGroupObject!
+
+  """
+  Reorder the caller's conversation groups. groupIds must list every group exactly once; returns them in the new order.
+  """
+  reorderAgentConversationGroup(input: ReorderAgentConversationGroupInput!): [AgentConversationGroupObject!]!
+
   """Create an agent conversation for the authenticated human user."""
   createAgentConversation(input: CreateAgentConversationInput): AgentConversationObject!
 
@@ -8137,6 +8185,16 @@ type Mutation {
 
   """Update the title on an owned agent conversation."""
   updateAgentConversationTitle(input: UpdateAgentConversationTitleInput!): AgentConversationObject!
+
+  """
+  Pin or unpin an owned agent conversation. Does not change its updatedAt.
+  """
+  setAgentConversationPinned(input: SetAgentConversationPinnedInput!): AgentConversationObject!
+
+  """
+  Move an owned agent conversation into one of the caller's groups (also clears pinned), or out of any group when groupId is null. Does not change its updatedAt.
+  """
+  moveAgentConversationToGroup(input: MoveAgentConversationToGroupInput!): AgentConversationObject!
 
   """
   Enable or disable an agent CLI driver for the current user. A disabled agent is hidden from chat/model pickers and rejected when starting new runs. Presence-as-disabled: enabled=false records the preference, enabled=true clears it (default is enabled). Gated by SETTINGS_WRITE, in parity with install/update; rejects unknown drivers.
@@ -9080,6 +9138,27 @@ input EndWorkSessionInput {
   summary: String
 }
 
+input CreateAgentConversationGroupInput {
+  """Group name; trimmed, 1 to 80 characters"""
+  name: String!
+}
+
+input RenameAgentConversationGroupInput {
+  groupId: ID!
+
+  """Group name; trimmed, 1 to 80 characters"""
+  name: String!
+}
+
+input DeleteAgentConversationGroupInput {
+  groupId: ID!
+}
+
+input ReorderAgentConversationGroupInput {
+  """Every one of the caller's group ids exactly once, in the new order"""
+  groupIds: [ID!]!
+}
+
 input CreateAgentConversationInput {
   """JSON string of optional metadata object"""
   metadataJson: String
@@ -9109,6 +9188,20 @@ input RestoreAgentConversationInput {
 input UpdateAgentConversationTitleInput {
   conversationId: ID!
   title: String!
+}
+
+input SetAgentConversationPinnedInput {
+  conversationId: ID!
+  pinned: Boolean!
+}
+
+input MoveAgentConversationToGroupInput {
+  conversationId: ID!
+
+  """
+  Target group; null removes the conversation from any group. A non-null group also clears pinned.
+  """
+  groupId: ID
 }
 
 input RecordAgentTrajectoryInput {

@@ -5,14 +5,18 @@ import {
   ScrollArea,
   Skeleton,
 } from '@openthrottle/react-router-shadcn';
-import { MessageSquarePlus } from 'lucide-react';
 import * as React from 'react';
 
 import { CHAT_CONVERSATION_SIDEBAR_COPY } from '../data/chat-conversation-sidebar.copy';
 import { useChatConversationSidebar } from '../hooks/useChatConversationSidebar';
-import type { AgentConversationListItem } from '../types';
+import type {
+  AgentConversationListItem,
+  ChatConversationGrouping,
+} from '../types';
+import { buildConversationSections } from '../utils/conversation-sections';
 import { ChatConversationListError } from './ChatConversationListError';
-import { ChatConversationRow } from './ChatConversationRow';
+import { ChatConversationSections } from './ChatConversationSections';
+import { ChatConversationSidebarHeader } from './ChatConversationSidebarHeader';
 
 export interface ChatConversationSidebarProps {
   /** Currently-open conversation, highlighted in the list; null/undefined for a fresh thread. */
@@ -22,6 +26,13 @@ export interface ChatConversationSidebarProps {
   readonly conversations: readonly AgentConversationListItem[];
   /** Why the list failed to load; replaces the empty state when no rows loaded. */
   readonly errorMessage?: string | null;
+  /**
+   * Pinning and user-defined groups. Omit it (the admin app) for date sections
+   * only, with no Pin or Move to group menu items.
+   */
+  readonly grouping?: ChatConversationGrouping;
+  /** Extra header controls after New chat (the docked column's collapse button). */
+  readonly headerEnd?: React.ReactNode;
   /** Suppress the built-in header row when a wrapper (e.g. {@link ChatConversationSheet}) supplies its own. */
   readonly hideHeader?: boolean;
   /** True while the first page loads — renders skeleton rows instead of the list. */
@@ -50,13 +61,12 @@ export interface ChatConversationSidebarProps {
 }
 
 /**
- * @description Fully-controlled, presentational conversations list for the chat
- * sidebar (home route) and the header switcher. Renders each conversation as a
- * selectable row (title + relative timestamp + active highlight) with inline
- * rename (Enter commits, Escape cancels) and an immediate soft-delete with an Undo toast, plus
- * a New chat action and an optional Load more affordance. Loading and empty
- * states are handled. The package owns no data or fetching — the consumer
- * supplies the rows and every handler.
+ * @description Fully-controlled, presentational conversations list for the
+ * docked column, the conversation sheet and the header switcher: Pinned, the
+ * user's groups and date sections ({@link ChatConversationSections}), New chat,
+ * and an optional Load more. The package owns no data or fetching — the
+ * consumer supplies the rows, the optional {@link ChatConversationGrouping},
+ * and every handler.
  *
  * @public
  */
@@ -68,6 +78,8 @@ export const ChatConversationSidebar = (
     className,
     conversations,
     errorMessage,
+    grouping,
+    headerEnd = null,
     hideHeader = false,
     isLoading = false,
     isLoadingMore = false,
@@ -82,20 +94,28 @@ export const ChatConversationSidebar = (
   } = props;
 
   // Hooks
-  const {
-    cancelRename,
-    deleteConversation,
-    draftTitle,
-    editingId,
-    onRenameKeyDown,
-    setDraftTitle,
-    startRename,
-  } = useChatConversationSidebar({ onDelete, onRename, onRestore });
+  const sidebar = useChatConversationSidebar({
+    onCreateGroup: grouping?.onCreateGroup,
+    onDelete,
+    onRename,
+    onRenameGroup: grouping?.onRenameGroup,
+    onRestore,
+  });
 
   // Setup
   const copy = CHAT_CONVERSATION_SIDEBAR_COPY;
-  const isEmpty = !isLoading && conversations.length === 0;
+  const hasGroups = (grouping?.groups.length ?? 0) > 0;
+  const isEmpty =
+    !isLoading &&
+    conversations.length === 0 &&
+    !hasGroups &&
+    sidebar.editing == null;
   const hasError = errorMessage != null;
+  const sections = buildConversationSections(
+    conversations,
+    grouping?.groups ?? [],
+    new Date(),
+  );
   const hasMore =
     onLoadMore != null &&
     conversations.length < (totalCount ?? conversations.length);
@@ -104,22 +124,11 @@ export const ChatConversationSidebar = (
 
   // Markup
   const header = (
-    <div className="flex items-center justify-between gap-2 px-2 py-1.5">
-      <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-        {copy.title}
-      </span>
-      <Button
-        aria-label={copy.newChat}
-        data-testid="ChatConversationSidebar-new-chat"
-        onClick={onNewChat}
-        size="sm"
-        type="button"
-        variant="ghost"
-      >
-        <MessageSquarePlus className="size-4" />
-        {copy.newChat}
-      </Button>
-    </div>
+    <ChatConversationSidebarHeader
+      end={headerEnd}
+      onNewChat={onNewChat}
+      onNewGroup={grouping ? () => sidebar.startNewGroup(null) : null}
+    />
   );
 
   const skeletons = (
@@ -143,23 +152,15 @@ export const ChatConversationSidebar = (
     </Empty>
   );
 
-  const rows = conversations.map((conversation) => (
-    <ChatConversationRow
-      conversation={conversation}
-      draftTitle={draftTitle}
-      isActive={conversation.id === activeConversationId}
-      isEditing={conversation.id === editingId}
-      key={conversation.id}
-      onCancelRename={cancelRename}
-      onDraftTitleChange={setDraftTitle}
-      onRenameKeyDown={(event) => onRenameKeyDown(event, conversation.id)}
-      onRequestDelete={() => deleteConversation(conversation)}
-      onSelect={() => onSelect(conversation.id)}
-      onStartRename={() => startRename(conversation)}
+  const list = (
+    <ChatConversationSections
+      activeConversationId={activeConversationId ?? null}
+      grouping={grouping}
+      onSelect={onSelect}
+      sections={sections}
+      sidebar={sidebar}
     />
-  ));
-
-  const list = <div className="flex flex-col gap-px pb-1">{rows}</div>;
+  );
   const failed = hasError ? (
     <ChatConversationListError errorMessage={errorMessage} onRetry={onRetry} />
   ) : null;

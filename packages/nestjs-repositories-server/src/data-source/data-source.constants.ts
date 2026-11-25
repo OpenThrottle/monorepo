@@ -1,4 +1,5 @@
 import { AgentAccount } from '../modules/agent-accounts/agent-account.entity.ts';
+import { AgentConversationGroup } from '../modules/agent-conversation-groups/agent-conversation-group.entity.ts';
 import { AgentConversationMessage } from '../modules/agent-conversation-messages/agent-conversation-message.entity.ts';
 import { AgentConversation } from '../modules/agent-conversations/agent-conversation.entity.ts';
 import { AgentTokenUsage } from '../modules/agent-token-usage/agent-token-usage.entity.ts';
@@ -76,6 +77,7 @@ import { WorktreeRemoval } from '../modules/worktree-removals/worktree-removal.e
 export const OPENTHROTTLE_ENTITIES = [
   AgentAccount,
   AgentConversation,
+  AgentConversationGroup,
   AgentConversationMessage,
   AgentTokenUsage,
   AgentTrajectory,

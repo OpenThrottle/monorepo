@@ -292,10 +292,69 @@ export interface LoadAgentConversationMessagesResult {
  * {@link ChatConversationSidebar} that renders it.
  */
 export interface AgentConversationListItem {
+  /** The user-defined group the conversation sits in, or null when ungrouped. */
+  readonly groupId: string | null;
   readonly id: string;
+  /** Pinned to the top of the sidebar. Never true together with {@link groupId}. */
+  readonly pinned: boolean;
   readonly status: string;
   readonly title: string | null;
   readonly updatedAt: string;
+}
+
+/** A user-defined conversation group, listed in `sortOrder`. @public */
+export interface AgentConversationGroup {
+  readonly id: string;
+  readonly name: string;
+  readonly sortOrder: number;
+}
+
+/**
+ * What the conversations sidebar is editing inline: a conversation title, a
+ * group name, or the name of a group being created (optionally to receive a
+ * conversation). @public
+ */
+export type ChatConversationEditTarget =
+  | { readonly conversationId: string | null; readonly kind: 'new-group' }
+  | { readonly id: string; readonly kind: 'conversation' }
+  | { readonly id: string; readonly kind: 'group' };
+
+/**
+ * Pinning and user-defined groups for {@link ChatConversationSidebar}. A host
+ * that supplies it gets the Pinned section, group sections, and the Pin /
+ * Move to group menu items; one that omits it gets date sections only.
+ * @public
+ */
+export interface ChatConversationGrouping {
+  /** Group ids shown collapsed (the host persists them). */
+  readonly collapsedGroupIds: readonly string[];
+  readonly groups: readonly AgentConversationGroup[];
+  readonly onCreateGroup: (name: string, conversationId: string | null) => void;
+  readonly onDeleteGroup: (groupId: string) => void;
+  readonly onMoveToGroup: (
+    conversationId: string,
+    groupId: string | null,
+  ) => void;
+  readonly onRenameGroup: (groupId: string, name: string) => void;
+  readonly onSetPinned: (conversationId: string, pinned: boolean) => void;
+  readonly onToggleGroupCollapsed: (groupId: string) => void;
+}
+
+/** JSON shape returned by the `list-groups` intent. @public */
+export interface ListAgentConversationGroupsResult {
+  readonly errorMessage: string | null;
+  readonly groups: readonly AgentConversationGroup[];
+}
+
+/**
+ * JSON shape returned by the group intents (`create-group`, `rename-group`,
+ * `delete-group`). `conversation` is set when `create-group` also moved a
+ * conversation into the new group. @public
+ */
+export interface MutateAgentConversationGroupResult {
+  readonly conversation: AgentConversationListItem | null;
+  readonly errorMessage: string | null;
+  readonly group: AgentConversationGroup | null;
 }
 
 /** JSON shape returned by a root `list-agent-conversations` action. */

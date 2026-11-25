@@ -74,3 +74,24 @@ export class UpdateAgentConversationTitleInput {
   @Field(() => String)
   title!: string;
 }
+
+@InputType()
+export class SetAgentConversationPinnedInput {
+  @Field(() => ID)
+  conversationId!: string;
+
+  @Field(() => Boolean)
+  pinned!: boolean;
+}
+
+@InputType()
+export class MoveAgentConversationToGroupInput {
+  @Field(() => ID)
+  conversationId!: string;
+
+  @Field(() => ID, {
+    description: `Target group; null removes the conversation from any group. A non-null group also clears pinned.`,
+    nullable: true,
+  })
+  groupId!: string | null;
+}

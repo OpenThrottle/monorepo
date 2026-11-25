@@ -60,8 +60,14 @@ export interface AgentConversationsRepositoryMock extends BaseRepositoryMock<
   readonly listConversationsForUser: Mock<
     AgentConversationsRepository['listConversationsForUser']
   >;
+  readonly moveConversationToGroup: Mock<
+    AgentConversationsRepository['moveConversationToGroup']
+  >;
   readonly restoreConversation: Mock<
     AgentConversationsRepository['restoreConversation']
+  >;
+  readonly setConversationPinned: Mock<
+    AgentConversationsRepository['setConversationPinned']
   >;
   readonly softDeleteConversation: Mock<
     AgentConversationsRepository['softDeleteConversation']

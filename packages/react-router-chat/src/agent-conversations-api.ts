@@ -23,7 +23,11 @@ import type {
 
 /** A persisted conversation row (GraphQL) reduced to the sidebar list-item shape. @public */
 export interface AgentConversationRow {
+  /** Absent when an app's document does not select it (the admin app); read as null. */
+  readonly groupId?: string | null;
   readonly id: string;
+  /** Absent when an app's document does not select it (the admin app); read as false. */
+  readonly pinned?: boolean | null;
   readonly status: string;
   readonly title?: string | null;
   readonly updatedAt: unknown;
@@ -75,20 +79,25 @@ export const emptyMutateAgentConversationResult = (
   };
 };
 
-/** Map a persisted conversation row (GraphQL) to the sidebar list-item shape. */
-const toAgentConversationListItem = (
+/**
+ * Map a persisted conversation row (GraphQL) to the sidebar list-item shape.
+ * @public
+ */
+export const toAgentConversationListItem = (
   row: AgentConversationRow,
 ): AgentConversationListItem => {
   return {
+    groupId: row.groupId ?? null,
     id: row.id,
+    pinned: row.pinned ?? false,
     status: row.status,
     title: row.title ?? null,
     updatedAt: String(row.updatedAt),
   };
 };
 
-/** Parse a non-empty trimmed string form field, or null. */
-const trimStringFormField = (
+/** Parse a non-empty trimmed string form field, or null. @public */
+export const trimStringFormField = (
   value: FormDataEntryValue | null,
 ): string | null => {
   if (typeof value !== 'string') {

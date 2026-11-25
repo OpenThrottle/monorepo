@@ -8,3 +8,10 @@ export const SEMANTIC_SEARCH_OFF_COPY = {
   dismissLabel: 'Dismiss semantic search notice',
   title: 'Semantic search is off',
 } as const;
+
+/** @description Copy for the docked conversations column. */
+export const CONVERSATION_DOCK_COPY = {
+  collapse: 'Collapse chats (⌘.)',
+  region: 'Chats',
+  show: 'Show chats (⌘.)',
+} as const;

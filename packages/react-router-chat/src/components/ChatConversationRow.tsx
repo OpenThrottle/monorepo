@@ -1,36 +1,43 @@
-import { Button, cn, Input } from '@openthrottle/react-router-shadcn';
-import { Pencil, Trash2 } from 'lucide-react';
+import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import {
-  ACTION_TOUCH_CLASSES,
-  ACTION_VISIBILITY_CLASSES,
-} from '../data/chat-conversation-row.classes';
 import { CHAT_CONVERSATION_SIDEBAR_COPY } from '../data/chat-conversation-sidebar.copy';
-import type { AgentConversationListItem } from '../types';
+import type {
+  AgentConversationGroup,
+  AgentConversationListItem,
+} from '../types';
 import { formatRelativeChatTimestamp } from '../utils/index';
+import { ChatConversationEditInput } from './ChatConversationEditInput';
+import { ChatConversationRowMenu } from './ChatConversationRowMenu';
 
 export interface ChatConversationRowProps {
   readonly conversation: AgentConversationListItem;
   /** Current rename draft; only read while {@link isEditing}. */
   readonly draftTitle: string;
+  /** The user's groups; null when the host offers no pinning or groups. */
+  readonly groups: readonly AgentConversationGroup[] | null;
+  /** Indents the row under a group header. */
+  readonly indented: boolean;
   readonly isActive: boolean;
   readonly isEditing: boolean;
-  readonly onCancelRename: () => void;
+  readonly onCommitRename: () => void;
   readonly onDraftTitleChange: (value: string) => void;
+  readonly onMoveToGroup: (groupId: string | null) => void;
+  readonly onNewGroup: () => void;
   readonly onRenameKeyDown: (
     event: React.KeyboardEvent<HTMLInputElement>,
   ) => void;
   readonly onRequestDelete: () => void;
   readonly onSelect: () => void;
   readonly onStartRename: () => void;
+  readonly onTogglePin: () => void;
 }
 
 /**
  * @description A single {@link ChatConversationSidebar} row: a selectable
- * title + relative timestamp with an active highlight, plus rename and delete
- * controls. Swaps to an inline rename {@link Input} while editing. Purely
- * presentational — every action is delegated to the sidebar's handlers.
+ * title + relative timestamp with an active highlight. Double-click the title
+ * (or press F2 on it) to rename inline; everything else is in the `⋯` menu.
+ * Purely presentational — every action is delegated to the sidebar.
  *
  * @public
  */
@@ -40,14 +47,19 @@ export const ChatConversationRow = (
   const {
     conversation,
     draftTitle,
+    groups,
+    indented,
     isActive,
     isEditing,
-    onCancelRename,
+    onCommitRename,
     onDraftTitleChange,
+    onMoveToGroup,
+    onNewGroup,
     onRenameKeyDown,
     onRequestDelete,
     onSelect,
     onStartRename,
+    onTogglePin,
   } = props;
 
   // Hooks
@@ -55,10 +67,17 @@ export const ChatConversationRow = (
   // Setup
   const copy = CHAT_CONVERSATION_SIDEBAR_COPY;
   const title = conversation.title ?? '';
-  const hasTitle = title.trim() !== '';
-  const label = hasTitle ? title : copy.untitled;
+  const label = title.trim() !== '' ? title : copy.untitled;
 
   // Handlers
+  const handleTitleKeyDown = (
+    event: React.KeyboardEvent<HTMLButtonElement>,
+  ): void => {
+    if (event.key === 'F2') {
+      event.preventDefault();
+      onStartRename();
+    }
+  };
 
   // Markup
 
@@ -67,16 +86,13 @@ export const ChatConversationRow = (
   // 🔌 Short Circuit
   if (isEditing) {
     return (
-      <div className="px-2 py-0.5">
-        <Input
-          aria-label={copy.renamePlaceholder}
-          autoFocus={true}
-          className="h-9"
-          data-testid={`ChatConversationSidebar-rename-input-${conversation.id}`}
-          onBlur={onCancelRename}
-          onChange={(event) => onDraftTitleChange(event.target.value)}
+      <div className={cn('px-2 py-0.5', indented && 'pl-6')}>
+        <ChatConversationEditInput
+          ariaLabel={copy.renamePlaceholder}
+          onChange={onDraftTitleChange}
+          onCommit={onCommitRename}
           onKeyDown={onRenameKeyDown}
-          placeholder={copy.renamePlaceholder}
+          testId={`ChatConversationSidebar-rename-input-${conversation.id}`}
           value={draftTitle}
         />
       </div>
@@ -86,54 +102,42 @@ export const ChatConversationRow = (
   return (
     <div
       className={cn(
-        'group/row hover:bg-accent/50 flex max-w-full items-center gap-1 px-2 py-2 pointer-coarse:py-0.5',
+        'group/row hover:bg-accent/50 mx-1 flex max-w-full items-center gap-1 rounded-md py-1 pr-1 pl-2 pointer-coarse:py-0.5',
+        indented && 'pl-6',
         isActive && 'bg-accent',
       )}
     >
       {/* w-0: ScrollArea's display:table viewport would otherwise grow to the untruncated title. */}
       <div className="w-0 min-w-0 flex-1">
         <button
-          aria-current={isActive ? 'true' : undefined}
+          aria-current={isActive ? 'page' : undefined}
           className="flex w-full min-w-0 cursor-pointer flex-col text-left pointer-coarse:py-1.5"
           data-testid={`ChatConversationSidebar-select-${conversation.id}`}
           onClick={onSelect}
+          onDoubleClick={onStartRename}
+          onKeyDown={handleTitleKeyDown}
+          title={copy.renameHint}
           type="button"
         >
-          <div className="w-full truncate text-sm">{label}</div>
-          <div className="text-muted-foreground w-full truncate text-xs">
+          <span className="w-full truncate text-sm">{label}</span>
+          <span className="text-muted-foreground w-full truncate text-xs">
             {formatRelativeChatTimestamp(conversation.updatedAt)}
-          </div>
+          </span>
         </button>
       </div>
 
-      <div className="flex shrink-0 items-center">
-        <Button
-          aria-label={`Rename ${label}`}
-          className={cn(ACTION_VISIBILITY_CLASSES, ACTION_TOUCH_CLASSES)}
-          data-testid={`ChatConversationSidebar-rename-${conversation.id}`}
-          onClick={onStartRename}
-          size="xs"
-          type="button"
-          variant="ghost"
-        >
-          <Pencil className="size-3.5" />
-        </Button>
-        <Button
-          aria-label={`Delete ${label}`}
-          className={cn(
-            'text-muted-foreground hover:text-destructive',
-            ACTION_VISIBILITY_CLASSES,
-            ACTION_TOUCH_CLASSES,
-          )}
-          data-testid={`ChatConversationSidebar-delete-${conversation.id}`}
-          onClick={onRequestDelete}
-          size="xs"
-          type="button"
-          variant="ghost"
-        >
-          <Trash2 className="size-3.5" />
-        </Button>
-      </div>
+      <ChatConversationRowMenu
+        alwaysVisible={isActive}
+        conversation={conversation}
+        groups={groups}
+        label={label}
+        onDelete={onRequestDelete}
+        onMoveToGroup={onMoveToGroup}
+        onNewGroup={onNewGroup}
+        onOpen={onSelect}
+        onRename={onStartRename}
+        onTogglePin={onTogglePin}
+      />
     </div>
   );
 };

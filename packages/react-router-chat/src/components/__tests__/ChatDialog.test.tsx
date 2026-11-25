@@ -309,7 +309,9 @@ describe('ChatDialog Component', () => {
       renderWithSidebar({
         conversations: [
           {
+            groupId: null,
             id: 'c1',
+            pinned: false,
             status: 'active',
             title: 'Prior thread',
             updatedAt: '2026-07-29T12:00:00.000Z',

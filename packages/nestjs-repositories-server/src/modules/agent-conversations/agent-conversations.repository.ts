@@ -4,6 +4,7 @@ import type { CreateModelInput } from '@openthrottle/nestjs-postgres';
 import { BaseRepository } from '@openthrottle/nestjs-postgres';
 import { Repository } from 'typeorm';
 
+import { AgentConversationGroup } from '../agent-conversation-groups/agent-conversation-group.entity.ts';
 import { Plan } from '../plans/plan.entity.ts';
 import { Project } from '../projects/project.entity.ts';
 import { AgentConversation } from './agent-conversation.entity.ts';
@@ -195,6 +196,55 @@ export class AgentConversationsRepository extends BaseRepository<
     }
 
     return restored;
+  }
+
+  /**
+   * @description Pins or unpins an owned conversation. `updated_at` is left unchanged (trigger
+   * from migration 207), so the conversation keeps its place in the date buckets.
+   * @throws NotFoundException when it does not exist, is deleted or is someone else's.
+   */
+  async setConversationPinned(
+    userId: string,
+    conversationId: string,
+    pinned: boolean,
+  ): Promise<AgentConversation> {
+    await this.getConversationForUser(userId, conversationId);
+
+    await this.repository.update({ id: conversationId, userId }, { pinned });
+
+    return this.getConversationForUser(userId, conversationId);
+  }
+
+  /**
+   * @description Moves an owned conversation into one of the user's groups, or out of any group
+   * when `groupId` is null. Moving into a group also clears `pinned`, so a chat is never shown
+   * twice. `updated_at` is left unchanged (trigger from migration 207).
+   * @throws NotFoundException when the conversation does not exist, is deleted or is someone
+   * else's, or when `groupId` names no group of the user's.
+   */
+  async moveConversationToGroup(
+    userId: string,
+    conversationId: string,
+    groupId: string | null,
+  ): Promise<AgentConversation> {
+    await this.getConversationForUser(userId, conversationId);
+
+    if (groupId !== null) {
+      const groupExists = await this.repository.manager
+        .getRepository(AgentConversationGroup)
+        .exists({ where: { id: groupId, userId } });
+
+      if (!groupExists) {
+        throw new NotFoundException('Agent conversation group not found');
+      }
+    }
+
+    await this.repository.update(
+      { id: conversationId, userId },
+      groupId === null ? { groupId: null } : { groupId, pinned: false },
+    );
+
+    return this.getConversationForUser(userId, conversationId);
   }
 
   /**

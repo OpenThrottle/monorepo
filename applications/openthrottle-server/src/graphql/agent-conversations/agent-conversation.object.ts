@@ -10,6 +10,12 @@ export class AgentConversationObject {
   @Field(() => Date)
   createdAt!: Date;
 
+  @Field(() => String, {
+    description: `The user-defined conversation group this chat sits in, or null when ungrouped`,
+    nullable: true,
+  })
+  groupId!: string | null;
+
   @Field(() => String)
   id!: string;
 
@@ -30,6 +36,11 @@ export class AgentConversationObject {
     nullable: true,
   })
   modelProvider!: string | null;
+
+  @Field(() => Boolean, {
+    description: `True when the chat is pinned to the top of the sidebar; never together with groupId`,
+  })
+  pinned!: boolean;
 
   @Field(() => String, {
     description: `Optional linked plan UUID`,

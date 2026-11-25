@@ -67,7 +67,9 @@ const mockConversationsQuery = {
   listAgentConversations: {
     items: [
       {
+        groupId: null,
         id: 'c1',
+        pinned: false,
         status: 'active',
         title: 'First chat',
         updatedAt: '2026-08-01T00:00:00.000Z',

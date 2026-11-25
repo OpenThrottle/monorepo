@@ -1,3 +1,4 @@
+export * from './agent-conversation-groups-api';
 export * from './agent-conversations-api';
 export * from './agents-chat-footer';
 export * from './components/ChatActivityGroup';

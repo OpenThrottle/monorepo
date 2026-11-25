@@ -24,6 +24,7 @@ const buildConversationList = (): UseConversationListResult => {
     isLoading: false,
     isLoadingMore: false,
     loadMore: vi.fn(),
+    mapConversations: vi.fn(),
     refresh: vi.fn(),
     remove: vi.fn(),
     rename: vi.fn(),
@@ -100,7 +101,9 @@ describe('HomeConversationToolbar Component', () => {
 
     test('shows an Undo toast whose action restores it', async () => {
       const row = {
+        groupId: null,
         id: 'conv-1',
+        pinned: false,
         status: 'active',
         title: 'Refactor the auth guard',
         updatedAt: '2026-07-29T12:00:00.000Z',
@@ -119,6 +122,9 @@ describe('HomeConversationToolbar Component', () => {
       });
 
       await user.click(component.getByRole('button'));
+      await user.click(
+        await component.findByTestId('ChatConversationSidebar-more-conv-1'),
+      );
       await user.click(
         await component.findByTestId('ChatConversationSidebar-delete-conv-1'),
       );

@@ -4,7 +4,7 @@
  * (it stamps `deleted_at` and sets `status` to `'deleted'`), and data retention purges it, with
  * its messages, 30 days later. `updatedAt` orders the conversation list, and the table's trigger
  * keeps it unchanged on soft delete and restore, overriding the value TypeORM sends. Matches
- * databases/openthrottle/migrations (051, 081, 180, 193).
+ * databases/openthrottle/migrations (051, 081, 180, 193, 207).
  * @public
  */
 
@@ -26,6 +26,12 @@ export class AgentConversation extends BaseModel {
 
   @Column({ default: 'active', name: 'status', type: 'text' })
   status!: AgentConversationStatus;
+
+  @Column({ default: false, name: 'pinned', type: 'boolean' })
+  pinned!: boolean;
+
+  @Column({ name: 'group_id', nullable: true, type: 'uuid' })
+  groupId!: string | null;
 
   @Column({ name: 'plan_id', nullable: true, type: 'uuid' })
   planId!: string | null;

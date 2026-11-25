@@ -10,19 +10,25 @@ import { DashboardRecentChatsCard } from '../DashboardRecentChatsCard';
 
 const CONVERSATIONS: readonly AgentConversationListItem[] = [
   {
+    groupId: null,
     id: 'c1',
+    pinned: false,
     status: 'active',
     title: 'First chat',
     updatedAt: '2026-08-01T00:00:00.000Z',
   },
   {
+    groupId: null,
     id: 'c2',
+    pinned: false,
     status: 'idle',
     title: 'Second chat',
     updatedAt: '2026-07-31T00:00:00.000Z',
   },
   {
+    groupId: null,
     id: 'c3',
+    pinned: false,
     status: 'active',
     title: null,
     updatedAt: '2026-07-30T00:00:00.000Z',
@@ -53,7 +59,9 @@ describe('DashboardRecentChatsCard Component', () => {
     const many: readonly AgentConversationListItem[] = [
       ...CONVERSATIONS,
       {
+        groupId: null,
         id: 'c4',
+        pinned: false,
         status: 'active',
         title: 'Fourth chat',
         updatedAt: '2026-07-29T00:00:00.000Z',

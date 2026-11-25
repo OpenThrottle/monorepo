@@ -21,6 +21,7 @@ export const buildRootMatch = (): RootMatch => {
     loaderData: {
       backgroundActivities: [],
       canonical: 'http://localhost/',
+      chatDock: { collapsedGroupIds: [], isOpen: true },
       defaultEditor: null,
       env: getPublicEnv(),
       permissions: [],

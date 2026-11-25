@@ -14,3 +14,16 @@ export const ACTION_VISIBILITY_CLASSES = `pointer-events-none opacity-0 group-ho
  * @public
  */
 export const ACTION_TOUCH_CLASSES = `pointer-coarse:size-11 [@media(hover:none)]:size-11`;
+
+/**
+ * Visibility of a row's `⋯` menu trigger: like {@link ACTION_VISIBILITY_CLASSES},
+ * and also shown while its menu is open.
+ * @public
+ */
+export const MENU_TRIGGER_VISIBILITY_CLASSES = `${ACTION_VISIBILITY_CLASSES} data-[state=open]:pointer-events-auto data-[state=open]:opacity-100`;
+
+/** Spacing and icon size for the sidebar's menu items. @public */
+export const MENU_ITEM_CLASSES = 'gap-2 [&_svg]:size-4 [&_svg]:shrink-0';
+
+/** A destructive menu item (Delete, Delete group). @public */
+export const MENU_ITEM_DESTRUCTIVE_CLASSES = `text-destructive focus:text-destructive`;

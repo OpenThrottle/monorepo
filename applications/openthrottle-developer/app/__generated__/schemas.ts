@@ -31,6 +31,7 @@ import {
   CodeSemanticSearchInput,
   CommitsPerPrInput,
   ConnectMcpConnectorInput,
+  CreateAgentConversationGroupInput,
   CreateAgentConversationInput,
   CreateBlogPostInput,
   CreateCmsFragmentInput,
@@ -57,6 +58,7 @@ import {
   CreateWorkspaceLocalRepositoryInput,
   CustomPromptType,
   DecideOAuthAuthorizationInput,
+  DeleteAgentConversationGroupInput,
   DeleteAgentConversationInput,
   DeletePlanInput,
   DeletePlanOutputInput,
@@ -94,6 +96,7 @@ import {
   LoginInput,
   MetricScope,
   MissingWorktreeCheckoutReason,
+  MoveAgentConversationToGroupInput,
   MoveProjectPlanInput,
   OpenToMergedCycleTimeInput,
   PlanEmbeddingsByPlanInput,
@@ -147,7 +150,9 @@ import {
   RemoveRoleFromUserInput,
   RemoveSkillTagInput,
   RemoveTaskTagInput,
+  RenameAgentConversationGroupInput,
   RenameSkillTagInput,
+  ReorderAgentConversationGroupInput,
   ReorderPlanTasksInput,
   ReorderProjectPlansInput,
   RepeatableJobsInput,
@@ -165,6 +170,7 @@ import {
   ScheduledAgentJobWebhookFilterInputType,
   SearchInput,
   SearchPlansInput,
+  SetAgentConversationPinnedInput,
   SetBlogPostTagsInput,
   SetMcpConnectorEnabledInput,
   SetPlanStatusInput,
@@ -604,6 +610,14 @@ export function ConnectMcpConnectorInputSchema(): z.ZodObject<
   });
 }
 
+export function CreateAgentConversationGroupInputSchema(): z.ZodObject<
+  Properties<CreateAgentConversationGroupInput>
+> {
+  return z.object({
+    name: z.string().min(1),
+  });
+}
+
 export function CreateAgentConversationInputSchema(): z.ZodObject<
   Properties<CreateAgentConversationInput>
 > {
@@ -935,6 +949,14 @@ export function DecideOAuthAuthorizationInputSchema(): z.ZodObject<
   });
 }
 
+export function DeleteAgentConversationGroupInputSchema(): z.ZodObject<
+  Properties<DeleteAgentConversationGroupInput>
+> {
+  return z.object({
+    groupId: z.string().min(1),
+  });
+}
+
 export function DeleteAgentConversationInputSchema(): z.ZodObject<
   Properties<DeleteAgentConversationInput>
 > {
@@ -1259,6 +1281,15 @@ export function LoginInputSchema(): z.ZodObject<Properties<LoginInput>> {
   return z.object({
     email: z.string().min(1),
     password: z.string().min(1),
+  });
+}
+
+export function MoveAgentConversationToGroupInputSchema(): z.ZodObject<
+  Properties<MoveAgentConversationToGroupInput>
+> {
+  return z.object({
+    conversationId: z.string().min(1),
+    groupId: z.string().nullish(),
   });
 }
 
@@ -1773,12 +1804,29 @@ export function RemoveTaskTagInputSchema(): z.ZodObject<
   });
 }
 
+export function RenameAgentConversationGroupInputSchema(): z.ZodObject<
+  Properties<RenameAgentConversationGroupInput>
+> {
+  return z.object({
+    groupId: z.string().min(1),
+    name: z.string().min(1),
+  });
+}
+
 export function RenameSkillTagInputSchema(): z.ZodObject<
   Properties<RenameSkillTagInput>
 > {
   return z.object({
     from: z.string().min(1),
     to: z.string().min(1),
+  });
+}
+
+export function ReorderAgentConversationGroupInputSchema(): z.ZodObject<
+  Properties<ReorderAgentConversationGroupInput>
+> {
+  return z.object({
+    groupIds: z.array(z.string().min(1)),
   });
 }
 
@@ -1932,6 +1980,15 @@ export function SearchPlansInputSchema(): z.ZodObject<
   return z.object({
     limit: z.number().nullish(),
     query: z.string().min(1),
+  });
+}
+
+export function SetAgentConversationPinnedInputSchema(): z.ZodObject<
+  Properties<SetAgentConversationPinnedInput>
+> {
+  return z.object({
+    conversationId: z.string().min(1),
+    pinned: z.boolean(),
   });
 }
 

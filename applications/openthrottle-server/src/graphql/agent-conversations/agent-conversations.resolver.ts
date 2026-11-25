@@ -26,7 +26,9 @@ import {
   DeleteAgentConversationInput,
   GetAgentConversationMessagesInput,
   ListAgentConversationsInput,
+  MoveAgentConversationToGroupInput,
   RestoreAgentConversationInput,
+  SetAgentConversationPinnedInput,
   UpdateAgentConversationTitleInput,
 } from './agent-conversation.input.ts';
 import {
@@ -266,6 +268,48 @@ export class AgentConversationsResolver {
         user.sub,
         input.conversationId,
         input.title,
+      );
+
+    return toAgentConversationObject(conversation);
+  }
+
+  @Mutation(() => AgentConversationObject, {
+    description: `Pin or unpin an owned agent conversation. Does not change its updatedAt.`,
+  })
+  @Permissions(PERMISSIONS.SETTINGS_WRITE)
+  async setAgentConversationPinned(
+    @CurrentUser() principal: AuthPrincipal | undefined,
+    @Args('input', { type: () => SetAgentConversationPinnedInput })
+    input: SetAgentConversationPinnedInput,
+  ): Promise<AgentConversationObject> {
+    const user = assertHumanAuthPrincipal(principal);
+
+    const conversation =
+      await this.agentConversationsRepository.setConversationPinned(
+        user.sub,
+        input.conversationId,
+        input.pinned,
+      );
+
+    return toAgentConversationObject(conversation);
+  }
+
+  @Mutation(() => AgentConversationObject, {
+    description: `Move an owned agent conversation into one of the caller's groups (also clears pinned), or out of any group when groupId is null. Does not change its updatedAt.`,
+  })
+  @Permissions(PERMISSIONS.SETTINGS_WRITE)
+  async moveAgentConversationToGroup(
+    @CurrentUser() principal: AuthPrincipal | undefined,
+    @Args('input', { type: () => MoveAgentConversationToGroupInput })
+    input: MoveAgentConversationToGroupInput,
+  ): Promise<AgentConversationObject> {
+    const user = assertHumanAuthPrincipal(principal);
+
+    const conversation =
+      await this.agentConversationsRepository.moveConversationToGroup(
+        user.sub,
+        input.conversationId,
+        input.groupId,
       );
 
     return toAgentConversationObject(conversation);

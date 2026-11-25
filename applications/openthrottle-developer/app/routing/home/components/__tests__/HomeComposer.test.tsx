@@ -24,6 +24,7 @@ const buildConversationList = (): UseConversationListResult => {
     isLoading: false,
     isLoadingMore: false,
     loadMore: vi.fn(),
+    mapConversations: vi.fn(),
     refresh: vi.fn(),
     remove: vi.fn(),
     rename: vi.fn(),

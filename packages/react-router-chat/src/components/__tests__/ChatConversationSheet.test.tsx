@@ -11,7 +11,9 @@ import { ChatConversationSheet } from '../ChatConversationSheet';
 
 const CONVERSATIONS: readonly AgentConversationListItem[] = [
   {
+    groupId: null,
     id: 'conv-1',
+    pinned: false,
     status: 'active',
     title: 'Refactor the auth guard',
     updatedAt: '2026-07-29T12:00:00.000Z',

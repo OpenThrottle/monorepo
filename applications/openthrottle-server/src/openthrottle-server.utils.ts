@@ -38,6 +38,7 @@ import {
   isOpenthrottleServerDevJsonlLoggingEnabled,
 } from './config/config.utils.ts';
 import { ActivityGraphqlModule } from './graphql/activity/activity.module.ts';
+import { AgentConversationGroupsGraphqlModule } from './graphql/agent-conversation-groups/agent-conversation-groups.module.ts';
 import { AgentConversationsGraphqlModule } from './graphql/agent-conversations/agent-conversations.module.ts';
 import { AgentDiscoveryGraphqlModule } from './graphql/agent-discovery/agent-discovery.module.ts';
 import { AgentSetupGraphqlModule } from './graphql/agent-setup/agent-setup.module.ts';
@@ -296,6 +297,7 @@ export const buildImports = (role: ProcessRole): AppModuleImports => {
     imports.push(
       ActivityGraphqlModule,
       AgenticWorkflowGraphqlModule,
+      AgentConversationGroupsGraphqlModule,
       AgentConversationsGraphqlModule,
       AgentDiscoveryGraphqlModule,
       AgentSetupGraphqlModule,
