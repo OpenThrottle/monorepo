@@ -19,7 +19,7 @@ export type CommanderEscapeRowKeywordValue =
  * full-bleed highlight.
  */
 export const COMMANDER_CLASS_NAME = {
-  group: 'm-0! p-0!',
+  group: 'm-0! p-0! [&_[cmdk-group-heading]]:px-4',
   icon: 'h-3! w-3! shrink-0 opacity-80',
   row: 'm-0! h-auto! rounded-none! p-2! px-4!',
 } as const;
