@@ -1,3 +1,4 @@
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import {
   executeGraphqlWithAuth,
   parseFormData,
@@ -125,7 +126,7 @@ export const runProjectDetailAction = async (args: Route.ActionArgs) => {
       }
       return { projectTagUpdated: true };
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = toErrorMessage(error);
       return { projectTagError: message };
     }
   }
@@ -140,7 +141,7 @@ export const runProjectDetailAction = async (args: Route.ActionArgs) => {
     try {
       return await runProjectStructureIntent(args, projectId, intent, formData);
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = toErrorMessage(error);
       return { projectError: message };
     }
   }

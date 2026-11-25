@@ -4,6 +4,8 @@ import { glob, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
@@ -86,10 +88,6 @@ const hasDescription = (config: NxTargetConfig): boolean => {
     isNonEmptyString(config?.description) ||
     isNonEmptyString(config?.metadata?.description)
   );
-};
-
-const isRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
 };
 
 /**

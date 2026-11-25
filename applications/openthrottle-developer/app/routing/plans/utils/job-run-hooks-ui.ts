@@ -3,7 +3,7 @@
  * Constants align with `@openthrottle/openthrottle-agentic-utils` job-run lifecycle hooks (no Node `fs` import).
  */
 
-import { isRecord } from '@openthrottle/nodejs-utils';
+import { isRecord, toErrorMessage } from '@openthrottle/nodejs-utils';
 
 /**
  * @description A new named-prompt hook starts blank: there is no default prompt profile, so the
@@ -409,7 +409,7 @@ export const validateJobRunHooksDraftRows = (
   try {
     normalizeJobRunHookDraftRows(rows);
   } catch (error) {
-    issues.push(error instanceof Error ? error.message : String(error));
+    issues.push(toErrorMessage(error));
   }
 
   return { issues, ok: issues.length === 0 };

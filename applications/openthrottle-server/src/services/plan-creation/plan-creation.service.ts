@@ -6,6 +6,7 @@ import {
   UserDisabledAgentClisRepository,
   UserPreferencesRepository,
 } from '@openthrottle/nestjs-repositories-server';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import type { PlanRunConfigStorage } from '@openthrottle/openthrottle-plan-config';
 import {
   getDefaultPlanRunConfigStorage,
@@ -172,7 +173,7 @@ export class PlanCreationService {
 
       return applyDefaultAgentToRunConfig(defaults, defaultAgent);
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = toErrorMessage(error);
       this.logger.warn(
         `${this.name}: default agent lookup failed, using system default: ${message}`,
       );
@@ -249,7 +250,7 @@ export class PlanCreationService {
         },
       };
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = toErrorMessage(error);
       this.logger.warn(
         `${this.name}: workspacePath resolution failed, falling back to defaults: ${message}`,
       );

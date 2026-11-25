@@ -1,6 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
+import { isRecord, toErrorMessage } from '@openthrottle/nodejs-utils';
+
 import type {
   DriverModelLister,
   LoopTask,
@@ -15,10 +17,6 @@ import {
   MODEL_ROUTING_POLICY_VERSION,
   MODEL_ROUTING_REVIEW_TIER,
 } from '../data/data.model-routing.ts';
-
-const isRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-};
 
 const invalid = (reason: string): ModelRoutingPolicyResult => {
   return { kind: 'invalid', reason };
@@ -232,7 +230,7 @@ export const readModelRoutingPolicy = async (
   try {
     text = await readFile(filePath, 'utf8');
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = toErrorMessage(error);
 
     return { kind: 'invalid', reason: `cannot read ${filePath}: ${message}` };
   }
@@ -240,7 +238,7 @@ export const readModelRoutingPolicy = async (
   try {
     return parseModelRoutingPolicy(JSON.parse(text));
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = toErrorMessage(error);
 
     return {
       kind: 'invalid',

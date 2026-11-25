@@ -5,6 +5,7 @@ import {
   ScheduledAgentJobRunsRepository,
   ScheduledAgentJobsRepository,
 } from '@openthrottle/nestjs-repositories-server';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import { SCHEDULED_RUN_FAILURE_REASONS } from '@openthrottle/openthrottle-notifications';
 
 import { resolveRepeatablesOwner } from '../../repeatable-job/repeatable-job.utils.ts';
@@ -196,7 +197,7 @@ export class ScheduledAgentJobsReconcileService implements OnModuleInit {
         ScheduledAgentJobsReconcileService.name,
       );
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = toErrorMessage(error);
       this.logger.warn(
         `Scheduled agent job ${job.id}: could not settle missed fires: ${message}`,
         ScheduledAgentJobsReconcileService.name,

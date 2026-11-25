@@ -71,6 +71,7 @@ import { builtinModules } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { isRecord } from '@openthrottle/nodejs-utils';
 import ts from 'typescript';
 
 import { hasFlag } from './utils/args.ts';
@@ -181,10 +182,6 @@ interface Finding {
   readonly project: string;
   readonly projectDirectory: string;
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-};
 
 /**
  * @description The workspace's project globs, read from `pnpm-workspace.yaml`

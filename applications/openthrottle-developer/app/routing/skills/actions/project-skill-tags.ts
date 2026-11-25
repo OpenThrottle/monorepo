@@ -3,6 +3,7 @@
  * project_skills row and for explicitly removing an orphan row.
  */
 
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import {
   executeGraphqlWithAuth,
   parseFormData,
@@ -15,7 +16,6 @@ import {
   RemoveProjectSkillTagDocument,
 } from '~/__generated__/graphql';
 import { AddProjectSkillTagInputSchema } from '~/__generated__/schemas';
-import { toErrorMessage } from '~/global/utils/utils.error-message';
 
 /** Skill-tag forms label their `slug` field as "Skill slug" in error copy. */
 const SKILL_TAG_LABELS = { slug: 'Skill slug' } as const;

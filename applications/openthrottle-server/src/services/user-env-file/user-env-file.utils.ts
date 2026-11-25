@@ -26,6 +26,7 @@ import type {
   UserEnvConcernState,
 } from '@openthrottle/agentic-hooks';
 import { normalizeLoopbackHost } from '@openthrottle/agentic-hooks';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 
 import {
   USER_ENV_FILE_CONFIG_DIR_ENV,
@@ -233,7 +234,7 @@ export const ensureUserEnvFile = ({
       );
     }
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
+    const message = toErrorMessage(err);
     logger.warn(`Could not update ~/.openthrottle/.env: ${message}`);
   }
 };

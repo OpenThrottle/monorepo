@@ -8,6 +8,7 @@ import {
 } from '@openthrottle/agentic-hooks';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { ServiceAccountCredentialsRepository } from '@openthrottle/nestjs-repositories-server';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 
 import {
   USER_ENV_FILE_HEALTH,
@@ -87,7 +88,7 @@ export class UserEnvFileService {
       );
     } catch (error: unknown) {
       this.logger.warn(
-        `Could not check ~/.openthrottle/.env: ${error instanceof Error ? error.message : String(error)}`,
+        `Could not check ~/.openthrottle/.env: ${toErrorMessage(error)}`,
         UserEnvFileService.name,
       );
     }

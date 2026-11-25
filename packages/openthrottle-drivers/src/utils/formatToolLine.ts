@@ -5,6 +5,8 @@
  * stays the bare `→ <tool>`.
  */
 
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 import type { ToolArgumentKindsValue } from '../data/data.tool-argument.ts';
 import {
   TOOL_ARGUMENT_FIELDS,
@@ -19,10 +21,6 @@ export interface FormatToolLineOptions {
   /** Directory absolute paths are shown relative to; defaults to `process.cwd()`. */
   readonly cwd: string | undefined;
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-};
 
 const firstString = (
   input: Record<string, unknown>,

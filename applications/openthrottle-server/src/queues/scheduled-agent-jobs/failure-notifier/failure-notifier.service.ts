@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { ScheduledAgentJobsRepository } from '@openthrottle/nestjs-repositories-server';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import type {
   NotificationSeverity,
   ScheduledRunFailureReasonsValue,
@@ -55,7 +56,7 @@ export class ScheduledAgentJobFailureNotifierService {
       await this.deliverToChannels(notice);
     } catch (error) {
       this.logger.warn(
-        `Could not notify about scheduled job ${input.scheduledAgentJobId} (${input.reason}): ${error instanceof Error ? error.message : String(error)}`,
+        `Could not notify about scheduled job ${input.scheduledAgentJobId} (${input.reason}): ${toErrorMessage(error)}`,
         ScheduledAgentJobFailureNotifierService.name,
       );
     }
@@ -103,7 +104,7 @@ export class ScheduledAgentJobFailureNotifierService {
       const name = this.channels[index]?.name ?? 'unknown';
       const reason: unknown = result.reason;
       this.logger.warn(
-        `Scheduled-run failure channel "${name}" could not deliver the notice for schedule ${notice.scheduledAgentJobId}: ${reason instanceof Error ? reason.message : String(reason)}`,
+        `Scheduled-run failure channel "${name}" could not deliver the notice for schedule ${notice.scheduledAgentJobId}: ${toErrorMessage(reason)}`,
         ScheduledAgentJobFailureNotifierService.name,
       );
     });

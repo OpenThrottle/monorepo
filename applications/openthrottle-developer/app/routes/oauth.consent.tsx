@@ -1,3 +1,4 @@
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import {
   getAuthTokenFromCookie,
   getLoginRedirectFromRequest,
@@ -17,7 +18,6 @@ import {
   OAuthConsentRequestDocument,
 } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
-import { toErrorMessage } from '~/global/utils/utils.error-message';
 import { ConsentCard } from '~/routing/oauth/components/ConsentCard';
 import { ConsentUnavailable } from '~/routing/oauth/components/ConsentUnavailable';
 import { OAUTH_SCOPES } from '~/routing/oauth/data/data.copy';

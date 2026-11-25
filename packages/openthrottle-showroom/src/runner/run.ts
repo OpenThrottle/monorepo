@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-
 /**
  * @description Record one demo flow. Flow in, raw frames plus a step-timing
  * manifest out; the assembly stage turns those into a master.
@@ -31,12 +30,12 @@
  * see ../README.md. Recording the dev server is not representative, and recording
  * the dev database is a leak.
  */
-
 import type { ChildProcess } from 'node:child_process';
 import { spawn } from 'node:child_process';
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import { chromium } from 'playwright';
 
 import { getFlow } from '../episodes/flows.ts';
@@ -190,9 +189,7 @@ const main = async (): Promise<void> => {
   try {
     flow = getFlow(flowId);
   } catch (error) {
-    console.error(
-      `run: ${error instanceof Error ? error.message : String(error)}`,
-    );
+    console.error(`run: ${toErrorMessage(error)}`);
     process.exit(1);
   }
 

@@ -7,6 +7,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+import { isErrorWithCode, isRecord } from '@openthrottle/nodejs-utils';
 import type {
   WorkflowDebugLevel,
   Writable,
@@ -33,7 +34,6 @@ import {
   PLAN_RUN_DEFAULTS_KEY,
   PLAN_RUN_ENV,
 } from '../data/data.plan-run-config.ts';
-import { isRecord } from './isRecord.ts';
 
 const V1_KNOWN_ROOT_KEYS = new Set([
   'debug',
@@ -51,12 +51,8 @@ const DEFAULT_LIFECYCLE_HOOKS_CHILD_JOBS = true;
 /** @internal Mutable builder for v1 file JSON. */
 type PlanRunDefaultsFileV1Draft = Partial<Writable<PlanRunDefaultsFileV1Json>>;
 
-const isNodeErrno = (error: unknown): error is NodeJS.ErrnoException => {
-  return typeof error === 'object' && error !== null && 'code' in error;
-};
-
 const isEnoent = (error: unknown): boolean => {
-  return isNodeErrno(error) && error.code === 'ENOENT';
+  return isErrorWithCode(error) && error.code === 'ENOENT';
 };
 
 /**

@@ -7,6 +7,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { isRecord } from '@openthrottle/nodejs-utils';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import type { HookFetch } from '../../../index.ts';
@@ -35,10 +36,6 @@ const completeTranscript = (): string => {
   return raw.slice(0, raw.lastIndexOf('\n') + 1);
 };
 
-const isRecordValue = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null;
-};
-
 interface FakeServer {
   readonly fetchImpl: HookFetch;
   /** Every request id posted, in order, across all calls. */
@@ -47,9 +44,9 @@ interface FakeServer {
 
 const inputRowsOf = (parsed: unknown): unknown => {
   if (
-    isRecordValue(parsed) &&
-    isRecordValue(parsed.variables) &&
-    isRecordValue(parsed.variables.input)
+    isRecord(parsed) &&
+    isRecord(parsed.variables) &&
+    isRecord(parsed.variables.input)
   ) {
     return parsed.variables.input.rows;
   }
@@ -63,7 +60,7 @@ const fakeServer = (): FakeServer => {
     const rows = inputRowsOf(parsed);
     const list = Array.isArray(rows) ? rows : [];
     for (const row of list) {
-      if (isRecordValue(row) && typeof row.requestId === 'string') {
+      if (isRecord(row) && typeof row.requestId === 'string') {
         requestIds.push(row.requestId);
       }
     }
@@ -198,7 +195,7 @@ describe('captureTranscriptUsage', () => {
         const rows = inputRowsOf(JSON.parse(init.body));
         const list = Array.isArray(rows) ? rows : [];
         for (const row of list) {
-          accounts.push(isRecordValue(row) ? row.account : undefined);
+          accounts.push(isRecord(row) ? row.account : undefined);
         }
         return {
           json: async () => ({

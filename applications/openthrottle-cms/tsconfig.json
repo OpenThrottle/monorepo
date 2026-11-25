@@ -33,6 +33,9 @@
       "path": "../../packages/react-router-cms-core"
     },
     {
+      "path": "../../packages/nodejs-utils"
+    },
+    {
       "path": "../../packages/react-router-graphql"
     },
     {

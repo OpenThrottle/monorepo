@@ -18,6 +18,7 @@ import {
   RepositoryCheckoutsRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import { PlanRunsRepository } from '@openthrottle/nestjs-repositories-server';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 
 import { RepositoryInspectionService } from '../../graphql/repository-inspection/repository-inspection.service.ts';
 import type { RegisterPlanRunWorktreeCheckoutParams } from './plan-run-worktree-checkout.types.ts';
@@ -97,9 +98,9 @@ export class PlanRunWorktreeCheckoutService {
       return updated ?? run;
     } catch (error) {
       this.logger.warn(
-        `[${this.name}] soft-fail registering worktree checkout for run ${planRunId} at ${filesystemPath}: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        `[${this.name}] soft-fail registering worktree checkout for run ${planRunId} at ${filesystemPath}: ${toErrorMessage(
+          error,
+        )}`,
       );
       return this.planRunsRepository.findRunById(planRunId);
     }

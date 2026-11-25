@@ -20,6 +20,7 @@
     "@openthrottle/nestjs-repositories-server": "workspace:^",
     "@openthrottle/nestjs-testing": "workspace:^",
     "@openthrottle/node-client": "workspace:^",
+    "@openthrottle/nodejs-utils": "workspace:^",
     "@openthrottle/openthrottle-agentic-loop": "workspace:^",
     "@openthrottle/openthrottle-agentic-utils": "workspace:^",
     "@openthrottle/openthrottle-desktop-bridge": "workspace:^",

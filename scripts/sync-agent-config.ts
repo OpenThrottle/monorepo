@@ -20,6 +20,7 @@ import {
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
+import { isStringArray } from '@openthrottle/nodejs-utils';
 import * as prettier from 'prettier';
 
 import { hasFlag } from './utils/args.ts';
@@ -85,12 +86,6 @@ type JsonObject = Record<string, unknown>;
 
 const isObject = (value: unknown): value is JsonObject => {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
-};
-
-const isStringArray = (value: unknown): value is string[] => {
-  return (
-    Array.isArray(value) && value.every((item) => typeof item === 'string')
-  );
 };
 
 const nonEmptyString = (value: unknown): value is string => {

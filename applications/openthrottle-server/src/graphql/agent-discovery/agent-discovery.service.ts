@@ -21,10 +21,10 @@
  * (`NODE_ENV=test` or `VITEST`), where it is off so testing modules never spawn
  * real CLIs; an explicit value always wins.
  */
-
 import type { OnApplicationBootstrap } from '@nestjs/common';
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import type { AgentCliDiscoveryResult } from '@openthrottle/openthrottle-agentic-utils';
 import { discoverAgentClis } from '@openthrottle/openthrottle-agentic-utils';
 import { StaleWhileRevalidateCache } from '@openthrottle/openthrottle-agentic-utils';
@@ -135,7 +135,7 @@ export class AgentDiscoveryService implements OnApplicationBootstrap {
         await this.cache.get(() => this.scan(), ttls, true);
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = toErrorMessage(error);
 
       this.logger.warn(`🤖 agent-discovery: boot warm-up failed: ${message}`);
     }

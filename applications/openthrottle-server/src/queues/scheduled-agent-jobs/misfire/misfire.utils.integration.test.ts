@@ -1,3 +1,4 @@
+import { sleep } from '@openthrottle/nodejs-utils';
 import type { Job } from 'bullmq';
 import { Queue, Worker } from 'bullmq';
 
@@ -52,10 +53,6 @@ interface ScenarioResult {
   readonly missedSlots: number;
   readonly processed: readonly ProcessedFire[];
 }
-
-const sleep = async (ms: number): Promise<void> => {
-  await new Promise((resolve) => setTimeout(resolve, ms));
-};
 
 const slotOf = (jobId: string | undefined): number => {
   return Number((jobId ?? '').split(':').at(-1) ?? Number.NaN);

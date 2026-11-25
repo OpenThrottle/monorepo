@@ -14,6 +14,8 @@
  * - **exit class** — success, failure, or termination.
  */
 
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 import type { Transcript } from '../../types/transcript.ts';
 
 /** @public */
@@ -49,10 +51,6 @@ const NESTED_DISCRIMINATED_KEYS = [
   'part',
   'step_update',
 ] as const;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
 
 function decode(line: string): unknown {
   try {

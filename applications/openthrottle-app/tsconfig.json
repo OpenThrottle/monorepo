@@ -18,6 +18,9 @@
   ],
   "references": [
     {
+      "path": "../../packages/nodejs-utils"
+    },
+    {
       "path": "../../packages/react-router-shadcn"
     },
     {

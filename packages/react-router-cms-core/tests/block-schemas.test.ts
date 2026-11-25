@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 
+import { isRecord } from '@openthrottle/nodejs-utils';
 import * as CmsUi from '@openthrottle/react-router-cms-ui';
 import { Ajv } from 'ajv';
 import { describe, expect, test } from 'vitest';
@@ -17,12 +18,6 @@ import { isCmsJsonSchema } from '../src/utils/parseCmsSchema';
  * the props interfaces; this proves they are usable: every block has one, each is valid JSON
  * Schema under a strict Ajv, and each block's defaults satisfy its own schema.
  */
-
-const isRecord = (
-  value: unknown,
-): value is Readonly<Record<string, unknown>> => {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-};
 
 const readJson = (path: string): unknown => {
   return JSON.parse(readFileSync(path, 'utf8'));

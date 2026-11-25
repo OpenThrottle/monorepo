@@ -17,6 +17,7 @@
     "@openthrottle/graphql-codegen": "workspace:^",
     "@openthrottle/nestjs-modules": "workspace:^",
     "@openthrottle/nodejs-graphql": "workspace:^",
+    "@openthrottle/nodejs-utils": "workspace:^",
     "@openthrottle/openthrottle-agentic-utils": "workspace:^",
     "@rekog/mcp-nest": "catalog:",
     "dotenv": "catalog:",

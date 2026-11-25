@@ -5,7 +5,6 @@
  * scheduler upsert are ordered write-then-project (mirroring enqueue-after-commit): a scheduler is
  * only registered after its row exists.
  */
-
 import { InjectQueue } from '@nestjs/bullmq';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
@@ -25,6 +24,7 @@ import {
   ScheduledAgentJobRunsRepository,
   ScheduledAgentJobsRepository,
 } from '@openthrottle/nestjs-repositories-server';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import {
   getDriver,
   parseDriverId,
@@ -348,7 +348,7 @@ export class ScheduledAgentJobsGraphqlService {
       });
     } catch (error) {
       this.logger.warn(
-        `Could not remove the queued job for scheduled run ${run.id}: ${error instanceof Error ? error.message : String(error)}`,
+        `Could not remove the queued job for scheduled run ${run.id}: ${toErrorMessage(error)}`,
         ScheduledAgentJobsGraphqlService.name,
       );
     }

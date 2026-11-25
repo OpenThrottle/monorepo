@@ -18,6 +18,7 @@ import { isAbsolute, join } from 'node:path';
 
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import type { WorkflowConfigRunner } from '@openthrottle/openthrottle-agentic-utils';
 
 import type { PlanRunWorkspacePreflightParams } from './plan-run-workspace-preflight.types.ts';
@@ -135,9 +136,9 @@ export class PlanRunWorkspacePreflightService {
       servers = readMcpServers(parsed);
     } catch (error) {
       return [
-        `${relativeConfigPath} in ${workingDirectory} is not readable JSON (${
-          error instanceof Error ? error.message : String(error)
-        }); MCP servers will not attach.`,
+        `${relativeConfigPath} in ${workingDirectory} is not readable JSON (${toErrorMessage(
+          error,
+        )}); MCP servers will not attach.`,
       ];
     }
 

@@ -1,3 +1,4 @@
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import {
   executeGraphqlWithAuth,
   parseFormData,
@@ -9,7 +10,6 @@ import {
   TrajectoryViewerRemoveLabelDocument,
 } from '~/__generated__/graphql';
 import { LabelAgentTrajectoryInputSchema } from '~/__generated__/schemas';
-import { toErrorMessage } from '~/global/utils/utils.error-message';
 import { TRAJECTORY_LABEL_COPY } from '~/routing/evals/data/data.copy';
 import type {
   TrajectoryLabelActionFailure,

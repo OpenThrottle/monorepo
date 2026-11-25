@@ -4,6 +4,9 @@
  * skills/ot-loop/SKILL.md). A change to that section must land here in the same PR. Design
  * and deliberate divergences (inbox handling, thin tasks): docs/workflows/ot-loop-job.md.
  */
+
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
+
 import type { LoopOutcome, RunOtLoopOptions } from '../contract/index.ts';
 import { LOOP_TASK_STATUS } from '../contract/index.ts';
 import {
@@ -74,7 +77,7 @@ const recover = async (
   ctx: LoopRunContext,
   error: unknown,
 ): Promise<LoopOutcome> => {
-  const reason = error instanceof Error ? error.message : String(error);
+  const reason = toErrorMessage(error);
   const { currentTaskId } = ctx.tracker;
 
   try {

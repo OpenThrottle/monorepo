@@ -4,6 +4,7 @@
  * configuration rather than protocol.
  */
 
+import { isRecord } from '@openthrottle/nodejs-utils';
 import type { ConversationBackend } from '@openthrottle/openthrottle-agentic-utils';
 import {
   antigravityConversationBackend,
@@ -75,10 +76,6 @@ export type ReplayProfile = Pick<
   RecordingProfile,
   'backend' | 'binEnv' | 'conversationBackend' | 'sessionStrategy'
 >;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
 
 function parseJsonLine(line: string): unknown {
   try {

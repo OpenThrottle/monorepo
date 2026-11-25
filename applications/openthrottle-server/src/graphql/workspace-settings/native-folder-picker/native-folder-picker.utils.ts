@@ -11,6 +11,8 @@ import { homedir } from 'node:os';
 import { isAbsolute } from 'node:path';
 import { promisify } from 'node:util';
 
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
+
 import {
   NATIVE_DIALOG_TIMEOUT_MS,
   NATIVE_PICKER_ENV,
@@ -237,7 +239,7 @@ export const pickNativeFolder = async (options: {
     }
     return {
       kind: 'error',
-      message: error instanceof Error ? error.message : String(error),
+      message: toErrorMessage(error),
     };
   }
 

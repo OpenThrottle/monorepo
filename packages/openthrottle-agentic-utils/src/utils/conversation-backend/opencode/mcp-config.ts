@@ -21,7 +21,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { isRecord } from '@openthrottle/nodejs-utils';
+import { isRecord, isStringArray } from '@openthrottle/nodejs-utils';
 
 import type { ConversationPermissionModesValue } from '../types.ts';
 import { CONVERSATION_PERMISSION_MODES } from '../types.ts';
@@ -103,12 +103,6 @@ export interface OpencodeMcpConfigFile {
   /** Absolute path to pass as `OPENCODE_CONFIG`. */
   readonly path: string;
 }
-
-const isStringArray = (value: unknown): value is string[] => {
-  return (
-    Array.isArray(value) && value.every((item) => typeof item === 'string')
-  );
-};
 
 const toStringRecord = (value: unknown): Record<string, string> | undefined => {
   if (!isRecord(value)) {

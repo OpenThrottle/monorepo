@@ -19,6 +19,7 @@ import type {
   GraderVerdict,
   RunEvalIteration,
 } from '@openthrottle/agentic-evals';
+import { isRecord } from '@openthrottle/nodejs-utils';
 
 import type { SandboxToolCall } from '../sandbox/createSandboxMcpServer.ts';
 import { cliGradeBoundaryOf, cliSelectionOf } from './cli-selection.ts';
@@ -55,10 +56,6 @@ export function createCliRunState(): CliRunState {
 export function trialKey(caseId: string, attempt: number): string {
   return `${caseId}#${attempt}`;
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-};
 
 const toSandboxCall = (value: unknown): SandboxToolCall | undefined => {
   if (!isRecord(value)) {

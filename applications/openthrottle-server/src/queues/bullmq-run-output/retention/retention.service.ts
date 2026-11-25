@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { pruneKeyedRunOutputDirectory } from '@openthrottle/nestjs-logging';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 
 import type { BullMqRunOutputRetentionConfig } from '../../../config/config.types.ts';
 import { getBullMqRunOutputRetentionConfig } from '../../../config/config.utils.ts';
@@ -49,7 +50,7 @@ export class BullMqRunOutputRetentionService {
         );
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = toErrorMessage(error);
 
       this.logger.warn(
         `BullMQ run output retention prune failed: ${message}`,

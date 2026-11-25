@@ -1,3 +1,4 @@
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import { GlobalScreen } from '@openthrottle/react-router-ui-global';
@@ -16,7 +17,6 @@ import {
   RetryJobInputSchema,
 } from '~/__generated__/schemas';
 import { SITE_TITLE } from '~/global/config/settings';
-import { toErrorMessage } from '~/global/utils/utils.error-message';
 import { QueueJobDetail } from '~/routing/queues/components/QueueJobDetail';
 
 type HandleData = Route.ComponentProps['loaderData'];

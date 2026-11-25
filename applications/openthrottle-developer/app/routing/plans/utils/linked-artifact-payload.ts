@@ -14,6 +14,8 @@
  * discriminator appended server-side by `resolveArtifactForWrite`.
  */
 
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 /** Icon keys the row component maps to a lucide icon; `unknown` is the fallback. */
 export const ARTIFACT_ICON_KEY = {
   DEPLOYMENT: 'deployment',
@@ -91,10 +93,6 @@ export type LinkedArtifactView =
 
 /** Length of the abbreviated sha shown in a commit label. */
 const SHORT_SHA_LENGTH = 7;
-
-const isRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-};
 
 const readString = (
   source: Record<string, unknown>,

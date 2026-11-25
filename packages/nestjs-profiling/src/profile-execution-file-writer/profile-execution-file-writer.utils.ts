@@ -1,6 +1,7 @@
 import * as fs from 'node:fs/promises';
 
 import { Logger } from '@nestjs/common';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 
 import type { ProfileExecutionResult } from '../decorators/decorators.types.ts';
 import type {
@@ -47,7 +48,7 @@ function serializeLine(
     return JSON.stringify({
       error: 'serialize_failed',
       label: result.label,
-      reason: cause instanceof Error ? cause.message : String(cause),
+      reason: toErrorMessage(cause),
     });
   }
 
@@ -129,7 +130,7 @@ export function createProfileExecutionFileWriter(
       return;
     }
 
-    const reason = cause instanceof Error ? cause.message : String(cause);
+    const reason = toErrorMessage(cause);
     const hasSuppressed = suppressedSinceLastLog > 0;
     const suppressedNote = ` (+${suppressedSinceLastLog} similar failures suppressed)`;
     const suffix = hasSuppressed ? suppressedNote : '';

@@ -1,3 +1,4 @@
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
@@ -16,7 +17,6 @@ import {
   SettingsConnectionsDocument,
 } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
-import { toErrorMessage } from '~/global/utils/utils.error-message';
 import { SettingsConnectionsTable } from '~/routing/settings/components/SettingsConnectionsTable';
 import { SETTINGS_CONNECTIONS_COPY as COPY } from '~/routing/settings/data/data.copy';
 

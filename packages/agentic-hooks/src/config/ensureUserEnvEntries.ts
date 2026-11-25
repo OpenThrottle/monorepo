@@ -28,6 +28,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
+
 import { parseEnvLine, userConfigDir } from './env.ts';
 
 /** The comment line that marks the line below it as writer-owned. @public */
@@ -260,7 +262,7 @@ export const inspectUserEnvEntries = (
   } catch (err) {
     return {
       envPath,
-      error: err instanceof Error ? err.message : String(err),
+      error: toErrorMessage(err),
       ok: false,
     };
   }
@@ -313,7 +315,7 @@ export const ensureUserEnvEntries = (
   } catch (err) {
     return {
       envPath,
-      error: err instanceof Error ? err.message : String(err),
+      error: toErrorMessage(err),
       ok: false,
     };
   }

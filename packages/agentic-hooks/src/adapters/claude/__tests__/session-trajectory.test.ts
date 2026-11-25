@@ -7,6 +7,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { isRecord } from '@openthrottle/nodejs-utils';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import type { HookFetch } from '../../../index.ts';
@@ -30,10 +31,6 @@ const readFixture = (name: string): string => {
   return fs.readFileSync(path.join(fixturesDir, name), 'utf8');
 };
 
-const isRecordValue = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null;
-};
-
 interface Posted {
   readonly input: Record<string, unknown>;
 }
@@ -55,9 +52,9 @@ const fakeServer = (behavior: Behavior = 'accept'): FakeServer => {
       return { json: async () => ({}), ok: false, status: 413 };
     }
     const parsed: unknown = JSON.parse(init.body);
-    const variables = isRecordValue(parsed) ? parsed.variables : undefined;
-    const sent = isRecordValue(variables) ? variables.input : undefined;
-    const input = isRecordValue(sent) ? sent : {};
+    const variables = isRecord(parsed) ? parsed.variables : undefined;
+    const sent = isRecord(variables) ? variables.input : undefined;
+    const input = isRecord(sent) ? sent : {};
     posted.push({ input });
     return {
       json: async () => ({ data: { recordAgentTrajectory: { id: 'traj-1' } } }),
@@ -161,7 +158,7 @@ describe('captureSessionTrajectories', () => {
     input: Record<string, unknown> | undefined,
   ): number => {
     const parsed: unknown = JSON.parse(String(input?.trajectoryJson));
-    return isRecordValue(parsed) && Array.isArray(parsed.subagent_trajectories)
+    return isRecord(parsed) && Array.isArray(parsed.subagent_trajectories)
       ? parsed.subagent_trajectories.length
       : 0;
   };

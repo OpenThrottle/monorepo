@@ -4,6 +4,8 @@
  * down to 768 dims scores the same under cosine and inner-product search.
  */
 
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
+
 /** @description Attempts per request, the first included. */
 export const HOSTED_EMBEDDING_MAX_ATTEMPTS = 4;
 
@@ -56,13 +58,6 @@ export function backoffDelayMs(
   return Math.min(Math.max(delay, 0), HOSTED_EMBEDDING_BACKOFF_MAX_MS);
 }
 
-/** @description The real sleep the adapters use outside tests. */
-export function sleepMs(ms: number): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-}
-
 /** @description First 300 characters of an error body; providers explain refusals there. */
 async function readErrorBody(response: Response): Promise<string> {
   try {
@@ -111,7 +106,7 @@ async function attemptPost(
       retryAfter: response.headers.get('retry-after'),
     };
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = toErrorMessage(error);
 
     return {
       detail: `${request.label} is unreachable: ${message}`,

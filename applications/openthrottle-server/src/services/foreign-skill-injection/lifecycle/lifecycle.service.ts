@@ -1,6 +1,7 @@
 import type { OnApplicationShutdown } from '@nestjs/common';
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import {
   layerForLedgerPath,
   listLedgerPaths,
@@ -50,9 +51,9 @@ export class ForeignSkillInjectionLifecycleService implements OnApplicationShutd
         reconciled += 1;
       } catch (error) {
         this.logger.warn(
-          `Foreign-skill teardown failed for ${ledger.repoPath}: ${
-            error instanceof Error ? error.message : String(error)
-          }`,
+          `Foreign-skill teardown failed for ${ledger.repoPath}: ${toErrorMessage(
+            error,
+          )}`,
         );
       }
     }

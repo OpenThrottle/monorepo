@@ -1,6 +1,8 @@
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
+
 import type {
   PlanRunCommandResult,
   PlanRunCommandRunner,
@@ -58,7 +60,7 @@ export const createPlanRunCommandRunner = (): PlanRunCommandRunner => {
         return { exitCode: error.code, stderr, stdout };
       }
 
-      const message = error instanceof Error ? error.message : String(error);
+      const message = toErrorMessage(error);
 
       return { exitCode: 1, stderr: message, stdout: '' };
     }

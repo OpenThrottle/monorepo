@@ -1,3 +1,4 @@
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import { PubSubEngine } from 'graphql-subscriptions';
 
 import {
@@ -20,10 +21,6 @@ interface Subscription {
   readonly channel: string;
   readonly onMessage: MessageHandler;
 }
-
-const describeError = (error: unknown): string => {
-  return error instanceof Error ? error.message : String(error);
-};
 
 /**
  * @description A {@link PubSubEngine} over Redis pub/sub, so an event published
@@ -71,7 +68,7 @@ export class RedisPubSubEngine extends PubSubEngine {
       );
     } catch (error: unknown) {
       this.logger?.warn(
-        `Redis PubSub publish to "${triggerName}" failed; event dropped: ${describeError(error)}`,
+        `Redis PubSub publish to "${triggerName}" failed; event dropped: ${toErrorMessage(error)}`,
       );
     }
   }
@@ -126,7 +123,7 @@ export class RedisPubSubEngine extends PubSubEngine {
       .unsubscribe(subscription.channel)
       .catch((error: unknown) => {
         this.logger?.warn(
-          `Redis PubSub unsubscribe from "${subscription.channel}" failed: ${describeError(error)}`,
+          `Redis PubSub unsubscribe from "${subscription.channel}" failed: ${toErrorMessage(error)}`,
         );
       });
   }
@@ -144,7 +141,7 @@ export class RedisPubSubEngine extends PubSubEngine {
     for (const result of results) {
       if (result.status === 'rejected') {
         this.logger?.warn(
-          `Redis PubSub connection failed to close: ${describeError(result.reason)}`,
+          `Redis PubSub connection failed to close: ${toErrorMessage(result.reason)}`,
         );
       }
     }
@@ -171,7 +168,7 @@ export class RedisPubSubEngine extends PubSubEngine {
       return { ok: true, payload: decodePubSubPayload(message) };
     } catch (error: unknown) {
       this.logger?.error(
-        `Redis PubSub dropped an undecodable message on "${channel}": ${describeError(error)}`,
+        `Redis PubSub dropped an undecodable message on "${channel}": ${toErrorMessage(error)}`,
       );
 
       return { ok: false };

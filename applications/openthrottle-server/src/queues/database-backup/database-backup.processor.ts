@@ -2,11 +2,11 @@
  * @description BullMQ processor for scheduled local Postgres backup via `pnpm run database:backup`.
  * @see docs/openthrottle/database-backup-scheduled-job-spec.md
  */
-
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
 import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 
 import { NotificationsService } from '../../notifications/notifications.service.ts';
 import {
@@ -107,7 +107,7 @@ export class DatabaseBackupProcessor
 
       return result;
     } catch (error) {
-      const message = `Database backup job failed: jobId=${jobId}, error=${error instanceof Error ? error.message : String(error)}`;
+      const message = `Database backup job failed: jobId=${jobId}, error=${toErrorMessage(error)}`;
       this.logger.error(message, logContext);
       this.notifications.emitQueueJobCompleted({
         jobType: JOB_TYPE,

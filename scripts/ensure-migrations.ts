@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { sleep } from '@openthrottle/nodejs-utils';
 import {
   ensurePostgresReachable,
   getPostgresUrl,
@@ -65,11 +66,6 @@ export class PostgresUnreachableError extends Error {
     this.attempts = attempts;
     this.name = 'PostgresUnreachableError';
   }
-}
-
-/** Real-clock sleep; injectable so the retry policy is unit-testable without timers. */
-export function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**

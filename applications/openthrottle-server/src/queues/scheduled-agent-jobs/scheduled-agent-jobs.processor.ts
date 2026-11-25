@@ -14,6 +14,7 @@ import {
   ScheduledAgentJobRunsRepository,
   ScheduledAgentJobsRepository,
 } from '@openthrottle/nestjs-repositories-server';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import { AGENT_CONFIG_POSTURE } from '@openthrottle/openthrottle-agentic-utils';
 import type {
   AgentDriver,
@@ -414,7 +415,7 @@ export class ScheduledAgentJobsProcessor
       // runAgentPrompt only throws on invalid input (unknown driver / capability mismatch); an
       // unexpected DB error can also land here. Record the run as failed in-band; do NOT rethrow, so
       // the run row (authoritative) carries the failure without a BullMQ retry (attempts: 1).
-      const message = error instanceof Error ? error.message : String(error);
+      const message = toErrorMessage(error);
       this.logger.warn(
         `Scheduled agent job ${scheduleId} run ${runRowId} failed: ${message}`,
         ScheduledAgentJobsProcessor.name,
@@ -609,7 +610,7 @@ export class ScheduledAgentJobsProcessor
       });
       await this.jobsRepository.updateNextRunAt(scheduleId, next);
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = toErrorMessage(error);
       this.logger.warn(
         `Scheduled agent job ${scheduleId}: could not arm the next fire: ${message}`,
         ScheduledAgentJobsProcessor.name,

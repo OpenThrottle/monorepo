@@ -1,8 +1,7 @@
 /**
  * @description Unit/integration tests for the Ollama proxy server.
  *
- * Covers the pure parser/validation helpers (`isRecord`,
- * `parseOllamaTagsResponse`) and the request router (`requestHandler`) driven
+ * Covers the pure parser (`parseOllamaTagsResponse`) and the request router (`requestHandler`) driven
  * through a real local HTTP server. Upstream `fetch` is replaced with a stub so
  * tests never reach a live Ollama; status/header passthrough and the streaming
  * relay are exercised against a real upstream `http` server.
@@ -10,6 +9,7 @@
 
 import * as http from 'node:http';
 
+import { isRecord } from '@openthrottle/nodejs-utils';
 import {
   afterAll,
   afterEach,
@@ -21,7 +21,6 @@ import {
 } from 'vitest';
 
 import {
-  isRecord,
   OLLAMA_BASE_URL,
   parseOllamaTagsResponse,
   requestHandler,
@@ -125,25 +124,6 @@ afterAll(async () => {
 afterEach(() => {
   globalThis.fetch = realFetch;
   vi.restoreAllMocks();
-});
-
-// ---------------------------------------------------------------------------
-// isRecord
-// ---------------------------------------------------------------------------
-
-describe('isRecord', () => {
-  it('accepts plain objects', () => {
-    expect(isRecord({})).toBe(true);
-    expect(isRecord({ a: 1 })).toBe(true);
-  });
-
-  it('rejects null, arrays and primitives', () => {
-    expect(isRecord(null)).toBe(false);
-    expect(isRecord([])).toBe(false);
-    expect(isRecord('x')).toBe(false);
-    expect(isRecord(42)).toBe(false);
-    expect(isRecord(undefined)).toBe(false);
-  });
 });
 
 // ---------------------------------------------------------------------------

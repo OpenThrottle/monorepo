@@ -7,6 +7,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { isRecord } from '@openthrottle/nodejs-utils';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import type { HookFetch } from '../../../index.ts';
@@ -25,10 +26,6 @@ const SESSION = 'ses-resegment-1';
 const URL = 'http://example.test/graphql';
 const TASK_1 = 'task-1';
 const EXISTING_ID = 'traj-keep-me';
-
-const isRecordValue = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null;
-};
 
 interface Call {
   readonly field: string;
@@ -74,9 +71,9 @@ const fakeServer = (): {
 
   const fetchImpl: HookFetch = async (_url, init) => {
     const parsed: unknown = JSON.parse(init.body);
-    const query = isRecordValue(parsed) ? String(parsed.query ?? '') : '';
-    const variables = isRecordValue(parsed) ? parsed.variables : undefined;
-    const vars = isRecordValue(variables) ? variables : {};
+    const query = isRecord(parsed) ? String(parsed.query ?? '') : '';
+    const variables = isRecord(parsed) ? parsed.variables : undefined;
+    const vars = isRecord(variables) ? variables : {};
 
     const listPayload = () => {
       return rows.map((row) => {
@@ -127,7 +124,7 @@ const fakeServer = (): {
 
     if (query.includes('replaceAgentTrajectory')) {
       const id = typeof vars.id === 'string' ? vars.id : '';
-      const input = isRecordValue(vars.input) ? vars.input : {};
+      const input = isRecord(vars.input) ? vars.input : {};
       calls.push({ field: 'replaceAgentTrajectory', id, input });
       const trajectoryJson =
         typeof input.trajectoryJson === 'string' ? input.trajectoryJson : '';
@@ -148,7 +145,7 @@ const fakeServer = (): {
     }
 
     if (query.includes('recordAgentTrajectory')) {
-      const input = isRecordValue(vars.input) ? vars.input : {};
+      const input = isRecord(vars.input) ? vars.input : {};
       const idempotencyKey =
         typeof input.idempotencyKey === 'string' ? input.idempotencyKey : null;
       const existing = rows.find((row) => {

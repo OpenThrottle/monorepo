@@ -2,6 +2,8 @@ import { createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 import type { GraderVerdict } from '../types/index.ts';
 
 /**
@@ -49,10 +51,6 @@ export const judgeCacheKey = (key: JudgeCacheKeyInput): string => {
   return sha256(
     JSON.stringify([key.prompt, key.input, key.graderVersion, key.judgeModel]),
   );
-};
-
-const isRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
 };
 
 const toCachedVerdict = (value: unknown): GraderVerdict | undefined => {

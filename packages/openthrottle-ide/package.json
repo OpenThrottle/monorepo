@@ -8,6 +8,7 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
+    "@openthrottle/nodejs-utils": "workspace:^",
     "@vscode/ripgrep": "catalog:",
     "chokidar": "catalog:",
     "ignore": "catalog:",

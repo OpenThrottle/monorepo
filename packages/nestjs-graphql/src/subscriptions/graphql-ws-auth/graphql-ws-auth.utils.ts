@@ -11,6 +11,7 @@
  * optional `JWT_ISSUER`, `sub` = user id), so the browser sends a short-lived,
  * same-secret token minted server-side; see the plan's auth decision.
  */
+import { isRecord } from '@openthrottle/nodejs-utils';
 import jwt from 'jsonwebtoken';
 
 import { GRAPHQL_WS_AUTH_TOKEN_PARAM } from './graphql-ws-auth.constants.ts';
@@ -18,10 +19,6 @@ import type {
   GraphqlWsAuthOptions,
   GraphqlWsConnectionContext,
 } from './graphql-ws-auth.types.ts';
-
-const isMutableRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null;
-};
 
 /**
  * @description Pull the bearer token out of connectionParams. Accepts either
@@ -110,7 +107,7 @@ export function createGraphqlWsOnConnect(
     // graphql-ws owns `extra` (a mutable object set on the socket before
     // onConnect runs); narrow it and stash identity for the shared `context`
     // callback to read back via resolveGraphqlWsUserId.
-    if (isMutableRecord(ctx.extra)) {
+    if (isRecord(ctx.extra)) {
       ctx.extra['userId'] = userId;
     }
 

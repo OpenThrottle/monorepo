@@ -1,5 +1,7 @@
 import { dirname } from 'node:path';
 
+import { isRecord, toErrorMessage } from '@openthrottle/nodejs-utils';
+
 import { SETTINGS_VERSION } from '../data/data.settings.ts';
 import { normalizeServerUrl } from '../utils/normalizeServerUrl.ts';
 
@@ -31,10 +33,6 @@ export interface CreateSettingsStoreOptions {
   readonly tempSuffix: string;
 }
 
-const isRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null;
-};
-
 const parseSettings = (raw: string): Settings => {
   try {
     const parsed: unknown = JSON.parse(raw);
@@ -49,10 +47,6 @@ const parseSettings = (raw: string): Settings => {
   } catch {
     return { serverUrl: undefined };
   }
-};
-
-const describeError = (error: unknown): string => {
-  return error instanceof Error ? error.message : String(error);
 };
 
 /**
@@ -95,7 +89,7 @@ export const createSettingsStore = (
 
       return { ok: true };
     } catch (error) {
-      return { ok: false, reason: describeError(error) };
+      return { ok: false, reason: toErrorMessage(error) };
     }
   };
 

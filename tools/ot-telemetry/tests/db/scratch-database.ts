@@ -4,6 +4,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import {
   getPostgresUrl,
   OPENTHROTTLE_POSTGRES_URL_ENV,
@@ -150,8 +151,7 @@ function cleanupFailedError(
   setupError: unknown,
   dropError: unknown,
 ): AggregateError {
-  const reason =
-    setupError instanceof Error ? setupError.message : String(setupError);
+  const reason = toErrorMessage(setupError);
   return new AggregateError(
     [setupError, dropError],
     `ot-telemetry DB tests: setting up "${name}" failed (${reason}), and dropping it again failed too — it may need dropping by hand.`,

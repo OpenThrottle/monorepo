@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import type { ValidateFunction } from 'ajv';
 import { Ajv } from 'ajv';
 
@@ -71,7 +72,7 @@ export class CmsSchemaValidationService {
         issues: [
           {
             instancePath: '',
-            message: error instanceof Error ? error.message : String(error),
+            message: toErrorMessage(error),
           },
         ],
         ok: false,
@@ -124,7 +125,7 @@ export class CmsSchemaValidationService {
         issues: [
           {
             instancePath: '',
-            message: `Stored schema ${schemaUuid} is not a valid JSON Schema: ${error instanceof Error ? error.message : String(error)}`,
+            message: `Stored schema ${schemaUuid} is not a valid JSON Schema: ${toErrorMessage(error)}`,
           },
         ],
         ok: false,

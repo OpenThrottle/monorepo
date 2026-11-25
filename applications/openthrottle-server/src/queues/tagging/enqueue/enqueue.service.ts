@@ -5,10 +5,10 @@
  * down. Deterministic job ids (tag-predict:<type>:<id>,
  * tag-refine:<planId>:<sha>) dedupe redeliveries of the same trigger.
  */
-
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import { Queue } from 'bullmq';
 
 import type { ForgeKind } from '../../../services/source-control/source-control.types.ts';
@@ -47,9 +47,9 @@ export class TaggingEnqueueService {
       );
     } catch (error) {
       this.logger.error(
-        `Failed to enqueue predict-tagging for ${entityType} ${entityId}: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        `Failed to enqueue predict-tagging for ${entityType} ${entityId}: ${toErrorMessage(
+          error,
+        )}`,
         TaggingEnqueueService.name,
       );
     }
@@ -73,9 +73,9 @@ export class TaggingEnqueueService {
       );
     } catch (error) {
       this.logger.error(
-        `Failed to enqueue refine-tagging for plan ${planId} @ ${sha}: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        `Failed to enqueue refine-tagging for plan ${planId} @ ${sha}: ${toErrorMessage(
+          error,
+        )}`,
         TaggingEnqueueService.name,
       );
     }

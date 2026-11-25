@@ -4,7 +4,7 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { isRecord } from '@openthrottle/nodejs-utils';
+import { isRecord, sleep } from '@openthrottle/nodejs-utils';
 
 import {
   GITHUB_MAX_RETRIES_DEFAULT,
@@ -802,12 +802,6 @@ function clampDelay(ms: number): number {
   return Math.min(ms, GITHUB_RETRY_MAX_DELAY_MS);
 }
 
-/** Promise-based delay. */
-async function sleep(ms: number): Promise<void> {
-  if (ms <= 0) return;
-  await new Promise<void>((resolve) => setTimeout(resolve, ms));
-}
-
 /**
  * Raises a {@link BadGatewayException} (502) when a GitHub response does not
  * match the minimal shape we read. This turns a GitHub error object or schema
@@ -821,11 +815,6 @@ function shapeError(context: string): never {
   );
 }
 
-/** Type guard: a non-null object (records and arrays both qualify). */
-function isObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
-
 /** Validates that the value is an array, returning it as `unknown[]`. */
 function parseUnknownArray(value: unknown): unknown[] {
   if (!Array.isArray(value)) {
@@ -837,7 +826,7 @@ function parseUnknownArray(value: unknown): unknown[] {
 /** Type guard: the minimal fields of a single PR list/detail item we map. */
 function isPullItem(value: unknown): value is GitHubPullItem {
   return (
-    isObject(value) &&
+    isRecord(value) &&
     typeof value.created_at === 'string' &&
     typeof value.html_url === 'string' &&
     typeof value.number === 'number' &&
@@ -862,7 +851,7 @@ function parsePullItemArray(value: unknown): GitHubPullItem[] {
 /** Type guard: the diff-stat fields read from the single-PR detail endpoint. */
 function isPullDetail(value: unknown): value is GitHubPullDetail {
   return (
-    isObject(value) &&
+    isRecord(value) &&
     typeof value.additions === 'number' &&
     typeof value.changed_files === 'number' &&
     typeof value.deletions === 'number' &&
@@ -881,7 +870,7 @@ function parsePullDetail(value: unknown): GitHubPullDetail {
 /** Type guard: a single issue/PR item (labels array + number + state) we map. */
 function isIssueItem(value: unknown): value is GitHubIssueItem {
   return (
-    isObject(value) &&
+    isRecord(value) &&
     Array.isArray(value.labels) &&
     typeof value.number === 'number'
   );
@@ -903,7 +892,7 @@ function parseIssueItemArray(value: unknown): GitHubIssueItem[] {
 /** Type guard: a single review item (state + submitted_at) we map. */
 function isReviewItem(value: unknown): value is GitHubReviewItem {
   return (
-    isObject(value) &&
+    isRecord(value) &&
     typeof value.submitted_at === 'string' &&
     (value.state === 'APPROVED' ||
       value.state === 'CHANGES_REQUESTED' ||
@@ -945,19 +934,19 @@ function toPullListItemDto(p: GitHubPullItem): PullListItemDto {
  * message — a malformed entry should be skipped, not fail the whole page.
  */
 function parseCommitSummary(value: unknown): CommitSummaryDto | null {
-  if (!isObject(value)) return null;
+  if (!isRecord(value)) return null;
 
   const sha = value.sha;
   const commit = value.commit;
 
-  if (typeof sha !== 'string' || !isObject(commit)) return null;
+  if (typeof sha !== 'string' || !isRecord(commit)) return null;
 
   const message = commit.message;
 
   if (typeof message !== 'string') return null;
 
   const author = value.author;
-  const login = isObject(author) ? author.login : undefined;
+  const login = isRecord(author) ? author.login : undefined;
 
   return {
     authorLogin: typeof login === 'string' && login !== '' ? login : null,

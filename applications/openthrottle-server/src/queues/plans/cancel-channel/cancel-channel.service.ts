@@ -10,6 +10,7 @@ import {
 } from '@openthrottle/nestjs-graphql';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { REDIS_CLIENT } from '@openthrottle/nestjs-redis';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import type { Redis } from 'ioredis';
 
 import { PlanRunCancellationService } from '../run-cancellation/run-cancellation.service.ts';
@@ -84,7 +85,7 @@ export class PlanCancelChannelService
       );
     } catch (error) {
       this.logger.warn(
-        `Failed to start plan-cancel subscriber (cancellation falls back to the durable marker): ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to start plan-cancel subscriber (cancellation falls back to the durable marker): ${toErrorMessage(error)}`,
         PlanCancelChannelService.name,
       );
     }
@@ -105,7 +106,7 @@ export class PlanCancelChannelService
       await this.redis.publish(planCancelTopic(planId), '1');
     } catch (error) {
       this.logger.warn(
-        `Failed to publish plan-cancel signal for planId=${planId} (durable marker still applies): ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to publish plan-cancel signal for planId=${planId} (durable marker still applies): ${toErrorMessage(error)}`,
         PlanCancelChannelService.name,
       );
     }
@@ -123,7 +124,7 @@ export class PlanCancelChannelService
       await subscriber.quit();
     } catch (error) {
       this.logger.warn(
-        `Failed to close plan-cancel subscriber connection: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to close plan-cancel subscriber connection: ${toErrorMessage(error)}`,
         PlanCancelChannelService.name,
       );
     }

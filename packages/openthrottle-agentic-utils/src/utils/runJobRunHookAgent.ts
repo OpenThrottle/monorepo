@@ -4,6 +4,7 @@
  * {@link JobRunHookAgentResult} for `executeJobRunHooksPhase`.
  */
 
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import type {
   AgentAccountError,
   AgentDriver,
@@ -105,7 +106,7 @@ export const runJobRunHookAgent = async (
       },
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = toErrorMessage(error);
 
     if (params.signal?.aborted === true) {
       return { cancelled: true, errorMessage: message, ok: false };

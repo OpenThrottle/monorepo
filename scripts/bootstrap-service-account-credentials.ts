@@ -28,6 +28,7 @@ import {
   ServiceAccountCredential,
   ServiceAccountCredentialsRepository,
 } from '@openthrottle/nestjs-repositories-server';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import { DataSource, IsNull } from 'typeorm';
 
 import {
@@ -112,10 +113,9 @@ async function upsertBootstrapCredentialFromEnv(
 
     return result.action;
   } catch (error) {
+    const detail = toErrorMessage(error);
     logger.fail(
-      `Failed to provision ${account.name} from ${account.envVar}: ${
-        error instanceof Error ? error.message : String(error)
-      }`,
+      `Failed to provision ${account.name} from ${account.envVar}: ${detail}`,
     );
 
     logger.fail(

@@ -3,6 +3,8 @@
  * Fan-out/fan-in: each run acquires one target, runs the loop, ensures commit guarantees, then releases.
  */
 
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
+
 import type {
   ParentJobAcquireResult,
   ParentJobEnsureCommitResult,
@@ -52,7 +54,7 @@ export async function runWorktreeWorkflow(
   try {
     loopResult = await runLoop(handoff);
   } catch (error) {
-    const msg = error instanceof Error ? error.message : String(error);
+    const msg = toErrorMessage(error);
     loopResult = { ok: false, reason: msg };
   }
 

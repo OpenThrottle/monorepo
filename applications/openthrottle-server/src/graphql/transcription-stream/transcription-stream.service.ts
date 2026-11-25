@@ -26,7 +26,7 @@ import {
   transcriptionStreamTopic,
 } from '@openthrottle/nestjs-graphql';
 import { LoggerService } from '@openthrottle/nestjs-modules';
-import { isRecord } from '@openthrottle/nodejs-utils';
+import { isRecord, toErrorMessage } from '@openthrottle/nodejs-utils';
 
 import { TRANSCRIPTION_STREAM_CHUNK_FIELD } from './transcription-stream.constants.ts';
 import type { TranscriptionStreamChunkPayload } from './transcription-stream.types.ts';
@@ -158,7 +158,7 @@ export class TranscriptionStreamService {
     try {
       session.socket = await this.connectToWhisper(session, serviceUrl);
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = toErrorMessage(error);
       this.logger.error(
         `transcription-stream: WhisperLive connect failed: ${message}`,
         TranscriptionStreamService.name,
@@ -193,9 +193,9 @@ export class TranscriptionStreamService {
       pcm = decodeInt16Base64ToFloat32(audioBase64);
     } catch (error: unknown) {
       this.logger.warn(
-        `transcription-stream: dropping undecodable audio chunk for session ${sessionId}: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        `transcription-stream: dropping undecodable audio chunk for session ${sessionId}: ${toErrorMessage(
+          error,
+        )}`,
         TranscriptionStreamService.name,
       );
 
@@ -238,9 +238,9 @@ export class TranscriptionStreamService {
         session.socket.send(END_OF_AUDIO);
       } catch (error: unknown) {
         this.logger.warn(
-          `transcription-stream: END_OF_AUDIO send failed for session ${sessionId}: ${
-            error instanceof Error ? error.message : String(error)
-          }`,
+          `transcription-stream: END_OF_AUDIO send failed for session ${sessionId}: ${toErrorMessage(
+            error,
+          )}`,
           TranscriptionStreamService.name,
         );
       }
@@ -469,9 +469,7 @@ export class TranscriptionStreamService {
       })
       .catch((error: unknown) => {
         this.logger.error(
-          `transcription-stream publish failed: ${
-            error instanceof Error ? error.message : String(error)
-          }`,
+          `transcription-stream publish failed: ${toErrorMessage(error)}`,
           TranscriptionStreamService.name,
         );
       });

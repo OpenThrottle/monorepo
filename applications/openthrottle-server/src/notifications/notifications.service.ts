@@ -5,7 +5,6 @@
  * @openthrottle/openthrottle-notifications (the discriminators); the payload shapes
  * are the code-first NotificationEvent types in the schema.
  */
-
 import { Inject, Injectable } from '@nestjs/common';
 import type { PubSubEngine } from '@openthrottle/nestjs-graphql';
 import {
@@ -16,6 +15,7 @@ import {
   userNotificationsTopic,
 } from '@openthrottle/nestjs-graphql';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import type {
   DebugPayload,
   NotificationSeverity,
@@ -82,9 +82,9 @@ export class NotificationsService {
       // Fire-and-forget: a publish failure must not break the originating
       // mutation, but a dropped notification should still be observable.
       this.logger.warn(
-        `Failed to publish notification event "${event.event}" to topics [${all.join(', ')}]: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        `Failed to publish notification event "${event.event}" to topics [${all.join(', ')}]: ${toErrorMessage(
+          error,
+        )}`,
         NotificationsService.name,
       );
     });

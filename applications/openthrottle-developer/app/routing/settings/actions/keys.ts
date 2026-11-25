@@ -1,3 +1,4 @@
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import {
   executeGraphqlWithAuth,
   parseFormData,
@@ -10,7 +11,6 @@ import {
   RevokeServiceAccountCredentialDocument,
 } from '~/__generated__/graphql';
 import { CreateServiceAccountCredentialInputSchema } from '~/__generated__/schemas';
-import { toErrorMessage } from '~/global/utils/utils.error-message';
 import type { SettingsKeysActionData } from '~/routing/settings/utils/settings-keys-action';
 import { parseExpiresAtFromFormData } from '~/routing/settings/utils/settings-keys-action';
 

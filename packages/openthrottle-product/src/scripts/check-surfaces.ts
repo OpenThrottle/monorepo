@@ -16,6 +16,7 @@ import { execFile } from 'node:child_process';
 import { access, readFile } from 'node:fs/promises';
 import { promisify } from 'node:util';
 
+import { isRecord, toErrorMessage } from '@openthrottle/nodejs-utils';
 import {
   OPENTHROTTLE_GITHUB_REPOSITORY,
   OPENTHROTTLE_GITHUB_URL_MONOREPO,
@@ -140,7 +141,7 @@ const checkPullRequests = async (): Promise<NetworkResult> => {
 
     return { checked: prs.length, kind: 'checked', problems };
   } catch (error) {
-    const reason = error instanceof Error ? error.message : String(error);
+    const reason = toErrorMessage(error);
 
     return {
       kind: 'skipped',
@@ -149,19 +150,15 @@ const checkPullRequests = async (): Promise<NetworkResult> => {
   }
 };
 
-const isObject = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null;
-};
-
 /** @description `data.plan.status` from a GraphQL response, if present. */
 const readPlanStatus = (body: unknown): string | undefined => {
-  if (!isObject(body) || !isObject(body.data)) {
+  if (!isRecord(body) || !isRecord(body.data)) {
     return undefined;
   }
 
   const plan = body.data.plan;
 
-  if (!isObject(plan) || typeof plan.status !== 'string') {
+  if (!isRecord(plan) || typeof plan.status !== 'string') {
     return undefined;
   }
 
@@ -231,7 +228,7 @@ const checkPlans = async (): Promise<NetworkResult> => {
 
     return { checked: cited.length, kind: 'checked', problems };
   } catch (error) {
-    const reason = error instanceof Error ? error.message : String(error);
+    const reason = toErrorMessage(error);
 
     return { kind: 'skipped', reason: `${API_URL} unreachable: ${reason}` };
   }

@@ -23,7 +23,7 @@ import {
   AgentConversationsRepository,
   AgentTokenUsageRepository,
 } from '@openthrottle/nestjs-repositories-server';
-import { isRecord } from '@openthrottle/nodejs-utils';
+import { isRecord, toErrorMessage } from '@openthrottle/nodejs-utils';
 import type {
   ConversationBackend,
   ConversationBackendRun,
@@ -352,7 +352,7 @@ export class ConversationStreamService {
           controller.signal,
         );
       } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : String(error);
+        const message = toErrorMessage(error);
         this.logger.error(`conversation-stream cursor mint failed: ${message}`);
         // Surface the mint failure as a terminal stream error the client can
         // display and retry — never a silent hang. Buffered, so a late
@@ -580,7 +580,7 @@ export class ConversationStreamService {
         sortOrder: sortOrder,
       });
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = toErrorMessage(error);
       this.logger.error(`conversation-stream failed: ${message}`);
 
       // Persist whatever streamed before the failure so the turn is not lost.
@@ -717,7 +717,7 @@ export class ConversationStreamService {
         // The thrown message already carries the redacted stdout/stderr, the
         // binary, and the cwd; add the conversation, the attempt, and our own
         // elapsed measurement.
-        const message = error instanceof Error ? error.message : String(error);
+        const message = toErrorMessage(error);
         const kind = classifyCursorFailure(message);
         this.logger.error(
           `conversation-stream cursor mint failed conversationId=${run.conversationId} elapsedMs=${Date.now() - startedAt} attempt=${attempt}/${CURSOR_MINT_MAX_ATTEMPTS} kind=${kind} ${message}`,
@@ -761,7 +761,7 @@ export class ConversationStreamService {
       } catch (error: unknown) {
         // A metadata-write failure must not drop the freshly minted session for
         // this turn: log and run with the id we hold (a later turn re-mints).
-        const message = error instanceof Error ? error.message : String(error);
+        const message = toErrorMessage(error);
         this.logger.error(
           `conversation-stream cursor session persist failed: ${message}`,
         );
@@ -802,7 +802,7 @@ export class ConversationStreamService {
         [sessionMetadataKey(run.backend)]: minted,
       });
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = toErrorMessage(error);
       this.logger.error(
         `conversation-stream session persist failed: ${message}`,
       );
@@ -884,7 +884,7 @@ export class ConversationStreamService {
         [seenThroughMetadataKey(run.backend)]: sortOrder,
       });
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = toErrorMessage(error);
       this.logger.error(
         `conversation-stream seen-through persist failed: ${message}`,
       );
@@ -940,7 +940,7 @@ export class ConversationStreamService {
         userId: run.userId,
       });
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = toErrorMessage(error);
 
       this.logger.error(`conversation-stream usage persist failed: ${message}`);
     }

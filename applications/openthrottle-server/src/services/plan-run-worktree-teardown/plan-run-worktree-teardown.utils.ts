@@ -2,11 +2,12 @@
  * @description Pure helpers for plan-run worktree teardown: the name a server-provisioned worktree
  * carries, and the one plan_output line a teardown writes.
  */
-
 import { execFile } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { promisify } from 'node:util';
+
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 
 import { PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME } from './plan-run-worktree-teardown.constants.ts';
 import type {
@@ -96,7 +97,7 @@ export const runCommand = async (
     });
     return { exitCode: 0, stderr, stdout };
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = toErrorMessage(error);
     const stderr = readStringField(error, 'stderr');
     return {
       exitCode: readExitCode(error),

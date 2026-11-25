@@ -9,6 +9,8 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 /**
  * @description Shard weights measured on the CI boxes themselves (OT plan
  * 80b62f5e), from the `NX_PROFILE` traces every `build` shard uploads as an
@@ -45,10 +47,6 @@ export interface ProfileTask {
 const EXECUTED_STATUSES: readonly string[] = ['failure', 'success'];
 
 const WEIGHTED_TARGETS: readonly string[] = ['lint', 'test', 'typecheck'];
-
-const isRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null;
-};
 
 const readString = (record: Record<string, unknown>, key: string): string => {
   const value = record[key];

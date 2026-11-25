@@ -1,8 +1,6 @@
-const TRIMMED_FIELDS = ['dependencies', 'optionalDependencies'] as const;
+import { isRecord } from '@openthrottle/nodejs-utils';
 
-const isRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-};
+const TRIMMED_FIELDS = ['dependencies', 'optionalDependencies'] as const;
 
 /**
  * @description Drops, from a staged third-party `package.json`, the

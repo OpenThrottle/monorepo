@@ -1,4 +1,5 @@
 import { logger } from '@nx/devkit';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import { execSync } from 'child_process';
 import type { Dirent } from 'fs';
 import { readdirSync } from 'fs';
@@ -95,7 +96,7 @@ const readApplicationFolders = (application: string, relative: string) => {
 
     return filterDirectories(filtered);
   } catch (error) {
-    const reason = error instanceof Error ? error.message : String(error);
+    const reason = toErrorMessage(error);
     throw new Error(
       `Unable to read "${expected}" (resolved to "${folder}"): ${reason}`,
     );

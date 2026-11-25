@@ -1,7 +1,6 @@
 /**
  * @description GraphQL resolver for the agents chat namespace. Runs one turn by routing to the in-process {@link McpDeveloperMcpSurface} tools (OpenThrottle / MCP developer).
  */
-
 import { ConfigService } from '@nestjs/config';
 import { Args, Context, Mutation, Resolver } from '@nestjs/graphql';
 import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
@@ -14,6 +13,7 @@ import {
   AgentConversationMessagesRepository,
   AgentConversationsRepository,
 } from '@openthrottle/nestjs-repositories-server';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 
 import { AgentsRunChatTurnInput } from './agents.input.ts';
 import { AgentsChatTurnResult } from './agents.object.ts';
@@ -228,7 +228,7 @@ export class AgentsResolver {
         return turn;
       });
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : String(error);
+      const msg = toErrorMessage(error);
       const failed = buildFailedAgentsChatTurn({
         conversationId: shouldPersist
           ? persistedConversationId

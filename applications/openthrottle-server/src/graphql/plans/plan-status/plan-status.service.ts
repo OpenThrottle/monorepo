@@ -22,6 +22,7 @@ import {
   Task,
   TasksRepository,
 } from '@openthrottle/nestjs-repositories-server';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import type { Queue } from 'bullmq';
 import type { EntityManager } from 'typeorm';
 import { DataSource, In } from 'typeorm';
@@ -635,7 +636,7 @@ export class PlanStatusService {
       return completed;
     } catch (error) {
       this.logger.warn(
-        `Could not re-run the plan auto-close for plan ${planId} after its scheduled run settled: ${error instanceof Error ? error.message : String(error)}`,
+        `Could not re-run the plan auto-close for plan ${planId} after its scheduled run settled: ${toErrorMessage(error)}`,
         PlanStatusService.name,
       );
 

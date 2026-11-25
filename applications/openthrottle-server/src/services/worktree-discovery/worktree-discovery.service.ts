@@ -37,6 +37,7 @@ import {
   RepositoryCheckoutsRepository,
   UserWorkspaceSettingsRepository,
 } from '@openthrottle/nestjs-repositories-server';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 
 import { parseLinkedWorktrees } from '../../graphql/repository-inspection/repository-inspection.utils.ts';
 import { realPath } from '../paths/real-path/real-path.utils.ts';
@@ -633,5 +634,5 @@ const isAbsentDirectoryError = (error: unknown): boolean => {
 };
 
 const message = (error: unknown): string => {
-  return error instanceof Error ? error.message : String(error);
+  return toErrorMessage(error);
 };

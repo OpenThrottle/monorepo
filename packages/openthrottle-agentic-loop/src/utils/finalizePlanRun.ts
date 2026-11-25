@@ -10,6 +10,7 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import type {
   PlanRunCommandResult,
   PlanRunCommandRunner,
@@ -672,7 +673,7 @@ const writeAndGuardPrFiles = async (params: {
     tempDir = await mkdtemp(join(tmpdir(), 'plan-run-finalize-pr-'));
   } catch (error) {
     return {
-      detail: error instanceof Error ? error.message : String(error),
+      detail: toErrorMessage(error),
       ok: false,
       owedStep: 'pr-temp-dir',
     };
@@ -686,7 +687,7 @@ const writeAndGuardPrFiles = async (params: {
     await writeFile(bodyPath, body, 'utf8');
   } catch (error) {
     return {
-      detail: error instanceof Error ? error.message : String(error),
+      detail: toErrorMessage(error),
       ok: false,
       owedStep: 'pr-write-draft',
     };
@@ -801,7 +802,7 @@ const refreshExistingPr = async (params: {
     );
   } catch (error) {
     return {
-      detail: error instanceof Error ? error.message : String(error),
+      detail: toErrorMessage(error),
       ok: false,
       owedStep: 'pr-write-draft',
     };

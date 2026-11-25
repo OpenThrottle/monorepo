@@ -1,6 +1,8 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
+
 import {
   isExplainOutput,
   summarizeExplainPlan,
@@ -96,9 +98,9 @@ export const writePostgresExplainPlan = async (
     logPlan(entry);
   } catch (error: unknown) {
     POSTGRES_PROFILING_LOGGER.warn(
-      `Could not write explain plan for ${entry.className}.${entry.methodName}: ${
-        error instanceof Error ? error.message : String(error)
-      }`,
+      `Could not write explain plan for ${entry.className}.${entry.methodName}: ${toErrorMessage(
+        error,
+      )}`,
       { context: POSTGRES_PROFILING_LOGGER_CONTEXT },
     );
   }

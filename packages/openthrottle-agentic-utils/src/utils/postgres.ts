@@ -1,3 +1,4 @@
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import pg from 'pg';
 
 /**
@@ -73,7 +74,7 @@ function resolvePrimaryPostgresUrl(
   try {
     return { ok: true, url: getPostgresUrl(env) };
   } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
+    const detail = toErrorMessage(error);
     return { error: detail, ok: false };
   }
 }
@@ -145,7 +146,7 @@ export async function ensurePostgresReachable(
     await client.connect();
     await client.query('SELECT 1');
   } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
+    const detail = toErrorMessage(error);
     throw new Error(
       `Postgres database is unreachable. ${detail}${POSTGRES_UNREACHABLE_HINT}`,
     );

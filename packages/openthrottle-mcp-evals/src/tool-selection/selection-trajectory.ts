@@ -5,6 +5,7 @@
  * the run's usage can be summed back out exactly.
  */
 
+import { isRecord } from '@openthrottle/nodejs-utils';
 import type {
   AtifToolCall,
   AtifTrajectory,
@@ -15,12 +16,6 @@ import { TOOL_SELECTION_AGENT_NAME } from './data/data.dataset.ts';
 import type { SelectedCall, Selection, SelectionUsage } from './eval-case.ts';
 
 type CallsSelection = Extract<Selection, { readonly kind: 'calls' }>;
-
-const isRecord = (
-  value: unknown,
-): value is Readonly<Record<string, unknown>> => {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-};
 
 const toolCallOf = (call: SelectedCall, index: number): AtifToolCall => {
   return {

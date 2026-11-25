@@ -9,6 +9,7 @@ import {
   ScheduledAgentJobRunsRepository,
   ScheduledAgentJobsRepository,
 } from '@openthrottle/nestjs-repositories-server';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import type { UsageLimit } from '@openthrottle/openthrottle-drivers';
 import type { Queue } from 'bullmq';
 
@@ -24,10 +25,6 @@ import { ScheduledAgentJobSchedulerService } from '../scheduler/scheduler.servic
 import { buildScheduledAgentJobPayload } from '../scheduler/scheduler.utils.ts';
 import type { ScheduledUsageLimitHandling } from './usage-limit-resume.types.ts';
 import { usageLimitResumeJobId } from './usage-limit-resume.utils.ts';
-
-const describeError = (error: unknown): string => {
-  return error instanceof Error ? error.message : String(error);
-};
 
 /**
  * @description Everything that happens after a scheduled-agent-job run, already recorded
@@ -97,7 +94,7 @@ export class ScheduledAgentJobUsageLimitResumeService {
       });
     } catch (error) {
       this.logger.warn(
-        `Usage-limit handling failed for scheduled job ${scheduleId}, run ${limitedRunId}: ${describeError(error)}`,
+        `Usage-limit handling failed for scheduled job ${scheduleId}, run ${limitedRunId}: ${toErrorMessage(error)}`,
         ScheduledAgentJobUsageLimitResumeService.name,
       );
 
@@ -116,7 +113,7 @@ export class ScheduledAgentJobUsageLimitResumeService {
       return await this.scheduler.readNextRunAt(job.schedulerKey);
     } catch (error) {
       this.logger.warn(
-        `Could not read the next fire time for scheduled job ${job.id}: ${describeError(error)}`,
+        `Could not read the next fire time for scheduled job ${job.id}: ${toErrorMessage(error)}`,
         ScheduledAgentJobUsageLimitResumeService.name,
       );
 
@@ -176,7 +173,7 @@ export class ScheduledAgentJobUsageLimitResumeService {
 
       return this.hold(
         limitedRunId,
-        `scheduling the resume failed: ${describeError(error)}`,
+        `scheduling the resume failed: ${toErrorMessage(error)}`,
       );
     }
 
@@ -225,7 +222,7 @@ export class ScheduledAgentJobUsageLimitResumeService {
       );
     } catch (error) {
       this.logger.warn(
-        `Could not record why run ${limitedRunId} was not resumed: ${describeError(error)}`,
+        `Could not record why run ${limitedRunId} was not resumed: ${toErrorMessage(error)}`,
         ScheduledAgentJobUsageLimitResumeService.name,
       );
     }

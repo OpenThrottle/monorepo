@@ -6,13 +6,14 @@
  * @see https://platform.openai.com/docs/api-reference/embeddings/create
  */
 
+import { sleep } from '@openthrottle/nodejs-utils';
+
 import type { EmbeddingBackendResult } from './embedding.ts';
 import type { HostedEmbeddingConfig } from './embedding-config.ts';
 import {
   isNumberArray,
   l2Normalize,
   postJsonWithRetry,
-  sleepMs,
 } from './hosted-embedding-request.ts';
 
 export interface EmbedWithOpenAIOptions {
@@ -72,7 +73,7 @@ function readEmbeddings(data: unknown, count: number): number[][] | undefined {
 export async function embedWithOpenAI(
   texts: readonly string[],
   config: HostedEmbeddingConfig,
-  options: EmbedWithOpenAIOptions = { sleep: sleepMs },
+  options: EmbedWithOpenAIOptions = { sleep },
 ): Promise<EmbeddingBackendResult> {
   const label = `OpenAI ${config.model}`;
   const response = await postJsonWithRetry({

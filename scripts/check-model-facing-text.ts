@@ -45,6 +45,7 @@
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+import { isRecord, isStringArray } from '@openthrottle/nodejs-utils';
 import { parseYamlFrontmatter } from '@openthrottle/openthrottle-skills';
 
 import { flagValue, hasFlag } from './utils/args.ts';
@@ -129,10 +130,6 @@ export interface CapBreach {
   readonly cap: number;
   readonly key: string;
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-};
 
 const byteLength = (text: string): number => {
   return Buffer.byteLength(text, 'utf8');
@@ -226,12 +223,6 @@ export const parseBudget = (raw: unknown, where: string = BUDGET_PATH): Budget =
     },
   };
 }; // prettier-ignore
-
-const isStringArray = (value: unknown): value is string[] => {
-  return (
-    Array.isArray(value) && value.every((item) => typeof item === 'string')
-  );
-};
 
 /** Parse the JSON written by `measure-tool-surface`. */
 export const parseToolSurface = (raw: unknown, where: string): ToolSurface => {

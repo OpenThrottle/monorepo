@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import {
   getPostgresUrl,
   sanitizePostgresUrlForLogs,
@@ -265,7 +265,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   try {
     await main();
   } catch (error) {
-    logger.fail(`CMS schema sync failed: ${error instanceof Error ? error.message : String(error)}`); // prettier-ignore
+    logger.fail(`CMS schema sync failed: ${toErrorMessage(error)}`); // prettier-ignore
     process.exit(1);
   }
 }

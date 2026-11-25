@@ -1,6 +1,8 @@
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 import { flagValue, hasFlag } from './utils/args.ts';
 import { createLogger } from './utils/logger.ts';
 
@@ -168,10 +170,6 @@ export const formatSeconds = (seconds: number | undefined): string => {
   if (seconds === undefined) return '—';
 
   return `${Math.floor(seconds / 60)}m${String(seconds % 60).padStart(2, '0')}s`;
-};
-
-const isRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null;
 };
 
 const readString = (

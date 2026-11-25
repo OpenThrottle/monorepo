@@ -22,6 +22,9 @@
       "path": "../openthrottle-agentic-utils/tsconfig.lib.json"
     },
     {
+      "path": "../nodejs-utils/tsconfig.lib.json"
+    },
+    {
       "path": "../nestjs-repositories-server/tsconfig.lib.json"
     },
     {

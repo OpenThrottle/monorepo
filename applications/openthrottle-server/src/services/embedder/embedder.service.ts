@@ -8,7 +8,6 @@
  * dimension mismatch is logged at error and visible in `health` instead of silently producing
  * empty search results.
  */
-
 import type { OnApplicationBootstrap, OnModuleDestroy } from '@nestjs/common';
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
@@ -25,6 +24,7 @@ import {
   createEmbedder,
   resolveEmbeddingConfig,
 } from '@openthrottle/node-client';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import { DataSource } from 'typeorm';
 
 import { EMBEDDER_PROBE_TEXT, EMBEDDING_TABLES } from './embedder.constants.ts';
@@ -170,7 +170,7 @@ export class EmbedderService
     } catch (error: unknown) {
       // The database being down is the database's health problem, not the embedder's.
       this.logger.warn(
-        `Embedder could not read embedding column dimensions: ${error instanceof Error ? error.message : String(error)}`,
+        `Embedder could not read embedding column dimensions: ${toErrorMessage(error)}`,
         EmbedderService.name,
       );
 

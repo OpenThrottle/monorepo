@@ -12,13 +12,13 @@
  * say. Whatever happens, ONE plan_output line records it. Never throws: the run is already
  * settled, and nothing here may change that.
  */
-
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import {
   PlanOutputStreamRepository,
   PlansRepository,
 } from '@openthrottle/nestjs-repositories-server';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import { planRunConfigFromPlanStorage } from '@openthrottle/openthrottle-plan-config';
 
 import { PlanRunWorktreeTeardownService } from '../plan-run-worktree-teardown/plan-run-worktree-teardown.service.ts';
@@ -60,7 +60,7 @@ export class PlanRunWorktreeCleanupService {
       await this.recordOutcome(params, outcome);
       return outcome;
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = toErrorMessage(error);
       this.logger.warn(
         `[${this.name}] plan ${params.planId}: worktree cleanup failed: ${message}`,
       );
@@ -129,9 +129,9 @@ export class PlanRunWorktreeCleanupService {
         .worktreeCleanup;
     } catch (error) {
       this.logger.warn(
-        `[${this.name}] could not read plan ${planId}: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        `[${this.name}] could not read plan ${planId}: ${toErrorMessage(
+          error,
+        )}`,
       );
       return null;
     }
@@ -154,9 +154,9 @@ export class PlanRunWorktreeCleanupService {
       });
     } catch (error) {
       this.logger.warn(
-        `[${this.name}] could not write plan output for ${params.planId}: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        `[${this.name}] could not write plan output for ${params.planId}: ${toErrorMessage(
+          error,
+        )}`,
       );
     }
   }

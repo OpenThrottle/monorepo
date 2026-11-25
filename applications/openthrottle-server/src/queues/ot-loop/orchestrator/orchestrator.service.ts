@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { PlanRunsRepository } from '@openthrottle/nestjs-repositories-server';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import type {
   CommandSequenceResult,
   LoopClient,
@@ -181,7 +182,7 @@ export class OtLoopOrchestratorService {
         workSessionId,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = toErrorMessage(error);
 
       this.logger.warn(
         `OT Loop run for plan ${planId} failed: ${message}`,
@@ -670,7 +671,7 @@ export class OtLoopOrchestratorService {
     try {
       await input.client.updatePlanStatus({ planId: input.planId, status });
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = toErrorMessage(error);
 
       input.say(`could not set the plan ${status}: ${message}`);
     }

@@ -4,7 +4,6 @@
  * resolves-or-creates the conversation, persists the user message, allocates the
  * assistant message id, and kicks off the streaming service fire-and-forget.
  */
-
 import { randomUUID } from 'node:crypto';
 
 import { ForbiddenException } from '@nestjs/common';
@@ -35,6 +34,7 @@ import {
   CustomPromptsRepository,
   UserDisabledAgentClisRepository,
 } from '@openthrottle/nestjs-repositories-server';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import type {
   ChatCompletionMessage,
   ConversationPermissionModesValue,
@@ -773,9 +773,9 @@ export class ConversationStreamResolver {
       await this.conversations.getConversationForUser(userId, conversationId);
     } catch (error: unknown) {
       this.logger.debug(
-        `cancelConversationStream: ownership check failed for conversation ${conversationId}: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        `cancelConversationStream: ownership check failed for conversation ${conversationId}: ${toErrorMessage(
+          error,
+        )}`,
         ConversationStreamResolver.name,
       );
 
@@ -805,9 +805,9 @@ export class ConversationStreamResolver {
       await this.conversations.getConversationForUser(userId, conversationId);
     } catch (error: unknown) {
       this.logger.debug(
-        `respondToConversationPermission: ownership check failed for conversation ${conversationId}: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        `respondToConversationPermission: ownership check failed for conversation ${conversationId}: ${toErrorMessage(
+          error,
+        )}`,
         ConversationStreamResolver.name,
       );
 
@@ -880,9 +880,9 @@ export class ConversationStreamResolver {
       return existing.id;
     } catch (error: unknown) {
       this.logger.debug(
-        `resolveConversationId: conversation ${conversationId} not owned by user ${userId}: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        `resolveConversationId: conversation ${conversationId} not owned by user ${userId}: ${toErrorMessage(
+          error,
+        )}`,
         ConversationStreamResolver.name,
       );
 

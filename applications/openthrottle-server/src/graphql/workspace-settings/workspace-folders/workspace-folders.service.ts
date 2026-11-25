@@ -29,7 +29,7 @@ import {
   RepositoriesRepository,
   RepositoryCheckoutsRepository,
 } from '@openthrottle/nestjs-repositories-server';
-import { isRecord } from '@openthrottle/nodejs-utils';
+import { isRecord, toErrorMessage } from '@openthrottle/nodejs-utils';
 import { resolveForeignWorkspaceContext } from '@openthrottle/openthrottle-agentic-utils';
 import {
   toContainerPath,
@@ -657,7 +657,7 @@ export class WorkspaceFoldersService {
     } catch (error) {
       // No DB rows exist yet, so there is nothing to orphan; drop the partial dir.
       await rm(targetProcessView, { force: true, recursive: true });
-      const message = error instanceof Error ? error.message : String(error);
+      const message = toErrorMessage(error);
       throw new BadRequestException(`git clone failed: ${message}`);
     }
 

@@ -2,10 +2,10 @@
  * @description Adds `userEnvFile` to `serverHealth` as a field resolver, so the file read and the
  * token check run only when a client selects it (MCP `health` does).
  */
-
 import { ResolveField, Resolver } from '@nestjs/graphql';
 import { Public } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 
 import { UserEnvFileService } from '../../../services/user-env-file/user-env-file.service.ts';
 import { ServerHealthObject } from '../server-health.object.ts';
@@ -28,7 +28,7 @@ export class UserEnvFileHealthResolver {
       return await this.userEnvFileService.getHealth();
     } catch (error: unknown) {
       this.logger.warn(
-        `User env file health unavailable: ${error instanceof Error ? error.message : String(error)}`,
+        `User env file health unavailable: ${toErrorMessage(error)}`,
         UserEnvFileHealthResolver.name,
       );
 

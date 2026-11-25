@@ -8,13 +8,13 @@
  * transition, delivered by the developer app as a toast, a bell entry and — in
  * the desktop app — a native notification. Never on page load.
  */
-
 import { BadRequestException } from '@nestjs/common';
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
 import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import type { TelemetryHeartbeat } from '@openthrottle/nestjs-repositories-server';
 import { TelemetryHeartbeatsRepository } from '@openthrottle/nestjs-repositories-server';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import { getOpenThrottleRoot } from '@openthrottle/openthrottle-agentic-utils';
 
 import { NotificationsService } from '../../notifications/notifications.service.ts';
@@ -109,7 +109,7 @@ export class TelemetryHeartbeatResolver {
       return rows.filter((row) => row.machineId === machineId);
     } catch (error) {
       this.logger.warn(
-        `telemetry coverage notify skipped: ${error instanceof Error ? error.message : String(error)}`,
+        `telemetry coverage notify skipped: ${toErrorMessage(error)}`,
         TelemetryHeartbeatResolver.name,
       );
 

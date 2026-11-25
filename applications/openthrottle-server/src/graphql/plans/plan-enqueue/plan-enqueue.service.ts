@@ -6,7 +6,6 @@
  * therefore leaves no orphaned job; the narrow committed-but-add-failed window is reconciled by the
  * processor's onModuleInit startup reconciliation.
  */
-
 import { randomUUID } from 'node:crypto';
 
 import { InjectQueue } from '@nestjs/bullmq';
@@ -30,6 +29,7 @@ import {
   PlansRepository,
   TasksRepository,
 } from '@openthrottle/nestjs-repositories-server';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import {
   nodeResolverFs,
   resolveOtLoopCommands,
@@ -584,9 +584,7 @@ export class PlanEnqueueService {
         workingDirectory: resolvedWorkspace.workingDirectory,
       });
     } catch (error) {
-      throw new BadRequestException(
-        error instanceof Error ? error.message : String(error),
-      );
+      throw new BadRequestException(toErrorMessage(error));
     }
 
     await this.assertOtLoopRunnable(jobData);

@@ -1,6 +1,6 @@
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import { isGraphqlResponseError } from '@openthrottle/react-router-graphql';
 
-import { toErrorMessage } from '~/global/utils/utils.error-message';
 import { PLAN_SCHEDULE_CONFIRM_COPY } from '~/routing/plans/data/data.copy';
 
 /**

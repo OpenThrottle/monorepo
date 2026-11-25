@@ -18,6 +18,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { resolveQueuePrefix } from '@openthrottle/nestjs-bullmq';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { REDIS_CLIENT } from '@openthrottle/nestjs-redis';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import type { Redis } from 'ioredis';
 
 import {
@@ -102,10 +103,6 @@ redis.call('pexpire', KEYS[2], ARGV[3])
 redis.call('pexpire', KEYS[3], ARGV[3])
 return { done, redis.call('hget', KEYS[1], 'total') }
 `;
-
-function describeError(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
-}
 
 function readProgressReply(reply: unknown): BackgroundActivityProgress | null {
   if (!Array.isArray(reply)) {
@@ -285,7 +282,7 @@ export class BackgroundActivityRegistryService {
       return await work(this.redis);
     } catch (error: unknown) {
       this.logger.warn(
-        `Background activity ${operation} failed: ${describeError(error)}`,
+        `Background activity ${operation} failed: ${toErrorMessage(error)}`,
         BackgroundActivityRegistryService.name,
       );
 

@@ -27,6 +27,8 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+import { isRecord } from '@openthrottle/nodejs-utils';
+
 import { createLogger } from './utils/logger.ts';
 
 const logger = createLogger();
@@ -71,10 +73,6 @@ export interface ParityReport {
   /** Exemptions whose signature CI no longer runs. */
   readonly staleExemptions: readonly string[];
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-};
 
 const stringOrUndefined = (value: unknown): string | undefined => {
   return typeof value === 'string' ? value : undefined;

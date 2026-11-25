@@ -33,7 +33,7 @@ import type {
   SessionUpdate,
 } from '@agentclientprotocol/sdk';
 import { client, methods, PROTOCOL_VERSION } from '@agentclientprotocol/sdk';
-import { isRecord } from '@openthrottle/nodejs-utils';
+import { isRecord, toErrorMessage } from '@openthrottle/nodejs-utils';
 
 import { withFileMentions } from '../file-mentions.ts';
 import { CONVERSATION_KEEPALIVE_CHUNK } from '../keepalive.ts';
@@ -158,7 +158,7 @@ function poolKey(cwd: string, sessionId: string): string {
 
 /** A readable message for a failed JSON-RPC call, with the agent's details. */
 function describeAcpError(error: unknown, stderrTail: string): string {
-  const message = error instanceof Error ? error.message : String(error);
+  const message = toErrorMessage(error);
   const data = isRecord(error) ? error['data'] : undefined;
   const hasDetails = isRecord(data) && typeof data['details'] === 'string';
   const details = hasDetails ? `: ${String(data['details'])}` : '';

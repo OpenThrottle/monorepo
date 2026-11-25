@@ -1,7 +1,6 @@
 /**
  * @description Run-start workspace setup for the OT Loop plan runner (docs/workflows/ot-loop-job.md § 1).
  */
-
 import { join } from 'node:path';
 
 import { Injectable } from '@nestjs/common';
@@ -10,6 +9,7 @@ import type { PlanRun } from '@openthrottle/nestjs-repositories-server';
 import { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories-server';
 import { PlanRunsRepository } from '@openthrottle/nestjs-repositories-server';
 import { PlanOutputStreamRepository } from '@openthrottle/nestjs-repositories-server';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import {
   applyPlanRunOtRootFromConfig,
   loadPlanRunConfig,
@@ -239,9 +239,9 @@ export class PlanRunWorkspaceService {
       });
     } catch (error) {
       this.logger.warn(
-        `Could not read checkout trust for ${baseCheckoutCwd}; treating it as untrusted: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        `Could not read checkout trust for ${baseCheckoutCwd}; treating it as untrusted: ${toErrorMessage(
+          error,
+        )}`,
         PlanRunWorkspaceService.name,
       );
 
@@ -277,9 +277,9 @@ export class PlanRunWorkspaceService {
       });
     } catch (error) {
       this.logger.warn(
-        `Soft-fail narrating checkout trust for plan ${planId}: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        `Soft-fail narrating checkout trust for plan ${planId}: ${toErrorMessage(
+          error,
+        )}`,
         PlanRunWorkspaceService.name,
       );
     }
@@ -320,9 +320,9 @@ export class PlanRunWorkspaceService {
       });
     } catch (error) {
       this.logger.warn(
-        `Soft-fail running the workspace preflight for plan ${planId}: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        `Soft-fail running the workspace preflight for plan ${planId}: ${toErrorMessage(
+          error,
+        )}`,
         PlanRunWorkspaceService.name,
       );
     }
@@ -353,9 +353,9 @@ export class PlanRunWorkspaceService {
       });
     } catch (error) {
       this.logger.warn(
-        `Soft-fail recording the resolved workspace on run ${run.id}: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        `Soft-fail recording the resolved workspace on run ${run.id}: ${toErrorMessage(
+          error,
+        )}`,
         PlanRunWorkspaceService.name,
       );
     }
@@ -479,9 +479,9 @@ export class PlanRunWorkspaceService {
       );
     } catch (error) {
       this.logger.warn(
-        `Soft-fail resolving plan_run for ${queueName}/${queueJobId}: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        `Soft-fail resolving plan_run for ${queueName}/${queueJobId}: ${toErrorMessage(
+          error,
+        )}`,
         PlanRunWorkspaceService.name,
       );
       return null;
@@ -542,9 +542,9 @@ export class PlanRunWorkspaceService {
       injectedNames = result.injectedNames;
     } catch (error) {
       this.logger.warn(
-        `Foreign-skill injection failed for ${configCwd}: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        `Foreign-skill injection failed for ${configCwd}: ${toErrorMessage(
+          error,
+        )}`,
       );
       return [];
     }
@@ -581,9 +581,9 @@ export class PlanRunWorkspaceService {
       });
     } catch (error) {
       this.logger.warn(
-        `Soft-fail narrating injected skills for plan ${planId}: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        `Soft-fail narrating injected skills for plan ${planId}: ${toErrorMessage(
+          error,
+        )}`,
         PlanRunWorkspaceService.name,
       );
     }
@@ -624,9 +624,9 @@ export class PlanRunWorkspaceService {
       });
     } catch (error) {
       this.logger.warn(
-        `Soft-fail worktree checkout registration at ${filesystemPath}: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        `Soft-fail worktree checkout registration at ${filesystemPath}: ${toErrorMessage(
+          error,
+        )}`,
         PlanRunWorkspaceService.name,
       );
     }

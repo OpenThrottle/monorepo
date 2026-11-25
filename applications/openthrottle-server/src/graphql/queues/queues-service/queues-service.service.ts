@@ -10,7 +10,7 @@ import {
 } from '@openthrottle/nestjs-bullmq';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { resolvePagination } from '@openthrottle/nestjs-postgres';
-import { isRecord } from '@openthrottle/nodejs-utils';
+import { isRecord, toErrorMessage } from '@openthrottle/nodejs-utils';
 import type { Job, JobState, Queue } from 'bullmq';
 import { Queue as BullQueue } from 'bullmq';
 
@@ -246,7 +246,7 @@ export class QueuesService implements OnModuleDestroy, OnModuleInit {
 
         return null;
       } catch (error) {
-        return error instanceof Error ? error.message : String(error);
+        return toErrorMessage(error);
       }
     })();
 
@@ -291,7 +291,7 @@ export class QueuesService implements OnModuleDestroy, OnModuleInit {
           }),
         );
       } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
+        const message = toErrorMessage(error);
         this.logger.error(
           `Queue "${name}" is in SERVER_QUEUE_NAMES but could not be resolved; import its producer module in QueuesServiceModule: ${message}`,
         );
@@ -478,7 +478,7 @@ export class QueuesService implements OnModuleDestroy, OnModuleInit {
       await queue.pause();
       return { queueName };
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = toErrorMessage(error);
       return { error: `Failed to pause queue: ${message}` };
     }
   }
@@ -498,7 +498,7 @@ export class QueuesService implements OnModuleDestroy, OnModuleInit {
       await queue.resume();
       return { queueName };
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = toErrorMessage(error);
       return { error: `Failed to resume queue: ${message}` };
     }
   }
@@ -536,7 +536,7 @@ export class QueuesService implements OnModuleDestroy, OnModuleInit {
       const removed = await queue.clean(safeGrace, safeLimit, state);
       return { removedCount: Array.isArray(removed) ? removed.length : 0 };
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = toErrorMessage(error);
       return { error: `Failed to clean queue: ${message}` };
     }
   }
@@ -708,7 +708,7 @@ export class QueuesService implements OnModuleDestroy, OnModuleInit {
 
       const name = queues[index]?.name ?? 'unknown';
       const err: unknown = result.reason;
-      const reason = err instanceof Error ? err.message : String(err);
+      const reason = toErrorMessage(err);
       this.logger.warn(`Queue "${name}" stats unavailable: ${reason}`);
 
       return [];

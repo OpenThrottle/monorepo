@@ -1,6 +1,7 @@
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import type { Queue } from 'bullmq';
 
 import { ForeignSkillInjectionLifecycleService } from '../../../services/foreign-skill-injection/lifecycle/lifecycle.service.ts';
@@ -77,9 +78,9 @@ export class PlanRunsStaleSweepRepeatableService implements OnModuleInit {
       }
     } catch (error) {
       this.logger.warn(
-        `Soft-fail reconciling foreign-skill injection at boot: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        `Soft-fail reconciling foreign-skill injection at boot: ${toErrorMessage(
+          error,
+        )}`,
         PlanRunsStaleSweepRepeatableService.name,
       );
     }
@@ -98,9 +99,9 @@ export class PlanRunsStaleSweepRepeatableService implements OnModuleInit {
       }
     } catch (error) {
       this.logger.warn(
-        `Soft-fail reconciling workspace-editors manifest exclusions at boot: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        `Soft-fail reconciling workspace-editors manifest exclusions at boot: ${toErrorMessage(
+          error,
+        )}`,
         PlanRunsStaleSweepRepeatableService.name,
       );
     }

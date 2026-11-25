@@ -8,6 +8,7 @@
  * so the run that starts and the config on the plan agree.
  */
 
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import {
   getDefaultPlanRunConfigStorage,
   MAX_PLAN_RUN_OT_LOOP_RETRIES,
@@ -376,7 +377,7 @@ export const parsePlanRunForm = (formData: FormData): PlanRunFormResult => {
       parseJobRunHooksJsonFromPlan(fields.jobRunHooksJson);
       jobRunHooksJson = fields.jobRunHooksJson;
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = toErrorMessage(error);
       return { error: `Invalid job run hooks: ${message}`, success: false };
     }
   }

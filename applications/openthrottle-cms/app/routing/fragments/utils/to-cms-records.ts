@@ -1,3 +1,4 @@
+import { isRecord } from '@openthrottle/nodejs-utils';
 import type {
   CmsFragment,
   CmsFragmentRecord,
@@ -215,12 +216,6 @@ export type CmsFragmentEditorResult =
   | { readonly ok: false; readonly reason: CmsFragmentEditorFailure }
   | { readonly ok: true; readonly value: CmsFragmentEditorRecords };
 
-const isPropertyRecord = (
-  value: unknown,
-): value is Readonly<Record<string, unknown>> => {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-};
-
 /**
  * @description The preview's children: the subtree under the `tree` root when it was loaded,
  * otherwise the direct children alone (one level, no grandchildren).
@@ -238,7 +233,7 @@ const toPreviewChildren = (
   return children.map((child) => {
     return {
       children: [],
-      properties: isPropertyRecord(child.properties) ? child.properties : {},
+      properties: isRecord(child.properties) ? child.properties : {},
       typename: child.typename,
       uuid: child.uuid,
     };

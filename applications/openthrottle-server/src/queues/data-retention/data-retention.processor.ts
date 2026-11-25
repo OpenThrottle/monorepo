@@ -18,12 +18,12 @@
  * and deletes nothing. One policy failing is contained — it is logged and the
  * remaining policies still run.
  */
-
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Inject, OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import { LoggerService } from '@openthrottle/nestjs-modules';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import { DataSource } from 'typeorm';
 
 import {
@@ -167,7 +167,7 @@ export class DataRetentionProcessor
       };
     } catch (error) {
       this.logger.error(
-        `Data-retention policy ${policy.name} (${policy.table}) failed; continuing with remaining policies: ${error instanceof Error ? error.message : String(error)}`,
+        `Data-retention policy ${policy.name} (${policy.table}) failed; continuing with remaining policies: ${toErrorMessage(error)}`,
         DataRetentionProcessor.name,
       );
 

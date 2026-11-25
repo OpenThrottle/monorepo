@@ -27,6 +27,7 @@ import {
   ProjectRepositoriesRepository,
   ProjectsRepository,
 } from '@openthrottle/nestjs-repositories-server';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import { planRunConfigFromPlanStorage } from '@openthrottle/openthrottle-plan-config';
 import type { EntityManager } from 'typeorm';
 
@@ -137,7 +138,7 @@ export class PlanProjectMembershipService {
         repositoryId,
       );
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = toErrorMessage(error);
       this.logger.warn(
         `${this.name}: could not link repository ${repositoryId} to project ${plan.projectId} for plan ${plan.id}: ${message}`,
       );
