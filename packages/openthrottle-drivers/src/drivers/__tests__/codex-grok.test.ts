@@ -131,6 +131,29 @@ describe('grok driver', () => {
     );
   });
 
+  it('emits one quoted --allow per allowed command, after --model and before -w', () => {
+    expect(
+      grokDriver.buildShellCommand(
+        config({
+          allowedCommands: [
+            'pnpm run social:x-post *',
+            'git fetch origin main',
+          ],
+          model: 'grok-4',
+          worktree: { worktree: 'wt' },
+        }),
+      ),
+    ).toBe(
+      'grok -p "fix it" --permission-mode acceptEdits --model grok-4 --allow "Bash(pnpm run social:x-post *)" --allow "Bash(git fetch origin main)" -w wt',
+    );
+  });
+
+  it('emits no --allow for an empty command allowlist', () => {
+    expect(grokDriver.buildShellCommand(config({ allowedCommands: [] }))).toBe(
+      'grok -p "fix it" --permission-mode acceptEdits',
+    );
+  });
+
   it('appends -w for a named worktree', () => {
     expect(
       grokDriver.buildShellCommand(config({ worktree: { worktree: 'wt' } })),
@@ -195,7 +218,7 @@ describe('grok driver', () => {
     expect(grokDriver.id).toBe('grok');
     expect(grokDriver.label).toBe('grok');
     expect(grokDriver.capabilities).toEqual({
-      allowedCommands: false,
+      allowedCommands: true,
       attachesWorkspaceMcp: true,
       chatStreaming: true,
       isolatesRepoAgentConfig: false,

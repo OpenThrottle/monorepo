@@ -34,7 +34,7 @@
       "transport": "stdio"
     },
     "openthrottle-mcp": {
-      "args": ["./scripts/run-openthrottle-mcp.sh"],
+      "args": ["./scripts/run-openthrottle-mcp.sh", "--toolsets=scheduling"],
       "command": "bash",
       "defaultOn": true,
       "description": "OpenThrottle (OT) plans knowledge base (Postgres + GraphQL). Plans, tasks, notes, commit links, activity, output stream, semantic search, health. No env block, for the same reason as the github entry: an unexpanded ${VAR} placeholder is what triggers the client's 'Missing environment variables' / 'Failed to replace env in config' warning, and the launcher already owns resolution. API_URL and API_URL_INTERNAL would be discarded regardless (the launcher probes for a live server and exports both itself); ANTHROPIC_API_KEY is read nowhere in openthrottle-mcp; and OPENTHROTTLE_MCP_AUTH_TOKEN is inherited from the launching shell when exported, else self-loaded from this worktree's .env or the root checkout's.",

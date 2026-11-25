@@ -229,12 +229,23 @@ code.
   either cap.
 - **Per-job command allowlist** (migration 205) — `allowedCommands` names the shell commands a
   job's headless run may execute without a permission prompt; the Claude driver turns each into
-  `--allowedTools "Bash(<pattern>)"`, and every other driver refuses a non-empty list at save time
-  and again before spawning. Entries are validated (at most 20, 1-200 characters, no line break or
+  `--allowedTools "Bash(<pattern>)"` and the Grok driver into one `--allow "Bash(<pattern>)"` per
+  entry; every other driver refuses a non-empty list at save time and again before spawning (table
+  below). Entries are validated (at most 20, 1-200 characters, no line break or
   parentheses). An `mcp`-created job with a non-empty list is stored `pending` and disabled even when
   `SCHEDULED_AGENT_JOBS_MCP_REQUIRE_APPROVAL` is off, and changing its content sends it back to
   `pending`: an agent must not widen its own run's shell access without a person seeing the list,
   which the approval notice shows.
+
+  | Driver      | Allowlist | Why                                                                                                                                                  |
+  | ----------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | claude      | enforced  | `--allowedTools "Bash(<pattern>)"`; headless `acceptEdits` otherwise stops at any command the settings do not allow.                                 |
+  | grok        | accepted  | `--allow "Bash(<pattern>)"` per entry (grok 1.0.92). Pre-approves the list; whether others are refused depends on the user's Grok settings.          |
+  | codex       | refused   | `exec --sandbox workspace-write` already runs commands, inside a sandbox whose network is off by default, so a list can neither widen nor narrow it. |
+  | cursor      | refused   | `--force` auto-approves every command; a list could not restrict it.                                                                                 |
+  | opencode    | refused   | `run --auto` auto-approves every command.                                                                                                            |
+  | antigravity | refused   | `--dangerously-skip-permissions` auto-approves every command.                                                                                        |
+
 - **Optional approval** — with `SCHEDULED_AGENT_JOBS_MCP_REQUIRE_APPROVAL=true`, an `mcp`-created job
   is stored disabled with `approval_state = 'pending'`. Nothing runs a pending job: the agent path
   cannot enable it or run it now, the human `setScheduledAgentJobEnabled` and

@@ -141,7 +141,7 @@ refused) and target one of the user's own repository checkouts.
 - Only jobs an agent created (shown as `createdVia: mcp`) can be updated or deleted by the tools; jobs
   you made in the UI can only be listed and run.
 - `allowedCommands` lists the shell commands the job's headless run may execute without a permission
-  prompt (Claude only, e.g. `pnpm run social:x-post *`). Without it, a headless run stops at its first
+  prompt (Claude and Grok only, e.g. `pnpm run social:x-post *`). Without it, a headless run stops at its first
   command that the project settings do not already allow, and the run still reports success. A job an
   agent gives a non-empty list waits for your approval; the approval notice shows the list.
 - With `SCHEDULED_AGENT_JOBS_MCP_REQUIRE_APPROVAL=true`, an agent-created job stays disabled

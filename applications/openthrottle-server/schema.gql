@@ -10571,7 +10571,7 @@ input CreateScheduledAgentJobAsAgentInputType {
   misfireThresholdMs: Int
 
   """
-  Shell command patterns the run may execute without a permission prompt, in Claude Code Bash(<pattern>) syntax without the wrapper (e.g. "pnpm run social:x-post *"). At most 20, each 1-200 characters with no newline or parentheses. Needs a driver with a command allowlist (claude). An agent-created job with a non-empty list waits for human approval. Omit for none.
+  Shell command patterns the run may execute without a permission prompt, in Claude Code Bash(<pattern>) syntax without the wrapper (e.g. "pnpm run social:x-post *"). At most 20, each 1-200 characters with no newline or parentheses. Needs a driver with a command allowlist (claude or grok). An agent-created job with a non-empty list waits for human approval. Omit for none.
   """
   allowedCommands: [String!]
 
@@ -10625,7 +10625,7 @@ input UpdateScheduledAgentJobAsAgentInputType {
   repositoryCheckoutId: ID
 
   """
-  Shell command patterns the run may execute without a permission prompt, in Claude Code Bash(<pattern>) syntax without the wrapper (e.g. "pnpm run social:x-post *"). At most 20, each 1-200 characters with no newline or parentheses. Needs a driver with a command allowlist (claude). An agent-created job with a non-empty list waits for human approval. Replaces the whole list; [] clears it. Omit to keep it.
+  Shell command patterns the run may execute without a permission prompt, in Claude Code Bash(<pattern>) syntax without the wrapper (e.g. "pnpm run social:x-post *"). At most 20, each 1-200 characters with no newline or parentheses. Needs a driver with a command allowlist (claude or grok). An agent-created job with a non-empty list waits for human approval. Replaces the whole list; [] clears it. Omit to keep it.
   """
   allowedCommands: [String!]
 
@@ -10698,7 +10698,7 @@ input CreateScheduledAgentJobInputType {
   repositoryCheckoutId: ID
 
   """
-  Shell command patterns the run may execute without a permission prompt, in Claude Code Bash(<pattern>) syntax without the wrapper (e.g. "pnpm run social:x-post *"). At most 20, each 1-200 characters with no newline or parentheses. Needs a driver with a command allowlist (claude). An agent-created job with a non-empty list waits for human approval. Omit for none.
+  Shell command patterns the run may execute without a permission prompt, in Claude Code Bash(<pattern>) syntax without the wrapper (e.g. "pnpm run social:x-post *"). At most 20, each 1-200 characters with no newline or parentheses. Needs a driver with a command allowlist (claude or grok). An agent-created job with a non-empty list waits for human approval. Omit for none.
   """
   allowedCommands: [String!]
 
@@ -10748,7 +10748,7 @@ input UpdateScheduledAgentJobInputType {
   repositoryCheckoutId: ID
 
   """
-  Shell command patterns the run may execute without a permission prompt, in Claude Code Bash(<pattern>) syntax without the wrapper (e.g. "pnpm run social:x-post *"). At most 20, each 1-200 characters with no newline or parentheses. Needs a driver with a command allowlist (claude). An agent-created job with a non-empty list waits for human approval. Replaces the whole list; [] clears it. Omit to keep it.
+  Shell command patterns the run may execute without a permission prompt, in Claude Code Bash(<pattern>) syntax without the wrapper (e.g. "pnpm run social:x-post *"). At most 20, each 1-200 characters with no newline or parentheses. Needs a driver with a command allowlist (claude or grok). An agent-created job with a non-empty list waits for human approval. Replaces the whole list; [] clears it. Omit to keep it.
   """
   allowedCommands: [String!]
 }

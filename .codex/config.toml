@@ -47,7 +47,7 @@ enabled = false
 # from this worktree's .env or the root checkout's.
 [mcp_servers.openthrottle-mcp]
 command = "bash"
-args = ["./scripts/run-openthrottle-mcp.sh"]
+args = ["./scripts/run-openthrottle-mcp.sh", "--toolsets=scheduling"]
 enabled = true
 
 # HTTP transport for the containerized OT MCP server (docker --profile prod up mcp). Off by default:
