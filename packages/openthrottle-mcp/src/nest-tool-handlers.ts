@@ -8,6 +8,7 @@ export * from './tools/agent-conversations.ts';
 export * from './tools/agent-discovery.ts';
 export * from './tools/auth-status.ts';
 export * from './tools/blog.ts';
+export * from './tools/code-search.ts';
 export * from './tools/git-text.ts';
 export * from './tools/health.ts';
 export * from './tools/model-discovery.ts';

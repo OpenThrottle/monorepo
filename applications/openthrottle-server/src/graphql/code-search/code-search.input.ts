@@ -1,5 +1,7 @@
 /**
  * @description GraphQL input for code semantic search over a registered repository's indexed code.
+ * Name the repository with `repositoryId`, or let the server resolve it from `workspacePath` — a
+ * hint resolved against the caller's own registered checkouts, never a path the server reads.
  */
 
 import { Field, ID, InputType, Int } from '@nestjs/graphql';
@@ -18,7 +20,14 @@ export class CodeSemanticSearchInput {
   query!: string;
 
   @Field(() => ID, {
-    description: `Registered WorkspaceLocalRepository id to search within.`,
+    description: `Registered WorkspaceLocalRepository id to search within. Takes precedence over workspacePath; one of the two is required.`,
+    nullable: true,
   })
-  repositoryId!: string;
+  repositoryId!: string | null;
+
+  @Field(() => String, {
+    description: `Absolute path the caller is working in (e.g. an MCP client's cwd). Resolved to the registered repository whose checkout contains it; ignored when repositoryId is set.`,
+    nullable: true,
+  })
+  workspacePath!: string | null;
 }

@@ -921,6 +921,17 @@ export class McpDeveloperMcpSurface {
   }
 
   @Tool({
+    description: Th.codeSearchToolDescription,
+    name: 'code_search',
+    parameters: asMcpParameters(Th.codeSearchToolParameters),
+  })
+  codeSearch(
+    args: Parameters<typeof Th.codeSearchToolHandler>[0],
+  ): ReturnType<typeof Th.codeSearchToolHandler> {
+    return Th.codeSearchToolHandler(args);
+  }
+
+  @Tool({
     description: Th.semanticSearchToolDescription,
     name: 'semantic_search',
     parameters: asMcpParameters(Th.semanticSearchToolParameters),

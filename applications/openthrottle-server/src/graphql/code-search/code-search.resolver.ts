@@ -1,6 +1,7 @@
 /**
  * @description GraphQL resolver for code semantic search over a registered repository. Resolves
- * repositoryId → filesystemPath server-side (user-scoped; never trusts a client path), runs search
+ * repositoryId → filesystemPath server-side (user-scoped; never trusts a client path) — for search,
+ * also from a caller's workspacePath and as the human a service account acts for — runs search
  * via @openthrottle/nestjs-vector-search, enqueues async full re-index on the code-index BullMQ
  * queue, and derives index status. Backs the /ide Semantic tab.
  */
@@ -10,6 +11,7 @@ import { BadRequestException, UseGuards } from '@nestjs/common';
 import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { CurrentUser } from '@openthrottle/nestjs-auth';
 import { PERMISSIONS, Permissions } from '@openthrottle/nestjs-rbac';
+import { RepositoryCheckoutsRepository } from '@openthrottle/nestjs-repositories-server';
 import { CodeSearchService } from '@openthrottle/nestjs-vector-search';
 import { toContainerPath } from '@openthrottle/openthrottle-agentic-utils';
 import { Queue } from 'bullmq';
@@ -23,6 +25,8 @@ import type {
   CodeIndexJobPayload,
   CodeIndexJobResult,
 } from '../../queues/code-index/code-index.types.ts';
+import { CheckoutPathResolutionService } from '../../services/checkout-path-resolution/checkout-path-resolution.service.ts';
+import { EffectiveUserResolutionService } from '../../services/effective-user-resolution/effective-user-resolution.service.ts';
 import { WorkspaceLocalRepositoriesService } from '../../services/workspace-local-repositories/workspace-local-repositories.service.ts';
 import { CODE_INDEX_STATUS } from './code-search.constants.ts';
 import { CodeSemanticSearchInput } from './code-search.input.ts';
@@ -51,6 +55,9 @@ export class CodeSearchResolver {
   constructor(
     private readonly codeSearch: CodeSearchService,
     private readonly repositories: WorkspaceLocalRepositoriesService,
+    private readonly checkoutPathResolution: CheckoutPathResolutionService,
+    private readonly checkouts: RepositoryCheckoutsRepository,
+    private readonly effectiveUserResolution: EffectiveUserResolutionService,
     @InjectQueue(CODE_INDEX_QUEUE_NAME)
     private readonly queue: Queue<CodeIndexJobPayload, CodeIndexJobResult>,
   ) {}
@@ -64,8 +71,8 @@ export class CodeSearchResolver {
     @Args('input', { type: () => CodeSemanticSearchInput })
     input: CodeSemanticSearchInput,
   ): Promise<CodeSemanticSearchResult> {
-    const filesystemPath = await this.resolveRepositoryPath(
-      input.repositoryId,
+    const filesystemPath = await this.resolveSearchRepositoryPath(
+      input,
       userId,
     );
 
@@ -86,7 +93,9 @@ export class CodeSearchResolver {
       limit,
     );
 
-    return { available: true, matches };
+    const ranked = [...matches].sort((a, b) => b.score - a.score);
+
+    return { available: true, matches: ranked };
   }
 
   @Query(() => CodeIndexStatusObject, {
@@ -182,6 +191,87 @@ export class CodeSearchResolver {
     // Stored host-truthful; translated to this process's view when the Docker
     // workspace bridge is active (identity otherwise).
     return toContainerPath(repository.filesystemPath);
+  }
+
+  /**
+   * @description The repository path a search runs over. The sub may be a service account (the
+   * MCP's usual caller), which owns no repositories itself, so it resolves to the human it acts
+   * for first. An explicit repositoryId wins; otherwise workspacePath is resolved against that
+   * user's registered checkouts (the deepest one containing it), falling back to an indexed
+   * checkout of the same repository when that one has no index.
+   */
+  private async resolveSearchRepositoryPath(
+    input: CodeSemanticSearchInput,
+    sub: string,
+  ): Promise<string> {
+    const userId =
+      (await this.effectiveUserResolution.resolveEffectiveUserId(sub)) ?? sub;
+    const repositoryId = input.repositoryId?.trim() ?? '';
+    if (repositoryId !== '') {
+      return this.resolveRepositoryPath(repositoryId, userId);
+    }
+
+    const workspacePath = input.workspacePath?.trim() ?? '';
+    if (workspacePath === '') {
+      throw new BadRequestException(
+        'A repositoryId or a workspacePath is required.',
+      );
+    }
+
+    const resolved = await this.checkoutPathResolution.resolveCheckoutForPath({
+      path: workspacePath,
+      userId,
+    });
+    if (resolved === null) {
+      throw new BadRequestException(
+        `No registered checkout contains ${workspacePath}; pass a repositoryId instead.`,
+      );
+    }
+
+    // A WorkspaceLocalRepository id is a checkout id, so the deepest registered
+    // checkout containing the path is the one searched — unless it has no index.
+    const checkoutPath = await this.resolveRepositoryPath(
+      resolved.checkoutId,
+      userId,
+    );
+    if ((await this.codeSearch.indexedChunkCount(checkoutPath)) > 0) {
+      return checkoutPath;
+    }
+
+    const indexedPath = await this.indexedSiblingCheckoutPath(
+      resolved.repositoryId,
+      userId,
+    );
+
+    return indexedPath ?? checkoutPath;
+  }
+
+  /**
+   * @description An indexed checkout of the same repository, primary first. Only the checkout a
+   * user indexes from /ide is indexed (worktrees and plan-run checkouts never are), so a search
+   * started inside a worktree would otherwise find nothing; the primary's index is what a review
+   * for existing code wants anyway. Null when no checkout of the repository is indexed.
+   */
+  private async indexedSiblingCheckoutPath(
+    repositoryId: string,
+    userId: string,
+  ): Promise<string | null> {
+    const checkouts = await this.checkouts.findByRepositoryIdForUser(
+      repositoryId,
+      userId,
+    );
+    const primaryFirst = [...checkouts].sort((a, b) => {
+      return Number(b.kind === 'primary') - Number(a.kind === 'primary');
+    });
+    const paths = primaryFirst.map((checkout) => {
+      return toContainerPath(checkout.filesystemPath);
+    });
+    const counts = await Promise.all(
+      paths.map((path) => this.codeSearch.indexedChunkCount(path)),
+    );
+    const index = counts.findIndex((count) => count > 0);
+
+    return paths[index] ?? null;
   }
 
   /** True when a code-index job for the repository is queued or running. */
