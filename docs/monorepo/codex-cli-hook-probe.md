@@ -1,23 +1,23 @@
 # `codex` CLI hook surface — measured
 
 **Measured 2026-09-11** against `codex-cli` **0.145.0** by running the installed binary with hooks
-wired to a stdin recorder, and by reading the JSON schemas the binary embeds. Sibling of
+wired to a stdin recorder, and by reading the JSON schemas the binary embeds. **`PreToolUse` re-probed
+2026-11-24** against **0.167.0**. Sibling of
 [cursor-agent-hook-probe.md](./cursor-agent-hook-probe.md) and
 [agent-cli-hook-capability-matrix.md](./agent-cli-hook-capability-matrix.md).
 
 Captured payloads are committed as fixtures at
 `packages/agentic-hooks/src/adapters/codex/__tests__/fixtures/` (paths scrubbed).
 
-## What was captured, and what was not
+## What was captured
 
-**Captured from a live run:** `SessionStart`, `UserPromptSubmit`, `SessionEnd`.
+**0.145.0, live:** `SessionStart`, `UserPromptSubmit`, `SessionEnd`. `PreToolUse` could not be
+captured then: `codex` auth on the probe machine had expired, so no model call and no tool call ran.
 
-**Not captured: `PreToolUse`.** The probe session reached the model call and failed there —
-`codex` authentication on the probe machine is expired (`~/.codex/auth.json` last refreshed
-2026-02-03, seven months before the probe; the file is untouched and the same failure reproduces
-with the real home directory, so this predates the probe). No model call means no tool call, so
-no `PreToolUse` payload. **The tool-based capture branch is therefore NOT implemented** — see
-[Open question](#open-question-how-does-a-skill-surface-as-a-tool) below.
+**0.167.0, live (2026-11-24):** `PreToolUse`, `PostToolUse`, `Stop`, from a session in a scratch repo
+asked to "Use the ot-probe-ping skill" — see
+[How a skill surfaces as a tool](#how-a-skill-surfaces-as-a-tool). The `PreToolUse` payload is the
+`pre-tool-use.json` fixture.
 
 ## Hook events
 
@@ -59,24 +59,45 @@ distinction.
 `session_id`, `tool_input`, `tool_name`, `tool_use_id`, `transcript_path`, `turn_id`; `agent_id` and
 `agent_type` are optional. That is the same shape Claude's `PreToolUse` has.
 
-## Open question: how does a skill surface as a tool?
+## How a skill surfaces as a tool
 
-`PreToolUse` carries `tool_name` and `tool_input`, so a skill invocation is observable **in
-principle**. What is unknown is which `tool_name` a skill produces, and where in `tool_input` the
-skill name sits.
+**Answered 2026-11-24 on 0.167.0.** Codex has **no `Skill` tool**. Its system prompt lists each skill
+with a short path into a "Skill roots" table and tells the model to read the `SKILL.md` before acting;
+the model does that with its `Bash` tool:
 
-Grepping the binary for a `Skill`-shaped tool finds only skill-_authoring_ helper scripts
-(`skill_name` / `skill_dir` argparse arguments in an embedded Python template), not a tool
-definition — which weakly suggests Codex resolves skills the way Cursor does, by reading `SKILL.md`,
-rather than through a dedicated tool. **That is a suggestion, not a measurement, and the adapter
-does not act on it.**
+```json
+{
+  "hook_event_name": "PreToolUse",
+  "tool_name": "Bash",
+  "tool_input": { "command": "cat .agents/skills/ot-probe-ping/SKILL.md" },
+  "tool_use_id": "exec-b8ed9ba6-…",
+  "session_id": "01a21067-…",
+  "turn_id": "01a21067-…",
+  "cwd": "/tmp/probe-repo",
+  "model": "gpt-6-luna",
+  "permission_mode": "bypassPermissions",
+  "transcript_path": "…/sessions/2026/11/24/rollout-….jsonl"
+}
+```
 
-This is deliberate. A normalizer written against a guessed tool name cannot distinguish "not a skill
-invocation" from "the shape changed underneath us" — precisely the bug the Cursor adapter carried
-for a year. The branch stays out until a real payload can be captured.
+The skill name is the `SKILL.md`'s parent directory — the same signal Cursor gives with a `Read`, so
+the adapter records it under the same `invocation_path`, `skill_read`. A second probe with a
+700-line `SKILL.md` was also read with one `cat`, not paged with `sed -n`.
 
-**To close this:** restore `codex` login (`codex login`), then re-run the probe method below and add
-the `PreToolUse` branch with a committed fixture.
+The adapter matches **only** that shape: one `cat`, one optionally quoted path ending in
+`/<name>/SKILL.md`, no pipes, chains, redirects or substitutions. A `sed -n`, `head` or compound read
+returns null. Those were not observed, and a normalizer that guesses at them cannot tell "not a skill
+invocation" from "the shape changed underneath us". A change in how codex loads skills therefore shows
+up as missing rows rather than wrong ones; the re-probe triggers below are how it is caught.
+
+**Hooks inherit the session's sandbox network policy.** Verified live on 2026-11-24: under
+`codex exec -s read-only` the capture post and the coverage heartbeat both failed with
+`fetch failed` and the event was buffered to `~/.openthrottle/skill-usage/` (the drain delivered it
+later, unchanged). Under the default `workspace-write` the same capture posted directly. Telemetry from
+read-only codex sessions therefore arrives late, on the next drain, rather than not at all.
+
+Cloud skills are different: the prompt sends them through a `skills.list` / `skills.read` tool with
+`skill://` identifiers. OpenThrottle's skills are filesystem skills, so that path is not captured.
 
 ## Probe method (repeatable)
 
@@ -127,5 +148,6 @@ own `cwd`, which every event carries, falling back to `OPEN_THROTTLE_REPO_ROOT` 
 
 ## Re-probe triggers
 
-Codex ships fast. Re-probe when: `codex login` is restored (to close the `PreToolUse` question);
-a release changes the hook event list; or Agent Plugins support changes how skills are resolved.
+Codex ships fast. Re-probe when: a release changes the hook event list; a release changes the
+"Skills" section of its system prompt (how a skill is loaded); or a `skill_usage_events` count for
+`source = 'codex'`, `invocation_path = 'skill_read'` drops to zero on a machine still running codex.

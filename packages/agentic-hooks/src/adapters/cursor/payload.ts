@@ -23,6 +23,10 @@ import { isRecord } from '@openthrottle/nodejs-utils';
 
 import { SKILL_USAGE_OUTCOMES } from '../../data/events.ts';
 import type { NormalizedInvocation, SkillUsageOutcome } from '../../types.ts';
+import {
+  SKILL_READ_INVOCATION_PATH,
+  skillNameFromSkillFilePath,
+} from '../../utils/skill-file.ts';
 
 /** Producer id stamped onto every event this adapter emits. @public */
 export const CURSOR_SOURCE = 'cursor';
@@ -55,12 +59,9 @@ export const readCursorShellSessionId = (
  * @public
  */
 export const CURSOR_INVOCATION_PATHS = Object.freeze({
-  SKILL_READ: 'skill_read',
+  SKILL_READ: SKILL_READ_INVOCATION_PATH,
   SLASH: 'slash',
 } as const);
-
-/** Matches `<anything>/<skill-name>/SKILL.md`, capturing the skill name. */
-const SKILL_FILE_PATTERN = /(?:^|\/)([^/]+)\/SKILL\.md$/;
 
 /** Matches a prompt that opens with `/<command-name>`, capturing the name. */
 const SLASH_COMMAND_PATTERN = /^\s*\/([A-Za-z0-9][\w.:-]*)\s*([\s\S]*)$/;
@@ -90,12 +91,6 @@ const resolveCwd = (payload: Record<string, unknown>): string | null => {
   return null;
 };
 
-/** Skill name from a `SKILL.md` path, or null when the path is not one. */
-const skillNameFromPath = (filePath: string): string | null => {
-  const match = SKILL_FILE_PATTERN.exec(filePath.split('\\').join('/'));
-  return match?.[1] ?? null;
-};
-
 const normalizeSkillRead = (
   payload: Record<string, unknown>,
 ): NormalizedInvocation | null => {
@@ -106,7 +101,7 @@ const normalizeSkillRead = (
   if (!filePath) {
     return null;
   }
-  const skillName = skillNameFromPath(filePath);
+  const skillName = skillNameFromSkillFilePath(filePath);
   if (!skillName) {
     return null;
   }

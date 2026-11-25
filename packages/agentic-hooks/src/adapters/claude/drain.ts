@@ -18,6 +18,7 @@ import {
   drainBufferedUsage,
   formatBufferStats,
   formatDrainFileResult,
+  isTelemetryDisabled,
   logHookError,
   readBufferStats,
   replayDeadLetter,
@@ -30,6 +31,10 @@ const parseArg = (flag: string): string | undefined => {
 
 const main = async (): Promise<void> => {
   try {
+    if (isTelemetryDisabled()) {
+      return;
+    }
+
     const repoRoot =
       process.env.CLAUDE_PROJECT_DIR ||
       process.env.OPEN_THROTTLE_REPO_ROOT ||

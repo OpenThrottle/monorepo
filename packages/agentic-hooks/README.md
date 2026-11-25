@@ -50,11 +50,11 @@ we make:
 - **home-dir config** — the tool reads hooks from the operator's home directory, so there is nothing
   to inject at all; delivery is documentation.
 
-| producer          | capture                                          | completion (outcome + duration) | delivery                        | status                         |
-| ----------------- | ------------------------------------------------ | ------------------------------- | ------------------------------- | ------------------------------ |
-| **`claude-code`** | ✅ `PreToolUse`(`Skill`) + `UserPromptExpansion` | ✅ `Stop`                       | in-repo hooks + plugin payload  | complete                       |
-| **`cursor`**      | ✅ `preToolUse` (a `Read` of `SKILL.md`)         | ✅ `sessionEnd`                 | in-repo hooks + plugin payload  | complete                       |
-| **`codex`**       | ⚠️ `UserPromptSubmit` slash commands only        | ✅ `SessionEnd`                 | home-dir config (documentation) | slash path only — see the note |
+| producer          | capture                                          | completion (outcome + duration) | delivery                        | status   |
+| ----------------- | ------------------------------------------------ | ------------------------------- | ------------------------------- | -------- |
+| **`claude-code`** | ✅ `PreToolUse`(`Skill`) + `UserPromptExpansion` | ✅ `Stop`                       | in-repo hooks + plugin payload  | complete |
+| **`cursor`**      | ✅ `preToolUse` (a `Read` of `SKILL.md`)         | ✅ `sessionEnd`                 | in-repo hooks + plugin payload  | complete |
+| **`codex`**       | ✅ `PreToolUse` (`cat` of `SKILL.md`) + slash    | ✅ `SessionEnd`                 | home-dir config (documentation) | complete |
 
 Each row is measured against the installed binary, not read off a docs site:
 [cursor-agent-hook-probe.md](../../docs/monorepo/cursor-agent-hook-probe.md),
@@ -66,11 +66,11 @@ Two rows carry caveats worth stating rather than smoothing over:
   `SKILL.md`, so it is recorded under its own `invocation_path` (`skill_read`) rather than reusing
   `skill_tool`. It is a genuinely weaker signal — an agent editing skills reads them too — and the
   data stays separable instead of looking falsely comparable.
-- **`codex` captures slash commands only.** Its `PreToolUse` carries `tool_name`/`tool_input`, so a
-  tool-shaped invocation is observable in principle, but which `tool_name` a skill produces has not
-  been captured. The branch is deliberately omitted rather than written against a guess — a
-  normalizer that guesses cannot tell "not a skill invocation" from "the shape changed underneath
-  us", which is exactly the bug `cursor` carried.
+- **`codex` has no `Skill` tool either.** Measured on `codex-cli 0.167.0`, it loads a filesystem
+  skill by running `cat <path>/SKILL.md` through its `Bash` tool, so it records under the same
+  `skill_read` path as `cursor`. Only that exact command shape matches (one `cat`, one path, no
+  pipes or chains); any other way of reading the file returns null rather than a guess, so a change
+  in how codex loads skills shows up as missing rows, not as wrong ones.
 
 Every one of these, and **`antigravity`**, also sends the coverage heartbeat on its session-start
 event (contract §8). For antigravity that is the only hook: it ships in the generated workspace
@@ -107,6 +107,11 @@ nothing to inject — delivery is this block, run once:
 
 ```toml
 # ~/.codex/config.toml
+[[hooks.PreToolUse]]
+[[hooks.PreToolUse.hooks]]
+type = "command"
+command = "/absolute/path/to/openthrottle/plugins/openthrottle-codex/hooks/skill-usage-capture.cjs"
+
 [[hooks.UserPromptSubmit]]
 [[hooks.UserPromptSubmit.hooks]]
 type = "command"

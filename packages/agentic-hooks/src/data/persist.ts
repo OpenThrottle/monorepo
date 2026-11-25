@@ -19,6 +19,7 @@ import type {
   UsageEvent,
 } from '../types.ts';
 import { logHookError } from '../utils/logging.ts';
+import { warnEndpointUnreachable } from '../utils/warnEndpointUnreachable.ts';
 import {
   buildOutcomeEvent,
   RECORD_SKILL_USAGE_MUTATION,
@@ -200,9 +201,11 @@ export const persistUsageEvent = async ({
       return { id: result.id, sink: 'server' };
     }
 
-    logHookError(
-      `server post failed; falling back to jsonl (${result.reason}) [endpoint ${forLog(graphqlUrl)}]`,
-    );
+    warnEndpointUnreachable({
+      message: `server post failed; falling back to jsonl (${result.reason}) [endpoint ${forLog(graphqlUrl)}]`,
+      repoRoot,
+      sessionId: event.session_id,
+    });
     try {
       appendJsonl(outPath, event);
     } catch (err) {
@@ -282,9 +285,11 @@ export const persistOutcomeEvent = async ({
       return { id: result.id, sink: 'server' };
     }
 
-    logHookError(
-      `outcome server post failed; falling back to jsonl (${result.reason}) [endpoint ${forLog(graphqlUrl)}]`,
-    );
+    warnEndpointUnreachable({
+      message: `outcome server post failed; falling back to jsonl (${result.reason}) [endpoint ${forLog(graphqlUrl)}]`,
+      repoRoot,
+      sessionId: event.session_id,
+    });
     try {
       appendJsonl(outPath, event);
     } catch (err) {
@@ -416,9 +421,11 @@ export const persistTokenUsage = async ({
       } else {
         detail = res.reason;
         serverDown = true;
-        logHookError(
-          `token usage post failed; falling back to jsonl (${res.reason}) [endpoint ${forLog(graphqlUrl)}]`,
-        );
+        warnEndpointUnreachable({
+          message: `token usage post failed; falling back to jsonl (${res.reason}) [endpoint ${forLog(graphqlUrl)}]`,
+          repoRoot,
+          sessionId: batch[0]?.session_id,
+        });
         buffer(batch);
       }
     }

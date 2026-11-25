@@ -12,6 +12,7 @@
 export * from './config/describe.ts';
 export * from './config/ensureUserEnvEntries.ts';
 export * from './config/env.ts';
+export * from './config/isTelemetryDisabled.ts';
 export * from './data/bash-guard/bsd-sed-inplace.ts';
 export * from './data/bash-guard/fs-glob-matcher.ts';
 export * from './data/bash-guard/gh-pr-lookup.ts';
@@ -52,3 +53,5 @@ export * from './utils/isDestructiveCommand.ts';
 export * from './utils/logging.ts';
 export * from './utils/privacy.ts';
 export * from './utils/scope.ts';
+export * from './utils/skill-file.ts';
+export * from './utils/warnEndpointUnreachable.ts';

@@ -24,14 +24,14 @@ Two rows now have their own primary record, far more detailed than this table:
 
 ## The matrix
 
-| CLI              | hooks?                                | hook config read from                                                                                           | out-of-repo override                                        | plugin mechanism                                                        | verdict for the overlay                                                                       |
-| ---------------- | ------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| **claude**       | yes                                   | user / project / local settings + every installed plugin, merged additively                                     | `--settings`, `--plugin-dir`, `--plugin-url`                | plugins + marketplace (`/plugin install`)                               | **shipped** — legs A and B both verified end-to-end                                           |
-| **cursor-agent** | yes                                   | nine sources merged additively, including `.claude/settings.json` and `.claude/settings.local.json`             | **`--plugin-dir`** (repeatable), confirmed on 2026.09.10    | plugins + `plugin marketplace`                                          | **shipped** — capture, completion and leg B verified; needs its OWN payload, see below        |
-| **codex**        | yes                                   | `~/.codex/config.toml`, `$CODEX_HOME/<name>.config.toml`; since 0.167.0 also a **trusted** project's `.codex/`  | `-c hooks.…`, `--profile`, `CODEX_HOME`                     | `codex plugin` installs from marketplaces; **no `--plugin-dir` flag**   | **shipped, partially** — needs no injection at all; capture is slash-commands-only, see below |
-| **grok**         | yes (`PreToolUse`, session lifecycle) | `.grok/hooks/`, plus `[[hooks.<Event>]]` in `~/.grok/config.toml` and other config layers, combined additively  | config layers are out-of-repo; **no per-invocation flag**   | durable `grok plugin install <git-url\|path>`; **reads Claude plugins** | **partial** — see below                                                                       |
-| **opencode**     | via plugins (JS module hook API)      | project `opencode.json` + global config; `--pure` disables                                                      | global config is out-of-repo                                | `opencode plugin <npm-module>` (npm, not a directory)                   | **viable, different shape** — npm-published module, not a payload directory                   |
-| **antigravity**  | yes — measured on 1.5.8 (2026-11-13)  | a workspace plugin, `<cwd>/.agents/plugins/<name>/{plugin.json,hooks.json}`; fires under `-p` **and** `agy acp` | `--settings` (session-only JSON) exists; unprobed for hooks | `agy plugin install` / `validate`, plus workspace `.agents/plugins/`    | **hooks verified in-repo only** — the out-of-repo route is still unprobed, see below          |
+| CLI              | hooks?                                | hook config read from                                                                                           | out-of-repo override                                        | plugin mechanism                                                        | verdict for the overlay                                                                             |
+| ---------------- | ------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| **claude**       | yes                                   | user / project / local settings + every installed plugin, merged additively                                     | `--settings`, `--plugin-dir`, `--plugin-url`                | plugins + marketplace (`/plugin install`)                               | **shipped** — legs A and B both verified end-to-end                                                 |
+| **cursor-agent** | yes                                   | nine sources merged additively, including `.claude/settings.json` and `.claude/settings.local.json`             | **`--plugin-dir`** (repeatable), confirmed on 2026.09.10    | plugins + `plugin marketplace`                                          | **shipped** — capture, completion and leg B verified; needs its OWN payload, see below              |
+| **codex**        | yes                                   | `~/.codex/config.toml`, `$CODEX_HOME/<name>.config.toml`; since 0.167.0 also a **trusted** project's `.codex/`  | `-c hooks.…`, `--profile`, `CODEX_HOME`                     | `codex plugin` installs from marketplaces; **no `--plugin-dir` flag**   | **shipped** — needs no injection at all; capture is a `Bash` `cat` of `SKILL.md` + slash, see below |
+| **grok**         | yes (`PreToolUse`, session lifecycle) | `.grok/hooks/`, plus `[[hooks.<Event>]]` in `~/.grok/config.toml` and other config layers, combined additively  | config layers are out-of-repo; **no per-invocation flag**   | durable `grok plugin install <git-url\|path>`; **reads Claude plugins** | **partial** — see below                                                                             |
+| **opencode**     | via plugins (JS module hook API)      | project `opencode.json` + global config; `--pure` disables                                                      | global config is out-of-repo                                | `opencode plugin <npm-module>` (npm, not a directory)                   | **viable, different shape** — npm-published module, not a payload directory                         |
+| **antigravity**  | yes — measured on 1.5.8 (2026-11-13)  | a workspace plugin, `<cwd>/.agents/plugins/<name>/{plugin.json,hooks.json}`; fires under `-p` **and** `agy acp` | `--settings` (session-only JSON) exists; unprobed for hooks | `agy plugin install` / `validate`, plus workspace `.agents/plugins/`    | **hooks verified in-repo only** — the out-of-repo route is still unprobed, see below                |
 
 ## What is worth knowing beyond the table
 
@@ -98,9 +98,11 @@ because "tool X reads Claude plugins" reads as coverage and is not.
 Claude has a real `Skill` tool, so `PreToolUse` with `matcher: "Skill"` is exact. **Cursor and codex
 do not.** In Cursor a skill invocation is only visible as a `Read` of the skill's `SKILL.md` — a
 weaker signal, since an agent editing skills reads them too, which is why those rows are recorded
-under a distinct `invocation_path` (`skill_read`) rather than folded in with Claude's. For codex,
-which `tool_name` a skill produces has not been captured at all, so its capture is
-slash-commands-only until it can be.
+under a distinct `invocation_path` (`skill_read`) rather than folded in with Claude's. Codex is the
+same signal through a different tool: measured on codex-cli 0.167.0 (2026-11-24), a filesystem skill
+is loaded by `PreToolUse` `tool_name: "Bash"` running `cat <path>/SKILL.md`, recorded as
+`skill_read` too. Only that exact command shape matches — see
+[`codex-cli-hook-probe.md`](./codex-cli-hook-probe.md#how-a-skill-surfaces-as-a-tool).
 
 This is the single biggest cross-tool difference and it is a **data-quality** difference, not a
 plumbing one. Anything comparing skill usage across producers has to account for it.
@@ -362,10 +364,8 @@ The honest split: assert what we control, date and re-probe what we do not.
 ## Consequences
 
 - **Shipped: claude, cursor, codex.** Claude and cursor have capture, completion and an out-of-repo
-  delivery leg, all verified end-to-end. Codex has completion and slash-command capture, and needs no
-  injection.
-- **codex's remaining gap** is its tool-based capture path, blocked on capturing a real `PreToolUse`
-  payload.
+  delivery leg, all verified end-to-end. Codex has completion and both capture paths (`skill_read`
+  via `PreToolUse`, and slash commands), and needs no injection.
 - **grok and opencode** stay on option D (server-side transcript derivation) for now: grok because
   trust and the missing `Skill` tool block it structurally, opencode because it needs a published npm
   package. Neither is blocked by a _lack_ of out-of-repo config.

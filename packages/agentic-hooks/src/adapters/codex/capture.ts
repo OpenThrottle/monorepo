@@ -1,5 +1,6 @@
 /**
- * Codex capture entrypoint (`UserPromptSubmit`). Thin: parse Codex's payload →
+ * Codex capture entrypoint (`PreToolUse` skill reads and `UserPromptSubmit`
+ * slash commands). Thin: parse Codex's payload →
  * neutral event → shared persist, plus record an identifiers-only start.
  * Fail-open: any error is swallowed; always exits 0.
  */
@@ -9,6 +10,7 @@ import path from 'node:path';
 import {
   buildUsageEvent,
   defaultJsonlPath,
+  isTelemetryDisabled,
   logHookError,
   persistUsageEvent,
   recordSkillStart,
@@ -17,6 +19,10 @@ import { CODEX_SOURCE, normalizeCodexPayload } from './payload.ts';
 
 const main = async (): Promise<void> => {
   try {
+    if (isTelemetryDisabled()) {
+      return;
+    }
+
     const repoRoot = process.env.OPEN_THROTTLE_REPO_ROOT || process.cwd();
 
     const stdinBuf = fs.readFileSync(0, 'utf8');

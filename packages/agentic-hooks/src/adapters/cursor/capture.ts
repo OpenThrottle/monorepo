@@ -9,6 +9,7 @@ import path from 'node:path';
 import {
   buildUsageEvent,
   defaultJsonlPath,
+  isTelemetryDisabled,
   logHookError,
   persistUsageEvent,
   recordSkillStart,
@@ -17,6 +18,10 @@ import { CURSOR_SOURCE, normalizeCursorPayload } from './payload.ts';
 
 const main = async (): Promise<void> => {
   try {
+    if (isTelemetryDisabled()) {
+      return;
+    }
+
     const repoRoot =
       process.env.CURSOR_PROJECT_DIR ||
       process.env.OPEN_THROTTLE_REPO_ROOT ||
