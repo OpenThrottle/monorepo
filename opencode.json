@@ -7,7 +7,13 @@
       "type": "local"
     },
     "github": {
-      "command": ["bash", "./scripts/run-github-mcp.sh"],
+      "command": [
+        "bash",
+        "-c",
+        "s=$1; shift; d=$PWD; until [ -f \"$d/$s\" ] || [ \"$d\" = / ]; do d=$(dirname \"$d\"); done; [ -f \"$d/$s\" ] || { echo \"mcp-launcher: no $s in $PWD or any parent folder\" >&2; exit 1; }; exec bash \"$d/$s\" \"$@\"",
+        "mcp-launcher",
+        "scripts/run-github-mcp.sh"
+      ],
       "enabled": true,
       "type": "local"
     },
@@ -22,7 +28,13 @@
       "type": "local"
     },
     "openthrottle-mcp": {
-      "command": ["bash", "./scripts/run-openthrottle-mcp.sh"],
+      "command": [
+        "bash",
+        "-c",
+        "s=$1; shift; d=$PWD; until [ -f \"$d/$s\" ] || [ \"$d\" = / ]; do d=$(dirname \"$d\"); done; [ -f \"$d/$s\" ] || { echo \"mcp-launcher: no $s in $PWD or any parent folder\" >&2; exit 1; }; exec bash \"$d/$s\" \"$@\"",
+        "mcp-launcher",
+        "scripts/run-openthrottle-mcp.sh"
+      ],
       "enabled": true,
       "type": "local"
     },

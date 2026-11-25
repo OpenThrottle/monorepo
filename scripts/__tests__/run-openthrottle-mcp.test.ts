@@ -16,14 +16,25 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { parseVersion, satisfies } from '../check-node-engine.mjs';
 import {
+  authSmokeTimeoutMs,
   buildCandidateUrls,
   checkNodeEngine,
+  DIST_WAIT_MAX_MS,
   isUnexpandedPlaceholder,
   isUnreachableError,
+  LAUNCH_BUDGET_MS,
+  listRuntimeEntries,
+  MCP_BIN_PATH,
   parseDockerServerPort,
   probe,
+  PROBE_DEADLINE_MS,
+  PROBE_ROUND_DELAYS_MS,
   readEnginesNodeRange,
   resolveClientWorkspacePath,
+  resolveLiveServer,
+  resolveRuntimeEntry,
+  waitForEntries,
+  workspaceDependencyNames,
 } from '../run-openthrottle-mcp.ts';
 
 describe('isUnexpandedPlaceholder', () => {
@@ -231,6 +242,316 @@ describe('probe', () => {
     });
 
     await expect(probe('http://127.0.0.1:1')).rejects.toBeInstanceOf(ReferenceError); // prettier-ignore
+  });
+});
+
+interface FakeClock {
+  readonly now: () => number;
+  readonly sleep: (ms: number) => Promise<void>;
+  readonly slept: number[];
+  readonly tick: (ms: number) => void;
+}
+
+/** A clock that only moves when the code under test sleeps or a probe ticks it. */
+const makeFakeClock = (): FakeClock => {
+  let time = 0;
+  const slept: number[] = [];
+
+  return {
+    now: () => {
+      return time;
+    },
+    sleep: async (ms) => {
+      slept.push(ms);
+      time += ms;
+    },
+    slept,
+    tick: (ms) => {
+      time += ms;
+    },
+  };
+};
+
+const noop = (): void => {
+  return undefined;
+};
+
+describe('PROBE_ROUND_DELAYS_MS', () => {
+  it('fits every round inside the probe deadline and the deadline inside the launch budget', () => {
+    const totalDelay = PROBE_ROUND_DELAYS_MS.reduce((sum, ms) => sum + ms, 0);
+
+    expect(PROBE_ROUND_DELAYS_MS[0]).toBe(0);
+    expect(PROBE_ROUND_DELAYS_MS.length).toBeGreaterThan(1);
+    expect(totalDelay).toBeLessThan(PROBE_DEADLINE_MS);
+    expect(PROBE_DEADLINE_MS).toBeLessThan(LAUNCH_BUDGET_MS);
+    expect(LAUNCH_BUDGET_MS).toBeLessThan(30_000);
+  });
+});
+
+describe('resolveLiveServer', () => {
+  describe('when a candidate answers in the first round', () => {
+    it('returns it without sleeping', async () => {
+      const clock = makeFakeClock();
+      const probed: string[] = [];
+
+      const result = await resolveLiveServer({
+        candidates: ['http://a', 'http://b'],
+        deadlineMs: PROBE_DEADLINE_MS,
+        delaysMs: PROBE_ROUND_DELAYS_MS,
+        now: clock.now,
+        onMiss: noop,
+        onRetry: noop,
+        probe: async (url) => {
+          probed.push(url);
+
+          return url === 'http://b';
+        },
+        sleep: clock.sleep,
+      });
+
+      expect(result).toEqual({ kind: 'found', rounds: 1, url: 'http://b' });
+      expect(probed).toEqual(['http://a', 'http://b']);
+      expect(clock.slept).toEqual([]);
+    });
+  });
+
+  describe('when the server comes up mid-restart', () => {
+    it('keeps the candidate order each round and finds it on a later round', async () => {
+      const clock = makeFakeClock();
+      const retries: number[] = [];
+      let calls = 0;
+
+      const result = await resolveLiveServer({
+        candidates: ['http://a'],
+        deadlineMs: PROBE_DEADLINE_MS,
+        delaysMs: [0, 1000, 2000, 3000],
+        now: clock.now,
+        onMiss: noop,
+        onRetry: (round) => {
+          retries.push(round);
+        },
+        probe: async () => {
+          calls += 1;
+
+          return calls === 3;
+        },
+        sleep: clock.sleep,
+      });
+
+      expect(result).toEqual({ kind: 'found', rounds: 3, url: 'http://a' });
+      expect(clock.slept).toEqual([1000, 2000]);
+      expect(retries).toEqual([2, 3]);
+    });
+  });
+
+  describe('when no server ever answers', () => {
+    it('runs every round, then reports none', async () => {
+      const clock = makeFakeClock();
+      const misses: string[] = [];
+
+      const result = await resolveLiveServer({
+        candidates: ['http://a', 'http://b'],
+        deadlineMs: PROBE_DEADLINE_MS,
+        delaysMs: [0, 1000, 2000, 3000],
+        now: clock.now,
+        onMiss: (url, round) => {
+          misses.push(`${round}:${url}`);
+        },
+        onRetry: noop,
+        probe: async () => {
+          return false;
+        },
+        sleep: clock.sleep,
+      });
+
+      expect(result).toEqual({ kind: 'none', rounds: 4 });
+      expect(clock.slept).toEqual([1000, 2000, 3000]);
+      expect(misses).toHaveLength(8);
+      expect(misses[7]).toBe('4:http://b');
+    });
+  });
+
+  describe('when probes time out slowly', () => {
+    it('starts no round that would cross the deadline', async () => {
+      const clock = makeFakeClock();
+
+      const result = await resolveLiveServer({
+        candidates: ['http://a', 'http://b'],
+        deadlineMs: 12_000,
+        delaysMs: [0, 1000, 2000, 3000],
+        now: clock.now,
+        onMiss: noop,
+        onRetry: noop,
+        // Each probe burns its full 2s timeout: a round costs 4s.
+        probe: async () => {
+          clock.tick(2000);
+
+          return false;
+        },
+        sleep: clock.sleep,
+      });
+
+      // Round 1 ends at 4s; round 2 starts at 5s and ends at 9s; round 3
+      // starts at 11s (< 12s) and ends at 15s; round 4 would start at 18s,
+      // past the deadline, so it never runs.
+      expect(result).toEqual({ kind: 'none', rounds: 3 });
+      expect(clock.slept).toEqual([1000, 2000]);
+    });
+  });
+});
+
+describe('authSmokeTimeoutMs', () => {
+  it('keeps the usual 10s when discovery was quick', () => {
+    expect(authSmokeTimeoutMs(500)).toBe(10_000);
+  });
+
+  it('shrinks to what is left of the launch budget after a slow discovery', () => {
+    expect(authSmokeTimeoutMs(LAUNCH_BUDGET_MS - 6000)).toBe(6000);
+  });
+
+  it('never drops below the floor', () => {
+    expect(authSmokeTimeoutMs(LAUNCH_BUDGET_MS)).toBe(3000);
+  });
+});
+
+describe('resolveRuntimeEntry', () => {
+  it('prefers the import condition of the root export', () => {
+    expect(resolveRuntimeEntry({ exports: { '.': { import: './dist/a.js', require: './dist/a.cjs', types: './dist/a.d.ts' } } })).toBe('./dist/a.js'); // prettier-ignore
+  });
+
+  it('reads a default condition or a bare string export', () => {
+    expect(resolveRuntimeEntry({ exports: { '.': { default: './src/index.ts' } } })).toBe('./src/index.ts'); // prettier-ignore
+    expect(resolveRuntimeEntry({ exports: './src/index.ts' })).toBe('./src/index.ts'); // prettier-ignore
+  });
+
+  it('falls back to main, then to nothing', () => {
+    expect(resolveRuntimeEntry({ main: './index.js' })).toBe('./index.js');
+    expect(resolveRuntimeEntry({})).toBeUndefined();
+  });
+});
+
+describe('workspaceDependencyNames', () => {
+  it('keeps only workspace: dependencies', () => {
+    const manifest = {
+      dependencies: { '@a/y': 'workspace:*', '@b/x': 'workspace:^', zod: 'catalog:' }, // prettier-ignore
+      devDependencies: { '@c/z': 'workspace:^' },
+    };
+
+    expect(workspaceDependencyNames(manifest)).toEqual(['@a/y', '@b/x']);
+  });
+
+  it('is empty without dependencies', () => {
+    expect(workspaceDependencyNames({})).toEqual([]);
+  });
+});
+
+describe('listRuntimeEntries', () => {
+  it('lists bin.js and each workspace dependency entry through node_modules', () => {
+    const root = makeTempDir();
+    const pkg = join(root, 'packages', 'openthrottle-mcp');
+    const dep = join(pkg, 'node_modules', '@openthrottle', 'built');
+    mkdirSync(dep, { recursive: true });
+    writeFileSync(join(pkg, 'package.json'), JSON.stringify({ dependencies: { '@openthrottle/built': 'workspace:^', zod: 'catalog:' } })); // prettier-ignore
+    writeFileSync(join(dep, 'package.json'), JSON.stringify({ exports: { '.': { import: './dist/src/index.js' } } })); // prettier-ignore
+
+    expect(listRuntimeEntries(root)).toEqual([
+      join(root, MCP_BIN_PATH),
+      join(dep, 'dist', 'src', 'index.js'),
+    ]);
+  });
+
+  it('still checks bin.js when the manifest is unreadable', () => {
+    const root = makeTempDir();
+
+    expect(listRuntimeEntries(root)).toEqual([join(root, MCP_BIN_PATH)]);
+  });
+});
+
+describe('waitForEntries', () => {
+  describe('when every entry exists', () => {
+    it('is ready at once, without waiting or warning', async () => {
+      const clock = makeFakeClock();
+      const onWait = vi.fn();
+
+      const result = await waitForEntries({
+        entries: ['a', 'b'],
+        exists: () => {
+          return true;
+        },
+        maxWaitMs: DIST_WAIT_MAX_MS,
+        now: clock.now,
+        onWait,
+        pollMs: 500,
+        sleep: clock.sleep,
+      });
+
+      expect(result).toEqual({ kind: 'ready', waitedMs: 0 });
+      expect(onWait).not.toHaveBeenCalled();
+      expect(clock.slept).toEqual([]);
+    });
+  });
+
+  describe('when a dist is mid-rewrite', () => {
+    it('warns once, then polls until it reappears', async () => {
+      const clock = makeFakeClock();
+      const onWait = vi.fn();
+
+      const result = await waitForEntries({
+        entries: ['bin', 'dep'],
+        exists: (path) => {
+          return path === 'bin' || clock.now() >= 1500;
+        },
+        maxWaitMs: DIST_WAIT_MAX_MS,
+        now: clock.now,
+        onWait,
+        pollMs: 500,
+        sleep: clock.sleep,
+      });
+
+      expect(result).toEqual({ kind: 'ready', waitedMs: 1500 });
+      expect(onWait).toHaveBeenCalledExactlyOnceWith(['dep']);
+      expect(clock.slept).toEqual([500, 500, 500]);
+    });
+  });
+
+  describe('when a dist never appears', () => {
+    it('gives up within the wait budget and names what is missing', async () => {
+      const clock = makeFakeClock();
+
+      const result = await waitForEntries({
+        entries: ['bin', 'dep'],
+        exists: (path) => {
+          return path === 'bin';
+        },
+        maxWaitMs: 2000,
+        now: clock.now,
+        onWait: noop,
+        pollMs: 500,
+        sleep: clock.sleep,
+      });
+
+      expect(result).toEqual({ kind: 'missing', missing: ['dep'] });
+      expect(clock.slept).toEqual([500, 500, 500, 500]);
+    });
+
+    it('checks once and fails when the launch budget is already spent', async () => {
+      const clock = makeFakeClock();
+
+      const result = await waitForEntries({
+        entries: ['dep'],
+        exists: () => {
+          return false;
+        },
+        maxWaitMs: 0,
+        now: clock.now,
+        onWait: noop,
+        pollMs: 500,
+        sleep: clock.sleep,
+      });
+
+      expect(result).toEqual({ kind: 'missing', missing: ['dep'] });
+      expect(clock.slept).toEqual([]);
+    });
   });
 });
 

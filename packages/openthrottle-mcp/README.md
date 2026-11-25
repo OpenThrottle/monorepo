@@ -107,6 +107,10 @@ PATH="$HOME/.nvm/versions/node/v16.17.1/bin:$PATH" OT_MCP_RESOLVE_ONLY=1 bash sc
 
 Both should report the `.nvmrc` version. MCP servers register when a session starts, so after you change the launcher or its config, reconnect the server (`/mcp` in Claude Code) or restart the client.
 
+### What does not restart the MCP
+
+Investigated in August 2026 so the hunt need not be repeated: `openthrottle-developer:dev` never rebuilds or restarts this package. The package exposes `__dev` (a tsc `--watch`), not `dev`, so `^dev` cascades skip it. Running openthrottle-server with `:start` is safe too. A build rewriting `dist/` cannot kill an MCP that is already running. The only risk is launching one while `^build` has cleaned `dist/`, and the launcher now waits that out ([AUTH.md § Build-output guard](docs/AUTH.md)).
+
 ## Tools overview
 
 | Category                                                      | MCP tools                                                                                                           | Auth                                       |

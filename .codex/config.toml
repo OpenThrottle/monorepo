@@ -15,10 +15,14 @@ enabled = true
 # GitHub MCP server. Launcher self-loads GITHUB_TOKEN from root .env when the shell that launched the
 # client didn't export it (no direnv here), mirroring run-openthrottle-mcp.sh. No env block: an
 # unexpanded ${GITHUB_TOKEN} placeholder is what triggers the client's 'Failed to replace env in
-# config' warning, and the launcher handles both exported and .env token sources.
+# config' warning, and the launcher handles both exported and .env token sources. The args walk up
+# from the client's cwd to the folder holding the launcher, because clients find this config by
+# walking up but spawn the server with their own cwd: a session opened in a subdirectory or a nested
+# repo (services/*) could not find a ./scripts path. The walk uses no ${} so no client tries to expand
+# it.
 [mcp_servers.github]
 command = "bash"
-args = ["./scripts/run-github-mcp.sh"]
+args = ["-c", "s=$1; shift; d=$PWD; until [ -f \"$d/$s\" ] || [ \"$d\" = / ]; do d=$(dirname \"$d\"); done; [ -f \"$d/$s\" ] || { echo \"mcp-launcher: no $s in $PWD or any parent folder\" >&2; exit 1; }; exec bash \"$d/$s\" \"$@\"", "mcp-launcher", "scripts/run-github-mcp.sh"]
 enabled = true
 
 # Maestro E2E testing (maestro.dev). Drive the openthrottle-developer app: list_devices,
@@ -44,10 +48,13 @@ enabled = false
 # API_URL and API_URL_INTERNAL would be discarded regardless (the launcher probes for a live server
 # and exports both itself); ANTHROPIC_API_KEY is read nowhere in openthrottle-mcp; and
 # OPENTHROTTLE_MCP_AUTH_TOKEN is inherited from the launching shell when exported, else self-loaded
-# from this worktree's .env or the root checkout's.
+# from this worktree's .env or the root checkout's. The args walk up from the client's cwd to the
+# folder holding the launcher, because clients find this config by walking up but spawn the server
+# with their own cwd: a session opened in a subdirectory or a nested repo (services/*) could not find
+# a ./scripts path. The walk uses no ${} so no client tries to expand it.
 [mcp_servers.openthrottle-mcp]
 command = "bash"
-args = ["./scripts/run-openthrottle-mcp.sh"]
+args = ["-c", "s=$1; shift; d=$PWD; until [ -f \"$d/$s\" ] || [ \"$d\" = / ]; do d=$(dirname \"$d\"); done; [ -f \"$d/$s\" ] || { echo \"mcp-launcher: no $s in $PWD or any parent folder\" >&2; exit 1; }; exec bash \"$d/$s\" \"$@\"", "mcp-launcher", "scripts/run-openthrottle-mcp.sh"]
 enabled = true
 
 # HTTP transport for the containerized OT MCP server (docker --profile prod up mcp). Off by default:

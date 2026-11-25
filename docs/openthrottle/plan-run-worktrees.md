@@ -281,7 +281,9 @@ but a false success is no longer silent):
 - **Relative launchers resolve from the run directory.** An entry like
   `bash ./scripts/run-openthrottle-mcp.sh` is _discovered_ by the CLI walking up to the
   workspace root but _spawned_ with the process cwd, so it reports a connection failure from
-  anywhere else.
+  anywhere else. This monorepo's own configs no longer use that form: their `bash -c` walks up
+  to the launcher, so the check has nothing to flag for them. It still catches a foreign repo's
+  `./` launcher.
 
 In this monorepo the ot-worktree create action (`pnpm run worktree:new` is its alias) satisfies all
 of them: its provisioner writes `.env`, both MCP config files, and the `scripts/` launchers. A foreign

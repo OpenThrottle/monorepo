@@ -37,7 +37,7 @@
  * other repo is stamped with THIS checkout instead (see resolveClientWorkspacePath).
  */
 import { spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -230,6 +230,242 @@ export const probe = async (
   }
 };
 
+/**
+ * @description The client's whole connect budget is 30s, and node startup,
+ * the auth smoke and the MCP's own initialize all have to fit inside it.
+ * Server discovery gets at most {@link PROBE_DEADLINE_MS} of that, spread over
+ * {@link PROBE_ROUND_DELAYS_MS}: one entry per round, each the wait BEFORE that
+ * round. A server that is mid-restart usually answers within a few seconds, and
+ * the client's own single relaunch fires within a second, too soon to help.
+ */
+export const PROBE_ROUND_DELAYS_MS: readonly number[] = [0, 1000, 2000, 3000];
+
+export const PROBE_DEADLINE_MS = 12_000;
+
+/** Total budget for the launch, kept under the client's 30s connect timeout. */
+export const LAUNCH_BUDGET_MS = 25_000;
+
+const AUTH_SMOKE_MAX_TIMEOUT_MS = 10_000;
+
+const AUTH_SMOKE_MIN_TIMEOUT_MS = 3000;
+
+export type ServerResolution =
+  | { readonly kind: 'found'; readonly rounds: number; readonly url: string }
+  | { readonly kind: 'none'; readonly rounds: number };
+
+export interface ResolveLiveServerOptions {
+  readonly candidates: readonly string[];
+  readonly deadlineMs: number;
+  readonly delaysMs: readonly number[];
+  readonly now: () => number;
+  readonly onMiss: (url: string, round: number) => void;
+  readonly onRetry: (round: number, delayMs: number) => void;
+  readonly probe: (url: string) => Promise<boolean>;
+  readonly sleep: (ms: number) => Promise<void>;
+}
+
+/**
+ * @description Probe the candidates in priority order, round after round, and
+ * stop at the first live one. A round whose delay would cross the deadline is
+ * not started, so a slow (timing-out) candidate list cannot eat the budget the
+ * auth smoke and initialize still need. Clock, sleep and probe are injected so
+ * the schedule is testable without real waits.
+ */
+export const resolveLiveServer = async (
+  options: ResolveLiveServerOptions,
+): Promise<ServerResolution> => {
+  const startedAt = options.now();
+  let rounds = 0;
+
+  /* eslint-disable no-await-in-loop -- rounds and priority-ordered probes are deliberately sequential */
+  for (const delayMs of options.delaysMs) {
+    const elapsed = options.now() - startedAt;
+
+    if (rounds > 0 && elapsed + delayMs >= options.deadlineMs) {
+      break;
+    }
+
+    if (rounds > 0) {
+      options.onRetry(rounds + 1, delayMs);
+      await options.sleep(delayMs);
+    }
+
+    rounds += 1;
+
+    for (const url of options.candidates) {
+      if (await options.probe(url)) {
+        return { kind: 'found', rounds, url };
+      }
+
+      options.onMiss(url, rounds);
+    }
+  }
+  /* eslint-enable no-await-in-loop */
+
+  return { kind: 'none', rounds };
+};
+
+/**
+ * @description The auth smoke's timeout: the usual 10s, shrunk by whatever
+ * server discovery already spent so the launch stays inside
+ * {@link LAUNCH_BUDGET_MS}, but never below a floor that a healthy server
+ * answers well within.
+ */
+export const authSmokeTimeoutMs = (elapsedMs: number): number => {
+  const remaining = LAUNCH_BUDGET_MS - elapsedMs;
+
+  return Math.max(AUTH_SMOKE_MIN_TIMEOUT_MS, Math.min(AUTH_SMOKE_MAX_TIMEOUT_MS, remaining)); // prettier-ignore
+};
+
+/** The MCP's own entry point, relative to the checkout root. */
+export const MCP_BIN_PATH = 'packages/openthrottle-mcp/dist/src/bin.js';
+
+const MCP_PACKAGE_DIR = 'packages/openthrottle-mcp';
+
+/** Longest wait for a cleaned dist to be rewritten, before failing loudly. */
+export const DIST_WAIT_MAX_MS = 8000;
+
+const DIST_POLL_MS = 500;
+
+const isRecord = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === 'object' && value !== null;
+};
+
+const readManifest = (path: string): Record<string, unknown> | undefined => {
+  try {
+    const parsed: unknown = JSON.parse(readFileSync(path, 'utf8'));
+
+    return isRecord(parsed) ? parsed : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
+/**
+ * @description The file a package's root export loads at runtime: the
+ * `import`, then `default`, then `require` condition of `exports['.']` (or a
+ * bare string export), falling back to `main`. Undefined when the manifest
+ * names none, which the guard treats as nothing to check.
+ */
+export const resolveRuntimeEntry = (
+  manifest: Record<string, unknown>,
+): string | undefined => {
+  const { exports: exported, main } = manifest;
+  const root = isRecord(exported) ? exported['.'] : exported;
+
+  if (typeof root === 'string') {
+    return root;
+  }
+
+  if (isRecord(root)) {
+    for (const condition of ['import', 'default', 'require']) {
+      const target = root[condition];
+
+      if (typeof target === 'string') {
+        return target;
+      }
+    }
+  }
+
+  return typeof main === 'string' ? main : undefined;
+};
+
+/** Names of the `workspace:` dependencies in a package manifest, sorted. */
+export const workspaceDependencyNames = (
+  manifest: Record<string, unknown>,
+): string[] => {
+  const { dependencies } = manifest;
+
+  if (!isRecord(dependencies)) {
+    return [];
+  }
+
+  return Object.entries(dependencies)
+    .filter(
+      ([, range]) =>
+        typeof range === 'string' && range.startsWith('workspace:'),
+    ) // prettier-ignore
+    .map(([name]) => name)
+    .sort();
+};
+
+/**
+ * @description Every file the MCP needs on disk before it can start: its own
+ * bin.js plus the runtime entry of each workspace dependency, resolved through
+ * the package's node_modules link. Source-first packages resolve to `src/`,
+ * which no build cleans, so only built (`dist/`) entries can ever go missing.
+ * An `@nx/js:tsc` `^build` deletes dist before rewriting it, and on
+ * 2026-11-06 an MCP launched inside that window died with ERR_MODULE_NOT_FOUND
+ * on a dependency's dist, not on bin.js.
+ */
+export const listRuntimeEntries = (root: string): string[] => {
+  const packageDir = join(root, MCP_PACKAGE_DIR);
+  const manifest = readManifest(join(packageDir, 'package.json'));
+  const entries = [join(root, MCP_BIN_PATH)];
+
+  if (manifest === undefined) {
+    return entries;
+  }
+
+  for (const name of workspaceDependencyNames(manifest)) {
+    const dependencyDir = join(packageDir, 'node_modules', name);
+    const dependencyManifest = readManifest(join(dependencyDir, 'package.json')); // prettier-ignore
+    const entry = dependencyManifest === undefined ? undefined : resolveRuntimeEntry(dependencyManifest); // prettier-ignore
+
+    if (entry !== undefined) {
+      entries.push(join(dependencyDir, entry));
+    }
+  }
+
+  return entries;
+};
+
+export type DistReadiness =
+  | { readonly kind: 'missing'; readonly missing: readonly string[] }
+  | { readonly kind: 'ready'; readonly waitedMs: number };
+
+export interface WaitForEntriesOptions {
+  readonly entries: readonly string[];
+  readonly exists: (path: string) => boolean;
+  readonly maxWaitMs: number;
+  readonly now: () => number;
+  readonly onWait: (missing: readonly string[]) => void;
+  readonly pollMs: number;
+  readonly sleep: (ms: number) => Promise<void>;
+}
+
+/**
+ * @description Wait, polling, until every entry exists or `maxWaitMs` runs out.
+ * A dist mid-rewrite reappears within seconds; a dist that was never built does
+ * not, and gets a loud failure naming the files rather than an opaque
+ * ERR_MODULE_NOT_FOUND from inside the server.
+ */
+export const waitForEntries = async (
+  options: WaitForEntriesOptions,
+): Promise<DistReadiness> => {
+  const startedAt = options.now();
+  let missing = options.entries.filter((entry) => !options.exists(entry));
+
+  if (missing.length > 0) {
+    options.onWait(missing);
+  }
+
+  /* eslint-disable no-await-in-loop -- polling: each check waits on the previous sleep */
+  while (missing.length > 0) {
+    const waited = options.now() - startedAt;
+
+    if (waited + options.pollMs > options.maxWaitMs) {
+      return { kind: 'missing', missing };
+    }
+
+    await options.sleep(options.pollMs);
+    missing = missing.filter((entry) => !options.exists(entry));
+  }
+  /* eslint-enable no-await-in-loop */
+
+  return { kind: 'ready', waitedMs: options.now() - startedAt };
+};
+
 const nodeEngineBanner = (
   verdict: Exclude<NodeEngineVerdict, { kind: 'satisfied' }>,
 ): void => {
@@ -261,6 +497,8 @@ const authFailBanner = (reason: string, apiUrl: string): void => {
 };
 
 const main = async (): Promise<void> => {
+  const launchStartedAt = Date.now();
+
   logger.detail(`🔍 Using Node.js version: ${process.version}`);
 
   const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -322,29 +560,40 @@ const main = async (): Promise<void> => {
     worktreeUrl,
   });
 
-  let apiUrl = '';
+  const resolution = await resolveLiveServer({
+    candidates,
+    deadlineMs: PROBE_DEADLINE_MS,
+    delaysMs: PROBE_ROUND_DELAYS_MS,
+    now: Date.now,
+    onMiss: (url, round) => {
+      logger.detail(`   …no OpenThrottle server at ${url} (round ${round})`);
+    },
+    onRetry: (round, delayMs) => {
+      logger.detail(`   ↻ retrying in ${delayMs}ms (round ${round}/${PROBE_ROUND_DELAYS_MS.length}) — the server may be restarting`); // prettier-ignore
+    },
+    probe: async (url) => {
+      return await probe(url);
+    },
+    sleep: async (ms) => {
+      await new Promise((resolve) => {
+        setTimeout(resolve, ms);
+      });
+    },
+  });
 
-  /* eslint-disable no-await-in-loop -- priority-ordered probing: stop at the first live server */
-  for (const url of candidates) {
-    if (await probe(url)) {
-      apiUrl = url;
-      logger.detail(`✅ openthrottle-mcp -> live server at ${url}`);
-      break;
-    }
-
-    logger.detail(`   …no OpenThrottle server at ${url}`);
-  }
-  /* eslint-enable no-await-in-loop */
-
-  if (apiUrl === '') {
+  if (resolution.kind === 'none') {
     logger.blank();
-    logger.fail('openthrottle-mcp: no reachable OpenThrottle server found.');
+    logger.fail(`openthrottle-mcp: no reachable OpenThrottle server found after ${resolution.rounds} round(s).`); // prettier-ignore
     logger.detail(`Tried (in order): ${candidates.join(' ')}`);
     logger.detail("Worktrees share the MAIN checkout's server — they do not start their own."); // prettier-ignore
     logger.detail('Start it from the main checkout:');
     logger.detail('    pnpm run database:start && pnpm nx run openthrottle-server:dev'); // prettier-ignore
     process.exit(1);
   }
+
+  const apiUrl = resolution.url;
+
+  logger.detail(`✅ openthrottle-mcp -> live server at ${apiUrl}`);
 
   env.API_URL = apiUrl;
   env.API_URL_INTERNAL = apiUrl;
@@ -411,7 +660,9 @@ const main = async (): Promise<void> => {
           'Content-Type': 'application/json',
         },
         method: 'POST',
-        signal: AbortSignal.timeout(10_000),
+        signal: AbortSignal.timeout(
+          authSmokeTimeoutMs(Date.now() - launchStartedAt),
+        ),
       });
       smoke = { body: await response.text(), status: response.status };
     } catch {
@@ -439,7 +690,40 @@ const main = async (): Promise<void> => {
   // EMBEDDING_PROVIDER=ollama), never in this launcher.
   // See docs/monorepo/Ollama.md § Embeddings for OpenThrottle.
   // Forward the launcher's own arguments (e.g. `--toolsets=blog`) so an MCP config's `args` reach the server.
-  const outcome = spawnSync('node', ['packages/openthrottle-mcp/dist/src/bin.js', ...process.argv.slice(2)], { cwd: root, env, stdio: 'inherit' }); // prettier-ignore
+  // Never spawn into a dist that a concurrent ^build has just cleaned.
+  const readiness = await waitForEntries({
+    entries: listRuntimeEntries(root),
+    exists: existsSync,
+    maxWaitMs: Math.max(0, Math.min(DIST_WAIT_MAX_MS, LAUNCH_BUDGET_MS - (Date.now() - launchStartedAt))), // prettier-ignore
+    now: Date.now,
+    onWait: (missing) => {
+      logger.warn(`openthrottle-mcp: waiting for ${missing.length} build output file(s), probably mid-rebuild: ${missing.map((path) => path.replace(`${root}/`, '')).join(', ')}`); // prettier-ignore
+    },
+    pollMs: DIST_POLL_MS,
+    sleep: async (ms) => {
+      await new Promise((resolve) => {
+        setTimeout(resolve, ms);
+      });
+    },
+  });
+
+  if (readiness.kind === 'missing') {
+    logger.blank();
+    logger.fail(
+      'openthrottle-mcp: refusing to start — build output is missing:',
+    );
+
+    for (const path of readiness.missing) {
+      logger.detail(`  ${path.replace(`${root}/`, '')}`);
+    }
+
+    logger.detail('A build may still be rewriting it. Otherwise build it, then reconnect the MCP:'); // prettier-ignore
+    logger.detail('    pnpm nx run @openthrottle/openthrottle-mcp:build');
+    logger.blank();
+    process.exit(1);
+  }
+
+  const outcome = spawnSync('node', [MCP_BIN_PATH, ...process.argv.slice(2)], { cwd: root, env, stdio: 'inherit' }); // prettier-ignore
 
   process.exit(outcome.status ?? 1);
 };

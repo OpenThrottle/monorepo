@@ -107,7 +107,7 @@ Notes on the translations that are not 1:1:
 
 - A live `agy -p` session loads it: it listed `openthrottle_fetch`, `openthrottle_github`, `openthrottle_maestro`, `openthrottle_openthrottle-mcp` and `openthrottle_shadcn`, and the OT MCP `health` call returned `ok` for api, database, redis and websocket. agy prefixes plugin servers with `<plugin>_`.
 - `agy mcp list` and `agy plugin list` still print nothing. They only read user-level config, so use a live session to check.
-- agy starts a plugin's stdio servers **with cwd = the plugin folder**, so the generator rewrites `./scripts/…` arguments to `../../../scripts/…`. The launchers resolve the repo from their own path.
+- agy starts a plugin's stdio servers **with cwd = the plugin folder**, so the generator rewrites `./scripts/…` arguments to `../../../scripts/…`. The repo's own launchers (`github`, `openthrottle-mcp`) no longer need it, because their `bash -c` walks up from any cwd to the folder holding the script; the rewrite stays for any future `./` argument. The launchers resolve the repo from their own path.
 - In headless `-p` without `--dangerously-skip-permissions`, MCP calls are denied until `permissions.allow` grants them (`mcp(*)` works; `mcp(openthrottle_openthrottle-mcp)` did not). The driver passes `--dangerously-skip-permissions`, so plan runs are not affected.
 
 `--settings '<json or path>'` validates its keys: `mcpServers` is rejected (`unknown setting`), so it cannot carry MCP servers. `permissions` (`allow` / `deny` / `ask` arrays of rules such as `command(git status)` and `mcp(*)`) is accepted and enforced (the `mcp(*)` allow above).
