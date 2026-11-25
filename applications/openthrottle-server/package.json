@@ -104,7 +104,17 @@
           "cwd": "{projectRoot}"
         }
       },
-      "codegen-graphql": {},
+      "codegen-graphql": {
+        "inputs": [
+          "codegenGraphqlInputs",
+          "{workspaceRoot}/packages/openthrottle-mcp/src/graphql/operations/**/*.graphql",
+          "{workspaceRoot}/packages/openthrottle-mcp/src/graphql/plan-messages.graphql",
+          "{workspaceRoot}/packages/openthrottle-mcp/src/graphql/work-sessions.graphql"
+        ],
+        "metadata": {
+          "description": "Generate GraphQL types and typed operations for the project with graphql-codegen. The inputs add the openthrottle-mcp documents codegen.ts reads, which sit outside this project: without them a change to one was a cache hit that left src/__generated__ stale."
+        }
+      },
       "dev": {
         "continuous": true,
         "dependsOn": [

@@ -2,6 +2,7 @@ import type { RenderResult } from '@testing-library/react';
 import { render } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 
+import { SEMANTIC_INDEX_FAILED_COPY } from '../../data/data.copy';
 import type { IdeSemanticResult } from '../../data/data.view-models';
 import { SemanticSearchResults } from '../SemanticSearchResults';
 
@@ -12,6 +13,7 @@ function buildResult(
 ): IdeSemanticResult {
   return {
     available: true,
+    failedReason: null,
     indexedChunks: 0,
     matches: [],
     query: '',
@@ -50,6 +52,23 @@ describe('SemanticSearchResults Component', () => {
       component.getByText(/CODE_EMBEDDINGS_ALLOW_HOSTED=true/),
     ).toBeInTheDocument();
     expect(component.queryByText('Not indexed yet')).not.toBeInTheDocument();
+  });
+
+  test('renders the failure reason when the last index failed', () => {
+    component = render(
+      <SemanticSearchResults
+        result={buildResult({
+          failedReason: 'invalid byte sequence for encoding "UTF8": 0x00',
+          indexedChunks: 2432,
+          status: 'failed',
+        })}
+      />,
+    );
+
+    expect(
+      component.getByText(SEMANTIC_INDEX_FAILED_COPY.title),
+    ).toBeInTheDocument();
+    expect(component.getByText(/0x00/)).toBeInTheDocument();
   });
 
   test('renders a not-indexed prompt when status is notIndexed', () => {

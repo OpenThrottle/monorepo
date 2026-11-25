@@ -45,6 +45,12 @@ export class CodeSemanticSearchResult {
 
 @ObjectType()
 export class CodeIndexStatusObject {
+  @Field(() => String, {
+    description: `Why the last code-index job failed, when status is failed; null otherwise.`,
+    nullable: true,
+  })
+  failedReason!: string | null;
+
   @Field(() => Int, {
     description: `Number of indexed code chunks for the repository (0 when not indexed).`,
   })
@@ -54,7 +60,7 @@ export class CodeIndexStatusObject {
   repositoryId!: string;
 
   @Field(() => String, {
-    description: `One of: unavailable, hostedOptInRequired, indexing, ready, notIndexed. hostedOptInRequired means the embedder is hosted (openai/gemini) and CODE_EMBEDDINGS_ALLOW_HOSTED is not true, so code is not indexed.`,
+    description: `One of: unavailable, hostedOptInRequired, indexing, failed, ready, notIndexed. failed means the last index job failed (see failedReason) and any indexed chunks are partial. hostedOptInRequired means the embedder is hosted (openai/gemini) and CODE_EMBEDDINGS_ALLOW_HOSTED is not true, so code is not indexed.`,
   })
   status!: string;
 }

@@ -97,6 +97,18 @@ describe('chunkFile', () => {
     expect(chunks[0]?.startLine).toBe(1);
   });
 
+  it('returns no chunks for binary content (a NUL in the first 8000 characters)', () => {
+    const png = `\u0089PNG\r\n\u001a\n\u0000\u0000\u0000\rIHDR`;
+
+    expect(chunkFile('public/favicon.png', png)).toEqual([]);
+  });
+
+  it('still chunks text whose only NUL is past the binary sniff window', () => {
+    const content = `${'x'.repeat(8000)}\u0000`;
+
+    expect(chunkFile('notes.txt', content).length).toBeGreaterThan(0);
+  });
+
   it('returns no chunks for empty content', () => {
     expect(chunkFile('src/empty.ts', '')).toEqual([]);
   });

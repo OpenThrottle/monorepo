@@ -1082,11 +1082,13 @@ export type CmsSchemaObject = {
 
 export type CodeIndexStatusObject = {
   __typename?: 'CodeIndexStatusObject';
+  /** Why the last code-index job failed, when status is failed; null otherwise. */
+  failedReason?: Maybe<Scalars['String']['output']>;
   /** Number of indexed code chunks for the repository (0 when not indexed). */
   indexedChunks: Scalars['Int']['output'];
   /** Registered repository id. */
   repositoryId: Scalars['String']['output'];
-  /** One of: unavailable, hostedOptInRequired, indexing, ready, notIndexed. hostedOptInRequired means the embedder is hosted (openai/gemini) and CODE_EMBEDDINGS_ALLOW_HOSTED is not true, so code is not indexed. */
+  /** One of: unavailable, hostedOptInRequired, indexing, failed, ready, notIndexed. failed means the last index job failed (see failedReason) and any indexed chunks are partial. hostedOptInRequired means the embedder is hosted (openai/gemini) and CODE_EMBEDDINGS_ALLOW_HOSTED is not true, so code is not indexed. */
   status: Scalars['String']['output'];
 };
 
@@ -11258,6 +11260,7 @@ export type CodeIndexStatusQuery = {
   __typename?: 'Query';
   codeIndexStatus: {
     __typename?: 'CodeIndexStatusObject';
+    failedReason?: string | null;
     indexedChunks: number;
     repositoryId: string;
     status: string;
@@ -29262,6 +29265,10 @@ export const CodeIndexStatusDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'failedReason' },
+                },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'indexedChunks' },

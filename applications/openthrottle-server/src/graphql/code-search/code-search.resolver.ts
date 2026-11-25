@@ -35,7 +35,10 @@ import {
   CodeSemanticSearchResult,
   IndexCodeRepositoryResult,
 } from './code-search.object.ts';
-import type { CodeIndexStatus } from './code-search.types.ts';
+import type {
+  CodeIndexJobState,
+  CodeIndexStatus,
+} from './code-search.types.ts';
 
 const DEFAULT_SEARCH_LIMIT = 10;
 const MAX_SEARCH_LIMIT = 50;
@@ -113,6 +116,7 @@ export class CodeSearchResolver {
 
     if (!this.codeSearch.isProviderConfigured()) {
       return {
+        failedReason: null,
         indexedChunks: 0,
         repositoryId,
         status: CODE_INDEX_STATUS.unavailable,
@@ -121,23 +125,35 @@ export class CodeSearchResolver {
 
     if (this.codeSearch.codeIndexingRefusal() !== null) {
       return {
+        failedReason: null,
         indexedChunks: 0,
         repositoryId,
         status: CODE_INDEX_STATUS.hostedOptInRequired,
       };
     }
 
-    const indexedChunks =
-      await this.codeSearch.indexedChunkCount(filesystemPath);
-    const isPending = await this.isIndexJobPending(repositoryId);
+    const [indexedChunks, job] = await Promise.all([
+      this.codeSearch.indexedChunkCount(filesystemPath),
+      this.indexJobState(repositoryId),
+    ]);
+
+    if (job?.state === 'failed') {
+      return {
+        failedReason: job.failedReason,
+        indexedChunks,
+        repositoryId,
+        status: CODE_INDEX_STATUS.failed,
+      };
+    }
+
     let status: CodeIndexStatus = CODE_INDEX_STATUS.notIndexed;
-    if (isPending) {
+    if (job !== undefined && PENDING_JOB_STATES.has(job.state)) {
       status = CODE_INDEX_STATUS.indexing;
     } else if (indexedChunks > 0) {
       status = CODE_INDEX_STATUS.ready;
     }
 
-    return { indexedChunks, repositoryId, status };
+    return { failedReason: null, indexedChunks, repositoryId, status };
   }
 
   @Mutation(() => IndexCodeRepositoryResult, {
@@ -159,12 +175,18 @@ export class CodeSearchResolver {
       return { repositoryId, status: CODE_INDEX_STATUS.hostedOptInRequired };
     }
 
-    // jobId = repositoryId dedupes concurrent indexing for the same repo;
-    // removeOnComplete/Fail frees the id so a later re-index isn't blocked.
+    // jobId = repositoryId dedupes concurrent indexing for the same repo. A failed job is kept so
+    // codeIndexStatus can report it (a dropped one read as `ready` over a partial index), and is
+    // removed here first, because BullMQ ignores an add whose jobId already exists.
+    const previous = await this.indexJobState(repositoryId);
+    if (previous?.state === 'failed') {
+      await previous.job.remove();
+    }
+
     await this.queue.add(
       INDEX_CODE_REPOSITORY_JOB_NAME,
       { repositoryId, userId },
-      { jobId: repositoryId, removeOnComplete: true, removeOnFail: true },
+      { jobId: repositoryId, removeOnComplete: true, removeOnFail: false },
     );
 
     return { repositoryId, status: CODE_INDEX_STATUS.indexing };
@@ -274,13 +296,16 @@ export class CodeSearchResolver {
     return paths[index] ?? null;
   }
 
-  /** True when a code-index job for the repository is queued or running. */
-  private async isIndexJobPending(repositoryId: string): Promise<boolean> {
+  /** The repository's code-index job and its state, or undefined when there is none. */
+  private async indexJobState(
+    repositoryId: string,
+  ): Promise<CodeIndexJobState | undefined> {
     const job = await this.queue.getJob(repositoryId);
     if (!job) {
-      return false;
+      return undefined;
     }
     const state = await job.getState();
-    return PENDING_JOB_STATES.has(state);
+    const failedReason = job.failedReason ? job.failedReason : null;
+    return { failedReason, job, state };
   }
 }

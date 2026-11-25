@@ -267,6 +267,7 @@ describe('CodeSearchResolver', () => {
       vi.mocked(codeSearch.codeIndexingRefusal).mockReturnValue(REFUSAL);
       const result = await resolver.codeIndexStatus(USER_ID, REPO_ID);
       expect(result).toEqual({
+        failedReason: null,
         indexedChunks: 0,
         repositoryId: REPO_ID,
         status: 'hostedOptInRequired',
@@ -290,9 +291,27 @@ describe('CodeSearchResolver', () => {
       vi.mocked(queue.getJob).mockResolvedValue(undefined);
       const result = await resolver.codeIndexStatus(USER_ID, REPO_ID);
       expect(result).toEqual({
+        failedReason: null,
         indexedChunks: 42,
         repositoryId: REPO_ID,
         status: 'ready',
+      });
+    });
+
+    it('is failed, with the reason, when the last job failed over a partial index', async () => {
+      vi.mocked(codeSearch.indexedChunkCount).mockResolvedValue(2432);
+      vi.mocked(queue.getJob).mockResolvedValue(
+        createMock<NonNullable<Awaited<ReturnType<Queue['getJob']>>>>({
+          failedReason: 'invalid byte sequence for encoding "UTF8": 0x00',
+          getState: vi.fn().mockResolvedValue('failed'),
+        }),
+      );
+      const result = await resolver.codeIndexStatus(USER_ID, REPO_ID);
+      expect(result).toEqual({
+        failedReason: 'invalid byte sequence for encoding "UTF8": 0x00',
+        indexedChunks: 2432,
+        repositoryId: REPO_ID,
+        status: 'failed',
       });
     });
 
@@ -328,9 +347,24 @@ describe('CodeSearchResolver', () => {
       expect(queue.add).toHaveBeenCalledWith(
         'index-code-repository',
         { repositoryId: REPO_ID, userId: USER_ID },
-        { jobId: REPO_ID, removeOnComplete: true, removeOnFail: true },
+        { jobId: REPO_ID, removeOnComplete: true, removeOnFail: false },
       );
       expect(result).toEqual({ repositoryId: REPO_ID, status: 'indexing' });
+    });
+
+    it('removes a kept failed job first, so the re-index is not ignored', async () => {
+      const remove = vi.fn().mockResolvedValue(undefined);
+      vi.mocked(queue.getJob).mockResolvedValue(
+        createMock<NonNullable<Awaited<ReturnType<Queue['getJob']>>>>({
+          getState: vi.fn().mockResolvedValue('failed'),
+          remove,
+        }),
+      );
+
+      await resolver.indexCodeRepository(USER_ID, REPO_ID);
+
+      expect(remove).toHaveBeenCalledOnce();
+      expect(queue.add).toHaveBeenCalledOnce();
     });
   });
 });

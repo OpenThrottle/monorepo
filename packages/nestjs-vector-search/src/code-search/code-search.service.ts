@@ -11,6 +11,7 @@ import {
   diffSnapshots,
   hashWorkspace,
   indexWorkspace,
+  semanticExcludeGlobs,
   semanticSearch,
 } from '@openthrottle/openthrottle-ide';
 
@@ -75,7 +76,12 @@ export class CodeSearchService {
     }
 
     const provider = this.providerFor('document');
-    const config = { root: workspaceRoot };
+    // The same file set for the snapshot and the index: lockfiles, generated output, binaries and
+    // the like are left out, and the diff against an older snapshot purges any already stored.
+    const config = {
+      exclude: await semanticExcludeGlobs(workspaceRoot),
+      root: workspaceRoot,
+    };
 
     const [priorSnapshot, nextSnapshot] = await Promise.all([
       this.snapshotStore.load(workspaceRoot),

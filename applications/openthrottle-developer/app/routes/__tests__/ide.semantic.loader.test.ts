@@ -77,6 +77,7 @@ describe('routes/ide.semantic loader', () => {
   test('skips the search call and returns an empty match list for a blank query', async () => {
     mockExecute.mockResolvedValueOnce(workspaceSettings).mockResolvedValueOnce({
       codeIndexStatus: {
+        failedReason: null,
         indexedChunks: 42,
         repositoryId: 'r1',
         status: 'ready',
@@ -100,6 +101,7 @@ describe('routes/ide.semantic loader', () => {
       .mockResolvedValueOnce(workspaceSettings)
       .mockResolvedValueOnce({
         codeIndexStatus: {
+          failedReason: null,
           indexedChunks: 10,
           repositoryId: 'r1',
           status: 'ready',
@@ -140,6 +142,7 @@ describe('routes/ide.semantic loader', () => {
   test('reports unavailable without searching when a hosted provider is not opted in for code', async () => {
     mockExecute.mockResolvedValueOnce(workspaceSettings).mockResolvedValueOnce({
       codeIndexStatus: {
+        failedReason: null,
         indexedChunks: 0,
         repositoryId: 'r1',
         status: 'hostedOptInRequired',
@@ -155,9 +158,30 @@ describe('routes/ide.semantic loader', () => {
     expect(result.available).toBe(false);
   });
 
+  test('passes a failed index and its reason through without searching', async () => {
+    mockExecute.mockResolvedValueOnce(workspaceSettings).mockResolvedValueOnce({
+      codeIndexStatus: {
+        failedReason: 'provider down',
+        indexedChunks: 2432,
+        repositoryId: 'r1',
+        status: 'failed',
+      },
+    });
+
+    const result = await loader(
+      buildLoaderArgs('/ide/semantic?repositoryId=r1&q=foo'),
+    );
+
+    expect(mockExecute).toHaveBeenCalledTimes(2);
+    expect(result.status).toBe(IDE_SEMANTIC_STATUS.failed);
+    expect(result.failedReason).toBe('provider down');
+    expect(result.matches).toEqual([]);
+  });
+
   test('does not run the search call when the index is not ready', async () => {
     mockExecute.mockResolvedValueOnce(workspaceSettings).mockResolvedValueOnce({
       codeIndexStatus: {
+        failedReason: null,
         indexedChunks: 0,
         repositoryId: 'r1',
         status: 'indexing',

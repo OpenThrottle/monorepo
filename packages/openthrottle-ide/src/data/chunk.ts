@@ -45,8 +45,20 @@ export interface ChunkOptions {
 /** Default line-window size used by the non-AST fallback chunker. */
 export const DEFAULT_CHUNK_WINDOW_LINES = 60;
 
+/** How much of a file {@link isBinaryContent} inspects, as git does for its own binary check. */
+const BINARY_SNIFF_LENGTH = 8000;
+
 /** Script extensions chunked with AST-aware boundaries (mirrors the symbols layer). */
 const SCRIPT_FILE_PATTERN = /\.(?:[cm]?[jt]sx?)$/;
+
+/**
+ * True when `content` looks binary: a NUL character in its first {@link BINARY_SNIFF_LENGTH}
+ * characters, the heuristic git uses. Reading an image or font as UTF-8 does not throw, so this is
+ * what keeps one out of the index; its NUL bytes would also fail a Postgres `text` insert.
+ */
+function isBinaryContent(content: string): boolean {
+  return content.slice(0, BINARY_SNIFF_LENGTH).includes('\u0000');
+}
 
 /**
  * Split a single source file into embeddable {@link CodeChunk}s.
@@ -58,7 +70,7 @@ const SCRIPT_FILE_PATTERN = /\.(?:[cm]?[jt]sx?)$/;
  * re-exports) between declarations are grouped together. Any other file type —
  * or a script file with no top-level declarations — falls back to fixed
  * line-windows. Both paths are pure: no filesystem access, deterministic for a
- * given `(path, content)`.
+ * given `(path, content)`. Binary content ({@link isBinaryContent}) yields no chunks.
  *
  * @public
  */
@@ -67,7 +79,7 @@ export function chunkFile(
   content: string,
   options: ChunkOptions = {},
 ): CodeChunk[] {
-  if (content.length === 0) {
+  if (content.length === 0 || isBinaryContent(content)) {
     return [];
   }
 

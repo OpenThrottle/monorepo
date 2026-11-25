@@ -5,17 +5,21 @@
  * Semantic tab's "Index" action; status is derived by the codeIndexStatus GraphQL query.
  */
 
-import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
 import { defaultWorkerOptions } from '@openthrottle/nestjs-bullmq';
 import { LoggerService } from '@openthrottle/nestjs-modules';
 import { CodeSearchService } from '@openthrottle/nestjs-vector-search';
+import { toContainerPath } from '@openthrottle/openthrottle-agentic-utils';
 
 import { WorkspaceLocalRepositoriesService } from '../../services/workspace-local-repositories/workspace-local-repositories.service.ts';
 import { CODE_INDEX_QUEUE_NAME } from './code-index.constants.ts';
 import type { CodeIndexJob, CodeIndexJobResult } from './code-index.types.ts';
 
 const CONCURRENCY = 1;
+
+/** How many skipped chunks a finished job names in its warning; the count is always logged. */
+const SKIPPED_CHUNKS_LOGGED = 20;
 
 /**
  * @description Processes code-index jobs: resolve repository → index workspace via the engine.
@@ -51,6 +55,16 @@ export class CodeIndexProcessor
     await this.worker.close();
   }
 
+  /** Logs a failed job as an error; the job is kept, so codeIndexStatus reports it as `failed`. */
+  @OnWorkerEvent('failed')
+  onJobFailed(job: CodeIndexJob | undefined, error: Error): void {
+    this.logger.error(
+      `Code-index job failed for repository ${job?.data.repositoryId ?? 'unknown'}: ${error.message}`,
+      error.stack,
+      `${CodeIndexProcessor.name} [jobId=${job?.id ?? 'unknown'}]`,
+    );
+  }
+
   async process(job: CodeIndexJob): Promise<CodeIndexJobResult> {
     const { repositoryId, userId } = job.data;
     const logContext = `${CodeIndexProcessor.name} [jobId=${job.id}]`;
@@ -77,16 +91,37 @@ export class CodeIndexProcessor
       );
     }
 
+    // Stored host-truthful; index under this process's view, the same key CodeSearchResolver
+    // searches and counts by. Identity unless the Docker workspace bridge is active.
+    const workspaceRoot = toContainerPath(repository.filesystemPath);
+
     this.logger.info(
-      `Indexing repository ${repositoryId} at ${repository.filesystemPath}`,
+      `Indexing repository ${repositoryId} at ${workspaceRoot}`,
       logContext,
     );
 
-    const { deletedPaths, embedded } = await this.codeSearch.indexCodeWorkspace(
-      repository.filesystemPath,
-    );
+    const { deletedPaths, embedded, skipped } =
+      await this.codeSearch.indexCodeWorkspace(workspaceRoot);
 
-    const result: CodeIndexJobResult = { deletedPaths, embedded, repositoryId };
+    if (skipped.length > 0) {
+      const named = skipped
+        .slice(0, SKIPPED_CHUNKS_LOGGED)
+        .map((chunk) => {
+          return `${chunk.path}:${chunk.startLine}-${chunk.endLine} (${chunk.reason})`;
+        })
+        .join('; ');
+      this.logger.warn(
+        `Skipped ${skipped.length} chunk(s) the embedder or store rejected: ${named}`,
+        logContext,
+      );
+    }
+
+    const result: CodeIndexJobResult = {
+      deletedPaths,
+      embedded,
+      repositoryId,
+      skipped: skipped.length,
+    };
     this.logger.info(
       `Code-index job finished: ${JSON.stringify(result)}`,
       logContext,

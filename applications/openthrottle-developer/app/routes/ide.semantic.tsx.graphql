@@ -1,5 +1,6 @@
 query CodeIndexStatus($repositoryId: ID!) {
   codeIndexStatus(repositoryId: $repositoryId) {
+    failedReason
     indexedChunks
     repositoryId
     status

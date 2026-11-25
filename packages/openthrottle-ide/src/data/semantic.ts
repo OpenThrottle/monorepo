@@ -74,12 +74,30 @@ export interface IndexWorkspaceOptions extends ChunkOptions {
   store: VectorStore;
 }
 
+/**
+ * A chunk {@link indexWorkspace} left out because embedding or storing it failed on its own.
+ *
+ * @public
+ */
+export interface SkippedChunk {
+  /** 1-based inclusive last line of the chunk. */
+  readonly endLine: number;
+  /** Workspace-relative POSIX path of the chunk's file. */
+  readonly path: string;
+  /** The provider's or store's error message. */
+  readonly reason: string;
+  /** 1-based first line of the chunk. */
+  readonly startLine: number;
+}
+
 /** Outcome of an {@link indexWorkspace} run. */
 export interface IndexWorkspaceResult {
   /** Number of files whose vectors were deleted (removed, plus changed in incremental mode). */
   deletedPaths: number;
   /** Number of chunks embedded and upserted. */
   embedded: number;
+  /** Chunks left out because they failed on their own; the rest of the run went on without them. */
+  readonly skipped: readonly SkippedChunk[];
 }
 
 /** Default number of chunk texts embedded per provider request. */
@@ -112,14 +130,14 @@ export async function indexWorkspace(
   if (diff === undefined) {
     await store.clear(resolved.root);
     const chunks = await chunkWorkspace(config, chunkOptions);
-    const embedded = await embedAndUpsert(
+    const { embedded, skipped } = await embedAndUpsert(
       resolved.root,
       chunks,
       provider,
       store,
       batchSize,
     );
-    return { deletedPaths: 0, embedded };
+    return { deletedPaths: 0, embedded, skipped };
   }
 
   const stalePaths = [...diff.changed, ...diff.removed];
@@ -129,7 +147,7 @@ export async function indexWorkspace(
 
   const targetPaths = [...diff.added, ...diff.changed];
   const chunks = await chunkPaths(resolved, targetPaths, chunkOptions);
-  const embedded = await embedAndUpsert(
+  const { embedded, skipped } = await embedAndUpsert(
     resolved.root,
     chunks,
     provider,
@@ -137,7 +155,7 @@ export async function indexWorkspace(
     batchSize,
   );
 
-  return { deletedPaths: stalePaths.length, embedded };
+  return { deletedPaths: stalePaths.length, embedded, skipped };
 }
 
 /** Read and chunk a specific set of workspace-relative paths (incremental mode). */
@@ -168,9 +186,86 @@ async function chunkPaths(
   return perFile.flat();
 }
 
+/** What {@link embedAndUpsert} stored and what it left out. */
+interface EmbedAndUpsertResult {
+  readonly embedded: number;
+  readonly skipped: readonly SkippedChunk[];
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+/**
+ * Embed one batch and upsert it. Throws when the provider or the store fails, or the provider
+ * returns a vector count that does not match the batch.
+ */
+async function embedAndUpsertBatch(
+  workspaceRoot: string,
+  batch: CodeChunk[],
+  provider: EmbeddingsProvider,
+  store: VectorStore,
+): Promise<void> {
+  const embeddings = await provider.embed(batch.map((chunk) => chunk.content));
+  // A provider returning fewer vectors than chunks would otherwise store
+  // `undefined` as an embedding — a row that matches nothing and is
+  // indistinguishable from a real one. Refuse the batch rather than fall back.
+  if (embeddings.length !== batch.length) {
+    throw new Error(
+      `Embeddings provider returned ${embeddings.length} vectors for a batch of ${batch.length} chunks`,
+    );
+  }
+  const records = batch.map((chunk, index) => {
+    const embedding = embeddings[index];
+    if (embedding === undefined) {
+      throw new Error(
+        `Embeddings provider returned no vector at index ${index}`,
+      );
+    }
+    return { chunk, embedding };
+  });
+  await store.upsert(workspaceRoot, records);
+}
+
+/**
+ * Retry a failed batch one chunk at a time, so a single chunk the provider or store rejects is
+ * skipped instead of failing the run. When every chunk of a multi-chunk batch fails, the cause is
+ * not one chunk (the provider or the database is down), so the batch's error is rethrown.
+ */
+async function retryChunkByChunk(
+  workspaceRoot: string,
+  batch: CodeChunk[],
+  batchError: unknown,
+  provider: EmbeddingsProvider,
+  store: VectorStore,
+): Promise<EmbedAndUpsertResult> {
+  const skipped: SkippedChunk[] = [];
+
+  await batch.reduce(async (previous, chunk) => {
+    await previous;
+    try {
+      await embedAndUpsertBatch(workspaceRoot, [chunk], provider, store);
+    } catch (error) {
+      skipped.push({
+        endLine: chunk.endLine,
+        path: chunk.path,
+        reason: errorMessage(error),
+        startLine: chunk.startLine,
+      });
+    }
+  }, Promise.resolve());
+
+  if (batch.length > 1 && skipped.length === batch.length) {
+    throw batchError;
+  }
+
+  return { embedded: batch.length - skipped.length, skipped };
+}
+
 /**
  * Embed chunk content in fixed-size batches and upsert each batch. Batches run
- * sequentially (chained, not a bare loop) to bound provider concurrency.
+ * sequentially (chained, not a bare loop) to bound provider concurrency. A batch
+ * that fails is retried chunk by chunk ({@link retryChunkByChunk}).
  */
 async function embedAndUpsert(
   workspaceRoot: string,
@@ -178,42 +273,33 @@ async function embedAndUpsert(
   provider: EmbeddingsProvider,
   store: VectorStore,
   batchSize: number,
-): Promise<number> {
-  if (chunks.length === 0) {
-    return 0;
-  }
-
+): Promise<EmbedAndUpsertResult> {
   const batches: CodeChunk[][] = [];
   for (let start = 0; start < chunks.length; start += batchSize) {
     batches.push(chunks.slice(start, start + batchSize));
   }
 
-  await batches.reduce(async (previous, batch) => {
-    await previous;
-    const embeddings = await provider.embed(
-      batch.map((chunk) => chunk.content),
-    );
-    // A provider returning fewer vectors than chunks would otherwise store
-    // `undefined` as an embedding — a row that matches nothing and is
-    // indistinguishable from a real one. Refuse the batch rather than fall back.
-    if (embeddings.length !== batch.length) {
-      throw new Error(
-        `Embeddings provider returned ${embeddings.length} vectors for a batch of ${batch.length} chunks`,
-      );
+  const embedBatch = async (
+    batch: CodeChunk[],
+  ): Promise<EmbedAndUpsertResult> => {
+    try {
+      await embedAndUpsertBatch(workspaceRoot, batch, provider, store);
+      return { embedded: batch.length, skipped: [] };
+    } catch (error) {
+      return retryChunkByChunk(workspaceRoot, batch, error, provider, store);
     }
-    const records = batch.map((chunk, index) => {
-      const embedding = embeddings[index];
-      if (embedding === undefined) {
-        throw new Error(
-          `Embeddings provider returned no vector at index ${index}`,
-        );
-      }
-      return { chunk, embedding };
-    });
-    await store.upsert(workspaceRoot, records);
-  }, Promise.resolve());
+  };
+  const empty: EmbedAndUpsertResult = { embedded: 0, skipped: [] };
 
-  return chunks.length;
+  return batches.reduce(async (previous, batch) => {
+    const total = await previous;
+    const outcome = await embedBatch(batch);
+
+    return {
+      embedded: total.embedded + outcome.embedded,
+      skipped: [...total.skipped, ...outcome.skipped],
+    };
+  }, Promise.resolve(empty));
 }
 
 /** A semantic search hit: where the match is, how close it is, and its text. */
