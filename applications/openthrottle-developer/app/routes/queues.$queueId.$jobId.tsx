@@ -1,4 +1,4 @@
-import { toErrorMessage } from '@openthrottle/nodejs-utils';
+import { toErrorMessageOr } from '@openthrottle/nodejs-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import { GlobalScreen } from '@openthrottle/react-router-ui-global';
@@ -132,7 +132,7 @@ export const action = async (args: Route.ActionArgs) => {
 
       return { retryJob: result.retryJob };
     } catch (error) {
-      return { retryJobError: toErrorMessage(error, 'Retry failed.') };
+      return { retryJobError: toErrorMessageOr(error, 'Retry failed.') };
     }
   }
 
@@ -155,7 +155,10 @@ export const action = async (args: Route.ActionArgs) => {
       return { cancelPlanRun: result.cancelPlanRun };
     } catch (error) {
       return {
-        cancelPlanRunError: toErrorMessage(error, 'Failed to cancel plan run.'),
+        cancelPlanRunError: toErrorMessageOr(
+          error,
+          'Failed to cancel plan run.',
+        ),
       };
     }
   }

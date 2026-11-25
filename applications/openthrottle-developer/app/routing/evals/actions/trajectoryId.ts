@@ -1,4 +1,4 @@
-import { toErrorMessage } from '@openthrottle/nodejs-utils';
+import { toErrorMessageOr } from '@openthrottle/nodejs-utils';
 import {
   executeGraphqlWithAuth,
   parseFormData,
@@ -60,7 +60,7 @@ export const labelTrajectory = async (
     return { label: result.labelAgentTrajectory, ok: true };
   } catch (error) {
     return {
-      error: toErrorMessage(error, 'Failed to save the label.'),
+      error: toErrorMessageOr(error, 'Failed to save the label.'),
       ok: false,
     };
   }
@@ -84,7 +84,7 @@ export const removeTrajectoryLabel = async (
     return { ok: true };
   } catch (error) {
     return {
-      error: toErrorMessage(error, 'Failed to remove the label.'),
+      error: toErrorMessageOr(error, 'Failed to remove the label.'),
       ok: false,
     };
   }

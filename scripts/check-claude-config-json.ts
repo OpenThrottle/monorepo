@@ -17,6 +17,8 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
+
 import { run } from './utils/exec.ts';
 import { createLogger } from './utils/logger.ts';
 
@@ -63,7 +65,7 @@ export const parseConfigFile = (
     return null;
   } catch (error) {
     return {
-      message: error instanceof Error ? error.message : String(error),
+      message: toErrorMessage(error),
       path,
     };
   }

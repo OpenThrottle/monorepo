@@ -1,4 +1,4 @@
-import { toErrorMessage } from '@openthrottle/nodejs-utils';
+import { toErrorMessage, toErrorMessageOr } from '@openthrottle/nodejs-utils';
 import { PlanDetailCancelPlanRunDocument } from '@openthrottle/openthrottle-developer-codegen';
 import {
   executeGraphqlWithAuth,
@@ -98,7 +98,7 @@ export const cancelPlanRun = async (
     return { cancelPlanRun: result.cancelPlanRun };
   } catch (error) {
     return {
-      cancelPlanRunError: toErrorMessage(error, 'Failed to cancel plan run.'),
+      cancelPlanRunError: toErrorMessageOr(error, 'Failed to cancel plan run.'),
     };
   }
 };
@@ -143,7 +143,7 @@ export const forceSettlePlanRun = async (
     return { forceSettlePlanRun: result.forceSettlePlanRun };
   } catch (error) {
     return {
-      forceSettlePlanRunError: toErrorMessage(
+      forceSettlePlanRunError: toErrorMessageOr(
         error,
         'Failed to settle plan run.',
       ),
@@ -185,7 +185,7 @@ export const postPlanMessage = async (
     return { postPlanMessage: result.postPlanMessage };
   } catch (error) {
     return {
-      postPlanMessageError: toErrorMessage(error, 'Failed to send message.'),
+      postPlanMessageError: toErrorMessageOr(error, 'Failed to send message.'),
     };
   }
 };
@@ -217,7 +217,7 @@ export const withdrawPlanMessage = async (
     return { withdrawPlanMessage: result.withdrawPlanMessage };
   } catch (error) {
     return {
-      withdrawPlanMessageError: toErrorMessage(
+      withdrawPlanMessageError: toErrorMessageOr(
         error,
         'Failed to withdraw message.',
       ),
@@ -440,7 +440,7 @@ export const updateTaskStatus = async (
     return { ok: true };
   } catch (error) {
     return {
-      updateTaskError: toErrorMessage(error, 'Failed to update task status.'),
+      updateTaskError: toErrorMessageOr(error, 'Failed to update task status.'),
     };
   }
 };
@@ -603,7 +603,7 @@ const persistPlanRunSelection = async (
       ? undefined
       : 'Failed to save the model and effort to the plan run configuration.';
   } catch (error) {
-    return `Could not save the model and effort to the plan run configuration: ${toErrorMessage(error, 'unknown error')}`;
+    return `Could not save the model and effort to the plan run configuration: ${toErrorMessageOr(error, 'unknown error')}`;
   }
 };
 
@@ -788,7 +788,7 @@ export const reschedulePlanRun = async (
     return { reschedulePlanRun: result.reschedulePlanRun };
   } catch (error) {
     return {
-      reschedulePlanRunError: toErrorMessage(
+      reschedulePlanRunError: toErrorMessageOr(
         error,
         'Failed to reschedule plan run.',
       ),

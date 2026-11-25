@@ -17,9 +17,11 @@ caught-error-to-message helper and `sleep`. Consumers span
   across the workspace), `isStringArray`, and `isErrorWithCode` (an `Error`
   with a string `code`, typed structurally so the package needs no
   `@types/node`).
-- [src/utils/errors.ts](src/utils/errors.ts) — `toErrorMessage(error,
-fallback?)`, the one spelling of `error instanceof Error ? error.message :
-String(error)`; a fallback replaces a blank message.
+- [src/utils/errors.ts](src/utils/errors.ts) — `toErrorMessage(error)`, the
+  one spelling of `error instanceof Error ? error.message : String(error)`,
+  and `toErrorMessageOr(error, fallback)`, which turns a blank message into
+  the fallback. Two names rather than an optional `fallback` argument, so the
+  blank-to-fallback behavior is visible at the call site.
 - [src/utils/async.ts](src/utils/async.ts) — `sleep(ms)`. Tests use fake
   timers instead.
 

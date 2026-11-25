@@ -1,14 +1,15 @@
+/**
+ * @description Shared shapes for the conversation streaming feature. The publish
+ * envelope key MUST equal the subscription resolver field name so @nestjs/graphql
+ * can resolve conversationStreamChunkAdded (mirrors appendPlanOutput -> planOutputChunkAdded).
+ */
+
 import type {
   ChatCompletionMessage,
   ConversationPermissionModesValue,
   ConversationReasoningEffort,
   ConversationServiceTiersValue,
 } from '@openthrottle/openthrottle-agentic-utils';
-/**
- * @description Shared shapes for the conversation streaming feature. The publish
- * envelope key MUST equal the subscription resolver field name so @nestjs/graphql
- * can resolve conversationStreamChunkAdded (mirrors appendPlanOutput -> planOutputChunkAdded).
- */
 import type { UsageLimit } from '@openthrottle/openthrottle-drivers';
 
 /** A single streamed chunk published to `conversation:<conversationId>:stream`. */

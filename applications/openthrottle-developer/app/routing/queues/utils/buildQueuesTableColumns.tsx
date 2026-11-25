@@ -1,9 +1,10 @@
-import type { DataTableColumnDef } from '@openthrottle/react-router-shadcn';
 /**
  * @description Column definitions for the queues overview table (name
  * drill-down, health, backlog, in-flight, completed, failed, per-row ops
  * controls). Hoisted out of QueuesTable per component-primitive-shape R4.
  */
+
+import type { DataTableColumnDef } from '@openthrottle/react-router-shadcn';
 import { Badge } from '@openthrottle/react-router-shadcn';
 import type { GlobalPopoverAction } from '@openthrottle/react-router-ui-global';
 import {

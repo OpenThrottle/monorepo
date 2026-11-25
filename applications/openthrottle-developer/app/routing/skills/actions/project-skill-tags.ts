@@ -3,7 +3,7 @@
  * project_skills row and for explicitly removing an orphan row.
  */
 
-import { toErrorMessage } from '@openthrottle/nodejs-utils';
+import { toErrorMessageOr } from '@openthrottle/nodejs-utils';
 import {
   executeGraphqlWithAuth,
   parseFormData,
@@ -107,7 +107,7 @@ export const runSkillRecordTagAction = async (
     return { error: `Unknown intent "${intent}".`, intent };
   } catch (error) {
     return {
-      error: toErrorMessage(error, 'Failed to update skill tags.'),
+      error: toErrorMessageOr(error, 'Failed to update skill tags.'),
       intent,
     };
   }

@@ -1,4 +1,4 @@
-import { toErrorMessage } from '@openthrottle/nodejs-utils';
+import { toErrorMessageOr } from '@openthrottle/nodejs-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
 import {
@@ -92,7 +92,7 @@ export const action = async (args: Route.ActionArgs) => {
     }
     return { ok: true };
   } catch (error) {
-    return data({ error: toErrorMessage(error, COPY.revokeFailed) }, 400);
+    return data({ error: toErrorMessageOr(error, COPY.revokeFailed) }, 400);
   }
 };
 

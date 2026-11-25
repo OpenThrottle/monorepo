@@ -1,4 +1,4 @@
-import { toErrorMessage } from '@openthrottle/nodejs-utils';
+import { toErrorMessage, toErrorMessageOr } from '@openthrottle/nodejs-utils';
 import {
   executeGraphqlWithAuth,
   parseFormData,
@@ -38,7 +38,7 @@ export const promoteTask = async (args: Route.ActionArgs, taskId: string) => {
     return { promoteTask: promote };
   } catch (error) {
     return {
-      promoteTaskError: toErrorMessage(error, 'Failed to promote task.'),
+      promoteTaskError: toErrorMessageOr(error, 'Failed to promote task.'),
     };
   }
 };
@@ -66,7 +66,7 @@ export const setTaskStatus = async (
     return { setTaskStatus: result.updateTask };
   } catch (error) {
     return {
-      setTaskStatusError: toErrorMessage(
+      setTaskStatusError: toErrorMessageOr(
         error,
         'Failed to update task status.',
       ),
@@ -104,7 +104,7 @@ export const updateTaskTag = async (
     return { taskTagUpdated: true };
   } catch (error) {
     return {
-      taskTagError: toErrorMessage(error, 'Failed to update task tag.'),
+      taskTagError: toErrorMessageOr(error, 'Failed to update task tag.'),
     };
   }
 };

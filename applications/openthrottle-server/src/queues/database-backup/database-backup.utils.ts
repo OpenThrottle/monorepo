@@ -1,9 +1,10 @@
-import { spawn } from 'node:child_process';
-
 /**
  * @description Environment contract for the scheduled database-backup BullMQ queue.
  * @see docs/openthrottle/database-backup-scheduled-job-spec.md
  */
+
+import { spawn } from 'node:child_process';
+
 import { resolveRepeatablesOwner } from '../repeatable-job/repeatable-job.utils.ts';
 import { DATABASE_BACKUP_DEFAULT_JOB_TIMEOUT_MS } from './database-backup.constants.ts';
 import {

@@ -31,6 +31,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'; // prettier-ignore
 import { join, relative, resolve } from 'node:path';
 
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import * as prettier from 'prettier';
 import ts from 'typescript';
 
@@ -574,7 +575,7 @@ if (process.argv[1]?.endsWith('generate-cms-schemas.ts')) {
   try {
     process.exit(await main());
   } catch (error) {
-    logger.fail(error instanceof Error ? error.message : String(error));
+    logger.fail(toErrorMessage(error));
     process.exit(1);
   }
 }

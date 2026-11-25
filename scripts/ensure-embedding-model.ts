@@ -19,6 +19,8 @@
  * `EMBEDDING_PROVIDER` and `EMBEDDING_MODELS_DIR` the server will.
  */
 
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
+
 import type {
   FetchModelFilesResult,
   VerifyEmbedderResult,
@@ -188,7 +190,7 @@ if (process.argv[1]?.endsWith('ensure-embedding-model.ts')) {
   } catch (error) {
     formatMissingModelWarning({
       kind: 'failed',
-      reason: error instanceof Error ? error.message : String(error),
+      reason: toErrorMessage(error),
       root: resolveModelsDir(process.env, undefined),
     }).forEach((line) => {
       process.stderr.write(`${line}\n`);
