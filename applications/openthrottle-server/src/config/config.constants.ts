@@ -19,3 +19,11 @@ export const PROCESS_ROLES = {
 
 export type ProcessRolesKey = keyof typeof PROCESS_ROLES;
 export type ProcessRolesValue = (typeof PROCESS_ROLES)[ProcessRolesKey];
+
+/**
+ * @description The oldest Node major the server boots on: the lowest major the
+ * root `package.json` `engines.node` allows (a test keeps the two equal). The
+ * production images pin it; running from source uses the shell's Node, which
+ * only `pnpm install` checks otherwise.
+ */
+export const MINIMUM_NODE_MAJOR = 26;

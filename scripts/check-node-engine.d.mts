@@ -19,3 +19,18 @@ export declare const satisfies: (
   version: ParsedVersion,
   range: string,
 ) => boolean | null;
+
+/** Where {@link findSatisfyingNvmBin} looks, and the `.nvmrc` pin it prefers. */
+export interface NvmLookup {
+  readonly nvmDir: string;
+  readonly pinned: string;
+}
+
+/**
+ * The bin dir of an installed nvm Node that satisfies `range` (the `.nvmrc`
+ * pin first, else the newest fit), or `null` when none does.
+ */
+export declare const findSatisfyingNvmBin: (
+  range: string,
+  lookup: NvmLookup,
+) => string | null;

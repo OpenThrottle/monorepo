@@ -1092,10 +1092,25 @@ const renderPluginReadme = (payload: PluginPayload): string => {
 };
 
 /**
+ * @description The Node major every bundle is compiled for (esbuild `target`), and so the
+ * oldest Node a stub will run a bundle on.
+ */
+const BUNDLE_NODE_MAJOR = 22;
+
+/**
  * The committed stub a tool actually runs. It names only its own file, so it is
  * byte-identical across every rebuild of the bundle behind it. Setting
  * `process.argv[1]` keeps a CLI's own path logic (the doctor resolves the drain
  * beside itself) pointing into `dist/`, where its siblings are.
+ *
+ * The stub runs in users' own repos on whatever `node` the agent's PATH has.
+ * The Claude desktop app lists nvm installs oldest-first, so that can be v16.
+ * Under {@link BUNDLE_NODE_MAJOR} it re-runs the bundle on a Node that is new
+ * enough: `$OT_NODE`, then the newest nvm install, then any other `node` on
+ * PATH. The host repo's `.nvmrc` / `engines` are deliberately never read,
+ * because they say which Node the host repo needs, not which Node OT needs.
+ * With no such Node it exits 0, as a missing bundle does. The stub itself is
+ * ES5 so it parses on any Node an agent might hand it.
  */
 const renderStub = (file: string): string => {
   return [
@@ -1104,19 +1119,85 @@ const renderStub = (file: string): string => {
     '// GENERATED — DO NOT EDIT. Source: packages/agentic-hooks/scripts/bundle-hooks.ts',
     `// Runs ../dist/${file} when it has been built, and otherwise exits 0 without a word:`,
     '// a hook that is not there must never break the tool call it was meant to observe.',
+    `// Below Node ${BUNDLE_NODE_MAJOR} it re-runs the bundle on a newer installed Node, never the host repo's.`,
     '',
     "'use strict';",
     '',
-    "const fs = require('node:fs');",
-    "const path = require('node:path');",
+    "var fs = require('fs');",
+    "var path = require('path');",
     '',
-    `const target = path.join(__dirname, '..', 'dist', ${JSON.stringify(file)});`,
+    `var target = path.join(__dirname, '..', 'dist', ${JSON.stringify(file)});`,
+    `var MIN_MAJOR = ${BUNDLE_NODE_MAJOR};`,
     '',
-    'if (fs.existsSync(target)) {',
+    'function major(version) {',
+    "  return parseInt(String(version).replace(/^v/, ''), 10) || 0;",
+    '}',
+    '',
+    'function isFile(candidate) {',
+    '  try {',
+    '    return fs.statSync(candidate).isFile();',
+    '  } catch (error) {',
+    '    return false;',
+    '  }',
+    '}',
+    '',
+    'function versionOf(candidate) {',
+    "  var result = require('child_process').spawnSync(candidate, ['--version'], { encoding: 'utf8' });",
+    "  return result.status === 0 ? String(result.stdout).trim() : '';",
+    '}',
+    '',
+    'function newestNvmNode() {',
+    "  var root = path.join(process.env.NVM_DIR || path.join(process.env.HOME || '', '.nvm'), 'versions', 'node');",
+    '  var best = null;',
+    '  var names = [];',
+    '  try {',
+    '    names = fs.readdirSync(root);',
+    '  } catch (error) {',
+    '    return null;',
+    '  }',
+    '  for (var i = 0; i < names.length; i++) {',
+    "    var parts = names[i].replace(/^v/, '').split('.');",
+    '    var rank = [parseInt(parts[0], 10) || 0, parseInt(parts[1], 10) || 0, parseInt(parts[2], 10) || 0];',
+    "    var bin = path.join(root, names[i], 'bin', 'node');",
+    '    if (rank[0] < MIN_MAJOR || !isFile(bin)) continue;',
+    '    if (!best || rank[0] > best.rank[0] || (rank[0] === best.rank[0] && (rank[1] > best.rank[1] || (rank[1] === best.rank[1] && rank[2] > best.rank[2])))) {',
+    '      best = { bin: bin, rank: rank };',
+    '    }',
+    '  }',
+    '  return best ? best.bin : null;',
+    '}',
+    '',
+    'function pathNode() {',
+    "  var dirs = String(process.env.PATH || '').split(path.delimiter);",
+    "  var name = process.platform === 'win32' ? 'node.exe' : 'node';",
+    '  for (var i = 0; i < dirs.length; i++) {',
+    '    var candidate = path.join(dirs[i], name);',
+    '    if (dirs[i] && candidate !== process.execPath && isFile(candidate) && major(versionOf(candidate)) >= MIN_MAJOR) {',
+    '      return candidate;',
+    '    }',
+    '  }',
+    '  return null;',
+    '}',
+    '',
+    'function compatibleNode() {',
+    "  var explicit = process.env.OT_NODE || '';",
+    "  if (explicit && explicit.indexOf('$') === -1 && isFile(explicit)) return explicit;",
+    '  return newestNvmNode() || pathNode();',
+    '}',
+    '',
+    'if (!fs.existsSync(target)) {',
+    '  process.exitCode = 0;',
+    '} else if (major(process.versions.node) >= MIN_MAJOR) {',
     '  process.argv[1] = target;',
     '  require(target);',
     '} else {',
-    '  process.exitCode = 0;',
+    '  var node = compatibleNode();',
+    '  if (node) {',
+    "    var result = require('child_process').spawnSync(node, [target].concat(process.argv.slice(2)), { stdio: 'inherit' });",
+    "    process.exitCode = typeof result.status === 'number' ? result.status : 0;",
+    '  } else {',
+    '    process.exitCode = 0;',
+    '  }',
     '}',
     '',
   ].join('\n');
@@ -1211,7 +1292,7 @@ const renderBundle = async (spec: BundleSpec): Promise<string> => {
     minify: false,
     platform: 'node',
     sourcemap: false,
-    target: 'node22',
+    target: `node${BUNDLE_NODE_MAJOR}`,
     treeShaking: true,
     write: false,
   });

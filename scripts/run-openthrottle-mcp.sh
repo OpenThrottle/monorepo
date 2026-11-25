@@ -14,7 +14,8 @@
 # all. The chosen Node runs the .ts directly — every engines.node line strips
 # types natively, so there is no tsx — and its bin dir goes on the front of PATH
 # so the .ts's `spawnSync('node', …)` runs on it too. How it is chosen, and the
-# OT_MCP_NODE override: scripts/utils/resolve-node.sh.
+# OT_MCP_NODE / OT_NODE override: skills/ot-worktree/scripts/resolve-node.sh
+# (shared with the worktree scripts and the ensure-node gate).
 #
 # stdio contract: stdout carries ONLY JSON-RPC — the .ts owns that discipline;
 # this shim writes nothing to stdout.
@@ -30,7 +31,7 @@ if [ ! -f "$DIR/.nvmrc" ]; then
   [ -n "$COMMON" ] && PRIMARY=$(dirname "$COMMON")
 fi
 
-. "$DIR/scripts/utils/resolve-node.sh"
+. "$DIR/skills/ot-worktree/scripts/resolve-node.sh"
 
 if ! ot_resolve_node "$DIR" "$PRIMARY"; then
   echo "🔴 run-openthrottle-mcp: no Node satisfying engines.node \"$OT_NODE_RANGE\" — tried: $OT_NODE_TRIED. Install one (nvm install), or set OT_MCP_NODE to a node binary in the MCP config's env block." >&2

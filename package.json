@@ -133,6 +133,9 @@
       "check-test-file-names": {},
       "ensure-embedding-model": {
         "cache": false,
+        "dependsOn": [
+          "ensure-node"
+        ],
         "executor": "nx:run-commands",
         "metadata": {
           "description": "Server boot gate (OT plan 7803080c): makes sure the semantic-search embedding model is in the weights cache (EMBEDDING_MODELS_DIR, else ~/.openthrottle/models) before openthrottle-server dev, dev-api, worker or start boots, so no one has to know embeddings:download-model exists. Re-hashes every pinned file (~0.5s), downloads what is missing with a progress line, and loads the embedder once after a download. Skips when EMBEDDING_PROVIDER is not local. Never fails the boot: offline it prints a loud warning and exits 0, and the server answers search by keyword until a later boot heals it. Reads the server's .env so it sees the same provider and cache. Never cached (external filesystem state)."
@@ -144,12 +147,26 @@
       },
       "ensure-migrations": {
         "cache": false,
+        "dependsOn": [
+          "ensure-node"
+        ],
         "executor": "nx:run-commands",
         "metadata": {
           "description": "Dev/start gate: wait for Postgres then apply pending SQL migrations before openthrottle-server boots. Uses the server's env (applications/openthrottle-server/.env) so it migrates the exact DB the server connects to; fails fast pointing at `pnpm run database:start` if Postgres is unreachable. Never cached (external DB state). Docker installs remain covered by Dockerfile.Migrations."
         },
         "options": {
           "command": "tsx --env-file applications/openthrottle-server/.env ./scripts/ensure-migrations.ts",
+          "cwd": "{workspaceRoot}"
+        }
+      },
+      "ensure-node": {
+        "cache": false,
+        "executor": "nx:run-commands",
+        "metadata": {
+          "description": "Server boot gate: fails fast, printing the exact `export PATH=…` fix, when the `node` on PATH does not satisfy root engines.node (an agent shell's nvm default, say). ensure-migrations and ensure-embedding-model depend on it, so it runs before every openthrottle-server dev, dev-api, worker and start. Plain bash (scripts/ensure-node.sh, via the ot-worktree resolver) so it can explain itself on the very Node it rejects. Never cached (depends on the shell's PATH)."
+        },
+        "options": {
+          "command": "bash ./scripts/ensure-node.sh",
           "cwd": "{workspaceRoot}"
         }
       },

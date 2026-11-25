@@ -16,10 +16,12 @@ export default [
   // NestJS files are `<folder>.<kind>.ts` and export only their kind. The
   // pre-Nest boot files keep their names: deploy commands and `NODE_OPTIONS`
   // name `bootstrap.js` and `register-workspace-type-stripping.js` by path,
-  // and `main.ts` imports `load-env.ts` first, before any Nest module loads.
+  // and `main.ts` imports `assert-node-version.ts` then `load-env.ts` first,
+  // before any Nest module loads.
   ...nestjsEslintConfig,
   {
     files: [
+      'src/assert-node-version.ts',
       'src/bootstrap.ts',
       'src/load-env.ts',
       'src/register-workspace-type-stripping.ts',

@@ -286,6 +286,7 @@
     "start:docker": "node ./build/src/main.js"
   },
   "sideEffects": [
+    "./src/assert-node-version.ts",
     "./src/bootstrap.ts",
     "./src/graphql/blog/blog-post-state.enum.ts",
     "./src/graphql/blog/blog-post-status.enum.ts",

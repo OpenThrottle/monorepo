@@ -59,7 +59,7 @@ Node 16 has no global `fetch`. The launcher's server probe called it, the result
 
 The shim resolves a Node that satisfies the root `package.json` `engines.node`, puts that Node's `bin` directory at the front of `PATH`, and then `exec`s that Node on `run-openthrottle-mcp.ts` directly. Every `engines.node` line strips types natively, so there is no tsx. The launcher and the server child it spawns both run on that Node. First hit wins:
 
-1. **`OT_MCP_NODE`**: an explicit node binary (see [Overriding](#overriding)).
+1. **`OT_NODE`** (or the older **`OT_MCP_NODE`**): an explicit node binary (see [Overriding](#overriding)).
 2. **The `.nvmrc` version** at `$NVM_DIR/versions/node/v<version>` (`$NVM_DIR` defaults to `~/.nvm`). The checkout's own `.nvmrc` is used, or the primary checkout's when a worktree has none. Only an exact `x.y.z` is looked up, so aliases such as `lts/*` move on to the next step.
 3. **The newest nvm install** that satisfies `engines.node`.
 4. **The `node` on PATH**, if its version satisfies `engines.node`.
@@ -70,13 +70,13 @@ If nothing fits, the shim exits 1 with one stderr line naming the range and ever
 🔴 run-openthrottle-mcp: no Node satisfying engines.node ">=22.22.3 <23 || >=24.15 <25 || >=26" — tried: .nvmrc v24.18.0 (not installed in /Users/you/.nvm); none of 3 nvm installs in /Users/you/.nvm; PATH node /usr/local/bin/node v20.11.0. …
 ```
 
-Resolution is plain bash ([`scripts/utils/resolve-node.sh`](../../scripts/utils/resolve-node.sh)). It takes about 6 ms, never sources `nvm.sh` (about 210 ms, and `nvm use` prints to stdout), and writes nothing to stdout, which carries only JSON-RPC. Its range parser matches the `pnpm install` guard in [`scripts/check-node-engine.mjs`](../../scripts/check-node-engine.mjs), and the tests check that the two agree.
+Resolution is plain bash ([`skills/ot-worktree/scripts/resolve-node.sh`](../../skills/ot-worktree/scripts/resolve-node.sh), shared with the worktree scripts and the `ensure-node` boot gate). It takes about 6 ms, never sources `nvm.sh` (about 210 ms, and `nvm use` prints to stdout), and writes nothing to stdout, which carries only JSON-RPC. Its range parser matches the `pnpm install` guard in [`scripts/check-node-engine.mjs`](../../scripts/check-node-engine.mjs), and the tests check that the two agree.
 
 If the shim is bypassed, for example by running the `.ts` directly on an old Node, `run-openthrottle-mcp.ts` checks `engines.node` itself. It refuses to start with a banner that names the running version and the required range, and it does so before probing any server. Its probe treats only real network failures and timeouts as "unreachable", so a broken runtime can no longer be reported as a down server.
 
 ### Overriding
 
-Pin a specific binary with **`OT_MCP_NODE`** in the client config's `env` block. It wins over everything else. It must still satisfy `engines.node`; if it doesn't, the launcher fails rather than quietly choosing a different Node.
+Pin a specific binary with **`OT_NODE`** in the client config's `env` block (the older **`OT_MCP_NODE`** still works; `OT_NODE` wins when both are set). It wins over everything else, and the worktree scripts and plugin hooks honour it too. It must still satisfy `engines.node`; if it doesn't, the launcher fails rather than quietly choosing a different Node.
 
 ```bash
 claude mcp add-json openthrottle-mcp --scope user '{"command":"bash","args":["/abs/path/to/monorepo/scripts/run-openthrottle-mcp.sh"],"env":{"OT_MCP_NODE":"/Users/you/.nvm/versions/node/v24.18.0/bin/node"}}'

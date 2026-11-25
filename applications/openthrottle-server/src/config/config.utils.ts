@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 
-import { PROCESS_ROLES } from './config.constants.ts';
+import { MINIMUM_NODE_MAJOR, PROCESS_ROLES } from './config.constants.ts';
 import type { BullMqRunOutputRetentionConfig } from './config.types.ts';
-import type { ProcessRole } from './config.types.ts';
+import type { NodeVersionCheck, ProcessRole } from './config.types.ts';
 const isProcessRole = (value: string): value is ProcessRole => {
   return value in PROCESS_ROLES;
 };
@@ -133,4 +133,21 @@ export const getOpenthrottleServerDevJsonlLogDirectory = (): string => {
   }
 
   return join(process.cwd(), '.openthrottle', 'server-logs');
+};
+
+/**
+ * @description Whether `version` (a `process.versions.node` string) is new
+ * enough to boot the server, with the message to print when it is not.
+ */
+export const checkNodeVersion = (version: string): NodeVersionCheck => {
+  const major = Number.parseInt(version.replace(/^v/, ''), 10);
+
+  if (Number.isInteger(major) && major >= MINIMUM_NODE_MAJOR) {
+    return { kind: 'supported' };
+  }
+
+  return {
+    kind: 'unsupported',
+    message: `openthrottle-server needs Node ${MINIMUM_NODE_MAJOR}+ but is running on v${version}. Put the repo's Node first on PATH (\`pnpm nx run monorepo:ensure-node\` prints the exact command), or run it with \`nvm use\`.`,
+  };
 };

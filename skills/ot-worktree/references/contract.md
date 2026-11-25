@@ -66,6 +66,17 @@ that does not support it ignores it:
 | ------------------------------ | ---------------------------------------------------------------------- |
 | `OPENTHROTTLE_WORKTREE_OWN_DB` | `1` — provision the worktree with its own database (not the primary's) |
 
+## Node
+
+Before the hook runs, create and heal put the checkout's Node first on `PATH` and export it, so the
+hook and everything it spawns run on it: `$OT_NODE` (an explicit binary), else the checkout's exact
+`.nvmrc` version under `$NVM_DIR` (the primary checkout's when a worktree has none), else the newest
+nvm install that satisfies `package.json` `engines.node`, else the caller's `node` if it fits
+([`scripts/resolve-node.sh`](../scripts/resolve-node.sh)). A checkout with no `engines.node` keeps
+the caller's `PATH`. When `engines.node` is declared and nothing installed fits, create fails before
+`git worktree add`. Set `OPENTHROTTLE_WORKTREE_NODE=0` to skip this, or pick a different runtime
+inside the hook itself.
+
 ## Example: a provisioner for a repo that does not use pnpm
 
 The hook is plain shell; nothing about it is OpenThrottle-specific. A minimal

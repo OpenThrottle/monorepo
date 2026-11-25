@@ -35,6 +35,7 @@ Along the way:
 - **Scheduled agent jobs:** [openthrottle/scheduled-agent-jobs-usage.md](./openthrottle/scheduled-agent-jobs-usage.md)
 - **Agentic CLI chat backends:** [openthrottle/agentic-cli-chat-backends.md](./openthrottle/agentic-cli-chat-backends.md), [openthrottle/agentic-cli-backend-compatibility-guide.md](./openthrottle/agentic-cli-backend-compatibility-guide.md)
 - **Server auth:** [openthrottle/openthrottle-server-auth.md](./openthrottle/openthrottle-server-auth.md), [nestjs/wiring-auth-rbac.md](./nestjs/wiring-auth-rbac.md)
+- **Node runtime:** [openthrottle/node-runtime.md](./openthrottle/node-runtime.md) — which Node each way of running OT uses (desktop app, MCP, plugin hooks, server from source, Docker, your repos' worktrees), and what happens when it doesn't fit.
 - **Plan-run worktrees:** [openthrottle/plan-run-worktrees.md](./openthrottle/plan-run-worktrees.md) — the git worktree OpenThrottle creates for every programmatic plan run, and how the run binds to it.
 - **Per-task model attribution:** [openthrottle/per-task-model-attribution.md](./openthrottle/per-task-model-attribution.md) — how a model that varies per task reaches the work ledger, and why the session rotates rather than the task row gaining a column.
 - **Per-task model routing:** [openthrottle/per-task-model-routing.md](./openthrottle/per-task-model-routing.md) — which model a task gets, the measured reach of routing on `tasks.category`, and why the fallback is the cheap tier.

@@ -1,17 +1,23 @@
 # shellcheck shell=bash
 #
-# Pick a Node that satisfies the root package.json `engines.node`, for
-# scripts/run-openthrottle-mcp.sh. Sourced, not executed.
+# ot-worktree: pick a Node that satisfies a checkout's package.json
+# `engines.node`, preferring its exact `.nvmrc`. Sourced, not executed.
 #
-# Why it exists: MCP clients spawn the launcher with whatever PATH they built,
-# and that PATH is often not the repo's Node. The Claude desktop app lists
-# every nvm install in ascending order, so `node` is the OLDEST one (v16 lacks
-# a global `fetch`, which the launcher then misreports as "no reachable
-# server"); `env -i` has no `node` at all. So the shim chooses a Node itself.
+# Why it exists: agent shells, MCP clients and git hooks run with whatever PATH
+# they were handed, and that is often not the repo's Node. An agent's Bash tool
+# gets nvm's *default* alias (older than the repo's pin); the Claude desktop app
+# lists every nvm install oldest-first, so `node` is the OLDEST one; `env -i`
+# has no `node` at all. `nvm use` cannot fix it either: the `nvm` shell function
+# does not exist in a non-interactive shell. So callers choose a Node here.
+#
+# Callers: create.sh / heal.sh (through ot_worktree_use_repo_node in
+# provision.sh), and OpenThrottle's scripts/run-openthrottle-mcp.sh and
+# scripts/ensure-node.sh.
 #
 # Order tried, first hit wins (decision + timings: OT plan 426acb9a):
-#   0. $OT_MCP_NODE — an explicit node binary. Explicit means explicit: if it
-#      does not satisfy engines, resolution fails rather than falling through.
+#   0. $OT_NODE (or the older $OT_MCP_NODE) — an explicit node binary.
+#      Explicit means explicit: if it does not satisfy engines, resolution
+#      fails rather than falling through.
 #   1. $NVM_DIR/versions/node/v<.nvmrc> — this checkout's .nvmrc, else the
 #      primary checkout's (worktree fallback). Only a full
 #      x.y.z .nvmrc is looked up; aliases (lts/*, node) and partials skip on.
@@ -22,11 +28,13 @@
 # and never spawns node to choose a node, except to ask an explicit or PATH
 # node its version. It writes NOTHING to stdout: results come back in globals.
 #
-# The range grammar deliberately matches scripts/check-node-engine.mjs
-# (`||`-separated alternatives of space-separated `>= > <= < =` comparators);
-# scripts/__tests__/run-openthrottle-mcp.test.ts holds the two in agreement.
+# The range grammar deliberately matches OpenThrottle's
+# scripts/check-node-engine.mjs (`||`-separated alternatives of space-separated
+# `>= > <= < =` comparators); scripts/__tests__/run-openthrottle-mcp.test.ts
+# holds the two in agreement.
 #
 # Must stay bash 3.2-compatible (macOS /bin/bash) and safe under `set -eu`.
+# POSIX-sh callers run it through `bash`, never `.` it into sh.
 
 # Parse `major[.minor[.patch]]` (optional leading v) off the front of $1 into
 # _OT_V1 _OT_V2 _OT_V3. Returns 1 when $1 does not start with a number.
@@ -161,7 +169,7 @@ _ot_node_tried() {
 # tried and why each was rejected. OT_NODE_RANGE is set either way.
 ot_resolve_node() {
   local checkout=$1 primary=${2:-} nvm_dir=${NVM_DIR:-${HOME:-}/.nvm}
-  local wanted='' dir best='' b1=0 b2=0 b3=0 installed=0 path_node explicit
+  local wanted='' dir best='' b1=0 b2=0 b3=0 installed=0 path_node explicit explicit_name
   OT_NODE_BIN='' OT_NODE_VERSION='' OT_NODE_TRIED=''
 
   if ! _ot_node_read_engines "$checkout/package.json"; then
@@ -171,14 +179,18 @@ ot_resolve_node() {
 
   # 0. Explicit override. A literal ${...} is a client that could not expand
   # its env block — treat it as unset, like the .ts does for the auth token.
-  explicit=${OT_MCP_NODE:-}
+  explicit_name=OT_NODE explicit=${OT_NODE:-}
   case $explicit in *'${'*) explicit='' ;; esac
+  if [ -z "$explicit" ]; then
+    explicit_name=OT_MCP_NODE explicit=${OT_MCP_NODE:-}
+    case $explicit in *'${'*) explicit='' ;; esac
+  fi
   if [ -n "$explicit" ]; then
     if [ -x "$explicit" ] && [ ! -d "$explicit" ]; then
-      _ot_node_try_binary "$explicit" "OT_MCP_NODE=$explicit"
+      _ot_node_try_binary "$explicit" "$explicit_name=$explicit"
       return
     fi
-    _ot_node_tried "OT_MCP_NODE=$explicit (not an executable file)"
+    _ot_node_tried "$explicit_name=$explicit (not an executable file)"
     return 1
   fi
 

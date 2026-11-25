@@ -138,10 +138,9 @@ Only relevant where the OpenThrottle server and its `package.json` scripts exist
 
 ### Gotchas in OpenThrottle
 
-- **`worktree:new` fails at `preinstall` with a Node engine error** → the agent's shell picked up an
-  older default Node, and the repo requires Node 26. Put the Node 26 `bin` first on `PATH` in the
-  same command (the `nvm` shell function does not work non-interactively), then run
-  `pnpm worktree:heal` inside the half-provisioned worktree.
+- **Create or heal stops with `no installed Node satisfies engines.node`** → they run the
+  provisioner on the checkout's Node (`.nvmrc`, else the newest that fits), and none is installed:
+  `nvm install` in the checkout, or set `OT_NODE`. Half-provisioned? `pnpm worktree:heal`.
 - **`pnpm run database:start` in a worktree fails with `Bind for 0.0.0.0:6010 failed`** → a shared-DB
   worktree reuses the primary's Postgres and Redis ports. Use the primary's database, or give the
   worktree its own with `pnpm worktree:db isolate`.
