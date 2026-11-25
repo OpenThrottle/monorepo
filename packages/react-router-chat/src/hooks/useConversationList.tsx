@@ -34,6 +34,16 @@ export interface UseConversationListResult {
   readonly isLoadingMore: boolean;
   /** Fetch the next page and append it. */
   readonly loadMore: () => void;
+  /**
+   * Rewrite loaded rows locally, without a request — how
+   * {@link useConversationGroups} applies an optimistic pin or move, a server
+   * row, or a deleted group's release.
+   */
+  readonly mapConversations: (
+    update: (
+      conversation: AgentConversationListItem,
+    ) => AgentConversationListItem,
+  ) => void;
   /** Reload from the first page (e.g. after a new conversation is created). */
   readonly refresh: () => void;
   /** Optimistically soft-delete a conversation, then persist it. */
@@ -103,6 +113,14 @@ export function useConversationList(
 
   const loadMore = (): void => {
     fetchPage(conversations.length);
+  };
+
+  const mapConversations = (
+    update: (
+      conversation: AgentConversationListItem,
+    ) => AgentConversationListItem,
+  ): void => {
+    setConversations((previous) => previous.map(update));
   };
 
   const refresh = (): void => {
@@ -248,6 +266,7 @@ export function useConversationList(
     isLoading,
     isLoadingMore,
     loadMore,
+    mapConversations,
     refresh,
     remove,
     rename,

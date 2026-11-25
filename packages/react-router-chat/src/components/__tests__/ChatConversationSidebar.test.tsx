@@ -6,19 +6,26 @@ import * as React from 'react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import { CHAT_CONVERSATION_SIDEBAR_COPY } from '../../data/chat-conversation-sidebar.copy';
-import type { AgentConversationListItem } from '../../types';
+import type {
+  AgentConversationListItem,
+  ChatConversationGrouping,
+} from '../../types';
 import type { ChatConversationSidebarProps } from '../ChatConversationSidebar';
 import { ChatConversationSidebar } from '../ChatConversationSidebar';
 
 const CONVERSATIONS: readonly AgentConversationListItem[] = [
   {
+    groupId: null,
     id: 'conv-1',
+    pinned: false,
     status: 'active',
     title: 'Refactor the auth guard',
     updatedAt: '2026-07-29T12:00:00.000Z',
   },
   {
+    groupId: null,
     id: 'conv-2',
+    pinned: false,
     status: 'active',
     title: null,
     updatedAt: '2026-07-28T12:00:00.000Z',
@@ -81,8 +88,8 @@ describe('ChatConversationSidebar', () => {
       const component = renderSidebar({ onRename });
       const user = userEvent.setup();
 
-      await user.click(
-        component.getByTestId('ChatConversationSidebar-rename-conv-1'),
+      await user.dblClick(
+        component.getByTestId('ChatConversationSidebar-select-conv-1'),
       );
       const input = component.getByTestId(
         'ChatConversationSidebar-rename-input-conv-1',
@@ -98,8 +105,8 @@ describe('ChatConversationSidebar', () => {
       const component = renderSidebar({ onRename });
       const user = userEvent.setup();
 
-      await user.click(
-        component.getByTestId('ChatConversationSidebar-rename-conv-1'),
+      await user.dblClick(
+        component.getByTestId('ChatConversationSidebar-select-conv-1'),
       );
       const input = component.getByTestId(
         'ChatConversationSidebar-rename-input-conv-1',
@@ -130,7 +137,12 @@ describe('ChatConversationSidebar', () => {
       const user = userEvent.setup();
 
       await user.click(
-        component.getByTestId('ChatConversationSidebar-delete-conv-1'),
+        component.getByTestId('ChatConversationSidebar-more-conv-1'),
+      );
+      await user.click(
+        await component.findByRole('menuitem', {
+          name: CHAT_CONVERSATION_SIDEBAR_COPY.delete,
+        }),
       );
 
       expect(onDelete).toHaveBeenCalledWith('conv-1');
@@ -145,7 +157,12 @@ describe('ChatConversationSidebar', () => {
       const user = userEvent.setup();
 
       await user.click(
-        component.getByTestId('ChatConversationSidebar-delete-conv-1'),
+        component.getByTestId('ChatConversationSidebar-more-conv-1'),
+      );
+      await user.click(
+        await component.findByRole('menuitem', {
+          name: CHAT_CONVERSATION_SIDEBAR_COPY.delete,
+        }),
       );
 
       const toasts = await toaster.findAllByText(
@@ -238,6 +255,98 @@ describe('ChatConversationSidebar', () => {
       expect(
         component.getByText('Refactor the auth guard'),
       ).toBeInTheDocument();
+    });
+  });
+  describe('grouping', () => {
+    const buildGrouping = (
+      overrides: Partial<ChatConversationGrouping> = {},
+    ): ChatConversationGrouping => {
+      return {
+        collapsedGroupIds: [],
+        groups: [{ id: 'g1', name: 'Launch prep', sortOrder: 1000 }],
+        onCreateGroup: vi.fn(),
+        onDeleteGroup: vi.fn(),
+        onMoveToGroup: vi.fn(),
+        onRenameGroup: vi.fn(),
+        onSetPinned: vi.fn(),
+        onToggleGroupCollapsed: vi.fn(),
+        ...overrides,
+      };
+    };
+    const grouped: readonly AgentConversationListItem[] = [
+      ...CONVERSATIONS.map((conversation) => {
+        return conversation.id === 'conv-1'
+          ? { ...conversation, groupId: 'g1' }
+          : { ...conversation, pinned: true };
+      }),
+    ];
+
+    test('lists Pinned, then the group with its conversation', () => {
+      const component = renderSidebar({
+        conversations: grouped,
+        grouping: buildGrouping(),
+      });
+
+      expect(
+        component.getByRole('region', {
+          name: CHAT_CONVERSATION_SIDEBAR_COPY.sectionPinned,
+        }),
+      ).toHaveTextContent(CHAT_CONVERSATION_SIDEBAR_COPY.untitled);
+      expect(
+        component.getByRole('region', { name: 'Launch prep' }),
+      ).toHaveTextContent('Refactor the auth guard');
+    });
+
+    test('a collapsed group hides its conversations', () => {
+      const component = renderSidebar({
+        conversations: grouped,
+        grouping: buildGrouping({ collapsedGroupIds: ['g1'] }),
+      });
+
+      expect(
+        component.queryByText('Refactor the auth guard'),
+      ).not.toBeInTheDocument();
+    });
+
+    test('clicking a group header toggles it', async () => {
+      const onToggleGroupCollapsed = vi.fn();
+      const component = renderSidebar({
+        conversations: grouped,
+        grouping: buildGrouping({ onToggleGroupCollapsed }),
+      });
+      const user = userEvent.setup();
+
+      await user.click(
+        component.getByRole('button', { expanded: true, name: /Launch prep/ }),
+      );
+
+      expect(onToggleGroupCollapsed).toHaveBeenCalledWith('g1');
+    });
+
+    test('New group names and creates a group', async () => {
+      const onCreateGroup = vi.fn();
+      const component = renderSidebar({
+        grouping: buildGrouping({ onCreateGroup }),
+      });
+      const user = userEvent.setup();
+
+      await user.click(
+        component.getByTestId('ChatConversationSidebar-new-group'),
+      );
+      await user.type(
+        component.getByTestId('ChatConversationSidebar-new-group-input'),
+        'Probes{Enter}',
+      );
+
+      expect(onCreateGroup).toHaveBeenCalledWith('Probes', null);
+    });
+
+    test('without grouping there is no New group button', () => {
+      const component = renderSidebar();
+
+      expect(
+        component.queryByTestId('ChatConversationSidebar-new-group'),
+      ).not.toBeInTheDocument();
     });
   });
 });

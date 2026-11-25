@@ -81,6 +81,7 @@ import {
   GetRootHealthDocument,
 } from '~/__generated__/graphql';
 import { DeveloperRolloutProvider } from '~/global/components/DeveloperRolloutProvider';
+import { GlobalConversationDock } from '~/global/components/GlobalConversationDock';
 import { GlobalRootLoaderFailureBanner } from '~/global/components/GlobalRootLoaderFailureBanner';
 import { GlobalServerHealthBanner } from '~/global/components/GlobalServerHealthBanner';
 import { NotificationsSubscriptionBridge } from '~/global/components/NotificationsSubscriptionBridge';
@@ -102,6 +103,10 @@ import { useBackgroundActivities } from '~/global/hooks/useBackgroundActivities'
 import { useCommanderOptions } from '~/global/hooks/useCommanderOptions';
 import { useHydratedAppearanceConfig } from '~/global/hooks/useHydratedAppearanceConfig';
 import { usePermissions } from '~/global/hooks/usePermissions';
+import {
+  defaultChatDockState,
+  parseChatDockCookie,
+} from '~/global/utils/chat-dock-cookie';
 import type { CommanderSearchFields } from '~/global/utils/commander-empty-extras';
 import {
   buildCommanderEmptyStateExtras,
@@ -342,6 +347,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   return {
     backgroundActivities,
     canonical,
+    chatDock: parseChatDockCookie(cookieHeader),
     defaultEditor,
     env,
     permissions,
@@ -578,6 +584,7 @@ export default function App(): React.ReactElement {
   const isCreateRoute = pathname.endsWith('/create');
 
   const isFooterHidden = isAuthRoute || isPromptsRoute;
+  const isDockShown = data?.user != null && !isAuthRoute && !isPromptsRoute;
   const isHeaderHidden = isAuthRoute || isPromptsRoute;
   const isMetricsHidden =
     isAuthRoute ||
@@ -684,6 +691,12 @@ export default function App(): React.ReactElement {
   );
 
   // Markup
+  const dockMarkup = (
+    <GlobalConversationDock
+      enabled={data?.user != null}
+      initialState={data?.chatDock ?? defaultChatDockState()}
+    />
+  );
   const headerMarkup = (
     <GlobalLayoutHeader onSearchChromeEvent={handleSearchChromeEvent} />
   );
@@ -714,6 +727,7 @@ export default function App(): React.ReactElement {
                   authenticated={data?.user !== null}
                   backgroundActivities={backgroundActivities}
                   data={navigation}
+                  dock={isDockShown ? dockMarkup : null}
                   health={data?.serverHealth}
                   overrides={{
                     footer: isFooterHidden,

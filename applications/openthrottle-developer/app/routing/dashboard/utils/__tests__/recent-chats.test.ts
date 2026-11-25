@@ -9,7 +9,9 @@ const conversation = (
   overrides: Partial<AgentConversationListItem>,
 ): AgentConversationListItem => {
   return {
+    groupId: null,
     id: 'convo-1',
+    pinned: false,
     status: 'active',
     title: null,
     updatedAt: '2026-01-01T00:00:00.000Z',

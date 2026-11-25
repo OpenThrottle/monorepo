@@ -69,6 +69,7 @@ const buildQueueMatches = (loaderData: QueueLoaderData): QueueMatches => {
   const rootData = {
     backgroundActivities: [],
     canonical: 'http://localhost/',
+    chatDock: { collapsedGroupIds: [], isOpen: true },
     defaultEditor: null,
     env: getPublicEnv(),
     permissions: [],

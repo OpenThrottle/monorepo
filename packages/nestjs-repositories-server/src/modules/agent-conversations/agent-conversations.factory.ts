@@ -17,10 +17,12 @@ export const agentConversationsFactory = Factory.define<AgentConversation>(
   () => ({
     createdAt: faker.date.past(),
     deletedAt: null,
+    groupId: null,
     id: faker.string.uuid(),
     metadata: null,
     modelName: null,
     modelProvider: null,
+    pinned: false,
     planId: null,
     projectId: null,
     status: AGENT_CONVERSATION_STATUSES.active,

@@ -3,6 +3,7 @@ import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { AgentConversationGroup } from '../agent-conversation-groups/agent-conversation-group.entity.ts';
 import { Plan } from '../plans/plan.entity.ts';
 import { Project } from '../projects/project.entity.ts';
 import { AgentConversation } from './agent-conversation.entity.ts';
@@ -31,6 +32,7 @@ describe('AgentConversationsRepository', () => {
 
   const planRepository = { exists: vi.fn() };
   const projectRepository = { exists: vi.fn() };
+  const groupRepository = { exists: vi.fn() };
 
   const mockRepository = {
     count: vi.fn(),
@@ -43,6 +45,9 @@ describe('AgentConversationsRepository', () => {
       getRepository: vi.fn((entity: unknown) => {
         if (isEntityTarget(entity, Plan)) return planRepository;
         if (isEntityTarget(entity, Project)) return projectRepository;
+        if (isEntityTarget(entity, AgentConversationGroup)) {
+          return groupRepository;
+        }
         throw new Error(`Unexpected entity: ${String(entity)}`);
       }),
     },
@@ -322,6 +327,71 @@ describe('AgentConversationsRepository', () => {
       });
 
       expect(result.metadata).toEqual({ added: true, keep: 1, replace: 'new' });
+    });
+  });
+
+  describe('setConversationPinned', () => {
+    it('updates pinned scoped to the owner without touching other columns', async () => {
+      await repository.setConversationPinned(userId, conversationId, true);
+
+      expect(mockRepository.update).toHaveBeenCalledWith(
+        { id: conversationId, userId },
+        { pinned: true },
+      );
+    });
+
+    it('throws NotFoundException when the conversation is not owned', async () => {
+      mockRepository.findOne.mockResolvedValue(null);
+
+      await expect(
+        repository.setConversationPinned(userId, conversationId, true),
+      ).rejects.toBeInstanceOf(NotFoundException);
+      expect(mockRepository.update).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('moveConversationToGroup', () => {
+    const groupId = '44444444-4444-4444-8444-444444444444';
+
+    it('sets the group and clears pinned when moving into a group', async () => {
+      groupRepository.exists.mockResolvedValue(true);
+
+      await repository.moveConversationToGroup(userId, conversationId, groupId);
+
+      expect(groupRepository.exists).toHaveBeenCalledWith({
+        where: { id: groupId, userId },
+      });
+      expect(mockRepository.update).toHaveBeenCalledWith(
+        { id: conversationId, userId },
+        { groupId, pinned: false },
+      );
+    });
+
+    it('clears only the group when ungrouping', async () => {
+      await repository.moveConversationToGroup(userId, conversationId, null);
+
+      expect(groupRepository.exists).not.toHaveBeenCalled();
+      expect(mockRepository.update).toHaveBeenCalledWith(
+        { id: conversationId, userId },
+        { groupId: null },
+      );
+    });
+
+    it("throws NotFoundException when the group is not the user's", async () => {
+      groupRepository.exists.mockResolvedValue(false);
+
+      await expect(
+        repository.moveConversationToGroup(userId, conversationId, groupId),
+      ).rejects.toBeInstanceOf(NotFoundException);
+      expect(mockRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('throws NotFoundException when the conversation is not owned', async () => {
+      mockRepository.findOne.mockResolvedValue(null);
+
+      await expect(
+        repository.moveConversationToGroup(userId, conversationId, null),
+      ).rejects.toBeInstanceOf(NotFoundException);
     });
   });
 });

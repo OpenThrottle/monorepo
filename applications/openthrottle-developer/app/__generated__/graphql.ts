@@ -333,6 +333,18 @@ export type AgentCliSetupConfigObject = {
   installEnabled: Scalars['Boolean']['output'];
 };
 
+export type AgentConversationGroupObject = {
+  __typename?: 'AgentConversationGroupObject';
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['String']['output'];
+  /** Display name; trimmed, 1 to 80 characters */
+  name: Scalars['String']['output'];
+  /** Position among the caller's groups, ascending */
+  sortOrder: Scalars['Int']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+  userId: Scalars['String']['output'];
+};
+
 export type AgentConversationMessageObject = {
   __typename?: 'AgentConversationMessageObject';
   content: Scalars['String']['output'];
@@ -358,6 +370,8 @@ export type AgentConversationMessageObject = {
 export type AgentConversationObject = {
   __typename?: 'AgentConversationObject';
   createdAt: Scalars['DateTime']['output'];
+  /** The user-defined conversation group this chat sits in, or null when ungrouped */
+  groupId?: Maybe<Scalars['String']['output']>;
   id: Scalars['String']['output'];
   /** JSON string of optional conversation metadata object */
   metadataJson?: Maybe<Scalars['String']['output']>;
@@ -365,6 +379,8 @@ export type AgentConversationObject = {
   modelName?: Maybe<Scalars['String']['output']>;
   /** Last router LLM provider when heuristic-only routing was not used */
   modelProvider?: Maybe<Scalars['String']['output']>;
+  /** True when the chat is pinned to the top of the sidebar; never together with groupId */
+  pinned: Scalars['Boolean']['output'];
   /** Optional linked plan UUID */
   planId?: Maybe<Scalars['String']['output']>;
   /** Optional linked project UUID */
@@ -1257,6 +1273,11 @@ export type ConversationStreamChunkObject = {
   sortOrder: Scalars['Int']['output'];
 };
 
+export type CreateAgentConversationGroupInput = {
+  /** Group name; trimmed, 1 to 80 characters */
+  name: Scalars['String']['input'];
+};
+
 export type CreateAgentConversationInput = {
   /** JSON string of optional metadata object */
   metadataJson?: InputMaybe<Scalars['String']['input']>;
@@ -1714,6 +1735,10 @@ export type DecideOAuthAuthorizationResultObject = {
   __typename?: 'DecideOAuthAuthorizationResultObject';
   /** The client's redirect URI carrying code (approve) or error=access_denied (deny), plus state and iss. */
   redirectUrl: Scalars['String']['output'];
+};
+
+export type DeleteAgentConversationGroupInput = {
+  groupId: Scalars['ID']['input'];
 };
 
 export type DeleteAgentConversationInput = {
@@ -2979,6 +3004,12 @@ export type ModelEndpointObject = {
   provider?: Maybe<Scalars['String']['output']>;
 };
 
+export type MoveAgentConversationToGroupInput = {
+  conversationId: Scalars['ID']['input'];
+  /** Target group; null removes the conversation from any group. A non-null group also clears pinned. */
+  groupId?: InputMaybe<Scalars['ID']['input']>;
+};
+
 export type MoveProjectPlanInput = {
   /** UP swaps with the earlier plan in project order, DOWN with the later one */
   direction: ProjectPlanMoveDirection;
@@ -3047,6 +3078,8 @@ export type Mutation = {
   connectMcpConnector: McpConnectorConnectionResultObject;
   /** Create an agent conversation for the authenticated human user. */
   createAgentConversation: AgentConversationObject;
+  /** Create a conversation group at the end of the caller's list. The name is trimmed and must be 1 to 80 characters (BAD_USER_INPUT otherwise). */
+  createAgentConversationGroup: AgentConversationGroupObject;
   /** Create a blog post as a DRAFT. Returns BlogSlugConflictError when the slug is taken, BlogCoverAltRequiredError when a cover image has no alt text, and BlogReferenceNotFoundError for an unknown authorSlug. */
   createBlogPost: CreateBlogPostResult;
   /** Create a fragment on its typename's newest ACTIVE schema, prefilled with that schema's defaults and validated against it. BAD_USER_INPUT (with extensions.issues) when invalid. */
@@ -3098,6 +3131,8 @@ export type Mutation = {
   decideOAuthAuthorization: DecideOAuthAuthorizationResultObject;
   /** Soft-delete an owned agent conversation (status=deleted; row + messages retained, hidden from the default list, reversible). */
   deleteAgentConversation: AgentConversationObject;
+  /** Delete an owned conversation group. Its conversations are kept and become ungrouped. Returns the deleted group. */
+  deleteAgentConversationGroup: AgentConversationGroupObject;
   /** Soft delete a fragment. CONFLICT while a live parent or layout still references it. */
   deleteCmsFragment: CmsFragmentObject;
   /** Soft delete a layout and its root fragment together. */
@@ -3183,6 +3218,8 @@ export type Mutation = {
   login: LoginResultObject;
   /** Mint a short-lived token (scoped to the current user) for authenticating a graphql-ws subscription connection via connectionParams.authToken. */
   mintSubscriptionToken: Scalars['String']['output'];
+  /** Move an owned agent conversation into one of the caller's groups (also clears pinned), or out of any group when groupId is null. Does not change its updatedAt. */
+  moveAgentConversationToGroup: AgentConversationObject;
   /** Swap a plan's projectSortOrder with its neighbour's in its project's full order (UP = earlier, DOWN = later), touching only those two plans, so a move works across any page boundary. A plan already at that end stays put. Returns every live plan of the project in the resulting order. Fails when the plan does not exist or is in no project. */
   moveProjectPlan: Array<PlanObject>;
   /** Pause a queue: workers stop picking up new jobs while in-flight jobs finish. Reversible via resumeQueue. */
@@ -3256,8 +3293,12 @@ export type Mutation = {
   removeSkillTag: Scalars['Boolean']['output'];
   /** Remove a tag from a task under the provenance ladder. Returns false when the tag was not present. */
   removeTaskTag: Scalars['Boolean']['output'];
+  /** Rename an owned conversation group. The name is trimmed and must be 1 to 80 characters (BAD_USER_INPUT otherwise). */
+  renameAgentConversationGroup: AgentConversationGroupObject;
   /** Rename a tag in the authenticated user's skill-tag vocabulary. A target the user already has is rejected with extensions.code SKILL_TAG_CONFLICT. A service-account caller is refused (FORBIDDEN). */
   renameSkillTag: SkillTagObject;
+  /** Reorder the caller's conversation groups. groupIds must list every group exactly once; returns them in the new order. */
+  reorderAgentConversationGroup: Array<AgentConversationGroupObject>;
   /** Reorder a parent's children. childUuids must list exactly the current children. */
   reorderCmsFragmentChildren: Array<CmsFragmentChildObject>;
   /** Reorder tasks within a plan. The listed tasks take the sortOrder values they already hold, in taskIds order; tasks not listed keep their place. A full list reorders the whole plan; a partial list reorders only itself, in place. Atomic. Fails on a duplicate id or an id that is not a task of the plan. */
@@ -3292,6 +3333,8 @@ export type Mutation = {
   schedulePlanRun: SchedulePlanRunResultObject;
   /** Relay one ~250ms chunk of base64-encoded 16kHz mono Int16 PCM to the session's WhisperLive connection. Executed over the same authenticated graphql-ws socket as the subscription. Returns false (no throw) for unauthenticated, unknown, foreign, or already-stopping sessions. */
   sendTranscriptionAudioChunk: Scalars['Boolean']['output'];
+  /** Pin or unpin an owned agent conversation. Does not change its updatedAt. */
+  setAgentConversationPinned: AgentConversationObject;
   /** Enable or disable an agent CLI driver for the current user. A disabled agent is hidden from chat/model pickers and rejected when starting new runs. Presence-as-disabled: enabled=false records the preference, enabled=true clears it (default is enabled). Gated by SETTINGS_WRITE, in parity with install/update; rejects unknown drivers. */
   setAgentEnabled: SetAgentEnabledResult;
   /** Enable or disable a single MODEL of an agent CLI driver for the current user. A disabled model is hidden from chat/model pickers and rejected when starting new runs, even while the agent itself stays enabled (an agent-level OFF hard-overrides all its models). Presence-as-disabled: enabled=false records the preference, enabled=true clears it (default is enabled). Gated by SETTINGS_WRITE; rejects unknown drivers. */
@@ -3524,6 +3567,10 @@ export type MutationCreateAgentConversationArgs = {
   input?: InputMaybe<CreateAgentConversationInput>;
 };
 
+export type MutationCreateAgentConversationGroupArgs = {
+  input: CreateAgentConversationGroupInput;
+};
+
 export type MutationCreateBlogPostArgs = {
   input: CreateBlogPostInput;
 };
@@ -3618,6 +3665,10 @@ export type MutationDecideOAuthAuthorizationArgs = {
 
 export type MutationDeleteAgentConversationArgs = {
   input: DeleteAgentConversationInput;
+};
+
+export type MutationDeleteAgentConversationGroupArgs = {
+  input: DeleteAgentConversationGroupInput;
 };
 
 export type MutationDeleteCmsFragmentArgs = {
@@ -3768,6 +3819,10 @@ export type MutationLoginArgs = {
   input: LoginInput;
 };
 
+export type MutationMoveAgentConversationToGroupArgs = {
+  input: MoveAgentConversationToGroupInput;
+};
+
 export type MutationMoveProjectPlanArgs = {
   input: MoveProjectPlanInput;
 };
@@ -3914,8 +3969,16 @@ export type MutationRemoveTaskTagArgs = {
   input: RemoveTaskTagInput;
 };
 
+export type MutationRenameAgentConversationGroupArgs = {
+  input: RenameAgentConversationGroupInput;
+};
+
 export type MutationRenameSkillTagArgs = {
   input: RenameSkillTagInput;
+};
+
+export type MutationReorderAgentConversationGroupArgs = {
+  input: ReorderAgentConversationGroupInput;
 };
 
 export type MutationReorderCmsFragmentChildrenArgs = {
@@ -3990,6 +4053,10 @@ export type MutationSendTranscriptionAudioChunkArgs = {
   audioBase64: Scalars['String']['input'];
   sessionId: Scalars['ID']['input'];
   sortOrder: Scalars['Int']['input'];
+};
+
+export type MutationSetAgentConversationPinnedArgs = {
+  input: SetAgentConversationPinnedInput;
 };
 
 export type MutationSetAgentEnabledArgs = {
@@ -5108,6 +5175,8 @@ export type Query = {
   lastActivity?: Maybe<LastActivityResultObject>;
   /** Lines added/deleted by period (week or month) and author for merged PRs. Lists merged PRs across pages up to 1000 (10 pages) then fetches per-PR diff stats; maxPrs caps the detail requests. */
   linesAddedDeleted: Array<LinesAddedDeletedRowObject>;
+  /** List the authenticated human user's conversation groups in sidebar order (sortOrder ascending). */
+  listAgentConversationGroups: Array<AgentConversationGroupObject>;
   /** List agent conversations for the authenticated human user (default status=active, limit 20 max 100). */
   listAgentConversations: ListAgentConversationsResultObject;
   /** Distinct author and assignee values from plans and tasks for filters */
@@ -6453,11 +6522,22 @@ export type RemoveTaskTagInput = {
   taskId: Scalars['ID']['input'];
 };
 
+export type RenameAgentConversationGroupInput = {
+  groupId: Scalars['ID']['input'];
+  /** Group name; trimmed, 1 to 80 characters */
+  name: Scalars['String']['input'];
+};
+
 export type RenameSkillTagInput = {
   /** Existing tag slug to rename. */
   from: Scalars['String']['input'];
   /** New kebab-case tag slug. */
   to: Scalars['String']['input'];
+};
+
+export type ReorderAgentConversationGroupInput = {
+  /** Every one of the caller's group ids exactly once, in the new order */
+  groupIds: Array<Scalars['ID']['input']>;
 };
 
 export type ReorderPlanTasksInput = {
@@ -7270,6 +7350,11 @@ export type ServiceAccountObject = {
   id: Scalars['String']['output'];
   /** Stable identifier (e.g. openthrottle-mcp). */
   name: Scalars['String']['output'];
+};
+
+export type SetAgentConversationPinnedInput = {
+  conversationId: Scalars['ID']['input'];
+  pinned: Scalars['Boolean']['input'];
 };
 
 export type SetAgentEnabledResult = {
@@ -9442,12 +9527,118 @@ export type ListAgentConversationsQuery = {
     totalCount: number;
     items: Array<{
       __typename?: 'AgentConversationObject';
+      groupId?: string | null;
       id: string;
+      pinned: boolean;
       status: string;
       title?: string | null;
       updatedAt: any;
     }>;
   };
+};
+
+export type ListAgentConversationGroupsQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type ListAgentConversationGroupsQuery = {
+  __typename?: 'Query';
+  listAgentConversationGroups: Array<{
+    __typename?: 'AgentConversationGroupObject';
+    id: string;
+    name: string;
+    sortOrder: number;
+  }>;
+};
+
+export type SetAgentConversationPinnedMutationVariables = Exact<{
+  input: SetAgentConversationPinnedInput;
+}>;
+
+export type SetAgentConversationPinnedMutation = {
+  __typename?: 'Mutation';
+  setAgentConversationPinned: {
+    __typename?: 'AgentConversationObject';
+    groupId?: string | null;
+    id: string;
+    pinned: boolean;
+    status: string;
+    title?: string | null;
+    updatedAt: any;
+  };
+};
+
+export type MoveAgentConversationToGroupMutationVariables = Exact<{
+  input: MoveAgentConversationToGroupInput;
+}>;
+
+export type MoveAgentConversationToGroupMutation = {
+  __typename?: 'Mutation';
+  moveAgentConversationToGroup: {
+    __typename?: 'AgentConversationObject';
+    groupId?: string | null;
+    id: string;
+    pinned: boolean;
+    status: string;
+    title?: string | null;
+    updatedAt: any;
+  };
+};
+
+export type CreateAgentConversationGroupMutationVariables = Exact<{
+  input: CreateAgentConversationGroupInput;
+}>;
+
+export type CreateAgentConversationGroupMutation = {
+  __typename?: 'Mutation';
+  createAgentConversationGroup: {
+    __typename?: 'AgentConversationGroupObject';
+    id: string;
+    name: string;
+    sortOrder: number;
+  };
+};
+
+export type RenameAgentConversationGroupMutationVariables = Exact<{
+  input: RenameAgentConversationGroupInput;
+}>;
+
+export type RenameAgentConversationGroupMutation = {
+  __typename?: 'Mutation';
+  renameAgentConversationGroup: {
+    __typename?: 'AgentConversationGroupObject';
+    id: string;
+    name: string;
+    sortOrder: number;
+  };
+};
+
+export type DeleteAgentConversationGroupMutationVariables = Exact<{
+  input: DeleteAgentConversationGroupInput;
+}>;
+
+export type DeleteAgentConversationGroupMutation = {
+  __typename?: 'Mutation';
+  deleteAgentConversationGroup: {
+    __typename?: 'AgentConversationGroupObject';
+    id: string;
+    name: string;
+    sortOrder: number;
+  };
+};
+
+export type ReorderAgentConversationGroupMutationVariables = Exact<{
+  input: ReorderAgentConversationGroupInput;
+}>;
+
+export type ReorderAgentConversationGroupMutation = {
+  __typename?: 'Mutation';
+  reorderAgentConversationGroup: Array<{
+    __typename?: 'AgentConversationGroupObject';
+    id: string;
+    name: string;
+    sortOrder: number;
+  }>;
 };
 
 export type DeleteAgentConversationMutationVariables = Exact<{
@@ -25485,7 +25676,15 @@ export const ListAgentConversationsDocument = {
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'groupId' },
+                      },
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'pinned' },
+                      },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'status' },
@@ -25509,6 +25708,393 @@ export const ListAgentConversationsDocument = {
 } as unknown as DocumentNode<
   ListAgentConversationsQuery,
   ListAgentConversationsQueryVariables
+>;
+export const ListAgentConversationGroupsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'listAgentConversationGroups' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'listAgentConversationGroups' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  ListAgentConversationGroupsQuery,
+  ListAgentConversationGroupsQueryVariables
+>;
+export const SetAgentConversationPinnedDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'setAgentConversationPinned' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'SetAgentConversationPinnedInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'setAgentConversationPinned' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'groupId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'pinned' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  SetAgentConversationPinnedMutation,
+  SetAgentConversationPinnedMutationVariables
+>;
+export const MoveAgentConversationToGroupDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'moveAgentConversationToGroup' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: {
+                kind: 'Name',
+                value: 'MoveAgentConversationToGroupInput',
+              },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'moveAgentConversationToGroup' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'groupId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'pinned' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  MoveAgentConversationToGroupMutation,
+  MoveAgentConversationToGroupMutationVariables
+>;
+export const CreateAgentConversationGroupDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'createAgentConversationGroup' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: {
+                kind: 'Name',
+                value: 'CreateAgentConversationGroupInput',
+              },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'createAgentConversationGroup' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  CreateAgentConversationGroupMutation,
+  CreateAgentConversationGroupMutationVariables
+>;
+export const RenameAgentConversationGroupDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'renameAgentConversationGroup' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: {
+                kind: 'Name',
+                value: 'RenameAgentConversationGroupInput',
+              },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'renameAgentConversationGroup' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  RenameAgentConversationGroupMutation,
+  RenameAgentConversationGroupMutationVariables
+>;
+export const DeleteAgentConversationGroupDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'deleteAgentConversationGroup' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: {
+                kind: 'Name',
+                value: 'DeleteAgentConversationGroupInput',
+              },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'deleteAgentConversationGroup' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  DeleteAgentConversationGroupMutation,
+  DeleteAgentConversationGroupMutationVariables
+>;
+export const ReorderAgentConversationGroupDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'reorderAgentConversationGroup' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: {
+                kind: 'Name',
+                value: 'ReorderAgentConversationGroupInput',
+              },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'reorderAgentConversationGroup' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  ReorderAgentConversationGroupMutation,
+  ReorderAgentConversationGroupMutationVariables
 >;
 export const DeleteAgentConversationDocument = {
   kind: 'Document',

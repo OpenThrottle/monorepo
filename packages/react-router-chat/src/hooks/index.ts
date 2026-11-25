@@ -46,6 +46,11 @@ export type {
 } from './useChatTurnFetcher';
 export { useChatTurnFetcher } from './useChatTurnFetcher';
 export type {
+  UseConversationGroupsOptions,
+  UseConversationGroupsResult,
+} from './useConversationGroups';
+export { useConversationGroups } from './useConversationGroups';
+export type {
   UseConversationListOptions,
   UseConversationListResult,
 } from './useConversationList';

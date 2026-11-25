@@ -21,7 +21,9 @@ function conversationsPage(
 }
 
 const RESTORED = {
+  groupId: null,
   id: 'conv-restored',
+  pinned: false,
   status: 'active',
   title: 'Restored',
   updatedAt: '2026-07-01T00:00:00.000Z',
@@ -287,13 +289,17 @@ describe('useConversationList', () => {
     test('re-inserts the row in its updatedAt slot and increments totalCount', async () => {
       const page = [
         {
+          groupId: null,
           id: 'a',
+          pinned: false,
           status: 'active',
           title: 'A',
           updatedAt: '2026-08-01T00:00:00.000Z',
         },
         {
+          groupId: null,
           id: 'b',
+          pinned: false,
           status: 'active',
           title: 'B',
           updatedAt: '2026-06-01T00:00:00.000Z',
@@ -318,7 +324,9 @@ describe('useConversationList', () => {
 
     test('re-inserts a deleted row when called through the restore captured before the delete', async () => {
       const row = {
+        groupId: null,
         id: 'a',
+        pinned: false,
         status: 'active',
         title: 'A',
         updatedAt: '2026-08-01T00:00:00.000Z',
@@ -326,7 +334,9 @@ describe('useConversationList', () => {
       const page = [
         row,
         {
+          groupId: null,
           id: 'b',
+          pinned: false,
           status: 'active',
           title: 'B',
           updatedAt: '2026-06-01T00:00:00.000Z',
@@ -364,13 +374,17 @@ describe('useConversationList', () => {
       // the restored row first; by time it belongs between the two.
       const page = [
         {
+          groupId: null,
           id: 'a',
+          pinned: false,
           status: 'active',
           title: 'A',
           updatedAt: `Sun Aug 02 2026 00:00:00 GMT+0000 (Coordinated Universal Time)`,
         },
         {
+          groupId: null,
           id: 'b',
+          pinned: false,
           status: 'active',
           title: 'B',
           updatedAt: `Mon Jun 01 2026 00:00:00 GMT+0000 (Coordinated Universal Time)`,
@@ -384,7 +398,9 @@ describe('useConversationList', () => {
 
       act(() => {
         latest.current?.restore({
+          groupId: null,
           id: 'r',
+          pinned: false,
           status: 'active',
           title: 'R',
           updatedAt: `Tue Jul 07 2026 00:00:00 GMT+0000 (Coordinated Universal Time)`,
@@ -401,7 +417,9 @@ describe('useConversationList', () => {
     test('does not double-count a row that is already listed', async () => {
       const page = [
         {
+          groupId: null,
           id: 'a',
+          pinned: false,
           status: 'active',
           title: 'A',
           updatedAt: '2026-08-01T00:00:00.000Z',

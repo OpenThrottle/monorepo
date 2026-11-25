@@ -24,10 +24,12 @@ export const toAgentConversationObject = (
 ): AgentConversationObject => {
   return {
     createdAt: entity.createdAt,
+    groupId: entity.groupId,
     id: entity.id,
     metadataJson: stringifyJsonField(entity.metadata),
     modelName: entity.modelName,
     modelProvider: entity.modelProvider,
+    pinned: entity.pinned,
     planId: entity.planId,
     projectId: entity.projectId,
     status: entity.status,

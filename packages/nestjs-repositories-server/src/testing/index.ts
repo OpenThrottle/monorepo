@@ -7,6 +7,9 @@
 export * from '../modules/agent-accounts/agent-accounts.factory.ts';
 export type * from '../modules/agent-accounts/agent-accounts.types.ts';
 export * from '../modules/agent-accounts/agent-accounts.utils.ts';
+export * from '../modules/agent-conversation-groups/agent-conversation-groups.factory.ts';
+export type * from '../modules/agent-conversation-groups/agent-conversation-groups.types.ts';
+export * from '../modules/agent-conversation-groups/agent-conversation-groups.utils.ts';
 export * from '../modules/agent-conversation-messages/agent-conversation-messages.factory.ts';
 export type * from '../modules/agent-conversation-messages/agent-conversation-messages.types.ts';
 export * from '../modules/agent-conversation-messages/agent-conversation-messages.utils.ts';

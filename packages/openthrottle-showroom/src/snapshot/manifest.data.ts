@@ -19,6 +19,10 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
     classification: 'denied',
     reason: `agent-CLI account identities (email, org, external account id, credential kind) — identity-adjacent, never exported; agent_token_usage drops its reference`,
   },
+  agent_conversation_groups: {
+    classification: 'ignored',
+    reason: `per-user organisation of the chat sidebar — the demo user makes its own groups`,
+  },
   agent_conversation_messages: {
     classification: 'exported',
     columns: {
@@ -71,6 +75,10 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
         action: 'keep',
         reason: 'structural (timestamp with time zone)',
       },
+      group_id: {
+        action: 'drop',
+        reason: `references the ignored agent_conversation_groups table`,
+      },
       id: { action: 'keep', reason: 'structural (uuid)' },
       metadata: {
         action: 'scrub',
@@ -81,6 +89,7 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
         action: 'scrub',
         reason: 'free text — identity/secret pass (text)',
       },
+      pinned: { action: 'keep', reason: 'structural (boolean)' },
       plan_id: { action: 'keep', reason: 'structural (uuid)' },
       project_id: { action: 'keep', reason: 'structural (uuid)' },
       status: { action: 'keep', reason: 'structural (text)' },

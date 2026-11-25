@@ -140,12 +140,86 @@ query getRootMetrics {
 query listAgentConversations($input: ListAgentConversationsInput) {
   listAgentConversations(input: $input) {
     items {
+      groupId
       id
+      pinned
       status
       title
       updatedAt
     }
     totalCount
+  }
+}
+
+query listAgentConversationGroups {
+  listAgentConversationGroups {
+    id
+    name
+    sortOrder
+  }
+}
+
+mutation setAgentConversationPinned($input: SetAgentConversationPinnedInput!) {
+  setAgentConversationPinned(input: $input) {
+    groupId
+    id
+    pinned
+    status
+    title
+    updatedAt
+  }
+}
+
+mutation moveAgentConversationToGroup(
+  $input: MoveAgentConversationToGroupInput!
+) {
+  moveAgentConversationToGroup(input: $input) {
+    groupId
+    id
+    pinned
+    status
+    title
+    updatedAt
+  }
+}
+
+mutation createAgentConversationGroup(
+  $input: CreateAgentConversationGroupInput!
+) {
+  createAgentConversationGroup(input: $input) {
+    id
+    name
+    sortOrder
+  }
+}
+
+mutation renameAgentConversationGroup(
+  $input: RenameAgentConversationGroupInput!
+) {
+  renameAgentConversationGroup(input: $input) {
+    id
+    name
+    sortOrder
+  }
+}
+
+mutation deleteAgentConversationGroup(
+  $input: DeleteAgentConversationGroupInput!
+) {
+  deleteAgentConversationGroup(input: $input) {
+    id
+    name
+    sortOrder
+  }
+}
+
+mutation reorderAgentConversationGroup(
+  $input: ReorderAgentConversationGroupInput!
+) {
+  reorderAgentConversationGroup(input: $input) {
+    id
+    name
+    sortOrder
   }
 }
 

@@ -1,13 +1,22 @@
 import {
+  CreateAgentConversationGroupDocument,
   DeleteAgentConversationDocument,
+  DeleteAgentConversationGroupDocument,
   GetAgentConversationMessagesDocument,
+  ListAgentConversationGroupsDocument,
   ListAgentConversationsDocument,
+  MoveAgentConversationToGroupDocument,
+  RenameAgentConversationGroupDocument,
   RestoreAgentConversationDocument,
   SendAgentMessageDocument,
+  SetAgentConversationPinnedDocument,
   UpdateAgentConversationTitleDocument,
 } from '@openthrottle/openthrottle-developer-codegen';
 import type { ChatTurnResult } from '@openthrottle/react-router-chat';
-import { createAgentConversationsApi } from '@openthrottle/react-router-chat';
+import {
+  createAgentConversationGroupsApi,
+  createAgentConversationsApi,
+} from '@openthrottle/react-router-chat';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 
 import { AgentsRunChatTurnInputSchema } from '~/__generated__/schemas';
@@ -41,6 +50,16 @@ export const handleRenameAgentConversationIntent =
   agentConversations.handleRenameAgentConversationIntent;
 export const handleRestoreAgentConversationIntent =
   agentConversations.handleRestoreAgentConversationIntent;
+
+/** Pinning and user-defined groups for the same sidebar ({@link createAgentConversationGroupsApi}). */
+export const agentConversationGroups = createAgentConversationGroupsApi({
+  createGroupDocument: CreateAgentConversationGroupDocument,
+  deleteGroupDocument: DeleteAgentConversationGroupDocument,
+  listGroupsDocument: ListAgentConversationGroupsDocument,
+  moveToGroupDocument: MoveAgentConversationToGroupDocument,
+  renameGroupDocument: RenameAgentConversationGroupDocument,
+  setPinnedDocument: SetAgentConversationPinnedDocument,
+});
 
 // ---------------------------------------------------------------------------
 // Legacy non-streaming MCP-tool-router turn path (deliberately DELIMITED, kept).

@@ -1,245 +1,237 @@
 import { Toaster } from '@openthrottle/react-router-shadcn';
+import type { RenderHookResult } from '@testing-library/react';
 import { act, render, renderHook } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
 import { CHAT_CONVERSATION_SIDEBAR_COPY } from '../../data/chat-conversation-sidebar.copy';
-import type { AgentConversationListItem } from '../../types';
+import type {
+  AgentConversationGroup,
+  AgentConversationListItem,
+} from '../../types';
+import type {
+  UseChatConversationSidebarOptions,
+  UseChatConversationSidebarResult,
+} from '../useChatConversationSidebar';
 import { useChatConversationSidebar } from '../useChatConversationSidebar';
 
 const conversation: AgentConversationListItem = {
+  groupId: null,
   id: 'c1',
+  pinned: false,
   status: 'active',
   title: 'Existing title',
   updatedAt: '2026-08-01T00:00:00.000Z',
 };
 
-interface RenameHarnessProps {
-  readonly conversationId: string;
-  readonly draftTitle: string;
-  readonly onRenameKeyDown: (
-    event: React.KeyboardEvent<HTMLInputElement>,
-    conversationId: string,
-  ) => void;
+const group: AgentConversationGroup = {
+  id: 'g1',
+  name: 'Launch prep',
+  sortOrder: 1000,
+};
+
+const renderSidebarHook = (
+  overrides: Partial<UseChatConversationSidebarOptions> = {},
+): RenderHookResult<UseChatConversationSidebarResult, unknown> => {
+  return renderHook(() =>
+    useChatConversationSidebar({
+      onCreateGroup: vi.fn(),
+      onDelete: vi.fn(),
+      onRename: vi.fn(),
+      onRenameGroup: vi.fn(),
+      onRestore: vi.fn(),
+      ...overrides,
+    }),
+  );
+};
+
+interface EditHarnessProps {
+  readonly onKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => void;
 }
 
-/** Minimal input harness exercising `onRenameKeyDown` via real keyboard events. */
-const RenameHarness = (props: RenameHarnessProps): React.ReactElement => {
+/** Minimal input exercising `onEditKeyDown` with real keyboard events. */
+const EditHarness = (props: EditHarnessProps): React.ReactElement => {
   return (
     <input
-      aria-label="Rename"
+      aria-label="Edit"
       onChange={() => {}}
-      onKeyDown={(event) => {
-        props.onRenameKeyDown(event, props.conversationId);
-      }}
-      value={props.draftTitle}
+      onKeyDown={props.onKeyDown}
+      value=""
     />
   );
 };
 
 describe('useChatConversationSidebar', () => {
-  test('starts with no editing, no draft, and no draft', () => {
-    const { result } = renderHook(() =>
-      useChatConversationSidebar({
-        onDelete: vi.fn(),
-        onRename: vi.fn(),
-        onRestore: vi.fn(),
-      }),
-    );
-    expect(result.current.editingId).toBeNull();
-    expect(result.current.draftTitle).toBe('');
+  test('starts with nothing being edited', () => {
+    const { result } = renderSidebarHook();
+
+    expect(result.current.editing).toBeNull();
+    expect(result.current.draft).toBe('');
   });
 
   describe('startRename', () => {
-    test('seeds the draft from the conversation title', () => {
-      const { result } = renderHook(() =>
-        useChatConversationSidebar({
-          onDelete: vi.fn(),
-          onRename: vi.fn(),
-          onRestore: vi.fn(),
-        }),
-      );
+    test('targets the conversation and seeds the draft from its title', () => {
+      const { result } = renderSidebarHook();
       act(() => {
         result.current.startRename(conversation);
       });
-      expect(result.current.editingId).toBe('c1');
-      expect(result.current.draftTitle).toBe('Existing title');
+
+      expect(result.current.editing).toEqual({
+        id: 'c1',
+        kind: 'conversation',
+      });
+      expect(result.current.draft).toBe('Existing title');
     });
 
-    test('falls back to an empty draft for a null title', () => {
-      const { result } = renderHook(() =>
-        useChatConversationSidebar({
-          onDelete: vi.fn(),
-          onRename: vi.fn(),
-          onRestore: vi.fn(),
-        }),
-      );
+    test('seeds an empty draft for a null title', () => {
+      const { result } = renderSidebarHook();
       act(() => {
         result.current.startRename({ ...conversation, title: null });
       });
-      expect(result.current.draftTitle).toBe('');
+
+      expect(result.current.draft).toBe('');
     });
   });
 
-  describe('cancelRename', () => {
-    test('clears the editing id and draft', () => {
-      const { result } = renderHook(() =>
-        useChatConversationSidebar({
-          onDelete: vi.fn(),
-          onRename: vi.fn(),
-          onRestore: vi.fn(),
-        }),
-      );
-      act(() => {
-        result.current.startRename(conversation);
-      });
-      act(() => {
-        result.current.cancelRename();
-      });
-      expect(result.current.editingId).toBeNull();
-      expect(result.current.draftTitle).toBe('');
-    });
-  });
-
-  describe('setDraftTitle', () => {
-    test('replaces the draft text', () => {
-      const { result } = renderHook(() =>
-        useChatConversationSidebar({
-          onDelete: vi.fn(),
-          onRename: vi.fn(),
-          onRestore: vi.fn(),
-        }),
-      );
-      act(() => {
-        result.current.setDraftTitle('New draft');
-      });
-      expect(result.current.draftTitle).toBe('New draft');
-    });
-  });
-
-  describe('onRenameKeyDown', () => {
-    test('Enter commits a non-empty trimmed rename and exits editing', async () => {
-      const user = userEvent.setup();
+  describe('commitEdit', () => {
+    test('saves a trimmed conversation title', () => {
       const onRename = vi.fn();
-      const { result } = renderHook(() =>
-        useChatConversationSidebar({
-          onDelete: vi.fn(),
-          onRename,
-          onRestore: vi.fn(),
-        }),
-      );
+      const { result } = renderSidebarHook({ onRename });
       act(() => {
         result.current.startRename(conversation);
-        result.current.setDraftTitle('  Renamed  ');
+        result.current.setDraft('  Renamed  ');
       });
-      const component = render(
-        <RenameHarness
-          conversationId="c1"
-          draftTitle={result.current.draftTitle}
-          onRenameKeyDown={result.current.onRenameKeyDown}
-        />,
-      );
-
-      await user.type(component.getByLabelText('Rename'), '{Enter}');
+      act(() => {
+        result.current.commitEdit();
+      });
 
       expect(onRename).toHaveBeenCalledWith('c1', 'Renamed');
-      expect(result.current.editingId).toBeNull();
-      expect(result.current.draftTitle).toBe('');
+      expect(result.current.editing).toBeNull();
     });
 
-    test('Enter does not commit a whitespace-only draft', async () => {
-      const user = userEvent.setup();
-      const onRename = vi.fn();
-      const { result } = renderHook(() =>
-        useChatConversationSidebar({
-          onDelete: vi.fn(),
-          onRename,
-          onRestore: vi.fn(),
-        }),
-      );
+    test('saves a group rename', () => {
+      const onRenameGroup = vi.fn();
+      const { result } = renderSidebarHook({ onRenameGroup });
       act(() => {
-        result.current.startRename(conversation);
-        result.current.setDraftTitle('   ');
+        result.current.startGroupRename(group);
+        result.current.setDraft('Shipping');
       });
-      const component = render(
-        <RenameHarness
-          conversationId="c1"
-          draftTitle={result.current.draftTitle}
-          onRenameKeyDown={result.current.onRenameKeyDown}
-        />,
-      );
+      act(() => {
+        result.current.commitEdit();
+      });
 
-      await user.type(component.getByLabelText('Rename'), '{Enter}');
-
-      expect(onRename).not.toHaveBeenCalled();
-      expect(result.current.editingId).toBeNull();
+      expect(onRenameGroup).toHaveBeenCalledWith('g1', 'Shipping');
     });
 
-    test('Escape cancels without committing', async () => {
-      const user = userEvent.setup();
+    test('creates a new group that receives the conversation', () => {
+      const onCreateGroup = vi.fn();
+      const { result } = renderSidebarHook({ onCreateGroup });
+      act(() => {
+        result.current.startNewGroup('c1');
+        result.current.setDraft('Probes');
+      });
+      act(() => {
+        result.current.commitEdit();
+      });
+
+      expect(onCreateGroup).toHaveBeenCalledWith('Probes', 'c1');
+    });
+
+    test('an empty draft saves nothing', () => {
       const onRename = vi.fn();
-      const { result } = renderHook(() =>
-        useChatConversationSidebar({
-          onDelete: vi.fn(),
-          onRename,
-          onRestore: vi.fn(),
-        }),
-      );
+      const { result } = renderSidebarHook({ onRename });
       act(() => {
         result.current.startRename(conversation);
-        result.current.setDraftTitle('Ignored');
+        result.current.setDraft('   ');
       });
-      const component = render(
-        <RenameHarness
-          conversationId="c1"
-          draftTitle={result.current.draftTitle}
-          onRenameKeyDown={result.current.onRenameKeyDown}
-        />,
-      );
-
-      await user.type(component.getByLabelText('Rename'), '{Escape}');
+      act(() => {
+        result.current.commitEdit();
+      });
 
       expect(onRename).not.toHaveBeenCalled();
-      expect(result.current.editingId).toBeNull();
-      expect(result.current.draftTitle).toBe('');
+      expect(result.current.editing).toBeNull();
+    });
+
+    test('a second save after the first (Enter, then blur) is a no-op', () => {
+      const onRename = vi.fn();
+      const { result } = renderSidebarHook({ onRename });
+      act(() => {
+        result.current.startRename(conversation);
+        result.current.setDraft('Renamed');
+      });
+      act(() => {
+        result.current.commitEdit();
+        result.current.commitEdit();
+      });
+
+      expect(onRename).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('onEditKeyDown', () => {
+    test('Enter saves', async () => {
+      const user = userEvent.setup();
+      const onRename = vi.fn();
+      const { result } = renderSidebarHook({ onRename });
+      act(() => {
+        result.current.startRename(conversation);
+        result.current.setDraft('Renamed');
+      });
+      const component = render(
+        <EditHarness onKeyDown={result.current.onEditKeyDown} />,
+      );
+
+      await user.type(component.getByLabelText('Edit'), '{Enter}');
+
+      expect(onRename).toHaveBeenCalledWith('c1', 'Renamed');
+    });
+
+    test('Escape cancels without saving', async () => {
+      const user = userEvent.setup();
+      const onRename = vi.fn();
+      const { result } = renderSidebarHook({ onRename });
+      act(() => {
+        result.current.startRename(conversation);
+        result.current.setDraft('Ignored');
+      });
+      const component = render(
+        <EditHarness onKeyDown={result.current.onEditKeyDown} />,
+      );
+
+      await user.type(component.getByLabelText('Edit'), '{Escape}');
+
+      expect(onRename).not.toHaveBeenCalled();
+      expect(result.current.editing).toBeNull();
+      expect(result.current.draft).toBe('');
     });
 
     test('other keys are ignored', async () => {
       const user = userEvent.setup();
       const onRename = vi.fn();
-      const { result } = renderHook(() =>
-        useChatConversationSidebar({
-          onDelete: vi.fn(),
-          onRename,
-          onRestore: vi.fn(),
-        }),
-      );
+      const { result } = renderSidebarHook({ onRename });
       act(() => {
         result.current.startRename(conversation);
       });
       const component = render(
-        <RenameHarness
-          conversationId="c1"
-          draftTitle={result.current.draftTitle}
-          onRenameKeyDown={result.current.onRenameKeyDown}
-        />,
+        <EditHarness onKeyDown={result.current.onEditKeyDown} />,
       );
 
-      await user.type(component.getByLabelText('Rename'), 'a');
+      await user.type(component.getByLabelText('Edit'), 'a');
 
       expect(onRename).not.toHaveBeenCalled();
-      expect(result.current.editingId).toBe('c1');
+      expect(result.current.editing).toEqual({
+        id: 'c1',
+        kind: 'conversation',
+      });
     });
   });
 
   describe('delete flow', () => {
-    test('deleteConversation deletes at once and toasts with an Undo action', async () => {
+    test('deletes at once and toasts with an Undo action', async () => {
       const onDelete = vi.fn();
       const onRestore = vi.fn();
-      const { result } = renderHook(() =>
-        useChatConversationSidebar({ onDelete, onRename: vi.fn(), onRestore }),
-      );
+      const { result } = renderSidebarHook({ onDelete, onRestore });
       const component = render(<Toaster />);
       const user = userEvent.setup();
 

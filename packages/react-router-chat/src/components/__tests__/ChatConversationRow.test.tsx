@@ -1,19 +1,32 @@
 import type { RenderResult } from '@testing-library/react';
-import { render } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
-import type { AgentConversationListItem } from '../../types';
+import { CHAT_CONVERSATION_SIDEBAR_COPY } from '../../data/chat-conversation-sidebar.copy';
+import type {
+  AgentConversationGroup,
+  AgentConversationListItem,
+} from '../../types';
 import type { ChatConversationRowProps } from '../ChatConversationRow';
 import { ChatConversationRow } from '../ChatConversationRow';
 
 const CONVERSATION: AgentConversationListItem = {
+  groupId: null,
   id: 'conv-1',
+  pinned: false,
   status: 'active',
   title: 'Refactor the auth guard',
   updatedAt: '2026-07-29T12:00:00.000Z',
 };
+
+const GROUPS: readonly AgentConversationGroup[] = [
+  { id: 'g1', name: 'Launch prep', sortOrder: 1000 },
+  { id: 'g2', name: 'Plan triage', sortOrder: 2000 },
+];
+
+const copy = CHAT_CONVERSATION_SIDEBAR_COPY;
 
 const renderRow = (
   overrides: Partial<ChatConversationRowProps> = {},
@@ -22,16 +35,30 @@ const renderRow = (
     <ChatConversationRow
       conversation={CONVERSATION}
       draftTitle=""
+      groups={GROUPS}
+      indented={false}
       isActive={false}
       isEditing={false}
-      onCancelRename={vi.fn()}
+      onCommitRename={vi.fn()}
       onDraftTitleChange={vi.fn()}
+      onMoveToGroup={vi.fn()}
+      onNewGroup={vi.fn()}
       onRenameKeyDown={vi.fn()}
       onRequestDelete={vi.fn()}
       onSelect={vi.fn()}
       onStartRename={vi.fn()}
+      onTogglePin={vi.fn()}
       {...overrides}
     />,
+  );
+};
+
+const openMenu = async (
+  component: RenderResult,
+  user: ReturnType<typeof userEvent.setup>,
+): Promise<void> => {
+  await user.click(
+    component.getByTestId('ChatConversationSidebar-more-conv-1'),
   );
 };
 
@@ -47,10 +74,10 @@ describe('ChatConversationRow', () => {
       conversation: { ...CONVERSATION, title: null },
     });
 
-    expect(component.getByText('Untitled conversation')).toBeInTheDocument();
+    expect(component.getByText(copy.untitled)).toBeInTheDocument();
   });
 
-  test('calls onSelect when the row is clicked', async () => {
+  test('calls onSelect when the title is clicked', async () => {
     const onSelect = vi.fn();
     const component = renderRow({ onSelect });
     const user = userEvent.setup();
@@ -62,91 +89,38 @@ describe('ChatConversationRow', () => {
     expect(onSelect).toHaveBeenCalledTimes(1);
   });
 
-  test('calls onStartRename from the rename button', async () => {
+  test('double-clicking the title starts a rename', async () => {
     const onStartRename = vi.fn();
     const component = renderRow({ onStartRename });
     const user = userEvent.setup();
 
-    await user.click(
-      component.getByTestId('ChatConversationSidebar-rename-conv-1'),
+    await user.dblClick(
+      component.getByTestId('ChatConversationSidebar-select-conv-1'),
     );
 
     expect(onStartRename).toHaveBeenCalledTimes(1);
   });
 
-  test('calls onRequestDelete from the delete button', async () => {
-    const onRequestDelete = vi.fn();
-    const component = renderRow({ onRequestDelete });
+  test('F2 on the focused title starts a rename', async () => {
+    const onStartRename = vi.fn();
+    const component = renderRow({ onStartRename });
     const user = userEvent.setup();
 
-    await user.click(
-      component.getByTestId('ChatConversationSidebar-delete-conv-1'),
-    );
+    component.getByTestId('ChatConversationSidebar-select-conv-1').focus();
+    await user.keyboard('{F2}');
 
-    expect(onRequestDelete).toHaveBeenCalledTimes(1);
+    expect(onStartRename).toHaveBeenCalledTimes(1);
   });
 
-  describe('rename/delete controls on touch vs hover', () => {
-    const TEST_IDS = [
-      'ChatConversationSidebar-rename-conv-1',
-      'ChatConversationSidebar-delete-conv-1',
-    ] as const;
+  test('has no standalone rename or delete buttons', () => {
+    const component = renderRow();
 
-    test.each(TEST_IDS)(
-      '%s is hidden and inert on hover-capable devices until hover or focus',
-      (testId) => {
-        const component = renderRow();
-        const button = component.getByTestId(testId);
-
-        expect(button).toHaveClass('opacity-0', 'pointer-events-none');
-        expect(button).toHaveClass(
-          'group-hover/row:opacity-100',
-          'group-hover/row:pointer-events-auto',
-          'focus-visible:opacity-100',
-          'focus-visible:pointer-events-auto',
-        );
-      },
-    );
-
-    test.each(TEST_IDS)(
-      '%s is visible and tappable when the device has no hover',
-      (testId) => {
-        const component = renderRow();
-        const button = component.getByTestId(testId);
-
-        expect(button).toHaveClass(
-          '[@media(hover:none)]:opacity-100',
-          '[@media(hover:none)]:pointer-events-auto',
-        );
-      },
-    );
-
-    test.each(TEST_IDS)(
-      '%s grows to a 44px target on touch without changing the desktop size',
-      (testId) => {
-        const component = renderRow();
-        const button = component.getByTestId(testId);
-
-        expect(button).toHaveClass(
-          'pointer-coarse:size-11',
-          '[@media(hover:none)]:size-11',
-        );
-        expect(button).toHaveClass('h-6');
-      },
-    );
-
-    test('lets the title truncate so enlarged targets do not widen the row', () => {
-      const component = renderRow();
-      const select = component.getByTestId(
-        'ChatConversationSidebar-select-conv-1',
-      );
-
-      expect(select).toHaveClass('min-w-0');
-      expect(select.parentElement).toHaveClass('min-w-0', 'flex-1');
-      expect(component.getByText('Refactor the auth guard')).toHaveClass(
-        'truncate',
-      );
-    });
+    expect(
+      component.queryByTestId('ChatConversationSidebar-rename-conv-1'),
+    ).not.toBeInTheDocument();
+    expect(
+      component.queryByTestId('ChatConversationSidebar-delete-conv-1'),
+    ).not.toBeInTheDocument();
   });
 
   test('sets aria-current when active', () => {
@@ -154,28 +128,140 @@ describe('ChatConversationRow', () => {
 
     expect(
       component.getByTestId('ChatConversationSidebar-select-conv-1'),
-    ).toHaveAttribute('aria-current', 'true');
+    ).toHaveAttribute('aria-current', 'page');
+  });
+
+  describe('more menu', () => {
+    test('labels its trigger with the conversation title', () => {
+      const component = renderRow();
+
+      expect(
+        component.getByRole('button', {
+          name: `${copy.moreOptionsFor} Refactor the auth guard`,
+        }),
+      ).toBeInTheDocument();
+    });
+
+    test('Rename, Pin and Delete call their handlers', async () => {
+      const onStartRename = vi.fn();
+      const onTogglePin = vi.fn();
+      const onRequestDelete = vi.fn();
+      const component = renderRow({
+        onRequestDelete,
+        onStartRename,
+        onTogglePin,
+      });
+      const user = userEvent.setup();
+
+      await openMenu(component, user);
+      await user.click(
+        await component.findByRole('menuitem', { name: /Rename/ }),
+      );
+      await openMenu(component, user);
+      await user.click(
+        await component.findByRole('menuitem', { name: copy.pin }),
+      );
+      await openMenu(component, user);
+      await user.click(
+        await component.findByRole('menuitem', { name: copy.delete }),
+      );
+
+      expect(onStartRename).toHaveBeenCalledTimes(1);
+      expect(onTogglePin).toHaveBeenCalledTimes(1);
+      expect(onRequestDelete).toHaveBeenCalledTimes(1);
+    });
+
+    test('offers Unpin for a pinned conversation', async () => {
+      const component = renderRow({
+        conversation: { ...CONVERSATION, pinned: true },
+      });
+      const user = userEvent.setup();
+
+      await openMenu(component, user);
+
+      expect(
+        await component.findByRole('menuitem', { name: copy.unpin }),
+      ).toBeInTheDocument();
+    });
+
+    test('Move to group lists the groups and moves into the chosen one', async () => {
+      const onMoveToGroup = vi.fn();
+      const component = renderRow({ onMoveToGroup });
+      const user = userEvent.setup();
+
+      await openMenu(component, user);
+      (
+        await component.findByRole('menuitem', { name: copy.moveToGroup })
+      ).focus();
+      await user.keyboard('{ArrowRight}');
+      await user.click(
+        await component.findByRole('menuitem', { name: 'Plan triage' }),
+      );
+
+      expect(onMoveToGroup).toHaveBeenCalledWith('g2');
+    });
+
+    test('a grouped conversation can be removed from its group', async () => {
+      const onMoveToGroup = vi.fn();
+      const component = renderRow({
+        conversation: { ...CONVERSATION, groupId: 'g1' },
+        onMoveToGroup,
+      });
+      const user = userEvent.setup();
+
+      await openMenu(component, user);
+      (
+        await component.findByRole('menuitem', { name: copy.moveToGroup })
+      ).focus();
+      await user.keyboard('{ArrowRight}');
+      await user.click(
+        await component.findByRole('menuitem', { name: copy.removeFromGroup }),
+      );
+
+      expect(onMoveToGroup).toHaveBeenCalledWith(null);
+    });
+
+    test('hides Pin and Move to group when the host offers no grouping', async () => {
+      const component = renderRow({ groups: null });
+      const user = userEvent.setup();
+
+      await openMenu(component, user);
+      await component.findByRole('menuitem', { name: copy.delete });
+
+      expect(
+        component.queryByRole('menuitem', { name: copy.pin }),
+      ).not.toBeInTheDocument();
+      expect(
+        component.queryByRole('menuitem', { name: copy.moveToGroup }),
+      ).not.toBeInTheDocument();
+    });
   });
 
   describe('editing mode', () => {
     test('renders an input with the draft title instead of the row', () => {
       const component = renderRow({ draftTitle: 'New title', isEditing: true });
 
-      const input = component.getByTestId(
-        'ChatConversationSidebar-rename-input-conv-1',
-      );
-      expect(input).toHaveValue('New title');
+      expect(
+        component.getByTestId('ChatConversationSidebar-rename-input-conv-1'),
+      ).toHaveValue('New title');
       expect(
         component.queryByTestId('ChatConversationSidebar-select-conv-1'),
       ).not.toBeInTheDocument();
     });
 
-    test('calls onDraftTitleChange as the input value changes', async () => {
-      const onDraftTitleChange = vi.fn();
-      const component = renderRow({
-        isEditing: true,
-        onDraftTitleChange,
+    test('focuses the input', async () => {
+      const component = renderRow({ isEditing: true });
+
+      await waitFor(() => {
+        expect(
+          component.getByTestId('ChatConversationSidebar-rename-input-conv-1'),
+        ).toHaveFocus();
       });
+    });
+
+    test('calls onDraftTitleChange as the value changes', async () => {
+      const onDraftTitleChange = vi.fn();
+      const component = renderRow({ isEditing: true, onDraftTitleChange });
       const user = userEvent.setup();
 
       await user.type(
@@ -186,9 +272,9 @@ describe('ChatConversationRow', () => {
       expect(onDraftTitleChange).toHaveBeenCalledWith('x');
     });
 
-    test('calls onCancelRename on blur', async () => {
-      const onCancelRename = vi.fn();
-      const component = renderRow({ isEditing: true, onCancelRename });
+    test('saves on blur', async () => {
+      const onCommitRename = vi.fn();
+      const component = renderRow({ isEditing: true, onCommitRename });
       const user = userEvent.setup();
 
       await user.click(
@@ -196,10 +282,10 @@ describe('ChatConversationRow', () => {
       );
       await user.tab();
 
-      expect(onCancelRename).toHaveBeenCalledTimes(1);
+      expect(onCommitRename).toHaveBeenCalledTimes(1);
     });
 
-    test('calls onRenameKeyDown on key presses', async () => {
+    test('passes key presses to onRenameKeyDown', async () => {
       const onRenameKeyDown = vi.fn();
       const component = renderRow({ isEditing: true, onRenameKeyDown });
       const user = userEvent.setup();

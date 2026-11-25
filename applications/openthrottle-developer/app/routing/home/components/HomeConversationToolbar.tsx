@@ -15,8 +15,9 @@ export interface HomeConversationToolbarProps {
 }
 
 /**
- * @description The home route's top strip — the trigger for the persisted
- * conversation sheet (history, rename, delete, new chat). Extracted from the
+ * @description The home route's top strip on small screens — the trigger for
+ * the persisted conversation sheet (history, rename, delete, new chat). From md
+ * up the docked conversations column (GlobalConversationDock) replaces it. Extracted from the
  * route so the route file stays inside the 210-line cap.
  */
 export const HomeConversationToolbar = (
@@ -51,7 +52,7 @@ export const HomeConversationToolbar = (
 
   return (
     <div
-      className="flex items-center gap-2 px-4 pt-4 md:px-8 md:pt-6 lg:px-12"
+      className="flex items-center gap-2 px-4 pt-4 md:hidden"
       data-testid="home-conversation-toolbar"
     >
       <ChatConversationSheet

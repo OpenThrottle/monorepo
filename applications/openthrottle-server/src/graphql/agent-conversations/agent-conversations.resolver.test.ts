@@ -41,10 +41,12 @@ describe('AgentConversationsResolver', () => {
   const mockConversation: AgentConversation = {
     createdAt: new Date('2026-06-07T10:00:00.000Z'),
     deletedAt: null,
+    groupId: null,
     id: '11111111-1111-4111-8111-111111111111',
     metadata: null,
     modelName: null,
     modelProvider: null,
+    pinned: false,
     planId: null,
     projectId: null,
     status: AGENT_CONVERSATION_STATUSES.active,
@@ -311,6 +313,79 @@ describe('AgentConversationsResolver', () => {
       );
 
       expect(result.title).toBe('Renamed');
+    });
+  });
+
+  describe('setAgentConversationPinned', () => {
+    test('pins scoped to the caller and maps pinned', async () => {
+      agentConversationsRepository.setConversationPinned.mockResolvedValueOnce({
+        ...mockConversation,
+        pinned: true,
+      });
+
+      const result = await resolver.setAgentConversationPinned(humanPrincipal, {
+        conversationId: mockConversation.id,
+        pinned: true,
+      });
+
+      expect(
+        agentConversationsRepository.setConversationPinned,
+      ).toHaveBeenCalledWith(humanPrincipal.sub, mockConversation.id, true);
+      expect(result.pinned).toBe(true);
+    });
+
+    test('rejects a service account', async () => {
+      await expect(
+        resolver.setAgentConversationPinned(serviceAccountPrincipal, {
+          conversationId: mockConversation.id,
+          pinned: true,
+        }),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+    });
+
+    test("propagates NotFoundException for a conversation that is not the caller's", async () => {
+      await expect(
+        resolver.setAgentConversationPinned(humanPrincipal, {
+          conversationId: mockConversation.id,
+          pinned: true,
+        }),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+  });
+
+  describe('moveAgentConversationToGroup', () => {
+    const groupId = '33333333-3333-4333-8333-333333333333';
+
+    test('moves into a group scoped to the caller', async () => {
+      agentConversationsRepository.moveConversationToGroup.mockResolvedValueOnce(
+        { ...mockConversation, groupId },
+      );
+
+      const result = await resolver.moveAgentConversationToGroup(
+        humanPrincipal,
+        { conversationId: mockConversation.id, groupId },
+      );
+
+      expect(
+        agentConversationsRepository.moveConversationToGroup,
+      ).toHaveBeenCalledWith(humanPrincipal.sub, mockConversation.id, groupId);
+      expect(result.groupId).toBe(groupId);
+    });
+
+    test('ungroups with a null groupId', async () => {
+      agentConversationsRepository.moveConversationToGroup.mockResolvedValueOnce(
+        mockConversation,
+      );
+
+      const result = await resolver.moveAgentConversationToGroup(
+        humanPrincipal,
+        { conversationId: mockConversation.id, groupId: null },
+      );
+
+      expect(
+        agentConversationsRepository.moveConversationToGroup,
+      ).toHaveBeenCalledWith(humanPrincipal.sub, mockConversation.id, null);
+      expect(result.groupId).toBeNull();
     });
   });
 });

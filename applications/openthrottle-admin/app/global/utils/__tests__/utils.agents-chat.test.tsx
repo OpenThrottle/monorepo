@@ -93,7 +93,9 @@ describe('utils.agents-chat handlers', () => {
         listAgentConversations: {
           items: [
             {
+              groupId: null,
               id: 'c1',
+              pinned: false,
               status: 'active',
               title: 'Hello',
               updatedAt: '2025-01-01T00:00:00.000Z',
@@ -114,7 +116,9 @@ describe('utils.agents-chat handlers', () => {
       expect(result).toEqual({
         conversations: [
           {
+            groupId: null,
             id: 'c1',
+            pinned: false,
             status: 'active',
             title: 'Hello',
             updatedAt: '2025-01-01T00:00:00.000Z',
@@ -161,7 +165,9 @@ describe('utils.agents-chat handlers', () => {
     test('renames a conversation', async () => {
       mockGraphql.mockResolvedValue({
         updateAgentConversationTitle: {
+          groupId: null,
           id: 'c1',
+          pinned: false,
           status: 'active',
           title: 'New title',
           updatedAt: '2025-01-02T00:00:00.000Z',
@@ -178,7 +184,9 @@ describe('utils.agents-chat handlers', () => {
 
       expect(result).toEqual({
         conversation: {
+          groupId: null,
           id: 'c1',
+          pinned: false,
           status: 'active',
           title: 'New title',
           updatedAt: '2025-01-02T00:00:00.000Z',
@@ -205,7 +213,9 @@ describe('utils.agents-chat handlers', () => {
     test('soft-deletes a conversation', async () => {
       mockGraphql.mockResolvedValue({
         deleteAgentConversation: {
+          groupId: null,
           id: 'c1',
+          pinned: false,
           status: 'deleted',
           title: 'Hello',
           updatedAt: '2025-01-03T00:00:00.000Z',
@@ -221,7 +231,9 @@ describe('utils.agents-chat handlers', () => {
 
       expect(result).toEqual({
         conversation: {
+          groupId: null,
           id: 'c1',
+          pinned: false,
           status: 'deleted',
           title: 'Hello',
           updatedAt: '2025-01-03T00:00:00.000Z',

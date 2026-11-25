@@ -14,6 +14,7 @@ import { HomeConversationToolbar } from '~/routing/home/components/HomeConversat
 import { HomeThreadColumn } from '~/routing/home/components/HomeThreadColumn';
 import { useAgenticChatTurn } from '~/routing/home/hooks/useAgenticChatTurn';
 import { useConversationList } from '~/routing/home/hooks/useConversationList';
+import { useNewChatRequest } from '~/routing/home/hooks/useNewChatRequest';
 import {
   clearConversationIdParam,
   writeConversationIdParam,
@@ -131,6 +132,7 @@ export default function Component(
 
   // Handlers
   const onNewChat = (): void => {
+    restoredConversationIdRef.current = null;
     turn.reset();
     // Drop the live-synced id so a reload after New chat is a blank composer.
     clearConversationIdParam();
@@ -163,6 +165,8 @@ export default function Component(
     restoredConversationIdRef.current = id;
     activeTurn.restore({ conversationId: id });
   }, [conversationIdParam]);
+
+  useNewChatRequest({ onNewChat });
 
   // 🔌 Short Circuit
 
