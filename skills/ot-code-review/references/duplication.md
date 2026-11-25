@@ -7,15 +7,16 @@ Principle 5 (`dup-01` to `dup-12` in the [catalog](catalog.md#5-duplication-the-
 Search the **whole tree**, not just the diff's project, and ignore `__tests__/` hits until the end.
 
 1. **Grep by distinctive literal.** Take a string, test id, copy key, error message, regex or magic number from the new code and `git grep -n '<literal>' -- applications packages tools scripts`. This is the step that finds copy 1 when the diff adds copy 2. Prefer a literal over a name: copies are rarely named alike.
-2. **Grep by name and by intent words.** `git grep -n -E '(const|function) (parse|format)Date'`, plus the verbs and nouns of the job (`parseEnv`, `CheckoutPath`, `toContainerPath`). Also `ls` the sibling `utils/` folders: `app/global/utils/`, the area's `utils/`, and `packages/*/src/utils/`.
-3. **Read package barrels.** `git grep -n -i '<subject>' -- 'packages/*/src/index.ts'` and open the owning package's `index.ts`. A package that owns the subject (`nodejs-utils`, `openthrottle-agentic-utils`, `react-router-utils`, `react-router-shadcn`, `react-router-ui-global`) is the home.
-4. **`semantic_search`, last and only as a hint.** It indexes plans, tasks and docs, **not code** (see [§ 5](#5-verdict-on-semantic_search)). Use it to learn whether someone planned or discussed this work: OT MCP `semantic_search({ query: "<one-sentence intent, not the code body>", limit: 5 })`. Parameters are `query` and `limit` (max 50) only; there is no source filter. Call `health` first; a plan or task hit is a lead to verify with grep, never a finding. Keep `limit` at 5: at 8 or more the result overflows to a file.
+2. **`code_search` by intent, then by body.** OT MCP `code_search({ query, limit: 5 })` searches the indexed code of the repository you are in; a worktree falls back to the primary checkout's index. Send a one-sentence intent ("parse .env contents into a key/value map, stripping quotes") first, then the new function's body as one line. It found the home at rank 1 in 4 of 5 measured cases, including ones where the names differ ([§ 4](#code_search-eval)). Results give `path:start-end`, score and a snippet, best first; a hit is a lead, so open it. A sibling `.types.ts` or `.module.ts` in the right folder means the home is in that folder. `available: false`, a 403 or an empty result means no index (index it from /ide Semantic) or no permission, not no copy: carry on with grep.
+3. **Grep by name and by intent words.** `git grep -n -E '(const|function) (parse|format)Date'`, plus the verbs and nouns of the job (`parseEnv`, `CheckoutPath`, `toContainerPath`). Also `ls` the sibling `utils/` folders: `app/global/utils/`, the area's `utils/`, and `packages/*/src/utils/`.
+4. **Read package barrels.** `git grep -n -i '<subject>' -- 'packages/*/src/index.ts'` and open the owning package's `index.ts`. A package that owns the subject (`nodejs-utils`, `openthrottle-agentic-utils`, `react-router-utils`, `react-router-shadcn`, `react-router-ui-global`) is the home.
+5. **`semantic_search`, for history only.** It indexes plans, tasks and docs, not code. Use it to learn whether someone planned or discussed the work: `semantic_search({ query: "<one-sentence intent>", limit: 5 })`. Call `health` first. A plan or task hit is a lead to verify, never a finding. Keep `limit` at 5: at 8 or more the result overflows to a file.
 
 A copy only counts when the **behavior** matches, not the name. Before filing a finding, open both and say what differs.
 
 ## 2. Decide
 
-`semantic_search` aside, the home is the **lowest rung that holds every consumer** ([ot-folders](https://github.com/openthrottle/monorepo/blob/main/skills/ot-folders/SKILL.md#the-promotion-ladder): promote when the second consumer appears, not before). One use stays where it is; do not file "make this reusable".
+The home is the **lowest rung that holds every consumer** ([ot-folders](https://github.com/openthrottle/monorepo/blob/main/skills/ot-folders/SKILL.md#the-promotion-ladder): promote when the second consumer appears, not before). One use stays where it is; do not file "make this reusable".
 
 | Where the copies live                                                                                                                    | Shared version goes                                                                     | Catalog id, severity                                                |
 | ---------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
@@ -86,7 +87,21 @@ Flagged: yes. A reviewer reading the new code's distinctive pair (`toContainerPa
 
 Flagged: yes, and it found a **third and fourth parser** the fix left in place (`agentic-hooks` `parseEnvLine`, `service-accounts.utils.ts`). The eight FP are consumers of the home, which is what you want to see when deciding it stays in `scripts/utils/`.
 
-### Semantic search probes
+### `code_search` eval
+
+`pnpm nx run @openthrottle/openthrottle-mcp-evals:eval-code-search` runs the three cases above, plus a `parseDate` body and intent probe (gold: `app/global/utils/dates.ts`), through `codeSemanticSearch` and scores the top 5. Run 2026-11-24 on a full index of the monorepo (39,380 chunks, local `nomic-embed-text-v1.5`, plan 8db9851c):
+
+| Case                                    | First relevant rank | precision@5 |
+| --------------------------------------- | ------------------- | ----------- |
+| `parseDate` body                        | 1                   | 0.20        |
+| `parseDate` intent                      | 1                   | 0.40        |
+| Case 1 intent: skill source badge       | 1                   | 0.40        |
+| Case 2 intent: checkout id to view path | 6                   | 0.00        |
+| Case 3 intent: parse `.env`             | 1                   | 1.00        |
+
+MRR 0.833, hit@5 0.80, mean precision@5 0.40. Precision is per chunk, so a file with one home caps low; the number that matters is the first relevant rank. Case 2's top 5 were `checkout-path.types.ts`, the `checkout-path-resolution` test and module, and an unrelated `.types.ts`: the right folders, with the services at rank 6. Case 3 returned both parsers (`scripts/utils/env.ts`, `agentic-hooks/config/env.ts`), which grep found only by literal.
+
+### Semantic search probes (before `code_search`)
 
 Six calls total. Code chunks returned across all of them: **0** (the index reports 5,760 code embeddings; `source` is only ever `plan`, `task` or `documentation`).
 
@@ -103,21 +118,14 @@ Code-probe precision: 0 of 81 returned chunks. Plan and task probe precision on 
 
 `health` reported `status: ok`, local `nomic-embed-text-v1.5`, 768 dims, 0 stale. The indexed tree is the current one, so for the historical cases this measures only whether history is findable now.
 
-## 5. Verdict on `semantic_search`
+## 5. Verdict
 
-**Not good enough for duplicate detection; a follow-up plan is needed.** Grep and barrel reading carried every case. The MCP tool never returns code, so "is this already done somewhere?" cannot be answered by it.
+**`code_search` is good enough to run second, after the literal grep; `semantic_search` is not a code search.** Literal grep remains the most precise signal when the diff supplies one. `code_search` adds a recall step that does not depend on names, which is where grep is weakest (26 false positives on Case 2's name grep). Treat every hit as a lead to open, never as a finding.
 
-A server-side code search already exists: the `codeSemanticSearch(input: { repositoryId, query, limit })` GraphQL query (`code-search.resolver.ts`, indexes per registered repository, `SETTINGS_READ`). The follow-up would need:
-
-1. An MCP tool (or `source`/`kind` filter on `semantic_search`) that exposes `codeSemanticSearch`, with `repositoryId` defaulting to the checkout the session runs in, returning `sourcePath`, line range and a short snippet.
-2. A small result budget (the current 8-chunk response already overflows the tool limit for task text), and sorting by similarity.
-3. An eval set from the cases above (query = new function body, expected = path of the home) to measure precision at 5 before trusting it; add `parseDate` in `app/global/utils/dates.ts` as the first positive.
-4. A check that worktree and plan-run checkouts are indexed, since the index follows registered repositories rather than the reviewed diff.
-
-Until then the recipe stays grep-first; treat any semantic hit as a lead.
+`code_search` only knows what was indexed: a checkout is indexed from /ide Semantic, not automatically, so the index can lag the tree. A worktree or plan-run checkout reads the primary's index, which is right for "is this already done on main?". The MCP's own service account cannot call it yet (`settings:read`, plan c731a412); until that lands it works only for a human-token client.
 
 ## Not verified
 
-- `codeSemanticSearch` itself was not called (needs an authenticated GraphQL session and a registered `repositoryId`), so its precision is unmeasured.
+- `code_search` precision on cases beyond these five, and on a stale index.
 - Whether the three residual `toContainerPath` consumers in Case 2 are real duplicates.
 - Counts are over one pre-fix tree each; recall on other cases is unknown.
