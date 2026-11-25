@@ -2,7 +2,10 @@ import * as React from 'react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import type { PlanDetailsFragment } from '~/__generated__/graphql';
-import { renderRoutesStub } from '~/testing/route-fixtures';
+import {
+  buildPlanDetailLoaderData,
+  renderWithPlanDetailRouteData,
+} from '~/routing/plans/testing/plan-detail-route-data';
 
 import { PlanDetailRouteHeader } from '../PlanDetailRouteHeader';
 
@@ -65,9 +68,14 @@ const planWithProject: PlanDetailsFragment = {
   },
 };
 
+// The header's project picker reads the route's deferred `projects` key.
+const renderHeader = (element: React.ReactElement) => {
+  return renderWithPlanDetailRouteData(element, buildPlanDetailLoaderData());
+};
+
 describe('PlanDetailRouteHeader Component', () => {
   test('renders title, status, and assignee', () => {
-    const { getByRole, getByText, queryByLabelText } = renderRoutesStub(
+    const { getByRole, getByText, queryByLabelText } = renderHeader(
       <PlanDetailRouteHeader plan={basePlan} status="IN_PROGRESS" />,
     );
 
@@ -81,7 +89,7 @@ describe('PlanDetailRouteHeader Component', () => {
   });
 
   test('links the status badge to the filtered plans list', () => {
-    const { getByRole } = renderRoutesStub(
+    const { getByRole } = renderHeader(
       <PlanDetailRouteHeader plan={basePlan} status="IN_PROGRESS" />,
     );
 
@@ -91,15 +99,15 @@ describe('PlanDetailRouteHeader Component', () => {
     );
   });
 
-  // The project chip is currently commented out in the header. Until it comes
-  // back, assert it stays absent even for a plan that does point at a project,
-  // so re-enabling it fails here rather than silently changing the header.
-  test('renders no project chip even when the plan points at a project', () => {
-    const { queryByTestId } = renderRoutesStub(
+  test('renders the project chip linking to the plan project', () => {
+    const { queryByTestId } = renderHeader(
       <PlanDetailRouteHeader plan={planWithProject} status="IN_PROGRESS" />,
     );
 
-    expect(queryByTestId('PlanProjectBadge')).not.toBeInTheDocument();
+    expect(queryByTestId('PlanProjectBadge')).toHaveAttribute(
+      'href',
+      '/projects/project-1',
+    );
   });
 
   describe('the non-beta unschedule control (D10)', () => {
@@ -114,7 +122,7 @@ describe('PlanDetailRouteHeader Component', () => {
     });
 
     test('renders beside the badge on a SCHEDULED plan without beta preview', () => {
-      const { getByTestId } = renderRoutesStub(
+      const { getByTestId } = renderHeader(
         <PlanDetailRouteHeader plan={scheduledPlan} status="SCHEDULED" />,
       );
 
@@ -123,7 +131,7 @@ describe('PlanDetailRouteHeader Component', () => {
 
     test('is absent with beta preview, where the toolbar owns status', () => {
       betaPreview.enabled = true;
-      const { queryByTestId } = renderRoutesStub(
+      const { queryByTestId } = renderHeader(
         <PlanDetailRouteHeader plan={scheduledPlan} status="SCHEDULED" />,
       );
 
@@ -131,7 +139,7 @@ describe('PlanDetailRouteHeader Component', () => {
     });
 
     test('is absent on a plan that is not scheduled', () => {
-      const { queryByTestId } = renderRoutesStub(
+      const { queryByTestId } = renderHeader(
         <PlanDetailRouteHeader plan={basePlan} status="IN_PROGRESS" />,
       );
 
@@ -142,7 +150,7 @@ describe('PlanDetailRouteHeader Component', () => {
   // Most plans have no project, so the chip must be absent rather than an
   // "unassigned" placeholder on every other plan header.
   test('renders no project chip when the plan points at nothing', () => {
-    const { queryByTestId } = renderRoutesStub(
+    const { queryByTestId } = renderHeader(
       <PlanDetailRouteHeader plan={basePlan} status="IN_PROGRESS" />,
     );
 

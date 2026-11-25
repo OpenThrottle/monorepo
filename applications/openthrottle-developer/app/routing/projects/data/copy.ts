@@ -26,14 +26,20 @@ export const PROJECT_REPOSITORIES_COPY = {
 } as const;
 
 export const PROJECT_PLANS_COPY = {
-  addButton: `Add plan`,
-  addLabel: `Add an existing plan`,
-  addPlaceholder: `Select a plan`,
+  addButton: `Add plans`,
+  addButtonCountPrefix: `Add`,
+  addButtonCountSuffix: `plans`,
+  addEmpty: `No plans match.`,
+  addFailedPrefix: `Couldn't add`,
+  addPlaceholder: `Add existing plans…`,
+  addSearch: `Search plans…`,
   empty: `No plans in this project yet. Add an existing plan to start the order.`,
   heading: `Plans`,
+  inOtherProjectPrefix: `in`,
   menuAriaLabelPrefix: `Plan actions for`,
   moveDown: `Move down`,
   moveUp: `Move up`,
+  newPlanCopy: `Copy new-plan prompt`,
   openPlan: `Open plan`,
   remove: `Remove from project`,
 } as const;
@@ -47,4 +53,51 @@ export const PROJECT_PLAN_TASKS_COPY = {
   showAllSuffix: `tasks`,
   showFewer: `Show fewer`,
   toggleAriaLabelPrefix: `Tasks for`,
+} as const;
+
+export const PROJECT_FORM_COPY = {
+  cancel: `Cancel`,
+  createSubmit: `Create project`,
+  descriptionLabel: `Description (optional)`,
+  descriptionPlaceholder: `What this initiative is for and what done looks like`,
+  nameLabel: `Name`,
+  nameMissing: `Project name is required.`,
+  namePlaceholder: `Project name`,
+  repositoriesEmpty: `No repositories match.`,
+  repositoriesHint: `Plans in this project can run against any linked repository. You can change this later.`,
+  repositoriesLabel: `Repositories (optional)`,
+  repositoriesPlaceholder: `Link repositories`,
+  repositoriesSearch: `Search repositories…`,
+  saveSubmit: `Save changes`,
+} as const;
+
+export const PROJECTS_INDEX_COPY = {
+  addRepository: `Add repository`,
+  description: `Projects are initiatives: an ordered list of plans across one or more linked repositories. Each row shows how many of its plans are completed.`,
+  heading: `Projects`,
+  newProject: `New project`,
+} as const;
+
+export const PROJECT_CREATE_COPY = {
+  breadcrumb: `New project`,
+  createFailed: `Failed to create project.`,
+  heading: `New project`,
+  metaTitle: `New project`,
+} as const;
+
+export const PROJECT_EDIT_COPY = {
+  breadcrumb: `Edit`,
+  deleteFailed: `Failed to delete project.`,
+  headingPrefix: `Edit`,
+  updateFailed: `Failed to update project.`,
+} as const;
+
+export const PROJECT_DELETE_COPY = {
+  cancel: `Keep project`,
+  confirm: `Delete project`,
+  confirmDescription: `Its plans, tasks and their history are kept; they just stop belonging to a project.`,
+  confirmTitlePrefix: `Delete`,
+  description: `Removes the project from your workspace. Its plans are kept and become unassigned.`,
+  heading: `Delete project`,
+  trigger: `Delete project`,
 } as const;

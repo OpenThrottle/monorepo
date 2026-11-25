@@ -4,7 +4,11 @@ import * as React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/projects.$projectId.edit';
-import { UpdateProjectDocument } from '~/__generated__/graphql';
+import {
+  ProjectEditDeleteProjectDocument,
+  UpdateProjectDocument,
+} from '~/__generated__/graphql';
+import { PROJECT_DELETE_COPY } from '~/routing/projects/data/copy';
 import { buildRootMatch } from '~/testing/buildRootMatch';
 import { renderRoutesStub } from '~/testing/route-fixtures';
 
@@ -26,7 +30,6 @@ const mockProject = {
   description: 'Existing description',
   id: 'proj-1',
   name: 'Existing Project',
-  nxProjectName: 'openthrottle-developer',
   updatedAt: '2025-01-02T00:00:00Z',
 };
 
@@ -64,10 +67,13 @@ describe('routes/projects.$projectId.edit.tsx', () => {
         component.getByDisplayValue('Existing description'),
       ).toBeInTheDocument();
       expect(
-        component.getByDisplayValue('openthrottle-developer'),
+        component.getByRole('heading', { name: 'Edit Existing Project' }),
       ).toBeInTheDocument();
       expect(
         component.getByRole('button', { name: 'Save changes' }),
+      ).toBeInTheDocument();
+      expect(
+        component.getByRole('button', { name: PROJECT_DELETE_COPY.trigger }),
       ).toBeInTheDocument();
       expect(component.getByRole('link', { name: 'Cancel' })).toHaveAttribute(
         'href',
@@ -135,7 +141,6 @@ describe('routes/projects.$projectId.edit.tsx', () => {
       const formData = new FormData();
       formData.set('name', '  Renamed Project  ');
       formData.set('description', '  New description  ');
-      formData.set('nxProjectName', '');
 
       const request = new Request('http://localhost/projects/proj-1/edit', {
         body: formData,
@@ -158,7 +163,6 @@ describe('routes/projects.$projectId.edit.tsx', () => {
             description: 'New description',
             id: 'proj-1',
             name: 'Renamed Project',
-            nxProjectName: null,
           },
         },
       );
@@ -169,6 +173,58 @@ describe('routes/projects.$projectId.edit.tsx', () => {
 
       expect(result.status).toBe(302);
       expect(result.headers.get('location')).toBe('/projects/proj-1');
+    });
+
+    test('deletes the project and returns to the list on the delete intent', async () => {
+      mockExecuteGraphqlWithAuth.mockResolvedValue({ deleteProject: true });
+
+      const formData = new FormData();
+      formData.set('intent', 'deleteProject');
+
+      const request = new Request('http://localhost/projects/proj-1/edit', {
+        body: formData,
+        method: 'POST',
+      });
+
+      const result = await action({
+        context: createTestRouterContext(),
+        params: { projectId: 'proj-1' },
+        pattern: '/projects/:projectId/edit',
+        request,
+        url: new URL(request.url),
+      });
+
+      expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledWith(
+        request,
+        ProjectEditDeleteProjectDocument,
+        { input: { id: 'proj-1' } },
+      );
+      if (!(result instanceof Response)) {
+        throw new Error('expected the action to return a redirect Response');
+      }
+      expect(result.headers.get('location')).toBe('/projects');
+    });
+
+    test('returns the error when the delete fails', async () => {
+      mockExecuteGraphqlWithAuth.mockRejectedValue(new Error('denied'));
+
+      const formData = new FormData();
+      formData.set('intent', 'deleteProject');
+
+      const request = new Request('http://localhost/projects/proj-1/edit', {
+        body: formData,
+        method: 'POST',
+      });
+
+      const result = await action({
+        context: createTestRouterContext(),
+        params: { projectId: 'proj-1' },
+        pattern: '/projects/:projectId/edit',
+        request,
+        url: new URL(request.url),
+      });
+
+      expect(result).toEqual({ error: 'denied' });
     });
   });
 });

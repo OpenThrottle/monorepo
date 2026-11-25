@@ -5,6 +5,7 @@ import {
   PlanDetailInboxDocument,
   PlanDetailLedgerDocument,
   PlanDetailOutputChunksDocument,
+  PlanDetailProjectOptionsDocument,
   PlanDetailRunHistoryDocument,
   PlanDetailTagVocabularyDocument,
   PlanDetailWorkspaceRepositoriesDocument,
@@ -47,6 +48,7 @@ export const loadPlanDetail = async (
       models: Promise.resolve([]),
       outputChunks: Promise.resolve([]),
       plan: null,
+      projects: Promise.resolve([]),
       runHistory: Promise.resolve({ planRunAuditRows: [], planRunMetrics: [] }),
       tagVocabulary: Promise.resolve([]),
       tasks: [],
@@ -110,6 +112,16 @@ export const loadPlanDetail = async (
     { planId },
   ).then((result) => result.planOutputStreamChunks ?? []);
 
+  // The header's project picker is optional chrome, like the inbox: a failure
+  // leaves the badge and an empty picker rather than an error region.
+  const projects = executeGraphqlWithAuth(
+    request,
+    PlanDetailProjectOptionsDocument,
+    {},
+  )
+    .then((result) => result.projects)
+    .catch(() => []);
+
   const runHistory = executeGraphqlWithAuth(
     request,
     PlanDetailRunHistoryDocument,
@@ -142,6 +154,7 @@ export const loadPlanDetail = async (
     ledger,
     models,
     outputChunks,
+    projects,
     runHistory,
     tagVocabulary,
     workspaceRepositories,
@@ -157,6 +170,7 @@ export const loadPlanDetail = async (
     models,
     outputChunks,
     plan: critical.plan ?? null,
+    projects,
     runHistory,
     tagVocabulary,
     tasks: critical.tasksByPlanId ?? [],

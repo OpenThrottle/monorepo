@@ -33,3 +33,16 @@ export const getUnlinkedRepositories = <TRepository extends { id: string }>(
   const linkedIds = new Set(linked.map((repository) => repository.id));
   return all.filter((repository) => !linkedIds.has(repository.id));
 };
+
+/**
+ * @description The prompt that files a new plan straight into this project.
+ * Plans are authored through the OpenThrottle MCP rather than a web form, so the
+ * project page hands the user a prompt whose `create_plan` call carries the
+ * project id.
+ */
+export const buildNewPlanPrompt = (project: {
+  readonly id: string;
+  readonly name: string;
+}): string => {
+  return `Create a plan in the OpenThrottle project "${project.name}" (pass projectId: ${project.id} to create_plan). `;
+};

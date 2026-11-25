@@ -1,25 +1,48 @@
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import { toErrorMessageOr } from '@openthrottle/nodejs-utils';
+import {
+  executeGraphqlWithAuth,
+  parseFormData,
+} from '@openthrottle/react-router-graphql';
 import type { GlobalLayoutBreadcrumbsHandle } from '@openthrottle/react-router-ui-global';
-import { GlobalScreen } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalHeading,
+  GlobalScreen,
+} from '@openthrottle/react-router-ui-global';
 import { GlobalErrorBoundary } from '@openthrottle/react-router-ui-global';
 import { mergeRouteModuleMeta } from '@openthrottle/react-router-utils';
+import { FolderPlusIcon } from 'lucide-react';
 import * as React from 'react';
 import { redirect } from 'react-router';
+import { z } from 'zod/v3';
 
 import type { Route } from '@/app/routes/+types/projects.create';
-import { CreateProjectDocument } from '~/__generated__/graphql';
+import {
+  CreateProjectDocument,
+  GetProjectCreateOptionsDocument,
+  ProjectCreateLinkRepositoryDocument,
+} from '~/__generated__/graphql';
+import { CreateProjectInputSchema } from '~/__generated__/schemas';
 import { SITE_TITLE } from '~/global/config/settings';
 import { ProjectForm } from '~/routing/projects/components/ProjectForm';
+import {
+  PROJECT_CREATE_COPY,
+  PROJECT_FORM_COPY,
+} from '~/routing/projects/data/copy';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
 export const handle: GlobalLayoutBreadcrumbsHandle<HandleData> = {
-  breadcrumb: (_match) => 'Create',
+  breadcrumb: (_match) => PROJECT_CREATE_COPY.breadcrumb,
   links: (_match) => [{ children: 'Projects', to: '/projects' }],
 };
 
-export const loader = async (_args: Route.LoaderArgs) => {
-  return {};
+export const loader = async (args: Route.LoaderArgs) => {
+  const { workspaceRepositories } = await executeGraphqlWithAuth(
+    args.request,
+    GetProjectCreateOptionsDocument,
+  );
+
+  return { repositories: workspaceRepositories };
 };
 
 export const links: Route.LinksFunction = () => {
@@ -27,13 +50,14 @@ export const links: Route.LinksFunction = () => {
 };
 
 export const meta: Route.MetaFunction = mergeRouteModuleMeta((_args) => {
-  return [{ title: `Create project | ${SITE_TITLE}` }];
+  return [{ title: `${PROJECT_CREATE_COPY.metaTitle} | ${SITE_TITLE}` }];
 });
 
 export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
-  const { actionData, loaderData: _l, matches: _m, params: _p } = props;
+  const { actionData, loaderData, matches: _m, params: _p } = props;
+  const { repositories } = loaderData;
 
   // Hooks
 
@@ -49,51 +73,63 @@ export default function Component(
 
   return (
     <GlobalScreen>
-      <ProjectForm actionData={actionData} />
+      <GlobalHeading
+        heading="h1"
+        icon={FolderPlusIcon}
+        title={PROJECT_CREATE_COPY.heading}
+      />
+      <ProjectForm actionData={actionData} repositories={repositories} />
     </GlobalScreen>
   );
 }
 
 export const action = async (args: Route.ActionArgs) => {
   const formData = await args.request.formData();
-  const name = formData.get('name');
 
-  if (typeof name !== 'string' || !name.trim()) {
-    return { error: 'Project name is required.' };
+  // `nxProjectName` is deprecated (projects are initiatives), so the form no
+  // longer offers it and strict parsing rejects it.
+  const parsed = parseFormData(
+    formData,
+    CreateProjectInputSchema()
+      .omit({ nxProjectName: true })
+      .extend({ repositoryIds: z.array(z.string()).default([]) }),
+    { lists: ['repositoryIds'] },
+  );
+  if (!parsed.success) {
+    return { error: PROJECT_FORM_COPY.nameMissing };
   }
 
-  const description = formData.get('description');
-  const nxProjectName = formData.get('nxProjectName');
-
-  const input = {
-    name: name.trim(),
-    ...(typeof description === 'string' &&
-      description.trim() && { description: description.trim() }),
-    ...(typeof nxProjectName === 'string' &&
-      nxProjectName.trim() && { nxProjectName: nxProjectName.trim() }),
-  };
+  const { description, name, repositoryIds } = parsed.data;
 
   try {
     const result = await executeGraphqlWithAuth(
       args.request,
       CreateProjectDocument,
-      { input },
+      { input: { description: description ?? null, name } },
     );
+    const projectId = result.createProject?.id;
 
-    if (!result.createProject?.id) {
-      return { error: 'Failed to create project.' };
+    if (!projectId) {
+      return { error: PROJECT_CREATE_COPY.createFailed };
     }
 
-    return redirect(`/projects/${result.createProject.id}`);
+    // The project exists now, so a failed link must not turn into an error
+    // that invites a duplicate create: the project page shows which links
+    // landed and can link the rest.
+    await Promise.allSettled(
+      repositoryIds.map((repositoryId) => {
+        return executeGraphqlWithAuth(
+          args.request,
+          ProjectCreateLinkRepositoryDocument,
+          { input: { projectId, repositoryId } },
+        );
+      }),
+    );
+
+    return redirect(`/projects/${projectId}`);
   } catch (error) {
-    const isError = error instanceof Error;
-    const message = isError ? error.message : 'Failed to create project.';
-
-    return { error: message };
+    return { error: toErrorMessageOr(error, PROJECT_CREATE_COPY.createFailed) };
   }
-
-  // 🚨 Default to invalid action error when no intent is provided.
-  // throw new Error('Invalid intent');
 };
 
 export const ErrorBoundary = GlobalErrorBoundary;

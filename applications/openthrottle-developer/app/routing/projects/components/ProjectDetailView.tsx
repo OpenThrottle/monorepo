@@ -147,7 +147,7 @@ export const ProjectDetailView = (
           <h2 className="text-lg" id="project-plans-heading">
             {PROJECT_PLANS_COPY.heading}
           </h2>
-          <ProjectPlanAdd plans={availablePlans} />
+          <ProjectPlanAdd plans={availablePlans} project={project} />
         </div>
         <ProjectPlansList
           offset={pageOffset}

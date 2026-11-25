@@ -12419,6 +12419,47 @@ export type PlanDetailDetachHookMutation = {
   detachHook: boolean;
 };
 
+export type PlanDetailProjectOptionsQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type PlanDetailProjectOptionsQuery = {
+  __typename?: 'Query';
+  projects: Array<{ __typename?: 'ProjectObject'; id: string; name: string }>;
+};
+
+export type PlanProjectOptionFragment = {
+  __typename?: 'ProjectObject';
+  id: string;
+  name: string;
+};
+
+export type PlanDetailAddPlanToProjectMutationVariables = Exact<{
+  input: AddPlanToProjectInput;
+}>;
+
+export type PlanDetailAddPlanToProjectMutation = {
+  __typename?: 'Mutation';
+  addPlanToProject: {
+    __typename?: 'PlanObject';
+    id: string;
+    projectId?: string | null;
+  };
+};
+
+export type PlanDetailRemovePlanFromProjectMutationVariables = Exact<{
+  input: RemovePlanFromProjectInput;
+}>;
+
+export type PlanDetailRemovePlanFromProjectMutation = {
+  __typename?: 'Mutation';
+  removePlanFromProject: {
+    __typename?: 'PlanObject';
+    id: string;
+    projectId?: string | null;
+  };
+};
+
 export type GetTaskByIdQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
@@ -12946,6 +12987,11 @@ export type GetProjectByIdQuery = {
     projectId?: string | null;
     status: string;
     title: string;
+    projectRelation?: {
+      __typename?: 'ProjectObject';
+      id: string;
+      name: string;
+    } | null;
   }>;
   project?: {
     __typename?: 'ProjectObject';
@@ -13044,6 +13090,19 @@ export type ProjectRepositoryRowFragment = {
   normalizedRemoteUrl?: string | null;
 };
 
+export type ProjectPlanCandidateFragment = {
+  __typename?: 'PlanObject';
+  id: string;
+  projectId?: string | null;
+  status: string;
+  title: string;
+  projectRelation?: {
+    __typename?: 'ProjectObject';
+    id: string;
+    name: string;
+  } | null;
+};
+
 export type ProjectPlanRowFragment = {
   __typename?: 'PlanObject';
   id: string;
@@ -13114,7 +13173,6 @@ export type GetProjectForEditQuery = {
     description?: string | null;
     id: string;
     name: string;
-    nxProjectName?: string | null;
     updatedAt: any;
   } | null;
 };
@@ -13130,9 +13188,17 @@ export type UpdateProjectMutation = {
     description?: string | null;
     id: string;
     name: string;
-    nxProjectName?: string | null;
     updatedAt: any;
   } | null;
+};
+
+export type ProjectEditDeleteProjectMutationVariables = Exact<{
+  input: DeleteProjectInput;
+}>;
+
+export type ProjectEditDeleteProjectMutation = {
+  __typename?: 'Mutation';
+  deleteProject: boolean;
 };
 
 export type ProjectCardFragment = {
@@ -13172,6 +13238,21 @@ export type GetProjectsQuery = {
   }>;
 };
 
+export type GetProjectCreateOptionsQueryVariables = Exact<{
+  [key: string]: never;
+}>;
+
+export type GetProjectCreateOptionsQuery = {
+  __typename?: 'Query';
+  workspaceRepositories: Array<{
+    __typename?: 'RepositoryObject';
+    defaultBranch?: string | null;
+    id: string;
+    name: string;
+    normalizedRemoteUrl?: string | null;
+  }>;
+};
+
 export type CreateProjectMutationVariables = Exact<{
   input: CreateProjectInput;
 }>;
@@ -13184,8 +13265,20 @@ export type CreateProjectMutation = {
     description?: string | null;
     id: string;
     name: string;
-    nxProjectName?: string | null;
     updatedAt: any;
+  };
+};
+
+export type ProjectCreateLinkRepositoryMutationVariables = Exact<{
+  input: LinkProjectRepositoryInput;
+}>;
+
+export type ProjectCreateLinkRepositoryMutation = {
+  __typename?: 'Mutation';
+  linkProjectRepository: {
+    __typename?: 'ProjectRepositoryObject';
+    projectId: string;
+    repositoryId: string;
   };
 };
 
@@ -20505,6 +20598,26 @@ export const PlanInboxMessageFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<PlanInboxMessageFragment, unknown>;
+export const PlanProjectOptionFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanProjectOption' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ProjectObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<PlanProjectOptionFragment, unknown>;
 export const PlanTaskRowFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -20950,6 +21063,39 @@ export const ProjectTagChipFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<ProjectTagChipFragment, unknown>;
+export const ProjectPlanCandidateFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ProjectPlanCandidate' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'projectRelation' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<ProjectPlanCandidateFragment, unknown>;
 export const ProjectPlanRowFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -32522,6 +32668,162 @@ export const PlanDetailDetachHookDocument = {
   PlanDetailDetachHookMutation,
   PlanDetailDetachHookMutationVariables
 >;
+export const PlanDetailProjectOptionsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'PlanDetailProjectOptions' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'projects' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'PlanProjectOption' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanProjectOption' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ProjectObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  PlanDetailProjectOptionsQuery,
+  PlanDetailProjectOptionsQueryVariables
+>;
+export const PlanDetailAddPlanToProjectDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'PlanDetailAddPlanToProject' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'AddPlanToProjectInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'addPlanToProject' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  PlanDetailAddPlanToProjectMutation,
+  PlanDetailAddPlanToProjectMutationVariables
+>;
+export const PlanDetailRemovePlanFromProjectDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'PlanDetailRemovePlanFromProject' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'RemovePlanFromProjectInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'removePlanFromProject' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  PlanDetailRemovePlanFromProjectMutation,
+  PlanDetailRemovePlanFromProjectMutationVariables
+>;
 export const GetTaskByIdDocument = {
   kind: 'Document',
   definitions: [
@@ -33902,10 +34204,10 @@ export const GetProjectByIdDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'ProjectPlanCandidate' },
+                },
               ],
             },
           },
@@ -34048,6 +34350,34 @@ export const GetProjectByIdDocument = {
             kind: 'Field',
             name: { kind: 'Name', value: 'normalizedRemoteUrl' },
           },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ProjectPlanCandidate' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'projectRelation' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
         ],
       },
     },
@@ -34550,10 +34880,6 @@ export const GetProjectForEditDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'description' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'nxProjectName' },
-                },
                 { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
               ],
             },
@@ -34611,10 +34937,6 @@ export const UpdateProjectDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'description' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'nxProjectName' },
-                },
                 { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
               ],
             },
@@ -34626,6 +34948,54 @@ export const UpdateProjectDocument = {
 } as unknown as DocumentNode<
   UpdateProjectMutation,
   UpdateProjectMutationVariables
+>;
+export const ProjectEditDeleteProjectDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'ProjectEditDeleteProject' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'DeleteProjectInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'deleteProject' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  ProjectEditDeleteProjectMutation,
+  ProjectEditDeleteProjectMutationVariables
 >;
 export const GetProjectsDocument = {
   kind: 'Document',
@@ -34695,6 +35065,57 @@ export const GetProjectsDocument = {
     },
   ],
 } as unknown as DocumentNode<GetProjectsQuery, GetProjectsQueryVariables>;
+export const GetProjectCreateOptionsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getProjectCreateOptions' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'workspaceRepositories' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'ProjectRepositoryRow' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ProjectRepositoryRow' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'RepositoryObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'defaultBranch' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'normalizedRemoteUrl' },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetProjectCreateOptionsQuery,
+  GetProjectCreateOptionsQueryVariables
+>;
 export const CreateProjectDocument = {
   kind: 'Document',
   definitions: [
@@ -34741,10 +35162,6 @@ export const CreateProjectDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'description' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'nxProjectName' },
-                },
                 { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
               ],
             },
@@ -34756,6 +35173,64 @@ export const CreateProjectDocument = {
 } as unknown as DocumentNode<
   CreateProjectMutation,
   CreateProjectMutationVariables
+>;
+export const ProjectCreateLinkRepositoryDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'ProjectCreateLinkRepository' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'LinkProjectRepositoryInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'linkProjectRepository' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'repositoryId' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  ProjectCreateLinkRepositoryMutation,
+  ProjectCreateLinkRepositoryMutationVariables
 >;
 export const GetPromptDocument = {
   kind: 'Document',

@@ -15,11 +15,13 @@ import type {
 import {
   PlanDetailAddHookDocument,
   PlanDetailAddPlanTagDocument,
+  PlanDetailAddPlanToProjectDocument,
   PlanDetailDetachHookDocument,
   PlanDetailEnqueuePlanRunDocument,
   PlanDetailEvaluatePlanRulesDocument,
   PlanDetailForceSettlePlanRunDocument,
   PlanDetailPostPlanMessageDocument,
+  PlanDetailRemovePlanFromProjectDocument,
   PlanDetailRemovePlanTagDocument,
   PlanDetailReschedulePlanRunDocument,
   PlanDetailRunConfigDocument,
@@ -33,6 +35,7 @@ import {
 import {
   AddHookInputSchema,
   AddPlanTagInputSchema,
+  AddPlanToProjectInputSchema,
   CancelPlanRunInputSchema,
   DetachHookInputSchema,
   EnqueuePlanRunInputSchema,
@@ -221,6 +224,57 @@ export const withdrawPlanMessage = async (
         error,
         'Failed to withdraw message.',
       ),
+    };
+  }
+};
+
+type PlanProjectActionResult =
+  { readonly planProjectError: string } | { readonly planProjectUpdated: true };
+
+/**
+ * @description Puts the plan in a project, or moves it there from its current
+ * one: the server appends it to the end of the target project's order.
+ */
+export const assignPlanProject = async (
+  args: Route.ActionArgs,
+  planId: string,
+  formData: FormData,
+): Promise<PlanProjectActionResult> => {
+  const parsed = parseFormData(
+    formData,
+    AddPlanToProjectInputSchema().omit({ planId: true }),
+  );
+  if (!parsed.success) {
+    return { planProjectError: parsed.error };
+  }
+  try {
+    await executeGraphqlWithAuth(
+      args.request,
+      PlanDetailAddPlanToProjectDocument,
+      { input: { planId, projectId: parsed.data.projectId } },
+    );
+    return { planProjectUpdated: true };
+  } catch (error) {
+    return {
+      planProjectError: toErrorMessageOr(error, 'Failed to assign project.'),
+    };
+  }
+};
+
+export const removePlanProject = async (
+  args: Route.ActionArgs,
+  planId: string,
+): Promise<PlanProjectActionResult> => {
+  try {
+    await executeGraphqlWithAuth(
+      args.request,
+      PlanDetailRemovePlanFromProjectDocument,
+      { input: { planId } },
+    );
+    return { planProjectUpdated: true };
+  } catch (error) {
+    return {
+      planProjectError: toErrorMessageOr(error, 'Failed to remove project.'),
     };
   }
 };

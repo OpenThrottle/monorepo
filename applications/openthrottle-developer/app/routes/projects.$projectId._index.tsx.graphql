@@ -21,10 +21,7 @@ query getProjectById($id: ID!, $limit: Int!, $offset: Int!) {
   # plans list is bounded; a plan already in this project is filtered out in
   # the loader.
   availablePlans: plans(limit: 500) {
-    id
-    projectId
-    status
-    title
+    ...ProjectPlanCandidate
   }
 
   project(id: $id) {
@@ -75,6 +72,17 @@ fragment ProjectRepositoryRow on RepositoryObject {
   id
   name
   normalizedRemoteUrl
+}
+
+fragment ProjectPlanCandidate on PlanObject {
+  id
+  projectId
+  projectRelation {
+    id
+    name
+  }
+  status
+  title
 }
 
 fragment ProjectPlanRow on PlanObject {

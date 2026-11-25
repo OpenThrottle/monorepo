@@ -1,10 +1,22 @@
+query getProjectCreateOptions {
+  workspaceRepositories {
+    ...ProjectRepositoryRow
+  }
+}
+
 mutation createProject($input: CreateProjectInput!) {
   createProject(input: $input) {
     createdAt
     description
     id
     name
-    nxProjectName
     updatedAt
+  }
+}
+
+mutation ProjectCreateLinkRepository($input: LinkProjectRepositoryInput!) {
+  linkProjectRepository(input: $input) {
+    projectId
+    repositoryId
   }
 }

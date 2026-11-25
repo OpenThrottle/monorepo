@@ -82,6 +82,7 @@ export const buildPlanDetailLoaderData = (
     models: Promise.resolve([]),
     outputChunks: Promise.resolve([]),
     plan: null,
+    projects: Promise.resolve([]),
     runHistory: Promise.resolve({ planRunAuditRows: [], planRunMetrics: [] }),
     tagVocabulary: Promise.resolve([]),
     tasks: [],

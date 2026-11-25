@@ -488,3 +488,30 @@ mutation PlanDetailAddHook($input: AddHookInput!) {
 mutation PlanDetailDetachHook($input: DetachHookInput!) {
   detachHook(input: $input)
 }
+
+# Candidates for the header's project picker. Deferred like every non-critical
+# key, and degraded to [] on failure: the picker is optional chrome.
+query PlanDetailProjectOptions {
+  projects {
+    ...PlanProjectOption
+  }
+}
+
+fragment PlanProjectOption on ProjectObject {
+  id
+  name
+}
+
+mutation PlanDetailAddPlanToProject($input: AddPlanToProjectInput!) {
+  addPlanToProject(input: $input) {
+    id
+    projectId
+  }
+}
+
+mutation PlanDetailRemovePlanFromProject($input: RemovePlanFromProjectInput!) {
+  removePlanFromProject(input: $input) {
+    id
+    projectId
+  }
+}
