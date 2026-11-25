@@ -46,10 +46,11 @@ try {
 await sleep(250);
 ```
 
-| Export            | What it does                                                                  |
-| ----------------- | ----------------------------------------------------------------------------- |
-| `isRecord`        | Non-null, non-array object → `Record<string, unknown>`                        |
-| `isStringArray`   | Array whose every element is a string                                         |
-| `isErrorWithCode` | `Error` with a string `code` (Node system errors and the like)                |
-| `toErrorMessage`  | `error.message` or `String(error)`; an optional fallback replaces a blank one |
-| `sleep`           | Resolves after `ms`; immediately for `ms <= 0`                                |
+| Export             | What it does                                                     |
+| ------------------ | ---------------------------------------------------------------- |
+| `isRecord`         | Non-null, non-array object → `Record<string, unknown>`           |
+| `isStringArray`    | Array whose every element is a string                            |
+| `isErrorWithCode`  | `Error` with a string `code` (Node system errors and the like)   |
+| `toErrorMessage`   | `error.message` or `String(error)`                               |
+| `toErrorMessageOr` | `toErrorMessage`, but a blank message becomes the given fallback |
+| `sleep`            | Resolves after `ms`; immediately for `ms <= 0`                   |

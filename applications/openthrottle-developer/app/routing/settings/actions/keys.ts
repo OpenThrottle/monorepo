@@ -1,4 +1,4 @@
-import { toErrorMessage } from '@openthrottle/nodejs-utils';
+import { toErrorMessageOr } from '@openthrottle/nodejs-utils';
 import {
   executeGraphqlWithAuth,
   parseFormData,
@@ -52,7 +52,7 @@ export const createServiceAccountCredential = async (
       token: result.token,
     };
   } catch (error) {
-    return { error: toErrorMessage(error, 'Failed to create credential.') };
+    return { error: toErrorMessageOr(error, 'Failed to create credential.') };
   }
 };
 
@@ -77,6 +77,6 @@ export const revokeServiceAccountCredential = async (
     );
     return { ok: true };
   } catch (error) {
-    return { error: toErrorMessage(error, 'Failed to revoke credential.') };
+    return { error: toErrorMessageOr(error, 'Failed to revoke credential.') };
   }
 };

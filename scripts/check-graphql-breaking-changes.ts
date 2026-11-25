@@ -14,6 +14,7 @@
 import { fileURLToPath } from 'node:url';
 
 import { CriticalityLevel, diff } from '@graphql-inspector/core';
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import { buildSchema } from 'graphql';
 
 import { run } from './utils/exec.ts';
@@ -68,7 +69,7 @@ export const checkSchemaBreakingChanges = async (
       )
       .map((change) => ({ message: change.message, path: change.path }));
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = toErrorMessage(error);
 
     return { kind: 'invalid-schema', message };
   }

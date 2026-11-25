@@ -1,9 +1,10 @@
-import type { DataTableColumnDef } from '@openthrottle/react-router-shadcn';
 /**
  * @description Column definitions (and their row-id / formatting helpers) for
  * the queue-detail jobs table. Hoisted out of QueueJobsTable per
  * component-primitive-shape R4 so the component stays UI-focused.
  */
+
+import type { DataTableColumnDef } from '@openthrottle/react-router-shadcn';
 import { OpenThrottleClipboard } from '@openthrottle/react-router-ui';
 import * as React from 'react';
 import { Link } from 'react-router';

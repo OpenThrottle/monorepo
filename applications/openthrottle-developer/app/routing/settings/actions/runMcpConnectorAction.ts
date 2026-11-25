@@ -1,4 +1,4 @@
-import { toErrorMessage } from '@openthrottle/nodejs-utils';
+import { toErrorMessageOr } from '@openthrottle/nodejs-utils';
 import {
   coerceBoolean,
   executeGraphqlWithAuth,
@@ -58,7 +58,7 @@ export const runMcpConnectorAction = async (
         intent: 'connect',
       };
     } catch (error) {
-      return { error: toErrorMessage(error, 'Failed to connect.') };
+      return { error: toErrorMessageOr(error, 'Failed to connect.') };
     }
   }
 
@@ -79,7 +79,7 @@ export const runMcpConnectorAction = async (
       );
       return { ok: true };
     } catch (error) {
-      return { error: toErrorMessage(error, 'Failed to update connection.') };
+      return { error: toErrorMessageOr(error, 'Failed to update connection.') };
     }
   }
 
@@ -92,7 +92,7 @@ export const runMcpConnectorAction = async (
       );
       return { ok: true };
     } catch (error) {
-      return { error: toErrorMessage(error, 'Failed to disconnect.') };
+      return { error: toErrorMessageOr(error, 'Failed to disconnect.') };
     }
   }
 

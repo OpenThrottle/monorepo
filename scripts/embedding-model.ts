@@ -20,6 +20,8 @@ import { dirname, join } from 'node:path';
 import { Readable, Transform } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
+
 export interface ModelFile {
   readonly path: string;
   readonly sha256: string;
@@ -90,10 +92,6 @@ export const MODEL_FILES: readonly ModelFile[] = [
     sha256: 'd7e0000bcc80134debd2222220427e6bf5fa20a669f40a0d0d1409cc18e0a9bc',
   },
 ];
-
-const describeError = (error: unknown): string => {
-  return error instanceof Error ? error.message : String(error);
-};
 
 /**
  * @description The weights cache directory: `--dir`, else `EMBEDDING_MODELS_DIR`, else
@@ -266,7 +264,7 @@ export const fetchModelFiles = async (
       ok: true,
     };
   } catch (error) {
-    return { ok: false, reason: describeError(error) };
+    return { ok: false, reason: toErrorMessage(error) };
   }
 };
 
@@ -306,6 +304,6 @@ export const verifyEmbedder = async (
       await embedder.close();
     }
   } catch (error) {
-    return { ok: false, reason: describeError(error) };
+    return { ok: false, reason: toErrorMessage(error) };
   }
 };

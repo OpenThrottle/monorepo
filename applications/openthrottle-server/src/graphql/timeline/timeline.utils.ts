@@ -1,14 +1,15 @@
-import {
-  SCHEDULED_LANE_KEY,
-  SKILLS_LANE_KEY,
-  UNATTRIBUTED_LANE_KEY,
-} from './timeline.constants.ts';
 /**
  * @description Pure lane-key derivation for the workstream timeline. Every span
  * and marker kind must resolve a lane under every grouping mode; rows with
  * nothing to group on collapse into one shared "Unattributed" lane rather than
  * N single-row lanes. Kept out of the resolver so it is testable without SQL.
  */
+
+import {
+  SCHEDULED_LANE_KEY,
+  SKILLS_LANE_KEY,
+  UNATTRIBUTED_LANE_KEY,
+} from './timeline.constants.ts';
 import type { TimelineLaneGroupingValue } from './timeline.enum.ts';
 import { TIMELINE_LANE_GROUPING } from './timeline.enum.ts';
 import type {

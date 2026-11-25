@@ -1,4 +1,4 @@
-import { toErrorMessage } from '@openthrottle/nodejs-utils';
+import { toErrorMessageOr } from '@openthrottle/nodejs-utils';
 import { isGraphqlResponseError } from '@openthrottle/react-router-graphql';
 
 import { PLAN_SCHEDULE_CONFIRM_COPY } from '~/routing/plans/data/data.copy';
@@ -114,6 +114,6 @@ export const readPlanScheduleFailure = (
     case PLAN_SCHEDULE_CONFLICT_CODE.PLAN_NOT_SCHEDULABLE:
       return { message: PLAN_SCHEDULE_CONFIRM_COPY.conflictNotSchedulable };
     default:
-      return { message: toErrorMessage(error, fallback) };
+      return { message: toErrorMessageOr(error, fallback) };
   }
 };

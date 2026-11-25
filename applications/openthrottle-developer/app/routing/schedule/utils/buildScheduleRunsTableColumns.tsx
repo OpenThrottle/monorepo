@@ -1,9 +1,10 @@
-import type { DataTableColumnDef } from '@openthrottle/react-router-shadcn';
 /**
  * @description Column definitions for {@link ScheduleRunsTable}. Hoisted from the
  * component file per component-primitive-shape R4 (module-scope helpers live in
  * the sibling utils/ folder) so the table component stays UI-focused.
  */
+
+import type { DataTableColumnDef } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 import { Link } from 'react-router';
 

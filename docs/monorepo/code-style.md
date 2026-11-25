@@ -57,6 +57,7 @@ lint but never had a rule file of their own:
 | [Route primitive shape](#route-and-component-shape)                             | **Warned**                              | `openthrottle/route-primitive-shape`, `openthrottle/pre-hooks-unpack` |
 | [Hook primitive shape](#hook-shape)                                             | **Enforced**                            | `openthrottle/hook-primitive-shape` + `audit:hook-shape`              |
 | [Import order](#import-order)                                                   | **Warned**                              | `simple-import-sort/imports`, `simple-import-sort/exports`            |
+| [File header comes first](#file-header-comes-first)                             | **Enforced** (autofix)                  | `openthrottle/file-header-first`                                      |
 | [Anti-flake test rules](#anti-flake-test-rules)                                 | **Enforced**                            | `openthrottle/no-test-sleep` and four siblings; Vitest `retry: 0`     |
 | [Agent-safety rules](#agent-safety-rules)                                       | **Enforced**                            | `openthrottle/mcp-tool-registration` and two siblings                 |
 | [Discriminated unions](#discriminated-unions)                                   | Honor system                            | —                                                                     |
@@ -236,8 +237,12 @@ A guard that deliberately behaves differently, for example one that lets
 arrays through, keeps a local copy under a name that says so (`isObjectLike`),
 with a `@description` explaining why. The rule exempts the package itself,
 `tools/dotfiles` (nodejs-utils depends on it, so the reverse edge would be a
-cycle) and every `scripts/` folder, because some scripts run before
-`pnpm install` or as agent hooks and must stay dependency-free.
+cycle) and a short, file-by-file list of root scripts that run before
+`pnpm install` (worktree create, heal and teardown, and what they import),
+under bare `node --experimental-strip-types`, or as agent hooks, and so must
+stay dependency-free. Every other script, root or nested, imports the helpers:
+add a file to that list in `tools/dotfiles/src/index.ts` only when it joins
+one of those three groups.
 
 ## Types
 
@@ -494,6 +499,37 @@ always hoisted to the top of their chunk. Their order _relative to each other_ i
 so dependency-ordered registration blocks — the code-first GraphQL `*.enum` → `*.object` →
 `*.input` modules, and `main.ts`'s `./load-env` — survive intact. Imports that previously sat
 above a side-effect import will end up below it.
+
+### File header comes first
+
+**Enforced** by `openthrottle/file-header-first` at `error`, autofixable with `eslint --fix`.
+
+A file-level `/** … */` header sits above the first import. A codemod that prepends an
+import to a file that opens with a header pushes the header down between two imports, where
+it documents nothing — one did exactly that to 14 files. `simple-import-sort` cannot catch
+it: it sorts imports and leaves comments where they are.
+
+```ts
+// Wrong
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
+/**
+ * @description What this file does.
+ */
+
+import { join } from 'node:path';
+
+// Right
+/**
+ * @description What this file does.
+ */
+
+import { toErrorMessage } from '@openthrottle/nodejs-utils';
+import { join } from 'node:path';
+```
+
+The rule fires only on a JSDoc block whose next statement is another import, the one place a
+JSDoc block can document nothing. A plain `/* … */` or `//` comment between imports is left
+alone, as is a JSDoc block on a declaration.
 
 ### `interface extends` over `&`
 

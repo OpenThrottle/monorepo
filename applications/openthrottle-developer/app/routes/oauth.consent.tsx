@@ -1,4 +1,4 @@
-import { toErrorMessage } from '@openthrottle/nodejs-utils';
+import { toErrorMessageOr } from '@openthrottle/nodejs-utils';
 import {
   getAuthTokenFromCookie,
   getLoginRedirectFromRequest,
@@ -133,7 +133,7 @@ export const action = async (args: Route.ActionArgs) => {
     return redirect(result.decideOAuthAuthorization.redirectUrl);
   } catch (error) {
     return data(
-      { error: toErrorMessage(error, 'Could not record your decision.') },
+      { error: toErrorMessageOr(error, 'Could not record your decision.') },
       400,
     );
   }

@@ -17,6 +17,7 @@ import { asConstEnumShape } from './rules/asConstEnumShape.ts';
 import { componentPrimitiveShape } from './rules/componentPrimitiveShape.ts';
 import { dataFileShape } from './rules/dataFileShape.ts';
 import { disableRequiresReason } from './rules/disableRequiresReason.ts';
+import { fileHeaderFirst } from './rules/fileHeaderFirst.ts';
 import { hookPrimitiveShape } from './rules/hookPrimitiveShape.ts';
 import { longStringTemplateLiteral } from './rules/longStringTemplateLiteral.ts';
 import { mcpToolRegistration } from './rules/mcpToolRegistration.ts';
@@ -288,6 +289,7 @@ export const eslintConfig = tslint.config([
           'component-primitive-shape': componentPrimitiveShape,
           'data-file-shape': dataFileShape,
           'disable-requires-reason': disableRequiresReason,
+          'file-header-first': fileHeaderFirst,
           'hook-primitive-shape': hookPrimitiveShape,
           'long-string-template-literal': longStringTemplateLiteral,
           'mcp-tool-registration': mcpToolRegistration,
@@ -575,19 +577,51 @@ export const eslintConfig = tslint.config([
     },
   },
   /**
+   * A file-level JSDoc header stays above the first import. A codemod that
+   * prepends an import pushes the header between two imports, and
+   * simple-import-sort, which sorts imports and leaves comments alone, cannot
+   * see it. Autofixable.
+   */
+  {
+    files: ['**/*.{cjs,js,jsx,mjs,ts,tsx}'],
+    rules: {
+      'openthrottle/file-header-first': 'error',
+    },
+  },
+  /**
    * The small universal helpers (isRecord, isStringArray, isErrorWithCode,
    * toErrorMessage, sleep) are imported from @openthrottle/nodejs-utils, never
    * re-declared. Exempt: the package itself; tools/dotfiles, which it depends
-   * on (the reverse edge is a cycle); and every `scripts/` folder, since some
-   * scripts run before `pnpm install` or as agent hooks and must stay
-   * dependency-free.
+   * on (the reverse edge is a cycle: nodejs-utils' own eslint and vite configs
+   * import dotfiles, so the edge is in the Nx graph whatever its tsconfig says,
+   * and a dotfiles -> nodejs-utils import fails enforce-module-boundaries and
+   * the task graph alike); and the root scripts that run before
+   * `pnpm install` (worktree create/heal/teardown and what they import), under
+   * bare `node --experimental-strip-types`, or as agent hooks, which must stay
+   * dependency-free. That last list is by file, not `scripts/`, which would
+   * also exempt every nested `scripts/` folder: a root script that only runs
+   * after install imports the helpers like any other code.
    */
   {
     files: ['**/*.{ts,tsx}'],
     rules: {
       'openthrottle/prefer-nodejs-utils': [
         'error',
-        { allow: ['packages/nodejs-utils/', 'tools/dotfiles/', 'scripts/'] },
+        {
+          allow: [
+            'packages/nodejs-utils/',
+            'tools/dotfiles/',
+            'scripts/antigravity-deny-hook.ts',
+            'scripts/teardown_worktree.ts',
+            'scripts/utils/agent-checkout-registrations.ts',
+            'scripts/utils/claude-plugins.ts',
+            'scripts/utils/codex-trust.ts',
+            'scripts/utils/env.ts',
+            'scripts/utils/worktree-compose.ts',
+            'scripts/worktree_prune_queues.ts',
+            'scripts/worktree_serve.ts',
+          ],
+        },
       ],
     },
   },
