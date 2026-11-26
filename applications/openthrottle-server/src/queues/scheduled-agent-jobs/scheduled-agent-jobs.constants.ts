@@ -45,3 +45,15 @@ export const SCHEDULED_AGENT_JOBS_DEFAULT_TIMEOUT_MS = 15 * 60_000;
 export const SCHEDULED_AGENT_JOB_OUTPUT_SOURCE = 'agent';
 /** Namespace prefix of every advisory directory-lock key this feature takes. */
 export const SCHEDULED_AGENT_JOBS_LOCK_KEY_PREFIX = 'scheduled-agent-jobs:dir:';
+
+/**
+ * @description How many refused tool calls a run's error message names before it summarises the
+ * rest as "and N more".
+ */
+export const SCHEDULED_AGENT_JOB_DENIALS_LISTED = 3;
+
+/**
+ * @description Longest command text a run's error message quotes per refused tool call; the full
+ * command is in the run log.
+ */
+export const SCHEDULED_AGENT_JOB_DENIAL_COMMAND_MAX_CHARS = 80;

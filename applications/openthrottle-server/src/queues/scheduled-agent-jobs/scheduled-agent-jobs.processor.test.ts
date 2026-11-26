@@ -898,6 +898,72 @@ describe('ScheduledAgentJobsProcessor', () => {
     expect(failureNotifier.notify).not.toHaveBeenCalled();
   });
 
+  describe('refused tool calls', () => {
+    const refusedOutput = JSON.stringify({
+      permission_denials: [
+        {
+          tool_input: { command: 'gh api user' },
+          tool_name: 'Bash',
+          tool_use_id: 't1',
+        },
+      ],
+      type: 'result',
+    });
+
+    it('fails a clean exit whose CLI refused a command, and notifies', async () => {
+      vi.mocked(runner.run).mockResolvedValue(
+        result({ output: refusedOutput }),
+      );
+
+      await processor.process(makeJob());
+
+      expect(runsRepository.markRunFinished).toHaveBeenCalledWith(
+        'run-1',
+        expect.objectContaining({
+          errorMessage: expect.stringContaining('Bash: gh api user'),
+          exitCode: 0,
+          status: 'failed',
+        }),
+      );
+      expect(failureNotifier.notify).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({ reason: 'failed', runId: 'run-1' }),
+      );
+    });
+
+    it('overrides a no_op verdict too', async () => {
+      vi.mocked(runner.run).mockResolvedValue(
+        result({ output: `${refusedOutput}\nOT_RUN_OUTCOME: no_op` }),
+      );
+
+      await processor.process(makeJob());
+
+      expect(runsRepository.markRunFinished).toHaveBeenCalledWith(
+        'run-1',
+        expect.objectContaining({ status: 'failed' }),
+      );
+    });
+
+    it('keeps the timeout message when a timed-out run also had refusals', async () => {
+      vi.mocked(runner.run).mockResolvedValue(
+        result({
+          exitCode: null,
+          output: refusedOutput,
+          status: RUN_AGENT_STATUS.timeout,
+        }),
+      );
+
+      await processor.process(makeJob());
+
+      expect(runsRepository.markRunFinished).toHaveBeenCalledWith(
+        'run-1',
+        expect.objectContaining({
+          errorMessage: 'Run timed out',
+          status: 'failed',
+        }),
+      );
+    });
+  });
+
   describe('failure notices', () => {
     it('sends nothing for a successful run', async () => {
       await processor.process(makeJob());

@@ -3,13 +3,15 @@
  * and the JSONL on disk:
  *
  * - `drop` columns are nulled — the value never reaches the snapshot.
- * - `scrub` columns get the identity scrub: emails become deterministic
+ * - `scrub` columns get the identity scrub, on every string leaf of the value
+ *   (a jsonb object or a text[] is walked, keys kept): emails become deterministic
  *   `localpart-<hash>@atlasworks.example` addresses (rule-based, so no real
  *   address is committed anywhere and distinct addresses never collide), home
  *   directories collapse to `/home/demo`, `*.local` hostnames collapse to
  *   `demo-workstation.local`.
  * - the secret detector then runs over EVERY kept string (keep and scrub
- *   alike) and THROWS on a hit, naming table, column and row id — fail closed,
+ *   alike, and every string leaf of a scrubbed jsonb or array value) and
+ *   THROWS on a hit, naming table, column and row id — fail closed,
  *   no silent redaction. Residual risk is accepted explicitly: recordings are
  *   human-reviewed before publishing, nothing goes live automatically.
  * - timestamps are rebased to offsets from a data-independent anchor supplied
@@ -256,15 +258,95 @@ export type RowTransform = (
   row: Record<string, unknown>,
 ) => Record<string, unknown> | null;
 
+/**
+ * @description True for a plain JSON object (what `pg` parses a jsonb value
+ * into). Deliberately narrower than `isRecord`: a Buffer (bytea) or a Date is
+ * an object too, and walking its entries would rewrite it into something else.
+ */
+const isPlainJsonObject = (
+  value: unknown,
+): value is Record<string, unknown> => {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false;
+  }
+
+  const prototype: unknown = Object.getPrototypeOf(value);
+
+  return prototype === Object.prototype || prototype === null;
+};
+
+/**
+ * @description Applies `transform` to every string leaf of a JSON-shaped value:
+ * arrays and plain objects are walked (keys kept, order kept, so the export
+ * stays deterministic); numbers, booleans, null and anything else pass through.
+ */
+const mapStringLeaves = (
+  value: unknown,
+  transform: (text: string) => string,
+): unknown => {
+  if (typeof value === 'string') {
+    return transform(value);
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item: unknown) => mapStringLeaves(item, transform));
+  }
+
+  if (isPlainJsonObject(value)) {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, item]) => [
+        key,
+        mapStringLeaves(item, transform),
+      ]),
+    );
+  }
+
+  return value;
+};
+
+/** @description Every string leaf of a JSON-shaped value, in walk order. */
+const stringLeaves = (value: unknown): readonly string[] => {
+  if (typeof value === 'string') {
+    return [value];
+  }
+
+  if (Array.isArray(value)) {
+    return value.flatMap((item: unknown) => stringLeaves(item));
+  }
+
+  if (isPlainJsonObject(value)) {
+    return Object.values(value).flatMap((item) => stringLeaves(item));
+  }
+
+  return [];
+};
+
 const scrubWhenClassified = (
   action: string | undefined,
   value: unknown,
 ): unknown => {
-  if (action === 'scrub' && typeof value === 'string') {
-    return scrubIdentity(value);
+  if (action === 'scrub') {
+    return mapStringLeaves(value, scrubIdentity);
   }
 
   return value;
+};
+
+/**
+ * @description The strings the secret detector must see for one column: a
+ * plain string always; every string leaf of a scrubbed jsonb or array value.
+ * A kept structured value is not walked — scrub is the classification that
+ * says a column's content is free-form.
+ */
+const stringsToCheck = (
+  action: string | undefined,
+  value: unknown,
+): readonly string[] => {
+  if (typeof value === 'string') {
+    return [value];
+  }
+
+  return action === 'scrub' ? stringLeaves(value) : [];
 };
 
 export const createSanitizer = (context: SanitizeContext): RowTransform => {
@@ -330,8 +412,8 @@ export const createSanitizer = (context: SanitizeContext): RowTransform => {
 
       const scrubbed = scrubWhenClassified(action, value);
 
-      if (typeof scrubbed === 'string') {
-        const secret = detectSecret(scrubbed);
+      for (const text of stringsToCheck(action, scrubbed)) {
+        const secret = detectSecret(text);
 
         if (secret !== null) {
           throw new Error(

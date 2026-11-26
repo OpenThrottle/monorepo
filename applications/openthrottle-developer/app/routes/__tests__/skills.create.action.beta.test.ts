@@ -3,8 +3,8 @@
  * The flag-on half of the create action's FEATURE_BETA_PREVIEW gate. It lives
  * in its own file because the flag is a module-level const resolved at import
  * time: one module graph can only ever see one value, so the two states cannot
- * share a suite. The flag-off half — the default, since the flag is unset in
- * this environment — is in skills.create.action.test.ts.
+ * share a suite. The flag-off half, which mocks the flag false, is in
+ * skills.create.action.test.ts.
  */
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
 import { afterEach, describe, expect, test, vi } from 'vitest';

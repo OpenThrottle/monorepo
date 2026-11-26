@@ -49,3 +49,14 @@ export interface ScheduledAgentJobPayload {
 }
 
 export type ScheduledAgentJobBullJob = Job<ScheduledAgentJobPayload, void>;
+
+/**
+ * @description One tool call the agent CLI refused because it needed an approval nobody can give
+ * headlessly.
+ */
+export interface PermissionDenial {
+  /** @description The shell command, when the refused tool was a shell tool that carried one. */
+  readonly command: string | null;
+  readonly toolName: string;
+  readonly toolUseId: string | null;
+}
