@@ -31,12 +31,12 @@ import {
   TasksByPlanIdInputSchema,
   UpdateTaskInputSchema,
 } from '../__generated__/schemas.ts';
-import { getAuthToken } from '../auth/getAuthToken.ts';
-import { ambientSessionOptions } from '../session/sessionHeaders.ts';
 import type { GenericResult } from '../types/index.ts';
 import { invalidArgsContent } from '../utils/errors.ts';
 import { filterTasksByCategory } from '../utils/filters.ts';
+import { getAuthToken } from '../utils/getAuthToken.ts';
 import { runTool } from '../utils/runTool.ts';
+import { ambientSessionOptions } from '../utils/session.ts';
 
 /**
  * Upper bound requested from the capped root tasks() query when fetching the

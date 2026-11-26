@@ -10,15 +10,17 @@ Grok, OpenCode). Each CLI is one `defineDriver(...)` module; a shared engine
 
 ## Layout
 
-- `src/registry/` — `DRIVER_IDS`, `DriverId`, `defineDriver`, `isDriverId`,
+- `src/utils/registry.ts` — `DRIVER_IDS`, `DriverId`, `defineDriver`, `isDriverId`,
   `parseDriverId`, `lookupDriver`. Imports NO driver module (keeps it acyclic).
-- `src/drivers/` — one file per CLI + `index.ts` that assembles `ALL_DRIVERS`,
-  `DRIVER_REGISTRY`, and `getDriver`.
-- `src/engine/` — `runDriverSync`/`runDriverAsync` (spawn/timeout/abort/streaming).
+- `src/utils/<agent>Driver.ts` — one file per CLI, exporting `<agent>Driver` (`defineDriver(...)`).
+  `src/utils/driver-registry.ts` assembles `ALL_DRIVERS`, `DRIVER_REGISTRY`, and `getDriver`.
+- `src/utils/engine.ts` — `runDriverSync`/`runDriverAsync` (spawn/timeout/abort/streaming).
+- `src/utils/runAgentPrompt.ts` — `runAgentPrompt` (resolve driver, check capabilities, run).
 - `src/types/` — `AgentDriver`, `DriverCapabilities`, `DriverInvocationConfig`, …
-- `src/errors/` — `UnknownDriverError`, `UnsupportedDriverModeError`.
-- `src/utils/` — `shell.ts` (escaping), `worktree.ts` (capability-gated `-w` flags),
-  `logger.ts` (injectable `DriverLogger`), `child-kill.ts` (SIGTERM→SIGKILL).
+- `src/utils/` also holds the error classes (`UnknownDriverError`, `UnsupportedDriverModeError`,
+  `DriverCapabilityError`, one PascalCase file each), `shell.ts` (escaping), `shell-flags.ts`
+  (capability-gated `-w` flags), `logger.ts` (injectable `DriverLogger`), `child-kill.ts`
+  (SIGTERM→SIGKILL).
 
 ## Invariants & gotchas
 
@@ -27,8 +29,8 @@ Grok, OpenCode). Each CLI is one `defineDriver(...)` module; a shared engine
   depend on THIS, not the reverse. Do not import from
   `openthrottle-agentic-*` here (it would create a cycle).
 - **Registry ↔ drivers split** avoids a cycle: driver modules import `defineDriver`
-  from `registry/`, so the assembled `DRIVER_REGISTRY`/`getDriver` live in
-  `drivers/index.ts`, not `registry/`. Keep it that way.
+  from `utils/registry.ts`, so the assembled `DRIVER_REGISTRY`/`getDriver` live in
+  `utils/driver-registry.ts`, not the registry module. Keep it that way.
 - **`DRIVER_REGISTRY` is `Record<DriverId, AgentDriver>`** — adding an id to `DRIVERS` fails to compile until a module is registered. `ALL_DRIVERS` derives from that map.
 - **Argv parity** is a hard contract for `claude`/`cursor`: their tests pin the exact argv. Claude emits `claude -p …` (NOT `--bare`). Don't "fix" it.
 - **Widening `DRIVER_IDS` ripples**: the runner-id helpers in agentic-utils derive from it, and the
@@ -39,7 +41,7 @@ Grok, OpenCode). Each CLI is one `defineDriver(...)` module; a shared engine
   `BASE_CHILD_ENV_KEYS`, the driver's `hostEnv`, `OPENTHROTTLE_AGENT_ENV_PASSTHROUGH`
   (exact names) and `config.env`. A CLI that needs a new login variable gets it in its
   `hostEnv` — never by widening the base or adding a broad prefix. The canaries
-  (`run-agent-prompt/__tests__/child-env.canary.test.ts` and the OT Loop one in the
+  (`utils/__tests__/child-env.canary.test.ts` and the OT Loop one in the
   server's `ot-loop.utils.test.ts`) fail if a server secret reaches a child.
 - Built package (real `build`/`build-package`, `exports` → `dist/`) — server consumes
   it at runtime, so relative imports use `.ts` extensions. Tag public API `@public`.

@@ -1,0 +1,127 @@
+/**
+ * @description Command-construction tests for the OpenCode driver (`opencode run --auto …`),
+ * including prompt/model escaping and confirmation that it advertises no worktree capability.
+ */
+
+import { describe, expect, it } from 'vitest';
+
+import type { DriverInvocationConfig } from '../../types/index.ts';
+import { getDriver } from '../driver-registry.ts';
+import { opencodeDriver } from '../opencodeDriver.ts';
+
+const config = (
+  extra: Omit<DriverInvocationConfig, 'iteration' | 'prompt'> & {
+    prompt?: string;
+  } = {},
+): DriverInvocationConfig => {
+  return {
+    iteration: 1,
+    prompt: extra.prompt ?? 'do the thing',
+    ...extra,
+  };
+};
+
+describe('opencode driver', () => {
+  it('builds the base run command with --auto', () => {
+    expect(opencodeDriver.buildShellCommand(config())).toBe(
+      'opencode run --auto "do the thing"',
+    );
+  });
+
+  it('appends --model for a provider/model value', () => {
+    expect(
+      opencodeDriver.buildShellCommand(config({ model: 'anthropic/claude' })),
+    ).toBe('opencode run --auto "do the thing" --model anthropic/claude');
+  });
+
+  it('omits --model when unset or auto', () => {
+    expect(opencodeDriver.buildShellCommand(config({ model: 'auto' }))).toBe(
+      'opencode run --auto "do the thing"',
+    );
+    expect(opencodeDriver.buildShellCommand(config({ model: '  ' }))).toBe(
+      'opencode run --auto "do the thing"',
+    );
+  });
+
+  it('neutralizes shell metacharacters in the prompt', () => {
+    expect(
+      opencodeDriver.buildShellCommand(
+        config({ prompt: 'leak ${HOME} $(id)' }),
+      ),
+    ).toBe('opencode run --auto "leak \\${HOME} \\$(id)"');
+  });
+
+  it('escapes a malicious model value', () => {
+    expect(
+      opencodeDriver.buildShellCommand(config({ model: 'x; rm -rf ~' })),
+    ).toBe('opencode run --auto "do the thing" --model "x; rm -rf ~"');
+  });
+
+  it('ignores worktree options (no worktree capability)', () => {
+    expect(
+      opencodeDriver.buildShellCommand(
+        config({
+          worktree: {
+            skipWorktreeSetup: true,
+            worktree: 'wt',
+            worktreeBase: 'main',
+          },
+        }),
+      ),
+    ).toBe('opencode run --auto "do the thing"');
+  });
+
+  it('prepends OPENCODE_CONFIG when a local-endpoint config file is supplied', () => {
+    expect(
+      opencodeDriver.buildShellCommand(
+        config({
+          endpoint: {
+            baseUrl: 'http://localhost:11434/v1',
+            configFilePath: '/tmp/oc/config.json',
+          },
+          model: 'local/llama3',
+        }),
+      ),
+    ).toBe(
+      'OPENCODE_CONFIG=/tmp/oc/config.json opencode run --auto "do the thing" --model local/llama3',
+    );
+  });
+
+  it('ignores an endpoint with no config file path (nothing to point at)', () => {
+    expect(
+      opencodeDriver.buildShellCommand(
+        config({ endpoint: { baseUrl: 'http://localhost:11434/v1' } }),
+      ),
+    ).toBe('opencode run --auto "do the thing"');
+  });
+
+  it('emits no MCP flags (opencode reads the repo opencode.json on its own)', () => {
+    const command = opencodeDriver.buildShellCommand(config());
+    expect(command).not.toContain('--approve-mcps');
+    expect(command).not.toContain('--mcp');
+  });
+
+  it('advertises id, label, and capabilities', () => {
+    expect(opencodeDriver.id).toBe('opencode');
+    expect(opencodeDriver.label).toBe('opencode');
+    expect(opencodeDriver.capabilities).toEqual({
+      allowedCommands: false,
+      attachesWorkspaceMcp: true,
+      chatStreaming: true,
+      isolatesRepoAgentConfig: false,
+      mcpAutoApprove: false,
+      permissionMode: true,
+      pluginDir: false,
+      reportsToolCalls: true,
+      skipWorktreeSetup: false,
+      supportsCustomBaseUrl: true,
+      supportsModelFlag: true,
+      worktree: false,
+      worktreeBase: false,
+    });
+  });
+
+  it('is resolvable from the registry', () => {
+    expect(getDriver('opencode')).toBe(opencodeDriver);
+  });
+});

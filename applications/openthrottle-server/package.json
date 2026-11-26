@@ -108,8 +108,10 @@
       "codegen-graphql": {
         "inputs": [
           "codegenGraphqlInputs",
-          "{workspaceRoot}/packages/openthrottle-mcp/src/graphql/operations/**/*.graphql",
+          "{workspaceRoot}/packages/openthrottle-mcp/src/graphql/fragments.graphql",
+          "{workspaceRoot}/packages/openthrottle-mcp/src/graphql/mutations.graphql",
           "{workspaceRoot}/packages/openthrottle-mcp/src/graphql/plan-messages.graphql",
+          "{workspaceRoot}/packages/openthrottle-mcp/src/graphql/queries.graphql",
           "{workspaceRoot}/packages/openthrottle-mcp/src/graphql/work-sessions.graphql"
         ],
         "metadata": {

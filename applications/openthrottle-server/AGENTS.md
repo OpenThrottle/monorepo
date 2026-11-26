@@ -19,7 +19,7 @@ apps, `packages/openthrottle-mcp`) consumes its schema through the committed
 - The single `typecheck` target type-checks source and test files here; `test` is plain Vitest.
 - `pnpm nx run openthrottle-server:codegen-graphql` — the server is code-first, but it also has a small
   client codegen: `codegen.ts` reads the plan-run documents `packages/openthrottle-mcp` owns
-  (`src/graphql/operations/`, `plan-messages.graphql`, `work-sessions.graphql`) and emits typed
+  (`src/graphql/` — `fragments`, `queries`, `mutations`, `plan-messages`, `work-sessions`, all `.graphql`) and emits typed
   `*Document` consts and fragment types into the **committed** `src/__generated__/` (the package
   `.gitignore` negates the root rule, so `build`/`graphql-schema:write` never run codegen). The OT
   Loop job (`src/queues/ot-loop/`) imports from it. Edit the documents in `openthrottle-mcp`,

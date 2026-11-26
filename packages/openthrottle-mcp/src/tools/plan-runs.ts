@@ -28,7 +28,6 @@ import {
   RegisterPlanRunWorktreeCheckoutDocument,
   SettlePlanRunDocument,
 } from '../__generated__/graphql.js';
-import { getAuthToken } from '../auth/getAuthToken.ts';
 import { resolveDriver } from '../config/driver.ts';
 import {
   forgetPlanRunForBackstop,
@@ -36,6 +35,7 @@ import {
 } from '../config/plan-run-backstop.ts';
 import type { GenericResult } from '../types/index.ts';
 import { invalidArgsContent } from '../utils/errors.ts';
+import { getAuthToken } from '../utils/getAuthToken.ts';
 import { runTool } from '../utils/runTool.ts';
 
 // ── register_plan_run ────────────────────────────────────────────────────────

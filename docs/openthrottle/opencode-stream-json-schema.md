@@ -2,7 +2,7 @@
 
 The headless event stream the `opencode` chat backend
 (`packages/agentic-conversation-backend/src/utils/opencode*.ts`) and the `opencode`
-plan-run driver (`packages/openthrottle-drivers/src/drivers/opencode.ts`) are built against. opencode
+plan-run driver (`packages/openthrottle-drivers/src/utils/opencodeDriver.ts`) are built against. opencode
 calls it `run --format json` (NDJSON).
 
 > **Provenance.** Event shapes are from a **recorded** stream on opencode **1.18.16**, sanitized, in

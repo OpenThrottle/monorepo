@@ -12,7 +12,7 @@ import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { captureStdioAgentEnvironment } from '../../config/agent-environment.ts';
-import { clearCurrentSession } from '../../session/current-session.ts';
+import { clearCurrentSession } from '../../utils/session.ts';
 import { getPlanToolHandler, updatePlanToolHandler } from '../plans.ts';
 import { getTaskToolHandler, updateTaskToolHandler } from '../tasks.ts';
 

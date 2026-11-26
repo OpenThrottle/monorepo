@@ -1,0 +1,113 @@
+/**
+ * @description OpenCode CLI driver: headless mode (`opencode run "<prompt>"`). Verified against the installed CLI
+ * (opencode 1.18.5, `opencode run --help`): the prompt is a positional message, `-m/--model` takes
+ * `provider/model`, and `--auto` auto-approves permissions (the headless analog of Claude's
+ * `--permission-mode acceptEdits` / Cursor's `--force`). OpenCode exposes NO agent-worktree flags.
+ */
+
+import type { DriverCapabilities, DriverModelListing } from '../types/index.ts';
+import { structuredOutputShellFlag } from './output-format.ts';
+import { opencodeVariant } from './reasoning-effort.ts';
+import { defineDriver } from './registry.ts';
+import {
+  escapeForShellDoubleQuoted,
+  escapeShellArg,
+  formatModelFlag,
+  formatShellEnvPrefix,
+} from './shell.ts';
+
+const capabilities: DriverCapabilities = {
+  allowedCommands: false,
+  /** Reads the repo's committed `opencode.json` `mcp` block automatically in `run` mode (1.18.16). */
+  attachesWorkspaceMcp: true,
+  chatStreaming: true,
+  /**
+   * `false`: opencode 1.19.5 reads the repo's `opencode.json` `mcp` block, and `run --pure` only
+   * skips external plugins, not the project config (`run --help` checked 2026-11-22). An untrusted
+   * checkout's opencode run is refused.
+   */
+  isolatesRepoAgentConfig: false,
+  /**
+   * No flag needed — verified against opencode 1.18.16. OpenCode reads the repo's committed
+   * `opencode.json` `mcp` block automatically, including in headless `run` mode, with no approval
+   * step: `opencode run --auto "…"` in a first-seen worktree reports both `openthrottle-mcp` and
+   * `maestro` as available, and `opencode mcp list` shows them connected.
+   *
+   * Note the interaction with the endpoint path above: pointing `OPENCODE_CONFIG` at a materialized
+   * provider-config file REPLACES the config opencode loads, so a local-endpoint run only keeps the
+   * MCP servers if that generated file also carries the `mcp` block. Out of scope here; relevant if
+   * local-endpoint runs are ever expected to use MCP tools.
+   */
+  mcpAutoApprove: false,
+  permissionMode: true,
+  pluginDir: false,
+  reportsToolCalls: true,
+  skipWorktreeSetup: false,
+  supportsCustomBaseUrl: true,
+  supportsModelFlag: true,
+  worktree: false,
+  worktreeBase: false,
+};
+
+/**
+ * `opencode models` prints one `provider/model` id per line (verified against 1.18.5). Every
+ * non-empty trimmed line is a model id.
+ */
+const discoverModels: DriverModelListing = {
+  argv: ['models'],
+  mode: 'command',
+  parse: (stdout) =>
+    stdout
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line !== ''),
+};
+
+/**
+ * @description OpenCode driver (`opencode`, label `opencode`). `--auto` keeps the agentic loop
+ * non-blocking; `--model` is omitted when unset or `auto` (OpenCode has no `auto` alias). A local
+ * endpoint is targeted by defining a custom `@ai-sdk/openai-compatible` provider in a config file
+ * (materialized by the consumer) and pointing `OPENCODE_CONFIG` at it; `config.model` then carries
+ * the `provider/model` id for that provider. The builder stays pure — it only references the
+ * caller-supplied `endpoint.configFilePath`; the env prefix is baked in because the engine spawns
+ * without an `env` override.
+ * @public
+ */
+export const opencodeDriver = defineDriver({
+  binEnv: 'OPENTHROTTLE_OPENCODE_BIN',
+  binary: 'opencode',
+  buildShellCommand: (config) => {
+    const modelFlag = formatModelFlag(config.model);
+
+    const configPath = config.endpoint?.configFilePath?.trim();
+    let endpointPrefix = '';
+    if (configPath) {
+      endpointPrefix = formatShellEnvPrefix({ OPENCODE_CONFIG: configPath });
+    }
+
+    const variant = opencodeVariant(config.effort);
+    const variantFlag = variant !== undefined ? ` --variant ${variant}` : '';
+
+    const safePrompt = escapeForShellDoubleQuoted(config.prompt);
+
+    const outputFlag = structuredOutputShellFlag(config, '--format json');
+
+    return `${endpointPrefix}${escapeShellArg(config.bin ?? 'opencode')} run --auto "${safePrompt}"${outputFlag}${modelFlag}${variantFlag}`;
+  },
+  capabilities,
+  discoverModels,
+  // OpenCode reads its login from its config under `HOME`; the endpoint config travels on the command line.
+  hostEnv: {
+    keys: [],
+    prefixes: [],
+  },
+  id: 'opencode',
+  install: {
+    installerShell: 'bash',
+    method: 'curl-shell',
+    url: 'https://opencode.ai/install',
+  },
+  label: 'opencode',
+  update: { argv: ['upgrade'], method: 'command' },
+  versionArgs: ['--version'],
+});

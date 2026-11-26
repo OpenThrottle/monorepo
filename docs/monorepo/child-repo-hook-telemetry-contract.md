@@ -403,7 +403,7 @@ delivery leg, in which repo, with what sitting in the buffer.
   **The Claude bundles under another tool.** The marketplace plugin's hooks are the Claude bundles,
   and cursor-agent, codex and agy all run them (cursor-agent runs whatever the user installed
   through Claude). Since plugin 1.3.1 (OT plan `8f9ce368`) the bundles detect the host —
-  `adapters/claude/bundle-host.ts`; markers in `agent-cli-hook-capability-matrix.md` § Which tool is
+  `utils/claude-host.ts`; markers in `agent-cli-hook-capability-matrix.md` § Which tool is
   running the Claude bundles. The heartbeat then goes out with the host's `source`, the delivery
   leg and marketplace fields of the install that delivered it, and stands down when the host's own
   registration of the heartbeat runs in that session (cursor `.cursor/hooks.json`, codex

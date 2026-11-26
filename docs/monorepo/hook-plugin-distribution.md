@@ -126,6 +126,10 @@ Under (b), these files stay committed on `main` because they are small and rarel
 - a tiny fixed **stub** per hook and CLI in `hooks/` and `bin/`. It `require`s `dist/<file>` if the
   bundle is built and otherwise exits 0, so an unbuilt checkout stays fail-open instead of erroring.
   The bundles themselves live in the gitignored `dist/`.
+- The `dist/<file>` name and the stub name are independent of the source file: each `PluginEntry` in
+  `packages/agentic-hooks/scripts/bundle-hooks.ts` maps a source entrypoint
+  (`src/scripts/<tool>-<hook>.ts`) to its shipped file name (`skill-usage-capture.cjs`), so moving or
+  renaming a source file never changes an installed plugin's command.
 
 `bundle-hooks-check` (byte-for-byte drift) becomes a build plus smoke test. The `.gitattributes`
 entries for hook bundles go away.

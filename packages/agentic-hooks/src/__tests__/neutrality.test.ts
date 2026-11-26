@@ -5,11 +5,14 @@
  * concept in the neutral core — that is exactly how the Claude/Cursor
  * divergence went unremarked. This suite makes the posture enforceable:
  *
- *   1. No file under `src/` outside `src/adapters/` may name a specific agent
- *      tool, in code OR in comments. Legitimate exceptions are an explicit,
- *      argued allowlist rather than a silent skip.
- *   2. Every directory under `src/adapters/` ships a `payload.ts` exporting a
- *      `*_SOURCE` producer id, so no adapter can emit unattributed events.
+ *   1. No file under `src/` other than a per-agent one (a file in `src/scripts/`
+ *      or `src/utils/` whose name starts with an agent prefix such as
+ *      `claude-`) may name a specific agent tool, in code OR in comments.
+ *      Legitimate exceptions are an explicit, argued allowlist rather than a
+ *      silent skip.
+ *   2. Every agent that ships a `src/scripts/<agent>-*.ts` entrypoint also ships
+ *      a `src/utils/<agent>-payload.ts` exporting a `*_SOURCE` producer id, so
+ *      no adapter can emit unattributed events.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -21,7 +24,23 @@ const srcRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   '..',
 );
-const adaptersRoot = path.join(srcRoot, 'adapters');
+const scriptsRoot = path.join(srcRoot, 'scripts');
+const utilsRoot = path.join(srcRoot, 'utils');
+
+/**
+ * The agent prefixes a per-agent file starts with. Per-tool adapters are the
+ * ONE place a tool name belongs, and the prefix is what marks a file as one.
+ */
+const AGENT_PREFIXES: readonly string[] = [
+  'antigravity',
+  'claude',
+  'codex',
+  'cursor',
+];
+
+const isAgentFile = (name: string): boolean => {
+  return AGENT_PREFIXES.some((agent) => name.startsWith(`${agent}-`));
+};
 
 /**
  * Identifiers that make a file tool-specific. Matched case-insensitively as
@@ -77,10 +96,6 @@ const EXEMPT_DIRECTORIES: ReadonlyMap<string, string> = new Map([
     '__tests__',
     'Test files legitimately exercise producer ids as opaque `source` values, and this guard itself must name every tool it looks for.',
   ],
-  [
-    'adapters',
-    'Per-tool adapters are the ONE place a tool name belongs — that is the whole architecture.',
-  ],
 ]);
 
 const listTypeScriptFiles = (dir: string): readonly string[] => {
@@ -94,7 +109,11 @@ const listTypeScriptFiles = (dir: string): readonly string[] => {
       out.push(...listTypeScriptFiles(full));
       continue;
     }
-    if (entry.isFile() && entry.name.endsWith('.ts')) {
+    if (
+      entry.isFile() &&
+      entry.name.endsWith('.ts') &&
+      !isAgentFile(entry.name)
+    ) {
       out.push(full);
     }
   }
@@ -147,7 +166,7 @@ const formatViolation = (violation: Violation): string => {
 };
 
 describe('the neutral core names no specific tool', () => {
-  it('finds no tool-specific identifier outside src/adapters/', () => {
+  it('finds no tool-specific identifier outside the per-agent files', () => {
     const violations = findViolations();
     expect(violations.map(formatViolation)).toEqual([]);
   });
@@ -189,19 +208,23 @@ describe('the neutral core names no specific tool', () => {
 });
 
 describe('every adapter is attributable', () => {
-  const adapterDirectories = fs
-    .readdirSync(adaptersRoot, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => entry.name);
+  const agents = [
+    ...new Set(
+      fs
+        .readdirSync(scriptsRoot)
+        .filter((name) => isAgentFile(name) && name.endsWith('.ts'))
+        .map((name) => name.slice(0, name.indexOf('-'))),
+    ),
+  ];
 
   it('has at least one adapter', () => {
-    expect(adapterDirectories.length).toBeGreaterThan(0);
+    expect(agents.length).toBeGreaterThan(0);
   });
 
-  it.each(adapterDirectories)(
-    '%s exports a *_SOURCE producer id from payload.ts',
-    (adapter) => {
-      const payload = path.join(adaptersRoot, adapter, 'payload.ts');
+  it.each(agents)(
+    '%s exports a *_SOURCE producer id from utils/<agent>-payload.ts',
+    (agent) => {
+      const payload = path.join(utilsRoot, `${agent}-payload.ts`);
       expect(fs.existsSync(payload)).toBe(true);
       expect(fs.readFileSync(payload, 'utf8')).toMatch(
         /export const [A-Z0-9_]+_SOURCE\s*=/,

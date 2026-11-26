@@ -10,10 +10,10 @@ import { z } from 'zod';
 
 import type { CodeSearchMatchFragment } from '../__generated__/graphql.js';
 import { SearchCodeDocument } from '../__generated__/graphql.js';
-import { getAuthToken } from '../auth/getAuthToken.ts';
 import { resolveWorkspacePathArgument } from '../config/workspace-path.ts';
 import type { GenericResult } from '../types/index.ts';
 import { invalidArgsContent } from '../utils/errors.ts';
+import { getAuthToken } from '../utils/getAuthToken.ts';
 import { runTool } from '../utils/runTool.ts';
 
 const CODE_SEARCH_DEFAULT_LIMIT = 8;

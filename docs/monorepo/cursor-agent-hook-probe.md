@@ -6,7 +6,7 @@ binary, capturing raw hook stdin, and reading the shipped bundle. Nothing here i
 Sibling of [agent-cli-hook-capability-matrix.md](./agent-cli-hook-capability-matrix.md), which
 summarizes every CLI; this file is the primary record for the Cursor row. Captured payloads are
 committed as test fixtures at
-`packages/agentic-hooks/src/adapters/cursor/__tests__/fixtures/` (paths and the operator email
+`packages/agentic-hooks/fixtures/cursor/` (paths and the operator email
 scrubbed; everything else verbatim).
 
 ## Method

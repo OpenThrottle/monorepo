@@ -209,15 +209,11 @@
         "src/snapshot/scanSnapshotText.ts",
       ],
     },
-    // Hook bundles. Nothing imports an adapter: scripts/bundle-hooks.ts hands each one
+    // Hook bundles. Nothing imports a hook entrypoint (src/scripts/): scripts/bundle-hooks.ts hands each one
     // to esbuild as an entrypoint by path (its BUNDLES array), and the scripts are run
     // through tsx by this package's Nx targets.
     "packages/agentic-hooks": {
-      "entry": [
-        "src/index.ts",
-        "scripts/*.ts",
-        "src/adapters/{antigravity,claude,codex,cursor}/*.ts",
-      ],
+      "entry": ["src/index.ts", "scripts/*.ts", "src/scripts/*.ts"],
     },
     // check-drift.ts and record.ts are run through tsx by this package's Nx targets.
     "packages/agentic-replay-testing": {
@@ -568,8 +564,8 @@
         "src/nest-tool-handlers.ts",
         "src/nest/bootstrapMcpDeveloperApp.ts",
         // Run by the `measure-tool-surface` Nx target (tsx); also reaches
-        // surface.ts, which it imports.
-        "src/model-facing-text/writeToolSurface.ts",
+        // utils/model-facing-text.ts, which it imports.
+        "src/scripts/write-tool-surface.ts",
         // Public `./tool-surface` subpath, consumed by openthrottle-mcp-evals.
         "src/tool-surface.ts",
         // Streamable-HTTP MCP surface. Shell-invoked container entrypoints with

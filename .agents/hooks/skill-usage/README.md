@@ -23,7 +23,7 @@ producer hook payload → <tool adapter> → NormalizedInvocation
 | Concern                                                                                                                    | Location                                                                                         |
 | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | Tool-neutral core (scope, privacy seam, `buildUsageEvent`, GraphQL/JSONL persistence, outcome/duration correlation, drain) | `packages/agentic-hooks/src/` (barrel `index.ts`)                                                |
-| Per-tool adapters (TS esbuild entrypoints)                                                                                 | `packages/agentic-hooks/src/adapters/<tool>/`                                                    |
+| Per-tool adapters (TS esbuild entrypoints)                                                                                 | `packages/agentic-hooks/src/scripts/<tool>-<hook>.ts`, `src/utils/<tool>-*.ts`                   |
 | Bundler + drift check                                                                                                      | `packages/agentic-hooks/scripts/bundle-hooks.ts` → targets `bundle-hooks` / `bundle-hooks-check` |
 | Generated Claude payload                                                                                                   | `plugins/openthrottle/{hooks,bin}/skill-usage-*.cjs` (stubs; bundles in gitignored `dist/`)      |
 | Generated Cursor payload                                                                                                   | `plugins/openthrottle-cursor/hooks/skill-usage-*.cjs`                                            |
@@ -122,7 +122,7 @@ does an unbounded catch-up flush (idempotent, concurrent-writer safe).
 
 ## Adding / changing a producer
 
-1. Add an entrypoint under `packages/agentic-hooks/src/adapters/<tool>/`
+1. Add an entrypoint at `packages/agentic-hooks/src/scripts/<tool>-<hook>.ts` (and `src/utils/<tool>-payload.ts`)
    (implement `normalize<Tool>Payload(raw)` and delegate to the core) and a
    Vitest for the normalizer.
 2. Add a `PluginEntry` row to a payload in

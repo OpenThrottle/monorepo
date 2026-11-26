@@ -21,7 +21,7 @@ driver or model made a run better or worse. Two gaps are visible in the code:
 
 - **Run transcripts are thrown away.** Plan runs spawn agents through `runDriverAsync`
   (the OT Loop job, plus the scheduled-agent runner). Only
-  `drivers/claude.ts` implements `AgentDriver.parseOutput`, and it keeps only the final text and the
+  `utils/claudeDriver.ts` implements `AgentDriver.parseOutput`, and it keeps only the final text and the
   usage-limit signal. The other five drivers run in plain-text mode. Nothing records tool calls,
   tokens, cost, duration and exit status together, and `agent_token_usage` has no `plan_run_id`.
 - **One eval exists and it is narrow.** `packages/openthrottle-mcp-evals/src/tool-selection/`
@@ -72,7 +72,7 @@ once container isolation exists. Decision 3 keeps that door open at zero cost.
 - **Subagents** spawned in a segment (`toolUseResult.agentId` → `subagents/agent-<id>.jsonl`)
   are embedded as ATIF `subagent_trajectories`, each capped at 160 KiB.
 - **Where the code lives.** The reading is pure (`claude-session.ts` in `agentic-utils`). The
-  hook (`agentic-hooks` `adapters/claude/session-trajectory.ts`) owns I/O. It reads incrementally
+  hook (`agentic-hooks` `utils/claude-session-trajectory.ts`) owns I/O. It reads incrementally
   from a per-session offset, keeps an upload state per session, and buffers or dead-letters
   through the same JSONL machinery as token usage.
 

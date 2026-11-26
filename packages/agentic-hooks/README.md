@@ -22,7 +22,8 @@ if a second producer would duplicate it, it belongs in the core.
 ```
 src/
   types.ts                 the producer contract every adapter satisfies
-  adapters/<tool>/         thin per-tool entrypoints: native payload → NormalizedInvocation
+  scripts/<tool>-<hook>.ts thin per-tool entrypoints (the esbuild bundle roots)
+  utils/<tool>-payload.ts  per-tool native payload → NormalizedInvocation
   utils/scope.ts           ours | personal | third-party
   utils/privacy.ts         args truncation + secret redaction, before anything leaves the machine
   config/env.ts            endpoint + git branch resolution
@@ -31,8 +32,8 @@ src/
   data/starts.ts           identifiers-only start records used to compute duration
 ```
 
-A machine-checked test enforces this: no file under `src/` outside `src/adapters/` may name a
-specific tool. See [Neutrality is tested, not just asserted](#neutrality-is-tested-not-just-asserted).
+A machine-checked test enforces this: no file under `src/` other than the per-agent ones (`src/scripts/` and `src/utils/` files that start with an agent name,
+such as `claude-`) may name a specific tool. See [Neutrality is tested, not just asserted](#neutrality-is-tested-not-just-asserted).
 
 ## Producer matrix
 
@@ -84,8 +85,8 @@ what each CLI's hook and plugin surface actually supports, measured against inst
 
 Four steps, in order.
 
-1. **Write the adapter.** `src/adapters/<tool>/payload.ts` exporting a `<TOOL>_SOURCE` producer id
-   and a normalizer returning `NormalizedInvocation | null`, plus `src/adapters/<tool>/capture.ts` as
+1. **Write the adapter.** `src/utils/<tool>-payload.ts` exporting a `<TOOL>_SOURCE` producer id
+   and a normalizer returning `NormalizedInvocation | null`, plus `src/scripts/<tool>-capture.ts` as
    the entrypoint. Add a completion entrypoint too if the tool exposes a usable session-end event.
 2. **Register the bundle.** Add a `PluginEntry` row to a payload in
    [scripts/bundle-hooks.ts](scripts/bundle-hooks.ts). That is the only registration: the Nx
@@ -213,7 +214,7 @@ This is non-negotiable and applies to every producer, present and future.
 
 Documentation does not stop the next feature from landing a tool-shaped concept in the core — that is
 exactly how the current divergence happened. A test walks every `.ts` file under `src/` **excluding**
-`src/adapters/` and fails on any tool-specific identifier, in code or comments, with a short
+the per-agent files (`<agent>-*.ts` in `scripts/` and `utils/`) and fails on any tool-specific identifier, in code or comments, with a short
 explicitly-argued allowlist for the handful of legitimate prose references.
 
 If you find yourself needing a tool name in the core, you probably need a new field on

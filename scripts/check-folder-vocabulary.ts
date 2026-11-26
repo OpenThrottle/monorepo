@@ -196,6 +196,7 @@ export interface GrandfatheredFolder {
 
 const PREDATES_CHECK = `predates the bucket allowlist; move it into the vocabulary when next touched`;
 const MCP_VOCABULARY = `MCP protocol vocabulary: the server registers tools and resources`;
+const MCP_NEST_SERVER = `the MCP server is a Nest app: its stdio and HTTP entries boot this, and moving it to a nestjs-* package would cycle with nestjs-mcp-developer`;
 
 /**
  * @description `src/` folders outside their bucket's vocabulary that existed
@@ -212,24 +213,13 @@ export const GRANDFATHERED_FOLDERS: readonly GrandfatheredFolder[] = [
   { path: 'packages/agentic-evals/src/runner', reason: PREDATES_CHECK },
   { path: 'packages/agentic-evals/src/stats', reason: PREDATES_CHECK },
   { path: 'packages/agentic-evals/src/workspace', reason: PREDATES_CHECK },
-  { path: 'packages/agentic-hooks/src/adapters', reason: PREDATES_CHECK },
-  { path: 'packages/agentic-hooks/src/memory', reason: PREDATES_CHECK },
-  { path: 'packages/openthrottle-drivers/src/drivers', reason: PREDATES_CHECK },
-  { path: 'packages/openthrottle-drivers/src/engine', reason: PREDATES_CHECK },
-  { path: 'packages/openthrottle-drivers/src/errors', reason: PREDATES_CHECK },
-  { path: 'packages/openthrottle-drivers/src/registry', reason: PREDATES_CHECK },
-  { path: 'packages/openthrottle-drivers/src/run-agent-prompt', reason: PREDATES_CHECK },
   { path: 'packages/openthrottle-mcp-evals/src/code-search', reason: PREDATES_CHECK },
   { path: 'packages/openthrottle-mcp-evals/src/sandbox', reason: PREDATES_CHECK },
   { path: 'packages/openthrottle-mcp-evals/src/search-ranking', reason: PREDATES_CHECK },
   { path: 'packages/openthrottle-mcp-evals/src/tool-selection', reason: PREDATES_CHECK },
-  { path: 'packages/openthrottle-mcp/src/auth', reason: PREDATES_CHECK },
-  { path: 'packages/openthrottle-mcp/src/graphql', reason: PREDATES_CHECK },
-  { path: 'packages/openthrottle-mcp/src/http', reason: PREDATES_CHECK },
-  { path: 'packages/openthrottle-mcp/src/model-facing-text', reason: PREDATES_CHECK },
-  { path: 'packages/openthrottle-mcp/src/nest', reason: PREDATES_CHECK },
+  { path: 'packages/openthrottle-mcp/src/http', reason: MCP_NEST_SERVER },
+  { path: 'packages/openthrottle-mcp/src/nest', reason: MCP_NEST_SERVER },
   { path: 'packages/openthrottle-mcp/src/resources', reason: MCP_VOCABULARY },
-  { path: 'packages/openthrottle-mcp/src/session', reason: PREDATES_CHECK },
   { path: 'packages/openthrottle-mcp/src/tools', reason: MCP_VOCABULARY },
   { path: 'packages/openthrottle-showroom/src/assemble', reason: PREDATES_CHECK },
   { path: 'packages/openthrottle-showroom/src/episodes', reason: PREDATES_CHECK },

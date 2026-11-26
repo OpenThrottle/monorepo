@@ -1,0 +1,171 @@
+/**
+ * Claude Code adapter — the ONE Claude-specific concern: turning a Claude Code
+ * hook payload (PreToolUse/Skill + UserPromptExpansion, or a Stop/SubagentStop)
+ * into the tool-neutral shapes the shared core understands. Everything
+ * downstream lives in the package core.
+ */
+import { isRecord } from '@openthrottle/nodejs-utils';
+
+import type { NormalizedInvocation } from '../types.ts';
+
+/** Producer id stamped onto every event this adapter emits. @public */
+export const CLAUDE_SOURCE = 'claude-code';
+
+/**
+ * The session id Claude Code exports to its Bash tool, or null outside one.
+ * `CLAUDE_CODE_SESSION_ID` is what the Bash tool actually sees; the older
+ * `CLAUDE_SESSION_ID` is kept as a fallback. It equals the hook payload's
+ * `session_id`, so a reporter can claim the start the capture hook recorded.
+ *
+ * @public
+ */
+export const readClaudeShellSessionId = (
+  env: NodeJS.ProcessEnv,
+): string | null => {
+  return env.CLAUDE_CODE_SESSION_ID || env.CLAUDE_SESSION_ID || null;
+};
+
+/**
+ * Parse a Claude Code hook payload into a NormalizedInvocation, or null when
+ * the payload is not a skill invocation this adapter handles.
+ *
+ * @public
+ */
+export const normalizeClaudePayload = (
+  raw: unknown,
+): NormalizedInvocation | null => {
+  if (!isRecord(raw)) {
+    return null;
+  }
+
+  const payload = raw;
+  const hookEvent =
+    typeof payload.hook_event_name === 'string' ? payload.hook_event_name : '';
+
+  if (hookEvent === 'PreToolUse' || payload.tool_name === 'Skill') {
+    const toolInput = isRecord(payload.tool_input) ? payload.tool_input : {};
+    let skillName: string | null = null;
+    if (typeof toolInput.skill === 'string') {
+      skillName = toolInput.skill;
+    } else if (typeof toolInput.name === 'string') {
+      skillName = toolInput.name;
+    }
+    if (!skillName) {
+      return null;
+    }
+    const normalized: NormalizedInvocation = {
+      args: toolInput.args ?? '',
+      cwd: typeof payload.cwd === 'string' ? payload.cwd : null,
+      hook_event_name: hookEvent || 'PreToolUse',
+      invocation_path: 'skill_tool',
+      session_id:
+        typeof payload.session_id === 'string' ? payload.session_id : null,
+      skill_name: skillName,
+    };
+    if (typeof payload.agent_id === 'string') {
+      normalized.agent_id = payload.agent_id;
+    }
+    if (typeof payload.agent_type === 'string') {
+      normalized.agent_type = payload.agent_type;
+    }
+    if (typeof payload.tool_use_id === 'string') {
+      normalized.tool_use_id = payload.tool_use_id;
+    }
+    if (typeof payload.prompt_id === 'string') {
+      normalized.prompt_id = payload.prompt_id;
+    }
+    return normalized;
+  }
+
+  if (
+    hookEvent === 'UserPromptExpansion' ||
+    payload.expansion_type === 'slash_command'
+  ) {
+    const skillName =
+      typeof payload.command_name === 'string' ? payload.command_name : null;
+    if (!skillName) {
+      return null;
+    }
+    const normalized: NormalizedInvocation = {
+      args:
+        typeof payload.command_args === 'string' ? payload.command_args : '',
+      cwd: typeof payload.cwd === 'string' ? payload.cwd : null,
+      hook_event_name: hookEvent || 'UserPromptExpansion',
+      invocation_path: 'slash',
+      session_id:
+        typeof payload.session_id === 'string' ? payload.session_id : null,
+      skill_name: skillName,
+    };
+    if (typeof payload.prompt_id === 'string') {
+      normalized.prompt_id = payload.prompt_id;
+    }
+    return normalized;
+  }
+
+  return null;
+};
+
+/**
+ * The fields of a Claude Code `Stop`/`SubagentStop` payload the completion
+ * emitter needs: session-scoped correlation plus where the transcripts live.
+ *
+ * @public
+ */
+export interface ClaudeStopPayload {
+  /** `SubagentStop` only: the subagent's own transcript file. */
+  readonly agent_transcript_path: string | null;
+  readonly cwd: string | null;
+  readonly hook_event_name: string;
+  readonly session_id: string;
+  /** The main session transcript (`<project>/<session id>.jsonl`). */
+  readonly transcript_path: string | null;
+}
+
+const nonEmptyString = (value: unknown): string | null => {
+  return typeof value === 'string' && value.trim() !== '' ? value : null;
+};
+
+/**
+ * @description Whether a completion payload ends the session, and so may
+ * resolve the session's open skill starts.
+ *
+ * Claude's `Stop` fires at the end of every turn, not of the session. Resolving
+ * starts there drained a skill's start before a later turn could report on it,
+ * so a skill that finished in turn 3 reported an outcome with no duration (see
+ * `claimLatestStart`). Starts now stay open across turns and resolve at
+ * `SessionEnd`, the same point the Cursor and Codex adapters already use.
+ *
+ * @public
+ */
+export const resolvesSkillStarts = (hookEventName: string): boolean => {
+  return hookEventName === 'SessionEnd';
+};
+
+/**
+ * Parse a Claude Code `Stop`/`SubagentStop`/`SessionEnd` payload into the
+ * fields the completion emitter needs (session-scoped correlation, transcript
+ * paths).
+ * Returns null when there is no usable session id.
+ *
+ * @public
+ */
+export const normalizeClaudeStopPayload = (
+  raw: unknown,
+): ClaudeStopPayload | null => {
+  if (!isRecord(raw)) {
+    return null;
+  }
+  const sessionId =
+    typeof raw.session_id === 'string' ? raw.session_id.trim() : '';
+  if (!sessionId) {
+    return null;
+  }
+  return {
+    agent_transcript_path: nonEmptyString(raw.agent_transcript_path),
+    cwd: nonEmptyString(raw.cwd),
+    hook_event_name:
+      typeof raw.hook_event_name === 'string' ? raw.hook_event_name : 'Stop',
+    session_id: sessionId,
+    transcript_path: nonEmptyString(raw.transcript_path),
+  };
+};

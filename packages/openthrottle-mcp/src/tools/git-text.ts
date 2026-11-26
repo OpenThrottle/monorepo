@@ -8,9 +8,9 @@ import { z } from 'zod';
 
 import type { GitTextDraftFragment } from '../__generated__/graphql.js';
 import { GitTextDraftDocument } from '../__generated__/graphql.js';
-import { getAuthToken } from '../auth/getAuthToken.ts';
 import type { GenericResult } from '../types/index.ts';
 import { invalidArgsContent } from '../utils/errors.ts';
+import { getAuthToken } from '../utils/getAuthToken.ts';
 import { runTool } from '../utils/runTool.ts';
 
 type DraftGitTextResult = GenericResult<{ draft: GitTextDraftFragment }>;

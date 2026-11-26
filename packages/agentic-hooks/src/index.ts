@@ -2,7 +2,7 @@
  * `@openthrottle/agentic-hooks` — the tool-neutral skill-usage hook core.
  *
  * Knows nothing about any specific agent/editor. Each tool ships a thin adapter
- * (an esbuild entrypoint under `src/adapters/<tool>/`, bundled to that tool's
+ * (an esbuild entrypoint under `src/scripts/<tool>-<hook>.ts`, bundled to that tool's
  * hook folder) that parses ITS OWN native payload into a NormalizedInvocation
  * and delegates the rest here.
  *

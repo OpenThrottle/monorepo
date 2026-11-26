@@ -3,9 +3,9 @@ import 'reflect-metadata';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import { TOOLSET_NAMES } from '../config/toolsets.ts';
-import type { ToolSurface } from '../model-facing-text/surface.ts';
-import { listToolSurface } from '../model-facing-text/surface.ts';
 import { developerMcpToolDefinitions } from '../tool-registry.ts';
+import type { ToolSurface } from '../utils/model-facing-text.ts';
+import { listToolSurface } from '../utils/model-facing-text.ts';
 
 /**
  * @description Regression suite for the hidden-arguments defect: `get_activity_by_date` and `get_blog_post`

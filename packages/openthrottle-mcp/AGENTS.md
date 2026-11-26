@@ -37,7 +37,7 @@ Nx project name is the full `@openthrottle/openthrottle-mcp` (not the bare direc
 ## Fragment coverage (why a tool result can be missing a field)
 
 This package **owns** the shared plan/task/note/project/commit/plan-run documents in
-`src/graphql/operations/*.graphql` (plus `plan-messages.graphql` and `work-sessions.graphql`),
+`src/graphql/{fragments,queries,mutations}.graphql` (plus `plan-messages.graphql` and `work-sessions.graphql`),
 because a package cannot read documents from an application. `openthrottle-server`'s codegen
 (`applications/openthrottle-server/codegen.ts`, committed `src/__generated__/`, used by the OT Loop
 job in `src/queues/ot-loop/`) reads those
@@ -49,7 +49,7 @@ every MCP caller, while codegen, typecheck and the drift guard all stay green �
 absent. `get_plan` hid `runConfigJson` this way for months.
 
 So: **adding a scalar field to `PlanObject`/`TaskObject` server-side is not done until the shared
-fragment selects it.** `src/graphql/__tests__/fragment-coverage.test.ts`
+fragment selects it.** `src/__tests__/fragment-coverage.test.ts`
 enforces this — every scalar/enum field on a covered type must be selected by the fragment or named
 in that file's `EXCLUSIONS` with a reason. Object and list-of-object fields are exempt (a selection
 set is a real choice). After changing a shared document, regenerate **both** consumers: `pnpm nx affected --target=codegen-graphql --parallel` (this package and `openthrottle-server`) and commit every `__generated__`. Renaming an operation renames its generated `*Document`/`*Query`/`*Mutation` names for both; update importers, never alias.
@@ -59,8 +59,8 @@ set is a real choice). After changing a shared document, regenerate **both** con
 - `src/tool-registry.ts` + `src/tools/*.ts` — one file per tool family (plans, tasks, notes,
   activity, output, search, commit, agent-conversations, …); start here to add or change a tool.
 - `src/nest/McpDeveloperMcpSurface.ts` — the MCP surface wired into NestJS.
-- `src/auth/getAuthToken.ts` — bearer-token resolution, exported via the `./auth` subpath.
-- `src/graphql/**/*.graphql` → `src/__generated__/` — codegen output; edit documents, never `__generated__`. `src/graphql/operations/` holds the shared documents (operation names must stay unique across everything the three codegens read, case-insensitively: `ClaimPlanMessages` and `claimPlanMessages` would both emit `ClaimPlanMessagesDocument`).
+- `src/utils/getAuthToken.ts` — bearer-token resolution, re-exported from the package entry.
+- `src/graphql/**/*.graphql` → `src/__generated__/` — codegen output; edit documents, never `__generated__`. `fragments`, `queries` and `mutations` there hold the shared documents (the folder is flat and `.graphql`-only) (operation names must stay unique across everything the three codegens read, case-insensitively: `ClaimPlanMessages` and `claimPlanMessages` would both emit `ClaimPlanMessagesDocument`).
 - `docs/verification-environment.md` — the canonical local services/env/smoke checklist.
 
 ## Invariants & gotchas

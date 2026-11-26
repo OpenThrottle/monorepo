@@ -12,6 +12,6 @@ export type { ToolsetName } from './config/toolsets.ts';
 /** @public */
 export { TOOLSET_NAMES } from './config/toolsets.ts';
 /** @public */
-export type { ToolSurface } from './model-facing-text/surface.ts';
+export type { ToolSurface } from './utils/model-facing-text.ts';
 /** @public */
-export { listToolSurface } from './model-facing-text/surface.ts';
+export { listToolSurface } from './utils/model-facing-text.ts';

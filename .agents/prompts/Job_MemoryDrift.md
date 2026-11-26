@@ -49,7 +49,7 @@ Two hard limits on that licence:
 - **Only the disputed words.** Do not rewrite hooks, reorder entries, or tidy prose in passing. A reconcile that also edits is how a guard starts introducing the drift it was meant to remove.
 - **Never delete an entry.** If an entry looks obsolete, that is a judgement call for the archive-on-land pass, not for this one.
 
-After editing, **re-run the tool** and confirm it exits 0. Then re-run it once more against the written file to confirm the memory-index budget guard did not flag a truncation (see `packages/agentic-hooks/src/memory/index-budget.ts`) — an index that no longer fits is a separate, worse problem than a stale word.
+After editing, **re-run the tool** and confirm it exits 0. Then re-run it once more against the written file to confirm the memory-index budget guard did not flag a truncation (see `packages/agentic-hooks/src/utils/memory-index-budget.ts`) — an index that no longer fits is a separate, worse problem than a stale word.
 
 File an OT plan only for what you could **not** fix mechanically: entries whose correct state is ambiguous, references that consistently fail to resolve, or a pattern suggesting the index needs restructuring rather than correcting.
 

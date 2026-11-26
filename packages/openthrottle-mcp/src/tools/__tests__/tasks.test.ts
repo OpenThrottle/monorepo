@@ -5,10 +5,7 @@
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import {
-  clearCurrentSession,
-  ensureWorkSession,
-} from '../../session/current-session.ts';
+import { clearCurrentSession, ensureWorkSession } from '../../utils/session.ts';
 import {
   createTasksToolHandler,
   createTaskToolHandler,

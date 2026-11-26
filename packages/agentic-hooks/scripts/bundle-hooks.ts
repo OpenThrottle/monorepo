@@ -1,7 +1,7 @@
 /**
  * Deterministic esbuild bundler and generator for the OpenThrottle hook plugins.
  *
- * Each adapter is a TS entrypoint under `src/adapters/<tool>/`. This script
+ * Each adapter is a TS entrypoint at `src/scripts/<tool>-<hook>.ts`. This script
  * bundles each one into a self-contained CommonJS `.cjs` under its payload's
  * `dist/`. The bundle `require`s nothing outside node builtins — the neutral
  * core is inlined — so hooks run as bare `node x.cjs` with no `node_modules`.
@@ -154,32 +154,32 @@ interface PluginEntry {
  */
 const CLAUDE_PLUGIN_ENTRIES: readonly PluginEntry[] = [
   {
-    entry: 'adapters/claude/capture.ts',
+    entry: 'scripts/claude-capture.ts',
     file: 'skill-usage-capture.cjs',
     kind: 'hook',
   },
   {
-    entry: 'adapters/claude/complete.ts',
+    entry: 'scripts/claude-complete.ts',
     file: 'skill-usage-complete.cjs',
     kind: 'hook',
   },
   {
-    entry: 'adapters/claude/doctor.ts',
+    entry: 'scripts/claude-doctor.ts',
     file: 'skill-usage-doctor.cjs',
     kind: 'bin',
   },
   {
-    entry: 'adapters/claude/drain.ts',
+    entry: 'scripts/claude-drain.ts',
     file: 'skill-usage-drain.cjs',
     kind: 'bin',
   },
   {
-    entry: 'adapters/claude/heartbeat.ts',
+    entry: 'scripts/claude-heartbeat.ts',
     file: 'skill-usage-heartbeat.cjs',
     kind: 'hook',
   },
   {
-    entry: 'adapters/claude/outcome.ts',
+    entry: 'scripts/claude-outcome.ts',
     file: 'skill-usage-outcome.cjs',
     kind: 'bin',
   },
@@ -187,23 +187,23 @@ const CLAUDE_PLUGIN_ENTRIES: readonly PluginEntry[] = [
 
 const CURSOR_PLUGIN_ENTRIES: readonly PluginEntry[] = [
   {
-    entry: 'adapters/cursor/capture.ts',
+    entry: 'scripts/cursor-capture.ts',
     file: 'skill-usage-capture.cjs',
     kind: 'hook',
   },
   {
-    entry: 'adapters/cursor/complete.ts',
+    entry: 'scripts/cursor-complete.ts',
     file: 'skill-usage-complete.cjs',
     kind: 'hook',
   },
   {
-    entry: 'adapters/cursor/heartbeat.ts',
+    entry: 'scripts/cursor-heartbeat.ts',
     file: 'skill-usage-heartbeat.cjs',
     kind: 'hook',
   }, // The one tool-neutral outcome reporter: it resolves the running agent's
-  // session and source itself (adapters/claude/reporter-host.ts).
+  // session and source itself (utils/claude-host.ts).
   {
-    entry: 'adapters/claude/outcome.ts',
+    entry: 'scripts/claude-outcome.ts',
     file: 'skill-usage-outcome.cjs',
     kind: 'bin',
   },
@@ -212,37 +212,37 @@ const CURSOR_PLUGIN_ENTRIES: readonly PluginEntry[] = [
 /** OT plan-run workflow: steers an agent working an OT plan, never denies a tool call it cannot justify. */
 const CLAUDE_WORKFLOW_ENTRIES: readonly PluginEntry[] = [
   {
-    entry: 'adapters/claude/plan-auto-close.ts',
+    entry: 'scripts/claude-plan-auto-close.ts',
     file: 'plan-auto-close.cjs',
     kind: 'hook',
   },
   {
-    entry: 'adapters/claude/plan-inbox-claim.ts',
+    entry: 'scripts/claude-plan-inbox-claim.ts',
     file: 'plan-inbox-claim.cjs',
     kind: 'hook',
   },
   {
-    entry: 'adapters/claude/plan-narration.ts',
+    entry: 'scripts/claude-plan-narration.ts',
     file: 'plan-narration.cjs',
     kind: 'hook',
   },
   {
-    entry: 'adapters/claude/plan-run-invariants.ts',
+    entry: 'scripts/claude-plan-run-invariants.ts',
     file: 'plan-run-invariants.cjs',
     kind: 'hook',
   },
   {
-    entry: 'adapters/claude/plan-run-janitor.ts',
+    entry: 'scripts/claude-plan-run-janitor.ts',
     file: 'plan-run-janitor.cjs',
     kind: 'hook',
   },
   {
-    entry: 'adapters/claude/plan-run-task-guard.ts',
+    entry: 'scripts/claude-plan-run-task-guard.ts',
     file: 'plan-run-task-guard.cjs',
     kind: 'hook',
   },
   {
-    entry: 'adapters/claude/require-ot-plan-kickoff.ts',
+    entry: 'scripts/claude-require-ot-plan-kickoff.ts',
     file: 'require-ot-plan-kickoff.cjs',
     kind: 'hook',
   },
@@ -251,12 +251,12 @@ const CLAUDE_WORKFLOW_ENTRIES: readonly PluginEntry[] = [
 /** General guards: useful with or without OpenThrottle. */
 const CLAUDE_GUARDS_ENTRIES: readonly PluginEntry[] = [
   {
-    entry: 'adapters/claude/bash-guard.ts',
+    entry: 'scripts/claude-bash-guard.ts',
     file: 'bash-guard.cjs',
     kind: 'hook',
   },
   {
-    entry: 'adapters/claude/memory-index-guard.ts',
+    entry: 'scripts/claude-memory-index-guard.ts',
     file: 'memory-index-guard.cjs',
     kind: 'hook',
   },
@@ -264,23 +264,23 @@ const CLAUDE_GUARDS_ENTRIES: readonly PluginEntry[] = [
 
 const CODEX_PLUGIN_ENTRIES: readonly PluginEntry[] = [
   {
-    entry: 'adapters/codex/capture.ts',
+    entry: 'scripts/codex-capture.ts',
     file: 'skill-usage-capture.cjs',
     kind: 'hook',
   },
   {
-    entry: 'adapters/codex/complete.ts',
+    entry: 'scripts/codex-complete.ts',
     file: 'skill-usage-complete.cjs',
     kind: 'hook',
   },
   {
-    entry: 'adapters/codex/heartbeat.ts',
+    entry: 'scripts/codex-heartbeat.ts',
     file: 'skill-usage-heartbeat.cjs',
     kind: 'hook',
   }, // The one tool-neutral outcome reporter: it resolves the running agent's
-  // session and source itself (adapters/claude/reporter-host.ts).
+  // session and source itself (utils/claude-host.ts).
   {
-    entry: 'adapters/claude/outcome.ts',
+    entry: 'scripts/claude-outcome.ts',
     file: 'skill-usage-outcome.cjs',
     kind: 'bin',
   },
@@ -288,7 +288,7 @@ const CODEX_PLUGIN_ENTRIES: readonly PluginEntry[] = [
 
 const CURSOR_GUARDS_ENTRIES: readonly PluginEntry[] = [
   {
-    entry: 'adapters/cursor/bash-guard.ts',
+    entry: 'scripts/cursor-bash-guard.ts',
     file: 'bash-guard.cjs',
     kind: 'hook',
   },
@@ -1245,7 +1245,7 @@ interface StandaloneHook {
 
 const STANDALONE_HOOKS: readonly StandaloneHook[] = [
   {
-    entry: 'adapters/antigravity/heartbeat.ts',
+    entry: 'scripts/antigravity-heartbeat.ts',
     file: 'skill-usage-heartbeat.cjs',
     root: '.agents/plugins/openthrottle',
   },

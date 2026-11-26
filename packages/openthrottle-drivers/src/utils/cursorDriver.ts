@@ -1,0 +1,139 @@
+/**
+ * @description Cursor CLI driver: non-interactive mode (`cursor-agent --force -p …`). Also emits
+ * the MCP-attachment flags (see {@link CURSOR_MCP_FLAGS}). Unlike Claude, Cursor emits `--model` for
+ * any non-empty value (including `auto`), and supports the Cursor-only `--worktree-base` /
+ * `--skip-worktree-setup` flags.
+ */
+
+import type { DriverCapabilities, DriverModelListing } from '../types/index.ts';
+import { cursorAttributionOffEnv } from './cursor-config.ts';
+import { structuredOutputShellFlag } from './output-format.ts';
+import { defineDriver } from './registry.ts';
+import { escapeForShellDoubleQuoted, escapeShellArg } from './shell.ts';
+import {
+  appendMcpShellFlags,
+  appendPluginDirShellFlags,
+  appendWorktreeShellFlags,
+  OPENTHROTTLE_CURSOR_PLUGIN_DIR_RELS,
+} from './shell-flags.ts';
+
+/**
+ * Flags that attach the workspace's configured MCP servers to a headless run, verified against
+ * `cursor-agent` 2026.08.11-e8db854.
+ *
+ * `--approve-mcps` is the one that matters and is both necessary and sufficient: without it every
+ * server in `.cursor/mcp.json` is parsed but held at `not loaded (needs approval)`, so an agent
+ * given an MCP-dependent job silently has no tools. Approval is otherwise granted interactively and
+ * cached per workspace **path** under `~/.cursor/projects/<slug>/`, which is why this never
+ * reproduced in a long-lived checkout but always fails in a fresh worktree, a container, or the
+ * scheduled-job worker's cwd.
+ *
+ * `--trust` is a distinct axis (workspace trust, not MCP approval) and does nothing for attachment
+ * on its own — it is emitted alongside to suppress the other headless prompt a first-seen path
+ * hits. The chat composer's cursor backend emits it unconditionally for the same reason.
+ */
+const CURSOR_MCP_FLAGS: readonly string[] = ['--approve-mcps', '--trust'];
+
+const capabilities: DriverCapabilities = {
+  allowedCommands: false,
+  /**
+   * Reads the workspace's `.cursor/mcp.json`. Requires {@link CURSOR_MCP_FLAGS} to actually attach,
+   * and requires the run to happen in the checkout root — Cursor discovers the config by walking up
+   * but SPAWNS each server with the process cwd, so relative launchers like
+   * `bash ./scripts/run-openthrottle-mcp.sh` fail from a subdirectory.
+   */
+  attachesWorkspaceMcp: true,
+  chatStreaming: true,
+  /**
+   * `false`: no flag suppresses the workspace layer. Checked against cursor-agent
+   * 2026.11.13-eacade1 `--help` (2026-11-22): there is no settings-source or strict-MCP option, and
+   * this driver's own {@link CURSOR_MCP_FLAGS} (`--approve-mcps --trust`) approve every server in
+   * the repo's `.cursor/mcp.json`. Dropping them would also drop `openthrottle-mcp`, and nothing
+   * says `.cursor/hooks.json` is gated by `--trust`. An untrusted checkout's cursor run is refused.
+   */
+  isolatesRepoAgentConfig: false,
+  mcpAutoApprove: true,
+  permissionMode: false,
+  /**
+   * `--plugin-dir <path>`, repeatable — verified against `cursor-agent` 2026.09.10-fd3934a. Points
+   * at the CURSOR payload (`pluginDirRels` below), never the Claude one.
+   */
+  pluginDir: true,
+  reportsToolCalls: true,
+  skipWorktreeSetup: true,
+  supportsCustomBaseUrl: false,
+  supportsModelFlag: true,
+  worktree: true,
+  worktreeBase: true,
+};
+
+/**
+ * `cursor-agent models` prints a `Available models` header, a blank line, then one `<id> - <Label>`
+ * row per model (verified against 2026.07.23). Capture the id token before ` - `; skip the header
+ * and blanks.
+ */
+const discoverModels: DriverModelListing = {
+  argv: ['models'],
+  mode: 'command',
+  parse: (stdout) =>
+    stdout
+      .split('\n')
+      .map((line) => /^(\S+) - /.exec(line.trim())?.[1])
+      .filter((id): id is string => id !== undefined),
+};
+
+/**
+ * @description Cursor driver (`cursor`, label `cursor-agent`).
+ * @public
+ */
+export const cursorDriver = defineDriver({
+  binEnv: 'OPENTHROTTLE_CURSOR_AGENT_BIN',
+  binary: 'cursor-agent',
+  buildShellCommand: (config) => {
+    const modelFlag = config.model
+      ? ` --model ${escapeShellArg(config.model)}`
+      : '';
+
+    const safePrompt = escapeForShellDoubleQuoted(config.prompt);
+    const outputFlag = structuredOutputShellFlag(
+      config,
+      '--output-format stream-json',
+    );
+    const base = `${escapeShellArg(config.bin ?? 'cursor-agent')} --force -p "${safePrompt}"${outputFlag}${modelFlag}`;
+    const withMcp = appendMcpShellFlags(base, capabilities, CURSOR_MCP_FLAGS);
+    const withPlugins = appendPluginDirShellFlags(
+      withMcp,
+      capabilities,
+      config.pluginDirs,
+    );
+
+    return appendWorktreeShellFlags(withPlugins, capabilities, config.worktree);
+  },
+  capabilities,
+  // Stops cursor writing a `Co-authored-by: Cursor` trailer — see utils/cursor-config.ts.
+  childEnv: cursorAttributionOffEnv,
+  discoverModels,
+  // Mirrors the chat adapter's list: the credential-store selector, the proxy trio (cursor has no network route behind a proxy without it), the XDG dirs that locate its config and compile cache, and `CURSOR_*`, which is cursor's own configuration by construction.
+  hostEnv: {
+    keys: [
+      'AGENT_CLI_CREDENTIAL_STORE',
+      'SHELL', // cursor shells out for tool calls; listed so chat (whose base omits it) keeps it.
+      'HTTPS_PROXY',
+      'HTTP_PROXY',
+      'NO_PROXY',
+      'XDG_CACHE_HOME',
+      'XDG_CONFIG_HOME',
+    ],
+    prefixes: ['CURSOR_'],
+  },
+  id: 'cursor',
+  install: {
+    installerShell: 'bash',
+    method: 'curl-shell',
+    url: 'https://cursor.com/install',
+  },
+  label: 'cursor-agent',
+  pluginDirRels: OPENTHROTTLE_CURSOR_PLUGIN_DIR_RELS,
+  update: { method: 'reinstall' },
+  versionArgs: ['--version'],
+});

@@ -1,0 +1,251 @@
+/**
+ * @description The single provider-agnostic "run one prompt once" entrypoint. Resolves a driver from
+ * an id, validates that requested tuning knobs are supported (typed errors, never silent drops), runs
+ * the prompt through the async engine, and returns a structured {@link RunAgentPromptResult} that
+ * classifies the engine's merged-string + `<promise>ERROR</promise>` sentinel convention into an
+ * explicit status (including a `failed` state for non-zero exits, which the raw engine string hides).
+ *
+ * This is the choke point the server calls for any of the five agent CLIs — no invocation logic
+ * (driver resolution, command building, spawn) should leak into consumers.
+ */
+
+import type {
+  DriverChunk,
+  DriverEndpointConfig,
+  DriverInvocationConfig,
+  DriverRepoAgentConfig,
+  DriverWorktreeOptions,
+} from '../types/index.ts';
+import type { AgentAccountError } from './account-error.ts';
+import type { UsageLimit } from './claude-output.ts';
+import { getDriver } from './driver-registry.ts';
+import { DriverCapabilityError } from './DriverCapabilityError.ts';
+import type { RunDriverOptions } from './engine.ts';
+import { checkRepoAgentConfig, runDriverAsync } from './engine.ts';
+import type { DriversValue } from './registry.ts';
+import { parseDriverId } from './registry.ts';
+
+/**
+ * @description The typed subset of driver tuning knobs a generic caller may set. Deliberately NOT a
+ * free-form flag bag — the driver contract has no arbitrary-flags path, so only `endpoint` and
+ * `worktree` (the real knobs beyond `model`, which stays a first-class field on
+ * {@link RunAgentPromptConfig}) are honored. Unknown keys are a validation concern for the caller.
+ * @public
+ */
+export interface AgentPromptSettings {
+  /** Local OpenAI-compatible endpoint; honored only by drivers with `supportsCustomBaseUrl`. */
+  readonly endpoint?: DriverEndpointConfig;
+  /** Worktree flags; honored only by drivers with the matching `worktree` capabilities. */
+  readonly worktree?: DriverWorktreeOptions;
+}
+
+/**
+ * @description Provider-agnostic input for {@link runAgentPrompt}. `driverId` is a raw string
+ * validated via `parseDriverId`; the rest map directly onto {@link DriverInvocationConfig}.
+ * @public
+ */
+export interface RunAgentPromptConfig {
+  /**
+   * Shell command patterns the run may execute without a prompt (see
+   * {@link DriverInvocationConfig.allowedCommands}). A non-empty list on a driver without the
+   * `allowedCommands` capability throws {@link DriverCapabilityError} before anything spawns.
+   */
+  readonly allowedCommands?: readonly string[];
+  /** Process cwd for the subprocess; inherits `process.cwd()` when omitted. */
+  readonly cwd?: string;
+  /** Raw driver id; validated via `parseDriverId` (throws `UnknownDriverError` when unknown). */
+  readonly driverId: string;
+  /** Model preset; requires the driver to advertise `supportsModelFlag`. */
+  readonly model?: string;
+  /** Per-chunk stdout/stderr callback; wrapped internally so `output` is always buffered. */
+  readonly onChunk?: (chunk: DriverChunk) => void;
+  /** Full prompt passed to the CLI's print/headless mode. */
+  readonly prompt: string;
+  /**
+   * Whether the CLI may load the cwd's own agent config (hooks, MCP servers). Omitted means
+   * trusted, as before the trust gate; an isolated posture on a driver without
+   * `isolatesRepoAgentConfig` throws {@link DriverCapabilityError} before anything spawns.
+   */
+  readonly repoAgentConfig?: DriverRepoAgentConfig;
+  /** Typed tuning-knob subset (endpoint/worktree). */
+  readonly settings?: AgentPromptSettings;
+  /** AbortSignal to cancel the invocation. */
+  readonly signal?: AbortSignal;
+  /** Per-invocation timeout in ms; on expiry the child is SIGTERM→SIGKILL'd. */
+  readonly timeoutMs?: number;
+}
+
+/**
+ * @description Terminal status of a single prompt run.
+ * - `ok` — process exited 0.
+ * - `failed` — process exited non-zero.
+ * - `timeout` — killed after `timeoutMs`.
+ * - `cancelled` — killed via `signal`.
+ * - `spawn_error` — the child never started (spawn failure).
+ * @public
+ */
+export const RUN_AGENT_STATUS = {
+  cancelled: 'cancelled',
+  failed: 'failed',
+  ok: 'ok',
+  spawnError: 'spawn_error',
+  timeout: 'timeout',
+} as const;
+
+export type RunAgentStatusKey = keyof typeof RUN_AGENT_STATUS;
+/** @description One of the {@link RUN_AGENT_STATUS} values. @public */
+export type RunAgentStatusValue = (typeof RUN_AGENT_STATUS)[RunAgentStatusKey];
+
+/**
+ * @description Structured result of {@link runAgentPrompt}. `output` is buffered by `runAgentPrompt`
+ * itself (wrapping the caller's `onChunk`), so partial output survives a timeout/cancel — the engine
+ * discards its own buffer on those paths. `exitCode` is `null` for any non-`ok`/`failed` status.
+ * For a driver with `parseOutput` (Claude's stream-json) `output` is the parsed result text after a
+ * normal close; after a timeout/cancel it is the partial live-rendered text (see `renderOutputLine`). `usageLimit` is non-null only when the run closed normally and hit a subscription usage
+ * limit; `status` is still exit-code based (a limited run is `failed`), so the caller decides what
+ * a limit means. `accountError` follows the same rule for a fatal account error.
+ * @public
+ */
+export interface RunAgentPromptResult {
+  readonly accountError: AgentAccountError | null;
+  readonly driverId: DriversValue;
+  readonly exitCode: number | null;
+  readonly model?: string;
+  readonly output: string;
+  readonly status: RunAgentStatusValue;
+  readonly usageLimit: UsageLimit | null;
+}
+
+/**
+ * @description Runs one prompt through one driver and returns a typed result. Resolves the driver via
+ * `getDriver(parseDriverId(...))`, rejects capability mismatches with {@link DriverCapabilityError},
+ * and classifies the outcome:
+ *
+ * 1. A thrown child spawn error ⇒ `spawn_error`.
+ * 2. Otherwise, if the engine reported a normal close (`onExit` fired) ⇒ `ok` (exit 0) or `failed`.
+ * 3. Otherwise the run was killed: `cancelled` when `signal.aborted`, else `timeout`.
+ *
+ * Never throws for timeout/abort/non-zero exit — those are results, not exceptions. Only invalid
+ * input (unknown driver id, capability mismatch) throws.
+ * @public
+ */
+export const runAgentPrompt = async (
+  config: RunAgentPromptConfig,
+  options: RunDriverOptions = {},
+): Promise<RunAgentPromptResult> => {
+  const driverId = parseDriverId(config.driverId);
+  const driver = getDriver(driverId);
+  const { endpoint, worktree } = config.settings ?? {};
+
+  const model = config.model?.trim();
+  if (model && !driver.capabilities.supportsModelFlag) {
+    throw new DriverCapabilityError(
+      driverId,
+      'a model flag',
+      `cannot apply model "${model}"`,
+    );
+  }
+
+  if (endpoint && !driver.capabilities.supportsCustomBaseUrl) {
+    throw new DriverCapabilityError(
+      driverId,
+      'a custom endpoint',
+      `cannot target base URL "${endpoint.baseUrl}"`,
+    );
+  }
+
+  if (worktree && !driver.capabilities.worktree) {
+    throw new DriverCapabilityError(
+      driverId,
+      'worktrees',
+      'cannot apply worktree options',
+    );
+  }
+
+  const allowedCommands = config.allowedCommands ?? [];
+  if (allowedCommands.length > 0 && !driver.capabilities.allowedCommands) {
+    throw new DriverCapabilityError(
+      driverId,
+      'a command allowlist',
+      `cannot pre-approve ${allowedCommands.length} command pattern(s)`,
+    );
+  }
+
+  const trustCheck = checkRepoAgentConfig(driver, config);
+  if (!trustCheck.ok) {
+    throw new DriverCapabilityError(
+      driverId,
+      'repository agent-config isolation',
+      trustCheck.reason,
+    );
+  }
+
+  const buffered: string[] = [];
+  const invocationConfig: DriverInvocationConfig = {
+    allowedCommands,
+    cwd: config.cwd,
+    endpoint,
+    iteration: 0,
+    model: config.model,
+    onChunk: (chunk: DriverChunk): void => {
+      buffered.push(chunk.data);
+      config.onChunk?.(chunk);
+    },
+    prompt: config.prompt,
+    repoAgentConfig: config.repoAgentConfig,
+    signal: config.signal,
+    timeoutMs: config.timeoutMs,
+    worktree,
+  };
+
+  let exitCode: number | null = null;
+  let exited = false;
+  let usageLimit: UsageLimit | null = null;
+  let accountError: AgentAccountError | null = null;
+  let finalOutput: string | undefined;
+
+  let status: RunAgentStatusValue;
+  try {
+    const engineOutput = await runDriverAsync(driver, invocationConfig, {
+      logger: options.logger,
+      onAccountError: (error: AgentAccountError): void => {
+        accountError = error;
+        options.onAccountError?.(error);
+      },
+      onExit: (code: number | null): void => {
+        exited = true;
+        exitCode = code;
+      },
+      onUsageLimit: (limit: UsageLimit): void => {
+        usageLimit = limit;
+        options.onUsageLimit?.(limit);
+      },
+    });
+
+    if (exited) {
+      // A driver with `parseOutput` streams RENDERED chunks, so on a normal close the engine's
+      // parsed result is the authoritative output; drivers without it keep the buffered chunks.
+      if (driver.parseOutput !== undefined) {
+        finalOutput = engineOutput.trim();
+      }
+
+      status = exitCode === 0 ? RUN_AGENT_STATUS.ok : RUN_AGENT_STATUS.failed;
+    } else if (config.signal?.aborted) {
+      status = RUN_AGENT_STATUS.cancelled;
+    } else {
+      status = RUN_AGENT_STATUS.timeout;
+    }
+  } catch {
+    status = RUN_AGENT_STATUS.spawnError;
+  }
+
+  return {
+    accountError,
+    driverId,
+    exitCode,
+    model: config.model,
+    output: finalOutput ?? buffered.join('').trim(),
+    status,
+    usageLimit,
+  };
+};

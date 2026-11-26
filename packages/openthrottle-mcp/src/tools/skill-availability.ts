@@ -24,9 +24,9 @@ import {
   UpsertSkillAvailabilityRuleSetDocument,
 } from '../__generated__/graphql.js';
 import { SkillAvailabilityRuleInputSchema } from '../__generated__/schemas.ts';
-import { getAuthToken } from '../auth/getAuthToken.ts';
 import type { GenericResult } from '../types/index.ts';
 import { invalidArgsContent } from '../utils/errors.ts';
+import { getAuthToken } from '../utils/getAuthToken.ts';
 import { runTool } from '../utils/runTool.ts';
 
 type SkillAvailabilityRule = {

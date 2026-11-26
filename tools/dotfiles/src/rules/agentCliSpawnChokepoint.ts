@@ -37,7 +37,7 @@ const DEFAULT_ALLOWED_FILES: readonly string[] = [
 ];
 
 /**
- * The `binary` of every driver in openthrottle-drivers (`src/drivers/*.ts`),
+ * The `binary` of every driver in openthrottle-drivers (`src/utils/*Driver.ts`),
  * plus the long name Antigravity also installs under. Duplicated rather than
  * imported: every project's lint config loads this package, so it cannot
  * depend on a workspace package.

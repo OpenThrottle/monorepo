@@ -198,7 +198,7 @@ fields, delivery-leg detection and privacy rules live in the
 
 ### `--bare` skips hooks, LSP, and plugins
 
-Nothing in the real spawn path emits it — `packages/openthrottle-drivers/src/drivers/claude.ts`
+Nothing in the real spawn path emits it — `packages/openthrottle-drivers/src/utils/claudeDriver.ts`
 builds `claude -p --permission-mode acceptEdits "<prompt>"`, and a test pins that `--bare` never
 appears. Some older `claude --bare -p` strings survived in help text and docs after
 the move to the driver registry; those have been corrected, since they now describe a

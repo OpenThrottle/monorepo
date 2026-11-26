@@ -2,7 +2,7 @@
 
 The headless event stream the `grok` chat backend
 (`packages/agentic-conversation-backend/src/utils/grok*.ts`) and the `grok` plan-run
-driver (`packages/openthrottle-drivers/src/drivers/grok.ts`) are built against. grok calls the format
+driver (`packages/openthrottle-drivers/src/utils/grokDriver.ts`) are built against. grok calls the format
 `streaming-json` (JSONL).
 
 > **Provenance, stated honestly.** Three sources, and they do not cover the same ground.

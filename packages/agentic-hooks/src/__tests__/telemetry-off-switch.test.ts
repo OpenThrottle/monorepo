@@ -5,10 +5,11 @@ import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-const ADAPTERS_DIR = path.resolve(import.meta.dirname, '..', 'adapters');
+const FIXTURES_DIR = path.resolve(import.meta.dirname, '..', '..', 'fixtures');
+const SCRIPTS_DIR = path.resolve(import.meta.dirname, '..', 'scripts');
 
 const readFixture = (relPath: string): string => {
-  return fs.readFileSync(path.join(ADAPTERS_DIR, relPath), 'utf8');
+  return fs.readFileSync(path.join(FIXTURES_DIR, relPath), 'utf8');
 };
 
 interface Entrypoint {
@@ -18,43 +19,41 @@ interface Entrypoint {
 
 const ENTRYPOINTS: readonly Entrypoint[] = [
   {
-    payload: readFixture('claude/__tests__/fixtures/stop-payload.json'),
-    script: 'claude/capture.ts',
+    payload: readFixture('claude/stop-payload.json'),
+    script: 'claude-capture.ts',
   },
   {
-    payload: readFixture('claude/__tests__/fixtures/stop-payload.json'),
-    script: 'claude/complete.ts',
+    payload: readFixture('claude/stop-payload.json'),
+    script: 'claude-complete.ts',
   },
-  { payload: '{}', script: 'claude/drain.ts' },
-  { payload: '{}', script: 'claude/heartbeat.ts' },
-  { payload: '{}', script: 'claude/outcome.ts' },
+  { payload: '{}', script: 'claude-drain.ts' },
+  { payload: '{}', script: 'claude-heartbeat.ts' },
+  { payload: '{}', script: 'claude-outcome.ts' },
   {
-    payload: readFixture(
-      'cursor/__tests__/fixtures/pre-tool-use-skill-read.json',
-    ),
-    script: 'cursor/capture.ts',
+    payload: readFixture('cursor/pre-tool-use-skill-read.json'),
+    script: 'cursor-capture.ts',
   },
   {
-    payload: readFixture('cursor/__tests__/fixtures/session-end.json'),
-    script: 'cursor/complete.ts',
+    payload: readFixture('cursor/session-end.json'),
+    script: 'cursor-complete.ts',
   },
   {
-    payload: readFixture('cursor/__tests__/fixtures/session-start.json'),
-    script: 'cursor/heartbeat.ts',
+    payload: readFixture('cursor/session-start.json'),
+    script: 'cursor-heartbeat.ts',
   },
   {
-    payload: readFixture('codex/__tests__/fixtures/pre-tool-use.json'),
-    script: 'codex/capture.ts',
+    payload: readFixture('codex/pre-tool-use.json'),
+    script: 'codex-capture.ts',
   },
   {
-    payload: readFixture('codex/__tests__/fixtures/session-end.json'),
-    script: 'codex/complete.ts',
+    payload: readFixture('codex/session-end.json'),
+    script: 'codex-complete.ts',
   },
   {
-    payload: readFixture('codex/__tests__/fixtures/session-start.json'),
-    script: 'codex/heartbeat.ts',
+    payload: readFixture('codex/session-start.json'),
+    script: 'codex-heartbeat.ts',
   },
-  { payload: '{}', script: 'antigravity/heartbeat.ts' },
+  { payload: '{}', script: 'antigravity-heartbeat.ts' },
 ];
 
 const listFiles = (dir: string): string[] => {
@@ -84,7 +83,7 @@ describe('telemetry off switch (contract §7 layer 2)', () => {
   const run = (entrypoint: Entrypoint, env: Record<string, string>): void => {
     const result = spawnSync(
       process.execPath,
-      [path.join(ADAPTERS_DIR, entrypoint.script)],
+      [path.join(SCRIPTS_DIR, entrypoint.script)],
       {
         cwd: home,
         encoding: 'utf8',
@@ -124,7 +123,7 @@ describe('telemetry off switch (contract §7 layer 2)', () => {
   });
 
   describe('when it is not set (control)', () => {
-    it.each(['cursor/capture.ts', 'codex/capture.ts'])(
+    it.each(['cursor-capture.ts', 'codex-capture.ts'])(
       '%s buffers an event and a start file',
       (script) => {
         const entrypoint = ENTRYPOINTS.find((e) => e.script === script);

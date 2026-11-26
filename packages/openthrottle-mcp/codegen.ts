@@ -9,9 +9,8 @@ const __dirname = dirname(__filename);
 const config: CodegenConfig = defineCodegen({
   dirname: __dirname,
   documents: [
-    // Every .graphql document this package owns, including src/graphql/operations/: the shared
-    // plan/task/note/project/commit operations and fragments that openthrottle-server's
-    // codegen also reads.
+    // Every .graphql document this package owns, including the shared
+    // fragments/queries/mutations that openthrottle-server's codegen also reads.
     'src/**/*.graphql',
     'src/**/*.ts',
     '!src/__generated__/**/*',

@@ -11,8 +11,10 @@ const config: CodegenConfig = defineCodegen({
   // The plan-run documents the OT Loop job executes (queues/ot-loop/). openthrottle-mcp owns them,
   // because a package cannot read documents from an application; the server reads them from there.
   documents: [
-    '../../packages/openthrottle-mcp/src/graphql/operations/**/*.graphql',
+    '../../packages/openthrottle-mcp/src/graphql/fragments.graphql',
+    '../../packages/openthrottle-mcp/src/graphql/mutations.graphql',
     '../../packages/openthrottle-mcp/src/graphql/plan-messages.graphql',
+    '../../packages/openthrottle-mcp/src/graphql/queries.graphql',
     '../../packages/openthrottle-mcp/src/graphql/work-sessions.graphql',
     '!src/__generated__/**/*',
   ],
