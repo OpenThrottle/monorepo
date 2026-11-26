@@ -278,28 +278,43 @@ source-first TypeScript entries.
 **Decision:** the `build` target of `@openthrottle/nestjs-repositories-cms` copies both packages' generated files into
 its own output, using the `@nx/js:tsc` `assets` option (the
 [package generator template](../../tools/generators/src/generators/package/files/tools/package.json)
-already uses it):
+already uses it). The glob is `schema*.json`, which takes the manifest and every schema but not the
+`mock.*.ts` files beside them:
 
 ```text
-packages/react-router-cms-ui/src/data/schema{.*,-manifest}.json   → packages/nestjs-repositories-cms/dist/schemas/react-router-cms-ui/
-packages/react-router-cms-core/src/data/schema{.*,-manifest}.json → packages/nestjs-repositories-cms/dist/schemas/react-router-cms-core/
+packages/react-router-cms-ui/src/data/schema*.json   → packages/nestjs-repositories-cms/dist/schemas/react-router-cms-ui/
+packages/react-router-cms-core/src/data/schema*.json → packages/nestjs-repositories-cms/dist/schemas/react-router-cms-core/
 ```
 
-At runtime the sync finds them relative to its own compiled file, with
-`new URL('…/schemas/', import.meta.url)`. It never uses a path from the repository root and never
-resolves either React package. The build's `inputs` name both packages' `src/data/schema*.json` files, so editing a block
-schema invalidates the Nx cache and the copy cannot go stale.
+The build's `inputs` are Nx's defaults plus both packages' `src/data/schema*.json`, so editing a
+block schema invalidates the Nx cache and the copy cannot go stale.
+
+**What ships today, and what does not yet (OT plan `ad97c557-95f8-4462-aa2c-8f7bcdf41307`):**
+
+- **Shipped:** the copy and the cache inputs above. A build of the package leaves all 16 files
+  (10 cms-ui schemas, 4 cms-core schemas, a manifest each) in `dist/schemas/`.
+- **Not yet:** anything that reads them. The runtime half of this decision lives in draft PR #872
+  (branch `openthrottle/cms-schema-sync`, plan `a608869b` task 5), which is unmerged. That includes
+  `CmsSchemaSyncService` (the boot hook and `syncCmsSchemas` from [§ 3](#3-schema-sync-trigger-on-server-boot-in-the-package-plus-an-admin-mutation)),
+  its lookup relative to its own compiled file (`new URL('…/schemas/', import.meta.url)`, never a
+  repository-root path and never a resolve of either React package), and the boot-check coverage
+  below. Until it lands, the only sync is the repository-tree script
+  ([`scripts/openthrottle-database-sync-cms-schemas.ts`](../../scripts/openthrottle-database-sync-cms-schemas.ts)),
+  so a production image has no way to fill `schemas`. #872 predates the move of these files into
+  `src/data/`, and it must take this build target as it is now rather than its own `schemas/` globs.
 
 Why this survives the production image: `Dockerfile.NestJS` builds every package, then ships only the
 `pnpm --filter openthrottle-server --prod deploy` tree. The server resolves
 `@openthrottle/nestjs-repositories-cms` through its `exports`, which point at `dist/`. Once the
 server imports the module (plan `18a3b88f`), that `dist/` must be in the image or the server cannot
 boot, so the manifests ride inside a directory the image already has to ship.
-[`boot-check.sh`](../../.github/actions/docker-build-push/boot-check.sh) boots that image with a
-read-only root before it is pushed, so a missing folder shows up there as a logged sync error.
+Once the sync service lands,
+[`boot-check.sh`](../../.github/actions/docker-build-push/boot-check.sh) (which boots that image
+with a read-only root before it is pushed) will show a missing folder as a logged sync error.
 
 In dev, `openthrottle-server:dev` runs `^build` first, so the copy exists before the server starts.
-After `cms-schemas:write`, rebuild the package (or restart `dev`) and run `syncCmsSchemas`.
+After `cms-schemas:write`, rebuild the package (or restart `dev`); with the sync service, then run
+`syncCmsSchemas`.
 
 Rejected options:
 

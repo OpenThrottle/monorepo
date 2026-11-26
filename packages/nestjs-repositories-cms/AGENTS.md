@@ -34,6 +34,10 @@ hand-written `@ObjectType()` classes and `*ListResult` envelopes (`items`, `tota
 
 ## Invariants & gotchas
 
+- **`build` copies the CMS block schemas into `dist/schemas/<pkg>/`** (`assets` + matching
+  `inputs`, from `packages/react-router-cms-{ui,core}/src/data/schema*.json`). Nothing reads them yet:
+  the sync service that will is draft PR #872. Moving or renaming those files means updating both
+  lists here, or the copy silently goes empty. Decision: `databases/cms/README.md` § 4.
 - A schema change is **two edits, together**: the SQL migration under `databases/cms/migrations/`
   AND the entity here. Each entity's class JSDoc names the migrations it matches. The SQL is the
   source of truth: `synchronize` is off and there are no TypeORM migrations.
