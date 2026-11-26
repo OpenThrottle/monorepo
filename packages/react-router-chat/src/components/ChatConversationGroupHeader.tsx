@@ -10,6 +10,8 @@ import {
   DropdownMenuTrigger,
 } from '@openthrottle/react-router-shadcn';
 import {
+  ArrowDown,
+  ArrowUp,
   ChevronDown,
   Folder,
   MoreHorizontal,
@@ -31,6 +33,10 @@ export interface ChatConversationGroupHeaderProps {
   readonly group: AgentConversationGroup;
   readonly isCollapsed: boolean;
   readonly onDelete: () => void;
+  /** Null at the bottom; both null hides the move items (a lone group). */
+  readonly onMoveDown: (() => void) | null;
+  /** Null at the top. */
+  readonly onMoveUp: (() => void) | null;
   readonly onStartRename: () => void;
   readonly onToggleCollapsed: () => void;
 }
@@ -38,7 +44,8 @@ export interface ChatConversationGroupHeaderProps {
 /**
  * @description A user-defined group's header in {@link ChatConversationSidebar}:
  * click to collapse or expand, double-click (or F2) to rename, and a `⋯` menu
- * with Rename and Delete group. Deleting keeps the group's chats.
+ * with Rename, Move up / Move down and Delete group. Deleting keeps the group's
+ * chats.
  */
 export const ChatConversationGroupHeader = (
   props: ChatConversationGroupHeaderProps,
@@ -48,6 +55,8 @@ export const ChatConversationGroupHeader = (
     group,
     isCollapsed,
     onDelete,
+    onMoveDown,
+    onMoveUp,
     onStartRename,
     onToggleCollapsed,
   } = props;
@@ -57,6 +66,7 @@ export const ChatConversationGroupHeader = (
   // Setup
   const copy = CHAT_CONVERSATION_SIDEBAR_COPY;
   const collapseLabel = isCollapsed ? copy.expandGroup : copy.collapseGroup;
+  const isMovable = onMoveUp != null || onMoveDown != null;
 
   // Handlers
   const handleKeyDown = (
@@ -69,6 +79,26 @@ export const ChatConversationGroupHeader = (
   };
 
   // Markup
+  const moveItems = (
+    <>
+      <DropdownMenuItem
+        className={MENU_ITEM_CLASSES}
+        disabled={onMoveUp == null}
+        onSelect={() => onMoveUp?.()}
+      >
+        <ArrowUp aria-hidden={true} />
+        {copy.moveGroupUp}
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        className={MENU_ITEM_CLASSES}
+        disabled={onMoveDown == null}
+        onSelect={() => onMoveDown?.()}
+      >
+        <ArrowDown aria-hidden={true} />
+        {copy.moveGroupDown}
+      </DropdownMenuItem>
+    </>
+  );
 
   // Life Cycle
 
@@ -134,6 +164,7 @@ export const ChatConversationGroupHeader = (
             <ChevronDown aria-hidden={true} />
             {collapseLabel}
           </DropdownMenuItem>
+          {isMovable ? moveItems : null}
           <DropdownMenuSeparator />
           <DropdownMenuItem
             className={cn(MENU_ITEM_CLASSES, MENU_ITEM_DESTRUCTIVE_CLASSES)}

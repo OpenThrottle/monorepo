@@ -33,13 +33,17 @@ export class AgentConversationGroupsRepository extends BaseRepository<
   }
 
   /**
-   * @description Lists a user's groups in sidebar order (`sort_order` ascending).
+   * @description Lists a user's groups in sidebar order (`sort_order` ascending, `id` breaking
+   * ties). An `orderBy` chain rather than `find({ order })`: TypeORM sorts by that object's key
+   * order, which the alphabetize-keys lint rewrites.
    */
   async listGroupsForUser(userId: string): Promise<AgentConversationGroup[]> {
-    return this.repository.find({
-      order: { id: 'ASC', sortOrder: 'ASC' },
-      where: { userId },
-    });
+    return this.repository
+      .createQueryBuilder('agentConversationGroup')
+      .where('agentConversationGroup.userId = :userId', { userId })
+      .orderBy('agentConversationGroup.sortOrder', 'ASC')
+      .addOrderBy('agentConversationGroup.id', 'ASC')
+      .getMany();
   }
 
   /**

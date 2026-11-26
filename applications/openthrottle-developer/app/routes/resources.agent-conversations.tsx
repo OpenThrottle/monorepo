@@ -83,6 +83,10 @@ export const action = async (
     return agentConversationGroups.handleRenameGroupIntent(request, formData);
   }
 
+  if (intent === AGENT_CONVERSATION_GROUP_INTENTS.REORDER_GROUPS) {
+    return agentConversationGroups.handleReorderGroupsIntent(request, formData);
+  }
+
   if (intent === AGENT_CONVERSATION_GROUP_INTENTS.DELETE_GROUP) {
     return agentConversationGroups.handleDeleteGroupIntent(request, formData);
   }

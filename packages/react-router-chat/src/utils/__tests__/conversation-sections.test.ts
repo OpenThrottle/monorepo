@@ -7,6 +7,7 @@ import type {
 import {
   buildConversationSections,
   conversationDateKey,
+  moveGroupInOrder,
 } from '../conversation-sections';
 
 const NOW = new Date(2026, 10, 25, 15, 0, 0);
@@ -119,5 +120,29 @@ describe('buildConversationSections', () => {
         kind: 'date',
       },
     ]);
+  });
+});
+
+describe('moveGroupInOrder', () => {
+  test('moves a group down in sortOrder order', () => {
+    expect(moveGroupInOrder(GROUPS, 'g1', 1)).toEqual(['g2', 'g1']);
+  });
+
+  test('moves a group up in sortOrder order', () => {
+    expect(moveGroupInOrder(GROUPS, 'g2', -1)).toEqual(['g2', 'g1']);
+  });
+
+  describe('when the move would leave the list', () => {
+    test('the top group cannot move up', () => {
+      expect(moveGroupInOrder(GROUPS, 'g1', -1)).toBeNull();
+    });
+
+    test('the bottom group cannot move down', () => {
+      expect(moveGroupInOrder(GROUPS, 'g2', 1)).toBeNull();
+    });
+  });
+
+  test('an unknown group cannot move', () => {
+    expect(moveGroupInOrder(GROUPS, 'missing', 1)).toBeNull();
   });
 });

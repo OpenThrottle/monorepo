@@ -22,6 +22,8 @@ export const CHAT_CONVERSATION_SIDEBAR_COPY = {
   loadMore: 'Load more',
   moreOptionsFor: 'More options for',
   moreOptionsForGroup: 'More options for group',
+  moveGroupDown: 'Move down',
+  moveGroupUp: 'Move up',
   moveToGroup: 'Move to group',
   newChat: 'New chat',
   newGroup: 'New group',

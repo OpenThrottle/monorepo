@@ -102,6 +102,7 @@ export const useConversationDock = (
     onDeleteGroup: groups.deleteGroup,
     onMoveToGroup: groups.moveToGroup,
     onRenameGroup: groups.renameGroup,
+    onReorderGroups: groups.reorderGroups,
     onSetPinned: groups.setPinned,
     onToggleGroupCollapsed: toggleGroupCollapsed,
   };

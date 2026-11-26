@@ -15,6 +15,7 @@ export const AGENT_CONVERSATION_GROUP_INTENTS = {
   LIST_GROUPS: 'list-groups',
   MOVE_TO_GROUP: 'move-to-group',
   RENAME_GROUP: 'rename-group',
+  REORDER_GROUPS: 'reorder-groups',
   SET_PINNED: 'set-pinned',
 } as const;
 
