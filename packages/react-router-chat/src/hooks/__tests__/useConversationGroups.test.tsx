@@ -54,6 +54,9 @@ function Harness(props: HarnessProps): React.ReactElement {
       <button onClick={() => groups.deleteGroup('g1')} type="button">
         delete
       </button>
+      <button onClick={() => groups.reorderGroups(['g2', 'g1'])} type="button">
+        reorder
+      </button>
     </div>
   );
 }
@@ -201,5 +204,65 @@ describe('useConversationGroups', () => {
     expect(
       applyLast(mapConversations, { ...CONVERSATION, groupId: 'g1' }),
     ).toMatchObject({ groupId: null });
+  });
+
+  describe('reordering', () => {
+    const SECOND = { id: 'g2', name: 'Probes', sortOrder: 2000 };
+
+    test('shows the new order at once and posts every id in order', async () => {
+      const posted: unknown[] = [];
+      const { component, latest } = renderGroups((intent, body) => {
+        if (intent === AGENT_CONVERSATION_GROUP_INTENTS.REORDER_GROUPS) {
+          posted.push(JSON.parse(String(body.get('groupIds'))));
+          return {
+            errorMessage: null,
+            groups: [
+              { ...SECOND, sortOrder: 1000 },
+              { ...GROUP, sortOrder: 2000 },
+            ],
+          };
+        }
+        return { errorMessage: null, groups: [GROUP, SECOND] };
+      }, vi.fn());
+      const user = userEvent.setup();
+
+      await waitFor(() => {
+        expect(latest.current?.groups).toHaveLength(2);
+      });
+      await user.click(component.getByRole('button', { name: 'reorder' }));
+
+      expect(latest.current?.groups.map((group) => group.id)).toEqual([
+        'g2',
+        'g1',
+      ]);
+      await waitFor(() => {
+        expect(posted).toEqual([['g2', 'g1']]);
+      });
+      await waitFor(() => {
+        expect(latest.current?.groups[0]).toEqual({
+          ...SECOND,
+          sortOrder: 1000,
+        });
+      });
+    });
+
+    test('a failed reorder puts the old order back', async () => {
+      const { component, latest } = renderGroups((intent) => {
+        if (intent === AGENT_CONVERSATION_GROUP_INTENTS.REORDER_GROUPS) {
+          return { errorMessage: 'Server down', groups: [] };
+        }
+        return { errorMessage: null, groups: [GROUP, SECOND] };
+      }, vi.fn());
+      const user = userEvent.setup();
+
+      await waitFor(() => {
+        expect(latest.current?.groups).toHaveLength(2);
+      });
+      await user.click(component.getByRole('button', { name: 'reorder' }));
+
+      await waitFor(() => {
+        expect(latest.current?.groups).toEqual([GROUP, SECOND]);
+      });
+    });
   });
 });

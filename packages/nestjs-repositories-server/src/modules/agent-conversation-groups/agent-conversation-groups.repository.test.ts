@@ -1,6 +1,7 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { createQueryBuilderMock } from '@openthrottle/nestjs-postgres/testing';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AgentConversation } from '../agent-conversations/agent-conversation.entity.ts';
@@ -45,10 +46,13 @@ describe('AgentConversationGroupsRepository', () => {
     }),
   };
 
+  const queryBuilder = createQueryBuilderMock<AgentConversationGroup>();
+
   const mockRepository = {
     create: vi.fn((data: Partial<AgentConversationGroup>) => {
       return { ...mockGroup, ...data };
     }),
+    createQueryBuilder: vi.fn(() => queryBuilder),
     find: vi.fn(),
     findOne: vi.fn(),
     manager,
@@ -78,16 +82,24 @@ describe('AgentConversationGroupsRepository', () => {
   });
 
   describe('listGroupsForUser', () => {
-    it("reads the user's groups in sort order", async () => {
-      mockRepository.find.mockResolvedValue([mockGroup]);
+    it("reads the user's groups by sort_order, then id", async () => {
+      queryBuilder.getMany.mockResolvedValue([mockGroup]);
 
       const result = await repository.listGroupsForUser(userId);
 
       expect(result).toEqual([mockGroup]);
-      expect(mockRepository.find).toHaveBeenCalledWith({
-        order: { id: 'ASC', sortOrder: 'ASC' },
-        where: { userId },
-      });
+      expect(queryBuilder.where).toHaveBeenCalledWith(
+        'agentConversationGroup.userId = :userId',
+        { userId },
+      );
+      expect(queryBuilder.orderBy).toHaveBeenCalledWith(
+        'agentConversationGroup.sortOrder',
+        'ASC',
+      );
+      expect(queryBuilder.addOrderBy).toHaveBeenCalledWith(
+        'agentConversationGroup.id',
+        'ASC',
+      );
     });
   });
 
@@ -164,7 +176,7 @@ describe('AgentConversationGroupsRepository', () => {
 
   describe('reorderGroups', () => {
     beforeEach(() => {
-      mockRepository.find.mockResolvedValue([
+      queryBuilder.getMany.mockResolvedValue([
         mockGroup,
         { ...mockGroup, id: otherGroupId },
       ]);

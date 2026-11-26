@@ -41,6 +41,8 @@ export interface UseConversationGroupsResult {
     groupId: string | null,
   ) => void;
   readonly renameGroup: (groupId: string, name: string) => void;
+  /** Reorder the groups: every group id once, top to bottom. */
+  readonly reorderGroups: (groupIds: readonly string[]) => void;
   readonly setPinned: (conversationId: string, pinned: boolean) => void;
 }
 
@@ -48,8 +50,8 @@ export interface UseConversationGroupsResult {
  * @description Pinning and user-defined groups for the conversations sidebar.
  * Owns the group list; applies conversation changes through
  * {@link useConversationList}'s `mapConversations` so both hooks show one
- * consistent list. Pins, moves, renames and deletes are optimistic (a failed pin
- * or move puts the row back); a create
+ * consistent list. Pins, moves, renames, reorders and deletes are optimistic (a
+ * failed pin, move or reorder puts things back); a create
  * appears when the server returns the new group's id. Failures toast.
  * @public
  */
@@ -63,12 +65,15 @@ export function useConversationGroups(
   const organizeFetcher = useFetcher<MutateAgentConversationResult>();
   const createFetcher = useFetcher<MutateAgentConversationGroupResult>();
   const groupFetcher = useFetcher<MutateAgentConversationGroupResult>();
+  const reorderFetcher = useFetcher<ListAgentConversationGroupsResult>();
   const [groups, setGroups] = React.useState<AgentConversationGroup[]>([]);
   const loadedOnce = React.useRef(false);
   // The row as it was before the in-flight pin or move, so a failure can put
   // it back. One slot: pins and moves share a fetcher, so a newer submit
   // replaces (aborts) the older one.
   const organizeRollback = React.useRef<AgentConversationListItem | null>(null);
+  // The group order before the in-flight reorder, for the same reason.
+  const reorderRollback = React.useRef<AgentConversationGroup[] | null>(null);
 
   // Setup
   const copy = CHAT_CONVERSATION_SIDEBAR_COPY;
@@ -140,6 +145,21 @@ export function useConversationGroups(
     );
     groupFetcher.submit(
       { groupId, intent: intents.RENAME_GROUP, name },
+      submitOptions,
+    );
+  };
+
+  const reorderGroups = (groupIds: readonly string[]): void => {
+    const byId = new Map(groups.map((group) => [group.id, group]));
+    reorderRollback.current = groups;
+    setGroups(
+      groupIds.flatMap((id, index) => {
+        const group = byId.get(id);
+        return group == null ? [] : [{ ...group, sortOrder: index }];
+      }),
+    );
+    reorderFetcher.submit(
+      { groupIds: JSON.stringify(groupIds), intent: intents.REORDER_GROUPS },
       submitOptions,
     );
   };
@@ -224,6 +244,23 @@ export function useConversationGroups(
   }, [createFetcher.data]);
 
   React.useEffect(() => {
+    const data = reorderFetcher.data;
+    if (data == null) {
+      return;
+    }
+    const previous = reorderRollback.current;
+    reorderRollback.current = null;
+    if (data.errorMessage != null) {
+      if (previous != null) {
+        setGroups(previous);
+      }
+      toast.error(copy.groupUpdateFailed, { description: data.errorMessage });
+      return;
+    }
+    setGroups([...data.groups]);
+  }, [reorderFetcher.data]);
+
+  React.useEffect(() => {
     const data = groupFetcher.data;
     if (data?.errorMessage != null) {
       toast.error(copy.groupUpdateFailed, { description: data.errorMessage });
@@ -238,6 +275,7 @@ export function useConversationGroups(
     groups,
     moveToGroup,
     renameGroup,
+    reorderGroups,
     setPinned,
   };
 }

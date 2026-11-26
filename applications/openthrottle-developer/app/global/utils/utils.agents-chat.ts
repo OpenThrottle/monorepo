@@ -7,6 +7,7 @@ import {
   ListAgentConversationsDocument,
   MoveAgentConversationToGroupDocument,
   RenameAgentConversationGroupDocument,
+  ReorderAgentConversationGroupDocument,
   RestoreAgentConversationDocument,
   SendAgentMessageDocument,
   SetAgentConversationPinnedDocument,
@@ -58,6 +59,7 @@ export const agentConversationGroups = createAgentConversationGroupsApi({
   listGroupsDocument: ListAgentConversationGroupsDocument,
   moveToGroupDocument: MoveAgentConversationToGroupDocument,
   renameGroupDocument: RenameAgentConversationGroupDocument,
+  reorderGroupsDocument: ReorderAgentConversationGroupDocument,
   setPinnedDocument: SetAgentConversationPinnedDocument,
 });
 

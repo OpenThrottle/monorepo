@@ -278,6 +278,7 @@ describe('ChatConversationSidebar', () => {
         onDeleteGroup: vi.fn(),
         onMoveToGroup: vi.fn(),
         onRenameGroup: vi.fn(),
+        onReorderGroups: vi.fn(),
         onSetPinned: vi.fn(),
         onToggleGroupCollapsed: vi.fn(),
         ...overrides,
@@ -349,6 +350,73 @@ describe('ChatConversationSidebar', () => {
       );
 
       expect(onCreateGroup).toHaveBeenCalledWith('Probes', null);
+    });
+
+    test('Move down saves the new group order', async () => {
+      const onReorderGroups = vi.fn();
+      const component = renderSidebar({
+        conversations: grouped,
+        grouping: buildGrouping({
+          groups: [
+            { id: 'g1', name: 'Launch prep', sortOrder: 1000 },
+            { id: 'g2', name: 'Probes', sortOrder: 2000 },
+          ],
+          onReorderGroups,
+        }),
+      });
+      const user = userEvent.setup();
+
+      await user.click(
+        component.getByTestId('ChatConversationSidebar-group-more-g1'),
+      );
+      await user.click(
+        component.getByRole('menuitem', {
+          name: CHAT_CONVERSATION_SIDEBAR_COPY.moveGroupDown,
+        }),
+      );
+
+      expect(onReorderGroups).toHaveBeenCalledWith(['g2', 'g1']);
+    });
+
+    test('the top group cannot move up', async () => {
+      const component = renderSidebar({
+        conversations: grouped,
+        grouping: buildGrouping({
+          groups: [
+            { id: 'g1', name: 'Launch prep', sortOrder: 1000 },
+            { id: 'g2', name: 'Probes', sortOrder: 2000 },
+          ],
+        }),
+      });
+      const user = userEvent.setup();
+
+      await user.click(
+        component.getByTestId('ChatConversationSidebar-group-more-g1'),
+      );
+
+      expect(
+        component.getByRole('menuitem', {
+          name: CHAT_CONVERSATION_SIDEBAR_COPY.moveGroupUp,
+        }),
+      ).toHaveAttribute('aria-disabled', 'true');
+    });
+
+    test('a lone group offers no move items', async () => {
+      const component = renderSidebar({
+        conversations: grouped,
+        grouping: buildGrouping(),
+      });
+      const user = userEvent.setup();
+
+      await user.click(
+        component.getByTestId('ChatConversationSidebar-group-more-g1'),
+      );
+
+      expect(
+        component.queryByRole('menuitem', {
+          name: CHAT_CONVERSATION_SIDEBAR_COPY.moveGroupUp,
+        }),
+      ).not.toBeInTheDocument();
     });
 
     test('without grouping there is no New group button', () => {

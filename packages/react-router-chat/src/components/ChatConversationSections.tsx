@@ -12,6 +12,7 @@ import {
   groupSectionId,
 } from '../utils/conversation-drag';
 import type { ConversationSection } from '../utils/conversation-sections';
+import { moveGroupInOrder } from '../utils/conversation-sections';
 import { ChatConversationDragItem } from './ChatConversationDragItem';
 import { ChatConversationDropSection } from './ChatConversationDropSection';
 import { ChatConversationEditInput } from './ChatConversationEditInput';
@@ -55,6 +56,11 @@ export const ChatConversationSections = (
   const isDndEnabled = grouping != null;
   const isEditingConversation = (id: string): boolean => {
     return editing?.kind === 'conversation' && editing.id === id;
+  };
+  const groupMover = (groupId: string, offset: number): (() => void) | null => {
+    const order = moveGroupInOrder(groups ?? [], groupId, offset);
+
+    return order == null ? null : () => grouping?.onReorderGroups(order);
   };
 
   // Handlers
@@ -141,6 +147,8 @@ export const ChatConversationSections = (
         group={group}
         isCollapsed={isCollapsed}
         onDelete={() => grouping?.onDeleteGroup(group.id)}
+        onMoveDown={groupMover(group.id, 1)}
+        onMoveUp={groupMover(group.id, -1)}
         onStartRename={() => sidebar.startGroupRename(group)}
         onToggleCollapsed={() => grouping?.onToggleGroupCollapsed(group.id)}
       />

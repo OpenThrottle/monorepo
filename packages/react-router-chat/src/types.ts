@@ -348,6 +348,8 @@ export interface ChatConversationGrouping {
     groupId: string | null,
   ) => void;
   readonly onRenameGroup: (groupId: string, name: string) => void;
+  /** Save a new group order: every group id once, top to bottom. */
+  readonly onReorderGroups: (groupIds: readonly string[]) => void;
   readonly onSetPinned: (conversationId: string, pinned: boolean) => void;
   readonly onToggleGroupCollapsed: (groupId: string) => void;
 }

@@ -107,3 +107,27 @@ export const buildConversationSections = (
     (section) => section.kind === 'group' || section.conversations.length > 0,
   );
 };
+
+/**
+ * @description The group ids in display (`sortOrder`) order with `groupId`
+ * moved `offset` places, or `null` when that would move it past either end
+ * or the group is not in `groups`.
+ */
+export const moveGroupInOrder = (
+  groups: readonly AgentConversationGroup[],
+  groupId: string,
+  offset: number,
+): readonly string[] | null => {
+  const ids = [...groups]
+    .sort((left, right) => left.sortOrder - right.sortOrder)
+    .map((group) => group.id);
+  const from = ids.indexOf(groupId);
+  const to = from + offset;
+  if (from === -1 || to < 0 || to >= ids.length) {
+    return null;
+  }
+  ids.splice(from, 1);
+  ids.splice(to, 0, groupId);
+
+  return ids;
+};

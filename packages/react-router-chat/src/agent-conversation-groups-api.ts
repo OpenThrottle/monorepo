@@ -1,5 +1,5 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import { toErrorMessage } from '@openthrottle/nodejs-utils';
+import { isStringArray, toErrorMessage } from '@openthrottle/nodejs-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 
 import type { AgentConversationRow } from './agent-conversations-api';
@@ -56,6 +56,10 @@ export interface AgentConversationGroupsDocuments {
     { renameAgentConversationGroup: AgentConversationGroupRow },
     { input: { groupId: string; name: string } }
   >;
+  readonly reorderGroupsDocument: TypedDocumentNode<
+    { reorderAgentConversationGroup: readonly AgentConversationGroupRow[] },
+    { input: { groupIds: string[] } }
+  >;
   readonly setPinnedDocument: TypedDocumentNode<
     { setAgentConversationPinned: AgentConversationRow },
     { input: { conversationId: string; pinned: boolean } }
@@ -83,6 +87,11 @@ export interface AgentConversationGroupsApi {
     request: Request,
     formData: FormData,
   ): Promise<MutateAgentConversationGroupResult>;
+  /** `groupIds` is a JSON array: every one of the user's group ids, in order. */
+  handleReorderGroupsIntent(
+    request: Request,
+    formData: FormData,
+  ): Promise<ListAgentConversationGroupsResult>;
   handleSetPinnedIntent(
     request: Request,
     formData: FormData,
@@ -99,6 +108,19 @@ export const emptyMutateAgentConversationGroupResult = (
     group: null,
     ...overrides,
   };
+};
+
+const parseGroupIds = (value: FormDataEntryValue | null): string[] | null => {
+  if (typeof value !== 'string') {
+    return null;
+  }
+  try {
+    const parsed: unknown = JSON.parse(value);
+
+    return isStringArray(parsed) && parsed.length > 0 ? parsed : null;
+  } catch {
+    return null;
+  }
 };
 
 const toAgentConversationGroup = (
@@ -304,12 +326,41 @@ export function createAgentConversationGroupsApi(
     }
   };
 
+  const handleReorderGroupsIntent = async (
+    request: Request,
+    formData: FormData,
+  ): Promise<ListAgentConversationGroupsResult> => {
+    const groupIds = parseGroupIds(formData.get('groupIds'));
+
+    if (groupIds == null) {
+      return { errorMessage: 'groupIds is required', groups: [] };
+    }
+
+    try {
+      const data = await executeGraphqlWithAuth(
+        request,
+        documents.reorderGroupsDocument,
+        { input: { groupIds } },
+      );
+
+      return {
+        errorMessage: null,
+        groups: data.reorderAgentConversationGroup.map(
+          toAgentConversationGroup,
+        ),
+      };
+    } catch (error) {
+      return { errorMessage: toErrorMessage(error), groups: [] };
+    }
+  };
+
   return {
     handleCreateGroupIntent,
     handleDeleteGroupIntent,
     handleListGroupsIntent,
     handleMoveToGroupIntent,
     handleRenameGroupIntent,
+    handleReorderGroupsIntent,
     handleSetPinnedIntent,
   };
 }
