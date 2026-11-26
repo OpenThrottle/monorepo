@@ -27,3 +27,12 @@ export const MENU_ITEM_CLASSES = 'gap-2 [&_svg]:size-4 [&_svg]:shrink-0';
 
 /** A destructive menu item (Delete, Delete group). @public */
 export const MENU_ITEM_DESTRUCTIVE_CLASSES = `text-destructive focus:text-destructive`;
+
+/** Highlight on a section while a dragged row hovers it ({@link ChatConversationDropSection}). @public */
+export const DROP_TARGET_CLASSES = `bg-accent/40 ring-ring/50 rounded-md ring-2`;
+
+/** The row being dragged, left behind while its overlay follows the pointer. @public */
+export const DRAGGING_ROW_CLASSES = 'opacity-40';
+
+/** The floating copy of the dragged row. @public */
+export const DRAG_OVERLAY_CLASSES = `bg-popover text-popover-foreground border-border pointer-events-none max-w-56 truncate rounded-md border px-3 py-1.5 text-sm shadow-md`;

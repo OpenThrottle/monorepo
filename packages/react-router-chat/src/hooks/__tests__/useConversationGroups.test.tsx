@@ -137,6 +137,26 @@ describe('useConversationGroups', () => {
     });
   });
 
+  test('a failed move puts the row back the way it was', async () => {
+    let row: AgentConversationListItem = CONVERSATION;
+    const mapConversations: MapConversations = (update) => {
+      row = update(row);
+    };
+    const { component } = renderGroups((intent) => {
+      if (intent === AGENT_CONVERSATION_GROUP_INTENTS.MOVE_TO_GROUP) {
+        return { conversation: null, errorMessage: 'Server down' };
+      }
+      return { errorMessage: null, groups: [GROUP] };
+    }, mapConversations);
+    const user = userEvent.setup();
+
+    await user.click(component.getByRole('button', { name: 'move' }));
+
+    await waitFor(() => {
+      expect(row).toEqual(CONVERSATION);
+    });
+  });
+
   test('a created group is appended and its moved conversation applied', async () => {
     const mapConversations = vi.fn<MapConversations>();
     const created = { id: 'g2', name: 'Probes', sortOrder: 2000 };

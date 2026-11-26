@@ -72,6 +72,16 @@ describe('ChatConversationSidebar', () => {
     expect(onSelect).toHaveBeenCalledWith('conv-1');
   });
 
+  test('names the header row for assistive tech without a visible title', () => {
+    const component = renderSidebar();
+    const copy = CHAT_CONVERSATION_SIDEBAR_COPY;
+
+    expect(component.getByRole('group', { name: copy.title })).toBe(
+      component.getByTestId('ChatConversationSidebar-header'),
+    );
+    expect(component.queryByText(copy.title)).not.toBeInTheDocument();
+  });
+
   test('calls onNewChat from the New chat button', async () => {
     const onNewChat = vi.fn();
     const component = renderSidebar({ onNewChat });

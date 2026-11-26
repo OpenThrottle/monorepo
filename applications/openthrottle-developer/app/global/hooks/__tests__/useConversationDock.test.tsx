@@ -3,6 +3,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, describe, expect, test } from 'vitest';
 
+import { ConversationListContext } from '~/global/config/ConversationListContext';
 import { parseChatDockCookie } from '~/global/utils/chat-dock-cookie';
 
 import type { UseConversationDockResult } from '../useConversationDock';
@@ -59,6 +60,52 @@ describe('useConversationDock', () => {
       const { latest } = renderDockHook('/?conversationId=c9');
 
       expect(latest.current?.activeConversationId).toBe('c9');
+    });
+
+    test('prefers the id the chat route published over the search param', () => {
+      const latest: { current: UseConversationDockResult | null } = {
+        current: null,
+      };
+      const contextValue = {
+        activeConversationId: 'c-new',
+        list: {
+          conversations: [],
+          errorMessage: null,
+          insert: () => undefined,
+          isLoading: false,
+          isLoadingMore: false,
+          loadMore: () => undefined,
+          mapConversations: () => undefined,
+          refresh: () => undefined,
+          remove: () => undefined,
+          rename: () => undefined,
+          restore: () => undefined,
+          totalCount: 0,
+        },
+        setActiveConversationId: () => undefined,
+      };
+      // eslint-disable-next-line react/no-multi-comp -- test-local harness component
+      const Harness = (): null => {
+        latest.current = useConversationDock({
+          enabled: false,
+          initialState: { collapsedGroupIds: [], isOpen: true },
+        });
+        return null;
+      };
+      const Stub = createRoutesStub([
+        {
+          // eslint-disable-next-line react/no-multi-comp -- test-local harness component
+          Component: () => (
+            <ConversationListContext.Provider value={contextValue}>
+              <Harness />
+            </ConversationListContext.Provider>
+          ),
+          path: '*',
+        },
+      ]);
+      render(<Stub initialEntries={['/']} />);
+
+      expect(latest.current?.activeConversationId).toBe('c-new');
     });
 
     test('is null on other routes', () => {

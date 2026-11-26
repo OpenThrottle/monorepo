@@ -28,6 +28,12 @@ export interface UseConversationListResult {
    * failure as "No conversations yet".
    */
   readonly errorMessage: string | null;
+  /**
+   * List a conversation that was just created, ahead of the server's list
+   * (newest first), without a request. A no-op when it is already listed. The
+   * next {@link refresh} reconciles it with the server row.
+   */
+  readonly insert: (conversation: AgentConversationListItem) => void;
   /** True while the first page is loading (nothing shown yet). */
   readonly isLoading: boolean;
   /** True while a subsequent page is loading. */
@@ -44,7 +50,10 @@ export interface UseConversationListResult {
       conversation: AgentConversationListItem,
     ) => AgentConversationListItem,
   ) => void;
-  /** Reload from the first page (e.g. after a new conversation is created). */
+  /**
+   * Reload from the first page (e.g. after a new conversation is created). The
+   * loaded rows stay on screen until the first page arrives and replaces them.
+   */
   readonly refresh: () => void;
   /** Optimistically soft-delete a conversation, then persist it. */
   readonly remove: (conversationId: string) => void;
@@ -81,7 +90,18 @@ export function useConversationList(
   >([]);
   const [totalCount, setTotalCount] = React.useState(0);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
-  const loadedOnce = React.useRef(false);
+  // Initial-load attempts. The first submit can be dropped before it lands
+  // (a fetcher deleted by a StrictMode or hydration remount comes back idle with
+  // no data), so the load retries until a page arrives, at most a few times.
+  const initialLoadAttempts = React.useRef(0);
+  // The last list response merged into state. Each response is applied once,
+  // from whichever commit first sees it: a render that sees it can be thrown
+  // away (a route suspending during hydration), so an effect keyed on the
+  // response alone can miss it.
+  const appliedPage = React.useRef<ListAgentConversationsResult | null>(null);
+  // Set by `refresh`: the next page replaces the list instead of appending, so
+  // rows stay on screen (no skeleton flash) while the reload is in flight.
+  const replaceOnNextPage = React.useRef(false);
   // Id of the conversation whose restore is in flight, so a failed restore
   // rolls back its optimistic re-insert.
   const restoringId = React.useRef<string | null>(null);
@@ -124,8 +144,23 @@ export function useConversationList(
   };
 
   const refresh = (): void => {
-    setConversations([]);
+    replaceOnNextPage.current = true;
     fetchPage(0);
+  };
+
+  const insert = (conversation: AgentConversationListItem): void => {
+    if (latestConversations.current.some((row) => row.id === conversation.id)) {
+      return;
+    }
+
+    setConversations((previous) => {
+      if (previous.some((row) => row.id === conversation.id)) {
+        return previous;
+      }
+
+      return [conversation, ...previous];
+    });
+    setTotalCount((previous) => previous + 1);
   };
 
   const rename = (conversationId: string, title: string): void => {
@@ -198,31 +233,47 @@ export function useConversationList(
     latestConversations.current = conversations;
   }, [conversations]);
 
-  // Initial load (once), deferred until the host enables it — a logged-out
-  // page must fire no request at the protected list action.
+  // Initial load, deferred until the host enables it — a logged-out page must
+  // fire no request at the protected list action. Re-runs while the fetcher
+  // sits idle with no page, so a dropped first submit is retried.
   React.useEffect(() => {
-    if (!enabled || loadedOnce.current) {
+    const maxAttempts = 3;
+    const isUnloaded = listFetcher.state === 'idle' && listFetcher.data == null;
+    if (!enabled || !isUnloaded) {
       return;
     }
-    loadedOnce.current = true;
+    if (initialLoadAttempts.current >= maxAttempts) {
+      return;
+    }
+    initialLoadAttempts.current += 1;
     fetchPage(0);
-  }, [enabled]);
+  }, [enabled, listFetcher.state, listFetcher.data]);
 
   // Merge each loaded page into the accumulated list. Append + dedup by id, so
-  // a `refresh` (which clears first) replaces, load-more appends, and an
-  // optimistic rename already in state survives a later append.
+  // a `refresh` replaces the whole list, load-more appends, and an
+  // optimistic rename already in state survives a later append. Runs after
+  // every commit and applies a response it has not applied yet (see
+  // `appliedPage`).
   React.useEffect(() => {
     const data = listFetcher.data;
-    if (!data) {
+    if (data == null || data === appliedPage.current) {
       return;
     }
+    appliedPage.current = data;
 
+    const shouldReplace = replaceOnNextPage.current;
+    replaceOnNextPage.current = false;
     setErrorMessage(data.errorMessage ?? null);
     if (data.errorMessage != null) {
       return;
     }
 
     setTotalCount(data.totalCount);
+    if (shouldReplace) {
+      setConversations([...data.conversations]);
+      return;
+    }
+
     setConversations((previous) => {
       const seen = new Set(previous.map((conversation) => conversation.id));
       const merged = [...previous];
@@ -234,7 +285,7 @@ export function useConversationList(
       }
       return merged;
     });
-  }, [listFetcher.data]);
+  });
 
   // A failed restore: undo the optimistic re-insert and tell the user.
   React.useEffect(() => {
@@ -263,6 +314,7 @@ export function useConversationList(
   return {
     conversations,
     errorMessage,
+    insert,
     isLoading,
     isLoadingMore,
     loadMore,

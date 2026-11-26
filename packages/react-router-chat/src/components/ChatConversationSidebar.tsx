@@ -14,6 +14,7 @@ import type {
   ChatConversationGrouping,
 } from '../types';
 import { buildConversationSections } from '../utils/conversation-sections';
+import { ChatConversationDndContext } from './ChatConversationDndContext';
 import { ChatConversationListError } from './ChatConversationListError';
 import { ChatConversationSections } from './ChatConversationSections';
 import { ChatConversationSidebarHeader } from './ChatConversationSidebarHeader';
@@ -193,7 +194,12 @@ export const ChatConversationSidebar = (
     >
       {hideHeader ? null : header}
       <ScrollArea className="min-h-0 flex-1">
-        {isLoading ? skeletons : listOrEmpty}
+        <ChatConversationDndContext
+          conversations={conversations}
+          grouping={grouping}
+        >
+          {isLoading ? skeletons : listOrEmpty}
+        </ChatConversationDndContext>
         {hasMore ? loadMore : null}
       </ScrollArea>
     </div>

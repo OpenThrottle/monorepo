@@ -80,6 +80,7 @@ import {
   GetMyUserDocument,
   GetRootHealthDocument,
 } from '~/__generated__/graphql';
+import { ConversationListProvider } from '~/global/components/ConversationListProvider';
 import { DeveloperRolloutProvider } from '~/global/components/DeveloperRolloutProvider';
 import { GlobalConversationDock } from '~/global/components/GlobalConversationDock';
 import { GlobalRootLoaderFailureBanner } from '~/global/components/GlobalRootLoaderFailureBanner';
@@ -717,85 +718,87 @@ export default function App(): React.ReactElement {
       <NotificationsStoreProvider>
         <DefaultEditorContext.Provider value={data?.defaultEditor ?? null}>
           <DeveloperRolloutProvider identityKey={data?.user?.id ?? null}>
-            <NotificationsSubscriptionBridge>
-              <GlobalProviders
-                chat={headerChatSurface}
-                chatPersist={data?.user != null}
-              >
-                <GlobalLayout
-                  appVersion={__APP_VERSION__}
-                  authenticated={data?.user !== null}
-                  backgroundActivities={backgroundActivities}
-                  data={navigation}
-                  dock={isDockShown ? dockMarkup : null}
-                  health={data?.serverHealth}
-                  overrides={{
-                    footer: isFooterHidden,
-                    header: isHeaderHidden,
-                  }}
+            <ConversationListProvider enabled={data?.user != null}>
+              <NotificationsSubscriptionBridge>
+                <GlobalProviders
+                  chat={headerChatSurface}
+                  chatPersist={data?.user != null}
                 >
-                  <GlobalRootLoaderFailureBanner
-                    diagnostics={data?.rootLoaderDiagnostics}
-                    failure={data?.rootLoaderFailure ?? null}
-                    isRevalidating={revalidator.state === 'loading'}
-                    onRetry={handleRootLoaderRetry}
-                    userLoadOk={data?.userLoadOk !== false}
-                  />
-
-                  <GlobalServerHealthBanner
+                  <GlobalLayout
+                    appVersion={__APP_VERSION__}
+                    authenticated={data?.user !== null}
+                    backgroundActivities={backgroundActivities}
+                    data={navigation}
+                    dock={isDockShown ? dockMarkup : null}
                     health={data?.serverHealth}
-                    suppress={data?.rootLoaderFailure?.step === 'health'}
-                  />
+                    overrides={{
+                      footer: isFooterHidden,
+                      header: isHeaderHidden,
+                    }}
+                  >
+                    <GlobalRootLoaderFailureBanner
+                      diagnostics={data?.rootLoaderDiagnostics}
+                      failure={data?.rootLoaderFailure ?? null}
+                      isRevalidating={revalidator.state === 'loading'}
+                      onRetry={handleRootLoaderRetry}
+                      userLoadOk={data?.userLoadOk !== false}
+                    />
 
-                  {isHeaderHidden ? null : headerMarkup}
+                    <GlobalServerHealthBanner
+                      health={data?.serverHealth}
+                      suppress={data?.rootLoaderFailure?.step === 'health'}
+                    />
 
-                  <GlobalRouteViewTransition>
-                    <Outlet />
-                  </GlobalRouteViewTransition>
+                    {isHeaderHidden ? null : headerMarkup}
 
-                  {isMetricsHidden ? null : metricsMarkup}
+                    <GlobalRouteViewTransition>
+                      <Outlet />
+                    </GlobalRouteViewTransition>
 
-                  <OpenThrottleCommander
-                    className="m-0! p-0!"
-                    emptyStateExtras={commanderEmptyExtras}
-                    emptyStateMessage={
-                      <span className="block px-2 text-center text-sm leading-relaxed">
-                        <span className="block font-medium">
-                          Nothing matched that filter
-                        </span>
-                        <span className="text-muted-foreground mt-2 block text-xs">
-                          <span className="block">
-                            1) Keep typing to narrow the list, or 2) paste one
-                            OpenThrottle UUID for plan/queue/generator/search
-                            rows, or 3) paste two UUIDs with{' '}
-                            <code className="text-[10px]">/</code> or a space to
-                            jump to a queue job or a plan task.
+                    {isMetricsHidden ? null : metricsMarkup}
+
+                    <OpenThrottleCommander
+                      className="m-0! p-0!"
+                      emptyStateExtras={commanderEmptyExtras}
+                      emptyStateMessage={
+                        <span className="block px-2 text-center text-sm leading-relaxed">
+                          <span className="block font-medium">
+                            Nothing matched that filter
+                          </span>
+                          <span className="text-muted-foreground mt-2 block text-xs">
+                            <span className="block">
+                              1) Keep typing to narrow the list, or 2) paste one
+                              OpenThrottle UUID for plan/queue/generator/search
+                              rows, or 3) paste two UUIDs with{' '}
+                              <code className="text-[10px]">/</code> or a space
+                              to jump to a queue job or a plan task.
+                            </span>
+                          </span>
+                          <span className="text-muted-foreground mt-2 block text-xs">
+                            When you have typed text (even if it is not a UUID),
+                            the list below offers browse shortcuts and a
+                            full-text search action.
+                          </span>
+                          <span className="text-muted-foreground mt-2 block text-[10px]">
+                            Server metrics (when visible) use{' '}
+                            <code className="text-[10px]">serverMetrics</code>{' '}
+                            from openthrottle-server; definitions and GraphQL
+                            health: Settings → Debug.
                           </span>
                         </span>
-                        <span className="text-muted-foreground mt-2 block text-xs">
-                          When you have typed text (even if it is not a UUID),
-                          the list below offers browse shortcuts and a full-text
-                          search action.
-                        </span>
-                        <span className="text-muted-foreground mt-2 block text-[10px]">
-                          Server metrics (when visible) use{' '}
-                          <code className="text-[10px]">serverMetrics</code>{' '}
-                          from openthrottle-server; definitions and GraphQL
-                          health: Settings → Debug.
-                        </span>
-                      </span>
-                    }
-                    footerHint="Debug jumps use the same POST as Search — see root action commander-search (jump, id, id2, q)."
-                    groups={groups}
-                    onEmptyStateSearch={handleSearch}
-                    onOpenChange={setCommanderOpen}
-                    onSearchChange={setCommanderQuery}
-                    open={commanderOpen}
-                    placeholder="Command, filter navigation, or paste UUID / queueId · jobId…"
-                  />
-                </GlobalLayout>
-              </GlobalProviders>
-            </NotificationsSubscriptionBridge>
+                      }
+                      footerHint="Debug jumps use the same POST as Search — see root action commander-search (jump, id, id2, q)."
+                      groups={groups}
+                      onEmptyStateSearch={handleSearch}
+                      onOpenChange={setCommanderOpen}
+                      onSearchChange={setCommanderQuery}
+                      open={commanderOpen}
+                      placeholder="Command, filter navigation, or paste UUID / queueId · jobId…"
+                    />
+                  </GlobalLayout>
+                </GlobalProviders>
+              </NotificationsSubscriptionBridge>
+            </ConversationListProvider>
           </DeveloperRolloutProvider>
         </DefaultEditorContext.Provider>
       </NotificationsStoreProvider>

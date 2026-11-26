@@ -95,6 +95,7 @@ function renderConversationList(
   action: (args: { request: Request }) => Promise<unknown> | unknown,
   pageLoader: (() => null) | undefined = undefined,
   enabled = true,
+  strict = false,
 ): {
   readonly getByTestId: (testId: string) => HTMLElement;
   readonly latest: { current: UseConversationListResult | null };
@@ -123,11 +124,29 @@ function renderConversationList(
     },
   ]);
 
-  const view = render(<Stub initialEntries={['/']} />);
+  const stub = <Stub initialEntries={['/']} />;
+  const view = render(
+    strict ? <React.StrictMode>{stub}</React.StrictMode> : stub,
+  );
   return { getByTestId: view.getByTestId, latest };
 }
 
 describe('useConversationList', () => {
+  test('loads the first page under StrictMode’s mount-unmount-mount', async () => {
+    const { latest } = renderConversationList(
+      () => {
+        return { conversations: conversationsPage(0, 2), totalCount: 2 };
+      },
+      undefined,
+      true,
+      true,
+    );
+
+    await waitFor(() => {
+      expect(latest.current?.conversations).toHaveLength(2);
+    });
+  });
+
   describe('when disabled (logged out)', () => {
     test('issues no request to the protected list action', async () => {
       let calls = 0;
