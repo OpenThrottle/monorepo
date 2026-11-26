@@ -31,6 +31,7 @@ vi.mock('~/routing/home/hooks/useConversationList', () => ({
   useConversationList: () => ({
     conversations: [],
     errorMessage: null,
+    insert: vi.fn(),
     isLoading: false,
     isLoadingMore: false,
     loadMore: vi.fn(),

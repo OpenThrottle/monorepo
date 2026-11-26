@@ -111,6 +111,68 @@ describe('GlobalConversationDock', () => {
     });
   });
 
+  describe('the toggle shortcut', () => {
+    test('Ctrl+J with Caps Lock (an upper-case J) collapses the open column', async () => {
+      const component = renderDock({ collapsedGroupIds: [], isOpen: true });
+      const user = userEvent.setup();
+
+      await user.keyboard('{Control>}J{/Control}');
+
+      expect(
+        component.getByTestId('GlobalConversationDock-rail'),
+      ).toBeInTheDocument();
+    });
+
+    test('the old ⌘. binding no longer toggles', async () => {
+      const component = renderDock({ collapsedGroupIds: [], isOpen: false });
+      const user = userEvent.setup();
+
+      await user.keyboard('{Meta>}.{/Meta}');
+
+      expect(component.queryByRole('complementary')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('the open column’s edge strip', () => {
+    test('collapses the column when clicked', async () => {
+      const component = renderDock({ collapsedGroupIds: [], isOpen: true });
+      const user = userEvent.setup();
+
+      await user.click(component.getByTestId('GlobalConversationDock-edge'));
+
+      expect(
+        component.getByTestId('GlobalConversationDock-rail'),
+      ).toBeInTheDocument();
+      expect(parseChatDockCookie(document.cookie).isOpen).toBe(false);
+    });
+
+    test('is not rendered while collapsed', () => {
+      const component = renderDock({ collapsedGroupIds: [], isOpen: false });
+
+      expect(
+        component.queryByTestId('GlobalConversationDock-edge'),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  describe('the toggle icon', () => {
+    test('is filled while open', () => {
+      const component = renderDock({ collapsedGroupIds: [], isOpen: true });
+
+      expect(
+        component.getByTestId('GlobalConversationDock-icon-open'),
+      ).toHaveClass('fill-current');
+    });
+
+    test('is outlined while collapsed', () => {
+      const component = renderDock({ collapsedGroupIds: [], isOpen: false });
+
+      expect(
+        component.getByTestId('GlobalConversationDock-icon-closed'),
+      ).not.toHaveClass('fill-current');
+    });
+  });
+
   describe('when collapsed', () => {
     test('renders only the rail, whose button reopens the column', async () => {
       const component = renderDock({ collapsedGroupIds: [], isOpen: false });
@@ -127,11 +189,34 @@ describe('GlobalConversationDock', () => {
       ).toBeInTheDocument();
     });
 
-    test('⌘. toggles it open', async () => {
+    test('a click anywhere on the rail opens the column', async () => {
       const component = renderDock({ collapsedGroupIds: [], isOpen: false });
       const user = userEvent.setup();
 
-      await user.keyboard('{Meta>}.{/Meta}');
+      await user.click(component.getByTestId('GlobalConversationDock-rail'));
+
+      expect(
+        component.getByRole('complementary', {
+          name: CONVERSATION_DOCK_COPY.region,
+        }),
+      ).toBeInTheDocument();
+    });
+
+    test('the rail is a single labelled button', () => {
+      const component = renderDock({ collapsedGroupIds: [], isOpen: false });
+      const rail = component.getByTestId('GlobalConversationDock-rail');
+
+      expect(
+        component.getByRole('button', { name: CONVERSATION_DOCK_COPY.show }),
+      ).toBe(component.getByTestId('GlobalConversationDock-show'));
+      expect(rail.querySelectorAll('button')).toHaveLength(1);
+    });
+
+    test('⌘J toggles it open', async () => {
+      const component = renderDock({ collapsedGroupIds: [], isOpen: false });
+      const user = userEvent.setup();
+
+      await user.keyboard('{Meta>}j{/Meta}');
 
       expect(
         component.getByRole('complementary', {

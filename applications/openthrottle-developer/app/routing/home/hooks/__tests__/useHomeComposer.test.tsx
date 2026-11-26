@@ -15,6 +15,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { ConversationListContext } from '~/global/config/ConversationListContext';
 import type { UseAgenticChatTurnResult } from '~/routing/home/hooks/useAgenticChatTurn';
 import type { UseConversationListResult } from '~/routing/home/hooks/useConversationList';
 import type { RepositoryOption } from '~/routing/home/utils/models.server';
@@ -88,6 +89,7 @@ const makeConversationList = (
   return {
     conversations: [],
     errorMessage: null,
+    insert: vi.fn(),
     isLoading: false,
     isLoadingMore: false,
     loadMore: vi.fn(),
@@ -385,7 +387,7 @@ describe('useHomeComposer', () => {
     );
   });
 
-  test('refreshes the conversation list once a new persisted conversation id appears', async () => {
+  test('lists a new persisted conversation at once, then refreshes once', async () => {
     const conversationList = makeConversationList();
     // A single stable RoutesStub instance reads props from a mutable ref so a
     // rerender re-invokes HookProbe without remounting the route tree (which
@@ -398,7 +400,10 @@ describe('useHomeComposer', () => {
         models: [openaiModel],
         personas: [],
         repositories: [repositoryA],
-        turn: makeTurn({ conversationId: 'conv-1' }),
+        turn: makeTurn({
+          conversationId: 'conv-1',
+          messages: [{ body: 'Fix the flaky test', id: 'm1', role: 'user' }],
+        }),
       },
     };
     const RoutesStub = createRoutesStub([
@@ -408,16 +413,114 @@ describe('useHomeComposer', () => {
     const { rerender } = render(<RoutesStub />);
     await flush();
 
+    expect(conversationList.insert).toHaveBeenCalledTimes(1);
+    expect(conversationList.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        groupId: null,
+        id: 'conv-1',
+        pinned: false,
+        title: 'Fix the flaky test',
+      }),
+    );
     expect(conversationList.refresh).toHaveBeenCalledTimes(1);
 
     rerender(<RoutesStub />);
     await flush();
 
-    // Same conversation id: dedupe ref prevents a second refresh.
+    // Same conversation id: dedupe ref prevents a second insert and refresh.
+    expect(conversationList.insert).toHaveBeenCalledTimes(1);
     expect(conversationList.refresh).toHaveBeenCalledTimes(1);
   });
 
-  test('does not refresh the conversation list when the turn is Private (persist=false)', async () => {
+  test('does not insert a conversation that is already listed (a restore)', async () => {
+    const conversationList = makeConversationList({
+      conversations: [
+        {
+          groupId: null,
+          id: 'conv-listed',
+          pinned: false,
+          status: 'active',
+          title: 'Listed',
+          updatedAt: '2026-11-01T00:00:00.000Z',
+        },
+      ],
+    });
+
+    await renderComposer({
+      conversationList,
+      turn: makeTurn({ conversationId: 'conv-listed' }),
+    });
+
+    expect(conversationList.insert).not.toHaveBeenCalled();
+    expect(conversationList.refresh).not.toHaveBeenCalled();
+  });
+
+  describe('publishing the open conversation to the dock', () => {
+    const renderWithContext = async (
+      overrides: Partial<UseHomeComposerOptions>,
+    ): Promise<ReturnType<typeof vi.fn>> => {
+      const setActiveConversationId = vi.fn();
+      const contextValue = {
+        activeConversationId: null,
+        list: makeConversationList(),
+        setActiveConversationId,
+      };
+      const props: UseHomeComposerOptions = {
+        agentRuntimes: {},
+        conversationList: makeConversationList(),
+        defaultAgent: null,
+        models: [openaiModel],
+        personas: [],
+        repositories: [repositoryA],
+        turn: makeTurn(),
+        ...overrides,
+      };
+      const RoutesStub = createRoutesStub([
+        {
+          // eslint-disable-next-line react/no-multi-comp -- test-local harness component
+          Component: () => (
+            <ConversationListContext.Provider value={contextValue}>
+              <HookProbe {...props} />
+            </ConversationListContext.Provider>
+          ),
+          path: '/',
+        },
+      ]);
+      render(<RoutesStub />);
+      await flush();
+
+      return setActiveConversationId;
+    };
+
+    test('publishes a persisted conversation id', async () => {
+      const setActiveConversationId = await renderWithContext({
+        turn: makeTurn({ conversationId: 'conv-new' }),
+      });
+
+      expect(setActiveConversationId).toHaveBeenLastCalledWith('conv-new');
+    });
+
+    test('publishes null for a blank thread', async () => {
+      const setActiveConversationId = await renderWithContext({});
+
+      expect(setActiveConversationId).toHaveBeenLastCalledWith(null);
+    });
+
+    test('publishes null for a Private conversation, which has no row', async () => {
+      store.set(chatToolbarStateAtom, {
+        ...DEFAULT_CHAT_TOOLBAR_STATE,
+        persist: false,
+      });
+
+      const setActiveConversationId = await renderWithContext({
+        turn: makeTurn({ conversationId: 'conv-private' }),
+      });
+
+      expect(setActiveConversationId).toHaveBeenLastCalledWith(null);
+    });
+  });
+
+  test('does not list the conversation when the turn is Private (persist=false)', async () => {
     const conversationList = makeConversationList();
     store.set(chatToolbarStateAtom, {
       ...DEFAULT_CHAT_TOOLBAR_STATE,
@@ -429,6 +532,7 @@ describe('useHomeComposer', () => {
       turn: makeTurn({ conversationId: 'conv-private' }),
     });
 
+    expect(conversationList.insert).not.toHaveBeenCalled();
     expect(conversationList.refresh).not.toHaveBeenCalled();
   });
 });

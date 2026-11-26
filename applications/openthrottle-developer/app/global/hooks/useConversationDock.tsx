@@ -2,13 +2,11 @@ import type {
   ChatConversationGrouping,
   UseConversationListResult,
 } from '@openthrottle/react-router-chat';
-import {
-  useConversationGroups,
-  useConversationList,
-} from '@openthrottle/react-router-chat';
+import { useConversationGroups } from '@openthrottle/react-router-chat';
 import * as React from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router';
 
+import { useConversationListContext } from '~/global/hooks/useConversationListContext';
 import type { ChatDockState } from '~/global/utils/chat-dock-cookie';
 import { serializeChatDockCookie } from '~/global/utils/chat-dock-cookie';
 
@@ -38,7 +36,8 @@ export interface UseConversationDockResult {
  * each group are collapsed — persisted in a cookie the root loader reads, so a
  * refresh renders the same layout. Picking a chat navigates to the chat route
  * (`/?conversationId=`); New chat navigates there with `state.newChat`, which
- * the home route answers by clearing its thread. ⌘. / Ctrl+. toggles the column.
+ * the home route answers by clearing its thread. ⌘J / Ctrl+J toggles the column
+ * (next to ⌘K for the commander), whatever the Caps Lock or Shift state.
  */
 export const useConversationDock = (
   options: UseConversationDockOptions,
@@ -49,7 +48,8 @@ export const useConversationDock = (
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [searchParams] = useSearchParams();
-  const list = useConversationList({ enabled });
+  const shared = useConversationListContext({ enabled });
+  const { list } = shared;
   const groups = useConversationGroups({
     enabled,
     mapConversations: list.mapConversations,
@@ -59,8 +59,11 @@ export const useConversationDock = (
 
   // Setup
   const isChatRoute = pathname === '/';
+  // The chat route publishes the conversation it has open: a new chat's id
+  // reaches the URL through `history.replaceState`, which the router never
+  // sees. The search param covers first paint, before anything is published.
   const activeConversationId = isChatRoute
-    ? searchParams.get('conversationId')
+    ? (shared.activeConversationId ?? searchParams.get('conversationId'))
     : null;
   const isActiveListed = list.conversations.some(
     (conversation) => conversation.id === activeConversationId,
@@ -83,10 +86,12 @@ export const useConversationDock = (
   };
 
   const selectConversation = (conversationId: string): void => {
+    shared.setActiveConversationId(conversationId);
     navigate(`/?conversationId=${encodeURIComponent(conversationId)}`);
   };
 
   const newChat = (): void => {
+    shared.setActiveConversationId(null);
     navigate('/', { state: { newChat: Date.now() } });
   };
 
@@ -124,7 +129,8 @@ export const useConversationDock = (
 
   React.useEffect(() => {
     const onKeyDown = (event: KeyboardEvent): void => {
-      if ((event.metaKey || event.ctrlKey) && event.key === '.') {
+      const isToggle = (event.metaKey || event.ctrlKey) && !event.altKey;
+      if (isToggle && event.key.toLowerCase() === 'j') {
         event.preventDefault();
         setDockState((previous) => ({ ...previous, isOpen: !previous.isOpen }));
       }

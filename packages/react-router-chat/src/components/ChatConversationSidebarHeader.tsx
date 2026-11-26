@@ -13,8 +13,9 @@ export interface ChatConversationSidebarHeaderProps {
 }
 
 /**
- * @description {@link ChatConversationSidebar}'s header row: the title, a New
- * group button when groups are on, New chat, and any host controls.
+ * @description {@link ChatConversationSidebar}'s header row: a New group
+ * button when groups are on, New chat, and any host controls. No visible title
+ * (the nav already labels the area): the row's accessible name carries it.
  */
 export const ChatConversationSidebarHeader = (
   props: ChatConversationSidebarHeaderProps,
@@ -49,11 +50,13 @@ export const ChatConversationSidebarHeader = (
   // 🔌 Short Circuit
 
   return (
-    <div className="flex items-center justify-between gap-2 px-2 py-1.5">
-      <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-        {copy.title}
-      </span>
-      <div className="flex items-center">
+    <div
+      aria-label={copy.title}
+      className="flex items-center justify-end gap-2 px-2 py-1.5"
+      data-testid="ChatConversationSidebar-header"
+      role="group"
+    >
+      <div className="flex min-w-0 flex-1 items-center justify-end">
         {newGroupButton}
         <Button
           aria-label={copy.newChat}

@@ -48,7 +48,8 @@ export interface UseConversationGroupsResult {
  * @description Pinning and user-defined groups for the conversations sidebar.
  * Owns the group list; applies conversation changes through
  * {@link useConversationList}'s `mapConversations` so both hooks show one
- * consistent list. Pins, moves, renames and deletes are optimistic; a create
+ * consistent list. Pins, moves, renames and deletes are optimistic (a failed pin
+ * or move puts the row back); a create
  * appears when the server returns the new group's id. Failures toast.
  * @public
  */
@@ -64,6 +65,10 @@ export function useConversationGroups(
   const groupFetcher = useFetcher<MutateAgentConversationGroupResult>();
   const [groups, setGroups] = React.useState<AgentConversationGroup[]>([]);
   const loadedOnce = React.useRef(false);
+  // The row as it was before the in-flight pin or move, so a failure can put
+  // it back. One slot: pins and moves share a fetcher, so a newer submit
+  // replaces (aborts) the older one.
+  const organizeRollback = React.useRef<AgentConversationListItem | null>(null);
 
   // Setup
   const copy = CHAT_CONVERSATION_SIDEBAR_COPY;
@@ -81,10 +86,14 @@ export function useConversationGroups(
   };
 
   const setPinned = (conversationId: string, pinned: boolean): void => {
+    organizeRollback.current = null;
     mapConversations((conversation) => {
-      return conversation.id === conversationId
-        ? { ...conversation, pinned }
-        : conversation;
+      if (conversation.id !== conversationId) {
+        return conversation;
+      }
+      organizeRollback.current = conversation;
+
+      return { ...conversation, pinned };
     });
     organizeFetcher.submit(
       { conversationId, intent: intents.SET_PINNED, pinned: String(pinned) },
@@ -96,10 +105,12 @@ export function useConversationGroups(
     conversationId: string,
     groupId: string | null,
   ): void => {
+    organizeRollback.current = null;
     mapConversations((conversation) => {
       if (conversation.id !== conversationId) {
         return conversation;
       }
+      organizeRollback.current = conversation;
       const pinned = groupId == null ? conversation.pinned : false;
 
       return { ...conversation, groupId, pinned };
@@ -177,7 +188,12 @@ export function useConversationGroups(
     if (data == null) {
       return;
     }
+    const previous = organizeRollback.current;
+    organizeRollback.current = null;
     if (data.errorMessage != null) {
+      if (previous != null) {
+        replaceConversation(previous);
+      }
       toast.error(copy.organizeFailed, { description: data.errorMessage });
       return;
     }

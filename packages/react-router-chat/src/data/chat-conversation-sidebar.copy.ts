@@ -10,6 +10,7 @@ export const CHAT_CONVERSATION_SIDEBAR_COPY = {
   deleteGroupHint: 'Its chats go back to their dates.',
   deleteUndo: 'Undo',
   deletedToast: 'Conversation deleted',
+  dropToUngroup: 'Drop here to unpin or ungroup',
   emptyDescription: 'Your saved conversations will appear here.',
   emptyTitle: 'No conversations yet',
   errorTitle: 'Could not load conversations',

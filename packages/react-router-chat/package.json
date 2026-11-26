@@ -5,6 +5,7 @@
     "url": "https://mattscholta.com"
   },
   "dependencies": {
+    "@dnd-kit/core": "catalog:",
     "@graphql-typed-document-node/core": "catalog:",
     "@openthrottle/agentic-token-usage": "workspace:^",
     "@openthrottle/nodejs-utils": "workspace:^",

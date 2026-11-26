@@ -1,6 +1,6 @@
 import { ChatConversationSidebar } from '@openthrottle/react-router-chat';
-import { Button } from '@openthrottle/react-router-shadcn';
-import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Button, cn } from '@openthrottle/react-router-shadcn';
+import { MessageSquare } from 'lucide-react';
 import * as React from 'react';
 
 import { CONVERSATION_DOCK_COPY } from '~/global/data/copy';
@@ -17,7 +17,12 @@ export interface GlobalConversationDockProps {
 /**
  * @description The conversations column docked between the primary nav and
  * the page on every route (md and up; smaller screens keep the chat route's
- * conversation sheet). Collapses to a slim rail with a Show chats button.
+ * conversation sheet). Collapses to a slim rail with a Show chats button. One
+ * chat icon marks the state on both toggles: outlined collapsed, filled open.
+ * Opening and closing animate the slot's width; the column keeps its full
+ * width inside the clipping slot so rows never reflow mid-animation. A CSS
+ * transition only runs on a change, so the cookie-restored state paints in
+ * place on SSR and hydration.
  */
 export const GlobalConversationDock = (
   props: GlobalConversationDockProps,
@@ -30,6 +35,10 @@ export const GlobalConversationDock = (
   // Setup
   const copy = CONVERSATION_DOCK_COPY;
   const { list } = dock;
+  const slotClassName = cn(
+    'border-sidebar-border bg-sidebar flex h-full overflow-hidden border-r transition-[width] duration-200 ease-out motion-reduce:transition-none',
+    dock.isOpen ? 'w-72' : 'w-10',
+  );
 
   // Handlers
 
@@ -44,40 +53,42 @@ export const GlobalConversationDock = (
       type="button"
       variant="ghost"
     >
-      <PanelLeftClose className="size-4" />
+      <MessageSquare
+        className="size-4 fill-current"
+        data-testid="GlobalConversationDock-icon-open"
+      />
     </Button>
   );
 
+  // A click anywhere on the rail opens the dock. The Show button stays the
+  // one focusable, labelled control: its own click (mouse, Enter or Space)
+  // bubbles here, so it carries no handler of its own.
   const rail = (
     <div
-      className="border-sidebar-border bg-sidebar sticky top-0 hidden h-svh w-10 shrink-0 flex-col items-center border-r py-2 md:flex"
+      className="hover:bg-sidebar-accent flex h-full w-10 shrink-0 cursor-pointer flex-col items-center py-2"
       data-testid="GlobalConversationDock-rail"
+      onClick={dock.toggleOpen}
     >
       <Button
         aria-label={copy.show}
         data-testid="GlobalConversationDock-show"
-        onClick={dock.toggleOpen}
         size="icon"
         title={copy.show}
         type="button"
         variant="ghost"
       >
-        <PanelLeftOpen className="size-4" />
+        <MessageSquare
+          className="size-4"
+          data-testid="GlobalConversationDock-icon-closed"
+        />
       </Button>
     </div>
   );
 
-  // Life Cycle
-
-  // 🔌 Short Circuit
-  if (!dock.isOpen) {
-    return rail;
-  }
-
-  return (
+  const column = (
     <aside
       aria-label={copy.region}
-      className="border-sidebar-border bg-sidebar sticky top-0 hidden h-svh w-72 shrink-0 flex-col border-r py-1 md:flex"
+      className="flex w-72 shrink-0 flex-col py-1"
       data-testid="GlobalConversationDock"
     >
       <ChatConversationSidebar
@@ -99,5 +110,35 @@ export const GlobalConversationDock = (
         totalCount={list.totalCount}
       />
     </aside>
+  );
+
+  // Pointer-only mirror of the rail: a strip just past the open column's edge
+  // collapses it. It sits outside the border so it never covers rows, the row
+  // menu or the scrollbar; the collapse button stays the labelled control.
+  const edge = (
+    <div
+      aria-hidden={true}
+      className="hover:bg-sidebar-border absolute inset-y-0 -right-2 z-20 w-2 cursor-pointer transition-colors"
+      data-testid="GlobalConversationDock-edge"
+      onClick={dock.toggleOpen}
+      title={copy.collapse}
+    />
+  );
+
+  // Life Cycle
+
+  // 🔌 Short Circuit
+
+  return (
+    <div className="sticky top-0 z-10 hidden h-svh shrink-0 md:flex">
+      <div
+        className={slotClassName}
+        data-state={dock.isOpen ? 'open' : 'closed'}
+        data-testid="GlobalConversationDock-slot"
+      >
+        {dock.isOpen ? column : rail}
+      </div>
+      {dock.isOpen ? edge : null}
+    </div>
   );
 };

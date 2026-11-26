@@ -21,6 +21,7 @@ const buildConversationList = (): UseConversationListResult => {
   return {
     conversations: [],
     errorMessage: null,
+    insert: vi.fn(),
     isLoading: false,
     isLoadingMore: false,
     loadMore: vi.fn(),

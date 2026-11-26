@@ -11,7 +11,7 @@ export const SEMANTIC_SEARCH_OFF_COPY = {
 
 /** @description Copy for the docked conversations column. */
 export const CONVERSATION_DOCK_COPY = {
-  collapse: 'Collapse chats (⌘.)',
+  collapse: 'Collapse chats (⌘J)',
   region: 'Chats',
-  show: 'Show chats (⌘.)',
+  show: 'Show chats (⌘J)',
 } as const;

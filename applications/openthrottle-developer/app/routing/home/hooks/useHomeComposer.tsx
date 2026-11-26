@@ -28,6 +28,7 @@ import {
 import { useAtom } from 'jotai';
 import * as React from 'react';
 
+import { ConversationListContext } from '~/global/config/ConversationListContext';
 import type { UseAgenticChatTurnResult } from '~/routing/home/hooks/useAgenticChatTurn';
 import type { UseConversationListResult } from '~/routing/home/hooks/useConversationList';
 import { useConversationUrlSync } from '~/routing/home/hooks/useConversationUrlSync';
@@ -42,7 +43,7 @@ import { seedComposerDefaultAgent } from '~/routing/home/utils/seedComposerDefau
 export interface UseHomeComposerOptions {
   /** Live per-agent runtime facts (ACP approvals, auth) keyed by backend id. */
   agentRuntimes: Readonly<Record<string, ChatAgentRuntime>>;
-  /** Sidebar-backing conversation list; the composer refreshes it on new persisted turns. */
+  /** Sidebar-backing conversation list; the composer lists new persisted turns in it. */
   conversationList: UseConversationListResult;
   /** The saved default agent; seeds model + reasoning when the atom remembers none. */
   defaultAgent: ComposerDefaultAgent | null;
@@ -125,6 +126,9 @@ export const useHomeComposer = (
   // the loader-derived seed for the effective value handed to the toolbar and to
   // onSubmit, without overwriting an explicit persisted choice.
   const [toolbarState, setToolbarState] = useAtom(chatToolbarStateAtom);
+
+  // Publishes the open conversation to the dock so it highlights it.
+  const sharedConversations = React.useContext(ConversationListContext);
 
   const composerTextAreaRef = React.useRef<HTMLTextAreaElement | null>(null);
   // Dedupes the "new conversation created" refresh to one per conversation id.
@@ -307,22 +311,37 @@ export const useHomeComposer = (
   // Life Cycle
   useConversationUrlSync({ conversationId: turn.conversationId, persist });
 
-  // When a turn creates a NEW persisted conversation (an id not already in the
-  // list), refresh the sidebar so it shows up. Skipped in Private mode (no row)
-  // and on restore (the id is already listed); the ref dedupes to one refresh.
+  // Publish the open conversation so the dock highlights it, and when a turn
+  // creates a NEW persisted conversation (an id not already in the list), list
+  // it at once — titled as the server titles it, from the first message — then
+  // reconcile with the server's row. Private mode has no row: nothing is listed
+  // or highlighted. The ref dedupes the insert to one per conversation id.
   React.useEffect(() => {
     const id = turn.conversationId;
-    if (id == null || id === refreshedForIdRef.current) {
-      return;
-    }
-
     const alreadyListed = conversationList.conversations.some(
       (conversation) => conversation.id === id,
     );
-    if (persist && !alreadyListed) {
-      refreshedForIdRef.current = id;
-      conversationList.refresh();
+    const hasRow = id != null && (persist || alreadyListed);
+    sharedConversations?.setActiveConversationId(hasRow ? id : null);
+
+    if (id == null || !persist || alreadyListed) {
+      return;
     }
+    if (id === refreshedForIdRef.current) {
+      return;
+    }
+
+    refreshedForIdRef.current = id;
+    const firstMessage = turn.messages.find((message) => message.role === 'user'); // prettier-ignore
+    conversationList.insert({
+      groupId: null,
+      id,
+      pinned: false,
+      status: 'active',
+      title: firstMessage?.body.slice(0, 80) ?? null,
+      updatedAt: new Date().toString(),
+    });
+    conversationList.refresh();
   }, [turn.conversationId, persist]);
 
   // 🔌 Short Circuit

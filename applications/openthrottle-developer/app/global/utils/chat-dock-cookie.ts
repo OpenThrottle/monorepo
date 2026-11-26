@@ -10,9 +10,12 @@ export interface ChatDockState {
 
 const COOKIE_NAME = 'ot_chat_dock';
 
-/** @description Open, with no group collapsed: the dock's state before any cookie. */
+/**
+ * @description Collapsed to its rail, with no group collapsed: the dock's state
+ * before any cookie. It opens only once the user asks for it (⌘J or the rail).
+ */
 export const defaultChatDockState = (): ChatDockState => {
-  return { collapsedGroupIds: [], isOpen: true };
+  return { collapsedGroupIds: [], isOpen: false };
 };
 
 /**
@@ -42,7 +45,7 @@ export const parseChatDockCookie = (cookieHeader: string): ChatDockState => {
       collapsedGroupIds: isStringArray(collapsedGroupIds)
         ? collapsedGroupIds
         : [],
-      isOpen: typeof isOpen === 'boolean' ? isOpen : true,
+      isOpen: typeof isOpen === 'boolean' ? isOpen : false,
     };
   } catch {
     return defaultChatDockState();

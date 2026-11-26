@@ -15,7 +15,23 @@ describe('parseChatDockCookie', () => {
     expect(parseChatDockCookie(`theme=dark; ${pair}; other=1`)).toEqual(state);
   });
 
+  test('a saved open state wins over the closed default', () => {
+    const pair = serializeChatDockCookie({
+      collapsedGroupIds: [],
+      isOpen: true,
+    }).split(';')[0];
+
+    expect(parseChatDockCookie(pair ?? '').isOpen).toBe(true);
+  });
+
   describe('falls back to the default', () => {
+    test('which is collapsed to the rail', () => {
+      expect(defaultChatDockState()).toEqual({
+        collapsedGroupIds: [],
+        isOpen: false,
+      });
+    });
+
     test('when the cookie is missing', () => {
       expect(parseChatDockCookie('theme=dark')).toEqual(defaultChatDockState());
     });
@@ -28,7 +44,7 @@ describe('parseChatDockCookie', () => {
 
     test('field by field when a field has the wrong type', () => {
       const value = encodeURIComponent(
-        JSON.stringify({ collapsedGroupIds: 'g1', isOpen: false }),
+        JSON.stringify({ collapsedGroupIds: 'g1', isOpen: 'yes' }),
       );
 
       expect(parseChatDockCookie(`ot_chat_dock=${value}`)).toEqual({

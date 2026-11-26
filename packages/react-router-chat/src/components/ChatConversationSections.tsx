@@ -6,10 +6,18 @@ import type {
   AgentConversationListItem,
   ChatConversationGrouping,
 } from '../types';
+import {
+  conversationDragId,
+  dateSectionId,
+  groupSectionId,
+} from '../utils/conversation-drag';
 import type { ConversationSection } from '../utils/conversation-sections';
+import { ChatConversationDragItem } from './ChatConversationDragItem';
+import { ChatConversationDropSection } from './ChatConversationDropSection';
 import { ChatConversationEditInput } from './ChatConversationEditInput';
 import { ChatConversationGroupHeader } from './ChatConversationGroupHeader';
 import { ChatConversationRow } from './ChatConversationRow';
+import { ChatConversationUngroupDropZone } from './ChatConversationUngroupDropZone';
 
 export interface ChatConversationSectionsProps {
   readonly activeConversationId: string | null;
@@ -44,6 +52,7 @@ export const ChatConversationSections = (
     'previous-week': copy.sectionPreviousWeek,
     today: copy.sectionToday,
   };
+  const isDndEnabled = grouping != null;
   const isEditingConversation = (id: string): boolean => {
     return editing?.kind === 'conversation' && editing.id === id;
   };
@@ -56,28 +65,33 @@ export const ChatConversationSections = (
     indented: boolean,
   ): React.ReactNode => {
     return conversations.map((conversation) => (
-      <ChatConversationRow
-        conversation={conversation}
-        draftTitle={draft}
-        groups={groups}
-        indented={indented}
-        isActive={conversation.id === activeConversationId}
-        isEditing={isEditingConversation(conversation.id)}
+      <ChatConversationDragItem
+        dragId={conversationDragId(conversation.id)}
+        enabled={isDndEnabled && !isEditingConversation(conversation.id)}
         key={conversation.id}
-        onCommitRename={sidebar.commitEdit}
-        onDraftTitleChange={sidebar.setDraft}
-        onMoveToGroup={(groupId) =>
-          grouping?.onMoveToGroup(conversation.id, groupId)
-        }
-        onNewGroup={() => sidebar.startNewGroup(conversation.id)}
-        onRenameKeyDown={sidebar.onEditKeyDown}
-        onRequestDelete={() => sidebar.deleteConversation(conversation)}
-        onSelect={() => onSelect(conversation.id)}
-        onStartRename={() => sidebar.startRename(conversation)}
-        onTogglePin={() =>
-          grouping?.onSetPinned(conversation.id, !conversation.pinned)
-        }
-      />
+      >
+        <ChatConversationRow
+          conversation={conversation}
+          draftTitle={draft}
+          groups={groups}
+          indented={indented}
+          isActive={conversation.id === activeConversationId}
+          isEditing={isEditingConversation(conversation.id)}
+          onCommitRename={sidebar.commitEdit}
+          onDraftTitleChange={sidebar.setDraft}
+          onMoveToGroup={(groupId) =>
+            grouping?.onMoveToGroup(conversation.id, groupId)
+          }
+          onNewGroup={() => sidebar.startNewGroup(conversation.id)}
+          onRenameKeyDown={sidebar.onEditKeyDown}
+          onRequestDelete={() => sidebar.deleteConversation(conversation)}
+          onSelect={() => onSelect(conversation.id)}
+          onStartRename={() => sidebar.startRename(conversation)}
+          onTogglePin={() =>
+            grouping?.onSetPinned(conversation.id, !conversation.pinned)
+          }
+        />
+      </ChatConversationDragItem>
     ));
   };
 
@@ -99,12 +113,17 @@ export const ChatConversationSections = (
   const renderSection = (section: ConversationSection): React.ReactElement => {
     if (section.kind === 'date') {
       return (
-        <section aria-label={dateLabels[section.key]} key={section.key}>
+        <ChatConversationDropSection
+          ariaLabel={dateLabels[section.key]}
+          dropId={dateSectionId(section.key)}
+          enabled={isDndEnabled}
+          key={section.key}
+        >
           <h3 className="text-muted-foreground px-3 pt-3 pb-1 text-xs font-medium tracking-wide uppercase">
             {dateLabels[section.key]}
           </h3>
           {renderRows(section.conversations, false)}
-        </section>
+        </ChatConversationDropSection>
       );
     }
 
@@ -135,10 +154,15 @@ export const ChatConversationSections = (
     const body = isEmpty ? emptyHint : renderRows(section.conversations, true);
 
     return (
-      <section aria-label={group.name} key={group.id}>
+      <ChatConversationDropSection
+        ariaLabel={group.name}
+        dropId={groupSectionId(group.id)}
+        enabled={isDndEnabled}
+        key={group.id}
+      >
         {header}
         {isCollapsed ? null : body}
-      </section>
+      </ChatConversationDropSection>
     );
   };
 
@@ -166,6 +190,9 @@ export const ChatConversationSections = (
       {groupSections.map(renderSection)}
       {newGroupInput}
       {dateSections.map(renderSection)}
+      <ChatConversationUngroupDropZone
+        enabled={isDndEnabled && dateSections.length === 0}
+      />
     </div>
   );
 };

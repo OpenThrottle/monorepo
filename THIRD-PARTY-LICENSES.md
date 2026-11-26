@@ -13,13 +13,13 @@ Platform-specific prebuilt binaries (packages that declare `os`/`cpu`, e.g.
 `@rollup/rollup-linux-x64-gnu`, `fsevents`) are omitted: which ones install depends on
 the host OS, and each shares the license of the cross-platform toolchain already listed.
 
-**2055** third-party packages.
+**2058** third-party packages.
 
 ## License summary
 
 | License | Packages |
 | --- | --- |
-| MIT | 1786 |
+| MIT | 1789 |
 | ISC | 79 |
 | Apache-2.0 | 75 |
 | BSD-3-Clause | 51 |
@@ -232,6 +232,9 @@ the host OS, and each shares the license of the cross-platform toolchain already
 | `@cspotcode/source-map-support` | 0.8.1 | MIT | [source](https://github.com/cspotcode/node-source-map-support#readme) |
 | `@dabh/diagnostics` | 2.0.8 | MIT | [Arnout Kazemier](https://github.com/DABH/diagnostics) |
 | `@date-fns/tz` | 1.5.0 | MIT | [Sasha Koss](https://github.com/date-fns/date-fns#readme) |
+| `@dnd-kit/accessibility` | 3.1.1 | MIT | [Claudéric Demers](https://github.com/clauderic/dnd-kit#readme) |
+| `@dnd-kit/core` | 6.3.1 | MIT | [Claudéric Demers](https://github.com/clauderic/dnd-kit#readme) |
+| `@dnd-kit/utilities` | 3.2.2 | MIT | [Claudéric Demers](https://github.com/clauderic/dnd-kit#readme) |
 | `@electron-internal/extract-zip` | 1.0.8 | MIT | [source](https://github.com/electron/extract-zip#readme) |
 | `@electron/asar` | 3.4.1 | MIT | [source](https://github.com/electron/asar) |
 | `@electron/fuses` | 1.8.0 | MIT | [Electron Community](https://github.com/electron/fuses#readme) |
