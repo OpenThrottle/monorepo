@@ -2,7 +2,7 @@
 
 /**
  * -------- GENERATED — DO NOT EDIT ------------------------------------
- * Source: packages/agentic-hooks/src/adapters/claude/outcome.ts
+ * Source: packages/agentic-hooks/src/scripts/claude-outcome.ts
  * Regenerate: pnpm nx run @openthrottle/agentic-hooks:bundle-hooks
  * Authoring lives in @openthrottle/agentic-hooks; this file is a bundle.
  * ----------------------------------------------------------------------
@@ -32,7 +32,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// packages/agentic-hooks/src/adapters/claude/outcome.ts
+// packages/agentic-hooks/src/scripts/claude-outcome.ts
 var import_node_path7 = __toESM(require("node:path"), 1);
 
 // packages/agentic-hooks/src/data/jsonl.ts
@@ -992,13 +992,19 @@ var persistOutcomeEvent = async ({
 // packages/agentic-hooks/src/utils/skill-file.ts
 var SKILL_READ_INVOCATION_PATH = "skill_read";
 
-// packages/agentic-hooks/src/adapters/codex/payload.ts
+// packages/agentic-hooks/src/utils/claude-payload.ts
+var CLAUDE_SOURCE = "claude-code";
+var readClaudeShellSessionId = (env) => {
+  return env.CLAUDE_CODE_SESSION_ID || env.CLAUDE_SESSION_ID || null;
+};
+
+// packages/agentic-hooks/src/utils/codex-payload.ts
 var CODEX_SOURCE = "codex";
 var readCodexShellSessionId = (env) => {
   return env.CODEX_SESSION_ID || env.CODEX_THREAD_ID || null;
 };
 
-// packages/agentic-hooks/src/adapters/cursor/payload.ts
+// packages/agentic-hooks/src/utils/cursor-payload.ts
 var CURSOR_SOURCE = "cursor";
 var readCursorShellSessionId = (env) => {
   if (!env.CURSOR_AGENT) {
@@ -1011,13 +1017,7 @@ var CURSOR_INVOCATION_PATHS = Object.freeze({
   SLASH: "slash"
 });
 
-// packages/agentic-hooks/src/adapters/claude/payload.ts
-var CLAUDE_SOURCE = "claude-code";
-var readClaudeShellSessionId = (env) => {
-  return env.CLAUDE_CODE_SESSION_ID || env.CLAUDE_SESSION_ID || null;
-};
-
-// packages/agentic-hooks/src/adapters/claude/bundle-host.ts
+// packages/agentic-hooks/src/utils/claude-host.ts
 var resolveBundleHostProjectDir = (host, env = process.env) => {
   if (host === CLAUDE_SOURCE) {
     return env.CLAUDE_PROJECT_DIR || env.OPEN_THROTTLE_REPO_ROOT || process.cwd();
@@ -1027,28 +1027,6 @@ var resolveBundleHostProjectDir = (host, env = process.env) => {
   }
   return env.OPEN_THROTTLE_REPO_ROOT || process.cwd();
 };
-
-// packages/agentic-hooks/src/adapters/claude/parseOutcomeArgs.ts
-var parseOutcomeArgs = (argv) => {
-  const out = {};
-  for (let i = 0; i < argv.length; i += 1) {
-    const token = argv[i];
-    if (!token || !token.startsWith("--")) {
-      continue;
-    }
-    const key = token.slice(2);
-    const next = argv[i + 1];
-    if (next != null && !next.startsWith("--")) {
-      out[key] = next;
-      i += 1;
-    } else {
-      out[key] = "1";
-    }
-  }
-  return out;
-};
-
-// packages/agentic-hooks/src/adapters/claude/reporter-host.ts
 var UNATTRIBUTABLE_HOST_MARKERS = [
   ["gemini-cli", "GEMINI_CLI"],
   ["opencode", "OPENCODE"]
@@ -1114,7 +1092,27 @@ var resolveReporterSession = ({
   };
 };
 
-// packages/agentic-hooks/src/adapters/claude/outcome.ts
+// packages/agentic-hooks/src/utils/parseOutcomeArgs.ts
+var parseOutcomeArgs = (argv) => {
+  const out = {};
+  for (let i = 0; i < argv.length; i += 1) {
+    const token = argv[i];
+    if (!token || !token.startsWith("--")) {
+      continue;
+    }
+    const key = token.slice(2);
+    const next = argv[i + 1];
+    if (next != null && !next.startsWith("--")) {
+      out[key] = next;
+      i += 1;
+    } else {
+      out[key] = "1";
+    }
+  }
+  return out;
+};
+
+// packages/agentic-hooks/src/scripts/claude-outcome.ts
 var main = async () => {
   try {
     if (isTelemetryDisabled()) {

@@ -2,7 +2,7 @@
 
 /**
  * -------- GENERATED — DO NOT EDIT ------------------------------------
- * Source: packages/agentic-hooks/src/adapters/claude/complete.ts
+ * Source: packages/agentic-hooks/src/scripts/claude-complete.ts
  * Regenerate: pnpm nx run @openthrottle/agentic-hooks:bundle-hooks
  * Authoring lives in @openthrottle/agentic-hooks; this file is a bundle.
  * ----------------------------------------------------------------------
@@ -32,7 +32,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// packages/agentic-hooks/src/adapters/claude/complete.ts
+// packages/agentic-hooks/src/scripts/claude-complete.ts
 var import_node_fs15 = __toESM(require("node:fs"), 1);
 
 // packages/agentic-hooks/src/data/jsonl.ts
@@ -74,8 +74,8 @@ var normalizeRemoteUrl = (raw) => {
     return null;
   }
   const host = withoutScheme.slice(0, slashIndex).toLowerCase();
-  const path18 = withoutScheme.slice(slashIndex);
-  return `https://${host}${path18}`;
+  const path17 = withoutScheme.slice(slashIndex);
+  return `https://${host}${path17}`;
 };
 
 // packages/agentic-hooks/src/config/env.ts
@@ -2301,18 +2301,6 @@ var AGENT_ACCOUNT_UNATTRIBUTED_REASONS = {
 };
 var AGENT_ACCOUNT_API_KEY_ID = "api_key";
 
-// packages/openthrottle-drivers/src/registry/index.ts
-var DRIVERS = {
-  antigravity: "antigravity",
-  claude: "claude",
-  codex: "codex",
-  cursor: "cursor",
-  grok: "grok",
-  opencode: "opencode"
-};
-var DRIVER_IDS = Object.values(DRIVERS);
-var DRIVER_ID_SET = new Set(DRIVER_IDS);
-
 // packages/openthrottle-drivers/src/utils/account-error.ts
 var ACCOUNT_ERROR_KINDS = {
   authenticationError: "authentication_error",
@@ -2403,6 +2391,18 @@ var parseClaudeRateLimitInfo = (value) => {
 var isClaudeUsageLimitResult = (event) => {
   return isRecord(event) && event.type === "result" && event.is_error === true && event.api_error_status === 429;
 };
+
+// packages/openthrottle-drivers/src/utils/registry.ts
+var DRIVERS = {
+  antigravity: "antigravity",
+  claude: "claude",
+  codex: "codex",
+  cursor: "cursor",
+  grok: "grok",
+  opencode: "opencode"
+};
+var DRIVER_IDS = Object.values(DRIVERS);
+var DRIVER_ID_SET = new Set(DRIVER_IDS);
 
 // packages/agentic-conversation-backend/src/types/conversation-backend.ts
 var CONVERSATION_STREAM_CHUNK_KINDS = {
@@ -3664,7 +3664,7 @@ function createOpencodeEventMapper() {
   };
 }
 
-// packages/agentic-hooks/src/adapters/claude/account.ts
+// packages/agentic-hooks/src/utils/claude-account.ts
 var CLAUDE_ACCOUNT_PROBE_TIMEOUT_MS = 3e3;
 var CLAUDE_BIN_ENV = "OPENTHROTTLE_CLAUDE_BIN";
 var toTokenUsageAccount = (account) => {
@@ -3692,40 +3692,21 @@ var resolveClaudeTokenUsageAccount = async (env) => {
   }
 };
 
-// packages/agentic-hooks/src/adapters/claude/bundle-host.ts
+// packages/agentic-hooks/src/utils/claude-host.ts
+var import_node_fs13 = __toESM(require("node:fs"), 1);
 var import_node_os4 = __toESM(require("node:os"), 1);
 var import_node_path14 = __toESM(require("node:path"), 1);
 
-// packages/agentic-hooks/src/adapters/antigravity/marketplace-install.ts
+// packages/agentic-hooks/src/utils/antigravity-marketplace-install.ts
 var import_node_path12 = __toESM(require("node:path"), 1);
 var resolveAntigravityPluginsDir = (homeDir) => {
   return import_node_path12.default.join(homeDir, ".gemini", "config", "plugins");
 };
 
-// packages/agentic-hooks/src/adapters/antigravity/payload.ts
+// packages/agentic-hooks/src/utils/antigravity-payload.ts
 var ANTIGRAVITY_SOURCE = "antigravity";
 
-// packages/agentic-hooks/src/adapters/codex/marketplace-install.ts
-var import_node_path13 = __toESM(require("node:path"), 1);
-var resolveCodexHome = (env, homeDir) => {
-  const configured = env.CODEX_HOME?.trim();
-  return configured ? import_node_path13.default.resolve(configured) : import_node_path13.default.join(homeDir, ".codex");
-};
-var resolveCodexMarketplaceCacheDir = (codexHome) => {
-  return import_node_path13.default.join(codexHome, "plugins", "cache");
-};
-
-// packages/agentic-hooks/src/adapters/codex/payload.ts
-var CODEX_SOURCE = "codex";
-
-// packages/agentic-hooks/src/adapters/cursor/payload.ts
-var CURSOR_SOURCE = "cursor";
-var CURSOR_INVOCATION_PATHS = Object.freeze({
-  SKILL_READ: SKILL_READ_INVOCATION_PATH,
-  SLASH: "slash"
-});
-
-// packages/agentic-hooks/src/adapters/claude/payload.ts
+// packages/agentic-hooks/src/utils/claude-payload.ts
 var CLAUDE_SOURCE = "claude-code";
 var nonEmptyString = (value) => {
   return typeof value === "string" && value.trim() !== "" ? value : null;
@@ -3750,7 +3731,27 @@ var normalizeClaudeStopPayload = (raw) => {
   };
 };
 
-// packages/agentic-hooks/src/adapters/claude/bundle-host.ts
+// packages/agentic-hooks/src/utils/codex-marketplace-install.ts
+var import_node_path13 = __toESM(require("node:path"), 1);
+var resolveCodexHome = (env, homeDir) => {
+  const configured = env.CODEX_HOME?.trim();
+  return configured ? import_node_path13.default.resolve(configured) : import_node_path13.default.join(homeDir, ".codex");
+};
+var resolveCodexMarketplaceCacheDir = (codexHome) => {
+  return import_node_path13.default.join(codexHome, "plugins", "cache");
+};
+
+// packages/agentic-hooks/src/utils/codex-payload.ts
+var CODEX_SOURCE = "codex";
+
+// packages/agentic-hooks/src/utils/cursor-payload.ts
+var CURSOR_SOURCE = "cursor";
+var CURSOR_INVOCATION_PATHS = Object.freeze({
+  SKILL_READ: SKILL_READ_INVOCATION_PATH,
+  SLASH: "slash"
+});
+
+// packages/agentic-hooks/src/utils/claude-host.ts
 var scriptIsInside = (dir, scriptPath) => {
   const root = dir?.trim();
   if (!root || !scriptPath) {
@@ -3789,8 +3790,40 @@ var detectClaudeBundleHost = ({
   }
   return CLAUDE_SOURCE;
 };
+var CAPTURE_BUNDLE = "skill-usage-capture";
+var runningFromPlugin = (env, scriptPath) => {
+  const pluginRoot = env.CLAUDE_PLUGIN_ROOT?.trim();
+  if (!pluginRoot || !scriptPath) {
+    return false;
+  }
+  const relative = import_node_path14.default.relative(import_node_path14.default.resolve(pluginRoot), scriptPath);
+  return relative !== "" && !relative.startsWith("..");
+};
+var repoRegistersBundle = (repoRoot, bundle) => {
+  try {
+    const raw = import_node_fs13.default.readFileSync(
+      import_node_path14.default.join(repoRoot, ".claude", "settings.json"),
+      "utf8"
+    );
+    const parsed = JSON.parse(raw);
+    if (typeof parsed !== "object" || parsed === null || !("hooks" in parsed)) {
+      return false;
+    }
+    return JSON.stringify(parsed.hooks).includes(bundle);
+  } catch {
+    return false;
+  }
+};
+var isShadowedByRepoHooks = ({
+  bundle = CAPTURE_BUNDLE,
+  env = process.env,
+  repoRoot,
+  scriptPath = process.argv[1]
+}) => {
+  return runningFromPlugin(env, scriptPath) && repoRegistersBundle(repoRoot, bundle);
+};
 
-// packages/agentic-hooks/src/adapters/claude/session-trajectory.ts
+// packages/agentic-hooks/src/utils/claude-session-trajectory.ts
 var import_node_path15 = __toESM(require("node:path"), 1);
 
 // packages/openthrottle-agentic-utils/src/utils/normalizeUsage.ts
@@ -5096,7 +5129,7 @@ var buildClaudeSessionTrajectory = (input) => {
   };
 };
 
-// packages/agentic-hooks/src/adapters/claude/session-trajectory.ts
+// packages/agentic-hooks/src/utils/claude-session-trajectory.ts
 var SESSION_TRAJECTORY_SOURCE = "session_upload";
 var SESSION_TRAJECTORY_DRIVER = "claude";
 var MAX_SESSION_SCAN_BYTES_PER_STOP = 32 * 1024 * 1024;
@@ -5256,45 +5289,9 @@ var captureSessionTrajectories = async ({
   }
 };
 
-// packages/agentic-hooks/src/adapters/claude/shadow.ts
-var import_node_fs13 = __toESM(require("node:fs"), 1);
-var import_node_path16 = __toESM(require("node:path"), 1);
-var CAPTURE_BUNDLE = "skill-usage-capture";
-var runningFromPlugin = (env, scriptPath) => {
-  const pluginRoot = env.CLAUDE_PLUGIN_ROOT?.trim();
-  if (!pluginRoot || !scriptPath) {
-    return false;
-  }
-  const relative = import_node_path16.default.relative(import_node_path16.default.resolve(pluginRoot), scriptPath);
-  return relative !== "" && !relative.startsWith("..");
-};
-var repoRegistersBundle = (repoRoot, bundle) => {
-  try {
-    const raw = import_node_fs13.default.readFileSync(
-      import_node_path16.default.join(repoRoot, ".claude", "settings.json"),
-      "utf8"
-    );
-    const parsed = JSON.parse(raw);
-    if (typeof parsed !== "object" || parsed === null || !("hooks" in parsed)) {
-      return false;
-    }
-    return JSON.stringify(parsed.hooks).includes(bundle);
-  } catch {
-    return false;
-  }
-};
-var isShadowedByRepoHooks = ({
-  bundle = CAPTURE_BUNDLE,
-  env = process.env,
-  repoRoot,
-  scriptPath = process.argv[1]
-}) => {
-  return runningFromPlugin(env, scriptPath) && repoRegistersBundle(repoRoot, bundle);
-};
-
-// packages/agentic-hooks/src/adapters/claude/transcript-usage.ts
+// packages/agentic-hooks/src/utils/claude-transcript.ts
 var import_node_fs14 = __toESM(require("node:fs"), 1);
-var import_node_path17 = __toESM(require("node:path"), 1);
+var import_node_path16 = __toESM(require("node:path"), 1);
 
 // packages/agentic-token-usage/src/usage.ts
 var asFiniteNumber = (value) => {
@@ -5431,7 +5428,7 @@ var hasUsageCounts = (usage) => {
   return usage !== void 0 && !hasNoCounts(usage);
 };
 
-// packages/agentic-hooks/src/adapters/claude/transcript.ts
+// packages/agentic-hooks/src/utils/claude-transcript.ts
 var CLAUDE_PROVIDER = "claude";
 var SYNTHETIC_MODEL = "<synthetic>";
 var nonEmptyString2 = (value) => {
@@ -5514,16 +5511,14 @@ var parseTranscriptLines = ({
   }
   return records;
 };
-
-// packages/agentic-hooks/src/adapters/claude/transcript-usage.ts
 var MAX_TRANSCRIPT_BYTES_PER_FILE = 4 * 1024 * 1024;
 var MAX_TRANSCRIPT_BYTES_PER_STOP = 16 * 1024 * 1024;
 var SUBAGENT_FILE = /^agent-.+\.jsonl$/;
 var listSubagentTranscripts = (transcriptPath) => {
-  const { dir, name } = import_node_path17.default.parse(transcriptPath);
-  const subagentsDir = import_node_path17.default.join(dir, name, "subagents");
+  const { dir, name } = import_node_path16.default.parse(transcriptPath);
+  const subagentsDir = import_node_path16.default.join(dir, name, "subagents");
   try {
-    return import_node_fs14.default.readdirSync(subagentsDir).filter((entry) => SUBAGENT_FILE.test(entry)).sort().map((entry) => import_node_path17.default.join(subagentsDir, entry));
+    return import_node_fs14.default.readdirSync(subagentsDir).filter((entry) => SUBAGENT_FILE.test(entry)).sort().map((entry) => import_node_path16.default.join(subagentsDir, entry));
   } catch {
     return [];
   }
@@ -5622,7 +5617,7 @@ var captureTranscriptUsage = async ({
   }
 };
 
-// packages/agentic-hooks/src/adapters/claude/complete.ts
+// packages/agentic-hooks/src/scripts/claude-complete.ts
 var main = async () => {
   try {
     if (isTelemetryDisabled()) {

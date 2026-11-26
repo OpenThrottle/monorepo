@@ -2,7 +2,7 @@
 
 /**
  * -------- GENERATED — DO NOT EDIT ------------------------------------
- * Source: packages/agentic-hooks/src/adapters/claude/memory-index-guard.ts
+ * Source: packages/agentic-hooks/src/scripts/claude-memory-index-guard.ts
  * Regenerate: pnpm nx run @openthrottle/agentic-hooks:bundle-hooks
  * Authoring lives in @openthrottle/agentic-hooks; this file is a bundle.
  * ----------------------------------------------------------------------
@@ -37,13 +37,13 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-// packages/agentic-hooks/src/adapters/claude/memory-index-guard.ts
-var memory_index_guard_exports = {};
-__export(memory_index_guard_exports, {
+// packages/agentic-hooks/src/scripts/claude-memory-index-guard.ts
+var claude_memory_index_guard_exports = {};
+__export(claude_memory_index_guard_exports, {
   isMemoryIndexPath: () => isMemoryIndexPath,
   readEditedPath: () => readEditedPath
 });
-module.exports = __toCommonJS(memory_index_guard_exports);
+module.exports = __toCommonJS(claude_memory_index_guard_exports);
 var import_node_fs = __toESM(require("node:fs"), 1);
 var import_node_path = __toESM(require("node:path"), 1);
 
@@ -64,7 +64,7 @@ var logHookError = (message, err) => {
   }
 };
 
-// packages/agentic-hooks/src/memory/index-budget.ts
+// packages/agentic-hooks/src/utils/memory-index-budget.ts
 var measureIndex = (content) => {
   return content.length;
 };
@@ -158,7 +158,7 @@ ${lost}
 ${remedy}`;
 };
 
-// packages/agentic-hooks/src/adapters/claude/memory-index-guard.ts
+// packages/agentic-hooks/src/scripts/claude-memory-index-guard.ts
 var isMemoryIndexPath = (filePath) => {
   return import_node_path.default.basename(filePath) === "MEMORY.md" && import_node_path.default.basename(import_node_path.default.dirname(filePath)) === "memory";
 };

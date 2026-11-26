@@ -2,7 +2,7 @@
 
 /**
  * -------- GENERATED — DO NOT EDIT ------------------------------------
- * Source: packages/agentic-hooks/src/adapters/cursor/bash-guard.ts
+ * Source: packages/agentic-hooks/src/scripts/cursor-bash-guard.ts
  * Regenerate: pnpm nx run @openthrottle/agentic-hooks:bundle-hooks
  * Authoring lives in @openthrottle/agentic-hooks; this file is a bundle.
  * ----------------------------------------------------------------------
@@ -32,7 +32,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// packages/agentic-hooks/src/adapters/cursor/bash-guard.ts
+// packages/agentic-hooks/src/scripts/cursor-bash-guard.ts
 var import_node_fs = __toESM(require("node:fs"), 1);
 
 // packages/agentic-hooks/src/utils/logging.ts
@@ -1052,7 +1052,7 @@ var readShellEnvironment = (options) => {
   };
 };
 
-// packages/agentic-hooks/src/adapters/cursor/bash-guard-output.ts
+// packages/agentic-hooks/src/utils/cursor-bash-guard.ts
 var CURSOR_SHELL_ALLOW = `${JSON.stringify({ permission: "allow" })}
 `;
 var readNonEmpty = (value) => {
@@ -1094,7 +1094,7 @@ var decideCursorBashGuard = async (raw, fallbackCwd, context) => {
   return renderCursorBashGuard(result);
 };
 
-// packages/agentic-hooks/src/adapters/cursor/bash-guard.ts
+// packages/agentic-hooks/src/scripts/cursor-bash-guard.ts
 var decide = async () => {
   const stdinBuf = import_node_fs.default.readFileSync(0, "utf8");
   if (!stdinBuf || !stdinBuf.trim()) return CURSOR_SHELL_ALLOW;

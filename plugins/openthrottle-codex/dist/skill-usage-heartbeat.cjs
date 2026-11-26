@@ -2,7 +2,7 @@
 
 /**
  * -------- GENERATED — DO NOT EDIT ------------------------------------
- * Source: packages/agentic-hooks/src/adapters/codex/heartbeat.ts
+ * Source: packages/agentic-hooks/src/scripts/codex-heartbeat.ts
  * Regenerate: pnpm nx run @openthrottle/agentic-hooks:bundle-hooks
  * Authoring lives in @openthrottle/agentic-hooks; this file is a bundle.
  * ----------------------------------------------------------------------
@@ -32,7 +32,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// packages/agentic-hooks/src/adapters/codex/heartbeat.ts
+// packages/agentic-hooks/src/scripts/codex-heartbeat.ts
 var import_node_os2 = __toESM(require("node:os"), 1);
 var import_node_path6 = __toESM(require("node:path"), 1);
 
@@ -851,7 +851,7 @@ var sendHeartbeat = async ({
   }
 };
 
-// packages/agentic-hooks/src/adapters/codex/marketplace-install.ts
+// packages/agentic-hooks/src/utils/codex-marketplace-install.ts
 var import_node_path5 = __toESM(require("node:path"), 1);
 var MARKETPLACE_NAME = "openthrottle";
 var PLUGIN_NAME = "openthrottle";
@@ -914,10 +914,10 @@ var readCodexMarketplaceInstall = ({
   };
 };
 
-// packages/agentic-hooks/src/adapters/codex/payload.ts
+// packages/agentic-hooks/src/utils/codex-payload.ts
 var CODEX_SOURCE = "codex";
 
-// packages/agentic-hooks/src/adapters/codex/heartbeat.ts
+// packages/agentic-hooks/src/scripts/codex-heartbeat.ts
 var main = async () => {
   try {
     if (isTelemetryDisabled()) {

@@ -2,7 +2,7 @@
 
 /**
  * -------- GENERATED — DO NOT EDIT ------------------------------------
- * Source: packages/agentic-hooks/src/adapters/claude/plan-narration.ts
+ * Source: packages/agentic-hooks/src/scripts/claude-plan-narration.ts
  * Regenerate: pnpm nx run @openthrottle/agentic-hooks:bundle-hooks
  * Authoring lives in @openthrottle/agentic-hooks; this file is a bundle.
  * ----------------------------------------------------------------------
@@ -32,7 +32,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// packages/agentic-hooks/src/adapters/claude/plan-narration.ts
+// packages/agentic-hooks/src/scripts/claude-plan-narration.ts
 var import_node_fs5 = __toESM(require("node:fs"), 1);
 
 // packages/agentic-hooks/src/data/jsonl.ts
@@ -806,7 +806,8 @@ var claudeSessionToolUsesOf = (event) => {
   return isMainLine(event) ? toolUsesOf(event) : [];
 };
 
-// packages/agentic-hooks/src/adapters/claude/plan-run-binding.ts
+// packages/agentic-hooks/src/utils/claude-plan-run-task-guard.ts
+var import_node_fs4 = __toESM(require("node:fs"), 1);
 var claudePlanRunTranscript = {
   planRunIdOf: (events) => {
     return findClaudeSessionPlanRunId(events) ?? null;
@@ -818,9 +819,6 @@ var claudePlanRunTranscript = {
   },
   toolUsesOf: claudeSessionToolUsesOf
 };
-
-// packages/agentic-hooks/src/adapters/claude/plan-run-task-guard-output.ts
-var import_node_fs4 = __toESM(require("node:fs"), 1);
 var PLAN_RUN_GUARD_MAX_TAIL_BYTES = 6 * 1024 * 1024;
 var parseTranscriptLines = (lines) => {
   return lines.flatMap((line) => {
@@ -846,7 +844,7 @@ var readTranscriptTail = (transcriptPath, maxBytes = PLAN_RUN_GUARD_MAX_TAIL_BYT
   }
 };
 
-// packages/agentic-hooks/src/adapters/claude/plan-narration-output.ts
+// packages/agentic-hooks/src/utils/claude-plan-run-output.ts
 var UPDATE_TASK_SUFFIX3 = "__update_task";
 var nonEmptyString3 = (value) => {
   return typeof value === "string" && value !== "" ? value : null;
@@ -928,7 +926,7 @@ var runClaudePlanNarration = async (raw, deps) => {
   }
 };
 
-// packages/agentic-hooks/src/adapters/claude/plan-narration.ts
+// packages/agentic-hooks/src/scripts/claude-plan-narration.ts
 var APPEND_TIMEOUT_MS = 2e3;
 var main = async () => {
   try {

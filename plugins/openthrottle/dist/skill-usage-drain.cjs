@@ -2,7 +2,7 @@
 
 /**
  * -------- GENERATED — DO NOT EDIT ------------------------------------
- * Source: packages/agentic-hooks/src/adapters/claude/drain.ts
+ * Source: packages/agentic-hooks/src/scripts/claude-drain.ts
  * Regenerate: pnpm nx run @openthrottle/agentic-hooks:bundle-hooks
  * Authoring lives in @openthrottle/agentic-hooks; this file is a bundle.
  * ----------------------------------------------------------------------
@@ -1163,7 +1163,7 @@ var drainBufferedTrajectories = async ({
   }
 };
 
-// packages/agentic-hooks/src/adapters/claude/drain.ts
+// packages/agentic-hooks/src/scripts/claude-drain.ts
 var parseArg = (flag) => {
   const idx = process.argv.indexOf(flag);
   return idx >= 0 ? process.argv[idx + 1] : void 0;

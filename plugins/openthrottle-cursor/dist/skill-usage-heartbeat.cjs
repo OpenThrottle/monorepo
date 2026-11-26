@@ -2,7 +2,7 @@
 
 /**
  * -------- GENERATED — DO NOT EDIT ------------------------------------
- * Source: packages/agentic-hooks/src/adapters/cursor/heartbeat.ts
+ * Source: packages/agentic-hooks/src/scripts/cursor-heartbeat.ts
  * Regenerate: pnpm nx run @openthrottle/agentic-hooks:bundle-hooks
  * Authoring lives in @openthrottle/agentic-hooks; this file is a bundle.
  * ----------------------------------------------------------------------
@@ -835,12 +835,12 @@ var sendHeartbeat = async ({
 // packages/agentic-hooks/src/utils/skill-file.ts
 var SKILL_READ_INVOCATION_PATH = "skill_read";
 
-// packages/agentic-hooks/src/adapters/cursor/heartbeat-run.ts
+// packages/agentic-hooks/src/utils/cursor-heartbeat.ts
 var import_node_fs6 = __toESM(require("node:fs"), 1);
 var import_node_os2 = __toESM(require("node:os"), 1);
 var import_node_path6 = __toESM(require("node:path"), 1);
 
-// packages/agentic-hooks/src/adapters/cursor/marketplace-install.ts
+// packages/agentic-hooks/src/utils/cursor-marketplace-install.ts
 var import_node_fs5 = __toESM(require("node:fs"), 1);
 var import_node_path5 = __toESM(require("node:path"), 1);
 var MARKETPLACE_NAME = "openthrottle";
@@ -869,7 +869,7 @@ var readCursorMarketplaceInstall = (cacheDir) => {
   };
 };
 
-// packages/agentic-hooks/src/adapters/cursor/payload.ts
+// packages/agentic-hooks/src/utils/cursor-payload.ts
 var CURSOR_SOURCE = "cursor";
 var CURSOR_INVOCATION_PATHS = Object.freeze({
   SKILL_READ: SKILL_READ_INVOCATION_PATH,
@@ -893,7 +893,7 @@ var readCursorPayloadCwd = (raw) => {
   return isRecord(raw) ? resolveCwd(raw) : null;
 };
 
-// packages/agentic-hooks/src/adapters/cursor/heartbeat-run.ts
+// packages/agentic-hooks/src/utils/cursor-heartbeat.ts
 var HEARTBEAT_BUNDLE = "skill-usage-heartbeat";
 var resolveOwnPluginRoot = (env, scriptPath) => {
   const pluginRoot = env.CURSOR_PLUGIN_ROOT?.trim();
@@ -973,7 +973,7 @@ var runCursorHeartbeat = async ({
   });
 };
 
-// packages/agentic-hooks/src/adapters/cursor/heartbeat.ts
+// packages/agentic-hooks/src/scripts/cursor-heartbeat.ts
 var readPayloadCwd = () => {
   try {
     return readCursorPayloadCwd(JSON.parse(readHookStdin()));

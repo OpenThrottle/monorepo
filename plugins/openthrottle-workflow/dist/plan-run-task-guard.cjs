@@ -2,7 +2,7 @@
 
 /**
  * -------- GENERATED — DO NOT EDIT ------------------------------------
- * Source: packages/agentic-hooks/src/adapters/claude/plan-run-task-guard.ts
+ * Source: packages/agentic-hooks/src/scripts/claude-plan-run-task-guard.ts
  * Regenerate: pnpm nx run @openthrottle/agentic-hooks:bundle-hooks
  * Authoring lives in @openthrottle/agentic-hooks; this file is a bundle.
  * ----------------------------------------------------------------------
@@ -32,7 +32,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// packages/agentic-hooks/src/adapters/claude/plan-run-task-guard.ts
+// packages/agentic-hooks/src/scripts/claude-plan-run-task-guard.ts
 var import_node_fs3 = __toESM(require("node:fs"), 1);
 
 // packages/agentic-hooks/src/utils/logging.ts
@@ -169,7 +169,7 @@ var readNewBytes = ({
   }
 };
 
-// packages/agentic-hooks/src/adapters/claude/plan-run-task-guard-output.ts
+// packages/agentic-hooks/src/utils/claude-plan-run-task-guard.ts
 var import_node_fs2 = __toESM(require("node:fs"), 1);
 var import_node_os = __toESM(require("node:os"), 1);
 
@@ -253,7 +253,7 @@ var claudeSessionToolUsesOf = (event) => {
   return isMainLine(event) ? toolUsesOf(event) : [];
 };
 
-// packages/agentic-hooks/src/adapters/claude/plan-run-binding.ts
+// packages/agentic-hooks/src/utils/claude-plan-run-task-guard.ts
 var claudePlanRunTranscript = {
   planRunIdOf: (events) => {
     return findClaudeSessionPlanRunId(events) ?? null;
@@ -268,8 +268,6 @@ var claudePlanRunTranscript = {
 var findClaudePlanRunBinding = (events) => {
   return findPlanRunBinding(events, claudePlanRunTranscript);
 };
-
-// packages/agentic-hooks/src/adapters/claude/plan-run-task-guard-output.ts
 var PLAN_RUN_GUARD_MAX_TAIL_BYTES = 6 * 1024 * 1024;
 var EDIT_TOOL_NAMES = /* @__PURE__ */ new Set([
   "Edit",
@@ -354,7 +352,7 @@ var decideClaudePlanRunTaskGuard = (raw, readEvents = readTranscriptTail) => {
 `;
 };
 
-// packages/agentic-hooks/src/adapters/claude/plan-run-task-guard.ts
+// packages/agentic-hooks/src/scripts/claude-plan-run-task-guard.ts
 var main = () => {
   try {
     const stdinBuf = import_node_fs3.default.readFileSync(0, "utf8");

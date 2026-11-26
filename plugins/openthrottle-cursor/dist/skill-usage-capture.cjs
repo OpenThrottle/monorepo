@@ -2,7 +2,7 @@
 
 /**
  * -------- GENERATED — DO NOT EDIT ------------------------------------
- * Source: packages/agentic-hooks/src/adapters/cursor/capture.ts
+ * Source: packages/agentic-hooks/src/scripts/cursor-capture.ts
  * Regenerate: pnpm nx run @openthrottle/agentic-hooks:bundle-hooks
  * Authoring lives in @openthrottle/agentic-hooks; this file is a bundle.
  * ----------------------------------------------------------------------
@@ -32,7 +32,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// packages/agentic-hooks/src/adapters/cursor/capture.ts
+// packages/agentic-hooks/src/scripts/cursor-capture.ts
 var import_node_fs7 = __toESM(require("node:fs"), 1);
 var import_node_path7 = __toESM(require("node:path"), 1);
 
@@ -1034,7 +1034,7 @@ var skillNameFromSkillFilePath = (filePath) => {
   return match?.[1] ?? null;
 };
 
-// packages/agentic-hooks/src/adapters/cursor/payload.ts
+// packages/agentic-hooks/src/utils/cursor-payload.ts
 var CURSOR_SOURCE = "cursor";
 var CURSOR_INVOCATION_PATHS = Object.freeze({
   SKILL_READ: SKILL_READ_INVOCATION_PATH,
@@ -1117,7 +1117,7 @@ var normalizeCursorPayload = (raw) => {
   }
 };
 
-// packages/agentic-hooks/src/adapters/cursor/capture.ts
+// packages/agentic-hooks/src/scripts/cursor-capture.ts
 var main = async () => {
   try {
     if (isTelemetryDisabled()) {

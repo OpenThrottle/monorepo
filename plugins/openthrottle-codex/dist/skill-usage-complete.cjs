@@ -2,7 +2,7 @@
 
 /**
  * -------- GENERATED — DO NOT EDIT ------------------------------------
- * Source: packages/agentic-hooks/src/adapters/codex/complete.ts
+ * Source: packages/agentic-hooks/src/scripts/codex-complete.ts
  * Regenerate: pnpm nx run @openthrottle/agentic-hooks:bundle-hooks
  * Authoring lives in @openthrottle/agentic-hooks; this file is a bundle.
  * ----------------------------------------------------------------------
@@ -32,7 +32,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// packages/agentic-hooks/src/adapters/codex/complete.ts
+// packages/agentic-hooks/src/scripts/codex-complete.ts
 var import_node_fs9 = __toESM(require("node:fs"), 1);
 
 // packages/agentic-hooks/src/data/jsonl.ts
@@ -1555,7 +1555,7 @@ var formatDrainReasons = (tally) => {
   return entries.length ? entries.map(([reason, count]) => `${reason} ×${count}`).join("; ") : "none";
 };
 
-// packages/agentic-hooks/src/adapters/codex/payload.ts
+// packages/agentic-hooks/src/utils/codex-payload.ts
 var CODEX_SOURCE = "codex";
 var readString = (value) => {
   return typeof value === "string" && value ? value : null;
@@ -1575,7 +1575,7 @@ var normalizeCodexSessionEndPayload = (raw) => {
   };
 };
 
-// packages/agentic-hooks/src/adapters/codex/complete.ts
+// packages/agentic-hooks/src/scripts/codex-complete.ts
 var main = async () => {
   try {
     if (isTelemetryDisabled()) {

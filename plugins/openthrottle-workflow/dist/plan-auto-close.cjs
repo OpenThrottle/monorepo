@@ -2,7 +2,7 @@
 
 /**
  * -------- GENERATED — DO NOT EDIT ------------------------------------
- * Source: packages/agentic-hooks/src/adapters/claude/plan-auto-close.ts
+ * Source: packages/agentic-hooks/src/scripts/claude-plan-auto-close.ts
  * Regenerate: pnpm nx run @openthrottle/agentic-hooks:bundle-hooks
  * Authoring lives in @openthrottle/agentic-hooks; this file is a bundle.
  * ----------------------------------------------------------------------
@@ -32,7 +32,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// packages/agentic-hooks/src/adapters/claude/plan-auto-close.ts
+// packages/agentic-hooks/src/scripts/claude-plan-auto-close.ts
 var import_node_fs2 = __toESM(require("node:fs"), 1);
 
 // packages/agentic-hooks/src/config/env.ts
@@ -263,7 +263,7 @@ var decidePlanAutoClose = async ({
   return `Completing "${found.taskTitle}" closed plan ${found.planId}. If this run has follow-up work, reopen the plan (update_plan IN_PROGRESS) before create_tasks.`;
 };
 
-// packages/agentic-hooks/src/adapters/claude/plan-auto-close-output.ts
+// packages/agentic-hooks/src/utils/claude-plan-run-output.ts
 var UPDATE_TASK_SUFFIX = "__update_task";
 var readUpdateTaskCall = (raw) => {
   if (!isRecord(raw) || typeof raw.tool_name !== "string") return null;
@@ -286,7 +286,7 @@ var decideClaudePlanAutoClose = async (raw, lookup) => {
 `;
 };
 
-// packages/agentic-hooks/src/adapters/claude/plan-auto-close.ts
+// packages/agentic-hooks/src/scripts/claude-plan-auto-close.ts
 var LOOKUP_TIMEOUT_MS = 1500;
 var main = async () => {
   try {

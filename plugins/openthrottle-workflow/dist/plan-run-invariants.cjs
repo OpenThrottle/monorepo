@@ -2,7 +2,7 @@
 
 /**
  * -------- GENERATED — DO NOT EDIT ------------------------------------
- * Source: packages/agentic-hooks/src/adapters/claude/plan-run-invariants.ts
+ * Source: packages/agentic-hooks/src/scripts/claude-plan-run-invariants.ts
  * Regenerate: pnpm nx run @openthrottle/agentic-hooks:bundle-hooks
  * Authoring lives in @openthrottle/agentic-hooks; this file is a bundle.
  * ----------------------------------------------------------------------
@@ -32,7 +32,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// packages/agentic-hooks/src/adapters/claude/plan-run-invariants.ts
+// packages/agentic-hooks/src/scripts/claude-plan-run-invariants.ts
 var import_node_fs4 = __toESM(require("node:fs"), 1);
 
 // packages/agentic-hooks/src/config/env.ts
@@ -637,7 +637,8 @@ var claudeSessionToolUsesOf = (event) => {
   return isMainLine(event) ? toolUsesOf(event) : [];
 };
 
-// packages/agentic-hooks/src/adapters/claude/plan-run-binding.ts
+// packages/agentic-hooks/src/utils/claude-plan-run-task-guard.ts
+var import_node_fs3 = __toESM(require("node:fs"), 1);
 var claudePlanRunTranscript = {
   planRunIdOf: (events) => {
     return findClaudeSessionPlanRunId(events) ?? null;
@@ -652,9 +653,6 @@ var claudePlanRunTranscript = {
 var findClaudePlanRunBinding = (events) => {
   return findPlanRunBinding(events, claudePlanRunTranscript);
 };
-
-// packages/agentic-hooks/src/adapters/claude/plan-run-task-guard-output.ts
-var import_node_fs3 = __toESM(require("node:fs"), 1);
 var PLAN_RUN_GUARD_MAX_TAIL_BYTES = 6 * 1024 * 1024;
 var parseTranscriptLines = (lines) => {
   return lines.flatMap((line) => {
@@ -680,7 +678,7 @@ var readTranscriptTail = (transcriptPath, maxBytes = PLAN_RUN_GUARD_MAX_TAIL_BYT
   }
 };
 
-// packages/agentic-hooks/src/adapters/claude/plan-run-invariants-output.ts
+// packages/agentic-hooks/src/utils/claude-plan-run-output.ts
 var UPDATE_TASK_SUFFIX2 = "__update_task";
 var nonEmptyString2 = (value) => {
   return typeof value === "string" && value !== "" ? value : null;
@@ -742,7 +740,7 @@ var decideClaudePlanRunInvariants = async (raw, deps) => {
   }
 };
 
-// packages/agentic-hooks/src/adapters/claude/plan-run-invariants.ts
+// packages/agentic-hooks/src/scripts/claude-plan-run-invariants.ts
 var LOOKUP_TIMEOUT_MS = 1500;
 var main = async () => {
   try {

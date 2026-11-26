@@ -2,7 +2,7 @@
 
 /**
  * -------- GENERATED — DO NOT EDIT ------------------------------------
- * Source: packages/agentic-hooks/src/adapters/claude/bash-guard.ts
+ * Source: packages/agentic-hooks/src/scripts/claude-bash-guard.ts
  * Regenerate: pnpm nx run @openthrottle/agentic-hooks:bundle-hooks
  * Authoring lives in @openthrottle/agentic-hooks; this file is a bundle.
  * ----------------------------------------------------------------------
@@ -32,7 +32,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// packages/agentic-hooks/src/adapters/claude/bash-guard.ts
+// packages/agentic-hooks/src/scripts/claude-bash-guard.ts
 var import_node_fs = __toESM(require("node:fs"), 1);
 
 // packages/agentic-hooks/src/utils/logging.ts
@@ -1052,7 +1052,7 @@ var readShellEnvironment = (options) => {
   };
 };
 
-// packages/agentic-hooks/src/adapters/claude/bash-guard-output.ts
+// packages/agentic-hooks/src/utils/claude-bash-guard.ts
 var readClaudeBashCall = (raw) => {
   if (!isRecord(raw) || raw.tool_name !== "Bash") return null;
   if (!isRecord(raw.tool_input)) return null;
@@ -1092,7 +1092,7 @@ var decideClaudeBashGuard = async (raw, fallbackCwd, context) => {
   return renderClaudeBashGuard(result);
 };
 
-// packages/agentic-hooks/src/adapters/claude/bash-guard.ts
+// packages/agentic-hooks/src/scripts/claude-bash-guard.ts
 var main = async () => {
   try {
     const stdinBuf = import_node_fs.default.readFileSync(0, "utf8");

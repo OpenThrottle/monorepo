@@ -2,7 +2,7 @@
 
 /**
  * -------- GENERATED — DO NOT EDIT ------------------------------------
- * Source: packages/agentic-hooks/src/adapters/codex/capture.ts
+ * Source: packages/agentic-hooks/src/scripts/codex-capture.ts
  * Regenerate: pnpm nx run @openthrottle/agentic-hooks:bundle-hooks
  * Authoring lives in @openthrottle/agentic-hooks; this file is a bundle.
  * ----------------------------------------------------------------------
@@ -32,7 +32,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// packages/agentic-hooks/src/adapters/codex/capture.ts
+// packages/agentic-hooks/src/scripts/codex-capture.ts
 var import_node_fs7 = __toESM(require("node:fs"), 1);
 var import_node_path7 = __toESM(require("node:path"), 1);
 
@@ -1034,7 +1034,7 @@ var skillNameFromSkillFilePath = (filePath) => {
   return match?.[1] ?? null;
 };
 
-// packages/agentic-hooks/src/adapters/codex/payload.ts
+// packages/agentic-hooks/src/utils/codex-payload.ts
 var CODEX_SOURCE = "codex";
 var SLASH_COMMAND_PATTERN = /^\s*\/([A-Za-z0-9][\w.:-]*)\s*([\s\S]*)$/;
 var readString = (value) => {
@@ -1111,7 +1111,7 @@ var normalizeCodexPayload = (raw) => {
   }
 };
 
-// packages/agentic-hooks/src/adapters/codex/capture.ts
+// packages/agentic-hooks/src/scripts/codex-capture.ts
 var main = async () => {
   try {
     if (isTelemetryDisabled()) {

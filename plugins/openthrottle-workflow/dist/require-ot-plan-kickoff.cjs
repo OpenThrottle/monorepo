@@ -2,7 +2,7 @@
 
 /**
  * -------- GENERATED — DO NOT EDIT ------------------------------------
- * Source: packages/agentic-hooks/src/adapters/claude/require-ot-plan-kickoff.ts
+ * Source: packages/agentic-hooks/src/scripts/claude-require-ot-plan-kickoff.ts
  * Regenerate: pnpm nx run @openthrottle/agentic-hooks:bundle-hooks
  * Authoring lives in @openthrottle/agentic-hooks; this file is a bundle.
  * ----------------------------------------------------------------------
@@ -32,7 +32,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// packages/agentic-hooks/src/adapters/claude/require-ot-plan-kickoff.ts
+// packages/agentic-hooks/src/scripts/claude-require-ot-plan-kickoff.ts
 var import_node_fs2 = __toESM(require("node:fs"), 1);
 
 // packages/agentic-hooks/src/config/env.ts
@@ -275,7 +275,7 @@ var decideKickoffBrief = async (brief, lookup) => {
   return KICKOFF_ALLOW;
 };
 
-// packages/agentic-hooks/src/adapters/claude/kickoff-guard.ts
+// packages/agentic-hooks/src/utils/claude-kickoff-guard.ts
 var KICKOFF_TOOL_SUFFIXES = [
   "__hand_off_to_session",
   "__start_session"
@@ -299,7 +299,7 @@ var decideKickoff = async (raw, lookup) => {
   return isKickoffTool(raw) ? decideKickoffBrief(readKickoffBrief(raw), lookup) : KICKOFF_ALLOW;
 };
 
-// packages/agentic-hooks/src/adapters/claude/require-ot-plan-kickoff.ts
+// packages/agentic-hooks/src/scripts/claude-require-ot-plan-kickoff.ts
 var LOOKUP_TIMEOUT_MS = 1500;
 var main = async () => {
   try {

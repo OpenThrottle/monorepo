@@ -2,7 +2,7 @@
 
 /**
  * -------- GENERATED — DO NOT EDIT ------------------------------------
- * Source: packages/agentic-hooks/src/adapters/claude/doctor.ts
+ * Source: packages/agentic-hooks/src/scripts/claude-doctor.ts
  * Regenerate: pnpm nx run @openthrottle/agentic-hooks:bundle-hooks
  * Authoring lives in @openthrottle/agentic-hooks; this file is a bundle.
  * ----------------------------------------------------------------------
@@ -32,7 +32,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// packages/agentic-hooks/src/adapters/claude/doctor.ts
+// packages/agentic-hooks/src/scripts/claude-doctor.ts
 var import_node_fs6 = __toESM(require("node:fs"), 1);
 var import_node_os3 = __toESM(require("node:os"), 1);
 
@@ -447,7 +447,12 @@ var readVersionField = (rawJson) => {
   }
 };
 
-// packages/agentic-hooks/src/adapters/claude/doctor-checks.ts
+// packages/agentic-hooks/src/utils/claude-doctor.ts
+var import_node_fs4 = __toESM(require("node:fs"), 1);
+var import_node_os2 = __toESM(require("node:os"), 1);
+var import_node_path5 = __toESM(require("node:path"), 1);
+
+// packages/agentic-hooks/src/utils/claude-doctor-checks.ts
 var PLUGIN_ID = "openthrottle@openthrottle";
 var STALE_BUFFER_MS = 24 * 60 * 60 * 1e3;
 var CHECK_STATUS = {
@@ -777,54 +782,7 @@ var summarizeChecks = (checks) => {
   };
 };
 
-// packages/agentic-hooks/src/adapters/claude/doctor-fix-run.ts
-var import_node_child_process = require("node:child_process");
-var import_node_fs5 = __toESM(require("node:fs"), 1);
-var import_node_path6 = __toESM(require("node:path"), 1);
-var import_promises = __toESM(require("node:readline/promises"), 1);
-
-// packages/agentic-hooks/src/adapters/claude/doctor-fix.ts
-var MARKETPLACE_NAME = "openthrottle";
-var MARKETPLACE_SOURCE = "OpenThrottle/monorepo";
-var parseMarketplaceKnown = (rawJson) => {
-  if (rawJson === null) {
-    return false;
-  }
-  try {
-    const parsed = JSON.parse(rawJson);
-    return isRecord(parsed) && isRecord(parsed[MARKETPLACE_NAME]);
-  } catch {
-    return false;
-  }
-};
-var planPluginFix = ({
-  install,
-  marketplaceKnown,
-  payloadVersion
-}) => {
-  if (install.installed !== true) {
-    const addMarketplace = marketplaceKnown ? [] : [["plugin", "marketplace", "add", MARKETPLACE_SOURCE]];
-    return {
-      commands: [...addMarketplace, ["plugin", "install", PLUGIN_ID]],
-      kind: "install"
-    };
-  }
-  if (install.version !== null && payloadVersion !== null && isOlderVersion(install.version, payloadVersion)) {
-    return { commands: [["plugin", "update", PLUGIN_ID]], kind: "update" };
-  }
-  return { kind: "none" };
-};
-var formatPluginFixCommand = (binary, command) => {
-  const shownBinary = /\s/.test(binary) ? `"${binary}"` : binary;
-  return [shownBinary, ...command].join(" ");
-};
-
-// packages/agentic-hooks/src/adapters/claude/doctor-run.ts
-var import_node_fs4 = __toESM(require("node:fs"), 1);
-var import_node_os2 = __toESM(require("node:os"), 1);
-var import_node_path5 = __toESM(require("node:path"), 1);
-
-// packages/agentic-hooks/src/adapters/claude/heartbeat-payload.ts
+// packages/agentic-hooks/src/utils/claude-heartbeat.ts
 var import_node_path4 = __toESM(require("node:path"), 1);
 var MARKETPLACE_PLUGIN_KEY = "openthrottle@openthrottle";
 var resolveClaudeConfigDir = (env, homeDir) => {
@@ -860,13 +818,64 @@ var parseMarketplaceInstall = (rawJson) => {
   return { installed: true, version: hasVersion ? entryVersion : null };
 };
 
-// packages/agentic-hooks/src/adapters/claude/doctor-run.ts
+// packages/agentic-hooks/src/utils/claude-doctor.ts
+var MIN_SCRUBBED_TOKEN_LENGTH = 6;
+var MIN_SCRUBBED_HOSTNAME_LENGTH = 4;
+var EMAIL_PATTERN = /[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+/g;
+var ID_COLUMN_WIDTH = 14;
+var STATUS_COLUMN_WIDTH = 4;
+var scrubText = (text, scrubber) => {
+  let out = text;
+  if (scrubber.token !== null && scrubber.token.length >= MIN_SCRUBBED_TOKEN_LENGTH) {
+    out = out.split(scrubber.token).join("<token>");
+  }
+  const homes = [...scrubber.homeDirs].filter((home) => home.length > 1).sort((a, b) => b.length - a.length);
+  for (const home of homes) {
+    out = out.split(home).join("~");
+  }
+  out = out.replace(EMAIL_PATTERN, "<email>");
+  const host = scrubber.hostname;
+  if (host !== null && host.length >= MIN_SCRUBBED_HOSTNAME_LENGTH && host !== "localhost") {
+    out = out.split(host).join("<host>");
+  }
+  return out;
+};
+var scrubCheck = (check, scrubber) => {
+  return {
+    detail: scrubText(check.detail, scrubber),
+    fix: check.fix === null ? null : scrubText(check.fix, scrubber),
+    id: check.id,
+    status: check.status
+  };
+};
+var renderDoctorJson = (checks, scrubber) => {
+  const clean = checks.map((check) => scrubCheck(check, scrubber));
+  return `${JSON.stringify({ checks: clean, summary: summarizeChecks(clean) }, null, 2)}
+`;
+};
+var renderDoctorHuman = (checks, scrubber) => {
+  const clean = checks.map((check) => scrubCheck(check, scrubber));
+  const lines = clean.map((check) => {
+    const status = check.status.padEnd(STATUS_COLUMN_WIDTH);
+    return `${status}  ${check.id.padEnd(ID_COLUMN_WIDTH)}${check.detail}`;
+  });
+  const withFix = clean.filter((check) => check.fix !== null);
+  const fixes = withFix.flatMap((check) => {
+    const body = (check.fix ?? "").split("\n").map((line) => `    ${line}`);
+    return [`  ${check.id}`, ...body];
+  });
+  const summary = summarizeChecks(clean);
+  const tally = `${summary.pass} pass, ${summary.warn} warn, ${summary.fail} fail`;
+  const tail = fixes.length === 0 ? [] : ["", "Fixes", ...fixes];
+  return `${[...lines, "", tally, ...tail].join("\n")}
+`;
+};
 var HEALTH_TIMEOUT_MS = 2e3;
 var TOKEN_KEYS = [
   "OPENTHROTTLE_MCP_AUTH_TOKEN",
   "OPENTHROTTLE_WORKER_GRAPHQL_AUTH_TOKEN"
 ];
-var readTextOrNull = (filePath) => {
+var readTextOrNull2 = (filePath) => {
   try {
     return import_node_fs4.default.readFileSync(filePath, "utf8");
   } catch {
@@ -953,7 +962,7 @@ var resolvePayloadVersion = (scriptPath) => {
     )
   ];
   for (const candidate of candidates) {
-    const raw = readTextOrNull(candidate);
+    const raw = readTextOrNull2(candidate);
     const version = raw === null ? null : readVersionField(raw);
     if (version !== null) {
       return version;
@@ -982,7 +991,7 @@ var collectChecks = async ({
   scriptPath
 }) => {
   const homeDir = import_node_os2.default.homedir();
-  const registryRaw = readTextOrNull(
+  const registryRaw = readTextOrNull2(
     import_node_path5.default.join(
       resolveClaudeConfigDir(process.env, homeDir),
       "plugins",
@@ -992,7 +1001,7 @@ var collectChecks = async ({
   const graphqlUrl = resolveGraphqlUrl(repoRoot);
   const origin = graphqlUrl === null ? null : originOf(graphqlUrl);
   const probe = await resolveProbe({ fetchImpl, now, origin });
-  const receiptRaw = readTextOrNull(
+  const receiptRaw = readTextOrNull2(
     import_node_path5.default.join(resolveTelemetryDir(), LAST_HEARTBEAT_BASENAME)
   );
   return [
@@ -1025,8 +1034,53 @@ var collectChecks = async ({
     checkPrivacyOptIns(readTruncatedRepoOptIns())
   ];
 };
+var parseDoctorArgs = (argv) => {
+  return {
+    fix: argv.includes("--fix"),
+    json: argv.includes("--json"),
+    strict: argv.includes("--strict")
+  };
+};
 
-// packages/agentic-hooks/src/adapters/claude/doctor-fix-run.ts
+// packages/agentic-hooks/src/utils/claude-doctor-fix.ts
+var import_node_child_process = require("node:child_process");
+var import_node_fs5 = __toESM(require("node:fs"), 1);
+var import_node_path6 = __toESM(require("node:path"), 1);
+var import_promises = __toESM(require("node:readline/promises"), 1);
+var MARKETPLACE_NAME = "openthrottle";
+var MARKETPLACE_SOURCE = "OpenThrottle/monorepo";
+var parseMarketplaceKnown = (rawJson) => {
+  if (rawJson === null) {
+    return false;
+  }
+  try {
+    const parsed = JSON.parse(rawJson);
+    return isRecord(parsed) && isRecord(parsed[MARKETPLACE_NAME]);
+  } catch {
+    return false;
+  }
+};
+var planPluginFix = ({
+  install,
+  marketplaceKnown,
+  payloadVersion
+}) => {
+  if (install.installed !== true) {
+    const addMarketplace = marketplaceKnown ? [] : [["plugin", "marketplace", "add", MARKETPLACE_SOURCE]];
+    return {
+      commands: [...addMarketplace, ["plugin", "install", PLUGIN_ID]],
+      kind: "install"
+    };
+  }
+  if (install.version !== null && payloadVersion !== null && isOlderVersion(install.version, payloadVersion)) {
+    return { commands: [["plugin", "update", PLUGIN_ID]], kind: "update" };
+  }
+  return { kind: "none" };
+};
+var formatPluginFixCommand = (binary, command) => {
+  const shownBinary = /\s/.test(binary) ? `"${binary}"` : binary;
+  return [shownBinary, ...command].join(" ");
+};
 var CLAUDE_BIN_ENV = "OPENTHROTTLE_CLAUDE_BIN";
 var PLUGIN_FIX_OUTCOME = {
   APPLIED: "applied",
@@ -1035,7 +1089,7 @@ var PLUGIN_FIX_OUTCOME = {
   NOTHING_TO_FIX: "nothing-to-fix",
   NO_TTY: "no-tty"
 };
-var readTextOrNull2 = (filePath) => {
+var readTextOrNull3 = (filePath) => {
   try {
     return import_node_fs5.default.readFileSync(filePath, "utf8");
   } catch {
@@ -1054,10 +1108,10 @@ var resolvePluginFixPlan = ({
   const pluginsDir = import_node_path6.default.join(resolveClaudeConfigDir(env, homeDir), "plugins");
   return planPluginFix({
     install: parseMarketplaceInstall(
-      readTextOrNull2(import_node_path6.default.join(pluginsDir, "installed_plugins.json"))
+      readTextOrNull3(import_node_path6.default.join(pluginsDir, "installed_plugins.json"))
     ),
     marketplaceKnown: parseMarketplaceKnown(
-      readTextOrNull2(import_node_path6.default.join(pluginsDir, "known_marketplaces.json"))
+      readTextOrNull3(import_node_path6.default.join(pluginsDir, "known_marketplaces.json"))
     ),
     payloadVersion: resolvePayloadVersion(scriptPath)
   });
@@ -1132,69 +1186,7 @@ ${shown.join("\n")}
   return PLUGIN_FIX_OUTCOME.APPLIED;
 };
 
-// packages/agentic-hooks/src/adapters/claude/doctor-render.ts
-var MIN_SCRUBBED_TOKEN_LENGTH = 6;
-var MIN_SCRUBBED_HOSTNAME_LENGTH = 4;
-var EMAIL_PATTERN = /[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+/g;
-var ID_COLUMN_WIDTH = 14;
-var STATUS_COLUMN_WIDTH = 4;
-var scrubText = (text, scrubber) => {
-  let out = text;
-  if (scrubber.token !== null && scrubber.token.length >= MIN_SCRUBBED_TOKEN_LENGTH) {
-    out = out.split(scrubber.token).join("<token>");
-  }
-  const homes = [...scrubber.homeDirs].filter((home) => home.length > 1).sort((a, b) => b.length - a.length);
-  for (const home of homes) {
-    out = out.split(home).join("~");
-  }
-  out = out.replace(EMAIL_PATTERN, "<email>");
-  const host = scrubber.hostname;
-  if (host !== null && host.length >= MIN_SCRUBBED_HOSTNAME_LENGTH && host !== "localhost") {
-    out = out.split(host).join("<host>");
-  }
-  return out;
-};
-var scrubCheck = (check, scrubber) => {
-  return {
-    detail: scrubText(check.detail, scrubber),
-    fix: check.fix === null ? null : scrubText(check.fix, scrubber),
-    id: check.id,
-    status: check.status
-  };
-};
-var renderDoctorJson = (checks, scrubber) => {
-  const clean = checks.map((check) => scrubCheck(check, scrubber));
-  return `${JSON.stringify({ checks: clean, summary: summarizeChecks(clean) }, null, 2)}
-`;
-};
-var renderDoctorHuman = (checks, scrubber) => {
-  const clean = checks.map((check) => scrubCheck(check, scrubber));
-  const lines = clean.map((check) => {
-    const status = check.status.padEnd(STATUS_COLUMN_WIDTH);
-    return `${status}  ${check.id.padEnd(ID_COLUMN_WIDTH)}${check.detail}`;
-  });
-  const withFix = clean.filter((check) => check.fix !== null);
-  const fixes = withFix.flatMap((check) => {
-    const body = (check.fix ?? "").split("\n").map((line) => `    ${line}`);
-    return [`  ${check.id}`, ...body];
-  });
-  const summary = summarizeChecks(clean);
-  const tally = `${summary.pass} pass, ${summary.warn} warn, ${summary.fail} fail`;
-  const tail = fixes.length === 0 ? [] : ["", "Fixes", ...fixes];
-  return `${[...lines, "", tally, ...tail].join("\n")}
-`;
-};
-
-// packages/agentic-hooks/src/adapters/claude/parseDoctorArgs.ts
-var parseDoctorArgs = (argv) => {
-  return {
-    fix: argv.includes("--fix"),
-    json: argv.includes("--json"),
-    strict: argv.includes("--strict")
-  };
-};
-
-// packages/agentic-hooks/src/adapters/claude/doctor.ts
+// packages/agentic-hooks/src/scripts/claude-doctor.ts
 var realpathOrNull = (target) => {
   try {
     return import_node_fs6.default.realpathSync(target);

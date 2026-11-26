@@ -2,7 +2,7 @@
 
 /**
  * -------- GENERATED — DO NOT EDIT ------------------------------------
- * Source: packages/agentic-hooks/src/adapters/claude/capture.ts
+ * Source: packages/agentic-hooks/src/scripts/claude-capture.ts
  * Regenerate: pnpm nx run @openthrottle/agentic-hooks:bundle-hooks
  * Authoring lives in @openthrottle/agentic-hooks; this file is a bundle.
  * ----------------------------------------------------------------------
@@ -32,9 +32,9 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// packages/agentic-hooks/src/adapters/claude/capture.ts
+// packages/agentic-hooks/src/scripts/claude-capture.ts
 var import_node_fs8 = __toESM(require("node:fs"), 1);
-var import_node_path12 = __toESM(require("node:path"), 1);
+var import_node_path11 = __toESM(require("node:path"), 1);
 
 // packages/agentic-hooks/src/data/jsonl.ts
 var import_node_fs2 = __toESM(require("node:fs"), 1);
@@ -75,8 +75,8 @@ var normalizeRemoteUrl = (raw) => {
     return null;
   }
   const host = withoutScheme.slice(0, slashIndex).toLowerCase();
-  const path13 = withoutScheme.slice(slashIndex);
-  return `https://${host}${path13}`;
+  const path12 = withoutScheme.slice(slashIndex);
+  return `https://${host}${path12}`;
 };
 
 // packages/agentic-hooks/src/config/env.ts
@@ -1048,40 +1048,21 @@ var isPathInside = (parent, child) => {
 // packages/agentic-hooks/src/utils/skill-file.ts
 var SKILL_READ_INVOCATION_PATH = "skill_read";
 
-// packages/agentic-hooks/src/adapters/claude/bundle-host.ts
+// packages/agentic-hooks/src/utils/claude-host.ts
+var import_node_fs7 = __toESM(require("node:fs"), 1);
 var import_node_os4 = __toESM(require("node:os"), 1);
 var import_node_path10 = __toESM(require("node:path"), 1);
 
-// packages/agentic-hooks/src/adapters/antigravity/marketplace-install.ts
+// packages/agentic-hooks/src/utils/antigravity-marketplace-install.ts
 var import_node_path8 = __toESM(require("node:path"), 1);
 var resolveAntigravityPluginsDir = (homeDir) => {
   return import_node_path8.default.join(homeDir, ".gemini", "config", "plugins");
 };
 
-// packages/agentic-hooks/src/adapters/antigravity/payload.ts
+// packages/agentic-hooks/src/utils/antigravity-payload.ts
 var ANTIGRAVITY_SOURCE = "antigravity";
 
-// packages/agentic-hooks/src/adapters/codex/marketplace-install.ts
-var import_node_path9 = __toESM(require("node:path"), 1);
-var resolveCodexHome = (env, homeDir) => {
-  const configured = env.CODEX_HOME?.trim();
-  return configured ? import_node_path9.default.resolve(configured) : import_node_path9.default.join(homeDir, ".codex");
-};
-var resolveCodexMarketplaceCacheDir = (codexHome) => {
-  return import_node_path9.default.join(codexHome, "plugins", "cache");
-};
-
-// packages/agentic-hooks/src/adapters/codex/payload.ts
-var CODEX_SOURCE = "codex";
-
-// packages/agentic-hooks/src/adapters/cursor/payload.ts
-var CURSOR_SOURCE = "cursor";
-var CURSOR_INVOCATION_PATHS = Object.freeze({
-  SKILL_READ: SKILL_READ_INVOCATION_PATH,
-  SLASH: "slash"
-});
-
-// packages/agentic-hooks/src/adapters/claude/payload.ts
+// packages/agentic-hooks/src/utils/claude-payload.ts
 var CLAUDE_SOURCE = "claude-code";
 var normalizeClaudePayload = (raw) => {
   if (!isRecord(raw)) {
@@ -1143,7 +1124,27 @@ var normalizeClaudePayload = (raw) => {
   return null;
 };
 
-// packages/agentic-hooks/src/adapters/claude/bundle-host.ts
+// packages/agentic-hooks/src/utils/codex-marketplace-install.ts
+var import_node_path9 = __toESM(require("node:path"), 1);
+var resolveCodexHome = (env, homeDir) => {
+  const configured = env.CODEX_HOME?.trim();
+  return configured ? import_node_path9.default.resolve(configured) : import_node_path9.default.join(homeDir, ".codex");
+};
+var resolveCodexMarketplaceCacheDir = (codexHome) => {
+  return import_node_path9.default.join(codexHome, "plugins", "cache");
+};
+
+// packages/agentic-hooks/src/utils/codex-payload.ts
+var CODEX_SOURCE = "codex";
+
+// packages/agentic-hooks/src/utils/cursor-payload.ts
+var CURSOR_SOURCE = "cursor";
+var CURSOR_INVOCATION_PATHS = Object.freeze({
+  SKILL_READ: SKILL_READ_INVOCATION_PATH,
+  SLASH: "slash"
+});
+
+// packages/agentic-hooks/src/utils/claude-host.ts
 var scriptIsInside = (dir, scriptPath) => {
   const root = dir?.trim();
   if (!root || !scriptPath) {
@@ -1182,23 +1183,19 @@ var detectClaudeBundleHost = ({
   }
   return CLAUDE_SOURCE;
 };
-
-// packages/agentic-hooks/src/adapters/claude/shadow.ts
-var import_node_fs7 = __toESM(require("node:fs"), 1);
-var import_node_path11 = __toESM(require("node:path"), 1);
 var CAPTURE_BUNDLE = "skill-usage-capture";
 var runningFromPlugin = (env, scriptPath) => {
   const pluginRoot = env.CLAUDE_PLUGIN_ROOT?.trim();
   if (!pluginRoot || !scriptPath) {
     return false;
   }
-  const relative = import_node_path11.default.relative(import_node_path11.default.resolve(pluginRoot), scriptPath);
+  const relative = import_node_path10.default.relative(import_node_path10.default.resolve(pluginRoot), scriptPath);
   return relative !== "" && !relative.startsWith("..");
 };
 var repoRegistersBundle = (repoRoot, bundle) => {
   try {
     const raw = import_node_fs7.default.readFileSync(
-      import_node_path11.default.join(repoRoot, ".claude", "settings.json"),
+      import_node_path10.default.join(repoRoot, ".claude", "settings.json"),
       "utf8"
     );
     const parsed = JSON.parse(raw);
@@ -1219,7 +1216,7 @@ var isShadowedByRepoHooks = ({
   return runningFromPlugin(env, scriptPath) && repoRegistersBundle(repoRoot, bundle);
 };
 
-// packages/agentic-hooks/src/adapters/claude/capture.ts
+// packages/agentic-hooks/src/scripts/claude-capture.ts
 var main = async () => {
   try {
     if (isTelemetryDisabled()) {
@@ -1269,7 +1266,7 @@ var main = async () => {
     const outPath = defaultJsonlPath();
     await persistUsageEvent({
       event,
-      jsonlPath: import_node_path12.default.resolve(outPath),
+      jsonlPath: import_node_path11.default.resolve(outPath),
       repoRoot
     });
   } catch (err) {

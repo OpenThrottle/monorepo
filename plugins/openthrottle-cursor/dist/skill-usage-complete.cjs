@@ -2,7 +2,7 @@
 
 /**
  * -------- GENERATED — DO NOT EDIT ------------------------------------
- * Source: packages/agentic-hooks/src/adapters/cursor/complete.ts
+ * Source: packages/agentic-hooks/src/scripts/cursor-complete.ts
  * Regenerate: pnpm nx run @openthrottle/agentic-hooks:bundle-hooks
  * Authoring lives in @openthrottle/agentic-hooks; this file is a bundle.
  * ----------------------------------------------------------------------
@@ -32,7 +32,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// packages/agentic-hooks/src/adapters/cursor/complete.ts
+// packages/agentic-hooks/src/scripts/cursor-complete.ts
 var import_node_fs9 = __toESM(require("node:fs"), 1);
 
 // packages/agentic-hooks/src/data/jsonl.ts
@@ -1558,7 +1558,7 @@ var formatDrainReasons = (tally) => {
 // packages/agentic-hooks/src/utils/skill-file.ts
 var SKILL_READ_INVOCATION_PATH = "skill_read";
 
-// packages/agentic-hooks/src/adapters/cursor/payload.ts
+// packages/agentic-hooks/src/utils/cursor-payload.ts
 var CURSOR_SOURCE = "cursor";
 var CURSOR_INVOCATION_PATHS = Object.freeze({
   SKILL_READ: SKILL_READ_INVOCATION_PATH,
@@ -1606,7 +1606,7 @@ var cursorOutcomeForFinalStatus = (finalStatus) => {
   return SKILL_USAGE_OUTCOMES.ABANDONED;
 };
 
-// packages/agentic-hooks/src/adapters/cursor/complete.ts
+// packages/agentic-hooks/src/scripts/cursor-complete.ts
 var main = async () => {
   try {
     if (isTelemetryDisabled()) {

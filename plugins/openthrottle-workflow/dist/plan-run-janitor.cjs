@@ -2,7 +2,7 @@
 
 /**
  * -------- GENERATED — DO NOT EDIT ------------------------------------
- * Source: packages/agentic-hooks/src/adapters/claude/plan-run-janitor.ts
+ * Source: packages/agentic-hooks/src/scripts/claude-plan-run-janitor.ts
  * Regenerate: pnpm nx run @openthrottle/agentic-hooks:bundle-hooks
  * Authoring lives in @openthrottle/agentic-hooks; this file is a bundle.
  * ----------------------------------------------------------------------
@@ -32,7 +32,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// packages/agentic-hooks/src/adapters/claude/plan-run-janitor.ts
+// packages/agentic-hooks/src/scripts/claude-plan-run-janitor.ts
 var import_node_fs3 = __toESM(require("node:fs"), 1);
 
 // packages/agentic-hooks/src/data/jsonl.ts
@@ -395,7 +395,7 @@ var settleAbandonedPlanRuns = async ({
   return { settled: outcomes.filter(Boolean).length };
 };
 
-// packages/agentic-hooks/src/adapters/claude/payload.ts
+// packages/agentic-hooks/src/utils/claude-payload.ts
 var nonEmptyString = (value) => {
   return typeof value === "string" && value.trim() !== "" ? value : null;
 };
@@ -416,7 +416,7 @@ var normalizeClaudeStopPayload = (raw) => {
   };
 };
 
-// packages/agentic-hooks/src/adapters/claude/plan-run-janitor.ts
+// packages/agentic-hooks/src/scripts/claude-plan-run-janitor.ts
 var main = async () => {
   try {
     const repoRoot = process.env.CLAUDE_PROJECT_DIR || process.env.OPEN_THROTTLE_REPO_ROOT || process.cwd();
