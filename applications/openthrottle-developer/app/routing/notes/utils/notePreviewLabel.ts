@@ -1,7 +1,3 @@
-import { formatDate } from 'date-fns';
-
-import type { Scalars } from '~/__generated__/graphql';
-
 /** First non-empty line of a note (heading markers stripped), truncated to 80. */
 export const notePreviewLabel = (content: string): string => {
   const firstLine = content.split('\n')[0]?.trim() ?? '';
@@ -18,19 +14,4 @@ export const notePreviewLabel = (content: string): string => {
   }
 
   return trimmed.length > 80 ? `${trimmed.slice(0, 80)}…` : trimmed;
-};
-
-/** Formats a note's timestamp as MM/dd/yyyy, or "—" when absent/invalid. */
-export const formatNoteDate = (raw: Scalars['DateTime']['output']): string => {
-  if (raw == null) {
-    return '—';
-  }
-
-  try {
-    const date = typeof raw === 'string' ? new Date(raw) : raw;
-
-    return formatDate(date, 'MM/dd/yyyy');
-  } catch {
-    return '—';
-  }
 };

@@ -2,6 +2,7 @@ import * as graphqlWithAuth from '@openthrottle/react-router-graphql';
 import { createTestRouterContext } from '@openthrottle/react-router-testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { action as indexAction } from '../notes._index';
 import { action as updateAction } from '../notes.$noteId';
 import { action as createAction } from '../notes.create';
 
@@ -114,5 +115,82 @@ describe('routes/notes.$noteId action', () => {
       expect.anything(),
       { input: { author: null, content: '# Updated', id: 'note-1' } },
     );
+  });
+});
+
+describe('routes/notes._index action', () => {
+  beforeEach(() => {
+    mockExecuteGraphqlWithAuth.mockReset();
+  });
+
+  const runIndexAction = async (
+    formData: FormData,
+  ): Promise<Awaited<ReturnType<typeof indexAction>>> => {
+    const req = request(formData, 'http://localhost/notes?index');
+
+    return indexAction({
+      context: createTestRouterContext(),
+      params: {},
+      pattern: '/notes',
+      request: req,
+      url: new URL(req.url),
+    });
+  };
+
+  const deleteFormData = (): FormData => {
+    const formData = new FormData();
+    formData.set('id', 'note-1');
+    formData.set('intent', 'deleteNote');
+
+    return formData;
+  };
+
+  test('deletes the note by id', async () => {
+    mockExecuteGraphqlWithAuth.mockResolvedValue(
+      asMock<
+        Awaited<ReturnType<typeof graphqlWithAuth.executeGraphqlWithAuth>>
+      >({ deleteNote: true }),
+    );
+
+    const result = await runIndexAction(deleteFormData());
+
+    expect(result).toEqual({ noteDeleted: true });
+    expect(mockExecuteGraphqlWithAuth).toHaveBeenCalledWith(
+      expect.any(Request),
+      expect.anything(),
+      { id: 'note-1' },
+    );
+  });
+
+  test('returns a noteError when the server reports nothing deleted', async () => {
+    mockExecuteGraphqlWithAuth.mockResolvedValue(
+      asMock<
+        Awaited<ReturnType<typeof graphqlWithAuth.executeGraphqlWithAuth>>
+      >({ deleteNote: false }),
+    );
+
+    const result = await runIndexAction(deleteFormData());
+
+    expect(result).toHaveProperty('noteError');
+  });
+
+  test('returns a noteError when the request throws', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    mockExecuteGraphqlWithAuth.mockRejectedValue(new Error('boom'));
+
+    const result = await runIndexAction(deleteFormData());
+
+    expect(result).toHaveProperty('noteError');
+  });
+
+  test('rejects an unknown intent without calling the server', async () => {
+    const formData = new FormData();
+    formData.set('id', 'note-1');
+    formData.set('intent', 'somethingElse');
+
+    const result = await runIndexAction(formData);
+
+    expect(result).toHaveProperty('noteError');
+    expect(mockExecuteGraphqlWithAuth).not.toHaveBeenCalled();
   });
 });

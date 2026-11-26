@@ -100,4 +100,25 @@ describe('NotesToolbar Component', () => {
       expect(qs.has('search')).toBe(false);
     });
   });
+
+  test('resets to page 1 and keeps other params on a new search', async () => {
+    const user = userEvent.setup();
+    const component = renderToolbar('/?page=3&view=card');
+
+    const input = component.getByRole('searchbox', { name: /search notes/i });
+    await user.type(input, 'draft');
+    await user.click(component.getByRole('button', { name: 'Search' }));
+
+    await waitFor(() => {
+      const qs = new URLSearchParams(
+        component.getByTestId('current-search').textContent ?? '',
+      );
+      expect(qs.get('search')).toBe('draft');
+    });
+    const qs = new URLSearchParams(
+      component.getByTestId('current-search').textContent ?? '',
+    );
+    expect(qs.has('page')).toBe(false);
+    expect(qs.get('view')).toBe('card');
+  });
 });

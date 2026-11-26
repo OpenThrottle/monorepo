@@ -1,7 +1,6 @@
-import { formatDate } from 'date-fns';
 import { describe, expect, test } from 'vitest';
 
-import { formatNoteDate, notePreviewLabel } from '../notes-table';
+import { notePreviewLabel } from '../notePreviewLabel';
 
 describe('notePreviewLabel', () => {
   test('returns the first non-empty line with heading markers stripped', () => {
@@ -33,26 +32,5 @@ describe('notePreviewLabel', () => {
     const longContent = `#\n${'b'.repeat(90)}`;
     const result = notePreviewLabel(longContent);
     expect(result).toBe(`#\n${'b'.repeat(78)}…`);
-  });
-});
-
-describe('formatNoteDate', () => {
-  test('returns an em dash when the timestamp is null or undefined', () => {
-    expect(formatNoteDate(null)).toBe('—');
-    expect(formatNoteDate(undefined)).toBe('—');
-  });
-
-  test('formats a string ISO timestamp as MM/dd/yyyy', () => {
-    const iso = '2026-03-15T00:00:00.000Z';
-    expect(formatNoteDate(iso)).toBe(formatDate(new Date(iso), 'MM/dd/yyyy'));
-  });
-
-  test('formats a Date instance as MM/dd/yyyy', () => {
-    const date = new Date('2026-01-05T00:00:00.000Z');
-    expect(formatNoteDate(date)).toBe(formatDate(date, 'MM/dd/yyyy'));
-  });
-
-  test('returns an em dash when the value cannot be parsed as a valid date', () => {
-    expect(formatNoteDate('not-a-date')).toBe('—');
   });
 });
