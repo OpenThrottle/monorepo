@@ -196,6 +196,28 @@ describe('deriveSessionFiles', () => {
       expect(opencode[0]).toMatchObject({ op: 'created', path: 'a.ts' });
     });
 
+    test('a header that is all padding is no header (CodeQL polynomial-redos input)', () => {
+      // The old regex backtracked polynomially on these; the parser is linear.
+      const hostile = `*** Move to:${' '.repeat(50_000)}`;
+      const files = deriveSessionFiles(
+        [turn(call('apply_patch', `*** Update File: c.ts\n${hostile}\n+x`))],
+        '/'.repeat(50_000),
+      );
+
+      expect(files).toEqual([
+        expect.objectContaining({ op: 'edited', path: 'c.ts' }),
+      ]);
+    });
+
+    test('Update File with padding around the path reads the trimmed path', () => {
+      const files = deriveSessionFiles(
+        [turn(call('apply_patch', '*** Update File:   b.ts   \n+x'))],
+        undefined,
+      );
+
+      expect(files[0]).toMatchObject({ op: 'edited', path: 'b.ts' });
+    });
+
     test('OpenCode edit/write read filePath and camelCase strings', () => {
       const files = deriveSessionFiles(
         [

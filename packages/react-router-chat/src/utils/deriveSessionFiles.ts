@@ -53,8 +53,14 @@ const PATH_KEYS = [
 
 const PATCH_KEYS = ['patch', 'patchText', 'input', 'diff'] as const;
 
-const PATCH_HEADER =
-  /^\*\*\* (Add File|Update File|Delete File|Move to):\s*(.+?)\s*$/;
+const PATCH_HEADER_PREFIX = '*** ';
+
+const PATCH_HEADER_KINDS = [
+  'Add File',
+  'Delete File',
+  'Move to',
+  'Update File',
+] as const;
 
 const PATCH_KIND_OPS: Readonly<Record<string, SessionFileOp | undefined>> = {
   'Add File': 'created',
@@ -166,9 +172,9 @@ const readPatchText = (patch: string): readonly Touch[] => {
   };
 
   for (const line of patch.split('\n')) {
-    const header = PATCH_HEADER.exec(line);
-    const kind = header?.[1];
-    const path = header?.[2];
+    const header = parsePatchHeader(line);
+    const kind = header?.kind;
+    const path = header?.path;
 
     if (kind === 'Move to' && path !== undefined && current !== undefined) {
       // A rename: the content now lives at the destination path.
@@ -273,11 +279,44 @@ const readToolTouches = (name: string, args: unknown): readonly Touch[] => {
 };
 
 /**
+ * @description Read a `*** <Kind>: <path>` patch header without a regex:
+ * the old pattern backtracked polynomially on long runs of spaces (CodeQL
+ * js/polynomial-redos), and patch text is agent-supplied.
+ */
+const parsePatchHeader = (
+  line: string,
+): { readonly kind: string; readonly path: string } | undefined => {
+  if (!line.startsWith(PATCH_HEADER_PREFIX)) {
+    return undefined;
+  }
+  const rest = line.slice(PATCH_HEADER_PREFIX.length);
+  const kind = PATCH_HEADER_KINDS.find((candidate) => {
+    return rest.startsWith(`${candidate}:`);
+  });
+  if (kind === undefined) {
+    return undefined;
+  }
+  const path = rest.slice(kind.length + 1).trim();
+
+  return path === '' ? undefined : { kind, path };
+};
+
+/** Drop a trailing run of `/` with a linear scan instead of `/\/+$/`. */
+const trimTrailingSlashes = (value: string): string => {
+  let end = value.length;
+  while (end > 0 && value[end - 1] === '/') {
+    end -= 1;
+  }
+
+  return value.slice(0, end);
+};
+
+/**
  * Strip a trailing slash run from a root, and `./` or the root itself from a
  * path, so the same file reads one way however each driver spelled it.
  */
 const relativize = (path: string, rootPath: string | undefined): string => {
-  const root = (rootPath ?? '').replace(/\/+$/, '');
+  const root = trimTrailingSlashes(rootPath ?? '');
   const withoutDot = path.replace(/^\.\//, '');
 
   return root !== '' && withoutDot.startsWith(`${root}/`)
