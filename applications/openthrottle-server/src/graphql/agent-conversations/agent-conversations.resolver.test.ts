@@ -23,6 +23,7 @@ import {
 import { beforeAll, describe, expect, test, vi } from 'vitest';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { ConversationStreamService } from '../conversation-stream/conversation-stream.service.ts';
 import { AgentConversationsResolver } from './agent-conversations.resolver.ts';
 
 describe('AgentConversationsResolver', () => {
@@ -73,6 +74,12 @@ describe('AgentConversationsResolver', () => {
   const agentConversationMessagesRepository =
     createAgentConversationMessagesRepositoryMock();
 
+  const conversationStreamService = {
+    getActiveTurn: vi
+      .fn<ConversationStreamService['getActiveTurn']>()
+      .mockReturnValue(null),
+  };
+
   const mockRolesRepository = createRolesRepositoryMock();
   mockRolesRepository.getPermissionsForUser.mockResolvedValue([
     'settings:read',
@@ -90,6 +97,10 @@ describe('AgentConversationsResolver', () => {
         {
           provide: AgentConversationMessagesRepository,
           useValue: agentConversationMessagesRepository,
+        },
+        {
+          provide: ConversationStreamService,
+          useValue: conversationStreamService,
         },
         { provide: RolesRepository, useValue: mockRolesRepository },
         GqlPermissionsGuard,
@@ -178,6 +189,7 @@ describe('AgentConversationsResolver', () => {
         humanPrincipal,
         {
           conversationId: mockConversation.id,
+          fromNewest: null,
           limit: 100,
           offset: 0,
         },
@@ -186,6 +198,118 @@ describe('AgentConversationsResolver', () => {
       expect(result.items).toHaveLength(1);
       expect(result.items[0]?.sortOrder).toBe(1);
       expect(result.totalCount).toBe(1);
+    });
+
+    test('pages back from the newest message for a long thread', async () => {
+      const newest = Array.from({ length: 100 }, (_, index) => ({
+        ...mockMessage,
+        id: `message-${51 + index}`,
+        sortOrder: 51 + index,
+      }));
+      vi.mocked(
+        agentConversationMessagesRepository.listMessagesForConversation,
+      ).mockResolvedValue(newest);
+      agentConversationMessagesRepository.countMessagesForConversation.mockResolvedValue(
+        150,
+      );
+
+      const result = await resolver.getAgentConversationMessages(
+        humanPrincipal,
+        {
+          conversationId: mockConversation.id,
+          fromNewest: true,
+          limit: 100,
+          offset: 0,
+        },
+      );
+
+      expect(
+        agentConversationMessagesRepository.listMessagesForConversation,
+      ).toHaveBeenCalledWith(humanPrincipal.sub, mockConversation.id, {
+        fromNewest: true,
+        limit: 100,
+        offset: 0,
+      });
+      expect(result.items.at(-1)?.sortOrder).toBe(150);
+      // Older messages remain behind this page.
+      expect(result.hasNextPage).toBe(true);
+      expect(result.totalCount).toBe(150);
+    });
+
+    test('carries no active turn when none is running', async () => {
+      vi.mocked(
+        agentConversationMessagesRepository.listMessagesForConversation,
+      ).mockResolvedValue([mockMessage]);
+      agentConversationMessagesRepository.countMessagesForConversation.mockResolvedValue(
+        1,
+      );
+      conversationStreamService.getActiveTurn.mockReturnValue(null);
+
+      const result = await resolver.getAgentConversationMessages(
+        humanPrincipal,
+        {
+          conversationId: mockConversation.id,
+          fromNewest: null,
+          limit: 100,
+          offset: 0,
+        },
+      );
+
+      expect(result.activeTurn).toBeNull();
+    });
+
+    test('carries the running turn so a reopened thread can show it', async () => {
+      const startedAt = new Date('2026-06-07T10:02:00.000Z');
+      vi.mocked(
+        agentConversationMessagesRepository.listMessagesForConversation,
+      ).mockResolvedValue([mockMessage]);
+      agentConversationMessagesRepository.countMessagesForConversation.mockResolvedValue(
+        1,
+      );
+      conversationStreamService.getActiveTurn.mockReturnValue({
+        assistantMessageId: 'assistant-running',
+        startedAt,
+      });
+
+      const result = await resolver.getAgentConversationMessages(
+        humanPrincipal,
+        {
+          conversationId: mockConversation.id,
+          fromNewest: null,
+          limit: 100,
+          offset: 0,
+        },
+      );
+
+      expect(conversationStreamService.getActiveTurn).toHaveBeenCalledWith(
+        mockConversation.id,
+      );
+      expect(result.activeTurn).toEqual({
+        assistantMessageId: 'assistant-running',
+        startedAt,
+      });
+    });
+
+    test('never reads the active turn of a conversation the caller does not own', async () => {
+      conversationStreamService.getActiveTurn.mockClear();
+      vi.mocked(
+        agentConversationMessagesRepository.listMessagesForConversation,
+      ).mockRejectedValue(
+        new NotFoundException('Agent conversation not found'),
+      );
+      agentConversationMessagesRepository.countMessagesForConversation.mockResolvedValue(
+        0,
+      );
+
+      await expect(
+        resolver.getAgentConversationMessages(humanPrincipal, {
+          conversationId: mockConversation.id,
+          fromNewest: null,
+          limit: 100,
+          offset: 0,
+        }),
+      ).rejects.toBeInstanceOf(NotFoundException);
+      expect(conversationStreamService.getActiveTurn).not.toHaveBeenCalled();
     });
   });
 

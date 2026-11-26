@@ -22,6 +22,7 @@ import { ConversationStreamResolver } from './conversation-stream.resolver.ts';
 import { ConversationStreamService } from './conversation-stream.service.ts';
 
 @Module({
+  exports: [ConversationStreamService],
   imports: [
     AgentConversationMessagesModule,
     AgentConversationsModule,

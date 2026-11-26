@@ -29,6 +29,7 @@ import type {
 import { sumUsage } from '../usage';
 import {
   appendAssistantPlaceholder,
+  appendStreamedOnlyMessages,
   bakeStreamedMessages,
   didTurnFail,
   overlayStreamedMessage,
@@ -207,6 +208,12 @@ export function useAgenticChatTurn(
   const streamedByIdRef = React.useRef<ReadonlyMap<string, ChatMessage>>(
     new Map(),
   );
+  // Assistant turns this hook already tracks: started here, or adopted from the
+  // stream. A streamed turn outside this set that has not finished is one this
+  // tab did not start (reopened mid-turn, or started in another tab), and gets
+  // adopted as the pending turn once. Never re-adopting is what keeps Stop and
+  // a stall recovery, which clear the pending id early, from re-arming it.
+  const trackedTurnIdsRef = React.useRef<Set<string>>(new Set());
   const conversationIdRef = React.useRef<string | null>(null);
 
   const stream = useConversationStream({
@@ -229,7 +236,9 @@ export function useAgenticChatTurn(
   conversationIdRef.current = conversationId;
 
   const messagesView = React.useMemo(() => {
-    return messages.map((message) => {
+    const thread = appendStreamedOnlyMessages(messages, stream.messages);
+
+    return thread.map((message) => {
       const streamed = streamedById.get(message.id);
       const base = overlayStreamedMessage(message, streamed);
 
@@ -269,6 +278,7 @@ export function useAgenticChatTurn(
     messages,
     nowMs,
     pendingAssistantId,
+    stream.messages,
     stream.phaseByMessageId,
     streamedById,
   ]);
@@ -366,6 +376,10 @@ export function useAgenticChatTurn(
   const recover = (recoverOptions: RecoverOptions): void => {
     const lastTurn = lastTurnRef.current;
     if (lastTurn === null) {
+      // An adopted turn (started elsewhere) has nothing here to replay: stop
+      // waiting on it rather than spin forever.
+      setPendingAssistantId(null);
+      setIsRetrying(false);
       return;
     }
 
@@ -507,6 +521,7 @@ export function useAgenticChatTurn(
   // effect below swaps them in when the load resolves.
   const restore = (params: { conversationId: string }): void => {
     clearQueue();
+    trackedTurnIdsRef.current.clear();
     lastTurnRef.current = null;
     retryCountRef.current = 0;
     setCanRetry(false);
@@ -527,6 +542,7 @@ export function useAgenticChatTurn(
   // New chat: drop the id + thread so the next turn starts a fresh conversation.
   const reset = (): void => {
     clearQueue();
+    trackedTurnIdsRef.current.clear();
     lastTurnRef.current = null;
     retryCountRef.current = 0;
     setCanRetry(false);
@@ -568,6 +584,7 @@ export function useAgenticChatTurn(
       // The replayed turn's stream has begun → leave the retry bridge state.
       setIsRetrying(false);
       const assistantId = result.assistantMessageId;
+      trackedTurnIdsRef.current.add(assistantId);
       lastAssistantIdRef.current = assistantId;
       setPendingAssistantId(assistantId);
       setMessages((previous) =>
@@ -575,6 +592,37 @@ export function useAgenticChatTurn(
       );
     }
   }, [startFetcher.data]);
+
+  // Adopt a running turn this tab did not start: reopened mid-turn, the stream
+  // replays a reply with no terminal chunk under an id the thread never saw.
+  // Making it the pending turn arms the running indicator, heartbeat, stall
+  // watchdog and Stop exactly as for a turn started here.
+  React.useEffect(() => {
+    if (pendingAssistantId !== null || startFetcher.state !== 'idle') {
+      return;
+    }
+
+    const running = stream.messages.find((message) => {
+      return (
+        message.role === 'assistant' &&
+        !stream.completedIds.has(message.id) &&
+        !trackedTurnIdsRef.current.has(message.id)
+      );
+    });
+    if (running === undefined) {
+      return;
+    }
+
+    trackedTurnIdsRef.current.add(running.id);
+    lastAssistantIdRef.current = running.id;
+    turnStartedAtRef.current = Date.now();
+    setPendingAssistantId(running.id);
+  }, [
+    pendingAssistantId,
+    startFetcher.state,
+    stream.completedIds,
+    stream.messages,
+  ]);
 
   // Recover on a retryable timeout terminal for the current pending turn: the
   // server already ended the turn, so replay directly (no cancel). The loop
@@ -730,7 +778,25 @@ export function useAgenticChatTurn(
       return;
     }
 
-    setMessages([...result.messages]);
+    const { activeTurn } = result;
+    if (activeTurn === null) {
+      setMessages([...result.messages]);
+      return;
+    }
+
+    // The turn is still running: show its placeholder now, rather than a bare
+    // user message until the subscription replays the first chunk, which then
+    // fills this same id. If the turn ended during the load, the clear-pending
+    // effect sees its terminal chunk and clears it straight away.
+    const assistantId = activeTurn.assistantMessageId;
+    const startedAtMs = Date.parse(activeTurn.startedAt);
+    trackedTurnIdsRef.current.add(assistantId);
+    lastAssistantIdRef.current = assistantId;
+    turnStartedAtRef.current = Number.isNaN(startedAtMs)
+      ? Date.now()
+      : startedAtMs;
+    setMessages(appendAssistantPlaceholder([...result.messages], assistantId));
+    setPendingAssistantId(assistantId);
   }, [restoreFetcher.data]);
 
   // 🔌 Short Circuit

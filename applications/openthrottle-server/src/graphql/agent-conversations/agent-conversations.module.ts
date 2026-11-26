@@ -10,12 +10,14 @@ import {
 } from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { ConversationStreamGraphqlModule } from '../conversation-stream/conversation-stream.module.ts';
 import { AgentConversationsResolver } from './agent-conversations.resolver.ts';
 
 @Module({
   imports: [
     AgentConversationMessagesModule,
     AgentConversationsModule,
+    ConversationStreamGraphqlModule,
     RolesModule,
   ],
   providers: [AgentConversationsResolver, GqlPermissionsGuard],

@@ -279,8 +279,20 @@ export interface AppendChatMessageInput {
   readonly role: ChatMessageRole;
 }
 
+/**
+ * The turn a conversation is still streaming on the server: the assistant
+ * message id its chunks carry, and when it started (ISO string).
+ * @public
+ */
+export interface ChatActiveTurn {
+  readonly assistantMessageId: string;
+  readonly startedAt: string;
+}
+
 /** JSON shape returned by a root `load-agent-conversation-messages` action. */
 export interface LoadAgentConversationMessagesResult {
+  /** The turn still running when the messages loaded, or null when none is. */
+  readonly activeTurn: ChatActiveTurn | null;
   readonly conversationId: string | null;
   readonly errorMessage: string | null;
   readonly messages: readonly ChatMessage[];

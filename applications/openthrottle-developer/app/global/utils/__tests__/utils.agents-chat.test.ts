@@ -41,6 +41,7 @@ const baseHistory = (
   overrides: Partial<LoadAgentConversationMessagesResult> = {},
 ): LoadAgentConversationMessagesResult => {
   return {
+    activeTurn: null,
     conversationId: null,
     errorMessage: null,
     messages: [],
@@ -163,6 +164,29 @@ describe('callLoadAgentConversationMessages', () => {
     mockExecute.mockReset();
   });
 
+  test('restores the newest messages of a thread longer than one page', async () => {
+    // The server pages back from the newest message: rows 51-150 of 150.
+    const items = Array.from({ length: 100 }, (_, index) => ({
+      content: `Message ${51 + index}`,
+      createdAt: '2026-06-07T00:00:00.000Z',
+      id: `msg-${51 + index}`,
+      role: index % 2 === 0 ? 'user' : 'assistant',
+      routingConfidence: null,
+      routingReason: null,
+      toolMetadataJson: null,
+    }));
+    mockExecute.mockResolvedValueOnce({
+      getAgentConversationMessages: { items, totalCount: 150 },
+    });
+
+    const result = await callLoadAgentConversationMessages(request, {
+      conversationId: 'conv-1',
+    });
+
+    expect(result.messages).toHaveLength(100);
+    expect(result.messages.at(-1)?.id).toBe('msg-150');
+  });
+
   test('maps persisted messages into chat thread rows', async () => {
     mockExecute.mockResolvedValueOnce({
       getAgentConversationMessages: {
@@ -200,6 +224,7 @@ describe('callLoadAgentConversationMessages', () => {
       {
         input: {
           conversationId: 'conv-1',
+          fromNewest: true,
           limit: 100,
         },
       },

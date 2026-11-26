@@ -19,6 +19,7 @@ import {
 } from '@openthrottle/nestjs-repositories-server';
 
 import { GqlPermissionsGuard } from '../../guards/gql-permissions.guard.ts';
+import { ConversationStreamService } from '../conversation-stream/conversation-stream.service.ts';
 import { assertHumanAuthPrincipal } from '../service-accounts/service-accounts.utils.ts';
 import {
   ArchiveAgentConversationInput,
@@ -37,6 +38,7 @@ import {
   toAgentConversationObject,
 } from './agent-conversation.mapper.ts';
 import {
+  AgentConversationActiveTurnObject,
   AgentConversationObject,
   ListAgentConversationMessagesResultObject,
   ListAgentConversationsResultObject,
@@ -60,6 +62,7 @@ export class AgentConversationsResolver {
   constructor(
     private readonly agentConversationsRepository: AgentConversationsRepository,
     private readonly agentConversationMessagesRepository: AgentConversationMessagesRepository,
+    private readonly conversationStreamService: ConversationStreamService,
   ) {}
 
   @Query(() => ListAgentConversationsResultObject, {
@@ -130,7 +133,7 @@ export class AgentConversationsResolver {
   }
 
   @Query(() => ListAgentConversationMessagesResultObject, {
-    description: `List messages for an owned conversation ordered by sort_order ASC (default limit 100 max 500).`,
+    description: `List messages for an owned conversation ordered by sort_order ASC (default limit 100 max 500), plus the turn still streaming, if any. fromNewest pages back from the newest message.`,
   })
   @Permissions(PERMISSIONS.SETTINGS_READ)
   async getAgentConversationMessages(
@@ -147,6 +150,7 @@ export class AgentConversationsResolver {
         user.sub,
         input.conversationId,
         {
+          fromNewest: input.fromNewest ?? false,
           limit: input.limit ?? undefined,
           offset: input.offset ?? undefined,
         },
@@ -159,7 +163,20 @@ export class AgentConversationsResolver {
     const result = new ListAgentConversationMessagesResultObject();
 
     const items = messages.map(toAgentConversationMessageObject);
+    // Read only after the list call, which throws for a conversation the caller
+    // does not own, so another user's running turn never leaks.
+    const activeTurn = this.conversationStreamService.getActiveTurn(
+      input.conversationId,
+    );
 
+    if (activeTurn === null) {
+      result.activeTurn = null;
+    } else {
+      const activeTurnObject = new AgentConversationActiveTurnObject();
+      activeTurnObject.assistantMessageId = activeTurn.assistantMessageId;
+      activeTurnObject.startedAt = activeTurn.startedAt;
+      result.activeTurn = activeTurnObject;
+    }
     result.hasNextPage = hasNextPage({ items, totalCount }, input.offset ?? 0);
     result.items = items;
     result.totalCount = totalCount;

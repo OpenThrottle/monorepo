@@ -62,6 +62,17 @@ export interface TerminalUsageLimitMetadata {
 }
 
 /**
+ * The turn a conversation is running right now: its pre-allocated assistant
+ * message id (the id its streamed chunks carry) and when it started. A client
+ * reopening the conversation mid-turn uses it to show the reply as running
+ * before any replayed chunk arrives.
+ */
+export interface ActiveConversationTurn {
+  readonly assistantMessageId: string;
+  readonly startedAt: Date;
+}
+
+/**
  * PubSub publish envelope. The key MUST equal {@link CONVERSATION_STREAM_CHUNK_FIELD}
  * (the subscription field name) so @nestjs/graphql resolves the payload. Buffered
  * replay yields the same envelope shape as the live PubSub iterator.

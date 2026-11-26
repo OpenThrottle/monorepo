@@ -4,6 +4,7 @@ import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { mapPersistedAgentConversationMessages } from './mapPersistedAgentConversationMessages';
 import type {
   AgentConversationListItem,
+  ChatActiveTurn,
   ListAgentConversationsResult,
   LoadAgentConversationMessagesResult,
   MutateAgentConversationResult,
@@ -49,6 +50,7 @@ export const emptyLoadAgentConversationMessagesResult = (
   overrides: Partial<LoadAgentConversationMessagesResult>,
 ): LoadAgentConversationMessagesResult => {
   return {
+    activeTurn: null,
     conversationId: null,
     errorMessage: null,
     messages: [],
@@ -96,6 +98,23 @@ export const toAgentConversationListItem = (
   };
 };
 
+/** Reduce a GraphQL active-turn row to its JSON-safe chat shape. */
+const toChatActiveTurn = (
+  row: {
+    readonly assistantMessageId: string;
+    readonly startedAt: unknown;
+  } | null,
+): ChatActiveTurn | null => {
+  if (row === null) {
+    return null;
+  }
+
+  return {
+    assistantMessageId: row.assistantMessageId,
+    startedAt: String(row.startedAt),
+  };
+};
+
 /** Parse a non-empty trimmed string form field, or null. @public */
 export const trimStringFormField = (
   value: FormDataEntryValue | null,
@@ -135,10 +154,15 @@ export interface AgentConversationsDocuments {
   readonly getMessagesDocument: TypedDocumentNode<
     {
       getAgentConversationMessages: {
+        // Optional because generated selection types make it so.
+        readonly activeTurn?: {
+          readonly assistantMessageId: string;
+          readonly startedAt: unknown;
+        } | null;
         items: readonly PersistedAgentMessageRow[];
       };
     },
-    { input: { conversationId: string; limit: number } }
+    { input: { conversationId: string; fromNewest: boolean; limit: number } }
   >;
   readonly listDocument: TypedDocumentNode<
     {
@@ -218,8 +242,11 @@ export function createAgentConversationsApi(
       request,
       documents.getMessagesDocument,
       {
+        // The newest page: a thread longer than the limit must restore its
+        // latest turns, not its first ones.
         input: {
           conversationId: params.conversationId,
+          fromNewest: true,
           limit: params.limit ?? 100,
         },
       },
@@ -237,7 +264,10 @@ export function createAgentConversationsApi(
       })),
     );
 
+    const activeTurn = data.getAgentConversationMessages.activeTurn ?? null;
+
     return emptyLoadAgentConversationMessagesResult({
+      activeTurn: toChatActiveTurn(activeTurn),
       conversationId: params.conversationId,
       messages,
     });

@@ -1,6 +1,65 @@
 import { describe, expect, it } from 'vitest';
 
-import { composeCursorStartupErrorText } from './conversation-stream.utils.ts';
+import type { ConversationStreamChunkPayload } from './conversation-stream.types.ts';
+import {
+  compactReplayChunks,
+  composeCursorStartupErrorText,
+} from './conversation-stream.utils.ts';
+
+const chunk = (
+  sortOrder: number,
+  overrides: Partial<ConversationStreamChunkPayload> = {},
+): ConversationStreamChunkPayload => {
+  return {
+    conversationId: 'conv-1',
+    delta: `d${sortOrder} `,
+    done: false,
+    error: null,
+    id: `chunk-${sortOrder}`,
+    kind: 'text',
+    messageId: 'assistant-1',
+    metadataJson: null,
+    sortOrder,
+    ...overrides,
+  };
+};
+
+describe('compactReplayChunks', () => {
+  it('folds consecutive text deltas of the head into their first chunk', () => {
+    const chunks = [chunk(0), chunk(1), chunk(2), chunk(3)];
+
+    const compacted = compactReplayChunks(chunks, 1);
+
+    expect(compacted).toEqual([{ ...chunk(0), delta: 'd0 d1 d2 ' }, chunk(3)]);
+  });
+
+  it('keeps the reply from its first word', () => {
+    const chunks = Array.from({ length: 6000 }, (_, index) => chunk(index));
+
+    const compacted = compactReplayChunks(chunks, 500);
+
+    expect(compacted).toHaveLength(501);
+    expect(compacted[0]?.sortOrder).toBe(0);
+    expect(compacted.map((item) => item.delta).join('')).toBe(
+      chunks.map((item) => item.delta).join(''),
+    );
+  });
+
+  it('never folds across a tool event, a kind change or another message', () => {
+    const tool = chunk(1, { delta: '', kind: 'tool_call', metadataJson: '{}' });
+    const thinking = chunk(3, { kind: 'thinking' });
+    const otherMessage = chunk(4, { messageId: 'assistant-2' });
+    const chunks = [chunk(0), tool, chunk(2), thinking, otherMessage, chunk(5)];
+
+    expect(compactReplayChunks(chunks, 0)).toEqual(chunks);
+  });
+
+  it('leaves the tail untouched, so replayed and live copies still dedupe', () => {
+    const chunks = [chunk(0), chunk(1), chunk(2)];
+
+    expect(compactReplayChunks(chunks, 2)).toEqual(chunks);
+  });
+});
 
 // Captured verbatim off cursor-agent 2026.08.11 during the task 1 evidence gate.
 const REAL_AUTH_REQUIRED = `Error: Authentication required. Please run 'agent login' first, or set CURSOR_API_KEY environment variable.`;

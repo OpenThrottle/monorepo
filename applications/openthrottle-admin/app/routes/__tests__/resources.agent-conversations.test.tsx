@@ -55,6 +55,7 @@ describe('routes/resources.agent-conversations action (admin)', () => {
 
   test('dispatches the load-messages intent to the load-messages handler', async () => {
     mockLoadMessages.mockResolvedValue({
+      activeTurn: null,
       conversationId: 'c1',
       errorMessage: null,
       messages: [],
@@ -69,6 +70,7 @@ describe('routes/resources.agent-conversations action (admin)', () => {
 
     expect(mockLoadMessages).toHaveBeenCalledTimes(1);
     expect(result).toEqual({
+      activeTurn: null,
       conversationId: 'c1',
       errorMessage: null,
       messages: [],

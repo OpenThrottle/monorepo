@@ -1098,6 +1098,7 @@ export function GetAgentConversationMessagesInputSchema(): z.ZodObject<
 > {
   return z.object({
     conversationId: z.string().min(1),
+    fromNewest: z.boolean().default(false).nullish(),
     limit: z.number().nullish(),
     offset: z.number().nullish(),
   });

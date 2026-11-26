@@ -815,6 +815,71 @@ describe('ConversationStreamService', () => {
     expect(service.hasActiveTurn('conv-1')).toBe(false);
   });
 
+  it('reports the running turn, and nothing once it is cancelled or done', async () => {
+    let release: () => void = () => {};
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    async function* held(
+      _input: unknown,
+    ): AsyncGenerator<{ delta: string; done: boolean; kind: string }> {
+      yield { delta: 'first', done: false, kind: 'text' };
+      await gate;
+      yield { delta: '', done: true, kind: 'text' };
+    }
+    openAiStreamMock.mockImplementation(held);
+    const { service } = buildService();
+
+    expect(service.getActiveTurn('conv-1')).toBeNull();
+    const done = service.runStream(baseRun);
+    expect(service.getActiveTurn('conv-1')).toEqual({
+      assistantMessageId: 'assistant-msg-1',
+      startedAt: expect.any(Date),
+    });
+
+    service.cancel('conv-1');
+    expect(service.getActiveTurn('conv-1')).toBeNull();
+
+    release();
+    await done;
+    expect(service.getActiveTurn('conv-1')).toBeNull();
+  });
+
+  it('reports the next turn while a cancelled one is still unwinding', async () => {
+    const releases: Array<() => void> = [];
+    async function* held(
+      _input: unknown,
+    ): AsyncGenerator<{ delta: string; done: boolean; kind: string }> {
+      yield { delta: 'first', done: false, kind: 'text' };
+      await new Promise<void>((resolve) => {
+        releases.push(resolve);
+      });
+      yield { delta: '', done: true, kind: 'text' };
+    }
+    openAiStreamMock.mockImplementation(held);
+    const { service } = buildService();
+
+    const first = service.runStream(baseRun);
+    service.cancel('conv-1');
+    const second = service.runStream({
+      ...baseRun,
+      assistantMessageId: 'assistant-2',
+    });
+
+    await vi.waitFor(() => {
+      expect(releases).toHaveLength(2);
+    });
+    releases[0]?.();
+    await first;
+    expect(service.getActiveTurn('conv-1')?.assistantMessageId).toBe(
+      'assistant-2',
+    );
+
+    releases[1]?.();
+    await second;
+    expect(service.getActiveTurn('conv-1')).toBeNull();
+  });
+
   it('a cancelled turn unwinding does not release the next turn', async () => {
     const releases: Array<() => void> = [];
     async function* held(
@@ -1223,6 +1288,24 @@ describe('ConversationStreamService.subscribe (replay buffer)', () => {
       expect.objectContaining({ delta: 'lo', done: false, sortOrder: 1 }),
       expect.objectContaining({ delta: '', done: true, sortOrder: 2 }),
     ]);
+  });
+
+  it('replays a reply longer than the buffer cap from its first word', async () => {
+    const deltas = Array.from({ length: 6_000 }, (_, index) => `w${index} `);
+    openAiStreamMock.mockReturnValue(fakeStream(deltas));
+    const { service } = buildService();
+
+    await service.runStream(baseRun);
+
+    let body = '';
+    let replayedChunks = 0;
+    for await (const value of service.subscribe('conv-1')) {
+      body += value.conversationStreamChunkAdded.delta;
+      replayedChunks += 1;
+    }
+
+    expect(body).toBe(deltas.join(''));
+    expect(replayedChunks).toBeLessThan(deltas.length);
   });
 
   it('starts a fresh buffer for a new turn (does not replay the prior turn)', async () => {

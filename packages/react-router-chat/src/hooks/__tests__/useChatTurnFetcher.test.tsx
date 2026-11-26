@@ -275,6 +275,7 @@ describe('useChatTurnFetcher', () => {
     );
 
     historyFetcherData = {
+      activeTurn: null,
       conversationId: 'stored-server-id',
       errorMessage: null,
       messages: [
@@ -393,6 +394,7 @@ describe('useChatTurnFetcher', () => {
 
     // History load errors out: error surfaces and stored id is cleared.
     historyFetcherData = {
+      activeTurn: null,
       conversationId: null,
       errorMessage: 'Conversation not found',
       messages: [],

@@ -45,12 +45,16 @@ import { AgentAccountStampingService } from '../../services/agent-account-stampi
 import { CONVERSATION_STREAM_CHUNK_FIELD } from './conversation-stream.constants.ts';
 import type { StartConversationStreamRun } from './conversation-stream.types.ts';
 import type {
+  ActiveConversationTurn,
   ConversationStreamChunkEnvelope,
   ConversationStreamChunkPayload,
   TerminalTimeoutMetadata,
   TerminalUsageLimitMetadata,
 } from './conversation-stream.types.ts';
-import { composeCursorStartupErrorText } from './conversation-stream.utils.ts';
+import {
+  compactReplayChunks,
+  composeCursorStartupErrorText,
+} from './conversation-stream.utils.ts';
 
 /**
  * CLI backends (spawned agent adapters) keyed by the driver-id discriminator,
@@ -165,21 +169,40 @@ const CURSOR_MINT_RETRY_DELAY_MS = 500;
 
 /**
  * How long a finished turn's chunk buffer is retained after its terminal chunk,
- * so a subscriber that attaches slightly late (the home route only subscribes
- * once the start mutation has returned the conversation id) — or a turn that
- * completed entirely before the client subscribed — still replays in full.
+ * so a subscriber that attaches late still replays it in full: the home route
+ * only subscribes once the start mutation has returned the conversation id, a
+ * turn can complete before the client subscribed, and someone who left the
+ * chat mid-turn may come back minutes later, before the reload shows the
+ * persisted row.
  */
-const BUFFER_GRACE_MS = 30_000;
+const BUFFER_GRACE_MS = 5 * 60_000;
 
 /**
- * Hard cap on buffered chunks per conversation. A turn larger than this drops
- * its oldest chunks from replay (the live stream is unaffected); bounds memory.
+ * Buffered chunks per conversation that trigger a compaction. Compaction folds
+ * consecutive text deltas into one chunk (see `compactReplayChunks`), so a long
+ * reply still replays from its first word instead of dropping its head.
  */
-const BUFFER_MAX_CHUNKS = 5_000;
+const BUFFER_COMPACT_AT_CHUNKS = 5_000;
+
+/** Newest chunks a compaction leaves as they are, for the replay/live overlap. */
+const BUFFER_COMPACT_KEEP_TAIL = 500;
+
+/**
+ * Last-resort cap once compaction cannot shrink the buffer further (a turn of
+ * thousands of tool calls). Only past this are the oldest chunks dropped.
+ */
+const BUFFER_HARD_MAX_CHUNKS = 20_000;
 
 @Injectable()
 export class ConversationStreamService {
   private readonly controllers = new Map<string, AbortController>();
+  // The turn each live controller drives, keyed by the controller itself so it
+  // goes away with it: a cancelled turn still unwinding never reports itself as
+  // the active one once the next turn has registered.
+  private readonly turnsByController = new WeakMap<
+    AbortController,
+    ActiveConversationTurn
+  >();
 
   // Per-conversation replay buffer of the current/most-recent turn's chunks, so
   // a late subscriber does not miss chunks published before it attached. Evicted
@@ -190,6 +213,10 @@ export class ConversationStreamService {
     ConversationStreamChunkPayload[]
   >();
   private readonly evictionTimers = new Map<string, NodeJS.Timeout>();
+  // Buffer length at which each conversation next compacts. Doubles past what
+  // the last compaction left, so a buffer that cannot shrink (all tool events)
+  // is not rescanned on every chunk.
+  private readonly compactionThresholds = new Map<string, number>();
 
   // Owner registry for Private-mode (persist=false) streams. A Private turn has
   // no conversation row, so the subscription's DB ownership check cannot
@@ -268,6 +295,20 @@ export class ConversationStreamService {
   }
 
   /**
+   * @description The turn `conversationId` is running, or null when none is live
+   * (same rule as {@link hasActiveTurn}). Callers must ownership-check the
+   * conversation first: this map is process-wide.
+   */
+  getActiveTurn(conversationId: string): ActiveConversationTurn | null {
+    const controller = this.controllers.get(conversationId);
+    if (controller === undefined || controller.signal.aborted) {
+      return null;
+    }
+
+    return this.turnsByController.get(controller) ?? null;
+  }
+
+  /**
    * Kick off a streaming completion. Fire-and-forget; errors are logged, never thrown.
    */
   start(run: StartConversationStreamRun): void {
@@ -295,6 +336,10 @@ export class ConversationStreamService {
   async runStream(run: StartConversationStreamRun): Promise<void> {
     const controller = new AbortController();
     this.controllers.set(run.conversationId, controller);
+    this.turnsByController.set(controller, {
+      assistantMessageId: run.assistantMessageId,
+      startedAt: new Date(),
+    });
 
     // A new turn starts a fresh replay buffer (and cancels any pending eviction
     // of the previous turn's buffer).
@@ -991,15 +1036,44 @@ export class ConversationStreamService {
   private recordChunk(chunk: ConversationStreamChunkPayload): void {
     const buffer = this.buffers.get(chunk.conversationId) ?? [];
     buffer.push(chunk);
-    // Drop oldest beyond the cap so a very long turn cannot grow unbounded.
-    if (buffer.length > BUFFER_MAX_CHUNKS) {
-      buffer.splice(0, buffer.length - BUFFER_MAX_CHUNKS);
-    }
-    this.buffers.set(chunk.conversationId, buffer);
+    this.buffers.set(
+      chunk.conversationId,
+      this.boundBuffer(chunk.conversationId, buffer),
+    );
 
     if (chunk.done) {
       this.scheduleEviction(chunk.conversationId);
     }
+  }
+
+  /**
+   * Keep a buffer bounded without losing the reply's beginning: fold text
+   * deltas first, and only past the hard cap drop the oldest chunks.
+   */
+  private boundBuffer(
+    conversationId: string,
+    buffer: ConversationStreamChunkPayload[],
+  ): ConversationStreamChunkPayload[] {
+    const threshold =
+      this.compactionThresholds.get(conversationId) ?? BUFFER_COMPACT_AT_CHUNKS;
+    if (buffer.length <= threshold) {
+      return buffer;
+    }
+
+    const compacted = compactReplayChunks(buffer, BUFFER_COMPACT_KEEP_TAIL);
+    this.compactionThresholds.set(
+      conversationId,
+      Math.max(BUFFER_COMPACT_AT_CHUNKS, compacted.length * 2),
+    );
+    if (compacted.length <= BUFFER_HARD_MAX_CHUNKS) {
+      return compacted;
+    }
+
+    this.logger.warn(
+      `conversation-stream replay buffer over ${BUFFER_HARD_MAX_CHUNKS} chunks after compaction; dropping the oldest`,
+    );
+
+    return compacted.slice(compacted.length - BUFFER_HARD_MAX_CHUNKS);
   }
 
   /** Reset the replay buffer for a new turn and cancel any pending eviction. */
@@ -1010,6 +1084,7 @@ export class ConversationStreamService {
       this.evictionTimers.delete(conversationId);
     }
     this.buffers.set(conversationId, []);
+    this.compactionThresholds.delete(conversationId);
   }
 
   /** Evict a finished turn's buffer after a grace window for late subscribers. */
@@ -1021,6 +1096,7 @@ export class ConversationStreamService {
 
     const timer = setTimeout(() => {
       this.buffers.delete(conversationId);
+      this.compactionThresholds.delete(conversationId);
       this.evictionTimers.delete(conversationId);
       // A Private-mode owner entry lives exactly as long as its replay buffer.
       this.ephemeralOwners.delete(conversationId);
