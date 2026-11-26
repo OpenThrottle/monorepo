@@ -31,7 +31,7 @@ targets `nx-workspace`. The OT Loop job and its BullMQ wiring: [docs/workflows/o
 
 ### Schema change
 
-Consumers generate from the committed `applications/openthrottle-server/schema.gql` (via `@openthrottle/graphql-codegen`'s `defineCodegen`), and CI fails on drift. After changing GraphQL types, resolvers or documents:
+Consumers generate from the committed `applications/openthrottle-server/schema.gql` (via `@openthrottle/graphql-codegen`'s `defineCodegen`), and CI fails on drift. After changing GraphQL types, resolvers or documents (the shared documents are `packages/openthrottle-mcp/src/graphql/{fragments,queries,mutations}.graphql`; both openthrottle-mcp and openthrottle-server codegen read them):
 
 1. Run `pnpm nx run openthrottle-server:graphql-schema:write` (no Postgres, Redis or running server needed). It is the only producer of the committed `applications/openthrottle-server/schema.gql`: booting the server keeps the schema in memory and never writes the file. `dev` on a codegen consumer runs the equivalent `graphql-schema-write` first, so a new field plus a document selecting it needs no manual step there. It works in one pass even when a server-side client (`openthrottle-mcp`) already selects or reads the new field: tsc builds never run codegen and the client builds in the server graph are emit-only, so the server builds against the stale generated output and writes the schema that step 2 regenerates from. Do not reach for `--excludeTaskDependencies`.
 2. `pnpm nx affected --target=codegen-graphql,codegen-react-router --parallel`

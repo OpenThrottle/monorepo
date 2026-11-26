@@ -63,8 +63,8 @@ there is no per-request token (the embedded server path is untouched).
 
 ### Implementation
 
-- `packages/openthrottle-mcp/src/auth/getAuthToken.ts` —
+- `packages/openthrottle-mcp/src/utils/getAuthToken.ts` —
   `refreshEnvAuthTokenFromFile()` + wiring in `getAuthToken()`.
 - `scripts/run-openthrottle-mcp.sh` — export `OT_MCP_AUTH_TOKEN_ENV_FILE` on
   self-load.
-- Tests: `src/auth/get-auth-token.test.ts`.
+- Tests: `src/utils/__tests__/getAuthToken.test.ts`.

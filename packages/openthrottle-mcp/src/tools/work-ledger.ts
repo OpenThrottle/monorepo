@@ -3,7 +3,7 @@
  * end_session, get_work_sessions.
  * These let an agent self-report the outputs it produced (git commits, PRs, documents)
  * and tie its work to a plan/task, under a session opened lazily on first use.
- * The session id is process-managed (see ../session/current-session.ts), never a tool arg.
+ * The session id is process-managed (see ../utils/session.ts), never a tool arg.
  * An X-OT-Session-Id header is sent so server-side side effects can attribute to this session.
  *
  * begin_task_session is the exception to "opened lazily": a per-task model needs a per-task
@@ -25,17 +25,17 @@ import {
   RecordWorkArtifactDocument,
   WorkSessionsByPlanDocument,
 } from '../__generated__/graphql.js';
-import { getAuthToken } from '../auth/getAuthToken.ts';
 import { resolveSessionModel } from '../config/client-identity.ts';
+import type { GenericResult } from '../types/index.ts';
+import { invalidArgsContent } from '../utils/errors.ts';
+import { getAuthToken } from '../utils/getAuthToken.ts';
+import { runTool } from '../utils/runTool.ts';
 import {
   beginScopedSession,
   closeCurrentSession,
   ensureWorkSession,
-} from '../session/current-session.ts';
-import { sessionHeaders } from '../session/sessionHeaders.ts';
-import type { GenericResult } from '../types/index.ts';
-import { invalidArgsContent } from '../utils/errors.ts';
-import { runTool } from '../utils/runTool.ts';
+} from '../utils/session.ts';
+import { sessionHeaders } from '../utils/session.ts';
 
 // ── begin_task_session ──────────────────────────────────────────────────────
 

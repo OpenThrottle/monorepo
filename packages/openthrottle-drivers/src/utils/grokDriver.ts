@@ -1,0 +1,169 @@
+/**
+ * @description xAI Grok CLI driver: single-turn headless mode (`grok -p "<prompt>"`, which prints
+ * the response to stdout and exits). Verified against the installed CLI (grok 0.2.112, `grok --help`):
+ * `-p/--single <PROMPT>` is the headless flag, `-m/--model` selects the model, `--permission-mode`
+ * accepts `acceptEdits` (used here for non-blocking edits, matching Claude), and `-w/--worktree`
+ * takes an optional name. Grok's worktree base flag is `--worktree-ref` (NOT `--worktree-base`), so
+ * this driver advertises `worktree:true` but `worktreeBase:false`; wiring `--worktree-ref` through
+ * the shared formatter is a follow-up (would need a per-driver base-flag name).
+ */
+
+import type { DriverCapabilities, DriverModelListing } from '../types/index.ts';
+import { structuredOutputShellFlag } from './output-format.ts';
+import { grokReasoningEffort } from './reasoning-effort.ts';
+import { defineDriver } from './registry.ts';
+import {
+  escapeForShellDoubleQuoted,
+  escapeShellArg,
+  formatModelFlag,
+  formatShellEnvPrefix,
+} from './shell.ts';
+import { appendWorktreeShellFlags } from './shell-flags.ts';
+
+/**
+ * @description One `--allow "Bash(<pattern>)"` per allowed command, each shell-escaped. Empty when
+ * the list is empty or omitted, which keeps every existing command byte-identical.
+ */
+const buildGrokAllowFlags = (
+  allowedCommands: readonly string[] | undefined,
+): string => {
+  if (allowedCommands === undefined || allowedCommands.length === 0) {
+    return '';
+  }
+
+  return allowedCommands
+    .map((pattern) => {
+      return ` --allow ${escapeShellArg(`Bash(${pattern})`)}`;
+    })
+    .join('');
+};
+
+const capabilities: DriverCapabilities = {
+  /**
+   * Verified against grok 1.0.92 (2026-11-25): `--allow <RULE>` (compat alias `--allowedTools`)
+   * takes one permission rule in the `Bash(<pattern>)` syntax Grok shares with Claude Code, and is
+   * repeatable; a headless `-p` run given `--allow 'Bash(node -e *)'` ran that command. On the
+   * verifying machine a run WITHOUT the rule ran it too, so whether Grok gates a headless shell
+   * command at all depends on the user's own Grok and Claude settings; the flag guarantees the
+   * listed commands are pre-approved, not that others are refused. See {@link buildGrokAllowFlags}.
+   */
+  allowedCommands: true,
+  /**
+   * Reads the workspace's `.mcp.json` — verified against grok 1.0.0 (3cd0d0cbcebe) via
+   * `grok mcp doctor`, which lists `.mcp.json` as a first-class config source and handshakes
+   * `openthrottle-mcp` from it (62 tools discovered).
+   *
+   * Do NOT use `grok mcp list` to check this: it reports only servers in grok's own TOML config, so
+   * with no `.grok/config.toml` present it prints "No MCP servers configured" even though `.mcp.json`
+   * servers are live. That output is what first led this audit to the wrong conclusion. The proof
+   * that the project file (not some user-scope config) is the source: `maestro` exists in NO
+   * user-level config on the audited host, yet grok handshakes it.
+   *
+   * Caveat on evidence grade: `grok mcp doctor` is grok's own account of its MCP configuration, but
+   * the agent-runtime check — spawn the driver's command and ask the model which tools it has, as was
+   * done for cursor, claude and opencode — was blocked by grok's free-tier usage limit. Re-run it
+   * when quota allows to close the gap.
+   */
+  attachesWorkspaceMcp: true,
+  chatStreaming: true,
+  /**
+   * `false`: grok 1.0.77 reads the workspace `.mcp.json` and has no flag to skip it or the other
+   * per-directory config `grok inspect` reports (`--help` checked 2026-11-22). An untrusted
+   * checkout's grok run is refused.
+   */
+  isolatesRepoAgentConfig: false,
+  /**
+   * No flag needed and none exists — verified against grok 1.0.0 (3cd0d0cbcebe). Grok loads the
+   * workspace's `.mcp.json` with no approval step and no per-server gate, so there is nothing for
+   * this driver to emit; see {@link DriverCapabilities.attachesWorkspaceMcp} above for the evidence.
+   *
+   * A project-scope `./.grok/config.toml` (via `grok mcp add --scope project`) would ALSO work, but
+   * it is unnecessary duplication of `.mcp.json` and would add a new committed agent-config directory
+   * for no gain. Deliberately not added.
+   */
+  mcpAutoApprove: false,
+  permissionMode: true,
+  pluginDir: false,
+  /**
+   * grok 1.x `streaming-json` carries `tool_call` / `tool_call_update` events (verified against
+   * grok 1.0.77); 0.2.112 emitted only `thought` / `text` / `end`.
+   */
+  reportsToolCalls: true,
+  skipWorktreeSetup: false,
+  supportsCustomBaseUrl: true,
+  supportsModelFlag: true,
+  worktree: true,
+  worktreeBase: false,
+};
+
+/**
+ * `grok models` prints an `Available models:` header then bulleted `  * <id> (default)` rows
+ * (verified against 0.2.112). Capture the id after the bullet, strip a trailing ` (default)`.
+ * Listing requires login, so this tolerantly yields `[]` when logged out.
+ */
+const discoverModels: DriverModelListing = {
+  argv: ['models'],
+  mode: 'command',
+  parse: (stdout) =>
+    stdout
+      .split('\n')
+      .map((line) => /^\s*\*\s+(\S+)/.exec(line)?.[1])
+      .filter((id): id is string => id !== undefined),
+};
+
+/**
+ * @description Grok driver (`grok`, label `grok`). Model flag omitted when unset or `auto`. When a
+ * local endpoint is supplied, grok is redirected at it via the `GROK_MODELS_BASE_URL` +
+ * `XAI_API_KEY` env pair (see the Custom Models docs) — the model list is fetched from
+ * `{baseUrl}/models` and `--model` selects the discovered id. `XAI_API_KEY` defaults to a
+ * placeholder since local servers ignore it. The env prefix is baked into the command string
+ * because the engine spawns without an `env` override.
+ * @public
+ */
+export const grokDriver = defineDriver({
+  binEnv: 'OPENTHROTTLE_GROK_BIN',
+  binary: 'grok',
+  buildShellCommand: (config) => {
+    const modelFlag = formatModelFlag(config.model);
+
+    let endpointPrefix = '';
+    if (config.endpoint) {
+      endpointPrefix = formatShellEnvPrefix({
+        GROK_MODELS_BASE_URL: config.endpoint.baseUrl,
+        XAI_API_KEY: config.endpoint.apiKey?.trim() || 'local',
+      });
+    }
+
+    const effort = grokReasoningEffort(config.effort);
+    let effortFlag = '';
+    if (effort !== undefined) {
+      effortFlag = ` --reasoning-effort ${effort}`;
+    }
+
+    const safePrompt = escapeForShellDoubleQuoted(config.prompt);
+    const outputFlag = structuredOutputShellFlag(
+      config,
+      '--output-format streaming-json',
+    );
+    const allowFlags = buildGrokAllowFlags(config.allowedCommands);
+    const base = `${endpointPrefix}${escapeShellArg(config.bin ?? 'grok')} -p "${safePrompt}"${outputFlag} --permission-mode acceptEdits${modelFlag}${effortFlag}${allowFlags}`;
+
+    return appendWorktreeShellFlags(base, capabilities, config.worktree);
+  },
+  capabilities,
+  discoverModels,
+  // Grok authenticates with an xAI API key.
+  hostEnv: {
+    keys: ['XAI_API_KEY'],
+    prefixes: [],
+  },
+  id: 'grok',
+  install: {
+    installerShell: 'bash',
+    method: 'curl-shell',
+    url: 'https://x.ai/cli/install.sh',
+  },
+  label: 'grok',
+  update: { argv: ['update'], method: 'command' },
+  versionArgs: ['--version'],
+});

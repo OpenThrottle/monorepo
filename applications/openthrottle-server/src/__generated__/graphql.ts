@@ -9964,6 +9964,106 @@ export type DeleteProjectMutation = {
   deleteProject: boolean;
 };
 
+export type PlanMessageFieldsFragment = {
+  __typename?: 'PlanMessageObject';
+  author: string;
+  body: string;
+  createdAt: any;
+  deliveredAt?: any | null;
+  deliveredToTaskId?: string | null;
+  id: string;
+  kind: PlanMessageKind;
+  planId: string;
+  planRunId?: string | null;
+  status: PlanMessageStatus;
+  taskId?: string | null;
+  updatedAt: any;
+};
+
+export type ClaimPlanMessagesResultFragment = {
+  __typename?: 'ClaimPlanMessagesResultObject';
+  auditChunk?: {
+    __typename?: 'PlanOutputStreamChunkObject';
+    content: string;
+    createdAt: any;
+    id: string;
+    planId: string;
+    taskId?: string | null;
+  } | null;
+  messages: Array<{
+    __typename?: 'PlanMessageObject';
+    author: string;
+    body: string;
+    createdAt: any;
+    deliveredAt?: any | null;
+    deliveredToTaskId?: string | null;
+    id: string;
+    kind: PlanMessageKind;
+    planId: string;
+    planRunId?: string | null;
+    status: PlanMessageStatus;
+    taskId?: string | null;
+    updatedAt: any;
+  }>;
+};
+
+export type PostPlanMessageMutationVariables = Exact<{
+  input: PostPlanMessageInput;
+}>;
+
+export type PostPlanMessageMutation = {
+  __typename?: 'Mutation';
+  postPlanMessage: {
+    __typename?: 'PlanMessageObject';
+    author: string;
+    body: string;
+    createdAt: any;
+    deliveredAt?: any | null;
+    deliveredToTaskId?: string | null;
+    id: string;
+    kind: PlanMessageKind;
+    planId: string;
+    planRunId?: string | null;
+    status: PlanMessageStatus;
+    taskId?: string | null;
+    updatedAt: any;
+  };
+};
+
+export type ClaimPlanMessagesMutationVariables = Exact<{
+  input: ClaimPlanMessagesInput;
+}>;
+
+export type ClaimPlanMessagesMutation = {
+  __typename?: 'Mutation';
+  claimPlanMessages: {
+    __typename?: 'ClaimPlanMessagesResultObject';
+    auditChunk?: {
+      __typename?: 'PlanOutputStreamChunkObject';
+      content: string;
+      createdAt: any;
+      id: string;
+      planId: string;
+      taskId?: string | null;
+    } | null;
+    messages: Array<{
+      __typename?: 'PlanMessageObject';
+      author: string;
+      body: string;
+      createdAt: any;
+      deliveredAt?: any | null;
+      deliveredToTaskId?: string | null;
+      id: string;
+      kind: PlanMessageKind;
+      planId: string;
+      planRunId?: string | null;
+      status: PlanMessageStatus;
+      taskId?: string | null;
+      updatedAt: any;
+    }>;
+  };
+};
+
 export type GetNoteQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
@@ -10407,106 +10507,6 @@ export type DeliveredPlanMessagesQuery = {
     id: string;
     planRunId?: string | null;
   }>;
-};
-
-export type PlanMessageFieldsFragment = {
-  __typename?: 'PlanMessageObject';
-  author: string;
-  body: string;
-  createdAt: any;
-  deliveredAt?: any | null;
-  deliveredToTaskId?: string | null;
-  id: string;
-  kind: PlanMessageKind;
-  planId: string;
-  planRunId?: string | null;
-  status: PlanMessageStatus;
-  taskId?: string | null;
-  updatedAt: any;
-};
-
-export type ClaimPlanMessagesResultFragment = {
-  __typename?: 'ClaimPlanMessagesResultObject';
-  auditChunk?: {
-    __typename?: 'PlanOutputStreamChunkObject';
-    content: string;
-    createdAt: any;
-    id: string;
-    planId: string;
-    taskId?: string | null;
-  } | null;
-  messages: Array<{
-    __typename?: 'PlanMessageObject';
-    author: string;
-    body: string;
-    createdAt: any;
-    deliveredAt?: any | null;
-    deliveredToTaskId?: string | null;
-    id: string;
-    kind: PlanMessageKind;
-    planId: string;
-    planRunId?: string | null;
-    status: PlanMessageStatus;
-    taskId?: string | null;
-    updatedAt: any;
-  }>;
-};
-
-export type PostPlanMessageMutationVariables = Exact<{
-  input: PostPlanMessageInput;
-}>;
-
-export type PostPlanMessageMutation = {
-  __typename?: 'Mutation';
-  postPlanMessage: {
-    __typename?: 'PlanMessageObject';
-    author: string;
-    body: string;
-    createdAt: any;
-    deliveredAt?: any | null;
-    deliveredToTaskId?: string | null;
-    id: string;
-    kind: PlanMessageKind;
-    planId: string;
-    planRunId?: string | null;
-    status: PlanMessageStatus;
-    taskId?: string | null;
-    updatedAt: any;
-  };
-};
-
-export type ClaimPlanMessagesMutationVariables = Exact<{
-  input: ClaimPlanMessagesInput;
-}>;
-
-export type ClaimPlanMessagesMutation = {
-  __typename?: 'Mutation';
-  claimPlanMessages: {
-    __typename?: 'ClaimPlanMessagesResultObject';
-    auditChunk?: {
-      __typename?: 'PlanOutputStreamChunkObject';
-      content: string;
-      createdAt: any;
-      id: string;
-      planId: string;
-      taskId?: string | null;
-    } | null;
-    messages: Array<{
-      __typename?: 'PlanMessageObject';
-      author: string;
-      body: string;
-      createdAt: any;
-      deliveredAt?: any | null;
-      deliveredToTaskId?: string | null;
-      id: string;
-      kind: PlanMessageKind;
-      planId: string;
-      planRunId?: string | null;
-      status: PlanMessageStatus;
-      taskId?: string | null;
-      updatedAt: any;
-    }>;
-  };
 };
 
 export type WorkSessionFragment = {
@@ -12940,6 +12940,210 @@ export const DeleteProjectDocument = {
   DeleteProjectMutation,
   DeleteProjectMutationVariables
 >;
+export const PostPlanMessageDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'PostPlanMessage' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'PostPlanMessageInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'postPlanMessage' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'PlanMessageFields' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanMessageFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanMessageObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'author' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'body' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'deliveredAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'deliveredToTaskId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planRunId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  PostPlanMessageMutation,
+  PostPlanMessageMutationVariables
+>;
+export const ClaimPlanMessagesDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'ClaimPlanMessages' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'ClaimPlanMessagesInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'claimPlanMessages' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'ClaimPlanMessagesResult' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanMessageFields' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanMessageObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'author' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'body' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'deliveredAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'deliveredToTaskId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planRunId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ClaimPlanMessagesResult' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ClaimPlanMessagesResultObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'auditChunk' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'messages' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'PlanMessageFields' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  ClaimPlanMessagesMutation,
+  ClaimPlanMessagesMutationVariables
+>;
 export const GetNoteDocument = {
   kind: 'Document',
   definitions: [
@@ -14352,210 +14556,6 @@ export const DeliveredPlanMessagesDocument = {
 } as unknown as DocumentNode<
   DeliveredPlanMessagesQuery,
   DeliveredPlanMessagesQueryVariables
->;
-export const PostPlanMessageDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'mutation',
-      name: { kind: 'Name', value: 'PostPlanMessage' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'input' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'PostPlanMessageInput' },
-            },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'postPlanMessage' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'input' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'input' },
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'FragmentSpread',
-                  name: { kind: 'Name', value: 'PlanMessageFields' },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'PlanMessageFields' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'PlanMessageObject' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'author' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'body' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'deliveredAt' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'deliveredToTaskId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'planRunId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  PostPlanMessageMutation,
-  PostPlanMessageMutationVariables
->;
-export const ClaimPlanMessagesDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'mutation',
-      name: { kind: 'Name', value: 'ClaimPlanMessages' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'input' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'ClaimPlanMessagesInput' },
-            },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'claimPlanMessages' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'input' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'input' },
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'FragmentSpread',
-                  name: { kind: 'Name', value: 'ClaimPlanMessagesResult' },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'PlanMessageFields' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'PlanMessageObject' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'author' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'body' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'deliveredAt' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'deliveredToTaskId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'planRunId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
-        ],
-      },
-    },
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'ClaimPlanMessagesResult' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'ClaimPlanMessagesResultObject' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'auditChunk' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
-              ],
-            },
-          },
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'messages' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'FragmentSpread',
-                  name: { kind: 'Name', value: 'PlanMessageFields' },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  ClaimPlanMessagesMutation,
-  ClaimPlanMessagesMutationVariables
 >;
 export const StartWorkSessionDocument = {
   kind: 'Document',

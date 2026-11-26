@@ -10140,56 +10140,6 @@ export type GetServerHealthWithEmbeddingsQuery = {
   };
 };
 
-export type GitTextDraftFragment = {
-  __typename?: 'GitTextDraftObject';
-  branchName: string;
-  commitMessage?: string | null;
-  pullRequestBody: string;
-  pullRequestTitle: string;
-};
-
-export type GitTextDraftQueryVariables = Exact<{
-  input: GitTextDraftInput;
-}>;
-
-export type GitTextDraftQuery = {
-  __typename?: 'Query';
-  gitTextDraft: {
-    __typename?: 'GitTextDraftObject';
-    branchName: string;
-    commitMessage?: string | null;
-    pullRequestBody: string;
-    pullRequestTitle: string;
-  };
-};
-
-export type DiscoverLocalModelsQueryVariables = Exact<{ [key: string]: never }>;
-
-export type DiscoverLocalModelsQuery = {
-  __typename?: 'Query';
-  discoverLocalModels: {
-    __typename?: 'DiscoverLocalModelsResult';
-    scannedAt: string;
-    scannedHosts: Array<string>;
-    totalCount: number;
-    endpoints: Array<{
-      __typename?: 'ModelEndpointObject';
-      baseUrl: string;
-      host: string;
-      models: Array<string>;
-      port: number;
-      provider?: string | null;
-    }>;
-  };
-};
-
-export type ViewerOAuthScopesQueryVariables = Exact<{ [key: string]: never }>;
-
-export type ViewerOAuthScopesQuery = {
-  __typename?: 'Query';
-  viewerOAuthScopes?: Array<string> | null;
-};
-
 export type NoteFragment = {
   __typename?: 'NoteObject';
   author?: string | null;
@@ -10457,6 +10407,49 @@ export type ListSourceInfoFragment = {
   __typename?: 'ListSourceInfoObject';
   description: string;
   name: string;
+};
+
+export type GitTextDraftFragment = {
+  __typename?: 'GitTextDraftObject';
+  branchName: string;
+  commitMessage?: string | null;
+  pullRequestBody: string;
+  pullRequestTitle: string;
+};
+
+export type GitTextDraftQueryVariables = Exact<{
+  input: GitTextDraftInput;
+}>;
+
+export type GitTextDraftQuery = {
+  __typename?: 'Query';
+  gitTextDraft: {
+    __typename?: 'GitTextDraftObject';
+    branchName: string;
+    commitMessage?: string | null;
+    pullRequestBody: string;
+    pullRequestTitle: string;
+  };
+};
+
+export type DiscoverLocalModelsQueryVariables = Exact<{ [key: string]: never }>;
+
+export type DiscoverLocalModelsQuery = {
+  __typename?: 'Query';
+  discoverLocalModels: {
+    __typename?: 'DiscoverLocalModelsResult';
+    scannedAt: string;
+    scannedHosts: Array<string>;
+    totalCount: number;
+    endpoints: Array<{
+      __typename?: 'ModelEndpointObject';
+      baseUrl: string;
+      host: string;
+      models: Array<string>;
+      port: number;
+      provider?: string | null;
+    }>;
+  };
 };
 
 export type CreateNoteMutationVariables = Exact<{
@@ -10878,6 +10871,442 @@ export type DeleteProjectMutationVariables = Exact<{
 export type DeleteProjectMutation = {
   __typename?: 'Mutation';
   deleteProject: boolean;
+};
+
+export type ViewerOAuthScopesQueryVariables = Exact<{ [key: string]: never }>;
+
+export type ViewerOAuthScopesQuery = {
+  __typename?: 'Query';
+  viewerOAuthScopes?: Array<string> | null;
+};
+
+export type DeletePlanOutputMutationVariables = Exact<{
+  input: DeletePlanOutputInput;
+}>;
+
+export type DeletePlanOutputMutation = {
+  __typename?: 'Mutation';
+  deletePlanOutput: {
+    __typename?: 'DeletePlanOutputResult';
+    deletedCount: number;
+  };
+};
+
+export type PlanMessageFieldsFragment = {
+  __typename?: 'PlanMessageObject';
+  author: string;
+  body: string;
+  createdAt: any;
+  deliveredAt?: any | null;
+  deliveredToTaskId?: string | null;
+  id: string;
+  kind: PlanMessageKind;
+  planId: string;
+  planRunId?: string | null;
+  status: PlanMessageStatus;
+  taskId?: string | null;
+  updatedAt: any;
+};
+
+export type ClaimPlanMessagesResultFragment = {
+  __typename?: 'ClaimPlanMessagesResultObject';
+  auditChunk?: {
+    __typename?: 'PlanOutputStreamChunkObject';
+    content: string;
+    createdAt: any;
+    id: string;
+    planId: string;
+    taskId?: string | null;
+  } | null;
+  messages: Array<{
+    __typename?: 'PlanMessageObject';
+    author: string;
+    body: string;
+    createdAt: any;
+    deliveredAt?: any | null;
+    deliveredToTaskId?: string | null;
+    id: string;
+    kind: PlanMessageKind;
+    planId: string;
+    planRunId?: string | null;
+    status: PlanMessageStatus;
+    taskId?: string | null;
+    updatedAt: any;
+  }>;
+};
+
+export type PostPlanMessageMutationVariables = Exact<{
+  input: PostPlanMessageInput;
+}>;
+
+export type PostPlanMessageMutation = {
+  __typename?: 'Mutation';
+  postPlanMessage: {
+    __typename?: 'PlanMessageObject';
+    author: string;
+    body: string;
+    createdAt: any;
+    deliveredAt?: any | null;
+    deliveredToTaskId?: string | null;
+    id: string;
+    kind: PlanMessageKind;
+    planId: string;
+    planRunId?: string | null;
+    status: PlanMessageStatus;
+    taskId?: string | null;
+    updatedAt: any;
+  };
+};
+
+export type ClaimPlanMessagesMutationVariables = Exact<{
+  input: ClaimPlanMessagesInput;
+}>;
+
+export type ClaimPlanMessagesMutation = {
+  __typename?: 'Mutation';
+  claimPlanMessages: {
+    __typename?: 'ClaimPlanMessagesResultObject';
+    auditChunk?: {
+      __typename?: 'PlanOutputStreamChunkObject';
+      content: string;
+      createdAt: any;
+      id: string;
+      planId: string;
+      taskId?: string | null;
+    } | null;
+    messages: Array<{
+      __typename?: 'PlanMessageObject';
+      author: string;
+      body: string;
+      createdAt: any;
+      deliveredAt?: any | null;
+      deliveredToTaskId?: string | null;
+      id: string;
+      kind: PlanMessageKind;
+      planId: string;
+      planRunId?: string | null;
+      status: PlanMessageStatus;
+      taskId?: string | null;
+      updatedAt: any;
+    }>;
+  };
+};
+
+export type AddPlanTagMutationVariables = Exact<{
+  input: AddPlanTagInput;
+}>;
+
+export type AddPlanTagMutation = {
+  __typename?: 'Mutation';
+  addPlanTag: {
+    __typename?: 'PlanTagObject';
+    confidence?: number | null;
+    createdAt: any;
+    dimension: string;
+    id: string;
+    planId: string;
+    source: string;
+    tag: string;
+    updatedAt: any;
+  };
+};
+
+export type RemovePlanTagMutationVariables = Exact<{
+  input: RemovePlanTagInput;
+}>;
+
+export type RemovePlanTagMutation = {
+  __typename?: 'Mutation';
+  removePlanTag: boolean;
+};
+
+export type AddProjectTagMutationVariables = Exact<{
+  input: AddProjectTagInput;
+}>;
+
+export type AddProjectTagMutation = {
+  __typename?: 'Mutation';
+  addProjectTag: {
+    __typename?: 'ProjectTagObject';
+    confidence?: number | null;
+    createdAt: any;
+    dimension: string;
+    id: string;
+    projectId: string;
+    source: string;
+    tag: string;
+    updatedAt: any;
+  };
+};
+
+export type RemoveProjectTagMutationVariables = Exact<{
+  input: RemoveProjectTagInput;
+}>;
+
+export type RemoveProjectTagMutation = {
+  __typename?: 'Mutation';
+  removeProjectTag: boolean;
+};
+
+export type AddTaskTagMutationVariables = Exact<{
+  input: AddTaskTagInput;
+}>;
+
+export type AddTaskTagMutation = {
+  __typename?: 'Mutation';
+  addTaskTag: {
+    __typename?: 'TaskTagObject';
+    confidence?: number | null;
+    createdAt: any;
+    dimension: string;
+    id: string;
+    source: string;
+    tag: string;
+    taskId: string;
+    updatedAt: any;
+  };
+};
+
+export type RemoveTaskTagMutationVariables = Exact<{
+  input: RemoveTaskTagInput;
+}>;
+
+export type RemoveTaskTagMutation = {
+  __typename?: 'Mutation';
+  removeTaskTag: boolean;
+};
+
+export type AddProjectSkillTagMutationVariables = Exact<{
+  input: AddProjectSkillTagInput;
+}>;
+
+export type AddProjectSkillTagMutation = {
+  __typename?: 'Mutation';
+  addProjectSkillTag: {
+    __typename?: 'ProjectSkillObject';
+    description?: string | null;
+    orphanedAt?: any | null;
+    slug: string;
+    source: string;
+    sourceUrl?: string | null;
+    staticDisableModelInvocation?: boolean | null;
+    tags: Array<string>;
+  };
+};
+
+export type RemoveProjectSkillTagMutationVariables = Exact<{
+  input: RemoveProjectSkillTagInput;
+}>;
+
+export type RemoveProjectSkillTagMutation = {
+  __typename?: 'Mutation';
+  removeProjectSkillTag: boolean;
+};
+
+export type ProjectPlanFragment = {
+  __typename?: 'PlanObject';
+  id: string;
+  projectId?: string | null;
+  projectSortOrder?: number | null;
+  status: string;
+  title: string;
+};
+
+export type AddPlanToProjectMutationVariables = Exact<{
+  input: AddPlanToProjectInput;
+}>;
+
+export type AddPlanToProjectMutation = {
+  __typename?: 'Mutation';
+  addPlanToProject: {
+    __typename?: 'PlanObject';
+    id: string;
+    projectId?: string | null;
+    projectSortOrder?: number | null;
+    status: string;
+    title: string;
+  };
+};
+
+export type ProjectPlansQueryVariables = Exact<{
+  projectId: Scalars['ID']['input'];
+}>;
+
+export type ProjectPlansQuery = {
+  __typename?: 'Query';
+  projectPlans: Array<{
+    __typename?: 'PlanObject';
+    id: string;
+    projectId?: string | null;
+    projectSortOrder?: number | null;
+    status: string;
+    title: string;
+  }>;
+};
+
+export type RemovePlanFromProjectMutationVariables = Exact<{
+  input: RemovePlanFromProjectInput;
+}>;
+
+export type RemovePlanFromProjectMutation = {
+  __typename?: 'Mutation';
+  removePlanFromProject: {
+    __typename?: 'PlanObject';
+    id: string;
+    projectId?: string | null;
+    projectSortOrder?: number | null;
+    status: string;
+    title: string;
+  };
+};
+
+export type ReorderProjectPlansMutationVariables = Exact<{
+  input: ReorderProjectPlansInput;
+}>;
+
+export type ReorderProjectPlansMutation = {
+  __typename?: 'Mutation';
+  reorderProjectPlans: Array<{
+    __typename?: 'PlanObject';
+    id: string;
+    projectId?: string | null;
+    projectSortOrder?: number | null;
+    status: string;
+    title: string;
+  }>;
+};
+
+export type LinkProjectRepositoryMutationVariables = Exact<{
+  input: LinkProjectRepositoryInput;
+}>;
+
+export type LinkProjectRepositoryMutation = {
+  __typename?: 'Mutation';
+  linkProjectRepository: {
+    __typename?: 'ProjectRepositoryObject';
+    createdAt: any;
+    id: string;
+    projectId: string;
+    repositoryId: string;
+  };
+};
+
+export type UnlinkProjectRepositoryMutationVariables = Exact<{
+  input: UnlinkProjectRepositoryInput;
+}>;
+
+export type UnlinkProjectRepositoryMutation = {
+  __typename?: 'Mutation';
+  unlinkProjectRepository: boolean;
+};
+
+export type McpProjectSummaryFragment = {
+  __typename?: 'ProjectObject';
+  description?: string | null;
+  id: string;
+  isFavorite: boolean;
+  name: string;
+  updatedAt: any;
+  plans?: Array<{ __typename?: 'PlanObject'; id: string }> | null;
+  repositories: Array<{
+    __typename?: 'RepositoryObject';
+    id: string;
+    name: string;
+    normalizedRemoteUrl?: string | null;
+  }>;
+};
+
+export type McpListProjectsQueryVariables = Exact<{ [key: string]: never }>;
+
+export type McpListProjectsQuery = {
+  __typename?: 'Query';
+  projects: Array<{
+    __typename?: 'ProjectObject';
+    description?: string | null;
+    id: string;
+    isFavorite: boolean;
+    name: string;
+    updatedAt: any;
+    plans?: Array<{ __typename?: 'PlanObject'; id: string }> | null;
+    repositories: Array<{
+      __typename?: 'RepositoryObject';
+      id: string;
+      name: string;
+      normalizedRemoteUrl?: string | null;
+    }>;
+  }>;
+};
+
+export type McpGetProjectQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+export type McpGetProjectQuery = {
+  __typename?: 'Query';
+  project?: {
+    __typename?: 'ProjectObject';
+    createdAt: any;
+    description?: string | null;
+    id: string;
+    isFavorite: boolean;
+    name: string;
+    updatedAt: any;
+    plans?: Array<{ __typename?: 'PlanObject'; id: string }> | null;
+    repositories: Array<{
+      __typename?: 'RepositoryObject';
+      id: string;
+      name: string;
+      normalizedRemoteUrl?: string | null;
+    }>;
+  } | null;
+};
+
+export type McpCreateProjectMutationVariables = Exact<{
+  input: CreateProjectInput;
+}>;
+
+export type McpCreateProjectMutation = {
+  __typename?: 'Mutation';
+  createProject: {
+    __typename?: 'ProjectObject';
+    createdAt: any;
+    description?: string | null;
+    id: string;
+    isFavorite: boolean;
+    name: string;
+    updatedAt: any;
+    plans?: Array<{ __typename?: 'PlanObject'; id: string }> | null;
+    repositories: Array<{
+      __typename?: 'RepositoryObject';
+      id: string;
+      name: string;
+      normalizedRemoteUrl?: string | null;
+    }>;
+  };
+};
+
+export type McpUpdateProjectMutationVariables = Exact<{
+  input: UpdateProjectInput;
+}>;
+
+export type McpUpdateProjectMutation = {
+  __typename?: 'Mutation';
+  updateProject?: {
+    __typename?: 'ProjectObject';
+    createdAt: any;
+    description?: string | null;
+    id: string;
+    isFavorite: boolean;
+    name: string;
+    updatedAt: any;
+    plans?: Array<{ __typename?: 'PlanObject'; id: string }> | null;
+    repositories: Array<{
+      __typename?: 'RepositoryObject';
+      id: string;
+      name: string;
+      normalizedRemoteUrl?: string | null;
+    }>;
+  } | null;
 };
 
 export type GetNoteQueryVariables = Exact<{
@@ -11323,435 +11752,6 @@ export type DeliveredPlanMessagesQuery = {
     id: string;
     planRunId?: string | null;
   }>;
-};
-
-export type DeletePlanOutputMutationVariables = Exact<{
-  input: DeletePlanOutputInput;
-}>;
-
-export type DeletePlanOutputMutation = {
-  __typename?: 'Mutation';
-  deletePlanOutput: {
-    __typename?: 'DeletePlanOutputResult';
-    deletedCount: number;
-  };
-};
-
-export type PlanMessageFieldsFragment = {
-  __typename?: 'PlanMessageObject';
-  author: string;
-  body: string;
-  createdAt: any;
-  deliveredAt?: any | null;
-  deliveredToTaskId?: string | null;
-  id: string;
-  kind: PlanMessageKind;
-  planId: string;
-  planRunId?: string | null;
-  status: PlanMessageStatus;
-  taskId?: string | null;
-  updatedAt: any;
-};
-
-export type ClaimPlanMessagesResultFragment = {
-  __typename?: 'ClaimPlanMessagesResultObject';
-  auditChunk?: {
-    __typename?: 'PlanOutputStreamChunkObject';
-    content: string;
-    createdAt: any;
-    id: string;
-    planId: string;
-    taskId?: string | null;
-  } | null;
-  messages: Array<{
-    __typename?: 'PlanMessageObject';
-    author: string;
-    body: string;
-    createdAt: any;
-    deliveredAt?: any | null;
-    deliveredToTaskId?: string | null;
-    id: string;
-    kind: PlanMessageKind;
-    planId: string;
-    planRunId?: string | null;
-    status: PlanMessageStatus;
-    taskId?: string | null;
-    updatedAt: any;
-  }>;
-};
-
-export type PostPlanMessageMutationVariables = Exact<{
-  input: PostPlanMessageInput;
-}>;
-
-export type PostPlanMessageMutation = {
-  __typename?: 'Mutation';
-  postPlanMessage: {
-    __typename?: 'PlanMessageObject';
-    author: string;
-    body: string;
-    createdAt: any;
-    deliveredAt?: any | null;
-    deliveredToTaskId?: string | null;
-    id: string;
-    kind: PlanMessageKind;
-    planId: string;
-    planRunId?: string | null;
-    status: PlanMessageStatus;
-    taskId?: string | null;
-    updatedAt: any;
-  };
-};
-
-export type ClaimPlanMessagesMutationVariables = Exact<{
-  input: ClaimPlanMessagesInput;
-}>;
-
-export type ClaimPlanMessagesMutation = {
-  __typename?: 'Mutation';
-  claimPlanMessages: {
-    __typename?: 'ClaimPlanMessagesResultObject';
-    auditChunk?: {
-      __typename?: 'PlanOutputStreamChunkObject';
-      content: string;
-      createdAt: any;
-      id: string;
-      planId: string;
-      taskId?: string | null;
-    } | null;
-    messages: Array<{
-      __typename?: 'PlanMessageObject';
-      author: string;
-      body: string;
-      createdAt: any;
-      deliveredAt?: any | null;
-      deliveredToTaskId?: string | null;
-      id: string;
-      kind: PlanMessageKind;
-      planId: string;
-      planRunId?: string | null;
-      status: PlanMessageStatus;
-      taskId?: string | null;
-      updatedAt: any;
-    }>;
-  };
-};
-
-export type AddPlanTagMutationVariables = Exact<{
-  input: AddPlanTagInput;
-}>;
-
-export type AddPlanTagMutation = {
-  __typename?: 'Mutation';
-  addPlanTag: {
-    __typename?: 'PlanTagObject';
-    confidence?: number | null;
-    createdAt: any;
-    dimension: string;
-    id: string;
-    planId: string;
-    source: string;
-    tag: string;
-    updatedAt: any;
-  };
-};
-
-export type RemovePlanTagMutationVariables = Exact<{
-  input: RemovePlanTagInput;
-}>;
-
-export type RemovePlanTagMutation = {
-  __typename?: 'Mutation';
-  removePlanTag: boolean;
-};
-
-export type AddProjectTagMutationVariables = Exact<{
-  input: AddProjectTagInput;
-}>;
-
-export type AddProjectTagMutation = {
-  __typename?: 'Mutation';
-  addProjectTag: {
-    __typename?: 'ProjectTagObject';
-    confidence?: number | null;
-    createdAt: any;
-    dimension: string;
-    id: string;
-    projectId: string;
-    source: string;
-    tag: string;
-    updatedAt: any;
-  };
-};
-
-export type RemoveProjectTagMutationVariables = Exact<{
-  input: RemoveProjectTagInput;
-}>;
-
-export type RemoveProjectTagMutation = {
-  __typename?: 'Mutation';
-  removeProjectTag: boolean;
-};
-
-export type AddTaskTagMutationVariables = Exact<{
-  input: AddTaskTagInput;
-}>;
-
-export type AddTaskTagMutation = {
-  __typename?: 'Mutation';
-  addTaskTag: {
-    __typename?: 'TaskTagObject';
-    confidence?: number | null;
-    createdAt: any;
-    dimension: string;
-    id: string;
-    source: string;
-    tag: string;
-    taskId: string;
-    updatedAt: any;
-  };
-};
-
-export type RemoveTaskTagMutationVariables = Exact<{
-  input: RemoveTaskTagInput;
-}>;
-
-export type RemoveTaskTagMutation = {
-  __typename?: 'Mutation';
-  removeTaskTag: boolean;
-};
-
-export type AddProjectSkillTagMutationVariables = Exact<{
-  input: AddProjectSkillTagInput;
-}>;
-
-export type AddProjectSkillTagMutation = {
-  __typename?: 'Mutation';
-  addProjectSkillTag: {
-    __typename?: 'ProjectSkillObject';
-    description?: string | null;
-    orphanedAt?: any | null;
-    slug: string;
-    source: string;
-    sourceUrl?: string | null;
-    staticDisableModelInvocation?: boolean | null;
-    tags: Array<string>;
-  };
-};
-
-export type RemoveProjectSkillTagMutationVariables = Exact<{
-  input: RemoveProjectSkillTagInput;
-}>;
-
-export type RemoveProjectSkillTagMutation = {
-  __typename?: 'Mutation';
-  removeProjectSkillTag: boolean;
-};
-
-export type ProjectPlanFragment = {
-  __typename?: 'PlanObject';
-  id: string;
-  projectId?: string | null;
-  projectSortOrder?: number | null;
-  status: string;
-  title: string;
-};
-
-export type AddPlanToProjectMutationVariables = Exact<{
-  input: AddPlanToProjectInput;
-}>;
-
-export type AddPlanToProjectMutation = {
-  __typename?: 'Mutation';
-  addPlanToProject: {
-    __typename?: 'PlanObject';
-    id: string;
-    projectId?: string | null;
-    projectSortOrder?: number | null;
-    status: string;
-    title: string;
-  };
-};
-
-export type ProjectPlansQueryVariables = Exact<{
-  projectId: Scalars['ID']['input'];
-}>;
-
-export type ProjectPlansQuery = {
-  __typename?: 'Query';
-  projectPlans: Array<{
-    __typename?: 'PlanObject';
-    id: string;
-    projectId?: string | null;
-    projectSortOrder?: number | null;
-    status: string;
-    title: string;
-  }>;
-};
-
-export type RemovePlanFromProjectMutationVariables = Exact<{
-  input: RemovePlanFromProjectInput;
-}>;
-
-export type RemovePlanFromProjectMutation = {
-  __typename?: 'Mutation';
-  removePlanFromProject: {
-    __typename?: 'PlanObject';
-    id: string;
-    projectId?: string | null;
-    projectSortOrder?: number | null;
-    status: string;
-    title: string;
-  };
-};
-
-export type ReorderProjectPlansMutationVariables = Exact<{
-  input: ReorderProjectPlansInput;
-}>;
-
-export type ReorderProjectPlansMutation = {
-  __typename?: 'Mutation';
-  reorderProjectPlans: Array<{
-    __typename?: 'PlanObject';
-    id: string;
-    projectId?: string | null;
-    projectSortOrder?: number | null;
-    status: string;
-    title: string;
-  }>;
-};
-
-export type LinkProjectRepositoryMutationVariables = Exact<{
-  input: LinkProjectRepositoryInput;
-}>;
-
-export type LinkProjectRepositoryMutation = {
-  __typename?: 'Mutation';
-  linkProjectRepository: {
-    __typename?: 'ProjectRepositoryObject';
-    createdAt: any;
-    id: string;
-    projectId: string;
-    repositoryId: string;
-  };
-};
-
-export type UnlinkProjectRepositoryMutationVariables = Exact<{
-  input: UnlinkProjectRepositoryInput;
-}>;
-
-export type UnlinkProjectRepositoryMutation = {
-  __typename?: 'Mutation';
-  unlinkProjectRepository: boolean;
-};
-
-export type McpProjectSummaryFragment = {
-  __typename?: 'ProjectObject';
-  description?: string | null;
-  id: string;
-  isFavorite: boolean;
-  name: string;
-  updatedAt: any;
-  plans?: Array<{ __typename?: 'PlanObject'; id: string }> | null;
-  repositories: Array<{
-    __typename?: 'RepositoryObject';
-    id: string;
-    name: string;
-    normalizedRemoteUrl?: string | null;
-  }>;
-};
-
-export type McpListProjectsQueryVariables = Exact<{ [key: string]: never }>;
-
-export type McpListProjectsQuery = {
-  __typename?: 'Query';
-  projects: Array<{
-    __typename?: 'ProjectObject';
-    description?: string | null;
-    id: string;
-    isFavorite: boolean;
-    name: string;
-    updatedAt: any;
-    plans?: Array<{ __typename?: 'PlanObject'; id: string }> | null;
-    repositories: Array<{
-      __typename?: 'RepositoryObject';
-      id: string;
-      name: string;
-      normalizedRemoteUrl?: string | null;
-    }>;
-  }>;
-};
-
-export type McpGetProjectQueryVariables = Exact<{
-  id: Scalars['ID']['input'];
-}>;
-
-export type McpGetProjectQuery = {
-  __typename?: 'Query';
-  project?: {
-    __typename?: 'ProjectObject';
-    createdAt: any;
-    description?: string | null;
-    id: string;
-    isFavorite: boolean;
-    name: string;
-    updatedAt: any;
-    plans?: Array<{ __typename?: 'PlanObject'; id: string }> | null;
-    repositories: Array<{
-      __typename?: 'RepositoryObject';
-      id: string;
-      name: string;
-      normalizedRemoteUrl?: string | null;
-    }>;
-  } | null;
-};
-
-export type McpCreateProjectMutationVariables = Exact<{
-  input: CreateProjectInput;
-}>;
-
-export type McpCreateProjectMutation = {
-  __typename?: 'Mutation';
-  createProject: {
-    __typename?: 'ProjectObject';
-    createdAt: any;
-    description?: string | null;
-    id: string;
-    isFavorite: boolean;
-    name: string;
-    updatedAt: any;
-    plans?: Array<{ __typename?: 'PlanObject'; id: string }> | null;
-    repositories: Array<{
-      __typename?: 'RepositoryObject';
-      id: string;
-      name: string;
-      normalizedRemoteUrl?: string | null;
-    }>;
-  };
-};
-
-export type McpUpdateProjectMutationVariables = Exact<{
-  input: UpdateProjectInput;
-}>;
-
-export type McpUpdateProjectMutation = {
-  __typename?: 'Mutation';
-  updateProject?: {
-    __typename?: 'ProjectObject';
-    createdAt: any;
-    description?: string | null;
-    id: string;
-    isFavorite: boolean;
-    name: string;
-    updatedAt: any;
-    plans?: Array<{ __typename?: 'PlanObject'; id: string }> | null;
-    repositories: Array<{
-      __typename?: 'RepositoryObject';
-      id: string;
-      name: string;
-      normalizedRemoteUrl?: string | null;
-    }>;
-  } | null;
 };
 
 export type ScheduledJobFragment = {
@@ -13683,28 +13683,6 @@ export const ServerHealthWithEmbeddingsFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<ServerHealthWithEmbeddingsFragment, unknown>;
-export const GitTextDraftFragmentDoc = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'GitTextDraft' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'GitTextDraftObject' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'branchName' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'commitMessage' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'pullRequestBody' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'pullRequestTitle' } },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<GitTextDraftFragment, unknown>;
 export const NoteFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -14272,6 +14250,28 @@ export const ListSourceInfoFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<ListSourceInfoFragment, unknown>;
+export const GitTextDraftFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'GitTextDraft' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'GitTextDraftObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'branchName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'commitMessage' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'pullRequestBody' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'pullRequestTitle' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GitTextDraftFragment, unknown>;
 export const PlanMessageFieldsFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -16739,25 +16739,6 @@ export const DiscoverLocalModelsDocument = {
   DiscoverLocalModelsQuery,
   DiscoverLocalModelsQueryVariables
 >;
-export const ViewerOAuthScopesDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'ViewerOAuthScopes' },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'viewerOAuthScopes' } },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  ViewerOAuthScopesQuery,
-  ViewerOAuthScopesQueryVariables
->;
 export const CreateNoteDocument = {
   kind: 'Document',
   definitions: [
@@ -18197,1418 +18178,24 @@ export const DeleteProjectDocument = {
   DeleteProjectMutation,
   DeleteProjectMutationVariables
 >;
-export const GetNoteDocument = {
+export const ViewerOAuthScopesDocument = {
   kind: 'Document',
   definitions: [
     {
       kind: 'OperationDefinition',
       operation: 'query',
-      name: { kind: 'Name', value: 'getNote' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
-          type: {
-            kind: 'NonNullType',
-            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
-          },
-        },
-      ],
+      name: { kind: 'Name', value: 'ViewerOAuthScopes' },
       selectionSet: {
         kind: 'SelectionSet',
         selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'note' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'id' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'id' },
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'FragmentSpread',
-                  name: { kind: 'Name', value: 'Note' },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'Note' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'NoteObject' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'author' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'content' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<GetNoteQuery, GetNoteQueryVariables>;
-export const GetNotesDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'getNotes' },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'notes' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'FragmentSpread',
-                  name: { kind: 'Name', value: 'Note' },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'Note' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'NoteObject' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'author' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'content' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<GetNotesQuery, GetNotesQueryVariables>;
-export const GetPlanDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'getPlan' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
-          type: {
-            kind: 'NonNullType',
-            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'plan' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'id' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'id' },
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'FragmentSpread',
-                  name: { kind: 'Name', value: 'PlanWithTags' },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'Plan' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'PlanObject' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'author' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'category' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'completedAt' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'jobRunHooksJson' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'project' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'projectSortOrder' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
-        ],
-      },
-    },
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'PlanWithTags' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'PlanObject' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'FragmentSpread', name: { kind: 'Name', value: 'Plan' } },
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'tags' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'dimension' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'source' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<GetPlanQuery, GetPlanQueryVariables>;
-export const ListPlansByStatusDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'listPlansByStatus' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'input' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'ListPlansByStatusInput' },
-            },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'listPlansByStatus' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'input' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'input' },
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'items' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'FragmentSpread',
-                        name: { kind: 'Name', value: 'PlanWithTags' },
-                      },
-                    ],
-                  },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
-              ],
-            },
-          },
-        ],
-      },
-    },
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'Plan' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'PlanObject' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'author' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'category' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'completedAt' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'jobRunHooksJson' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'project' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'projectSortOrder' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
-        ],
-      },
-    },
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'PlanWithTags' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'PlanObject' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'FragmentSpread', name: { kind: 'Name', value: 'Plan' } },
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'tags' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'dimension' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'source' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
-              ],
-            },
-          },
+          { kind: 'Field', name: { kind: 'Name', value: 'viewerOAuthScopes' } },
         ],
       },
     },
   ],
 } as unknown as DocumentNode<
-  ListPlansByStatusQuery,
-  ListPlansByStatusQueryVariables
->;
-export const GetTaskDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'getTask' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
-          type: {
-            kind: 'NonNullType',
-            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'task' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'id' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'id' },
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'FragmentSpread',
-                  name: { kind: 'Name', value: 'Task' },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'Task' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'TaskObject' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'category' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'completedAt' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'hookScope' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'hookSource' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'parentTaskId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'project' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'requirementsJson' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'skillSlug' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'wave' } },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<GetTaskQuery, GetTaskQueryVariables>;
-export const GetTasksByPlanIdDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'getTasksByPlanId' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'input' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'TasksByPlanIdInput' },
-            },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'tasksByPlanId' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'input' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'input' },
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'FragmentSpread',
-                  name: { kind: 'Name', value: 'Task' },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'Task' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'TaskObject' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'category' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'completedAt' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'hookScope' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'hookSource' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'parentTaskId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'project' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'requirementsJson' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'skillSlug' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'wave' } },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  GetTasksByPlanIdQuery,
-  GetTasksByPlanIdQueryVariables
->;
-export const GetRemainingTasksByPlanIdDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'getRemainingTasksByPlanId' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'input' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'RemainingTasksByPlanIdInput' },
-            },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'remainingTasksByPlanId' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'input' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'input' },
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'FragmentSpread',
-                  name: { kind: 'Name', value: 'Task' },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'Task' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'TaskObject' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'category' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'completedAt' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'hookScope' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'hookSource' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'parentTaskId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'project' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'requirementsJson' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'skillSlug' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'wave' } },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  GetRemainingTasksByPlanIdQuery,
-  GetRemainingTasksByPlanIdQueryVariables
->;
-export const GetTasksDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'getTasks' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'limit' },
-          },
-          type: { kind: 'NamedType', name: { kind: 'Name', value: 'Int' } },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'tasks' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'limit' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'limit' },
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'FragmentSpread',
-                  name: { kind: 'Name', value: 'Task' },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'Task' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'TaskObject' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'category' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'completedAt' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'hookScope' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'hookSource' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'parentTaskId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'project' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'requirementsJson' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'skillSlug' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'wave' } },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<GetTasksQuery, GetTasksQueryVariables>;
-export const GetActivityByDateDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'getActivityByDate' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'input' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'ActivityByDateInput' },
-            },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'activityByDate' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'input' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'input' },
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'FragmentSpread',
-                  name: { kind: 'Name', value: 'ActivityByDate' },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'ActivityByDate' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'ActivityByDateResultObject' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'commits' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'planTitle' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'repo' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'sha' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'taskTitle' } },
-              ],
-            },
-          },
-          { kind: 'Field', name: { kind: 'Name', value: 'hasNext' } },
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'outputChunks' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'iteration' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'planTitle' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
-              ],
-            },
-          },
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'tasksUpdated' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'planTitle' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
-              ],
-            },
-          },
-          { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  GetActivityByDateQuery,
-  GetActivityByDateQueryVariables
->;
-export const GetLastActivityDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'getLastActivity' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'input' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'LastActivityInput' },
-            },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'lastActivity' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'input' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'input' },
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'FragmentSpread',
-                  name: { kind: 'Name', value: 'LastActivity' },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'LastActivity' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'LastActivityResultObject' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'at' } },
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'commit' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'repo' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'sha' } },
-              ],
-            },
-          },
-          { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'outputChunk' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'iteration' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
-              ],
-            },
-          },
-          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'taskUpdate' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'taskTitle' } },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  GetLastActivityQuery,
-  GetLastActivityQueryVariables
->;
-export const GetPlanOutputStreamChunksDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'getPlanOutputStreamChunks' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'input' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'ListPlanOutputStreamChunksInput' },
-            },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'planOutputStreamChunks' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'input' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'input' },
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'FragmentSpread',
-                  name: { kind: 'Name', value: 'PlanOutputStreamChunk' },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'PlanOutputStreamChunk' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'PlanOutputStreamChunkObject' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'content' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'iteration' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  GetPlanOutputStreamChunksQuery,
-  GetPlanOutputStreamChunksQueryVariables
->;
-export const SearchDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'search' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'input' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'SearchInput' },
-            },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'search' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'input' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'input' },
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'chunks' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'FragmentSpread',
-                        name: { kind: 'Name', value: 'SearchChunk' },
-                      },
-                    ],
-                  },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'mode' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'reason' } },
-              ],
-            },
-          },
-        ],
-      },
-    },
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'SearchChunk' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'SearchChunk' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'content' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'fusedScore' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'planTitle' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'similarity' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'sourcePath' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'sourceRepo' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'sourceSha' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'taskTitle' } },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<SearchQuery, SearchQueryVariables>;
-export const GetDocumentDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'getDocument' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'String' },
-            },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'getDocument' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'id' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'id' },
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'FragmentSpread',
-                  name: { kind: 'Name', value: 'SearchChunk' },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'SearchChunk' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'SearchChunk' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'content' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'fusedScore' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'planTitle' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'similarity' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'sourcePath' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'sourceRepo' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'sourceSha' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'taskTitle' } },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<GetDocumentQuery, GetDocumentQueryVariables>;
-export const ListSourcesDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'listSources' },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'listSources' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'plans' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'FragmentSpread',
-                        name: { kind: 'Name', value: 'ListPlanSource' },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'sources' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'FragmentSpread',
-                        name: { kind: 'Name', value: 'ListSourceInfo' },
-                      },
-                    ],
-                  },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'ListPlanSource' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'ListPlanSourceObject' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
-        ],
-      },
-    },
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'ListSourceInfo' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'ListSourceInfoObject' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<ListSourcesQuery, ListSourcesQueryVariables>;
-export const GetPlanRunsDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'getPlanRuns' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'input' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'PlanRunsByPlanIdInput' },
-            },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'planRunsByPlanId' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'input' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'input' },
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'FragmentSpread',
-                  name: { kind: 'Name', value: 'PlanRunWithCheckout' },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'PlanRun' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'PlanRunObject' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'branch' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'bullmqJobId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'cancelRequestedAt' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'driver' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'heartbeatExpected' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'isStale' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'lastHeartbeatAt' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'queueName' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'resumeOfRunId' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'runKind' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'settledReason' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'usageLimitResetsAt' },
-          },
-          { kind: 'Field', name: { kind: 'Name', value: 'usageLimitType' } },
-        ],
-      },
-    },
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'PlanRunWithCheckout' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'PlanRunObject' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'checkout' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'filesystemPath' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
-              ],
-            },
-          },
-          { kind: 'FragmentSpread', name: { kind: 'Name', value: 'PlanRun' } },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<GetPlanRunsQuery, GetPlanRunsQueryVariables>;
-export const DeliveredPlanMessagesDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'deliveredPlanMessages' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'input' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'ListPlanMessagesInput' },
-            },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'planMessages' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'input' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'input' },
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'body' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'planRunId' } },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  DeliveredPlanMessagesQuery,
-  DeliveredPlanMessagesQueryVariables
+  ViewerOAuthScopesQuery,
+  ViewerOAuthScopesQueryVariables
 >;
 export const DeletePlanOutputDocument = {
   kind: 'Document',
@@ -21072,6 +19659,1419 @@ export const McpUpdateProjectDocument = {
 } as unknown as DocumentNode<
   McpUpdateProjectMutation,
   McpUpdateProjectMutationVariables
+>;
+export const GetNoteDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getNote' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'note' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'Note' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'Note' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'NoteObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'author' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GetNoteQuery, GetNoteQueryVariables>;
+export const GetNotesDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getNotes' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'notes' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'Note' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'Note' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'NoteObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'author' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GetNotesQuery, GetNotesQueryVariables>;
+export const GetPlanDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getPlan' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'plan' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'PlanWithTags' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'Plan' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'author' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'completedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'jobRunHooksJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'project' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectSortOrder' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanWithTags' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'FragmentSpread', name: { kind: 'Name', value: 'Plan' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'tags' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'dimension' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GetPlanQuery, GetPlanQueryVariables>;
+export const ListPlansByStatusDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'listPlansByStatus' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'ListPlansByStatusInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'listPlansByStatus' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'items' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'PlanWithTags' },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'Plan' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'author' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'completedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'jobRunHooksJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'project' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectSortOrder' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'repositoryId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'runConfigJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanWithTags' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'FragmentSpread', name: { kind: 'Name', value: 'Plan' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'tags' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'dimension' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'tag' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  ListPlansByStatusQuery,
+  ListPlansByStatusQueryVariables
+>;
+export const GetTaskDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getTask' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'task' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'Task' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'Task' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TaskObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'completedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookScope' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookSource' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'parentTaskId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'project' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'requirementsJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'skillSlug' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'wave' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GetTaskQuery, GetTaskQueryVariables>;
+export const GetTasksByPlanIdDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getTasksByPlanId' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'TasksByPlanIdInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'tasksByPlanId' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'Task' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'Task' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TaskObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'completedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookScope' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookSource' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'parentTaskId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'project' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'requirementsJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'skillSlug' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'wave' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetTasksByPlanIdQuery,
+  GetTasksByPlanIdQueryVariables
+>;
+export const GetRemainingTasksByPlanIdDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getRemainingTasksByPlanId' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'RemainingTasksByPlanIdInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'remainingTasksByPlanId' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'Task' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'Task' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TaskObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'completedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookScope' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookSource' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'parentTaskId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'project' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'requirementsJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'skillSlug' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'wave' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetRemainingTasksByPlanIdQuery,
+  GetRemainingTasksByPlanIdQueryVariables
+>;
+export const GetTasksDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getTasks' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'limit' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'Int' } },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'tasks' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'limit' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'limit' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'Task' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'Task' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'TaskObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'assignee' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'completedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookRole' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookScope' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'hookSource' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'parentTaskId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'project' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'projectId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'requirementsJson' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'skillSlug' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'wave' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GetTasksQuery, GetTasksQueryVariables>;
+export const GetActivityByDateDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getActivityByDate' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'ActivityByDateInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'activityByDate' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'ActivityByDate' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ActivityByDate' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ActivityByDateResultObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'commits' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'planTitle' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'repo' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'sha' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'taskTitle' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'hasNext' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'outputChunks' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'iteration' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'planTitle' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'tasksUpdated' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'planTitle' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'totalCount' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetActivityByDateQuery,
+  GetActivityByDateQueryVariables
+>;
+export const GetLastActivityDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getLastActivity' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'LastActivityInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'lastActivity' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'LastActivity' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'LastActivity' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'LastActivityResultObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'at' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'commit' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'repo' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'sha' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'outputChunk' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'iteration' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'taskUpdate' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'taskTitle' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetLastActivityQuery,
+  GetLastActivityQueryVariables
+>;
+export const GetPlanOutputStreamChunksDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getPlanOutputStreamChunks' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'ListPlanOutputStreamChunksInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'planOutputStreamChunks' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'PlanOutputStreamChunk' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanOutputStreamChunk' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanOutputStreamChunkObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'iteration' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetPlanOutputStreamChunksQuery,
+  GetPlanOutputStreamChunksQueryVariables
+>;
+export const SearchDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'search' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'SearchInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'search' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'chunks' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'SearchChunk' },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'mode' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'reason' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'SearchChunk' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'SearchChunk' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'fusedScore' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planTitle' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'similarity' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sourcePath' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sourceRepo' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sourceSha' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'taskTitle' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<SearchQuery, SearchQueryVariables>;
+export const GetDocumentDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getDocument' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'getDocument' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'id' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'SearchChunk' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'SearchChunk' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'SearchChunk' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'fusedScore' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planTitle' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'similarity' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'source' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sourcePath' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sourceRepo' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'sourceSha' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'taskId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'taskTitle' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GetDocumentQuery, GetDocumentQueryVariables>;
+export const ListSourcesDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'listSources' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'listSources' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'plans' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'ListPlanSource' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'sources' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'FragmentSpread',
+                        name: { kind: 'Name', value: 'ListSourceInfo' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ListPlanSource' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ListPlanSourceObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ListSourceInfo' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'ListSourceInfoObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<ListSourcesQuery, ListSourcesQueryVariables>;
+export const GetPlanRunsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getPlanRuns' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'PlanRunsByPlanIdInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'planRunsByPlanId' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'PlanRunWithCheckout' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanRun' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanRunObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'branch' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'bullmqJobId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'cancelRequestedAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'driver' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'heartbeatExpected' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'isStale' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'lastHeartbeatAt' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'model' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'planId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'queueName' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'resumeOfRunId' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'runKind' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'settledReason' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'usageLimitResetsAt' },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'usageLimitType' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'PlanRunWithCheckout' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'PlanRunObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'checkout' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'displayName' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'filesystemPath' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
+              ],
+            },
+          },
+          { kind: 'FragmentSpread', name: { kind: 'Name', value: 'PlanRun' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GetPlanRunsQuery, GetPlanRunsQueryVariables>;
+export const DeliveredPlanMessagesDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'deliveredPlanMessages' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'ListPlanMessagesInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'planMessages' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'body' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'planRunId' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  DeliveredPlanMessagesQuery,
+  DeliveredPlanMessagesQueryVariables
 >;
 export const ListScheduledJobsDocument = {
   kind: 'Document',

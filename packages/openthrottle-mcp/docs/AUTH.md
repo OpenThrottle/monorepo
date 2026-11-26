@@ -53,7 +53,7 @@ Any previously-distributed copy of the rotated token stops working — update `O
 
 ## Token source (openthrottle-mcp)
 
-- **Per-request (embedded in openthrottle-server):** `withMcpDeveloperAuthToken` / `withMcpDeveloperAuthTokenAsync` from `@openthrottle/openthrottle-mcp/auth` so concurrent GraphQL requests do not share a global token.
+- **Per-request (embedded in openthrottle-server):** `withMcpDeveloperAuthToken` / `withMcpDeveloperAuthTokenAsync` from `@openthrottle/openthrottle-mcp` so concurrent GraphQL requests do not share a global token.
 - **Primary (stdio MCP / CLI):** environment variable `**OPENTHROTTLE_MCP_AUTH_TOKEN`\*\*
 
 Resolution order: per-request store → `OPENTHROTTLE_MCP_AUTH_TOKEN`. If none is set or the value is empty, authenticated tools throw an error that instructs you to set the env var.
@@ -172,7 +172,7 @@ JWTs expire (~24h). Prefer service accounts for MCP.
 
 ## Implementation
 
-- **Resolver:** `getAuthToken()` in `src/auth/getAuthToken.ts`. Tool handlers call it before `executeGraphqlWithAuth(token, document, variables)`.
+- **Resolver:** `getAuthToken()` in `src/utils/getAuthToken.ts` (re-exported from the package entry). Tool handlers call it before `executeGraphqlWithAuth(token, document, variables)`.
 - **No hardcoded tokens:** all auth is via per-request store or env.
 
 ## Related docs

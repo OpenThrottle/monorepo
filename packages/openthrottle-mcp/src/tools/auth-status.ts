@@ -14,8 +14,8 @@ import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import { z } from 'zod';
 
 import { ListSourcesDocument } from '../__generated__/graphql.js';
-import { getAuthToken } from '../auth/getAuthToken.ts';
 import type { GenericResult } from '../types/index.ts';
+import { getAuthToken } from '../utils/getAuthToken.ts';
 
 type AuthStatusStructured = {
   authStatus: {

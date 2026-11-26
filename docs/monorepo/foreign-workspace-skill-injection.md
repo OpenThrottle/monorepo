@@ -1,6 +1,6 @@
 # Foreign-workspace skill injection
 
-**Related:** [agent-editor-folders.md](./agent-editor-folders.md), `skills/ot-skill-sync/scripts/` (the in-repo SSOT fan-out this extends), `packages/openthrottle-drivers/src/drivers/` (the supported CLI set §2 is measured against). Implementation: `packages/openthrottle-agentic-utils/src/utils/foreign-skill-*.ts` and `src/types/foreign-skill-injection.ts`.
+**Related:** [agent-editor-folders.md](./agent-editor-folders.md), `skills/ot-skill-sync/scripts/` (the in-repo SSOT fan-out this extends), `packages/openthrottle-drivers/src/utils/*Driver.ts` (the supported CLI set §2 is measured against). Implementation: `packages/openthrottle-agentic-utils/src/utils/foreign-skill-*.ts` and `src/types/foreign-skill-injection.ts`.
 
 **Trust gate:** a foreign checkout's own hooks and MCP servers load in a plan run only once the user trusts it; skills are unaffected. See [agent-config-trust.md](./agent-config-trust.md).
 
@@ -103,7 +103,7 @@ Injecting into **both** dirs reaches four of the six with no per-CLI branching, 
 
 ### Antigravity (`agy` 1.1.21) — covered for free, no new dir
 
-The Antigravity CLI (see `packages/openthrottle-drivers/src/drivers/antigravity.ts`) discovers workspace skills from **`<workspace>/.agents/skills/<name>/`**, plus a global `~/.gemini/config/skills/<name>/`. The existing `.agents/skills` injection therefore reaches it with **zero changes to the materializer** — the one CLI the two-dir union covers natively.
+The Antigravity CLI (see `packages/openthrottle-drivers/src/utils/antigravityDriver.ts`) discovers workspace skills from **`<workspace>/.agents/skills/<name>/`**, plus a global `~/.gemini/config/skills/<name>/`. The existing `.agents/skills` injection therefore reaches it with **zero changes to the materializer** — the one CLI the two-dir union covers natively.
 
 Two notes on its layout:
 

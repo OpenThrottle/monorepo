@@ -16,9 +16,9 @@ import {
   ListSourcesDocument,
   SearchDocument,
 } from '../__generated__/graphql.js';
-import { getAuthToken } from '../auth/getAuthToken.ts';
 import type { GenericResult } from '../types/index.ts';
 import { invalidArgsContent, SafeToolError } from '../utils/errors.ts';
+import { getAuthToken } from '../utils/getAuthToken.ts';
 import { runTool } from '../utils/runTool.ts';
 
 const SEARCH_DEFAULT_LIMIT = 20;

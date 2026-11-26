@@ -18,7 +18,7 @@
  */
 import type { IncomingMessage } from 'node:http';
 
-import { requestAuthTokenStorage } from '../auth/getAuthToken.ts';
+import { requestAuthTokenStorage } from '../utils/getAuthToken.ts';
 import type {
   McpHttpAuthMode,
   McpPublicAuthMode,

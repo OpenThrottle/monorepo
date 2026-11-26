@@ -61,7 +61,7 @@
     "mcp.tool/list_blog_tags": 636,
     "mcp.tool/list_notes": 248,
     "mcp.tool/list_plans_by_status": 1539,
-    "mcp.tool/list_projects": 641,
+    "mcp.tool/list_projects": 637,
     "mcp.tool/list_rule_applications": 740,
     "mcp.tool/list_scheduled_jobs": 526,
     "mcp.tool/list_skill_tags": 452,
@@ -157,7 +157,7 @@
     "mcp.toolDescription/list_blog_tags": 425,
     "mcp.toolDescription/list_notes": 41,
     "mcp.toolDescription/list_plans_by_status": 636,
-    "mcp.toolDescription/list_projects": 302,
+    "mcp.toolDescription/list_projects": 298,
     "mcp.toolDescription/list_rule_applications": 313,
     "mcp.toolDescription/list_scheduled_jobs": 304,
     "mcp.toolDescription/list_skill_tags": 240,
@@ -200,7 +200,7 @@
     "prompt/Job_DocDrift.md": 9521,
     "prompt/Job_FeatureRegistryRefresh.md": 7570,
     "prompt/Job_Issue_Reporting.md": 11673,
-    "prompt/Job_MemoryDrift.md": 10214,
+    "prompt/Job_MemoryDrift.md": 10220,
     "prompt/Job_Performance.md": 8936,
     "prompt/Job_ReplayDrift.md": 7790,
     "prompt/Job_Roadmap.md": 9551,
@@ -215,7 +215,7 @@
     "skill/github-squash": 6945,
     "skill/ot-client-node-boundary": 3862,
     "skill/ot-code-review": 8950,
-    "skill/ot-folders": 15511,
+    "skill/ot-folders": 15795,
     "skill/ot-generators": 6734,
     "skill/ot-loop": 16252,
     "skill/ot-onboarding": 17051,
@@ -223,7 +223,7 @@
     "skill/ot-postgres": 5672,
     "skill/ot-skill-guide": 15667,
     "skill/ot-skill-sync": 10949,
-    "skill/ot-stack": 9671,
+    "skill/ot-stack": 9841,
     "skill/ot-worktree": 11233,
     "skillDescription/github-cleanup": 381,
     "skillDescription/github-commit": 266,
@@ -246,15 +246,15 @@
     "mcpToolset/admin": 18806,
     "mcpToolset/agents": 3068,
     "mcpToolset/blog": 7444,
-    "mcpToolset/core": 40891,
+    "mcpToolset/core": 40887,
     "mcpToolset/scheduling": 5614,
-    "mcpToolsFull": 75823
+    "mcpToolsFull": 75819
   },
   "totals": {
-    "alwaysInjected": 49026,
+    "alwaysInjected": 49022,
     "mcpInstructions": 2183,
-    "mcpTools": 40891,
-    "prompts": 137756,
-    "skills": 163501
+    "mcpTools": 40887,
+    "prompts": 137762,
+    "skills": 163955
   }
 }

@@ -1,7 +1,7 @@
 # antigravity (agy) CLI — headless contract
 
 The headless surface the `antigravity` driver
-(`packages/openthrottle-drivers/src/drivers/antigravity.ts`) is built against.
+(`packages/openthrottle-drivers/src/utils/antigravityDriver.ts`) is built against.
 
 **Measured 2026-08-26** against Antigravity CLI **1.1.21**, `darwin_arm64`, official release tarball
 (`cli_mac_arm64.tar.gz`, SHA512 verified against the release manifest). Probed as an extracted

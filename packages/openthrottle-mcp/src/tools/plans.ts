@@ -32,16 +32,16 @@ import {
   ListPlansByStatusInputSchema,
   UpdatePlanInputSchema,
 } from '../__generated__/schemas.ts';
-import { getAuthToken } from '../auth/getAuthToken.ts';
 import { resolveWorkspacePathArgument } from '../config/workspace-path.ts';
-import { ambientSessionOptions } from '../session/sessionHeaders.ts';
 import type { GenericResult } from '../types/index.ts';
 import {
   invalidArgsContent,
   isGraphqlTimeoutError,
   toSanitizedClientMessage,
 } from '../utils/errors.ts';
+import { getAuthToken } from '../utils/getAuthToken.ts';
 import { runTool } from '../utils/runTool.ts';
+import { ambientSessionOptions } from '../utils/session.ts';
 
 interface PlanTagFailure {
   readonly reason: string;

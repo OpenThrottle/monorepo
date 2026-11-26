@@ -74,11 +74,11 @@ Command shapes (legacy-identical for cursor; claude adds stream-json output flag
 ## Adding a new agent CLI
 
 1. Verify the CLI's headless flags against its own `--help` (never from memory).
-2. Add `src/drivers/<id>.ts`:
+2. Add `src/utils/<id>Driver.ts` (exporting `<id>Driver`):
 
    ```ts
-   import { defineDriver } from '../registry/index.ts';
-   import { escapeForShellDoubleQuoted } from '../utils/shell.ts';
+   import { defineDriver } from './registry.ts';
+   import { escapeForShellDoubleQuoted } from './shell.ts';
 
    export const copilotDriver = defineDriver({
      buildShellCommand: (config) =>
@@ -95,7 +95,7 @@ Command shapes (legacy-identical for cursor; claude adds stream-json output flag
    });
    ```
 
-3. Add `'copilot'` to `DRIVER_IDS` (registry) and the driver to `ALL_DRIVERS` (drivers barrel).
+3. Add `'copilot'` to `DRIVER_IDS` (`utils/registry.ts`) and the driver to `DRIVER_REGISTRY` (`utils/driver-registry.ts`).
 4. Add a command-construction test (base command, `--model`, prompt/model escaping).
 5. If the CLI has no viable headless mode, throw `UnsupportedDriverModeError` from
    `buildShellCommand` instead of shipping a broken command.

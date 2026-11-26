@@ -1,7 +1,7 @@
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { clearCurrentSession } from '../../session/current-session.ts';
+import { clearCurrentSession } from '../../utils/session.ts';
 import {
   attachSessionSubjectToolHandler,
   beginTaskSessionToolHandler,

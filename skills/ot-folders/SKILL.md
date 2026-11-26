@@ -40,12 +40,12 @@ metadata:
 Every project in this Nx monorepo belongs to one of four stacks. The bucket decides
 which folder vocabulary applies and, via `technology:` tags, what may import it.
 
-| Bucket         | What lives there                                                 | Folder vocabulary                                           |
-| -------------- | ---------------------------------------------------------------- | ----------------------------------------------------------- |
-| `nestjs`       | Applications and modules many NestJS applications may consume    | `modules` `services` `guards` `config` — no components      |
-| `nodejs`       | Server/client-agnostic code consumed by both API and client apps | `config` `data` `scripts` `utils` — no components, no hooks |
-| `react`        | Client code using React but **never** importing `react-router`   | `components` `config` `data` `hooks` `utils`                |
-| `react-router` | Client code coupled to the React Router framework                | `components` `config` `data` `hooks` `utils` (+ `actions`)  |
+| Bucket         | What lives there                                                 | Folder vocabulary                                                     |
+| -------------- | ---------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `nestjs`       | Applications and modules many NestJS applications may consume    | `modules` `services` `guards` `config` — no components                |
+| `nodejs`       | Server/client-agnostic code consumed by both API and client apps | `config` `data` `graphql` `scripts` `utils` — no components, no hooks |
+| `react`        | Client code using React but **never** importing `react-router`   | `components` `config` `data` `hooks` `utils`                          |
+| `react-router` | Client code coupled to the React Router framework                | `components` `config` `data` `hooks` `utils` (+ `actions`)            |
 
 **Below the top level, stay flat.** In the `nodejs`, `react` and `react-router`
 buckets a vocabulary folder holds files, not feature folders: `src/utils/<feature>/`,
@@ -54,7 +54,7 @@ into bucket modules named for its subject (`utils/replay.ts`, `utils/shell-words
 exceptions: the tooling folders `__tests__`/`__generated__`, and **one PascalCase folder per
 compound component** directly under `components/` (`components/Card/` holding `Card.tsx`,
 `CardHeader.tsx`, … and its `__tests__/`). A feature too big to flatten is not a folder, it is
-a package: promote it with `ot-generators`. `data/` holds only `<name>.ts`, `mock.<name>.ts` and
+a package: promote it with `ot-generators`. A `nodejs` package that owns `.graphql` codegen documents keeps them in `src/graphql/`, flat (`fragments.graphql`, `queries.graphql`, subject files; no `operations/` below it) and holding only `.graphql` files, never `.ts`. `data/` holds only `<name>.ts`, `mock.<name>.ts` and
 `schema.<name>.json` (kebab-case `<name>`); logic found there moves to `utils/`.
 
 **The bucket rule:** the moment a file imports from `react-router`, it belongs to the

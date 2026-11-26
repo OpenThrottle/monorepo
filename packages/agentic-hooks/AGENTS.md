@@ -19,15 +19,23 @@ marketplace installs them from `plugins-dist`. Hooks ship nowhere else: there ar
   keeps it.
 - `src/types.ts` — **the producer contract.** `NormalizedInvocation` is the seam every adapter
   targets; `UsageEvent` / `OutcomeEvent` are what the core builds from it.
-- `src/adapters/<tool>/` — thin per-tool entrypoints **only**: `payload.ts` (a `<TOOL>_SOURCE`
-  producer id + a normalizer) and one file per hook event. Nothing else belongs here, except the
-  tool's own transcript handling: Claude's lives in `transcript.ts` (line → `TokenUsageRecord`, no
-  I/O) and `transcript-usage.ts` (checkpointed read at `Stop`; also reads the session's
+- `src/scripts/<tool>-<hook>.ts` — the process entrypoints, one per hook or operator CLI, and the
+  esbuild roots `scripts/bundle-hooks.ts` names (`claude-capture.ts`, `cursor-bash-guard.ts`,
+  `codex-heartbeat.ts`, …). Thin: parse the native payload, delegate to the core, exit 0. The
+  `backfill`, `resegment` and `scope` operator CLIs live here too (bundled by no payload, run as
+  `pnpm run telemetry:<name>`, registered as no hook). Every file in `scripts/` runs on import, so
+  each is listed in `package.json` `sideEffects`.
+- `src/utils/<tool>-*.ts` — everything per-tool that is not an entrypoint, as agent-prefixed buckets:
+  `<tool>-payload.ts` (a `<TOOL>_SOURCE` producer id + a normalizer), `*-bash-guard.ts` renderers,
+  `*-marketplace-install.ts`, and for Claude the `claude-doctor*.ts`, `claude-heartbeat.ts`,
+  `claude-host.ts`, `claude-plan-run-*.ts` and transcript handling: `claude-transcript.ts` (line →
+  `TokenUsageRecord`, no I/O plus the checkpointed read at `Stop`, which also reads the session's
   `subagents/agent-*.jsonl`, so `SubagentStop` need not be registered). The file offsets,
-  checkpoints and sending stay in `src/data/`. The one-off operator backfill (`backfill.ts`, bundled
-  by no payload, run as `pnpm run telemetry:backfill`, registered as no hook) reuses that reader through
-  `transcript-backfill.ts`, `transcript-skills.ts` and `transcript-projects.ts`; see the README's
-  "Backfilling from transcripts".
+  checkpoints and sending stay in `src/data/`. The backfill reuses that reader through
+  `claude-backfill.ts`, `claude-transcript-backfill.ts`, `claude-transcript-skills.ts` and
+  `claude-transcript-projects.ts`; see the README's "Backfilling from transcripts".
+  `memory-index-budget.ts` is the tool-neutral memory-index budget the memory guard enforces.
+- `fixtures/<tool>/` — captured and sanitized payloads and transcripts the per-tool specs read.
 - `src/utils/` — `scope.ts` (ours | personal | third-party), `privacy.ts` (truncation + secret redaction),
   `logging.ts`, `warnEndpointUnreachable.ts` (an unreachable endpoint warns once per session outside
   an OpenThrottle checkout), `skill-file.ts` (skill name from a `SKILL.md` path, for producers with no
@@ -57,8 +65,9 @@ marketplace installs them from `plugins-dist`. Hooks ship nowhere else: there ar
 
 Each of these is a rule you can fail, not a description.
 
-- **The neutral core must contain no tool-specific identifier.** No file under `src/` outside
-  `src/adapters/` may name a tool, in code or in comments. A test enforces this with a short,
+- **The neutral core must contain no tool-specific identifier.** No file under `src/` other than a
+  per-agent one (`scripts/` or `utils/` file starting with `claude-`, `cursor-`, `codex-`, `antigravity-`)
+  may name a tool, in code or in comments. A test enforces this with a short,
   explicitly-argued allowlist — adding to that allowlist is an argument you have to make, not a
   formality. If you need a tool name in the core, you almost certainly need a new field on
   `NormalizedInvocation` instead.
@@ -94,8 +103,8 @@ Each of these is a rule you can fail, not a description.
   stubs require `dist/<file>` and exit 0 if it is missing, so an unbuilt checkout is fail-open. A
   hook change that needs a built bundle to take effect needs `pnpm run build:hooks` first.
   `publish-plugins.yml` publishes built payloads to `plugins-dist`, manifests without `version`.
-- **Adding a bundle is ONE edit in the generator, plus the adapter.** (1) the adapter under
-  `src/adapters/<tool>/`, (2) a `PluginEntry` row in the right payload in `scripts/bundle-hooks.ts`.
+- **Adding a bundle is ONE edit in the generator, plus the adapter.** (1) the entrypoint at
+  `src/scripts/<tool>-<hook>.ts` (plus its `utils/<tool>-*.ts` helpers), (2) a `PluginEntry` row in the right payload in `scripts/bundle-hooks.ts`.
   The Nx `outputs` and `inputs` are `plugins/**` globs, so `package.json` needs no change. A _new
   payload directory_ also needs its own entry in `.prettierignore` in the same commit (the
   `.gitattributes` globs already cover `plugins/*/`); add it to the driver's `pluginDirRels` if

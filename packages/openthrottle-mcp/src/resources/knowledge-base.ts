@@ -7,9 +7,9 @@ import { ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { executeGraphqlWithAuth } from '@openthrottle/nodejs-graphql';
 
 import { GetDocumentDocument } from '../__generated__/graphql.js';
-import { getAuthToken } from '../auth/getAuthToken.ts';
 import { toSanitizedClientMessage } from '../utils/errors.ts';
 import { firstStringParam } from '../utils/firstStringParam.ts';
+import { getAuthToken } from '../utils/getAuthToken.ts';
 
 type ChunkResult = {
   contents: Array<{ text: string; type: 'text'; uri: string }>;

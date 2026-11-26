@@ -9,12 +9,12 @@ import {
   resolveToolsets,
   TOOLSET_NAMES,
 } from '../config/toolsets.ts';
-import { listToolSurface } from '../model-facing-text/surface.ts';
 import { McpDeveloperMcpSurface } from '../nest/McpDeveloperMcpSurface.ts';
 import {
   developerMcpToolDefinitions,
   developerMcpToolsIn,
 } from '../tool-registry.ts';
+import { listToolSurface } from '../utils/model-facing-text.ts';
 
 /**
  * @description The toolsets a server resolves from an empty command line and the given environment.

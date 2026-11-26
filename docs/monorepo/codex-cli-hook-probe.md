@@ -7,7 +7,7 @@ wired to a stdin recorder, and by reading the JSON schemas the binary embeds. **
 [agent-cli-hook-capability-matrix.md](./agent-cli-hook-capability-matrix.md).
 
 Captured payloads are committed as fixtures at
-`packages/agentic-hooks/src/adapters/codex/__tests__/fixtures/` (paths scrubbed).
+`packages/agentic-hooks/fixtures/codex/` (paths scrubbed).
 
 ## What was captured
 

@@ -22,12 +22,12 @@ Today it cannot. Every interactive session records `model: null`.
 
 Four facts, each checked in the tree rather than inherited from the plan text:
 
-| Claim                                                                 | Status                                                                |
-| --------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| `StartWorkSessionInput.model` exists                                  | **True** — `applications/openthrottle-server/schema.gql`              |
-| `current-session.ts` already passes `resolveSessionModel()`           | **True** — `packages/openthrottle-mcp/src/session/current-session.ts` |
-| `resolveSessionModel` reads only `process.env.OPENTHROTTLE_MCP_MODEL` | **True** — `packages/openthrottle-mcp/src/config/client-identity.ts`  |
-| Nothing in the repo sets that variable                                | **True** — grep finds only `client-identity.test.ts`                  |
+| Claim                                                                 | Status                                                               |
+| --------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `StartWorkSessionInput.model` exists                                  | **True** — `applications/openthrottle-server/schema.gql`             |
+| `current-session.ts` already passes `resolveSessionModel()`           | **True** — `packages/openthrottle-mcp/src/utils/session.ts`          |
+| `resolveSessionModel` reads only `process.env.OPENTHROTTLE_MCP_MODEL` | **True** — `packages/openthrottle-mcp/src/config/client-identity.ts` |
+| Nothing in the repo sets that variable                                | **True** — grep finds only `client-identity.test.ts`                 |
 
 So the plumbing is complete from the GraphQL input down to the column. The gap is entirely in the
 **source** of the value.

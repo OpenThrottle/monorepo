@@ -2,7 +2,7 @@
 
 The headless event stream the `codex` chat backend
 (`packages/agentic-conversation-backend/src/utils/codex*.ts`) and the `codex` plan-run
-driver (`packages/openthrottle-drivers/src/drivers/codex.ts`) are built against. codex calls it
+driver (`packages/openthrottle-drivers/src/utils/codexDriver.ts`) are built against. codex calls it
 `--json` (JSONL "thread events"), not `stream-json`.
 
 > **Provenance.** Verified against codex-cli **0.145.0** (`codex exec --help`, per the driver header).
