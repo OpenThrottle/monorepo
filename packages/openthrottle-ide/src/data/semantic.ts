@@ -72,6 +72,12 @@ export interface IndexWorkspaceOptions extends ChunkOptions {
   embeddingBatchSize?: number;
   /** Produces embeddings for chunk content. */
   provider: EmbeddingsProvider;
+  /**
+   * Stops the run between embedding batches: once aborted, the next batch is not started and the
+   * run rejects with the signal's reason. The batch in flight finishes, so an abort lands within
+   * one provider request.
+   */
+  signal?: AbortSignal;
   /** Where vectors are persisted. */
   store: VectorStore;
 }
@@ -125,20 +131,19 @@ export async function indexWorkspace(
   options: IndexWorkspaceOptions,
 ): Promise<IndexWorkspaceResult> {
   const resolved = resolveWorkspaceConfig(config);
-  const { diff, provider, store } = options;
+  const { diff, provider, signal, store } = options;
   const batchSize = options.embeddingBatchSize ?? DEFAULT_EMBEDDING_BATCH_SIZE;
   const chunkOptions: ChunkOptions = { windowLines: options.windowLines };
 
   if (diff === undefined) {
     await store.clear(resolved.root);
     const chunks = await chunkWorkspace(config, chunkOptions);
-    const { embedded, skipped } = await embedAndUpsert(
-      resolved.root,
-      chunks,
-      provider,
-      store,
+    const { embedded, skipped } = await embedAndUpsert(resolved.root, chunks, {
       batchSize,
-    );
+      provider,
+      signal,
+      store,
+    });
     return { deletedPaths: 0, embedded, skipped };
   }
 
@@ -149,13 +154,12 @@ export async function indexWorkspace(
 
   const targetPaths = [...diff.added, ...diff.changed];
   const chunks = await chunkPaths(resolved, targetPaths, chunkOptions);
-  const { embedded, skipped } = await embedAndUpsert(
-    resolved.root,
-    chunks,
-    provider,
-    store,
+  const { embedded, skipped } = await embedAndUpsert(resolved.root, chunks, {
     batchSize,
-  );
+    provider,
+    signal,
+    store,
+  });
 
   return { deletedPaths: stalePaths.length, embedded, skipped };
 }
@@ -260,18 +264,26 @@ async function retryChunkByChunk(
   return { embedded: batch.length - skipped.length, skipped };
 }
 
+/** How {@link embedAndUpsert} embeds and where it stores. */
+interface EmbedAndUpsertOptions {
+  readonly batchSize: number;
+  readonly provider: EmbeddingsProvider;
+  readonly signal: AbortSignal | undefined;
+  readonly store: VectorStore;
+}
+
 /**
  * Embed chunk content in fixed-size batches and upsert each batch. Batches run
  * sequentially (chained, not a bare loop) to bound provider concurrency. A batch
- * that fails is retried chunk by chunk ({@link retryChunkByChunk}).
+ * that fails is retried chunk by chunk ({@link retryChunkByChunk}). An aborted
+ * `signal` stops it before the next batch.
  */
 async function embedAndUpsert(
   workspaceRoot: string,
   chunks: CodeChunk[],
-  provider: EmbeddingsProvider,
-  store: VectorStore,
-  batchSize: number,
+  options: EmbedAndUpsertOptions,
 ): Promise<EmbedAndUpsertResult> {
+  const { batchSize, provider, signal, store } = options;
   const batches: CodeChunk[][] = [];
   for (let start = 0; start < chunks.length; start += batchSize) {
     batches.push(chunks.slice(start, start + batchSize));
@@ -291,6 +303,7 @@ async function embedAndUpsert(
 
   return batches.reduce(async (previous, batch) => {
     const total = await previous;
+    signal?.throwIfAborted();
     const outcome = await embedBatch(batch);
 
     return {

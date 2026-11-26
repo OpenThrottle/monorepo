@@ -12,6 +12,7 @@ import {
   CONTAINER_WORKSPACES_DIR_ENV,
   HOST_WORKSPACES_DIR_ENV,
 } from '@openthrottle/openthrottle-agentic-utils';
+import { DelayedError } from 'bullmq';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { WorkspaceLocalRepositoriesService } from '../../services/workspace-local-repositories/workspace-local-repositories.service.ts';
@@ -94,6 +95,7 @@ describe('CodeIndexProcessor', () => {
     );
     expect(codeSearch.indexCodeWorkspace).toHaveBeenCalledWith(
       '/Users/dev/repo',
+      expect.any(AbortSignal),
     );
     expect(result).toEqual({
       deletedPaths: 3,
@@ -164,7 +166,84 @@ describe('CodeIndexProcessor', () => {
 
       expect(codeSearch.indexCodeWorkspace).toHaveBeenCalledWith(
         '/workspaces/repo',
+        expect.any(AbortSignal),
       );
+    });
+  });
+
+  describe('when the index fails', () => {
+    beforeEach(() => {
+      vi.mocked(repositories.findByIdForUser).mockResolvedValue(
+        createMock<Repository>({ filesystemPath: '/Users/dev/repo' }),
+      );
+      vi.mocked(codeSearch.indexCodeWorkspace).mockRejectedValue(
+        new Error('provider down'),
+      );
+    });
+
+    it('fails the job when the server is not shutting down', async () => {
+      const job = buildJob();
+
+      await expect(processor.process(job, 'token-1')).rejects.toThrow(
+        'provider down',
+      );
+      expect(job.moveToDelayed).not.toHaveBeenCalled();
+    });
+
+    it('hands the job back as delayed when shutdown aborted it', async () => {
+      const job = buildJob();
+      processor.onModuleDestroy();
+
+      await expect(processor.process(job, 'token-1')).rejects.toBeInstanceOf(
+        DelayedError,
+      );
+      expect(job.moveToDelayed).toHaveBeenCalledWith(
+        expect.any(Number),
+        'token-1',
+      );
+    });
+  });
+
+  describe('when a shutdown signal arrives', () => {
+    const sigtermListeners = (): ReturnType<
+      typeof process.listeners<'SIGTERM'>
+    > => {
+      return process.listeners('SIGTERM');
+    };
+    let before: ReturnType<typeof sigtermListeners> = [];
+    const addedListeners = (): ReturnType<typeof sigtermListeners> => {
+      return sigtermListeners().filter(
+        (listener) => !before.includes(listener),
+      );
+    };
+
+    beforeEach(() => {
+      before = sigtermListeners();
+      processor.onModuleInit();
+    });
+
+    afterEach(() => {
+      for (const listener of addedListeners()) {
+        process.removeListener('SIGTERM', listener);
+      }
+    });
+
+    it('aborts the run, so the job is handed back instead of failing', async () => {
+      vi.mocked(repositories.findByIdForUser).mockResolvedValue(
+        createMock<Repository>({ filesystemPath: '/Users/dev/repo' }),
+      );
+      vi.mocked(codeSearch.indexCodeWorkspace).mockRejectedValue(
+        new Error('aborted'),
+      );
+      const job = buildJob();
+
+      const [listener] = addedListeners();
+      listener?.('SIGTERM');
+
+      await expect(processor.process(job, 'token-1')).rejects.toBeInstanceOf(
+        DelayedError,
+      );
+      expect(job.moveToDelayed).toHaveBeenCalledOnce();
     });
   });
 });

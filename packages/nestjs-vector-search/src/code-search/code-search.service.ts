@@ -64,9 +64,13 @@ export class CodeSearchService {
    * ones via the store. With no prior snapshot it falls back to a FULL index (clear + embed every
    * tracked file). The new snapshot is persisted only after a successful index, so a failed run never
    * advances the baseline (which would silently skip files next time).
+   *
+   * An aborted `signal` stops the run between embedding batches and rejects with its reason; the
+   * snapshot is not saved, so a later run picks up the same work.
    */
   async indexCodeWorkspace(
     workspaceRoot: string,
+    signal?: AbortSignal,
   ): Promise<IndexWorkspaceResult> {
     this.logger.debug(`🧩 indexCodeWorkspace: ${workspaceRoot}`);
     const refusal = this.codeIndexingRefusal();
@@ -90,12 +94,13 @@ export class CodeSearchService {
 
     const runIndex = async (): Promise<IndexWorkspaceResult> => {
       if (priorSnapshot === null) {
-        return indexWorkspace(config, { provider, store: this.store });
+        return indexWorkspace(config, { provider, signal, store: this.store });
       }
 
       return indexWorkspace(config, {
         diff: diffSnapshots(priorSnapshot, nextSnapshot),
         provider,
+        signal,
         store: this.store,
       });
     };

@@ -8,7 +8,10 @@
  * dimension mismatch is logged at error and visible in `health` instead of silently producing
  * empty search results.
  */
-import type { OnApplicationBootstrap, OnModuleDestroy } from '@nestjs/common';
+import type {
+  OnApplicationBootstrap,
+  OnApplicationShutdown,
+} from '@nestjs/common';
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { LoggerService } from '@openthrottle/nestjs-modules';
@@ -37,7 +40,7 @@ import { formatLexicalOnlyBanner } from './embedder.utils.ts';
 
 @Injectable()
 export class EmbedderService
-  implements OnApplicationBootstrap, OnModuleDestroy
+  implements OnApplicationBootstrap, OnApplicationShutdown
 {
   private readonly configResult: EmbeddingConfigResult;
 
@@ -65,7 +68,12 @@ export class EmbedderService
     void this.probe();
   }
 
-  async onModuleDestroy(): Promise<void> {
+  /**
+   * @description Closes the model in the LAST shutdown phase. `@nestjs/bullmq` closes workers in
+   * `onModuleDestroy` and lets the batch in flight finish; closing the model in that same phase
+   * released the ONNX session under it and aborted the process (`libc++abi … Napi::Error`).
+   */
+  async onApplicationShutdown(): Promise<void> {
     await this.embedder?.close();
   }
 

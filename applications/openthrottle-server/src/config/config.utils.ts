@@ -1,4 +1,6 @@
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+
+import { OPENTHROTTLE_WORKSPACE_MARKER } from '@openthrottle/openthrottle-agentic-utils';
 
 import { MINIMUM_NODE_MAJOR, PROCESS_ROLES } from './config.constants.ts';
 import type { BullMqRunOutputRetentionConfig } from './config.types.ts';
@@ -150,4 +152,61 @@ export const checkNodeVersion = (version: string): NodeVersionCheck => {
     kind: 'unsupported',
     message: `openthrottle-server needs Node ${MINIMUM_NODE_MAJOR}+ but is running on v${version}. Put the repo's Node first on PATH (\`pnpm nx run monorepo:ensure-node\` prints the exact command), or run it with \`nvm use\`.`,
   };
+};
+
+/**
+ * @description The nearest directory at or above `fromDir` that holds `marker`, or undefined.
+ */
+const findUpDirectory = (
+  fromDir: string,
+  marker: string,
+  exists: (path: string) => boolean,
+): string | undefined => {
+  let current = fromDir;
+
+  for (;;) {
+    if (exists(join(current, marker))) {
+      return current;
+    }
+
+    const parent = dirname(current);
+    if (parent === current) {
+      return undefined;
+    }
+
+    current = parent;
+  }
+};
+
+/**
+ * @description The `.env` files the server loads at boot, highest precedence first: the app's own
+ * (`applications/openthrottle-server/.env`), then the workspace root's. That is the set and order
+ * `nx run` injects, so a server started with plain `node ./build/src/main.js` sees the same
+ * environment as `openthrottle-server:dev`. Without the root file such a process misses root-only
+ * keys like `OT_CONTAINER_PREFIX`, resolves the wrong BullMQ prefix, and reads another
+ * checkout's queues (codeIndexStatus answered `ready` mid-index, OT plan b79fbf43).
+ *
+ * `fromDir` is the loading module's directory; the app root is the nearest one with a
+ * `package.json`, so it resolves the same from `src/` and from the tsc output in `build/src/`.
+ */
+export const resolveEnvFilePaths = (
+  fromDir: string,
+  exists: (path: string) => boolean,
+): readonly string[] => {
+  const appRoot = findUpDirectory(fromDir, 'package.json', exists);
+  if (appRoot === undefined) {
+    return [];
+  }
+
+  const workspaceRoot = findUpDirectory(
+    appRoot,
+    OPENTHROTTLE_WORKSPACE_MARKER,
+    exists,
+  );
+  const candidates = [join(appRoot, '.env')];
+  if (workspaceRoot !== undefined && workspaceRoot !== appRoot) {
+    candidates.push(join(workspaceRoot, '.env'));
+  }
+
+  return candidates.filter((path) => exists(path));
 };

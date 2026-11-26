@@ -5,7 +5,11 @@ import { isRecord } from '@openthrottle/nodejs-utils';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { MINIMUM_NODE_MAJOR } from './config.constants.ts';
-import { checkNodeVersion, resolveProcessRole } from './config.utils.ts';
+import {
+  checkNodeVersion,
+  resolveEnvFilePaths,
+  resolveProcessRole,
+} from './config.utils.ts';
 
 describe('resolveProcessRole', () => {
   const originalRole = process.env.PROCESS_ROLE;
@@ -80,5 +84,58 @@ describe('checkNodeVersion', () => {
     const range = isRecord(engines) ? engines.node : undefined;
 
     expect(range).toBe(`>=${MINIMUM_NODE_MAJOR}`);
+  });
+});
+
+describe('resolveEnvFilePaths', () => {
+  const existsIn = (paths: readonly string[]): ((path: string) => boolean) => {
+    const set = new Set(paths);
+    return (path) => {
+      return set.has(path);
+    };
+  };
+
+  const workspace = [
+    '/repo/.openthrottle.mjs',
+    '/repo/.env',
+    '/repo/applications/openthrottle-server/package.json',
+    '/repo/applications/openthrottle-server/.env',
+  ];
+
+  describe('when run from the tsc output in build/src', () => {
+    it('loads the app .env first, then the workspace root .env', () => {
+      expect(
+        resolveEnvFilePaths(
+          '/repo/applications/openthrottle-server/build/src',
+          existsIn(workspace),
+        ),
+      ).toEqual(['/repo/applications/openthrottle-server/.env', '/repo/.env']);
+    });
+  });
+
+  describe('when run from source', () => {
+    it('resolves the same files from src', () => {
+      expect(
+        resolveEnvFilePaths(
+          '/repo/applications/openthrottle-server/src',
+          existsIn(workspace),
+        ),
+      ).toEqual(['/repo/applications/openthrottle-server/.env', '/repo/.env']);
+    });
+  });
+
+  describe('when a file is missing', () => {
+    it('skips a missing root .env (a container image has none)', () => {
+      expect(
+        resolveEnvFilePaths(
+          '/app/build/src',
+          existsIn(['/app/package.json', '/app/.env']),
+        ),
+      ).toEqual(['/app/.env']);
+    });
+
+    it('returns nothing outside a package', () => {
+      expect(resolveEnvFilePaths('/tmp/x', existsIn([]))).toEqual([]);
+    });
   });
 });

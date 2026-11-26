@@ -85,6 +85,27 @@ describe('indexWorkspace', () => {
     expect(paths).toEqual(new Set(['src/a.ts', 'src/c.ts']));
   });
 
+  describe('when the signal aborts', () => {
+    it('stops before the next batch and rejects with the reason', async () => {
+      const store = createMemoryStore();
+      const provider = fakeProvider();
+      const controller = new AbortController();
+      provider.embed.mockImplementationOnce(async (texts: string[]) => {
+        controller.abort(new Error('shutting down'));
+        return texts.map((text) => [text.length, 0, 0]);
+      });
+
+      await expect(
+        indexWorkspace(
+          { root },
+          { embeddingBatchSize: 1, provider, signal: controller.signal, store },
+        ),
+      ).rejects.toThrow('shutting down');
+      expect(provider.embed).toHaveBeenCalledOnce();
+      expect(store.byId.size).toBe(1);
+    });
+  });
+
   it('incremental mode re-embeds only added/changed files and deletes removed ones', async () => {
     const store = createMemoryStore();
     const provider = fakeProvider();
