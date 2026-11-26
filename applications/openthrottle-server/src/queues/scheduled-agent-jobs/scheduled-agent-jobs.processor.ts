@@ -54,8 +54,10 @@ import type {
   ScheduledAgentJobPayload,
 } from './scheduled-agent-jobs.types.ts';
 import {
+  describePermissionDenials,
   foldRunUsage,
   isDirectory,
+  parsePermissionDenials,
   parseRunOutcome,
 } from './scheduled-agent-jobs.utils.ts';
 import {
@@ -368,14 +370,20 @@ export class ScheduledAgentJobsProcessor
         const usageLimit = wasCancelled ? null : result.usageLimit;
 
         if (usageLimit === null) {
-          const errorMessage = errorMessageForAgentStatus(
-            result.status,
-            result.exitCode,
-          );
-          const status = runStatusForAgentStatus(
+          // A clean exit whose CLI refused tool calls for want of approval did not do what it was
+          // scheduled to do (a missing allowedCommands entry), so it fails rather than reading as a
+          // success. Only an ok exit is overridden: any other status already reports the run honestly.
+          const isOk = result.status === RUN_AGENT_STATUS.ok;
+          const denials = isOk ? parsePermissionDenials(result.output) : [];
+          const wasRefused = denials.length > 0;
+          const errorMessage = wasRefused
+            ? describePermissionDenials(denials)
+            : errorMessageForAgentStatus(result.status, result.exitCode);
+          const agentStatus = runStatusForAgentStatus(
             result.status,
             parseRunOutcome(result.output),
           );
+          const status = wasRefused ? 'failed' : agentStatus;
           await this.runsRepository.markRunFinished(runRowId, {
             errorMessage,
             exitCode: result.exitCode,

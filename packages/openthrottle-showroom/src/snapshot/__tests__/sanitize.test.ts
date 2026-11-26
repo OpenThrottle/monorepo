@@ -135,6 +135,20 @@ const schema: DatabaseSchema = {
   foreignKeys: [],
   tables: new Map<string, TableSchema>([
     [
+      'jobs',
+      {
+        columnTypes: {
+          commands: 'ARRAY',
+          id: 'uuid',
+          payload: 'jsonb',
+          settings: 'jsonb',
+        },
+        columns: ['id', 'payload', 'commands', 'settings'],
+        name: 'jobs',
+        primaryKey: ['id'],
+      },
+    ],
+    [
       'plan_output_stream',
       {
         columnTypes: {
@@ -168,6 +182,16 @@ const schema: DatabaseSchema = {
 };
 
 const manifest: SnapshotManifest = {
+  jobs: {
+    classification: 'exported',
+    columns: {
+      commands: { action: 'scrub', reason: 'command patterns' },
+      id: { action: 'keep', reason: 'identifier' },
+      payload: { action: 'scrub', reason: 'free-form jsonb' },
+      settings: { action: 'keep', reason: 'structured config' },
+    },
+    reason: 'test fixture',
+  },
   plan_output_stream: {
     classification: 'exported',
     columns: {
@@ -198,6 +222,89 @@ const context: SanitizeContext = {
 };
 
 describe('createSanitizer', () => {
+  describe('a scrubbed jsonb or array value', () => {
+    test('scrubs every string leaf, keeping keys, order and non-strings', () => {
+      const sanitize = createSanitizer(context);
+      const row = sanitize('jobs', {
+        commands: ['ls /Users/someone/repo', 'gh api user'],
+        id: 'j1',
+        payload: {
+          author: { email: 'someone@example-company.com', retries: 2 },
+          enabled: true,
+          paths: ['/home/someone/a', null],
+        },
+        settings: null,
+      });
+
+      expect(row?.commands).toEqual(['ls /home/demo/repo', 'gh api user']);
+      expect(row?.payload).toEqual({
+        author: {
+          email: scrubEmail('someone@example-company.com'),
+          retries: 2,
+        },
+        enabled: true,
+        paths: ['/home/demo/a', null],
+      });
+      expect(Object.keys(Object(row?.payload))).toEqual([
+        'author',
+        'enabled',
+        'paths',
+      ]);
+    });
+
+    test('is deterministic across runs', () => {
+      const input = {
+        commands: ['curl someone@example-company.com'],
+        id: 'j1',
+        payload: { note: 'machine.local' },
+        settings: null,
+      };
+
+      expect(createSanitizer(context)('jobs', input)).toEqual(
+        createSanitizer(context)('jobs', input),
+      );
+    });
+
+    test('a secret in a nested leaf STOPS the export', () => {
+      const sanitize = createSanitizer(context);
+
+      expect(() =>
+        sanitize('jobs', {
+          commands: [],
+          id: 'j1',
+          payload: { env: [{ key: 'AWS', value: 'AKIAIOSFODNN7EXAMPLE' }] },
+          settings: null,
+        }),
+      ).toThrow(/'jobs\.payload' \(row j1\): aws-access-key/);
+    });
+
+    test('a secret in a text[] element STOPS the export', () => {
+      const sanitize = createSanitizer(context);
+
+      expect(() =>
+        sanitize('jobs', {
+          commands: ['export KEY=AKIAIOSFODNN7EXAMPLE'],
+          id: 'j1',
+          payload: null,
+          settings: null,
+        }),
+      ).toThrow(/'jobs\.commands' \(row j1\): aws-access-key/);
+    });
+
+    test('leaves a kept jsonb value untouched', () => {
+      const sanitize = createSanitizer(context);
+      const settings = { path: '/Users/someone/repo' };
+      const row = sanitize('jobs', {
+        commands: null,
+        id: 'j1',
+        payload: null,
+        settings,
+      });
+
+      expect(row?.settings).toEqual(settings);
+    });
+  });
+
   test('drops credential columns and scrubs identity columns', () => {
     const sanitize = createSanitizer(context);
     const row = sanitize('users', {

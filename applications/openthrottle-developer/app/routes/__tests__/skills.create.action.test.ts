@@ -5,6 +5,18 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import { SKILL_CREATE_DESTINATIONS } from '~/routing/skills/config/skill-create';
 import { SKILL_CREATE_COPY } from '~/routing/skills/data/copy';
 
+// Pin the flag off rather than trusting the environment: Vitest loads the
+// app's .env, so a developer who sets FEATURE_BETA_PREVIEW there would flip
+// this suite into the gated-open state. The flag is a module-level const
+// resolved at import, so it is mocked rather than stubbed with vi.stubEnv,
+// mirroring skills.create.action.beta.test.ts.
+vi.mock('@openthrottle/react-router-utils', async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import('@openthrottle/react-router-utils')
+  >()),
+  FEATURE_BETA_PREVIEW: false,
+}));
+
 // The action dynamically imports this module; mocking it keeps the action test
 // about parsing, narrowing and the response shape rather than about disk.
 vi.mock('~/routing/skills/utils/createSkillFile.server', () => ({
@@ -54,9 +66,8 @@ describe('routes/skills.create.tsx action', () => {
     vi.clearAllMocks();
   });
 
-  // FEATURE_BETA_PREVIEW is unset in this node-environment suite, so it
-  // resolves to its `false` default — the gated state. The flag-on case lives
-  // in skills.create.action.beta.test.ts, which mocks the flag module.
+  // FEATURE_BETA_PREVIEW is mocked off above — the gated state. The flag-on
+  // case lives in skills.create.action.beta.test.ts.
   describe('the FEATURE_BETA_PREVIEW gate (flag off)', () => {
     test('refuses an openthrottle destination without reaching the server module', async () => {
       const result = await submit({

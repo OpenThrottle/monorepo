@@ -6,12 +6,16 @@ import {
   normalizeUsage,
   sumUsage,
 } from '@openthrottle/agentic-token-usage';
+import { isRecord } from '@openthrottle/nodejs-utils';
 import { getOpenThrottleRoot } from '@openthrottle/openthrottle-agentic-utils';
 
 import {
+  SCHEDULED_AGENT_JOB_DENIAL_COMMAND_MAX_CHARS,
+  SCHEDULED_AGENT_JOB_DENIALS_LISTED,
   SCHEDULED_AGENT_JOBS_DEFAULT_CONCURRENCY,
   SCHEDULED_AGENT_JOBS_DEFAULT_TIMEOUT_MS,
 } from './scheduled-agent-jobs.constants.ts';
+import type { PermissionDenial } from './scheduled-agent-jobs.types.ts';
 
 /**
  * @description Normalizes a resolved cwd into a stable directory identity. Trailing separators are
@@ -234,6 +238,104 @@ export const foldRunUsage = (output: string): NormalizedTokenUsage | null => {
   } catch {
     return null;
   }
+};
+
+/** @description One `permission_denials` entry as a {@link PermissionDenial}, or null when malformed. */
+const toPermissionDenial = (entry: unknown): PermissionDenial | null => {
+  if (!isRecord(entry) || typeof entry.tool_name !== 'string') {
+    return null;
+  }
+
+  const input = entry.tool_input;
+  const command =
+    isRecord(input) && typeof input.command === 'string' ? input.command : null;
+  const toolUseId =
+    typeof entry.tool_use_id === 'string' ? entry.tool_use_id : null;
+
+  return { command, toolName: entry.tool_name, toolUseId };
+};
+
+/** @description The `permission_denials` of one JSONL line when it is a `result` event, else none. */
+const denialsInLine = (line: string): readonly PermissionDenial[] => {
+  if (!line.includes('"permission_denials"')) {
+    return [];
+  }
+
+  try {
+    const event: unknown = JSON.parse(line);
+    if (!isRecord(event) || event.type !== 'result') {
+      return [];
+    }
+
+    const denials = event.permission_denials;
+    if (!Array.isArray(denials)) {
+      return [];
+    }
+
+    return denials.flatMap((entry: unknown) => {
+      const denial = toPermissionDenial(entry);
+
+      return denial === null ? [] : [denial];
+    });
+  } catch {
+    return [];
+  }
+};
+
+/**
+ * @description Collects the tool calls the agent CLI refused for want of approval, from a run's
+ * buffered output. A headless run cannot answer a permission prompt, so a command missing from the
+ * job's allowlist is refused ("This command requires approval") and the CLI still exits 0 — the run
+ * did nothing yet reads as a success. Claude's stream-json `result` event lists those refusals in
+ * `permission_denials`; that structured field is read rather than the refusal prose. Duplicates (one
+ * tool call reported by more than one result event) are dropped by `tool_use_id`. Drivers that emit
+ * no such field yield an empty list, so their mapping is unchanged.
+ */
+export const parsePermissionDenials = (
+  output: string,
+): readonly PermissionDenial[] => {
+  const seen = new Set<string>();
+
+  return output.split('\n').flatMap((line) => {
+    return denialsInLine(line).filter((denial) => {
+      if (denial.toolUseId === null) return true;
+      if (seen.has(denial.toolUseId)) return false;
+      seen.add(denial.toolUseId);
+
+      return true;
+    });
+  });
+};
+
+/** @description One refused call as `Bash: gh api …`, the command shortened to a readable length. */
+const describeDenial = (denial: PermissionDenial): string => {
+  if (denial.command === null) {
+    return denial.toolName;
+  }
+
+  const command = denial.command.replace(/\s+/gu, ' ').trim();
+  const isLong = command.length > SCHEDULED_AGENT_JOB_DENIAL_COMMAND_MAX_CHARS;
+  const shortened = `${command.slice(0, SCHEDULED_AGENT_JOB_DENIAL_COMMAND_MAX_CHARS - 1)}…`;
+
+  return `${denial.toolName}: ${isLong ? shortened : command}`;
+};
+
+/**
+ * @description The run's error detail for refused tool calls: how many, the first few, and the fix.
+ * Assumes a non-empty list.
+ */
+export const describePermissionDenials = (
+  denials: readonly PermissionDenial[],
+): string => {
+  const count = denials.length;
+  const noun = count === 1 ? 'tool call' : 'tool calls';
+  const listed = denials
+    .slice(0, SCHEDULED_AGENT_JOB_DENIALS_LISTED)
+    .map(describeDenial);
+  const remaining = count - listed.length;
+  const more = remaining > 0 ? `; and ${remaining} more` : '';
+
+  return `The agent CLI refused ${count} ${noun} that needed approval (${listed.join('; ')}${more}). Add the commands this job needs to its allowed commands.`;
 };
 
 /**

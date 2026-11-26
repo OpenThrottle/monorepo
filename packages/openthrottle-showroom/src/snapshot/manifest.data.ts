@@ -918,8 +918,8 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
     classification: 'exported',
     columns: {
       allowed_commands: {
-        action: 'drop',
-        reason: `shell command patterns (text[]): scrub and the secret detector only see strings, so drop rather than export it unchecked`,
+        action: 'scrub',
+        reason: `shell command patterns (text[]): every pattern is scrubbed and secret-checked like free text`,
       },
       approval_state: { action: 'keep', reason: `structural enum (text)` },
       created_at: {
