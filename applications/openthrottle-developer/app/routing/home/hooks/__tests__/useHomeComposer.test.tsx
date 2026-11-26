@@ -120,6 +120,7 @@ function buildStub(
     conversationList: makeConversationList(),
     defaultAgent: null,
     models: [openaiModel],
+    onEnvironmentChange: undefined,
     personas: [],
     repositories: [repositoryA],
     turn: makeTurn(),
@@ -398,6 +399,7 @@ describe('useHomeComposer', () => {
         conversationList,
         defaultAgent: null,
         models: [openaiModel],
+        onEnvironmentChange: undefined,
         personas: [],
         repositories: [repositoryA],
         turn: makeTurn({
@@ -470,6 +472,7 @@ describe('useHomeComposer', () => {
         conversationList: makeConversationList(),
         defaultAgent: null,
         models: [openaiModel],
+        onEnvironmentChange: undefined,
         personas: [],
         repositories: [repositoryA],
         turn: makeTurn(),

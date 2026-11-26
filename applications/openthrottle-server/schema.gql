@@ -1885,6 +1885,104 @@ type CaptureHealthRowObject {
   stream: String!
 }
 
+"""One file that differs from the checkout's base branch."""
+type CheckoutDiffFileObject {
+  """Lines added; 0 for a binary file."""
+  additions: Int!
+
+  """True when git treats the file as binary (no patch)."""
+  binary: Boolean!
+
+  """Lines removed; 0 for a binary file."""
+  deletions: Int!
+
+  """Path relative to the checkout root."""
+  path: String!
+
+  """Where a renamed file used to live; null otherwise."""
+  previousPath: String
+  status: CheckoutDiffFileStatus!
+}
+
+"""How a file differs from the checkout's base branch."""
+enum CheckoutDiffFileStatus {
+  """New file, committed or untracked."""
+  ADDED
+
+  """File removed."""
+  DELETED
+
+  """Content or mode changed."""
+  MODIFIED
+
+  """Moved, possibly with edits; see previousPath."""
+  RENAMED
+}
+
+"""
+The pull request open (or last seen) for the checkout's branch, when the forge knows one.
+"""
+type CheckoutDiffPullRequestObject {
+  number: Int!
+
+  """'open', 'merged' or 'closed'. Draft status is not tracked."""
+  state: String!
+
+  """The pull request's URL on its forge."""
+  url: String!
+}
+
+"""
+A checkout's changes against its base branch: committed work since the merge-base, uncommitted edits and untracked files.
+"""
+type CheckoutDiffObject {
+  """Total lines added across the listed files."""
+  additions: Int!
+
+  """False when no diff could be computed; see reason."""
+  available: Boolean!
+
+  """The base branch ref the diff is measured from (e.g. origin/main)."""
+  baseRef: String
+
+  """Total lines removed across the listed files."""
+  deletions: Int!
+  files: [CheckoutDiffFileObject!]!
+
+  """True when more files changed than are listed."""
+  filesTruncated: Boolean!
+
+  """The checked-out branch; null when HEAD is detached."""
+  headBranch: String
+
+  """
+  The branch's pull request; null when none is known or the forge could not be asked.
+  """
+  pullRequest: CheckoutDiffPullRequestObject
+
+  """Why the diff is unavailable; null when it is."""
+  reason: String
+}
+
+"""The unified patch of one file of a checkout diff."""
+type CheckoutFileDiffObject {
+  """False when no patch could be produced; see reason."""
+  available: Boolean!
+
+  """True for a binary file: the patch is empty."""
+  binary: Boolean!
+
+  """Unified diff text, capped at 200 KB."""
+  patch: String!
+  path: String!
+
+  """Why the patch is unavailable; null when it is."""
+  reason: String
+
+  """True when the patch was cut at the size cap."""
+  truncated: Boolean!
+}
+
 type CodeSearchMatch {
   """Raw source text of the matched chunk."""
   content: String!
@@ -6832,6 +6930,16 @@ type Query {
   When telemetry last arrived, per (stream, source): skill_events and skill_outcomes by source, token_usage by provider. A source that is absent has never captured; a stale lastCapturedAt means capture may be broken.
   """
   captureHealth: [CaptureHealthRowObject!]!
+
+  """
+  A checkout's changes against its base branch (merge-base with the default branch, including uncommitted and untracked files): per-file status and +/- counts, totals and the branch's pull request. Expected failures come back as available: false with a reason.
+  """
+  checkoutDiff(checkoutId: ID!): CheckoutDiffObject!
+
+  """
+  The unified patch of one file of checkoutDiff, capped at 200 KB. The path must be one of the diff's paths.
+  """
+  checkoutFileDiff(checkoutId: ID!, path: String!): CheckoutFileDiffObject!
 
   """
   Natural-language code semantic search over a registered repository's indexed code. available=false when no embeddings provider is configured, or a hosted one is not opted in for code.

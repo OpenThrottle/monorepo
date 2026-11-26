@@ -56,7 +56,10 @@ describe('routes/_index clientLoader', () => {
   describe('when the cache is cold', () => {
     test('streams the server bundle and caches it once resolved', async () => {
       const serverLoader = vi.fn(async () => {
-        return { composerData: Promise.resolve(SAMPLE) };
+        return {
+          composerData: Promise.resolve(SAMPLE),
+          sessionDrawer: { collapsedSections: [], isOpen: false },
+        };
       });
 
       const result = await clientLoader(buildArgs(serverLoader));
@@ -74,6 +77,7 @@ describe('routes/_index clientLoader', () => {
           composerData: new Promise<HomeComposerData>((resolve) => {
             resolveLoad = resolve;
           }),
+          sessionDrawer: { collapsedSections: [], isOpen: false },
         };
       });
 
@@ -96,6 +100,7 @@ describe('routes/_index clientLoader', () => {
           composerData: new Promise<HomeComposerData>((resolve) => {
             resolveLoad = resolve;
           }),
+          sessionDrawer: { collapsedSections: [], isOpen: false },
         };
       });
 

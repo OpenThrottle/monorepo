@@ -105,6 +105,7 @@ const resolvedComposerData = (): Route.ComponentProps['loaderData'] => {
       personas: [],
       repositories: [],
     }),
+    sessionDrawer: { collapsedSections: [], isOpen: false },
   };
 };
 
@@ -112,6 +113,7 @@ const resolvedComposerData = (): Route.ComponentProps['loaderData'] => {
 const pendingComposerData = (): Route.ComponentProps['loaderData'] => {
   return {
     composerData: new Promise<never>(() => {}),
+    sessionDrawer: { collapsedSections: [], isOpen: false },
   };
 };
 

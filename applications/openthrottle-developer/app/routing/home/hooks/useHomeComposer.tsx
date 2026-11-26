@@ -9,6 +9,7 @@ import type {
   ChatPersonaOption,
   ChatReasoningLevelValue,
   ChatServiceTierValue,
+  ChatSessionEnvironment,
   ChatSlashCommandProvider,
 } from '@openthrottle/react-router-chat';
 import { parseFileMentions } from '@openthrottle/react-router-chat';
@@ -33,6 +34,7 @@ import type { UseAgenticChatTurnResult } from '~/routing/home/hooks/useAgenticCh
 import type { UseConversationListResult } from '~/routing/home/hooks/useConversationList';
 import { useConversationUrlSync } from '~/routing/home/hooks/useConversationUrlSync';
 import { useFileMentionProvider } from '~/routing/home/hooks/useFileMentionProvider';
+import { useSessionEnvironmentReport } from '~/routing/home/hooks/useSessionEnvironmentReport';
 import { useSkillCommandProvider } from '~/routing/home/hooks/useSkillCommandProvider';
 import type { UseVoiceInputResult } from '~/routing/home/hooks/useVoiceInput';
 import { useVoiceInput } from '~/routing/home/hooks/useVoiceInput';
@@ -49,6 +51,9 @@ export interface UseHomeComposerOptions {
   defaultAgent: ComposerDefaultAgent | null;
   /** Discovered composer models (local endpoints + agent CLIs + driver×endpoint). */
   models: ChatModelOption[];
+  /** Reports the environment snapshot (model, agent, checkout, mode, effort) on each change. */
+  onEnvironmentChange:
+    ((environment: ChatSessionEnvironment) => void) | undefined;
   /** Registry personas; falls back to the mock list when empty. */
   personas: ChatPersonaOption[];
   /** Registered local checkouts selectable as the CLI working directory. */
@@ -110,6 +115,7 @@ export const useHomeComposer = (
     conversationList,
     defaultAgent,
     models,
+    onEnvironmentChange,
     repositories,
     turn,
   } = options;
@@ -310,6 +316,16 @@ export const useHomeComposer = (
 
   // Life Cycle
   useConversationUrlSync({ conversationId: turn.conversationId, persist });
+  useSessionEnvironmentReport({
+    checkouts,
+    modelGroups,
+    modelId,
+    models,
+    onEnvironmentChange,
+    permissionMode,
+    reasoning,
+    repositoryIds,
+  });
 
   // Publish the open conversation so the dock highlights it, and when a turn
   // creates a NEW persisted conversation (an id not already in the list), list

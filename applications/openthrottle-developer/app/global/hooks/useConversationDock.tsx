@@ -37,7 +37,8 @@ export interface UseConversationDockResult {
  * refresh renders the same layout. Picking a chat navigates to the chat route
  * (`/?conversationId=`); New chat navigates there with `state.newChat`, which
  * the home route answers by clearing its thread. ⌘J / Ctrl+J toggles the column
- * (next to ⌘K for the commander), whatever the Caps Lock or Shift state.
+ * (next to ⌘K for the commander), whatever the Caps Lock state; ⌘⇧J is the
+ * home route's session drawer, so Shift leaves the dock alone.
  */
 export const useConversationDock = (
   options: UseConversationDockOptions,
@@ -130,7 +131,9 @@ export const useConversationDock = (
 
   React.useEffect(() => {
     const onKeyDown = (event: KeyboardEvent): void => {
-      const isToggle = (event.metaKey || event.ctrlKey) && !event.altKey;
+      // ⌘⇧J belongs to the session drawer; the dock keeps plain ⌘J.
+      const isToggle =
+        (event.metaKey || event.ctrlKey) && !event.altKey && !event.shiftKey;
       if (isToggle && event.key.toLowerCase() === 'j') {
         event.preventDefault();
         setDockState((previous) => ({ ...previous, isOpen: !previous.isOpen }));

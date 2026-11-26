@@ -831,12 +831,90 @@ export type ChatBackendCapabilitiesObject = {
   steering: Scalars['Boolean']['output'];
 };
 
+/** One file that differs from the checkout's base branch. */
+export type CheckoutDiffFileObject = {
+  __typename?: 'CheckoutDiffFileObject';
+  /** Lines added; 0 for a binary file. */
+  additions: Scalars['Int']['output'];
+  /** True when git treats the file as binary (no patch). */
+  binary: Scalars['Boolean']['output'];
+  /** Lines removed; 0 for a binary file. */
+  deletions: Scalars['Int']['output'];
+  /** Path relative to the checkout root. */
+  path: Scalars['String']['output'];
+  /** Where a renamed file used to live; null otherwise. */
+  previousPath?: Maybe<Scalars['String']['output']>;
+  status: CheckoutDiffFileStatus;
+};
+
+/** How a file differs from the checkout's base branch. */
+export const CheckoutDiffFileStatus = {
+  /** New file, committed or untracked. */
+  Added: 'ADDED',
+  /** File removed. */
+  Deleted: 'DELETED',
+  /** Content or mode changed. */
+  Modified: 'MODIFIED',
+  /** Moved, possibly with edits; see previousPath. */
+  Renamed: 'RENAMED',
+} as const;
+
+export type CheckoutDiffFileStatus =
+  (typeof CheckoutDiffFileStatus)[keyof typeof CheckoutDiffFileStatus];
+/** A checkout's changes against its base branch: committed work since the merge-base, uncommitted edits and untracked files. */
+export type CheckoutDiffObject = {
+  __typename?: 'CheckoutDiffObject';
+  /** Total lines added across the listed files. */
+  additions: Scalars['Int']['output'];
+  /** False when no diff could be computed; see reason. */
+  available: Scalars['Boolean']['output'];
+  /** The base branch ref the diff is measured from (e.g. origin/main). */
+  baseRef?: Maybe<Scalars['String']['output']>;
+  /** Total lines removed across the listed files. */
+  deletions: Scalars['Int']['output'];
+  files: Array<CheckoutDiffFileObject>;
+  /** True when more files changed than are listed. */
+  filesTruncated: Scalars['Boolean']['output'];
+  /** The checked-out branch; null when HEAD is detached. */
+  headBranch?: Maybe<Scalars['String']['output']>;
+  /** The branch's pull request; null when none is known or the forge could not be asked. */
+  pullRequest?: Maybe<CheckoutDiffPullRequestObject>;
+  /** Why the diff is unavailable; null when it is. */
+  reason?: Maybe<Scalars['String']['output']>;
+};
+
+/** The pull request open (or last seen) for the checkout's branch, when the forge knows one. */
+export type CheckoutDiffPullRequestObject = {
+  __typename?: 'CheckoutDiffPullRequestObject';
+  number: Scalars['Int']['output'];
+  /** 'open', 'merged' or 'closed'. Draft status is not tracked. */
+  state: Scalars['String']['output'];
+  /** The pull request's URL on its forge. */
+  url: Scalars['String']['output'];
+};
+
 /** Drift detected by refreshCheckout, diffing the new scan against the previous snapshot. */
 export type CheckoutDriftObject = {
   __typename?: 'CheckoutDriftObject';
   branchMoved: Scalars['Boolean']['output'];
   pathMissing: Scalars['Boolean']['output'];
   remoteChanged: Scalars['Boolean']['output'];
+};
+
+/** The unified patch of one file of a checkout diff. */
+export type CheckoutFileDiffObject = {
+  __typename?: 'CheckoutFileDiffObject';
+  /** False when no patch could be produced; see reason. */
+  available: Scalars['Boolean']['output'];
+  /** True for a binary file: the patch is empty. */
+  binary: Scalars['Boolean']['output'];
+  /** Unified diff text, capped at 200 KB. */
+  patch: Scalars['String']['output'];
+  path: Scalars['String']['output'];
+  /** Why the patch is unavailable; null when it is. */
+  reason?: Maybe<Scalars['String']['output']>;
+  /** True when the patch was cut at the size cap. */
+  truncated: Scalars['Boolean']['output'];
 };
 
 /** Aggregated CPU and memory metrics for a child process over its lifetime. */
@@ -5098,6 +5176,10 @@ export type Query = {
   browseDirectory: WorkspaceDirectoryListingObject;
   /** When telemetry last arrived, per (stream, source): skill_events and skill_outcomes by source, token_usage by provider. A source that is absent has never captured; a stale lastCapturedAt means capture may be broken. */
   captureHealth: Array<CaptureHealthRowObject>;
+  /** A checkout's changes against its base branch (merge-base with the default branch, including uncommitted and untracked files): per-file status and +/- counts, totals and the branch's pull request. Expected failures come back as available: false with a reason. */
+  checkoutDiff: CheckoutDiffObject;
+  /** The unified patch of one file of checkoutDiff, capped at 200 KB. The path must be one of the diff's paths. */
+  checkoutFileDiff: CheckoutFileDiffObject;
   /** A live cms fragment by uuid; null when none matches. */
   cmsFragment?: Maybe<CmsFragmentObject>;
   /** One page of live cms fragments, oldest first, optionally narrowed by typename and isSystem (false also matches an unset flag). limit is 1 to 100 (default 25). */
@@ -5461,6 +5543,15 @@ export type QueryBlogPostsArgs = {
 
 export type QueryBrowseDirectoryArgs = {
   path?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type QueryCheckoutDiffArgs = {
+  checkoutId: Scalars['ID']['input'];
+};
+
+export type QueryCheckoutFileDiffArgs = {
+  checkoutId: Scalars['ID']['input'];
+  path: Scalars['String']['input'];
 };
 
 export type QueryCmsFragmentArgs = {

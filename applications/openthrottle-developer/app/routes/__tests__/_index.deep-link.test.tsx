@@ -47,7 +47,10 @@ const matches: Route.ComponentProps['matches'] = [
   {
     handle: undefined,
     id: 'routes/_index',
-    loaderData: { composerData: new Promise<never>(() => {}) },
+    loaderData: {
+      composerData: new Promise<never>(() => {}),
+      sessionDrawer: { collapsedSections: [], isOpen: false },
+    },
     params: {},
     pathname: '/',
   },
@@ -58,6 +61,7 @@ const matches: Route.ComponentProps['matches'] = [
 // stays focused on the mount-time restore effect.
 const loaderData: Route.ComponentProps['loaderData'] = {
   composerData: new Promise<never>(() => {}),
+  sessionDrawer: { collapsedSections: [], isOpen: false },
 };
 
 const renderAt = (entry: string) => {

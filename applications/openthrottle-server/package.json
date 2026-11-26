@@ -294,6 +294,7 @@
     "./src/graphql/blog/blog-post-state.enum.ts",
     "./src/graphql/blog/blog-post-status.enum.ts",
     "./src/graphql/blog/blog-reference-entity.enum.ts",
+    "./src/graphql/checkout-diff/checkout-diff.enum.ts",
     "./src/graphql/editor-presence/editor-presence-state.enum.ts",
     "./src/graphql/id-refs/id-refs.enum.ts",
     "./src/graphql/metrics/metric-scope.enum.ts",

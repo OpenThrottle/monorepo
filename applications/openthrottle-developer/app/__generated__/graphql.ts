@@ -831,12 +831,90 @@ export type ChatBackendCapabilitiesObject = {
   steering: Scalars['Boolean']['output'];
 };
 
+/** One file that differs from the checkout's base branch. */
+export type CheckoutDiffFileObject = {
+  __typename?: 'CheckoutDiffFileObject';
+  /** Lines added; 0 for a binary file. */
+  additions: Scalars['Int']['output'];
+  /** True when git treats the file as binary (no patch). */
+  binary: Scalars['Boolean']['output'];
+  /** Lines removed; 0 for a binary file. */
+  deletions: Scalars['Int']['output'];
+  /** Path relative to the checkout root. */
+  path: Scalars['String']['output'];
+  /** Where a renamed file used to live; null otherwise. */
+  previousPath?: Maybe<Scalars['String']['output']>;
+  status: CheckoutDiffFileStatus;
+};
+
+/** How a file differs from the checkout's base branch. */
+export const CheckoutDiffFileStatus = {
+  /** New file, committed or untracked. */
+  Added: 'ADDED',
+  /** File removed. */
+  Deleted: 'DELETED',
+  /** Content or mode changed. */
+  Modified: 'MODIFIED',
+  /** Moved, possibly with edits; see previousPath. */
+  Renamed: 'RENAMED',
+} as const;
+
+export type CheckoutDiffFileStatus =
+  (typeof CheckoutDiffFileStatus)[keyof typeof CheckoutDiffFileStatus];
+/** A checkout's changes against its base branch: committed work since the merge-base, uncommitted edits and untracked files. */
+export type CheckoutDiffObject = {
+  __typename?: 'CheckoutDiffObject';
+  /** Total lines added across the listed files. */
+  additions: Scalars['Int']['output'];
+  /** False when no diff could be computed; see reason. */
+  available: Scalars['Boolean']['output'];
+  /** The base branch ref the diff is measured from (e.g. origin/main). */
+  baseRef?: Maybe<Scalars['String']['output']>;
+  /** Total lines removed across the listed files. */
+  deletions: Scalars['Int']['output'];
+  files: Array<CheckoutDiffFileObject>;
+  /** True when more files changed than are listed. */
+  filesTruncated: Scalars['Boolean']['output'];
+  /** The checked-out branch; null when HEAD is detached. */
+  headBranch?: Maybe<Scalars['String']['output']>;
+  /** The branch's pull request; null when none is known or the forge could not be asked. */
+  pullRequest?: Maybe<CheckoutDiffPullRequestObject>;
+  /** Why the diff is unavailable; null when it is. */
+  reason?: Maybe<Scalars['String']['output']>;
+};
+
+/** The pull request open (or last seen) for the checkout's branch, when the forge knows one. */
+export type CheckoutDiffPullRequestObject = {
+  __typename?: 'CheckoutDiffPullRequestObject';
+  number: Scalars['Int']['output'];
+  /** 'open', 'merged' or 'closed'. Draft status is not tracked. */
+  state: Scalars['String']['output'];
+  /** The pull request's URL on its forge. */
+  url: Scalars['String']['output'];
+};
+
 /** Drift detected by refreshCheckout, diffing the new scan against the previous snapshot. */
 export type CheckoutDriftObject = {
   __typename?: 'CheckoutDriftObject';
   branchMoved: Scalars['Boolean']['output'];
   pathMissing: Scalars['Boolean']['output'];
   remoteChanged: Scalars['Boolean']['output'];
+};
+
+/** The unified patch of one file of a checkout diff. */
+export type CheckoutFileDiffObject = {
+  __typename?: 'CheckoutFileDiffObject';
+  /** False when no patch could be produced; see reason. */
+  available: Scalars['Boolean']['output'];
+  /** True for a binary file: the patch is empty. */
+  binary: Scalars['Boolean']['output'];
+  /** Unified diff text, capped at 200 KB. */
+  patch: Scalars['String']['output'];
+  path: Scalars['String']['output'];
+  /** Why the patch is unavailable; null when it is. */
+  reason?: Maybe<Scalars['String']['output']>;
+  /** True when the patch was cut at the size cap. */
+  truncated: Scalars['Boolean']['output'];
 };
 
 /** Aggregated CPU and memory metrics for a child process over its lifetime. */
@@ -5098,6 +5176,10 @@ export type Query = {
   browseDirectory: WorkspaceDirectoryListingObject;
   /** When telemetry last arrived, per (stream, source): skill_events and skill_outcomes by source, token_usage by provider. A source that is absent has never captured; a stale lastCapturedAt means capture may be broken. */
   captureHealth: Array<CaptureHealthRowObject>;
+  /** A checkout's changes against its base branch (merge-base with the default branch, including uncommitted and untracked files): per-file status and +/- counts, totals and the branch's pull request. Expected failures come back as available: false with a reason. */
+  checkoutDiff: CheckoutDiffObject;
+  /** The unified patch of one file of checkoutDiff, capped at 200 KB. The path must be one of the diff's paths. */
+  checkoutFileDiff: CheckoutFileDiffObject;
   /** A live cms fragment by uuid; null when none matches. */
   cmsFragment?: Maybe<CmsFragmentObject>;
   /** One page of live cms fragments, oldest first, optionally narrowed by typename and isSystem (false also matches an unset flag). limit is 1 to 100 (default 25). */
@@ -5461,6 +5543,15 @@ export type QueryBlogPostsArgs = {
 
 export type QueryBrowseDirectoryArgs = {
   path?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type QueryCheckoutDiffArgs = {
+  checkoutId: Scalars['ID']['input'];
+};
+
+export type QueryCheckoutFileDiffArgs = {
+  checkoutId: Scalars['ID']['input'];
+  path: Scalars['String']['input'];
 };
 
 export type QueryCmsFragmentArgs = {
@@ -14170,6 +14261,110 @@ export type GetBackgroundActivitiesQuery = {
   }>;
 };
 
+export type CheckoutDiffFileFragment = {
+  __typename?: 'CheckoutDiffFileObject';
+  additions: number;
+  binary: boolean;
+  deletions: number;
+  path: string;
+  previousPath?: string | null;
+  status: CheckoutDiffFileStatus;
+};
+
+export type CheckoutDiffPullRequestFragment = {
+  __typename?: 'CheckoutDiffPullRequestObject';
+  number: number;
+  state: string;
+  url: string;
+};
+
+export type CheckoutDiffSummaryFragment = {
+  __typename?: 'CheckoutDiffObject';
+  additions: number;
+  available: boolean;
+  baseRef?: string | null;
+  deletions: number;
+  filesTruncated: boolean;
+  headBranch?: string | null;
+  reason?: string | null;
+  files: Array<{
+    __typename?: 'CheckoutDiffFileObject';
+    additions: number;
+    binary: boolean;
+    deletions: number;
+    path: string;
+    previousPath?: string | null;
+    status: CheckoutDiffFileStatus;
+  }>;
+  pullRequest?: {
+    __typename?: 'CheckoutDiffPullRequestObject';
+    number: number;
+    state: string;
+    url: string;
+  } | null;
+};
+
+export type CheckoutFilePatchFragment = {
+  __typename?: 'CheckoutFileDiffObject';
+  available: boolean;
+  binary: boolean;
+  patch: string;
+  path: string;
+  reason?: string | null;
+  truncated: boolean;
+};
+
+export type GetCheckoutDiffQueryVariables = Exact<{
+  checkoutId: Scalars['ID']['input'];
+}>;
+
+export type GetCheckoutDiffQuery = {
+  __typename?: 'Query';
+  checkoutDiff: {
+    __typename?: 'CheckoutDiffObject';
+    additions: number;
+    available: boolean;
+    baseRef?: string | null;
+    deletions: number;
+    filesTruncated: boolean;
+    headBranch?: string | null;
+    reason?: string | null;
+    files: Array<{
+      __typename?: 'CheckoutDiffFileObject';
+      additions: number;
+      binary: boolean;
+      deletions: number;
+      path: string;
+      previousPath?: string | null;
+      status: CheckoutDiffFileStatus;
+    }>;
+    pullRequest?: {
+      __typename?: 'CheckoutDiffPullRequestObject';
+      number: number;
+      state: string;
+      url: string;
+    } | null;
+  };
+};
+
+export type GetCheckoutFileDiffQueryVariables = Exact<{
+  checkoutId: Scalars['ID']['input'];
+  path: Scalars['String']['input'];
+}>;
+
+export type GetCheckoutFileDiffQuery = {
+  __typename?: 'Query';
+  checkoutFileDiff: {
+    __typename?: 'CheckoutFileDiffObject';
+    available: boolean;
+    binary: boolean;
+    patch: string;
+    path: string;
+    reason?: string | null;
+    truncated: boolean;
+  };
+};
+
 export type ProjectPlanTaskRowFragment = {
   __typename?: 'TaskObject';
   id: string;
@@ -21981,6 +22176,161 @@ export const QueueCardFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<QueueCardFragment, unknown>;
+export const CheckoutDiffFileFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'CheckoutDiffFile' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'CheckoutDiffFileObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'additions' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'binary' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'deletions' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'previousPath' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<CheckoutDiffFileFragment, unknown>;
+export const CheckoutDiffPullRequestFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'CheckoutDiffPullRequest' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'CheckoutDiffPullRequestObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'number' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'url' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<CheckoutDiffPullRequestFragment, unknown>;
+export const CheckoutDiffSummaryFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'CheckoutDiffSummary' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'CheckoutDiffObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'additions' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'available' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'baseRef' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'deletions' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'files' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'CheckoutDiffFile' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'filesTruncated' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'headBranch' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'pullRequest' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'CheckoutDiffPullRequest' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'reason' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'CheckoutDiffFile' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'CheckoutDiffFileObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'additions' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'binary' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'deletions' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'previousPath' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'CheckoutDiffPullRequest' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'CheckoutDiffPullRequestObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'number' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'url' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<CheckoutDiffSummaryFragment, unknown>;
+export const CheckoutFilePatchFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'CheckoutFilePatch' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'CheckoutFileDiffObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'available' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'binary' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'patch' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'reason' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'truncated' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<CheckoutFilePatchFragment, unknown>;
 export const ProjectPlanTaskRowFragmentDoc = {
   kind: 'Document',
   definitions: [
@@ -37986,6 +38336,233 @@ export const GetBackgroundActivitiesDocument = {
 } as unknown as DocumentNode<
   GetBackgroundActivitiesQuery,
   GetBackgroundActivitiesQueryVariables
+>;
+export const GetCheckoutDiffDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getCheckoutDiff' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'checkoutId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'checkoutDiff' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'checkoutId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'checkoutId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'CheckoutDiffSummary' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'CheckoutDiffFile' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'CheckoutDiffFileObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'additions' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'binary' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'deletions' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'previousPath' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'CheckoutDiffPullRequest' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'CheckoutDiffPullRequestObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'number' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'state' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'url' } },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'CheckoutDiffSummary' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'CheckoutDiffObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'additions' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'available' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'baseRef' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'deletions' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'files' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'CheckoutDiffFile' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'filesTruncated' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'headBranch' } },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'pullRequest' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'CheckoutDiffPullRequest' },
+                },
+              ],
+            },
+          },
+          { kind: 'Field', name: { kind: 'Name', value: 'reason' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetCheckoutDiffQuery,
+  GetCheckoutDiffQueryVariables
+>;
+export const GetCheckoutFileDiffDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'getCheckoutFileDiff' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'checkoutId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'path' } },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'checkoutFileDiff' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'checkoutId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'checkoutId' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'path' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'path' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'FragmentSpread',
+                  name: { kind: 'Name', value: 'CheckoutFilePatch' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'CheckoutFilePatch' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'CheckoutFileDiffObject' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'available' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'binary' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'patch' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'path' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'reason' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'truncated' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetCheckoutFileDiffQuery,
+  GetCheckoutFileDiffQueryVariables
 >;
 export const GetProjectPlanTasksDocument = {
   kind: 'Document',

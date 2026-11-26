@@ -20,6 +20,7 @@ export * from './components/ContributionHeatmap';
 export * from './components/DataTable';
 export * from './components/DatePicker';
 export * from './components/Dialog/index';
+export * from './components/DiffView';
 export * from './components/Drawer';
 export * from './components/DropdownMenu';
 export * from './components/Empty';

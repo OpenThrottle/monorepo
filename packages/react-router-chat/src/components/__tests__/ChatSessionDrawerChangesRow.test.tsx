@@ -1,0 +1,75 @@
+import { render } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, test, vi } from 'vitest';
+
+import type { ChatSessionDiffFile } from '../../types';
+import { ChatSessionDrawerChangesRow } from '../ChatSessionDrawerChangesRow';
+
+const FILE: ChatSessionDiffFile = {
+  additions: 3,
+  binary: false,
+  deletions: 1,
+  path: 'src/a.ts',
+  previousPath: undefined,
+  status: 'modified',
+};
+
+const renderRow = (file: ChatSessionDiffFile, isSelected = false) => {
+  const onSelect = vi.fn();
+  const component = render(
+    <ul>
+      <ChatSessionDrawerChangesRow
+        file={file}
+        isSelected={isSelected}
+        onSelect={onSelect}
+      />
+    </ul>,
+  );
+
+  return { component, onSelect };
+};
+
+describe('ChatSessionDrawerChangesRow', () => {
+  test('reports its path on click', async () => {
+    const { component, onSelect } = renderRow(FILE);
+
+    await userEvent.click(component.getByRole('button'));
+
+    expect(onSelect).toHaveBeenCalledWith('src/a.ts');
+  });
+
+  test('marks the selected row pressed', () => {
+    const { component } = renderRow(FILE, true);
+
+    expect(component.getByRole('button')).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+  });
+
+  test('shows +/- counts, but not for a binary file', () => {
+    const { component } = renderRow(FILE);
+
+    expect(component.getByRole('button')).toHaveTextContent('+3');
+    expect(component.getByRole('button')).toHaveTextContent('−1');
+
+    const binary = renderRow({ ...FILE, binary: true });
+
+    expect(
+      binary.component.getAllByRole('button').at(-1),
+    ).not.toHaveTextContent('+3');
+  });
+
+  test('a renamed file names its old path in the title', () => {
+    const { component } = renderRow({
+      ...FILE,
+      previousPath: 'src/old.ts',
+      status: 'renamed',
+    });
+
+    expect(component.getByRole('button')).toHaveAttribute(
+      'title',
+      'Renamed from src/old.ts',
+    );
+  });
+});
