@@ -4,7 +4,7 @@ import type {
 } from '@openthrottle/react-router-chat';
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import type { RenderResult } from '@testing-library/react';
-import { render } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
@@ -95,6 +95,7 @@ describe('HomeComposer Component', () => {
       conversationList: buildConversationList(),
       defaultAgent: null,
       models,
+      onEnvironmentChange: undefined,
       personas,
       repositories,
       turn: buildTurn(),
@@ -124,6 +125,20 @@ describe('HomeComposer Component', () => {
     });
 
     expect(component.getByText('Something went wrong.')).toBeInTheDocument();
+  });
+
+  describe('environment reporting', () => {
+    test('reports a snapshot of the selected model once mounted', async () => {
+      const onEnvironmentChange = vi.fn();
+      component.unmount();
+      component = renderComposer({ ...props, onEnvironmentChange });
+
+      await waitFor(() => {
+        expect(onEnvironmentChange).toHaveBeenCalled();
+      });
+      const [environment] = onEnvironmentChange.mock.calls.at(-1) ?? [];
+      expect(environment).toHaveProperty('modelLabel');
+    });
   });
 
   describe('while a turn is streaming', () => {

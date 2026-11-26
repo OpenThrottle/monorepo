@@ -38,6 +38,7 @@ All theme variables are defined in the `:root` selector for light mode and `.dar
 - `--accent-foreground`: Text color on accent background
 - `--destructive`: Destructive/error color
 - `--destructive-foreground`: Text color on destructive background
+- `--success`: Success/added color (e.g. `+` line counts)
 - `--border`: Border color
 - `--input`: Input border color
 - `--ring`: Focus ring color

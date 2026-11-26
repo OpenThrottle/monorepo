@@ -1,3 +1,4 @@
+import type { ChatSessionEnvironment } from '@openthrottle/react-router-chat';
 import { ChatJumpToLatest, ChatThread } from '@openthrottle/react-router-chat';
 import { getGlobalScrollElement } from '@openthrottle/react-router-ui-global';
 import * as React from 'react';
@@ -20,6 +21,9 @@ export interface HomeThreadColumnProps {
   composerData: Promise<ComposerData>;
   /** Sidebar-backing conversation list, forwarded to the composer. */
   conversationList: UseConversationListResult;
+  /** Receives the composer's environment snapshot (the session drawer's Environment section). */
+  onEnvironmentChange:
+    ((environment: ChatSessionEnvironment) => void) | undefined;
   /** Streaming turn lifecycle shared with the route and sidebar. */
   turn: UseAgenticChatTurnResult;
 }
@@ -37,7 +41,7 @@ export interface HomeThreadColumnProps {
 export const HomeThreadColumn = (
   props: HomeThreadColumnProps,
 ): React.ReactElement => {
-  const { composerData, conversationList, turn } = props;
+  const { composerData, conversationList, onEnvironmentChange, turn } = props;
 
   // Hooks
   const repinRef = React.useRef<(() => void) | null>(null);
@@ -103,6 +107,7 @@ export const HomeThreadColumn = (
                 conversationList={conversationList}
                 defaultAgent={data.defaultAgent}
                 models={data.models}
+                onEnvironmentChange={onEnvironmentChange}
                 personas={data.personas}
                 repositories={data.repositories}
                 turn={turn}

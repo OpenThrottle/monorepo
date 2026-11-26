@@ -57,6 +57,7 @@ describe('HomeConversationToolbar Component', () => {
       activeConversationId: null,
       conversationList: buildConversationList(),
       onNewChat: vi.fn(),
+      onOpenSessionDrawer: vi.fn(),
       onSelectConversation: vi.fn(),
     };
 
@@ -70,7 +71,15 @@ describe('HomeConversationToolbar Component', () => {
   });
 
   test('renders the sheet trigger', () => {
-    expect(component.getByRole('button')).toBeInTheDocument();
+    expect(
+      component.getByTestId('ChatConversationSheet-trigger'),
+    ).toBeInTheDocument();
+  });
+
+  test('the session trigger opens the session drawer', async () => {
+    await userEvent.click(component.getByTestId('home-session-drawer-trigger'));
+
+    expect(props.onOpenSessionDrawer).toHaveBeenCalledTimes(1);
   });
 
   describe('when the list failed to load', () => {
@@ -82,7 +91,9 @@ describe('HomeConversationToolbar Component', () => {
       component.unmount();
       component = renderToolbar({ ...props, conversationList });
 
-      await userEvent.setup().click(component.getByRole('button'));
+      await userEvent
+        .setup()
+        .click(component.getByTestId('ChatConversationSheet-trigger'));
 
       expect(conversationList.refresh).toHaveBeenCalledTimes(1);
       expect(component.getByRole('alert')).toHaveTextContent(
@@ -122,7 +133,7 @@ describe('HomeConversationToolbar Component', () => {
         pointerEventsCheck: PointerEventsCheckLevel.Never,
       });
 
-      await user.click(component.getByRole('button'));
+      await user.click(component.getByTestId('ChatConversationSheet-trigger'));
       await user.click(
         await component.findByTestId('ChatConversationSidebar-more-conv-1'),
       );

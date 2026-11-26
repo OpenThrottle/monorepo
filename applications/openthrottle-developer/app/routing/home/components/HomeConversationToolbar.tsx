@@ -1,6 +1,9 @@
 import { ChatConversationSheet } from '@openthrottle/react-router-chat';
+import { Button } from '@openthrottle/react-router-shadcn';
+import { PanelRight } from 'lucide-react';
 import * as React from 'react';
 
+import { HOME_SESSION_DRAWER_COPY } from '~/routing/home/data/copy';
 import type { UseConversationListResult } from '~/routing/home/hooks/useConversationList';
 
 export interface HomeConversationToolbarProps {
@@ -10,13 +13,16 @@ export interface HomeConversationToolbarProps {
   conversationList: UseConversationListResult;
   /** Clears the thread for a new conversation. */
   onNewChat: () => void;
+  /** Opens the session drawer sheet. */
+  onOpenSessionDrawer: () => void;
   /** Restores the chosen conversation into the thread. */
   onSelectConversation: (conversationId: string) => void;
 }
 
 /**
  * @description The home route's top strip on small screens — the trigger for
- * the persisted conversation sheet (history, rename, delete, new chat). From md
+ * the persisted conversation sheet (history, rename, delete, new chat) and the
+ * session drawer sheet. From md
  * up the docked conversations column (GlobalConversationDock) replaces it. Extracted from the
  * route so the route file stays inside the 210-line cap.
  */
@@ -27,6 +33,7 @@ export const HomeConversationToolbar = (
     activeConversationId,
     conversationList,
     onNewChat,
+    onOpenSessionDrawer,
     onSelectConversation,
   } = props;
 
@@ -72,6 +79,17 @@ export const HomeConversationToolbar = (
         side="left"
         totalCount={conversationList.totalCount}
       />
+      <Button
+        aria-label={HOME_SESSION_DRAWER_COPY.show}
+        className="ml-auto shrink-0 pointer-coarse:size-11"
+        data-testid="home-session-drawer-trigger"
+        onClick={onOpenSessionDrawer}
+        size="icon"
+        type="button"
+        variant="ghost"
+      >
+        <PanelRight aria-hidden={true} className="size-4" />
+      </Button>
     </div>
   );
 };

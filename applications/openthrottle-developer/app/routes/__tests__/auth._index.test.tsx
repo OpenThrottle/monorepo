@@ -20,7 +20,10 @@ const matches: Route.ComponentProps['matches'] = [
   {
     handle: undefined,
     id: 'routes/_index',
-    loaderData: { composerData },
+    loaderData: {
+      composerData,
+      sessionDrawer: { collapsedSections: [], isOpen: false },
+    },
     params: {},
     pathname: '/',
   },
@@ -31,7 +34,10 @@ describe('routes/auth._index.tsx', () => {
     const component = renderRoutesStub(
       <AuthIndex
         actionData={undefined}
-        loaderData={{ composerData }}
+        loaderData={{
+          composerData,
+          sessionDrawer: { collapsedSections: [], isOpen: false },
+        }}
         matches={matches}
         params={{}}
       />,

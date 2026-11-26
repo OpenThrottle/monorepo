@@ -1,4 +1,5 @@
 import { act, render, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, describe, expect, test } from 'vitest';
@@ -38,6 +39,24 @@ describe('useConversationDock', () => {
 
     expect(latest.current?.isOpen).toBe(true);
     expect(latest.current?.grouping.collapsedGroupIds).toEqual(['g1']);
+  });
+
+  describe('keyboard shortcut', () => {
+    test('⌘J toggles the dock', async () => {
+      const { latest } = renderDockHook('/plans');
+
+      await userEvent.keyboard('{Meta>}j{/Meta}');
+
+      expect(latest.current?.isOpen).toBe(false);
+    });
+
+    test('⌘⇧J is left to the session drawer', async () => {
+      const { latest } = renderDockHook('/plans');
+
+      await userEvent.keyboard('{Meta>}{Shift>}j{/Shift}{/Meta}');
+
+      expect(latest.current?.isOpen).toBe(true);
+    });
   });
 
   test('toggling a group persists the new collapsed set', async () => {

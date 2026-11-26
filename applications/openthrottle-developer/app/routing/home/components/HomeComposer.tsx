@@ -20,6 +20,7 @@ import { useNavigate } from 'react-router';
 
 import type { UseAgenticChatTurnResult } from '~/routing/home/hooks/useAgenticChatTurn';
 import type { UseConversationListResult } from '~/routing/home/hooks/useConversationList';
+import type { UseHomeComposerOptions } from '~/routing/home/hooks/useHomeComposer';
 import { useHomeComposer } from '~/routing/home/hooks/useHomeComposer';
 import type { RepositoryOption } from '~/routing/home/utils/models.server';
 import type { ComposerDefaultAgent } from '~/routing/home/utils/seedComposerDefaultAgent';
@@ -33,6 +34,8 @@ export interface HomeComposerProps {
   defaultAgent: ComposerDefaultAgent | null;
   /** Discovered composer models (local endpoints + agent CLIs + driver×endpoint). */
   models: ChatModelOption[];
+  /** Reports the composer's environment snapshot on each change. */
+  onEnvironmentChange: UseHomeComposerOptions['onEnvironmentChange'];
   /** Registry personas; falls back to the mock list when empty. */
   personas: ChatPersonaOption[];
   /** Registered local checkouts selectable as the CLI working directory. */
@@ -42,13 +45,10 @@ export interface HomeComposerProps {
 }
 
 /**
- * @description The models/personas/repositories-dependent composer + toolbar
- * subtree of the home route. Rendered inside the home route's `<Await>` once the
- * deferred composer-data bundle resolves, so the route shell (hero + thread +
- * sidebar) paints instantly while model discovery streams in behind a Suspense
- * fallback. `ChatThread` deliberately lives in the route, not here — it needs no
- * deferred data, and keeping it outside this boundary lets the route dock only
- * the composer without the thread being re-mounted by the fallback swap.
+ * @description The models/personas/repositories-dependent composer + toolbar of
+ * the home route, rendered inside its `<Await>` once the deferred composer data
+ * resolves. `ChatThread` lives in the route, outside that boundary, so the
+ * fallback swap never re-mounts it.
  */
 export const HomeComposer = (props: HomeComposerProps): React.ReactElement => {
   const {
@@ -56,6 +56,7 @@ export const HomeComposer = (props: HomeComposerProps): React.ReactElement => {
     conversationList,
     defaultAgent,
     models,
+    onEnvironmentChange,
     personas,
     repositories,
     turn,
@@ -104,6 +105,7 @@ export const HomeComposer = (props: HomeComposerProps): React.ReactElement => {
     conversationList,
     defaultAgent,
     models,
+    onEnvironmentChange,
     personas,
     repositories,
     turn,

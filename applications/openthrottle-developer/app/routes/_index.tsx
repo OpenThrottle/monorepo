@@ -11,10 +11,11 @@ import type { Route } from '@/app/routes/+types/_index';
 import { SITE_TITLE } from '~/global/config/settings';
 import { markDeferredHandled } from '~/global/utils/markDeferredHandled';
 import { HomeConversationToolbar } from '~/routing/home/components/HomeConversationToolbar';
-import { HomeThreadColumn } from '~/routing/home/components/HomeThreadColumn';
+import { HomeLayout } from '~/routing/home/components/HomeLayout';
 import { useAgenticChatTurn } from '~/routing/home/hooks/useAgenticChatTurn';
 import { useConversationList } from '~/routing/home/hooks/useConversationList';
 import { useNewChatRequest } from '~/routing/home/hooks/useNewChatRequest';
+import { useSessionDrawer } from '~/routing/home/hooks/useSessionDrawer';
 import {
   clearConversationIdParam,
   writeConversationIdParam,
@@ -26,6 +27,7 @@ import {
   loadPersonas,
   loadRepositories,
 } from '~/routing/home/utils/models.server';
+import { parseSessionDrawerCookie } from '~/routing/home/utils/session-drawer-cookie';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -61,7 +63,12 @@ export const loader = (args: Route.LoaderArgs) => {
   // then a rejection would be unhandled and exit the server.
   markDeferredHandled([composerData]);
 
-  return { composerData };
+  return {
+    composerData,
+    sessionDrawer: parseSessionDrawerCookie(
+      args.request.headers.get('cookie') ?? '',
+    ),
+  };
 };
 
 // Five-minute client cache for the composer bundle (SSR still runs first).
@@ -70,6 +77,7 @@ export const clientLoader = (args: Route.ClientLoaderArgs) => {
     composerData: loadHomeComposer(async () => {
       return (await args.serverLoader()).composerData;
     }),
+    sessionDrawer: parseSessionDrawerCookie(document.cookie),
   };
 };
 
@@ -101,7 +109,7 @@ export default function Component(
   props: Route.ComponentProps,
 ): React.ReactElement {
   const { actionData: _a, loaderData, matches: _m, params: _p } = props;
-  const { composerData } = loaderData;
+  const { composerData, sessionDrawer } = loaderData;
 
   // Hooks
 
@@ -126,8 +134,11 @@ export default function Component(
   // authMiddleware, so a rendered home route always has a user.
   const conversationList = useConversationList({ enabled: true });
 
+  // The session drawer beside the thread: open/collapsed state (cookie-backed,
+  // so SSR matches) and the composer's reported environment.
+  const drawer = useSessionDrawer({ initialState: sessionDrawer });
+
   // Setup
-  const isEmptyThread = turn.messages.length === 0;
   const conversationIdParam = searchParams.get('conversationId');
 
   // Handlers
@@ -176,28 +187,16 @@ export default function Component(
         activeConversationId={turn.conversationId}
         conversationList={conversationList}
         onNewChat={onNewChat}
+        onOpenSessionDrawer={() => drawer.setSheetOpen(true)}
         onSelectConversation={onSelectConversation}
       />
 
-      <div className="flex flex-1 flex-col justify-end p-4 pt-2 md:p-8 md:pt-4 lg:p-12 lg:pt-4">
-        {isEmptyThread && (
-          <div className="flex flex-1 flex-col items-center justify-center">
-            <h1 className="text-center text-2xl">
-              What would you like to build today?
-            </h1>
-            <p className="text-muted-foreground mt-2 text-sm">
-              OpenThrottle is a platform for building software, iteratively, and
-              securely.
-            </p>
-          </div>
-        )}
-
-        <HomeThreadColumn
-          composerData={composerData}
-          conversationList={conversationList}
-          turn={turn}
-        />
-      </div>
+      <HomeLayout
+        composerData={composerData}
+        conversationList={conversationList}
+        drawer={drawer}
+        turn={turn}
+      />
     </GlobalScreen>
   );
 }

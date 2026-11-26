@@ -1,0 +1,51 @@
+fragment CheckoutDiffFile on CheckoutDiffFileObject {
+  additions
+  binary
+  deletions
+  path
+  previousPath
+  status
+}
+
+fragment CheckoutDiffPullRequest on CheckoutDiffPullRequestObject {
+  number
+  state
+  url
+}
+
+fragment CheckoutDiffSummary on CheckoutDiffObject {
+  additions
+  available
+  baseRef
+  deletions
+  files {
+    ...CheckoutDiffFile
+  }
+  filesTruncated
+  headBranch
+  pullRequest {
+    ...CheckoutDiffPullRequest
+  }
+  reason
+}
+
+fragment CheckoutFilePatch on CheckoutFileDiffObject {
+  available
+  binary
+  patch
+  path
+  reason
+  truncated
+}
+
+query getCheckoutDiff($checkoutId: ID!) {
+  checkoutDiff(checkoutId: $checkoutId) {
+    ...CheckoutDiffSummary
+  }
+}
+
+query getCheckoutFileDiff($checkoutId: ID!, $path: String!) {
+  checkoutFileDiff(checkoutId: $checkoutId, path: $path) {
+    ...CheckoutFilePatch
+  }
+}

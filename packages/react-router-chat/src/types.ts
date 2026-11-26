@@ -897,3 +897,77 @@ export interface ChatContextValue {
   readonly onStartNewChat: (() => void) | undefined;
   readonly open: boolean | undefined;
 }
+
+/**
+ * A snapshot of the settings the next turn of a chat runs with, as the
+ * composer holds them. Shown by the session drawer's Environment section.
+ *
+ * @public
+ */
+export interface ChatSessionEnvironment {
+  /** Label of the agent (backend) the selected model runs on. */
+  readonly agentLabel: string | undefined;
+  /** The checkout the agent works in, when one is selected. */
+  readonly checkout: ChatCheckoutOption | undefined;
+  /** Label of the selected model. */
+  readonly modelLabel: string | undefined;
+  readonly permissionMode: ChatPermissionModeValue | undefined;
+  readonly reasoning: ChatReasoningLevelValue | undefined;
+}
+
+/** How a file differs from the checkout's base branch. */
+export type ChatSessionDiffFileStatus =
+  'added' | 'deleted' | 'modified' | 'renamed';
+
+/** One file of a {@link ChatSessionDiff}. */
+export interface ChatSessionDiffFile {
+  readonly additions: number;
+  /** True for a binary file: it has no patch. */
+  readonly binary: boolean;
+  readonly deletions: number;
+  /** Relative to the checkout root, like the Files section's paths. */
+  readonly path: string;
+  /** Where a renamed file used to live. */
+  readonly previousPath: string | undefined;
+  readonly status: ChatSessionDiffFileStatus;
+}
+
+/** The pull request a checkout's branch has, when the forge knows one. */
+export interface ChatSessionDiffPullRequest {
+  readonly number: number;
+  /** 'open', 'merged' or 'closed'. */
+  readonly state: string;
+  readonly url: string;
+}
+
+/** A checkout whose changes could not be computed. */
+export interface ChatSessionDiffUnavailable {
+  readonly available: false;
+  /** Why the diff is unavailable. */
+  readonly reason: string | undefined;
+}
+
+/** A checkout's computed changes against its base branch. */
+export interface ChatSessionDiffAvailable {
+  readonly additions: number;
+  readonly available: true;
+  /** The base branch ref the diff is measured from (e.g. origin/main). */
+  readonly baseRef: string | undefined;
+  readonly deletions: number;
+  readonly files: readonly ChatSessionDiffFile[];
+  /** True when more files changed than `files` lists. */
+  readonly filesTruncated: boolean;
+  readonly headBranch: string | undefined;
+  readonly pullRequest: ChatSessionDiffPullRequest | undefined;
+}
+
+/**
+ * A checkout's changes against its base branch, as the session drawer's
+ * Changes section shows them: computed (`available: true`) or not, with the
+ * reason. A plain mirror of the host's query, so the package stays free of any
+ * GraphQL client.
+ *
+ * @public
+ */
+export type ChatSessionDiff =
+  ChatSessionDiffAvailable | ChatSessionDiffUnavailable;

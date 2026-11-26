@@ -42,7 +42,10 @@ const matches: Route.ComponentProps['matches'] = [
   {
     handle: undefined,
     id: 'routes/_index',
-    loaderData: { composerData },
+    loaderData: {
+      composerData,
+      sessionDrawer: { collapsedSections: [], isOpen: false },
+    },
     params: {},
     pathname: '/',
   },
@@ -102,7 +105,10 @@ describe('routes/auth._index.tsx redirectUrl', () => {
       const user = userEvent.setup();
       const props: Route.ComponentProps = {
         actionData: undefined,
-        loaderData: { composerData },
+        loaderData: {
+          composerData,
+          sessionDrawer: { collapsedSections: [], isOpen: false },
+        },
         matches,
         params: {},
       };

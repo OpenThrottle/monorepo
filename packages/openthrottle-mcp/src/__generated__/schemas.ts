@@ -24,6 +24,7 @@ import {
   BlogReferenceEntity,
   CalibrateJudgeForRunInput,
   CancelPlanRunInput,
+  CheckoutDiffFileStatus,
   ClaimPlanMessagesInput,
   CleanQueueInput,
   CloneCmsFragmentInput,
@@ -252,6 +253,9 @@ export const BlogPostStatusSchema: z.ZodType<BlogPostStatus> =
 
 export const BlogReferenceEntitySchema: z.ZodType<BlogReferenceEntity> =
   z.nativeEnum(BlogReferenceEntity);
+
+export const CheckoutDiffFileStatusSchema: z.ZodType<CheckoutDiffFileStatus> =
+  z.nativeEnum(CheckoutDiffFileStatus);
 
 export const CustomPromptTypeSchema: z.ZodType<CustomPromptType> =
   z.nativeEnum(CustomPromptType);

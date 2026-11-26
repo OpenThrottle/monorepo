@@ -98,12 +98,22 @@ export const activeToolOf = (
 };
 
 /**
+ * A tool name in the form {@link CHAT_TOOL_CATEGORY_BY_NAME} is keyed by:
+ * trimmed, lower-case, `-` as `_`.
+ * @public
+ */
+export const normalizeToolName = (name: string): string => {
+  return name.trim().toLowerCase().replaceAll('-', '_');
+};
+
+/**
  * The summary category a tool name counts under (see
  * {@link CHAT_TOOL_CATEGORY_BY_NAME}); names are matched case-insensitively,
  * with `-` treated as `_`. Unknown names are `other`.
+ * @public
  */
-const toolCategoryOf = (name: string): ChatToolCategory => {
-  const key = name.trim().toLowerCase().replaceAll('-', '_');
+export const toolCategoryOf = (name: string): ChatToolCategory => {
+  const key = normalizeToolName(name);
 
   return Object.hasOwn(CHAT_TOOL_CATEGORY_BY_NAME, key)
     ? (CHAT_TOOL_CATEGORY_BY_NAME[key] ?? 'other')

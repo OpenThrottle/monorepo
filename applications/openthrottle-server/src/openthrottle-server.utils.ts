@@ -49,6 +49,7 @@ import { AuthGraphqlModule } from './graphql/auth/auth.module.ts';
 import { BackgroundActivitiesGraphqlModule } from './graphql/background-activities/background-activities.module.ts';
 import { BlogGraphqlModule } from './graphql/blog/blog.module.ts';
 import { CaptureHealthGraphqlModule } from './graphql/capture-health/capture-health.module.ts';
+import { CheckoutDiffGraphqlModule } from './graphql/checkout-diff/checkout-diff.module.ts';
 import { CodeSearchGraphqlModule } from './graphql/code-search/code-search.module.ts';
 import { ConversationStreamGraphqlModule } from './graphql/conversation-stream/conversation-stream.module.ts';
 import { DailyStatsGraphqlModule } from './graphql/daily-stats/daily-stats.module.ts';
@@ -307,6 +308,7 @@ export const buildImports = (role: ProcessRole): AppModuleImports => {
       BackgroundActivitiesGraphqlModule,
       BlogGraphqlModule,
       CaptureHealthGraphqlModule,
+      CheckoutDiffGraphqlModule,
       CodeSearchGraphqlModule,
       ConversationStreamGraphqlModule,
       CustomPromptsGraphqlModule,

@@ -43,6 +43,7 @@ const matches: Route.ComponentProps['matches'] = [
         personas: [],
         repositories: [],
       }),
+      sessionDrawer: { collapsedSections: [], isOpen: false },
     },
     params: {},
     pathname: '/',
@@ -62,6 +63,7 @@ describe('routes/_index.tsx', () => {
             personas: [],
             repositories: [],
           }),
+          sessionDrawer: { collapsedSections: [], isOpen: false },
         }}
         matches={matches}
         params={{}}
@@ -86,7 +88,10 @@ describe('routes/_index.tsx', () => {
       <Index
         actionData={undefined}
         // A never-resolving promise keeps the Suspense boundary in its fallback.
-        loaderData={{ composerData: new Promise<never>(() => {}) }}
+        loaderData={{
+          composerData: new Promise<never>(() => {}),
+          sessionDrawer: { collapsedSections: [], isOpen: false },
+        }}
         matches={matches}
         params={{}}
       />,
@@ -118,6 +123,7 @@ describe('routes/_index.tsx toolbar persistence', () => {
       personas: [{ id: 'p1', label: 'Persona One' }],
       repositories: [{ displayName: 'Repo One', id: 'r1' }],
     }),
+    sessionDrawer: { collapsedSections: [], isOpen: false },
   };
 
   beforeEach(() => {

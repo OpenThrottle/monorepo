@@ -28,6 +28,7 @@
   --chart-5: hsl(27 87% 67%);
   --destructive-foreground: hsl(0 0% 98%);
   --destructive: hsl(0 84.2% 60.2%);
+  --success: hsl(142 71% 35%);
   --foreground: hsl(0 0% 3.9%);
   --input: hsl(0 0% 80%);
   --muted-foreground: hsl(0 0% 45.1%);
@@ -69,6 +70,7 @@
     --chart-5: hsl(340 75% 55%);
     --destructive-foreground: hsl(0 0% 98%);
     --destructive: hsl(0 84.2% 60.2%);
+    --success: hsl(142 69% 58%);
     --foreground: hsl(210 20% 98%);
     --input: hsl(210 17% 15%);
     --muted-foreground: hsl(210 14% 55%);
@@ -107,6 +109,7 @@
   --color-chart-5: var(--chart-5);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-destructive: var(--destructive);
+  --color-success: var(--success);
   --color-foreground: var(--foreground);
   --color-input: var(--input);
   --color-muted-foreground: var(--muted-foreground);
