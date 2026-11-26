@@ -1,6 +1,7 @@
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 import { redirect } from 'react-router';
 
+import type { SearchCodeRepositoryFragment } from '~/__generated__/graphql';
 import {
   GetSearchCodeIndexStatusDocument,
   GetSearchCodeRepositoriesDocument,
@@ -10,11 +11,37 @@ import { SEARCH_SCOPE } from '~/routing/search/config';
 import type { SearchIndexCodeData } from '~/routing/search/types/search-index';
 import {
   isCodeIndexSearchable,
+  isGraphqlForbiddenError,
   resolveCodeSearchRepository,
   toCodeSearchRepositories,
 } from '~/routing/search/utils/code-search';
 import type { ParsedSearchParams } from '~/routing/search/utils/parsers';
 import { buildSearchUrl } from '~/routing/search/utils/parsers';
+
+/**
+ * @description The offered repositories, or null when the caller may not list them: listing needs
+ * `settings:read`, while searching needs only `code:read`, so a refusal becomes a notice, not an
+ * error page.
+ */
+const loadCodeSearchRepositories = async (
+  request: Request,
+): Promise<SearchCodeRepositoryFragment[] | null> => {
+  try {
+    const { workspaceLocalRepositories } = await executeGraphqlWithAuth(
+      request,
+      GetSearchCodeRepositoriesDocument,
+      {},
+    );
+
+    return toCodeSearchRepositories(workspaceLocalRepositories);
+  } catch (error) {
+    if (isGraphqlForbiddenError(error)) {
+      return null;
+    }
+
+    throw error;
+  }
+};
 
 /**
  * @description The code scope of the /search loader: the offered repositories, the selected
@@ -26,12 +53,9 @@ export const loadSearchCode = async (
 ): Promise<SearchIndexCodeData> => {
   const { expandRankingDetails, limit, page, q, repositoryId } = params;
   const trimmed = q.trim();
-  const { workspaceLocalRepositories } = await executeGraphqlWithAuth(
-    request,
-    GetSearchCodeRepositoriesDocument,
-    {},
-  );
-  const repositories = toCodeSearchRepositories(workspaceLocalRepositories);
+  const listed = await loadCodeSearchRepositories(request);
+  const canListRepositories = listed !== null;
+  const repositories = listed ?? [];
   const repository = resolveCodeSearchRepository(repositories, repositoryId);
   const base = { expandRankingDetails, limit, page, query: q };
 
@@ -40,6 +64,7 @@ export const loadSearchCode = async (
       ...base,
       code: {
         available: true,
+        canListRepositories,
         index: null,
         matches: [],
         repositories,
@@ -66,6 +91,7 @@ export const loadSearchCode = async (
       ...base,
       code: {
         available: !isUnavailable,
+        canListRepositories,
         index: codeIndexStatus,
         matches: [],
         repositories,
@@ -109,6 +135,7 @@ export const loadSearchCode = async (
     ...base,
     code: {
       available,
+      canListRepositories,
       index: codeIndexStatus,
       matches,
       repositories,

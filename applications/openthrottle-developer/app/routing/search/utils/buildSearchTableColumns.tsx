@@ -53,6 +53,7 @@ export const buildSearchTableColumns = (
         return <div className="p-2">{SEARCH_TABLE_COPY.columns.result}</div>;
       },
       id: 'result',
+      meta: { cellClassName: 'w-full max-w-0' },
     },
     {
       cell: ({ row }) => {

@@ -1,3 +1,5 @@
+import { isGraphqlResponseError } from '@openthrottle/react-router-graphql';
+
 import type {
   SearchCodeIndexStatusFragment,
   SearchCodeMatchFragment,
@@ -100,16 +102,29 @@ export const getCodeIndexStatusLabel = (status: string): string => {
 
 /** Which notice the code scope shows above its results, if any. */
 export type CodeSearchNoticeKey =
-  'failed' | 'gated' | 'indexing' | 'noRepository' | 'notIndexed';
+  'failed' | 'forbidden' | 'gated' | 'indexing' | 'noRepository' | 'notIndexed';
+
+/** @description The code-scope state {@link getCodeSearchNotice} reads. */
+export interface CodeSearchNoticeState {
+  readonly available: boolean;
+  readonly canListRepositories: boolean;
+  readonly index: SearchCodeIndexStatusFragment | null;
+}
 
 /**
- * @description The notice for a code-scope state: no repository, code search gated off, or an
- * index that is missing, still building or failed. Null when the index is ready.
+ * @description The notice for a code-scope state: repositories the caller may not list, no
+ * repository, code search gated off, or an index that is missing, still building or failed.
+ * Null when the index is ready.
  */
 export const getCodeSearchNotice = (
-  available: boolean,
-  index: SearchCodeIndexStatusFragment | null,
+  state: CodeSearchNoticeState,
 ): CodeSearchNoticeKey | null => {
+  const { available, canListRepositories, index } = state;
+
+  if (!canListRepositories) {
+    return 'forbidden';
+  }
+
   if (index === null) {
     return 'noRepository';
   }
@@ -127,4 +142,14 @@ export const getCodeSearchNotice = (
   }
 
   return null;
+};
+
+/**
+ * @description True when a thrown GraphQL error is the server refusing the caller a permission
+ * (`extensions.code` `FORBIDDEN`): signed in, but not allowed.
+ */
+export const isGraphqlForbiddenError = (error: unknown): boolean => {
+  return (
+    isGraphqlResponseError(error) && error.extensions['code'] === 'FORBIDDEN'
+  );
 };

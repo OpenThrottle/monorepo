@@ -156,4 +156,50 @@ describe('DataTable', () => {
     );
     expect(ids).toEqual(['row-0-1', 'row-1-1a', 'row-0-2']);
   });
+
+  describe('when a column sets cell and header classes in meta', () => {
+    const classedColumns: DataTableColumnDef<DemoRow, unknown>[] = [
+      { accessorKey: 'name', header: 'Name' },
+      {
+        accessorKey: 'value',
+        header: 'Value',
+        meta: {
+          cellClassName: 'w-full max-w-0',
+          headerClassName: 'text-right',
+        },
+      },
+    ];
+    const data: DemoRow[] = [
+      { id: '1', name: 'Alpha', value: 10 },
+      { id: '2', name: 'Beta', value: 20 },
+    ];
+
+    it('puts the cell class on every body cell of that column only', () => {
+      const component = render(
+        <DataTable<DemoRow, unknown> columns={classedColumns} data={data} />,
+      );
+      const rows = Array.from(component.container.querySelectorAll('tbody tr'));
+
+      expect(rows).toHaveLength(2);
+      rows.forEach((row) => {
+        const [nameCell, valueCell] = Array.from(row.querySelectorAll('td'));
+
+        expect(valueCell).toHaveClass('w-full', 'max-w-0');
+        expect(nameCell).not.toHaveClass('w-full');
+      });
+    });
+
+    it('puts the header class on that column header only', () => {
+      const component = render(
+        <DataTable<DemoRow, unknown> columns={classedColumns} data={data} />,
+      );
+      const nameHeader = component.getByRole('columnheader', { name: 'Name' });
+      const valueHeader = component.getByRole('columnheader', {
+        name: 'Value',
+      });
+
+      expect(valueHeader).toHaveClass('text-right');
+      expect(nameHeader).not.toHaveClass('text-right');
+    });
+  });
 });

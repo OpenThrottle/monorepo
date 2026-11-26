@@ -31,11 +31,13 @@ export interface SearchIndexKnowledgeData extends SearchIndexLoaderBase {
 
 /**
  * @description The code scope: one registered repository's indexed code. `repository` is null
- * when none is registered; `available` is false when the embedder cannot index code.
+ * when none is registered; `available` is false when the embedder cannot index code;
+ * `canListRepositories` is false when the caller may search code but not list repositories.
  */
 export interface SearchIndexCodeData extends SearchIndexLoaderBase {
   readonly code: {
     readonly available: boolean;
+    readonly canListRepositories: boolean;
     readonly index: SearchCodeIndexStatusFragment | null;
     readonly matches: readonly SearchCodeMatchFragment[];
     readonly repositories: readonly SearchCodeRepositoryFragment[];

@@ -10,7 +10,11 @@ import { SearchCodeNotice } from '../SearchCodeNotice';
 describe('SearchCodeNotice', () => {
   test('renders nothing for a ready index', () => {
     const component = renderRoutesStub(
-      <SearchCodeNotice available={true} index={searchCodeIndexFixture} />,
+      <SearchCodeNotice
+        available={true}
+        canListRepositories={true}
+        index={searchCodeIndexFixture}
+      />,
     );
 
     expect(component.queryByTestId('SearchCodeNotice')).toBeNull();
@@ -18,7 +22,11 @@ describe('SearchCodeNotice', () => {
 
   test('explains a missing repository', () => {
     const component = renderRoutesStub(
-      <SearchCodeNotice available={true} index={null} />,
+      <SearchCodeNotice
+        available={true}
+        canListRepositories={true}
+        index={null}
+      />,
     );
 
     expect(component.getByTestId('SearchCodeNotice')).toHaveAttribute(
@@ -31,6 +39,7 @@ describe('SearchCodeNotice', () => {
     const component = renderRoutesStub(
       <SearchCodeNotice
         available={false}
+        canListRepositories={true}
         index={{ ...searchCodeIndexFixture, status: 'unavailable' }}
       />,
     );
@@ -42,11 +51,30 @@ describe('SearchCodeNotice', () => {
     expect(component.queryByRole('link')).toBeNull();
   });
 
+  describe('when the caller may not list repositories', () => {
+    test('explains the missing permission without an index link', () => {
+      const component = renderRoutesStub(
+        <SearchCodeNotice
+          available={true}
+          canListRepositories={false}
+          index={null}
+        />,
+      );
+
+      expect(component.getByTestId('SearchCodeNotice')).toHaveAttribute(
+        'data-notice',
+        'forbidden',
+      );
+      expect(component.queryByRole('link')).toBeNull();
+    });
+  });
+
   describe('when the repository is not indexed', () => {
     test('links to the IDE to index it', () => {
       const component = renderRoutesStub(
         <SearchCodeNotice
           available={true}
+          canListRepositories={true}
           index={{
             ...searchCodeIndexFixture,
             indexedChunks: 0,

@@ -121,7 +121,10 @@ export function DataTable<TData extends RowData, TValue>(
   const bodyRows = rows.map((row) => (
     <TableRow key={row.id} {...getRowProps?.(row)}>
       {row.getAllCells().map((cell) => (
-        <TableCell key={cell.id}>
+        <TableCell
+          className={cell.column.columnDef.meta?.cellClassName}
+          key={cell.id}
+        >
           {flexRender(cell.column.columnDef.cell, cell.getContext())}
         </TableCell>
       ))}
@@ -145,7 +148,10 @@ export function DataTable<TData extends RowData, TValue>(
         {table.getHeaderGroups().map((headerGroup) => (
           <TableRow key={headerGroup.id}>
             {headerGroup.headers.map((header) => (
-              <TableHead key={header.id}>
+              <TableHead
+                className={header.column.columnDef.meta?.headerClassName}
+                key={header.id}
+              >
                 {!header.isPlaceholder &&
                   flexRender(
                     header.column.columnDef.header,

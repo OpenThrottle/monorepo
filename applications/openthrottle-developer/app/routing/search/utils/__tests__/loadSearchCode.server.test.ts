@@ -1,4 +1,7 @@
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  executeGraphqlWithAuth,
+  GraphqlResponseError,
+} from '@openthrottle/react-router-graphql';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import {
@@ -10,8 +13,11 @@ import { parseSearchParams } from '~/routing/search/utils/parsers';
 
 import { loadSearchCode } from '../loadSearchCode.server';
 
-vi.mock('@openthrottle/react-router-graphql', () => {
-  return { executeGraphqlWithAuth: vi.fn() };
+vi.mock('@openthrottle/react-router-graphql', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@openthrottle/react-router-graphql')>();
+
+  return { ...actual, executeGraphqlWithAuth: vi.fn() };
 });
 
 const PRIMARY = {
@@ -32,7 +38,7 @@ const MATCH = {
 
 interface MockAnswers {
   readonly matches?: readonly (typeof MATCH)[];
-  readonly repositories: readonly (typeof PRIMARY)[];
+  readonly repositories: readonly (typeof PRIMARY)[] | Error;
   readonly status?: string;
   readonly total?: number;
 }
@@ -42,6 +48,10 @@ function answer(answers: MockAnswers): void {
   vi.mocked(executeGraphqlWithAuth).mockImplementation(
     async (_request, document) => {
       if (document === GetSearchCodeRepositoriesDocument) {
+        if (answers.repositories instanceof Error) {
+          throw answers.repositories;
+        }
+
         return { workspaceLocalRepositories: answers.repositories };
       }
 
@@ -89,8 +99,37 @@ describe('loadSearchCode', () => {
       const result = await load('scope=code&q=auth');
 
       expect(result.code.repository).toBeNull();
+      expect(result.code.canListRepositories).toBe(true);
       expect(result.stats).toEqual({ index: null, kind: 'code', total: null });
       expect(executeGraphqlWithAuth).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('when the caller may not list repositories', () => {
+    test('returns the forbidden state instead of throwing', async () => {
+      answer({
+        repositories: new GraphqlResponseError('GraphQL errors: Forbidden', {
+          code: 'FORBIDDEN',
+        }),
+      });
+
+      const result = await load('scope=code&q=auth');
+
+      expect(result.code.canListRepositories).toBe(false);
+      expect(result.code.repositories).toEqual([]);
+      expect(result.code.repository).toBeNull();
+      expect(executeGraphqlWithAuth).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('when listing repositories fails for another reason', () => {
+    test('rethrows the error', async () => {
+      const failure = new GraphqlResponseError('GraphQL errors: boom', {
+        code: 'INTERNAL_SERVER_ERROR',
+      });
+      answer({ repositories: failure });
+
+      await expect(load('scope=code&q=auth')).rejects.toBe(failure);
     });
   });
 

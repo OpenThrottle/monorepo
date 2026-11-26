@@ -7,7 +7,6 @@ import type {
   SearchCodeRepositoryFragment,
 } from '~/__generated__/graphql';
 import { SEARCH_CODE_COPY } from '~/routing/search/data/copy';
-import { SEARCH_CODE_TABLE_CLASS } from '~/routing/search/data/search-table';
 import { buildSearchCodeTableColumns } from '~/routing/search/utils/buildSearchCodeTableColumns';
 
 export interface SearchCodeResultsTableProps {
@@ -54,7 +53,6 @@ export const SearchCodeResultsTable = (
       data-testid="SearchCodeResultsTable"
     >
       <DataTable<SearchCodeMatchFragment, unknown>
-        className={SEARCH_CODE_TABLE_CLASS}
         columns={columns}
         data={data}
         emptyState={emptyState}
