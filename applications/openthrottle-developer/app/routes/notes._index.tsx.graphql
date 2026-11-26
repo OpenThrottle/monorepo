@@ -11,3 +11,7 @@ query getNotes {
     ...NoteCard
   }
 }
+
+mutation deleteNote($id: ID!) {
+  deleteNote(id: $id)
+}

@@ -1,15 +1,16 @@
 import type { DataTableColumnDef } from '@openthrottle/react-router-shadcn';
 import { cn, DataTable } from '@openthrottle/react-router-shadcn';
-import { readSearchParam } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalPopoverActionsHeader,
+  readSearchParam,
+} from '@openthrottle/react-router-ui-global';
 import * as React from 'react';
 import { Link, useSearchParams } from 'react-router';
 
 import type { NoteCardFragment } from '~/__generated__/graphql';
 import { NotesEmpty } from '~/routing/notes/components/NotesEmpty';
-import {
-  formatNoteDate,
-  notePreviewLabel,
-} from '~/routing/notes/utils/notes-table';
+import { NotesTableRowActions } from '~/routing/notes/components/NotesTableRowActions';
+import { notePreviewLabel } from '~/routing/notes/utils/notePreviewLabel';
 
 export interface NotesTableProps {
   className?: string;
@@ -100,24 +101,15 @@ NotesTable.buildTable = (): DataTableColumnDef<
       header: () => <div className="p-2">Author</div>,
     },
     {
-      accessorKey: 'updatedAt',
       cell: ({ row }) => {
-        const note = row.original;
-        const updated = formatNoteDate(note.updatedAt ?? note.createdAt);
-        const created = formatNoteDate(note.createdAt);
-
         return (
-          <div className="text-muted-foreground p-2 text-xs">
-            <div>
-              Updated: <span aria-label={`Updated: ${updated}`}>{updated}</span>
-            </div>
-            <div className="mt-0.5">
-              Created: <span aria-label={`Created: ${created}`}>{created}</span>
-            </div>
+          <div className="flex items-center justify-center">
+            <NotesTableRowActions note={row.original} />
           </div>
         );
       },
-      header: () => <div className="p-2">Dates</div>,
+      header: () => <GlobalPopoverActionsHeader />,
+      id: 'actions',
     },
   ];
 };

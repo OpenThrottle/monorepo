@@ -1,5 +1,8 @@
 import { Button, cn } from '@openthrottle/react-router-shadcn';
-import { GlobalToolbarSearch } from '@openthrottle/react-router-ui-global';
+import {
+  GlobalStatsToggleButton,
+  GlobalToolbarSearch,
+} from '@openthrottle/react-router-ui-global';
 import { PlusIcon } from 'lucide-react';
 import * as React from 'react';
 import { Link } from 'react-router';
@@ -9,7 +12,7 @@ export interface NotesToolbarProps {
 }
 
 /**
- * @description Compact toolbar: URL-driven search (search) and Create note link. Preserves data-testid and URL-driven state.
+ * @description Compact toolbar: URL-driven search, the stats toggle and the Create note link. Preserves data-testid and URL-driven state.
  */
 export const NotesToolbar = (props: NotesToolbarProps): React.ReactElement => {
   const { className } = props;
@@ -32,9 +35,14 @@ export const NotesToolbar = (props: NotesToolbarProps): React.ReactElement => {
         <GlobalToolbarSearch
           aria-label="Search notes"
           placeholder="Search notes"
-          transformCommittedParams={(next) => next.delete('q')}
+          transformCommittedParams={(next) => {
+            // Drop the legacy `?q=` and start a new search on page 1.
+            next.delete('q');
+            next.delete('page');
+          }}
         />
         <div className="min-w-0 flex-1" />
+        <GlobalStatsToggleButton />
         <Button asChild={true} className="shrink-0" variant="outline">
           <Link to="/notes/create">
             <PlusIcon className="h-4 w-4" /> Create note

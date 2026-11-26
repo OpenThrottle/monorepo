@@ -79,8 +79,9 @@ describe('NotesTable Component', () => {
     expect(
       withNotes.getByRole('columnheader', { name: 'Author' }),
     ).toBeInTheDocument();
+    expect(withNotes.queryByRole('columnheader', { name: 'Dates' })).toBeNull();
     expect(
-      withNotes.getByRole('columnheader', { name: 'Dates' }),
+      withNotes.getByTestId('GlobalPopoverActionsHeader'),
     ).toBeInTheDocument();
   });
 
@@ -114,11 +115,16 @@ describe('NotesTable Component', () => {
     expect(getByText('—')).toBeInTheDocument();
   });
 
-  test('renders formatted updated and created dates when present', () => {
-    const { container } = renderNotesTable({ notes: mockNotes });
+  test('renders a row actions menu per note', () => {
+    const component = renderNotesTable({ notes: mockNotes });
 
-    expect(container.textContent).toContain('Updated:');
-    expect(container.textContent).toContain('Created:');
-    expect(container.textContent).toMatch(/\d{1,2}\/\d{1,2}\/2025/);
+    expect(
+      component.getByRole('button', { name: 'Actions for First Note' }),
+    ).toBeInTheDocument();
+    expect(
+      component.getByRole('button', {
+        name: 'Actions for Plain second note without heading',
+      }),
+    ).toBeInTheDocument();
   });
 });
