@@ -1,11 +1,15 @@
+import { GraphqlResponseError } from '@openthrottle/react-router-graphql';
 import { describe, expect, test } from 'vitest';
 
+import type { SearchCodeIndexStatusFragment } from '~/__generated__/graphql';
 import { SEARCH_CODE_COPY } from '~/routing/search/data/copy';
 
+import type { CodeSearchNoticeState } from '../code-search';
 import {
   getCodeIndexStatusLabel,
   getCodeSearchNotice,
   isCodeIndexSearchable,
+  isGraphqlForbiddenError,
   resolveCodeSearchRepository,
   toCodeMatchHref,
   toCodeSearchRepositories,
@@ -118,11 +122,43 @@ describe('isCodeIndexSearchable', () => {
 });
 
 describe('getCodeSearchNotice', () => {
+  const state = (
+    available: boolean,
+    current: SearchCodeIndexStatusFragment | null,
+  ): CodeSearchNoticeState => {
+    return { available, canListRepositories: true, index: current };
+  };
+
   test('names the state that needs explaining', () => {
-    expect(getCodeSearchNotice(true, null)).toBe('noRepository');
-    expect(getCodeSearchNotice(false, index('unavailable'))).toBe('gated');
-    expect(getCodeSearchNotice(true, index('indexing'))).toBe('indexing');
-    expect(getCodeSearchNotice(true, index('ready'))).toBeNull();
+    expect(getCodeSearchNotice(state(true, null))).toBe('noRepository');
+    expect(getCodeSearchNotice(state(false, index('unavailable')))).toBe(
+      'gated',
+    );
+    expect(getCodeSearchNotice(state(true, index('indexing')))).toBe(
+      'indexing',
+    );
+    expect(getCodeSearchNotice(state(true, index('ready')))).toBeNull();
+  });
+
+  test('explains repositories the caller may not list before anything else', () => {
+    expect(
+      getCodeSearchNotice({
+        available: true,
+        canListRepositories: false,
+        index: null,
+      }),
+    ).toBe('forbidden');
+  });
+});
+
+describe('isGraphqlForbiddenError', () => {
+  test('matches only a GraphQL FORBIDDEN error', () => {
+    const forbidden = new GraphqlResponseError('x', { code: 'FORBIDDEN' });
+    const other = new GraphqlResponseError('x', { code: 'BAD_REQUEST' });
+
+    expect(isGraphqlForbiddenError(forbidden)).toBe(true);
+    expect(isGraphqlForbiddenError(other)).toBe(false);
+    expect(isGraphqlForbiddenError(new Error('FORBIDDEN'))).toBe(false);
   });
 });
 

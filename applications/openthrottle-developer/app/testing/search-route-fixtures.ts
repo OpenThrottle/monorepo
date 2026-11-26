@@ -155,6 +155,7 @@ export const searchCodeIndexFixture: SearchCodeIndexStatusFragment = {
 export const searchCodeLoaderFixture: SearchIndexCodeData = {
   code: {
     available: true,
+    canListRepositories: true,
     index: searchCodeIndexFixture,
     matches: [searchCodeMatchFixture],
     repositories: [searchCodeRepositoryFixture],

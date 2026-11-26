@@ -5,7 +5,6 @@ import * as React from 'react';
 
 import type { SearchChunk } from '~/__generated__/graphql';
 import { SEARCH_TABLE_COPY } from '~/routing/search/data/copy';
-import { SEARCH_RESULTS_TABLE_CLASS } from '~/routing/search/data/search-table';
 import { buildSearchTableColumns } from '~/routing/search/utils/buildSearchTableColumns';
 import { isInteractiveTarget } from '~/routing/search/utils/isInteractiveTarget';
 
@@ -75,7 +74,6 @@ export const SearchResultsTable = (
       data-testid="SearchResultsTable"
     >
       <DataTable<SearchChunk, unknown>
-        className={SEARCH_RESULTS_TABLE_CLASS}
         columns={columns}
         data={data}
         emptyState={emptyState}

@@ -49,7 +49,11 @@ export const SearchCodeResults = (
 
   return (
     <>
-      <SearchCodeNotice available={code.available} index={code.index} />
+      <SearchCodeNotice
+        available={code.available}
+        canListRepositories={code.canListRepositories}
+        index={code.index}
+      />
       {table}
       <OpenThrottlePagination
         basePath={SEARCH_BASE_PATH}

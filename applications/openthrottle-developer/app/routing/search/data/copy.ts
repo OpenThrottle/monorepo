@@ -105,6 +105,10 @@ export const SEARCH_CODE_COPY = {
       description: `The last index job failed, so results may be missing files. Re-index the repository to fill the gaps.`,
       title: 'Indexing failed',
     },
+    forbidden: {
+      description: `Your role can search code but not list repositories, which needs the settings:read permission. Ask an admin to add it to your role.`,
+      title: 'Repositories are not visible to you',
+    },
     gated: {
       description: `Code search needs an embedding model that may index code: a local or Ollama model, or a hosted one with CODE_EMBEDDINGS_ALLOW_HOSTED=true.`,
       title: 'Code search is off',

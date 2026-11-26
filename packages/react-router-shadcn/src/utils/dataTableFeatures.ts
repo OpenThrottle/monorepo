@@ -5,6 +5,7 @@ import type {
   HeaderContext,
   Row,
   RowData,
+  TableFeatures,
 } from '@tanstack/react-table';
 import {
   createExpandedRowModel,
@@ -51,5 +52,24 @@ export type DataTableHeaderContext<
   TData extends RowData,
   TValue extends CellData = CellData,
 > = HeaderContext<DataTableFeatures, TData, TValue>;
+
+declare module '@tanstack/react-table' {
+  /* eslint-disable @typescript-eslint/no-unused-vars -- merging needs TanStack's exact type parameters, unused here */
+  /**
+   * @description Per-column options `DataTable` reads from `columnDef.meta`. `cellClassName`
+   * lands on every body cell of the column and `headerClassName` on its header cell, so a
+   * column can size itself (e.g. `w-full max-w-0` to take the remaining width and truncate)
+   * without the table targeting it by position.
+   */
+  interface ColumnMeta<
+    in out TFeatures extends TableFeatures,
+    in out TData extends RowData,
+    TValue extends CellData = CellData,
+  > {
+    /* eslint-enable @typescript-eslint/no-unused-vars */
+    readonly cellClassName?: string;
+    readonly headerClassName?: string;
+  }
+}
 
 export type { ExpandedState } from '@tanstack/react-table';

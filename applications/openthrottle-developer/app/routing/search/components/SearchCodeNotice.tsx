@@ -13,22 +13,23 @@ import { getCodeSearchNotice } from '~/routing/search/utils/code-search';
 
 export interface SearchCodeNoticeProps {
   readonly available: boolean;
+  readonly canListRepositories: boolean;
   readonly index: SearchCodeIndexStatusFragment | null;
 }
 
 /**
- * @description Explains a code scope that cannot answer fully: no repository, code search gated
- * off, or an index that is missing, building or failed. Renders nothing when the index is ready.
+ * @description Explains a code scope that cannot answer fully: repositories the caller may not
+ * list, no repository, code search gated off, or an index that is missing, building or failed. Renders nothing when the index is ready.
  */
 export const SearchCodeNotice = (
   props: SearchCodeNoticeProps,
 ): React.ReactElement | null => {
-  const { available, index } = props;
+  const { available, canListRepositories, index } = props;
 
   // Hooks
 
   // Setup
-  const notice = getCodeSearchNotice(available, index);
+  const notice = getCodeSearchNotice({ available, canListRepositories, index });
   const canIndex = notice === 'notIndexed' || notice === 'failed';
   const repositoryId = index?.repositoryId ?? '';
 

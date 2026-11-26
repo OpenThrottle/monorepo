@@ -52,6 +52,7 @@ export const buildSearchCodeTableColumns = (
         );
       },
       id: 'match',
+      meta: { cellClassName: 'w-full max-w-0' },
     },
     {
       cell: ({ row }) => {
