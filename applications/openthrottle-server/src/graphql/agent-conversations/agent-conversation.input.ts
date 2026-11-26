@@ -19,6 +19,13 @@ export class ListAgentConversationsInput extends OffsetPaginationInput {
 export class GetAgentConversationMessagesInput extends OffsetPaginationInput {
   @Field(() => ID)
   conversationId!: string;
+
+  @Field(() => Boolean, {
+    defaultValue: false,
+    description: `Count offset back from the newest message, so limit N returns the newest N (still sorted oldest first) and hasNextPage means older messages remain. Default false: offset counts from the oldest`,
+    nullable: true,
+  })
+  fromNewest!: boolean | null;
 }
 
 @InputType()

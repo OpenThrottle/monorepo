@@ -33,6 +33,7 @@ describe('utils.agents-chat handlers', () => {
       );
 
       expect(result).toEqual({
+        activeTurn: null,
         conversationId: null,
         errorMessage: 'conversationId is required',
         messages: [],
@@ -80,6 +81,7 @@ describe('utils.agents-chat handlers', () => {
       );
 
       expect(result).toEqual({
+        activeTurn: null,
         conversationId: 'c1',
         errorMessage: 'boom',
         messages: [],

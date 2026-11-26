@@ -23,6 +23,7 @@ import { useAgenticChatTurn } from '../useAgenticChatTurn';
 let streamControl: {
   markCompleted: (id: string, failed?: boolean) => void;
   markRetryable: (id: string) => void;
+  streamPartial: (conversationId: string, message: ChatMessage) => void;
   streamReply: (conversationId: string, message: ChatMessage) => void;
 } | null = null;
 
@@ -65,6 +66,16 @@ vi.mock('../useConversationStream', () => ({
       },
       markRetryable: (id: string): void =>
         setRetryableIds((previous) => new Set(previous).add(id)),
+      // Streams part of a reply with no terminal chunk yet: a turn still running,
+      // as a late subscriber sees it when the server replays its buffer.
+      streamPartial: (conversationId: string, message: ChatMessage): void => {
+        setStreamed((previous) =>
+          new Map(previous).set(conversationId, [
+            ...(previous.get(conversationId) ?? []),
+            message,
+          ]),
+        );
+      },
       // Streams a finished reply: like a terminal chunk, it also completes the turn.
       streamReply: (conversationId: string, message: ChatMessage): void => {
         setStreamed((previous) =>
@@ -100,12 +111,22 @@ const STREAM_DOCUMENT: TypedDocumentNode<
 );
 
 const RESTORED = {
+  activeTurn: null,
   conversationId: 'conv-42',
   errorMessage: null,
   messages: [
     { body: 'Earlier question', id: 'm1', role: 'user' },
     { body: 'Earlier answer', id: 'm2', role: 'assistant' },
   ],
+};
+
+// The same thread loaded while its next turn is still running on the server.
+const RESTORED_RUNNING = {
+  ...RESTORED,
+  activeTurn: {
+    assistantMessageId: 'a-live',
+    startedAt: '2026-11-25T12:00:00.000Z',
+  },
 };
 
 // Single harness for the whole file (react/no-multi-comp) exposing every control
@@ -120,6 +141,13 @@ const Harness = (): React.ReactElement => {
       <span data-testid="conversation-id">{turn.conversationId ?? 'none'}</span>
       <span data-testid="can-retry">{turn.canRetry ? 'yes' : 'no'}</span>
       <span data-testid="message-count">{turn.messages.length}</span>
+      <span data-testid="is-streaming">{turn.isStreaming ? 'yes' : 'no'}</span>
+      <span data-testid="pending-ids">
+        {turn.messages
+          .filter((message) => message.pending === true)
+          .map((message) => message.id)
+          .join('|')}
+      </span>
       <span data-testid="queue">
         {turn.queuedMessages.map((item) => item.message).join('|')}
       </span>
@@ -192,11 +220,12 @@ let turnPosts = 0;
 
 const renderTurn = (
   pageLoader: (() => null) | undefined = undefined,
+  restored: typeof RESTORED_RUNNING | typeof RESTORED = RESTORED,
 ): RenderResult => {
   const RoutesStub = createRoutesStub([
     { Component: Harness, loader: pageLoader, path: '/' },
     {
-      action: () => RESTORED,
+      action: () => restored,
       path: '/resources/agent-conversations',
     },
     {
@@ -256,6 +285,172 @@ describe('useAgenticChatTurn restore/reset', () => {
     });
 
     expect(pageLoads).toBe(1);
+  });
+
+  // Reopening a conversation whose turn is still running: load-messages returns
+  // only the persisted rows (the assistant row is written when the turn ends),
+  // and the server replays the running turn's chunks under an assistant id the
+  // client has never seen. That reply must render and run like a local turn.
+  describe('when the stream replays a running turn', () => {
+    test('renders the reply after the persisted thread', async () => {
+      const user = userEvent.setup();
+      const component = renderTurn();
+
+      await user.click(component.getByRole('button', { name: 'Restore' }));
+      await waitFor(() =>
+        expect(component.getByTestId('message-count')).toHaveTextContent('2'),
+      );
+
+      act(() =>
+        streamControl?.streamPartial('conv-42', {
+          body: 'Working on it',
+          id: 'a-running',
+          role: 'assistant',
+        }),
+      );
+
+      await waitFor(() =>
+        expect(component.getByTestId('assistant-bodies')).toHaveTextContent(
+          'Earlier answer|Working on it',
+        ),
+      );
+      expect(component.getByTestId('message-count')).toHaveTextContent('3');
+    });
+
+    test('adopts it as the running turn, so Stop cancels it', async () => {
+      const user = userEvent.setup();
+      const component = renderTurn();
+
+      await user.click(component.getByRole('button', { name: 'Restore' }));
+      await waitFor(() =>
+        expect(component.getByTestId('message-count')).toHaveTextContent('2'),
+      );
+      act(() =>
+        streamControl?.streamPartial('conv-42', {
+          body: '',
+          id: 'a-running',
+          role: 'assistant',
+        }),
+      );
+
+      await waitFor(() =>
+        expect(component.getByTestId('pending-ids')).toHaveTextContent(
+          'a-running',
+        ),
+      );
+      expect(component.getByTestId('is-streaming')).toHaveTextContent('yes');
+
+      const postsBefore = turnPosts;
+      await user.click(component.getByRole('button', { name: 'Stop' }));
+
+      await waitFor(() => expect(turnPosts).toBe(postsBefore + 1));
+      expect(component.getByTestId('is-streaming')).toHaveTextContent('no');
+      // Stop clears the pending id before any terminal chunk; it must stay clear.
+      await new Promise((resolve) => {
+        setTimeout(resolve, 50);
+      });
+      expect(component.getByTestId('pending-ids')).toHaveTextContent('');
+    });
+
+    test('leaves the running state once the replayed turn finishes', async () => {
+      const user = userEvent.setup();
+      const component = renderTurn();
+
+      await user.click(component.getByRole('button', { name: 'Restore' }));
+      await waitFor(() =>
+        expect(component.getByTestId('message-count')).toHaveTextContent('2'),
+      );
+      act(() =>
+        streamControl?.streamPartial('conv-42', {
+          body: 'Working on it',
+          id: 'a-running',
+          role: 'assistant',
+        }),
+      );
+      await waitFor(() =>
+        expect(component.getByTestId('is-streaming')).toHaveTextContent('yes'),
+      );
+
+      act(() => streamControl?.markCompleted('a-running'));
+
+      await waitFor(() =>
+        expect(component.getByTestId('is-streaming')).toHaveTextContent('no'),
+      );
+    });
+  });
+
+  describe('when load-messages reports an active turn', () => {
+    test('shows a running placeholder before any chunk arrives', async () => {
+      const user = userEvent.setup();
+      const component = renderTurn(undefined, RESTORED_RUNNING);
+
+      await user.click(component.getByRole('button', { name: 'Restore' }));
+
+      await waitFor(() =>
+        expect(component.getByTestId('message-count')).toHaveTextContent('3'),
+      );
+      expect(component.getByTestId('pending-ids')).toHaveTextContent('a-live');
+      expect(component.getByTestId('is-streaming')).toHaveTextContent('yes');
+    });
+
+    test('settles at once when the turn ended during the load', async () => {
+      const user = userEvent.setup();
+      const component = renderTurn(undefined, RESTORED_RUNNING);
+      // The terminal chunk lands before the load resolves.
+      act(() => streamControl?.markCompleted('a-live'));
+
+      await user.click(component.getByRole('button', { name: 'Restore' }));
+
+      await waitFor(() =>
+        expect(component.getByTestId('message-count')).toHaveTextContent('3'),
+      );
+      await waitFor(() =>
+        expect(component.getByTestId('is-streaming')).toHaveTextContent('no'),
+      );
+      expect(component.getByTestId('assistant-bodies')).toHaveTextContent(
+        'Earlier answer|done',
+      );
+    });
+  });
+
+  test('a turn that finished while away is not shown twice', async () => {
+    const user = userEvent.setup();
+    const component = renderTurn();
+
+    await user.click(component.getByRole('button', { name: 'Restore' }));
+    await waitFor(() =>
+      expect(component.getByTestId('message-count')).toHaveTextContent('2'),
+    );
+
+    // The replay carries the same id the persisted assistant row has.
+    act(() =>
+      streamControl?.streamReply('conv-42', {
+        body: 'Earlier answer',
+        id: 'm2',
+        role: 'assistant',
+      }),
+    );
+
+    await waitFor(() =>
+      expect(component.getByTestId('assistant-bodies')).toHaveTextContent(
+        'Earlier answer',
+      ),
+    );
+    expect(component.getByTestId('message-count')).toHaveTextContent('2');
+    expect(component.getByTestId('is-streaming')).toHaveTextContent('no');
+  });
+
+  test('a restore with nothing streaming is idle', async () => {
+    const user = userEvent.setup();
+    const component = renderTurn();
+
+    await user.click(component.getByRole('button', { name: 'Restore' }));
+
+    await waitFor(() =>
+      expect(component.getByTestId('message-count')).toHaveTextContent('2'),
+    );
+    expect(component.getByTestId('is-streaming')).toHaveTextContent('no');
+    expect(component.getByTestId('pending-ids')).toHaveTextContent('');
   });
 
   test('reset clears the conversation id and thread', async () => {

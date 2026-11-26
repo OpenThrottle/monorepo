@@ -35,6 +35,28 @@ export const bakeStreamedMessages = (
   );
 };
 
+/**
+ * @description Append the streamed turns the thread has no row for yet, in stream
+ * order, after the last thread message. Reopening a conversation mid-turn loads
+ * only its persisted rows (the assistant row is written when the turn ends), so
+ * the running reply exists only in the replayed stream. A streamed id the thread
+ * already holds is left to {@link overlayStreamedMessage}, so a turn that
+ * finished while away is never shown twice.
+ */
+export const appendStreamedOnlyMessages = (
+  messages: readonly ChatMessage[],
+  streamed: readonly ChatMessage[],
+): readonly ChatMessage[] => {
+  const knownIds = new Set(messages.map((message) => message.id));
+  const streamedOnly = streamed.filter((message) => !knownIds.has(message.id));
+
+  if (streamedOnly.length === 0) {
+    return messages;
+  }
+
+  return [...messages, ...streamedOnly];
+};
+
 /** Append an empty assistant placeholder unless one with `id` already exists. */
 export const appendAssistantPlaceholder = (
   messages: ChatMessage[],

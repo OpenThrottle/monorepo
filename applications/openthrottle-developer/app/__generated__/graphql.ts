@@ -333,6 +333,13 @@ export type AgentCliSetupConfigObject = {
   installEnabled: Scalars['Boolean']['output'];
 };
 
+export type AgentConversationActiveTurnObject = {
+  __typename?: 'AgentConversationActiveTurnObject';
+  /** Assistant message id the running turn streams under; its row is written when the turn ends */
+  assistantMessageId: Scalars['String']['output'];
+  startedAt: Scalars['DateTime']['output'];
+};
+
 export type AgentConversationGroupObject = {
   __typename?: 'AgentConversationGroupObject';
   createdAt: Scalars['DateTime']['output'];
@@ -2491,6 +2498,8 @@ export type GeneratorObject = {
 
 export type GetAgentConversationMessagesInput = {
   conversationId: Scalars['ID']['input'];
+  /** Count offset back from the newest message, so limit N returns the newest N (still sorted oldest first) and hasNextPage means older messages remain. Default false: offset counts from the oldest */
+  fromNewest?: InputMaybe<Scalars['Boolean']['input']>;
   /** Page size. Omitted means the list's default; out of range is rejected */
   limit?: InputMaybe<Scalars['Int']['input']>;
   /** Rows to skip, 0 or more. Omitted means 0 */
@@ -2731,6 +2740,8 @@ export type LinkProjectRepositoryInput = {
 
 export type ListAgentConversationMessagesResultObject = {
   __typename?: 'ListAgentConversationMessagesResultObject';
+  /** The turn still streaming on this server, or null when none is running */
+  activeTurn?: Maybe<AgentConversationActiveTurnObject>;
   /** Whether rows remain after this page */
   hasNextPage: Scalars['Boolean']['output'];
   items: Array<AgentConversationMessageObject>;
@@ -5159,7 +5170,7 @@ export type Query = {
   generators: Array<GeneratorObject>;
   /** Get one agent conversation by ID for the authenticated human user. */
   getAgentConversation?: Maybe<AgentConversationObject>;
-  /** List messages for an owned conversation ordered by sort_order ASC (default limit 100 max 500). */
+  /** List messages for an owned conversation ordered by sort_order ASC (default limit 100 max 500), plus the turn still streaming, if any. fromNewest pages back from the newest message. */
   getAgentConversationMessages: ListAgentConversationMessagesResultObject;
   /** Fetch a single document chunk by id (UUID from plan_embeddings, task_embeddings, or documentation_embeddings). Use after semantic search to read full chunk content. */
   getDocument?: Maybe<SearchChunk>;
@@ -9695,6 +9706,11 @@ export type GetAgentConversationMessagesQuery = {
   getAgentConversationMessages: {
     __typename?: 'ListAgentConversationMessagesResultObject';
     totalCount: number;
+    activeTurn?: {
+      __typename?: 'AgentConversationActiveTurnObject';
+      assistantMessageId: string;
+      startedAt: any;
+    } | null;
     items: Array<{
       __typename?: 'AgentConversationMessageObject';
       content: string;
@@ -26315,6 +26331,23 @@ export const GetAgentConversationMessagesDocument = {
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'activeTurn' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'assistantMessageId' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'startedAt' },
+                      },
+                    ],
+                  },
+                },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'items' },

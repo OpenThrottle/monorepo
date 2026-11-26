@@ -54,8 +54,10 @@ export const getAgentConversationToolParameters = z
   })
   .strict();
 
+// `fromNewest` stays off the tool: the handler pages from the oldest row, and
+// every advertised field costs model context on each session.
 export const getAgentConversationMessagesToolParameters =
-  GetAgentConversationMessagesInputSchema().strict();
+  GetAgentConversationMessagesInputSchema().omit({ fromNewest: true }).strict();
 
 export const listAgentConversationsToolDescription = `List persisted web chat conversations for the authenticated human user. Optional status filter (default \`active\`), limit, and offset. ${AGENT_CONVERSATION_BOUNDARY_WARNING}`;
 

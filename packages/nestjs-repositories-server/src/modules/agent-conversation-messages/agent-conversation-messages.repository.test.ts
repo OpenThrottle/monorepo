@@ -89,6 +89,30 @@ describe('AgentConversationMessagesRepository', () => {
       });
     });
 
+    it('loads the newest page oldest first when counting from the newest', async () => {
+      const newestFirst = [
+        agentConversationMessagesFactory.build({ sortOrder: 150 }),
+        agentConversationMessagesFactory.build({ sortOrder: 149 }),
+      ];
+
+      conversationRepository.exists.mockResolvedValue(true);
+      mockMessageRepository.find.mockResolvedValue(newestFirst);
+
+      const result = await repository.listMessagesForConversation(
+        userId,
+        conversationId,
+        { fromNewest: true, limit: 2, offset: 0 },
+      );
+
+      expect(mockMessageRepository.find).toHaveBeenCalledWith({
+        order: { sortOrder: 'DESC' },
+        skip: 0,
+        take: 2,
+        where: { conversationId },
+      });
+      expect(result.map((message) => message.sortOrder)).toEqual([149, 150]);
+    });
+
     it('throws NotFoundException when the conversation is not live or not owned', async () => {
       conversationRepository.exists.mockResolvedValue(false);
 

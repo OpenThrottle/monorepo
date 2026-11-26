@@ -71,6 +71,7 @@ describe('routes/resources.agent-conversations action', () => {
 
   test('dispatches to the load-messages handler for intent=load-messages', async () => {
     const loadResult = {
+      activeTurn: null,
       conversationId: 'c1',
       errorMessage: null,
       messages: [],

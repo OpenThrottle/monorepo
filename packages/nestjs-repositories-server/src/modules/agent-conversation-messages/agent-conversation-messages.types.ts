@@ -43,6 +43,11 @@ export interface AppendAgentConversationMessageParams {
 
 /** @public */
 export interface ListAgentConversationMessagesOptions {
+  /**
+   * Count `offset` back from the newest message, so `limit` N returns the
+   * newest N. Rows still come back oldest first.
+   */
+  readonly fromNewest?: boolean;
   readonly limit?: number;
   readonly offset?: number;
 }

@@ -134,9 +134,27 @@ export class ListAgentConversationsResultObject extends OffsetPageObject {
   items!: AgentConversationObject[];
 }
 
+/** The turn a conversation is streaming right now, if any. */
+@ObjectType()
+export class AgentConversationActiveTurnObject {
+  @Field(() => String, {
+    description: `Assistant message id the running turn streams under; its row is written when the turn ends`,
+  })
+  assistantMessageId!: string;
+
+  @Field(() => Date)
+  startedAt!: Date;
+}
+
 /** Result of getAgentConversationMessages: messages slice and total count. */
 @ObjectType()
 export class ListAgentConversationMessagesResultObject extends OffsetPageObject {
+  @Field(() => AgentConversationActiveTurnObject, {
+    description: `The turn still streaming on this server, or null when none is running`,
+    nullable: true,
+  })
+  activeTurn!: AgentConversationActiveTurnObject | null;
+
   @Field(() => [AgentConversationMessageObject])
   items!: AgentConversationMessageObject[];
 }

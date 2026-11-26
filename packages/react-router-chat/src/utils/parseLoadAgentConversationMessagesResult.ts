@@ -1,6 +1,7 @@
 import { isRecord } from '@openthrottle/nodejs-utils';
 
 import type {
+  ChatActiveTurn,
   ChatMessage,
   LoadAgentConversationMessagesResult,
 } from '../types';
@@ -51,6 +52,21 @@ const parseChatMessage = (value: unknown): ChatMessage | null => {
   };
 };
 
+const parseActiveTurn = (value: unknown): ChatActiveTurn | null => {
+  if (
+    !isRecord(value) ||
+    typeof value.assistantMessageId !== 'string' ||
+    typeof value.startedAt !== 'string'
+  ) {
+    return null;
+  }
+
+  return {
+    assistantMessageId: value.assistantMessageId,
+    startedAt: value.startedAt,
+  };
+};
+
 /** Parses a `load-agent-conversation-messages` action payload, or null when malformed. */
 export const parseLoadAgentConversationMessagesResult = (
   data: unknown,
@@ -76,6 +92,7 @@ export const parseLoadAgentConversationMessagesResult = (
     .filter((message): message is ChatMessage => message != null);
 
   return {
+    activeTurn: parseActiveTurn(d.activeTurn),
     conversationId: nullableString(d.conversationId),
     errorMessage: nullableString(d.errorMessage),
     messages,

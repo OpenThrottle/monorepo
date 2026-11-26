@@ -187,6 +187,17 @@ export class AgentConversationMessagesRepository extends BaseRepository<
     const limit = clampAgentConversationMessagesLimit(options.limit);
     const offset = Math.max(options.offset ?? 0, 0);
 
+    if (options.fromNewest === true) {
+      const newestFirst = await this.repository.find({
+        order: { sortOrder: 'DESC' },
+        skip: offset,
+        take: limit,
+        where: { conversationId },
+      });
+
+      return newestFirst.reverse();
+    }
+
     return this.repository.find({
       order: { sortOrder: 'ASC' },
       skip: offset,

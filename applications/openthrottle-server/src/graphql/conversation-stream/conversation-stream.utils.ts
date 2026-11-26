@@ -1,5 +1,6 @@
 /**
- * User-facing copy for cursor-agent startup failures.
+ * Pure helpers for the conversation stream: replay-buffer compaction, and the
+ * user-facing copy for cursor-agent startup failures.
  *
  * This text is composed server-side rather than in the chat components because
  * that is where it is produced: a terminal error chunk reaches the UI as a
@@ -16,6 +17,57 @@ import {
   CURSOR_FAILURE_KINDS,
   stripAnsi,
 } from '@openthrottle/agentic-conversation-backend';
+
+import type { ConversationStreamChunkPayload } from './conversation-stream.types.ts';
+
+/** True for a plain text/thinking delta that can fold into its predecessor. */
+const isFoldableDelta = (chunk: ConversationStreamChunkPayload): boolean => {
+  return (
+    !chunk.done &&
+    chunk.error === null &&
+    chunk.metadataJson === null &&
+    (chunk.kind === 'text' || chunk.kind === 'thinking')
+  );
+};
+
+/**
+ * @description Shrink a replay buffer without losing its head: every run of
+ * consecutive text (or thinking) deltas for one message, outside the newest
+ * `keepTail` chunks, folds into its first chunk (same id and sortOrder, deltas
+ * joined). The client already merges consecutive deltas of one kind into one
+ * timeline event, so a replay of the compacted buffer renders the same reply.
+ * The tail stays untouched because a subscriber can receive its newest chunks
+ * twice (replayed and live), and only identical `messageId:sortOrder` keys
+ * dedupe.
+ */
+export function compactReplayChunks(
+  chunks: readonly ConversationStreamChunkPayload[],
+  keepTail: number,
+): ConversationStreamChunkPayload[] {
+  const headLength = Math.max(chunks.length - keepTail, 0);
+  const compacted: ConversationStreamChunkPayload[] = [];
+
+  for (const chunk of chunks.slice(0, headLength)) {
+    const previous = compacted[compacted.length - 1];
+    const folds =
+      previous !== undefined &&
+      isFoldableDelta(previous) &&
+      isFoldableDelta(chunk) &&
+      previous.kind === chunk.kind &&
+      previous.messageId === chunk.messageId;
+
+    if (folds) {
+      compacted[compacted.length - 1] = {
+        ...previous,
+        delta: previous.delta + chunk.delta,
+      };
+    } else {
+      compacted.push(chunk);
+    }
+  }
+
+  return [...compacted, ...chunks.slice(headLength)];
+}
 
 /**
  * One sentence naming what happened, then one naming what to do about it.

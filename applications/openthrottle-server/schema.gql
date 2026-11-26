@@ -1136,6 +1136,58 @@ type AgentConversationGroupObject {
   userId: String!
 }
 
+type ConversationStreamChunkObject {
+  conversationId: String!
+
+  """
+  Incremental assistant text for this chunk (empty on the terminal chunk).
+  """
+  delta: String!
+
+  """True exactly once, on the terminal chunk of the stream."""
+  done: Boolean!
+
+  """Error message when the stream failed; null otherwise."""
+  error: String
+
+  """Unique id for this chunk (subscription dedupe / cursor)."""
+  id: String!
+
+  """Assistant message id the deltas accumulate into."""
+  messageId: String!
+
+  """
+  Event kind: text (assistant output) | thinking | tool_call | tool_result | usage | usage_limit | session.
+  """
+  kind: String!
+
+  """
+  JSON-encoded structured metadata for non-text kinds (tool args, usage, session id); null otherwise.
+  """
+  metadataJson: String
+
+  """Monotonic index within the stream."""
+  sortOrder: Int!
+}
+
+type StartConversationStreamResult {
+  """
+  Pre-allocated assistant message id the streamed deltas accumulate into. Null when the request failed.
+  """
+  assistantMessageId: String
+
+  """
+  Resolved (or newly created) conversation id. Null when the request failed.
+  """
+  conversationId: String
+
+  """Validation or business-rule error (no throw). Null on success."""
+  errorMessage: String
+
+  """Persisted user message id for this turn. Null when the request failed."""
+  userMessageId: String
+}
+
 type AgentConversationObject {
   createdAt: DateTime!
 
@@ -1213,12 +1265,23 @@ type ListAgentConversationsResultObject {
   items: [AgentConversationObject!]!
 }
 
+type AgentConversationActiveTurnObject {
+  """
+  Assistant message id the running turn streams under; its row is written when the turn ends
+  """
+  assistantMessageId: String!
+  startedAt: DateTime!
+}
+
 type ListAgentConversationMessagesResultObject {
   """Whether rows remain after this page"""
   hasNextPage: Boolean!
 
   """Rows across every page"""
   totalCount: Int!
+
+  """The turn still streaming on this server, or null when none is running"""
+  activeTurn: AgentConversationActiveTurnObject
   items: [AgentConversationMessageObject!]!
 }
 
@@ -1882,58 +1945,6 @@ type IndexCodeRepositoryResult {
   Status after enqueue: indexing; unavailable when no provider is configured; hostedOptInRequired (nothing enqueued) when a hosted provider is not opted in for code.
   """
   status: String!
-}
-
-type ConversationStreamChunkObject {
-  conversationId: String!
-
-  """
-  Incremental assistant text for this chunk (empty on the terminal chunk).
-  """
-  delta: String!
-
-  """True exactly once, on the terminal chunk of the stream."""
-  done: Boolean!
-
-  """Error message when the stream failed; null otherwise."""
-  error: String
-
-  """Unique id for this chunk (subscription dedupe / cursor)."""
-  id: String!
-
-  """Assistant message id the deltas accumulate into."""
-  messageId: String!
-
-  """
-  Event kind: text (assistant output) | thinking | tool_call | tool_result | usage | usage_limit | session.
-  """
-  kind: String!
-
-  """
-  JSON-encoded structured metadata for non-text kinds (tool args, usage, session id); null otherwise.
-  """
-  metadataJson: String
-
-  """Monotonic index within the stream."""
-  sortOrder: Int!
-}
-
-type StartConversationStreamResult {
-  """
-  Pre-allocated assistant message id the streamed deltas accumulate into. Null when the request failed.
-  """
-  assistantMessageId: String
-
-  """
-  Resolved (or newly created) conversation id. Null when the request failed.
-  """
-  conversationId: String
-
-  """Validation or business-rule error (no throw). Null on success."""
-  errorMessage: String
-
-  """Persisted user message id for this turn. Null when the request failed."""
-  userMessageId: String
 }
 
 type DailyStatsObject {
@@ -6754,7 +6765,7 @@ type Query {
   getAgentConversation(id: ID!): AgentConversationObject
 
   """
-  List messages for an owned conversation ordered by sort_order ASC (default limit 100 max 500).
+  List messages for an owned conversation ordered by sort_order ASC (default limit 100 max 500), plus the turn still streaming, if any. fromNewest pages back from the newest message.
   """
   getAgentConversationMessages(input: GetAgentConversationMessagesInput!): ListAgentConversationMessagesResultObject!
 
@@ -7533,6 +7544,11 @@ input GetAgentConversationMessagesInput {
   """Rows to skip, 0 or more. Omitted means 0"""
   offset: Int
   conversationId: ID!
+
+  """
+  Count offset back from the newest message, so limit N returns the newest N (still sorted oldest first) and hasNextPage means older messages remain. Default false: offset counts from the oldest
+  """
+  fromNewest: Boolean = false
 }
 
 """The post in any state, or BlogPostNotFoundError."""
@@ -8197,6 +8213,21 @@ type Mutation {
   moveAgentConversationToGroup(input: MoveAgentConversationToGroupInput!): AgentConversationObject!
 
   """
+  Start a streamed assistant turn against a discovered local model. Persists the user message, returns the assistant message id to correlate the in-flight stream, and emits token deltas over conversationStreamChunkAdded. Uses errorMessage for expected validation failures.
+  """
+  startConversationStream(input: StartConversationStreamInput!): StartConversationStreamResult!
+
+  """
+  Abort an in-flight streamed turn for an owned conversation. Returns true when a stream was aborted.
+  """
+  cancelConversationStream(conversationId: ID!): Boolean!
+
+  """
+  Answer a pending ACP permission request surfaced in an owned conversation: optionId selects one of the offered options, null cancels. Returns false for an unknown or already settled requestId.
+  """
+  respondToConversationPermission(conversationId: ID!, requestId: String!, optionId: String): Boolean!
+
+  """
   Enable or disable an agent CLI driver for the current user. A disabled agent is hidden from chat/model pickers and rejected when starting new runs. Presence-as-disabled: enabled=false records the preference, enabled=true clears it (default is enabled). Gated by SETTINGS_WRITE, in parity with install/update; rejects unknown drivers.
   """
   setAgentEnabled(driver: String!, enabled: Boolean!): SetAgentEnabledResult!
@@ -8303,21 +8334,6 @@ type Mutation {
   Enqueue a full re-index of a registered repository's code. Returns indexing; unavailable when no embeddings provider is configured; hostedOptInRequired when a hosted provider is not opted in for code (CODE_EMBEDDINGS_ALLOW_HOSTED).
   """
   indexCodeRepository(repositoryId: ID!): IndexCodeRepositoryResult!
-
-  """
-  Start a streamed assistant turn against a discovered local model. Persists the user message, returns the assistant message id to correlate the in-flight stream, and emits token deltas over conversationStreamChunkAdded. Uses errorMessage for expected validation failures.
-  """
-  startConversationStream(input: StartConversationStreamInput!): StartConversationStreamResult!
-
-  """
-  Abort an in-flight streamed turn for an owned conversation. Returns true when a stream was aborted.
-  """
-  cancelConversationStream(conversationId: ID!): Boolean!
-
-  """
-  Answer a pending ACP permission request surfaced in an owned conversation: optionId selects one of the offered options, null cancels. Returns false for an unknown or already settled requestId.
-  """
-  respondToConversationPermission(conversationId: ID!, requestId: String!, optionId: String): Boolean!
 
   """Create a new custom prompt"""
   createCustomPrompt(input: CreateCustomPromptInput!): CustomPromptObject!
@@ -9204,6 +9220,67 @@ input MoveAgentConversationToGroupInput {
   groupId: ID
 }
 
+input StartConversationStreamInput {
+  """
+  Backend to stream from: "openai" (default) or an allowlisted agent CLI (e.g. "cursor"). Omit for openai.
+  """
+  backend: String
+
+  """
+  OpenAI-compatible base URL of a discovered local endpoint, e.g. http://localhost:11434/v1. Required for the openai backend.
+  """
+  baseUrl: String
+
+  """Existing conversation to continue; omit to start a new conversation."""
+  conversationId: ID
+
+  """
+  Workspace-relative POSIX paths @-mentioned in the message (parsed client-side). Nullable + additive. The paths also travel inline in the message as @path tokens; the server additionally injects them as structured turn context ("Referenced files") so the agent treats them as first-class references.
+  """
+  fileMentions: [String!]
+
+  """User message text for this turn."""
+  message: String!
+
+  """
+  Whether to persist this turn. True (default, or omitted) saves the conversation + messages as today. False runs a "Private mode" turn: the stream is ephemeral — no conversation row is created and no messages are written. A Private turn carries no server-side history (single-turn context) and CLI backends run a fresh, non-resumed session.
+  """
+  persist: Boolean
+
+  """
+  Model id to complete with. Required for the openai backend; optional model override for CLI backends.
+  """
+  modelId: String
+
+  """Persona to steer the turn; CLI backends inject it as a system prompt."""
+  personaId: ID
+
+  """
+  Permission mode for an agent backend: "supervised", "autoAcceptEdits", or "fullAccess". Nullable + additive. Honored: each CLI backend maps it to concrete permission/sandbox flags in its argv/config builder (a backend that cannot route it ignores it).
+  """
+  permissionMode: String
+
+  """
+  Reasoning-effort level for the turn: "low", "medium", "high", "extraHigh", "max", or "ultra". Nullable + additive. Honored: each backend that exposes a reasoning knob maps it to its own vocabulary (claude --effort, grok --reasoning-effort, codex -c model_reasoning_effort=, opencode --variant, cursor model-string [effort=…], openai reasoning_effort), clamping to its accepted set.
+  """
+  reasoning: String
+
+  """
+  Registered WorkspaceLocalRepository to run a CLI backend in. Required for CLI backends in production (the server resolves + ownership-checks the path).
+  """
+  repositoryId: ID @deprecated(reason: "Use repositoryIds, which carries the primary checkout plus any additional context directories. A lone repositoryId is still honored as a one-element list.")
+
+  """
+  Registered WorkspaceLocalRepositories for a CLI backend, PRIMARY FIRST. Index 0 becomes the process working directory; the remainder are granted to the CLI as additional context directories (repeated --add-dir) by the backends that support them. Every id is ownership-checked independently, and the list is capped server-side per driver.
+  """
+  repositoryIds: [ID!]
+
+  """
+  Service tier for the turn: "standard" or "fast". Nullable + additive. Honored only by backends that can route by tier (cursor-agent, via the model-string [fast=…] suffix); backends without a tier concept ignore it.
+  """
+  serviceTier: String
+}
+
 input RecordAgentTrajectoryInput {
   """Agent driver that produced the run, for example claude."""
   driver: String!
@@ -9462,67 +9539,6 @@ input UpsertBlogTagInput {
   Lowercase letters, digits and single hyphens (^[a-z0-9]+(-[a-z0-9]+)*$), e.g. "my-first-post".
   """
   slug: String!
-}
-
-input StartConversationStreamInput {
-  """
-  Backend to stream from: "openai" (default) or an allowlisted agent CLI (e.g. "cursor"). Omit for openai.
-  """
-  backend: String
-
-  """
-  OpenAI-compatible base URL of a discovered local endpoint, e.g. http://localhost:11434/v1. Required for the openai backend.
-  """
-  baseUrl: String
-
-  """Existing conversation to continue; omit to start a new conversation."""
-  conversationId: ID
-
-  """
-  Workspace-relative POSIX paths @-mentioned in the message (parsed client-side). Nullable + additive. The paths also travel inline in the message as @path tokens; the server additionally injects them as structured turn context ("Referenced files") so the agent treats them as first-class references.
-  """
-  fileMentions: [String!]
-
-  """User message text for this turn."""
-  message: String!
-
-  """
-  Whether to persist this turn. True (default, or omitted) saves the conversation + messages as today. False runs a "Private mode" turn: the stream is ephemeral — no conversation row is created and no messages are written. A Private turn carries no server-side history (single-turn context) and CLI backends run a fresh, non-resumed session.
-  """
-  persist: Boolean
-
-  """
-  Model id to complete with. Required for the openai backend; optional model override for CLI backends.
-  """
-  modelId: String
-
-  """Persona to steer the turn; CLI backends inject it as a system prompt."""
-  personaId: ID
-
-  """
-  Permission mode for an agent backend: "supervised", "autoAcceptEdits", or "fullAccess". Nullable + additive. Honored: each CLI backend maps it to concrete permission/sandbox flags in its argv/config builder (a backend that cannot route it ignores it).
-  """
-  permissionMode: String
-
-  """
-  Reasoning-effort level for the turn: "low", "medium", "high", "extraHigh", "max", or "ultra". Nullable + additive. Honored: each backend that exposes a reasoning knob maps it to its own vocabulary (claude --effort, grok --reasoning-effort, codex -c model_reasoning_effort=, opencode --variant, cursor model-string [effort=…], openai reasoning_effort), clamping to its accepted set.
-  """
-  reasoning: String
-
-  """
-  Registered WorkspaceLocalRepository to run a CLI backend in. Required for CLI backends in production (the server resolves + ownership-checks the path).
-  """
-  repositoryId: ID @deprecated(reason: "Use repositoryIds, which carries the primary checkout plus any additional context directories. A lone repositoryId is still honored as a one-element list.")
-
-  """
-  Registered WorkspaceLocalRepositories for a CLI backend, PRIMARY FIRST. Index 0 becomes the process working directory; the remainder are granted to the CLI as additional context directories (repeated --add-dir) by the backends that support them. Every id is ownership-checked independently, and the list is capped server-side per driver.
-  """
-  repositoryIds: [ID!]
-
-  """
-  Service tier for the turn: "standard" or "fast". Nullable + additive. Honored only by backends that can route by tier (cursor-agent, via the model-string [fast=…] suffix); backends without a tier concept ignore it.
-  """
-  serviceTier: String
 }
 
 """Input for creating a new custom prompt"""
@@ -11707,14 +11723,14 @@ input ApplyWorkspaceEditorConfigurationInput {
 
 type Subscription {
   """
-  Live stdout/stderr for an agent-CLI install/update run (topic agent-setup:<runId>:stream). Requires an authenticated connection.
-  """
-  agentSetupChunkAdded(runId: ID!): AgentSetupStreamChunkObject!
-
-  """
   Live token stream for a conversation (topic conversation:<id>:stream). Requires an authenticated connection that owns the conversation.
   """
   conversationStreamChunkAdded(conversationId: ID!): ConversationStreamChunkObject!
+
+  """
+  Live stdout/stderr for an agent-CLI install/update run (topic agent-setup:<runId>:stream). Requires an authenticated connection.
+  """
+  agentSetupChunkAdded(runId: ID!): AgentSetupStreamChunkObject!
 
   """
   Firehose of all real-time notification events. Identity comes from the authenticated ws connection.

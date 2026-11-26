@@ -25,6 +25,10 @@ query getMe {
 
 query getAgentConversationMessages($input: GetAgentConversationMessagesInput!) {
   getAgentConversationMessages(input: $input) {
+    activeTurn {
+      assistantMessageId
+      startedAt
+    }
     items {
       content
       createdAt
