@@ -125,6 +125,27 @@ describe('foldPersistedTurnEvents', () => {
     });
   });
 
+  it('keeps persisted mcpServers on the session event', () => {
+    const result = foldPersistedTurnEvents(
+      persisted([
+        {
+          delta: '',
+          kind: 'session',
+          metadata: {
+            mcpServers: [{ name: 'ot', status: 'connected' }],
+            sessionId: 'sess-7',
+          },
+        },
+      ]),
+      'hi',
+    );
+
+    expect(result[0]).toMatchObject({
+      kind: 'session',
+      mcpServers: [{ name: 'ot', status: 'connected' }],
+    });
+  });
+
   it('rebuilds a usageLimit event from a persisted usage_limit event', () => {
     const result = foldPersistedTurnEvents(
       persisted([

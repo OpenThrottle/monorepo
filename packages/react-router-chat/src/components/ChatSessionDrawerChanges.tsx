@@ -1,3 +1,4 @@
+import { fillTemplate } from '@openthrottle/nodejs-utils';
 import { Button, cn } from '@openthrottle/react-router-shadcn';
 import { RefreshCw } from 'lucide-react';
 import * as React from 'react';
@@ -6,7 +7,6 @@ import { CHAT_PANEL_HOVER_CLASSES } from '../data/chat-panel.classes';
 import { CHAT_SESSION_DRAWER_COPY } from '../data/copy';
 import type { ChatSessionChanges } from '../types';
 import type { SessionFile } from '../utils/deriveSessionFiles';
-import { fillTemplate } from '../utils/fillTemplate';
 import { formatBaseRef, formatDiffSummary } from '../utils/session-diff';
 import { ChatSessionDrawerChangesDialog } from './ChatSessionDrawerChangesDialog';
 import { ChatSessionDrawerChangesRow } from './ChatSessionDrawerChangesRow';
@@ -32,6 +32,7 @@ export const ChatSessionDrawerChanges = (
   props: ChatSessionDrawerChangesProps,
 ): React.ReactElement => {
   const {
+    buildFileHref,
     diff,
     isLoading,
     isPatchTruncated,
@@ -67,6 +68,7 @@ export const ChatSessionDrawerChanges = (
   // Markup
   const touchedList = touchedElsewhere.length > 0 && (
     <ChatSessionDrawerChangesTouched
+      buildFileHref={buildFileHref}
       files={touchedElsewhere}
       heading={touchedHeading}
     />
@@ -142,6 +144,7 @@ export const ChatSessionDrawerChanges = (
       <ul className="flex flex-col">
         {files.map((file) => (
           <ChatSessionDrawerChangesRow
+            buildFileHref={buildFileHref}
             file={file}
             isSelected={file.path === selectedFile}
             isTouched={touchedPaths.has(file.path)}

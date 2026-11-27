@@ -38,7 +38,7 @@ describe('ChatContextMeter Component', () => {
       expect(meter).toHaveAccessibleName(
         'Context window: 84k of 200k tokens used (42%)',
       );
-      expect(component.getByTestId('ChatContextMeter-fill')).toHaveStyle({
+      expect(component.getByTestId('ChatContextMeterBar-fill')).toHaveStyle({
         width: '42%',
       });
     });
@@ -54,7 +54,7 @@ describe('ChatContextMeter Component', () => {
         />,
       );
 
-      expect(component.getByTestId('ChatContextMeter-fill')).toHaveAttribute(
+      expect(component.getByTestId('ChatContextMeterBar-fill')).toHaveAttribute(
         'data-tone',
         tone,
       );

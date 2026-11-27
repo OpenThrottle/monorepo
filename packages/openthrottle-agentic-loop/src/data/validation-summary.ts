@@ -1,3 +1,5 @@
+import type { FormatDurationOptions } from '@openthrottle/nodejs-utils';
+
 /** @description Mark in a summary line for a command that exited 0. */
 export const SUMMARY_GREEN_MARK = '✔';
 
@@ -25,3 +27,9 @@ export const NX_TARGET_RUN_PATTERN = /\bnx\s+(?:affected|run-many)\b/;
 /** @description Captures the target list after `-t`, `--target` or `--targets`: `a,b`, or space-separated `a b` up to the next flag. */
 export const NX_TARGET_FLAG_PATTERN =
   /(?:^|\s)(?:-t|--targets?)(?:=|\s+)([^\s-]\S*(?:\s+[^\s-]\S*)*)/;
+
+/** @description A command's duration reads `46s`, then `2m 5s`, then `90m 0s`: minutes never roll into hours. */
+export const COMMAND_DURATION_OPTIONS = {
+  largestUnit: 'minute',
+  rounding: 'round',
+} satisfies FormatDurationOptions;

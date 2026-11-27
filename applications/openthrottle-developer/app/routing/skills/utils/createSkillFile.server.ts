@@ -56,6 +56,7 @@ import {
 } from 'node:fs';
 import { dirname, join } from 'node:path';
 
+import { fillTemplate } from '@openthrottle/nodejs-utils';
 import { resolvePersonalSkillsRoot } from '@openthrottle/openthrottle-agentic-utils';
 import {
   AGENT_ASSET_SLUG_PATTERN,
@@ -95,7 +96,7 @@ export type CreateSkillFileResult =
   | { readonly ok: true; readonly slug: string };
 
 const withSlug = (template: string, slug: string): string => {
-  return template.replaceAll('{slug}', slug);
+  return fillTemplate(template, { slug });
 };
 
 /**

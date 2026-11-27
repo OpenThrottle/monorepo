@@ -8,7 +8,7 @@ const buildOptions = (
   overrides: Partial<UseSessionEnvironmentReportOptions> = {},
 ): UseSessionEnvironmentReportOptions => {
   return {
-    checkouts: [{ id: 'c1', label: 'monorepo' }],
+    checkouts: [{ defaultBranch: undefined, id: 'c1', label: 'monorepo' }],
     modelGroups: [{ id: 'claude', label: 'Claude Code' }],
     modelId: 'm1',
     models: [{ groupId: 'claude', id: 'm1', label: 'Opus' }],

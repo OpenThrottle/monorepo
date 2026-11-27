@@ -1,8 +1,11 @@
 import * as React from 'react';
 
+import { useDefaultEditor } from '~/global/hooks/useDefaultEditor';
+import { getCheckoutFileEditorLink } from '~/global/utils/getCheckoutEditorLink';
 import { HomeSessionDrawer } from '~/routing/home/components/HomeSessionDrawer';
 import type { HomeThreadColumnProps } from '~/routing/home/components/HomeThreadColumn';
 import { HomeThreadColumn } from '~/routing/home/components/HomeThreadColumn';
+import { HOME_HERO_COPY } from '~/routing/home/data/copy';
 import { useCheckoutDiff } from '~/routing/home/hooks/useCheckoutDiff';
 import type { UseSessionDrawerResult } from '~/routing/home/hooks/useSessionDrawer';
 import { isCheckoutDiffVisible } from '~/routing/home/utils/isCheckoutDiffVisible';
@@ -31,7 +34,17 @@ export const HomeLayout = (props: HomeLayoutProps): React.ReactElement => {
     isStreaming: turn.isStreaming,
   });
 
+  const defaultEditor = useDefaultEditor();
+
   // Setup
+  const filesystemPath = drawer.environment?.checkout?.filesystemPath;
+  const buildFileHref = (path: string): string | null => {
+    return getCheckoutFileEditorLink(filesystemPath, defaultEditor, path);
+  };
+  const changes = {
+    ...checkoutDiff,
+    buildFileHref: filesystemPath === undefined ? undefined : buildFileHref,
+  };
   const isEmptyThread = turn.messages.length === 0;
 
   // Handlers
@@ -40,12 +53,9 @@ export const HomeLayout = (props: HomeLayoutProps): React.ReactElement => {
 
   const hero = (
     <div className="flex flex-1 flex-col items-center justify-center">
-      <h1 className="text-center text-2xl">
-        What would you like to build today?
-      </h1>
+      <h1 className="text-center text-2xl">{HOME_HERO_COPY.heading}</h1>
       <p className="text-muted-foreground mt-2 text-sm">
-        OpenThrottle is a platform for building software, iteratively, and
-        securely.
+        {HOME_HERO_COPY.tagline}
       </p>
     </div>
   );
@@ -68,7 +78,7 @@ export const HomeLayout = (props: HomeLayoutProps): React.ReactElement => {
       </div>
 
       <HomeSessionDrawer
-        changes={checkoutDiff}
+        changes={changes}
         collapsedSections={drawer.collapsedSections}
         environment={drawer.environment}
         isOpen={drawer.isOpen}

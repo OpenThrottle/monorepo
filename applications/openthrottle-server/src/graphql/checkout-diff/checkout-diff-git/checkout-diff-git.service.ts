@@ -1,14 +1,12 @@
-import { execFile } from 'node:child_process';
 import { lstat, readFile, realpath } from 'node:fs/promises';
 import { join, sep } from 'node:path';
-import { promisify } from 'node:util';
 
 import { Injectable } from '@nestjs/common';
-import { isRecord } from '@openthrottle/nodejs-utils';
 
+import { GitRunnerService } from '../../../services/git-runner/git-runner.service.ts';
 import {
-  GIT_COMMAND_TIMEOUT_MS,
-  GIT_MAX_BUFFER_BYTES,
+  DIFF_GIT_MAX_BUFFER_BYTES,
+  DIFF_GIT_TIMEOUT_MS,
   MAX_UNTRACKED_BYTES,
 } from '../checkout-diff.constants.ts';
 import { looksBinary } from '../checkout-diff.utils.ts';
@@ -17,8 +15,6 @@ import type {
   WorkingFileRead,
 } from './checkout-diff-git.types.ts';
 
-const execFileAsync = promisify(execFile);
-
 /**
  * @description The process boundary of the checkout diff: read-only git commands (argv, no shell,
  * timeboxed, bounded output) and bounded reads of working-tree files. Kept apart from
@@ -26,21 +22,17 @@ const execFileAsync = promisify(execFile);
  */
 @Injectable()
 export class CheckoutDiffGitService {
+  constructor(private readonly gitRunner: GitRunnerService) {}
+
   /** @description Runs `git -C root ...args`; never throws. */
   async run(root: string, args: readonly string[]): Promise<GitRunResult> {
-    try {
-      const { stdout } = await execFileAsync('git', ['-C', root, ...args], {
-        maxBuffer: GIT_MAX_BUFFER_BYTES,
-        timeout: GIT_COMMAND_TIMEOUT_MS,
-      });
+    // A whole-repo diff needs a longer, larger bound than the runner's probe defaults.
+    const result = await this.gitRunner.run(root, args, {
+      maxBufferBytes: DIFF_GIT_MAX_BUFFER_BYTES,
+      timeoutMs: DIFF_GIT_TIMEOUT_MS,
+    });
 
-      return { ok: true, stdout };
-    } catch (error) {
-      const stdout =
-        isRecord(error) && typeof error.stdout === 'string' ? error.stdout : '';
-
-      return { ok: false, stdout };
-    }
+    return { ok: result.ok, stdout: result.stdout };
   }
 
   /**

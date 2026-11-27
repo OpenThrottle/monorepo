@@ -11,10 +11,14 @@ import {
   SESSION_DIFF_STATUS_TONES,
 } from '../data/chat-session-diff-status';
 import { CHAT_SESSION_DRAWER_COPY } from '../data/copy';
-import type { ChatSessionDiffFile } from '../types';
+import type { ChatFileHrefBuilder, ChatSessionDiffFile } from '../types';
+import { splitPath } from '../utils/path';
 import { describeDiffFileTitle } from '../utils/session-diff';
+import { ChatSessionDrawerOpenFile } from './ChatSessionDrawerOpenFile';
 
 export interface ChatSessionDrawerChangesRowProps {
+  /** Builds the open-in-editor link; undefined hides the action. */
+  readonly buildFileHref: ChatFileHrefBuilder | undefined;
   readonly file: ChatSessionDiffFile;
   readonly isSelected: boolean;
   /** True when this conversation's edit tools touched the file. */
@@ -25,23 +29,21 @@ export interface ChatSessionDrawerChangesRowProps {
 /**
  * @description One file of the Changes section: status icon, path (directory muted), +/- counts.
  * A bot marker when this conversation touched it. A button that selects the file so its patch
- * opens in a dialog.
+ * opens in a dialog, with an open-in-editor link beside it when the host supplies one.
  *
  * @public
  */
 export const ChatSessionDrawerChangesRow = (
   props: ChatSessionDrawerChangesRowProps,
 ): React.ReactElement => {
-  const { file, isSelected, isTouched, onSelect } = props;
+  const { buildFileHref, file, isSelected, isTouched, onSelect } = props;
 
   // Hooks
 
   // Setup
   const copy = CHAT_SESSION_DRAWER_COPY.changes;
   const Icon = SESSION_DIFF_STATUS_ICONS[file.status];
-  const slash = file.path.lastIndexOf('/');
-  const directory = file.path.slice(0, slash + 1);
-  const name = file.path.slice(slash + 1);
+  const { directory, name } = splitPath(file.path);
   const title = describeDiffFileTitle(file);
 
   // Handlers
@@ -72,11 +74,11 @@ export const ChatSessionDrawerChangesRow = (
   // 🔌 Short Circuit
 
   return (
-    <li>
+    <li className="flex items-center gap-1">
       <button
         aria-haspopup="dialog"
         className={cn(
-          'flex w-full items-center gap-2 rounded px-1 py-0.5 text-left text-xs',
+          'flex min-w-0 flex-1 items-center gap-2 rounded px-1 py-0.5 text-left text-xs',
           CHAT_PANEL_HOVER_CLASSES,
           isSelected && CHAT_PANEL_SELECTED_CLASSES,
         )}
@@ -101,6 +103,10 @@ export const ChatSessionDrawerChangesRow = (
         {touchedMarker}
         {counts}
       </button>
+      <ChatSessionDrawerOpenFile
+        buildFileHref={buildFileHref}
+        path={file.path}
+      />
     </li>
   );
 };

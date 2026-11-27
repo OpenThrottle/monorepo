@@ -4,9 +4,10 @@ import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { GitRunnerService } from '../../../services/git-runner/git-runner.service.ts';
 import {
-  GIT_COMMAND_TIMEOUT_MS,
-  GIT_MAX_BUFFER_BYTES,
+  DIFF_GIT_MAX_BUFFER_BYTES,
+  DIFF_GIT_TIMEOUT_MS,
   MAX_UNTRACKED_BYTES,
 } from '../checkout-diff.constants.ts';
 import { CheckoutDiffGitService } from './checkout-diff-git.service.ts';
@@ -25,7 +26,7 @@ describe('CheckoutDiffGitService', () => {
   let root: string;
 
   beforeEach(async () => {
-    service = new CheckoutDiffGitService();
+    service = new CheckoutDiffGitService(new GitRunnerService());
     sandbox = await mkdtemp(join(tmpdir(), 'checkout-diff-git-'));
     root = join(sandbox, 'repo');
     await mkdir(root);
@@ -55,7 +56,7 @@ describe('CheckoutDiffGitService', () => {
       expect(execFileMock).toHaveBeenCalledWith(
         'git',
         ['-C', '/repo', 'diff', '--numstat'],
-        { maxBuffer: GIT_MAX_BUFFER_BYTES, timeout: GIT_COMMAND_TIMEOUT_MS },
+        { maxBuffer: DIFF_GIT_MAX_BUFFER_BYTES, timeout: DIFF_GIT_TIMEOUT_MS },
         expect.any(Function),
       );
     });

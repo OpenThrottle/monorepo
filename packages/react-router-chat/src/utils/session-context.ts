@@ -1,8 +1,9 @@
+import { fillTemplate } from '@openthrottle/nodejs-utils';
+
 import type { ChatMessage, ChatTokenUsage } from '../types';
 import { formatTokenCount, formatUsageCost, sumUsage } from '../usage';
 import type { ChatContextWindowUsage } from './chat-context-window';
 import { resolveContextWindowUsage } from './chat-context-window';
-import { fillTemplate } from './fillTemplate';
 import { resolveTotalTokens } from './resolveTotalTokens';
 
 /** One label/value row in the Context section, keyed for stable test ids. */

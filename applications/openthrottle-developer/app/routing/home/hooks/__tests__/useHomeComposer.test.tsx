@@ -46,11 +46,13 @@ const cliModel: ChatModelOption = {
 };
 
 const repositoryA: RepositoryOption = {
+  defaultBranch: undefined,
   displayName: 'repo-a',
   id: 'repo-a-id',
 };
 
 const repositoryB: RepositoryOption = {
+  defaultBranch: undefined,
   displayName: 'repo-b',
   id: 'repo-b-id',
 };
@@ -294,7 +296,10 @@ describe('useHomeComposer', () => {
 
   test('checkouts map repositories to {id, label} pairs', async () => {
     await renderComposer({
-      repositories: [repositoryA, { displayName: 'repo-b', id: 'repo-b-id' }],
+      repositories: [
+        repositoryA,
+        { defaultBranch: undefined, displayName: 'repo-b', id: 'repo-b-id' },
+      ],
     });
 
     expect(value.current?.checkouts).toEqual([

@@ -9,12 +9,13 @@ import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import { RepositoryCheckoutsModule } from '@openthrottle/nestjs-repositories-server';
 
+import { GitRunnerModule } from '../../services/git-runner/git-runner.module.ts';
 import { RepositoryInspectionService } from './repository-inspection.service.ts';
 
 @Module({
   controllers: [],
   exports: [RepositoryInspectionService],
-  imports: [LoggerModule, RepositoryCheckoutsModule],
+  imports: [GitRunnerModule, LoggerModule, RepositoryCheckoutsModule],
   providers: [RepositoryInspectionService],
 })
 export class RepositoryInspectionModule {}

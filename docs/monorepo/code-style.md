@@ -37,45 +37,47 @@ Every convention inherited from the retired rules tree — 15 of the 16 relocate
 [Corrections](#corrections-made-in-the-move)) — plus the rules that were already enforced by
 lint but never had a rule file of their own:
 
-| Convention                                                                      | Enforcement                             | Mechanism                                                             |
-| ------------------------------------------------------------------------------- | --------------------------------------- | --------------------------------------------------------------------- |
-| [No new enums](#no-new-enums)                                                   | **Enforced**                            | `no-restricted-syntax` → `TSEnumDeclaration`                          |
-| [Component and data boundaries](#component-and-data-boundaries)                 | **Enforced**                            | `openthrottle/component-primitive-shape` + `audit:component-shape`    |
-| [No default exports](#no-default-exports)                                       | **Enforced**                            | `import-x/no-default-export`                                          |
-| [`import type`](#import-type)                                                   | **Enforced**                            | `@typescript-eslint/consistent-type-imports`                          |
-| [Naming conventions](#naming-conventions)                                       | **Enforced** (file names honor system)  | `@typescript-eslint/naming-convention`                                |
-| [NestJS file names](#nestjs-file-names)                                         | **Enforced**                            | `openthrottle/nestjs-file-naming`, `openthrottle/nestjs-file-exports` |
-| [Indexed access is `\| undefined`](#indexed-access-returns-undefined)           | **Enforced**                            | `noUncheckedIndexedAccess` compiler flag                              |
-| [GraphQL data uses fragment types](#graphql-data-uses-fragment-types)           | **Enforced** (warn where not yet clean) | `openthrottle/prefer-graphql-fragment`                                |
-| [No `as` casts](#no-as-casts)                                                   | **Enforced**                            | `consistent-type-assertions`, `assertionStyle: 'never'`               |
-| [No `any`](#no-any)                                                             | **Enforced**                            | `@typescript-eslint/no-explicit-any`                                  |
-| [Alphabetize keys](#alphabetize-arrays-and-object-keys)                         | **Enforced**                            | `sort-keys`, `perfectionist/*`, `@graphql-eslint/alphabetize`         |
-| [File length caps](#file-length-caps)                                           | **Enforced**                            | `max-lines` (210 components / 210 routes)                             |
-| [No `await` in loops](#no-await-in-loops)                                       | **Enforced**                            | `no-await-in-loop`                                                    |
-| [Composing classes with `cn`](#composing-classes-with-cn)                       | **Enforced**                            | `no-restricted-imports` (`clsx`) + `no-restricted-syntax`             |
-| [Return types](#return-types)                                                   | **Warned**                              | `explicit-module-boundary-types`                                      |
-| [Route primitive shape](#route-and-component-shape)                             | **Warned**                              | `openthrottle/route-primitive-shape`, `openthrottle/pre-hooks-unpack` |
-| [Hook primitive shape](#hook-shape)                                             | **Enforced**                            | `openthrottle/hook-primitive-shape` + `audit:hook-shape`              |
-| [Import order](#import-order)                                                   | **Warned**                              | `simple-import-sort/imports`, `simple-import-sort/exports`            |
-| [File header comes first](#file-header-comes-first)                             | **Enforced** (autofix)                  | `openthrottle/file-header-first`                                      |
-| [Anti-flake test rules](#anti-flake-test-rules)                                 | **Enforced**                            | `openthrottle/no-test-sleep` and four siblings; Vitest `retry: 0`     |
-| [Agent-safety rules](#agent-safety-rules)                                       | **Enforced**                            | `openthrottle/mcp-tool-registration` and two siblings                 |
-| [Discriminated unions](#discriminated-unions)                                   | Honor system                            | —                                                                     |
-| [`interface extends` over `&`](#interface-extends-over-)                        | Honor system                            | —                                                                     |
-| [`readonly` by default](#readonly-properties)                                   | Honor system                            | —                                                                     |
-| [Optional properties sparingly](#optional-properties)                           | Honor system                            | —                                                                     |
-| [Prefer results over throwing](#prefer-results-over-throwing)                   | Honor system                            | —                                                                     |
-| [JSDoc](#jsdoc-comments)                                                        | Honor system                            | —                                                                     |
-| [Installing libraries](#installing-libraries)                                   | Honor system                            | —                                                                     |
-| [Frontend design](#frontend-design)                                             | Honor system                            | —                                                                     |
-| [Data files hold data](#data-files-hold-data)                                   | **Enforced** (React Router projects)    | `openthrottle/data-file-shape`                                        |
-| [Named functions use block bodies](#named-functions-use-block-bodies)           | **Enforced** (autofix)                  | `openthrottle/named-function-block-body`                              |
-| [A ternary takes at most three lines](#a-ternary-takes-at-most-three-lines)     | **Enforced**                            | `openthrottle/three-line-ternary`                                     |
-| [Long strings are template literals](#long-strings-are-template-literals)       | **Enforced** (autofix)                  | `openthrottle/long-string-template-literal`                           |
-| [JSX consts live under `// Markup`](#jsx-consts-live-under-markup)              | **Enforced** (components)               | `openthrottle/component-primitive-shape`                              |
-| [`sideEffects` is declared and true](#sideeffects-is-declared-and-true)         | **Enforced**                            | `monorepo:check-side-effects` (CI + `check:local`)                    |
-| [Select value children](#select-value-children)                                 | **Enforced**                            | `openthrottle/select-value-children`                                  |
-| [Shared helpers come from nodejs-utils](#shared-helpers-come-from-nodejs-utils) | **Enforced**                            | `openthrottle/prefer-nodejs-utils`                                    |
+| Convention                                                                        | Enforcement                             | Mechanism                                                             |
+| --------------------------------------------------------------------------------- | --------------------------------------- | --------------------------------------------------------------------- |
+| [No new enums](#no-new-enums)                                                     | **Enforced**                            | `no-restricted-syntax` → `TSEnumDeclaration`                          |
+| [Component and data boundaries](#component-and-data-boundaries)                   | **Enforced**                            | `openthrottle/component-primitive-shape` + `audit:component-shape`    |
+| [No default exports](#no-default-exports)                                         | **Enforced**                            | `import-x/no-default-export`                                          |
+| [`import type`](#import-type)                                                     | **Enforced**                            | `@typescript-eslint/consistent-type-imports`                          |
+| [Naming conventions](#naming-conventions)                                         | **Enforced** (file names honor system)  | `@typescript-eslint/naming-convention`                                |
+| [NestJS file names](#nestjs-file-names)                                           | **Enforced**                            | `openthrottle/nestjs-file-naming`, `openthrottle/nestjs-file-exports` |
+| [Indexed access is `\| undefined`](#indexed-access-returns-undefined)             | **Enforced**                            | `noUncheckedIndexedAccess` compiler flag                              |
+| [GraphQL data uses fragment types](#graphql-data-uses-fragment-types)             | **Enforced** (warn where not yet clean) | `openthrottle/prefer-graphql-fragment`                                |
+| [No `as` casts](#no-as-casts)                                                     | **Enforced**                            | `consistent-type-assertions`, `assertionStyle: 'never'`               |
+| [No `any`](#no-any)                                                               | **Enforced**                            | `@typescript-eslint/no-explicit-any`                                  |
+| [Alphabetize keys](#alphabetize-arrays-and-object-keys)                           | **Enforced**                            | `sort-keys`, `perfectionist/*`, `@graphql-eslint/alphabetize`         |
+| [File length caps](#file-length-caps)                                             | **Enforced**                            | `max-lines` (210 components / 210 routes)                             |
+| [No `await` in loops](#no-await-in-loops)                                         | **Enforced**                            | `no-await-in-loop`                                                    |
+| [Composing classes with `cn`](#composing-classes-with-cn)                         | **Enforced**                            | `no-restricted-imports` (`clsx`) + `no-restricted-syntax`             |
+| [Return types](#return-types)                                                     | **Warned**                              | `explicit-module-boundary-types`                                      |
+| [Route primitive shape](#route-and-component-shape)                               | **Warned**                              | `openthrottle/route-primitive-shape`, `openthrottle/pre-hooks-unpack` |
+| [Hook primitive shape](#hook-shape)                                               | **Enforced**                            | `openthrottle/hook-primitive-shape` + `audit:hook-shape`              |
+| [Import order](#import-order)                                                     | **Warned**                              | `simple-import-sort/imports`, `simple-import-sort/exports`            |
+| [File header comes first](#file-header-comes-first)                               | **Enforced** (autofix)                  | `openthrottle/file-header-first`                                      |
+| [Anti-flake test rules](#anti-flake-test-rules)                                   | **Enforced**                            | `openthrottle/no-test-sleep` and four siblings; Vitest `retry: 0`     |
+| [Agent-safety rules](#agent-safety-rules)                                         | **Enforced**                            | `openthrottle/mcp-tool-registration` and two siblings                 |
+| [Discriminated unions](#discriminated-unions)                                     | Honor system                            | —                                                                     |
+| [`interface extends` over `&`](#interface-extends-over-)                          | Honor system                            | —                                                                     |
+| [`readonly` by default](#readonly-properties)                                     | Honor system                            | —                                                                     |
+| [Optional properties sparingly](#optional-properties)                             | Honor system                            | —                                                                     |
+| [Prefer results over throwing](#prefer-results-over-throwing)                     | Honor system                            | —                                                                     |
+| [JSDoc](#jsdoc-comments)                                                          | Honor system                            | —                                                                     |
+| [Installing libraries](#installing-libraries)                                     | Honor system                            | —                                                                     |
+| [Frontend design](#frontend-design)                                               | Honor system                            | —                                                                     |
+| [Data files hold data](#data-files-hold-data)                                     | **Enforced** (React Router projects)    | `openthrottle/data-file-shape`                                        |
+| [Named functions use block bodies](#named-functions-use-block-bodies)             | **Enforced** (autofix)                  | `openthrottle/named-function-block-body`                              |
+| [A ternary takes at most three lines](#a-ternary-takes-at-most-three-lines)       | **Enforced**                            | `openthrottle/three-line-ternary`                                     |
+| [Long strings are template literals](#long-strings-are-template-literals)         | **Enforced** (autofix)                  | `openthrottle/long-string-template-literal`                           |
+| [JSX consts live under `// Markup`](#jsx-consts-live-under-markup)                | **Enforced** (components)               | `openthrottle/component-primitive-shape`                              |
+| [Fill copy templates with `fillTemplate`](#fill-copy-templates-with-filltemplate) | **Enforced**                            | `openthrottle/no-hand-rolled-template-fill`                           |
+| [Unused copy keys](#unused-copy-keys)                                             | **Enforced** (CI + `check:local`)       | `audit:copy-keys:strict`                                              |
+| [`sideEffects` is declared and true](#sideeffects-is-declared-and-true)           | **Enforced**                            | `monorepo:check-side-effects` (CI + `check:local`)                    |
+| [Select value children](#select-value-children)                                   | **Enforced**                            | `openthrottle/select-value-children`                                  |
+| [Shared helpers come from nodejs-utils](#shared-helpers-come-from-nodejs-utils)   | **Enforced**                            | `openthrottle/prefer-nodejs-utils`                                    |
 
 ## Corrections made in the move
 
@@ -1291,6 +1293,44 @@ Two alternatives were measured and rejected (plan `a8cb40e5`, task `1cc27f78`):
   the churn is what rules it out. Core `quotes` is also deprecated (a formatting rule, frozen
   since ESLint 8.53), and its `@stylistic` replacement is not installed.
 - **Honor system only** was the status quo, and the PR #622 review showed it does not hold.
+
+### Fill copy templates with `fillTemplate`
+
+A copy string with `{token}` placeholders is filled with `fillTemplate(template, { token: value })`,
+not `template.replace('{token}', value)` or a chain of them. One call names every token, so a
+renamed or forgotten token fails in one place instead of leaving a literal `{token}` in the UI.
+
+```ts
+// BAD
+const label = COPY.ariaLabel
+  .replace('{used}', used)
+  .replace('{window}', window);
+
+// GOOD
+const label = fillTemplate(COPY.ariaLabel, { used, window });
+```
+
+**Enforcement.** `openthrottle/no-hand-rolled-template-fill` is on at `error` repo-wide. It
+reports a `.replace` or `.replaceAll` call whose first argument is a string literal that is
+exactly `{identifier}`; a regex, a longer string or a computed token is not a template fill and
+is left alone. No autofix. The helper is `fillTemplate` from `@openthrottle/nodejs-utils`
+(browser-safe, so apps, packages and the server all import the same one).
+
+### Unused copy keys
+
+Every leaf key of a `data/copy.ts` (React Router apps and `react-router-*` packages) is read
+somewhere. A key nothing reads is dead copy: delete it with the code that stopped using it.
+
+**Enforcement.** `pnpm run audit:copy-keys:strict` (part of `check:local:audit`) fails on an
+unused key. It is an audit script rather than an ESLint rule because the reference lives in
+another file. It parses each `copy.ts` with the TypeScript compiler API, collects the leaf paths
+of every exported `as const` object, and marks a path used when a non-test source file anywhere
+in `applications/*/{app,src}` or `packages/*/src` reads it as `COPY.a.b`, `COPY.a['b']`, through
+an `import { COPY as C }` alias, or by destructuring its group. It is conservative: a dynamic
+access (`COPY.status[state]`) or a constant or group used bare (passed, spread, aliased,
+`typeof COPY`) marks everything beneath it used. A key read only by a test is unused. Without
+`--strict` it only reports. `scripts/audit-copy-keys.allowlist.ts` is the shrink-only baseline;
+it is empty.
 
 ### JSX consts live under `// Markup`
 

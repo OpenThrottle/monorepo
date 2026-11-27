@@ -17,7 +17,7 @@ import {
   formatRunTotalTokens,
   runUsageTooltip,
 } from '~/routing/schedule/utils/format-usage';
-import { formatDuration } from '~/routing/schedule/utils/formatDuration';
+import { formatRunDuration } from '~/routing/schedule/utils/formatRunDuration';
 import { formatWhen } from '~/routing/schedule/utils/formatWhen';
 
 /**
@@ -77,7 +77,7 @@ export const buildScheduleRunsTableColumns = (
     {
       cell: ({ row }) => (
         <div className="p-2">
-          {formatDuration(row.original.startedAt, row.original.finishedAt)}
+          {formatRunDuration(row.original.startedAt, row.original.finishedAt)}
         </div>
       ),
       header: () => <div className="p-2">Duration</div>,

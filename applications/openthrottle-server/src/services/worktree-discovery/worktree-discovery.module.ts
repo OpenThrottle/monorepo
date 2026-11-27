@@ -10,11 +10,13 @@ import {
   UserWorkspaceSettingsModule,
 } from '@openthrottle/nestjs-repositories-server';
 
+import { GitRunnerModule } from '../git-runner/git-runner.module.ts';
 import { WorktreeDiscoveryService } from './worktree-discovery.service.ts';
 
 @Module({
   exports: [WorktreeDiscoveryService],
   imports: [
+    GitRunnerModule,
     LoggerModule,
     RepositoryCheckoutsModule,
     UserWorkspaceSettingsModule,

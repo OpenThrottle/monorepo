@@ -19,6 +19,8 @@ import {
 } from './turn-events';
 import type { ChatMessage, ChatTurnEvent } from './types';
 import { CHAT_RUN_PHASE } from './types';
+import { parseJson } from './utils/json';
+import { parseMcpServers } from './utils/session-mcp-servers';
 
 /**
  * Server-reported phase carried on a live-only `keepalive` ping's `metadataJson`
@@ -29,16 +31,7 @@ import { CHAT_RUN_PHASE } from './types';
 const serverPhaseFromKeepalive = (
   metadataJson: string | null | undefined,
 ): ResolvedRunPhase | null => {
-  if (metadataJson === null || metadataJson === undefined) {
-    return null;
-  }
-
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(metadataJson);
-  } catch {
-    return null;
-  }
+  const parsed = parseJson(metadataJson);
 
   if (!isRecord(parsed)) {
     return null;
@@ -299,11 +292,18 @@ export function reduceStreamChunk(
       ),
     );
   } else if (chunk.kind === 'session') {
+    const sessionMetadata = parseChunkMetadataRecord(
+      chunk.metadataJson ?? null,
+    );
+    const rawSessionId = sessionMetadata?.sessionId;
+    const sessionId = typeof rawSessionId === 'string' ? rawSessionId : null;
+
     events.set(chunk.messageId, [
       ...currentEvents,
       {
         kind: 'session',
-        sessionId: parseChunkMetadata(chunk.metadataJson ?? null).sessionId,
+        mcpServers: parseMcpServers(sessionMetadata?.mcpServers),
+        sessionId,
         sortOrder: chunk.sortOrder,
       },
     ]);

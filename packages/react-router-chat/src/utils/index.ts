@@ -1,3 +1,5 @@
+import { parseJson } from './json';
+
 /**
  * Pretty-print a JSON payload string for display: re-indented when it parses,
  * the raw string when it doesn't, and null when empty/whitespace.
@@ -9,13 +11,9 @@ export const formatJsonPayload = (raw: string | null): string | null => {
     return null;
   }
 
-  try {
-    const parsed: unknown = JSON.parse(raw);
+  const parsed = parseJson(raw);
 
-    return JSON.stringify(parsed, undefined, 2);
-  } catch {
-    return raw;
-  }
+  return parsed === undefined ? raw : JSON.stringify(parsed, undefined, 2);
 };
 
 /**

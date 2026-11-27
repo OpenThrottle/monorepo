@@ -1,3 +1,4 @@
+import { fillTemplate } from '@openthrottle/nodejs-utils';
 import {
   Button,
   Dialog,
@@ -12,7 +13,6 @@ import * as React from 'react';
 
 import { CHAT_SESSION_DRAWER_COPY } from '../data/copy';
 import type { ChatSessionDiffFile } from '../types';
-import { fillTemplate } from '../utils/fillTemplate';
 import { describeDiffFile, findAdjacentFilePath } from '../utils/session-diff';
 import { ChatSessionDrawerChangesPatch } from './ChatSessionDrawerChangesPatch';
 

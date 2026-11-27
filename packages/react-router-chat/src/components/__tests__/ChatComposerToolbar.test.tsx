@@ -51,7 +51,12 @@ const CLI_CAPS: ChatBackendCapabilities = {
 };
 
 const CHECKOUTS: readonly [ChatCheckoutOption] = [
-  { branch: 'main', id: 'repo-a', label: 'openthrottle' },
+  {
+    branch: 'main',
+    defaultBranch: undefined,
+    id: 'repo-a',
+    label: 'openthrottle',
+  },
 ];
 
 const PERSONAS: readonly ChatPersonaOption[] = [
@@ -244,11 +249,13 @@ describe('ChatComposerToolbar Component', () => {
         capabilities: CLI_CAPS,
         checkouts: [
           {
+            defaultBranch: undefined,
             id: 'repo-a',
             label: 'monorepo',
             remoteUrl: 'git@github.com:openthrottle/monorepo.git',
           },
           {
+            defaultBranch: undefined,
             id: 'repo-b',
             label: 'monorepo',
             remoteUrl: 'git@github.com:shiftsmart/monorepo.git',

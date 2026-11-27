@@ -7,6 +7,10 @@ import { CHAT_CHECKOUT_ROW_COPY } from '../data/copy';
 import type { ChatCheckoutOption } from '../types';
 import { CHAT_CHECKOUT_KIND } from '../types';
 import {
+  describeCheckoutBranch,
+  resolveCheckoutBranch,
+} from '../utils/checkout-branch';
+import {
   shortenBranchName,
   shortenCheckoutPath,
 } from '../utils/checkout-display';
@@ -67,13 +71,18 @@ export const ChatCheckoutSelectorRow = (
     nested = false,
     onSelect,
   } = props;
-  const { branch, filesystemPath, id } = checkout;
+  const { filesystemPath, id } = checkout;
 
   // Hooks
 
   // Setup
   const label = descriptor?.label ?? checkout.label;
-  const hasBranch = branch != null && branch !== '';
+  const branch = resolveCheckoutBranch(checkout);
+  const {
+    isDefault: isDefaultBranch,
+    name: branchName,
+    title: branchTitle,
+  } = describeCheckoutBranch(branch, CHAT_CHECKOUT_ROW_COPY.branchDefault);
   const hasPath = filesystemPath != null && filesystemPath !== '';
   // The location line: where the checkout lives on disk, else the remote's
   // `owner/name` qualifier when the consumer supplied no path.
@@ -110,13 +119,17 @@ export const ChatCheckoutSelectorRow = (
   );
   const branchNode = (
     <span
-      className="text-muted-foreground flex min-w-0 items-center gap-1 text-xs"
+      className={cn(
+        'text-muted-foreground flex min-w-0 items-center gap-1 text-xs',
+        isDefaultBranch && 'italic',
+      )}
+      data-branch-source={branch?.source}
       data-testid={`ChatCheckoutSelector-row-branch-${id}`}
-      title={branch}
+      title={branchTitle}
     >
       <GitBranch className="size-3 shrink-0" />
       <span className="truncate">
-        {shortenBranchName(branch ?? '', CHECKOUT_ROW_MAX_CHARS.branch)}
+        {shortenBranchName(branchName, CHECKOUT_ROW_MAX_CHARS.branch)}
       </span>
     </span>
   );
@@ -161,7 +174,7 @@ export const ChatCheckoutSelectorRow = (
           {showPrimary ? primaryNode : null}
           {showContext ? contextNode : null}
         </span>
-        {hasBranch ? branchNode : null}
+        {branch != null ? branchNode : null}
         {location === undefined ? null : locationNode}
       </span>
       <Check

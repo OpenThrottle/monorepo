@@ -28,7 +28,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { isRecord } from '@openthrottle/nodejs-utils';
+import { formatDuration, isRecord } from '@openthrottle/nodejs-utils';
 
 import type { HookFetch } from '../types.ts';
 import { logHookError } from '../utils/logging.ts';
@@ -162,20 +162,6 @@ const readTaskHistories = (
   return histories;
 };
 
-/**
- * @description A duration as `1h 4m`, `12m 30s` or `45s`.
- * @public
- */
-export const formatElapsed = (ms: number): string => {
-  const totalSeconds = Math.max(0, Math.round(ms / 1000));
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-  if (hours > 0) return `${hours}h ${minutes}m`;
-  if (minutes > 0) return `${minutes}m ${seconds}s`;
-  return `${seconds}s`;
-};
-
 /** ` after 12m 30s` for a task leaving IN_PROGRESS at a known time, else empty. */
 const elapsedSuffixOf = (
   status: string,
@@ -183,7 +169,7 @@ const elapsedSuffixOf = (
   nowMs: number,
 ): string => {
   if (status === IN_PROGRESS || startedAtMs === null) return '';
-  return ` after ${formatElapsed(nowMs - startedAtMs)}`;
+  return ` after ${formatDuration(nowMs - startedAtMs)}`;
 };
 
 const runKeyOf = (planId: string, planRunId: string | null): string => {

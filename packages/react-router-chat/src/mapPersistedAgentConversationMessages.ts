@@ -3,6 +3,7 @@ import { isRecord } from '@openthrottle/nodejs-utils';
 import { buildAgentsChatAssistantFooter } from './agents-chat-footer';
 import { foldPersistedTurnEvents } from './turn-events';
 import type { ChatMessage, ChatTurnResult } from './types';
+import { parseJson } from './utils/json';
 
 export interface PersistedAgentConversationMessage {
   readonly content: string;
@@ -17,23 +18,15 @@ export interface PersistedAgentConversationMessage {
 const parseMcpToolFromToolMetadataJson = (
   toolMetadataJson: string | null,
 ): string | null => {
-  if (toolMetadataJson == null || toolMetadataJson.trim() === '') {
+  const parsed = parseJson(toolMetadataJson);
+
+  if (!isRecord(parsed)) {
     return null;
   }
 
-  try {
-    const parsed: unknown = JSON.parse(toolMetadataJson);
+  const tool = parsed.tool;
 
-    if (!isRecord(parsed)) {
-      return null;
-    }
-
-    const tool = parsed.tool;
-
-    return typeof tool === 'string' && tool.length > 0 ? tool : null;
-  } catch {
-    return null;
-  }
+  return typeof tool === 'string' && tool.length > 0 ? tool : null;
 };
 
 const toAssistantFooter = (

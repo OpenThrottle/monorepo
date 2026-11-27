@@ -46,6 +46,7 @@ export function checkoutSearchTerms(
   return [
     checkout.label,
     checkout.branch,
+    checkout.defaultBranch,
     checkout.filesystemPath,
     checkout.projectName,
     identity?.host,

@@ -25,10 +25,8 @@
  * Path containment: the only directory read is the root the shared ladder resolves. No
  * client-supplied path reaches this service.
  */
-import { execFile } from 'node:child_process';
 import { readdirSync, statSync } from 'node:fs';
 import { basename, join } from 'node:path';
-import { promisify } from 'node:util';
 
 import { Injectable } from '@nestjs/common';
 import { LoggerService } from '@openthrottle/nestjs-modules';
@@ -40,6 +38,7 @@ import {
 import { toErrorMessage } from '@openthrottle/nodejs-utils';
 
 import { parseLinkedWorktrees } from '../../graphql/repository-inspection/repository-inspection.utils.ts';
+import { GitRunnerService } from '../git-runner/git-runner.service.ts';
 import { realPath } from '../paths/real-path/real-path.utils.ts';
 import type { WorktreeRootSource } from '../worktree-root/worktree-root.types.ts';
 import { resolveWorktreeRoot } from '../worktree-root/worktree-root.utils.ts';
@@ -63,13 +62,6 @@ import {
   isLinkedWorktreeDirectory,
 } from './worktree-discovery.utils.ts';
 
-const execFileAsync = promisify(execFile);
-
-/** Per-git-probe timebox. Matches RepositoryInspectionService so the page's budgets agree. */
-const GIT_COMMAND_TIMEOUT_MS = 2_000;
-
-/** Cap on stdout per git probe; worktree/status listings stay well inside this. */
-const GIT_MAX_BUFFER_BYTES = 1024 * 1024;
 /** Matches the ceiling `workspaceRepositories` already uses for a user's checkouts. */
 const CHECKOUT_LIST_LIMIT = 200;
 
@@ -108,6 +100,7 @@ export class WorktreeDiscoveryService {
     private readonly logger: LoggerService,
     private readonly checkoutsRepository: RepositoryCheckoutsRepository,
     private readonly settingsRepository: UserWorkspaceSettingsRepository,
+    private readonly gitRunner: GitRunnerService,
   ) {
     this.logger.debug(`🧩 ${this.name} 🧩`);
   }
@@ -464,21 +457,16 @@ export class WorktreeDiscoveryService {
    * normal case for a fresh worktree, so that yields null rather than a warning.
    */
   private async aheadCount(path: string): Promise<number | null> {
-    try {
-      const { stdout } = await execFileAsync(
-        'git',
-        ['-C', path, 'rev-list', '--count', '@{upstream}..HEAD'],
-        {
-          maxBuffer: GIT_MAX_BUFFER_BYTES,
-          timeout: GIT_COMMAND_TIMEOUT_MS,
-        },
-      );
-      const parsed = Number.parseInt(stdout.trim(), 10);
-      return Number.isNaN(parsed) ? null : parsed;
-    } catch {
-      // No upstream configured is the normal case for a fresh worktree branch — not a warning.
-      return null;
-    }
+    const result = await this.gitRunner.run(path, [
+      'rev-list',
+      '--count',
+      '@{upstream}..HEAD',
+    ]);
+    // No upstream configured is the normal case for a fresh worktree branch — not a warning.
+    if (!result.ok) return null;
+
+    const parsed = Number.parseInt(result.stdout.trim(), 10);
+    return Number.isNaN(parsed) ? null : parsed;
   }
 
   /** One read-only git probe; failures return null and append a problem instead of throwing. */
@@ -508,15 +496,10 @@ export class WorktreeDiscoveryService {
     cwd: string,
     args: readonly string[],
   ): Promise<{ error: string | null; stdout: string }> {
-    try {
-      const { stdout } = await execFileAsync('git', ['-C', cwd, ...args], {
-        maxBuffer: GIT_MAX_BUFFER_BYTES,
-        timeout: GIT_COMMAND_TIMEOUT_MS,
-      });
-      return { error: null, stdout };
-    } catch (error) {
-      return { error: message(error), stdout: '' };
-    }
+    const result = await this.gitRunner.run(cwd, args);
+    if (result.ok) return { error: null, stdout: result.stdout };
+
+    return { error: result.error, stdout: '' };
   }
 }
 

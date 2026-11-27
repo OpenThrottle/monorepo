@@ -25,6 +25,7 @@ import { namedFunctionBlockBody } from './rules/namedFunctionBlockBody.ts';
 import { nestjsFileExports } from './rules/nestjsFileExports.ts';
 import { nestjsFileNaming } from './rules/nestjsFileNaming.ts';
 import { noFireEvent } from './rules/noFireEvent.ts';
+import { noHandRolledTemplateFill } from './rules/noHandRolledTemplateFill.ts';
 import { noPerTestTimeout } from './rules/noPerTestTimeout.ts';
 import { noScreen } from './rules/noScreen.ts';
 import { noTestSleep } from './rules/noTestSleep.ts';
@@ -297,6 +298,7 @@ export const eslintConfig = tslint.config([
           'nestjs-file-exports': nestjsFileExports,
           'nestjs-file-naming': nestjsFileNaming,
           'no-fire-event': noFireEvent,
+          'no-hand-rolled-template-fill': noHandRolledTemplateFill,
           'no-per-test-timeout': noPerTestTimeout,
           'no-screen': noScreen,
           'no-test-sleep': noTestSleep,
@@ -404,6 +406,9 @@ export const eslintConfig = tslint.config([
       // callback — those are exempt by decision. Autofixable; the existing
       // sites were migrated with `eslint --fix`.
       'openthrottle/named-function-block-body': 'error',
+      // "Fill copy templates with fillTemplate" (code-style.md): reports
+      // `.replace('{token}', …)` on a bare `{identifier}` string. No autofix.
+      'openthrottle/no-hand-rolled-template-fill': 'error',
       // "A ternary takes at most three lines" (code-style.md), JSX
       // conditionals included. A custom rule rather than core
       // `multiline-ternary`, which fights Prettier's width-based wrapping. No

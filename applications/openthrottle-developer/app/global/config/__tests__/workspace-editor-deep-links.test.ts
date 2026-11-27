@@ -15,6 +15,16 @@ const cursor = WORKSPACE_EDITOR_DEEP_LINKS[WorkspaceEditorId.Cursor];
 const vscode = WORKSPACE_EDITOR_DEEP_LINKS[WorkspaceEditorId.Vscode];
 
 describe('workspace editor deep links', () => {
+  test('builds per-file hrefs for VS Code and Cursor, none for Claude', () => {
+    expect(vscode.buildFileHref('/abs/my dir/a#b.ts')).toBe(
+      'vscode://file/abs/my%20dir/a%23b.ts',
+    );
+    expect(cursor.buildFileHref('/abs/a.ts')).toBe('cursor://file/abs/a.ts');
+    expect(claude.buildFileHref('/abs/a.ts')).toBeNull();
+    expect(vscode.buildFileHref('')).toBeNull();
+    expect(cursor.buildFileHref('')).toBeNull();
+  });
+
   test('builds the exact Claude plan href for a known plan and path', () => {
     expect(
       claude.buildPlanHref({

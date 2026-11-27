@@ -131,7 +131,6 @@ export const MISSING_WORKTREES_COPY = {
 export const WORKTREE_DISCOVERY_COPY = {
   /** The genuinely degraded case: something we could not read may be hiding worktrees. */
   degradedSummary: `Some worktrees may be missing from this list.`,
-  detailsHide: `Hide details`,
   detailsShow: `Show details`,
   droppedCountSuffix: `more were found on disk and are not listed.`,
   /** A repository that has no worktrees yet — stated as a count, never as an error per repo. */

@@ -27,12 +27,6 @@ export const CHAT_DENIED_ACTIONS_COPY = {
   prefix: 'Permission denied:',
 } as const;
 
-/** Tooltip copy for {@link ChatComposerPersistControl}'s Saved ↔ Private switch. */
-export const CHAT_PERSIST_HINT_COPY = {
-  private: 'Private — this conversation is not saved',
-  saved: 'Saving — this conversation is stored in your history',
-} as const;
-
 /** Copy for {@link ChatToolCall}. */
 export const CHAT_TOOL_CALL_COPY = {
   noOutputReported: 'No output reported.',
@@ -40,8 +34,12 @@ export const CHAT_TOOL_CALL_COPY = {
   payloadTruncated: 'Output truncated when saved',
 } as const;
 
+/** @description The one `{branch}` template for a repository's default branch, read by the checkout rows and the session drawer. */
+const BRANCH_DEFAULT_TEMPLATE = '{branch} (repo default)';
+
 /** Copy for {@link ChatCheckoutSelectorRow}. */
 export const CHAT_CHECKOUT_ROW_COPY = {
+  branchDefault: BRANCH_DEFAULT_TEMPLATE,
   contextOnly: 'Context only',
   primary: 'Primary',
   worktree: 'Worktree',
@@ -50,7 +48,6 @@ export const CHAT_CHECKOUT_ROW_COPY = {
 /** Copy for {@link ChatPermissionRequest}. */
 export const CHAT_PERMISSION_REQUEST_COPY = {
   cancelled: 'Cancelled',
-  dismiss: 'Dismiss',
   heading: 'Permission requested',
   selectedPrefix: 'Answered:',
 } as const;
@@ -117,6 +114,7 @@ export const CHAT_SESSION_DRAWER_COPY = {
     loadingPatch: 'Loading patch…',
     nextFile: 'Next file',
     noCheckout: 'Pick a checkout to see its changes.',
+    openInEditor: 'Open {path} in your editor',
     patchDialogCounts: '+{additions} −{deletions}',
     patchDialogPosition: '{index} of {total}',
     patchLabel: 'Patch for {path}',
@@ -155,15 +153,25 @@ export const CHAT_SESSION_DRAWER_COPY = {
   environment: {
     agent: 'Agent',
     branch: 'Branch',
+    branchDefault: BRANCH_DEFAULT_TEMPLATE,
     checkout: 'Checkout',
     empty: 'Pick a checkout and model to start.',
+    mcp: {
+      heading: 'MCP servers',
+      statuses: {
+        connected: 'Connected',
+        disabled: 'Disabled',
+        failed: 'Failed',
+        'needs-auth': 'Needs auth',
+        pending: 'Connecting',
+      },
+    },
     model: 'Model',
     permissions: 'Permissions',
   },
   expandSection: 'Expand section',
   files: {
     count: { many: '{count} files', one: '1 file' },
-    ops: { created: 'Created', deleted: 'Deleted', edited: 'Edited' },
   },
   pullRequest: {
     chip: '#{number} {state}',

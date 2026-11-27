@@ -2,14 +2,20 @@ import { Button, cn } from '@openthrottle/react-router-shadcn';
 import { FolderGit2, GitBranch } from 'lucide-react';
 import * as React from 'react';
 
+import { CHAT_CHECKOUT_ROW_COPY } from '../data/copy';
+import type { CheckoutBranchDisplay } from '../utils/checkout-branch';
+import { describeCheckoutBranch } from '../utils/checkout-branch';
 import { shortenBranchName } from '../utils/checkout-display';
 
 export interface ChatCheckoutSelectorTriggerProps extends Omit<
   React.ComponentPropsWithoutRef<typeof Button>,
   'className'
 > {
-  /** Branch of the primary selection, when known. */
-  readonly branch?: string;
+  /**
+   * Branch of the primary selection, when known. A `default` source is the
+   * repository default shown before a scan, so it is styled and titled as such.
+   */
+  readonly branch: CheckoutBranchDisplay | undefined;
   readonly className?: string;
   /** False when there is nothing to pick — the button goes inert. */
   readonly enabled: boolean;
@@ -59,7 +65,12 @@ export const ChatCheckoutSelectorTrigger = React.forwardRef<
   // Hooks
 
   // Setup
-  const hasBranch = branch != null && branch !== '';
+  const hasBranch = branch != null;
+  const {
+    isDefault: isDefaultBranch,
+    name: branchName,
+    title: branchTitle,
+  } = describeCheckoutBranch(branch, CHAT_CHECKOUT_ROW_COPY.branchDefault);
   const showOverflow = !minimal && secondaryCount > 0;
   const showBranch = !minimal && hasBranch;
 
@@ -76,13 +87,17 @@ export const ChatCheckoutSelectorTrigger = React.forwardRef<
   );
   const branchNode = (
     <span
-      className="text-muted-foreground flex max-w-32 shrink-0 items-center gap-1 text-xs"
+      className={cn(
+        'text-muted-foreground flex max-w-32 shrink-0 items-center gap-1 text-xs',
+        isDefaultBranch && 'italic',
+      )}
+      data-branch-source={branch?.source}
       data-testid="ChatCheckoutSelector-branch"
-      title={branch}
+      title={branchTitle}
     >
       <GitBranch className="size-3 shrink-0" />
       {/* 13 chars ≈ 94px at text-xs, inside max-w-32 (128px) minus the icon. */}
-      <span className="truncate">{shortenBranchName(branch ?? '', 13)}</span>
+      <span className="truncate">{shortenBranchName(branchName, 13)}</span>
     </span>
   );
 

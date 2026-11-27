@@ -14,6 +14,7 @@ describe('HomeSessionDrawer Component', () => {
     component?.unmount();
     props = {
       changes: {
+        buildFileHref: undefined,
         diff: undefined,
         isLoading: false,
         isPatchTruncated: false,

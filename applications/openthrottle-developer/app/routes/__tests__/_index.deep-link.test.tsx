@@ -6,6 +6,7 @@ import { createRoutesStub } from 'react-router';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/_index';
+import { HOME_HERO_COPY } from '~/routing/home/data/copy';
 import { buildRootMatch } from '~/testing/buildRootMatch';
 
 import Index from '../_index';
@@ -108,9 +109,7 @@ describe('routes/_index.tsx deep-link (?conversationId=)', () => {
 
     // Let the mount effects flush (the hero shell is synchronous).
     await waitFor(() => {
-      expect(
-        component.getByText('What would you like to build today?'),
-      ).toBeInTheDocument();
+      expect(component.getByText(HOME_HERO_COPY.heading)).toBeInTheDocument();
     });
     expect(hoisted.restoreSpy).not.toHaveBeenCalled();
   });

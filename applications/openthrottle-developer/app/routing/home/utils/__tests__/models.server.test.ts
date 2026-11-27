@@ -205,7 +205,8 @@ describe('loadRepositories', () => {
 
     expect(await loadRepositories(request())).toEqual([
       {
-        branch: 'main',
+        branch: undefined,
+        defaultBranch: 'main',
         displayName: 'monorepo',
         filesystemPath: '/Users/matt/Development/openthrottle',
         id: 'repo-a',
@@ -232,6 +233,7 @@ describe('loadRepositories', () => {
     expect(await loadRepositories(request())).toEqual([
       {
         branch: undefined,
+        defaultBranch: undefined,
         displayName: 'scratch',
         filesystemPath: '/tmp/scratch',
         id: 'repo-b',
@@ -241,7 +243,7 @@ describe('loadRepositories', () => {
     ]);
   });
 
-  test('prefers the inspected current branch and carries the checkout kind', async () => {
+  test('keeps the inspected current branch apart from the default and carries the checkout kind', async () => {
     mockExecute.mockResolvedValue({
       workspaceLocalRepositories: [
         {
@@ -260,6 +262,7 @@ describe('loadRepositories', () => {
     const [option] = await loadRepositories(request());
 
     expect(option?.branch).toBe('openthrottle/plan-0b6dfaf8');
+    expect(option?.defaultBranch).toBe('main');
     expect(option?.kind).toBe('worktree');
   });
 

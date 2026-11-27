@@ -5,11 +5,6 @@
  * inlining sentence-length literals in components.
  */
 
-export const TIMELINE_NOT_FOUND_COPY = {
-  description: `The timeline you're looking for doesn't exist or was removed.`,
-  title: `timeline not found`,
-} as const;
-
 export const TIMELINE_PAGE_COPY = {
   betaBadge: `Beta`,
   subtitle: `Runs and sessions as spans, everything else as markers on the same time axis — so you can see what overlapped what.`,
@@ -60,8 +55,6 @@ export const TIMELINE_SPAN_TOOLTIP_COPY = {
 } as const;
 
 export const TIMELINE_CONTROLS_COPY = {
-  branchLabel: `Branch`,
-  branchPlaceholder: `All branches`,
   groupingLabel: `Group lanes`,
   kindsLabel: `Show`,
   windowLabel: `Window`,
@@ -74,7 +67,6 @@ export const TIMELINE_LEGEND_COPY = {
 } as const;
 
 export const TIMELINE_DETAIL_COPY = {
-  closeLabel: `Close details`,
   driverLabel: `Driver`,
   durationLabel: `Duration`,
   endedLabel: `Ended`,

@@ -19,6 +19,7 @@ import {
   it,
 } from 'vitest';
 
+import { GitRunnerService } from '../../services/git-runner/git-runner.service.ts';
 import { RepositoryInspectionService } from './repository-inspection.service.ts';
 
 const execFileAsync = promisify(execFile);
@@ -31,6 +32,7 @@ describe('RepositoryInspectionService', () => {
   const service = new RepositoryInspectionService(
     createMock<LoggerService>(),
     mockCheckoutsService,
+    new GitRunnerService(),
   );
 
   let fixturesRoot: string;
@@ -168,6 +170,7 @@ describe('RepositoryInspectionService hook telemetry', () => {
     asMock<RepositoryCheckoutsRepository>(
       createRepositoryCheckoutsRepositoryMock(),
     ),
+    new GitRunnerService(),
   );
 
   let root: string;

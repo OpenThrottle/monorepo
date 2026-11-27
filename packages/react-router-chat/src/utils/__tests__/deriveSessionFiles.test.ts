@@ -56,7 +56,7 @@ describe('deriveSessionFiles', () => {
       expect(file).toEqual({
         added: 3,
         count: 1,
-        op: 'edited',
+        op: 'modified',
         path: '/r/a.ts',
         removed: 1,
       });
@@ -105,7 +105,7 @@ describe('deriveSessionFiles', () => {
 
       expect(file).toMatchObject({
         added: 2,
-        op: 'edited',
+        op: 'modified',
         removed: undefined,
       });
     });
@@ -116,7 +116,7 @@ describe('deriveSessionFiles', () => {
         undefined,
       );
 
-      expect(file).toMatchObject({ op: 'edited', path: '/r/n.ipynb' });
+      expect(file).toMatchObject({ op: 'modified', path: '/r/n.ipynb' });
     });
   });
 
@@ -141,9 +141,9 @@ describe('deriveSessionFiles', () => {
       expect(
         Object.fromEntries(files.map((file) => [file.path, file.op])),
       ).toEqual({
-        '/r/new.ts': 'created',
+        '/r/new.ts': 'added',
         '/r/old.ts': 'deleted',
-        '/r/up.ts': 'edited',
+        '/r/up.ts': 'modified',
       });
     });
 
@@ -171,9 +171,9 @@ describe('deriveSessionFiles', () => {
       );
       const byPath = Object.fromEntries(files.map((f) => [f.path, f]));
 
-      expect(byPath['src/new.ts']).toMatchObject({ added: 2, op: 'created' });
+      expect(byPath['src/new.ts']).toMatchObject({ added: 2, op: 'added' });
       expect(byPath['src/up.ts']).toMatchObject({ added: 2, removed: 1 });
-      expect(byPath['src/to.ts']).toMatchObject({ added: 1, op: 'edited' });
+      expect(byPath['src/to.ts']).toMatchObject({ added: 1, op: 'modified' });
       expect(byPath['src/from.ts']).toBeUndefined();
       expect(byPath['src/old.ts']).toMatchObject({
         added: undefined,
@@ -192,8 +192,8 @@ describe('deriveSessionFiles', () => {
         undefined,
       );
 
-      expect(bare[0]).toMatchObject({ op: 'created', path: 'a.ts' });
-      expect(opencode[0]).toMatchObject({ op: 'created', path: 'a.ts' });
+      expect(bare[0]).toMatchObject({ op: 'added', path: 'a.ts' });
+      expect(opencode[0]).toMatchObject({ op: 'added', path: 'a.ts' });
     });
 
     test('a header that is all padding is no header (CodeQL polynomial-redos input)', () => {
@@ -205,7 +205,7 @@ describe('deriveSessionFiles', () => {
       );
 
       expect(files).toEqual([
-        expect.objectContaining({ op: 'edited', path: 'c.ts' }),
+        expect.objectContaining({ op: 'modified', path: 'c.ts' }),
       ]);
     });
 
@@ -215,7 +215,7 @@ describe('deriveSessionFiles', () => {
         undefined,
       );
 
-      expect(files[0]).toMatchObject({ op: 'edited', path: 'b.ts' });
+      expect(files[0]).toMatchObject({ op: 'modified', path: 'b.ts' });
     });
 
     test('OpenCode edit/write read filePath and camelCase strings', () => {
@@ -285,7 +285,7 @@ describe('deriveSessionFiles', () => {
         undefined,
       );
 
-      expect(files.map((f) => f.op).sort()).toEqual(['created', 'deleted']);
+      expect(files.map((f) => f.op).sort()).toEqual(['added', 'deleted']);
     });
 
     test('tool names are normalized (case and dashes)', () => {
@@ -339,7 +339,7 @@ describe('deriveSessionFiles', () => {
         undefined,
       );
 
-      expect(file?.op).toBe('created');
+      expect(file?.op).toBe('added');
     });
 
     test('edited then deleted is deleted', () => {
@@ -367,7 +367,7 @@ describe('deriveSessionFiles', () => {
         undefined,
       );
 
-      expect(file?.op).toBe('created');
+      expect(file?.op).toBe('added');
     });
 
     test('orders the most recently touched first', () => {

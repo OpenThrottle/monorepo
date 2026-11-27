@@ -11,10 +11,10 @@ export const MAX_UNTRACKED_FILES = 200;
 export const MAX_UNTRACKED_BYTES = 512 * 1024;
 
 /** @description Per-command timebox for a git probe, in milliseconds. */
-export const GIT_COMMAND_TIMEOUT_MS = 10_000;
+export const DIFF_GIT_TIMEOUT_MS = 10_000;
 
 /** @description Cap on stdout for one git command (a whole-repo diff stays bounded). */
-export const GIT_MAX_BUFFER_BYTES = 8 * 1024 * 1024;
+export const DIFF_GIT_MAX_BUFFER_BYTES = 8 * 1024 * 1024;
 
 /** @description Base refs tried, in order, when `origin/HEAD` does not resolve. */
 export const FALLBACK_BASE_REFS: readonly string[] = [

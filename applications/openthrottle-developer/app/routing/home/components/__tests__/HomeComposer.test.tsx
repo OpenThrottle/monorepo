@@ -74,7 +74,7 @@ const models: ChatModelOption[] = [
 const personas: ChatPersonaOption[] = [];
 
 const repositories: RepositoryOption[] = [
-  { displayName: 'monorepo', id: 'repo-1' },
+  { defaultBranch: undefined, displayName: 'monorepo', id: 'repo-1' },
 ];
 
 const renderComposer = (composerProps: HomeComposerProps): RenderResult => {
@@ -207,6 +207,7 @@ describe('HomeComposer Component', () => {
       repositories: [
         {
           branch: 'main',
+          defaultBranch: undefined,
           displayName: 'monorepo',
           filesystemPath: '/Users/matt/Development/openthrottle',
           id: 'repo-1',
@@ -214,6 +215,7 @@ describe('HomeComposer Component', () => {
         },
         {
           branch: 'trunk',
+          defaultBranch: undefined,
           displayName: 'monorepo',
           filesystemPath: '/Users/matt/Work/monorepo',
           id: 'repo-2',

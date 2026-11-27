@@ -1,5 +1,10 @@
 import { isRecord, isStringArray } from '@openthrottle/nodejs-utils';
 
+import {
+  readJsonCookie,
+  serializeJsonCookie,
+} from '~/global/utils/json-cookie';
+
 /** What the home route's session drawer remembers across a refresh. */
 export interface SessionDrawerState {
   /** Ids of the sections shown collapsed. */
@@ -26,45 +31,26 @@ export const defaultSessionDrawerState = (): SessionDrawerState => {
 export const parseSessionDrawerCookie = (
   cookieHeader: string,
 ): SessionDrawerState => {
-  const entry = cookieHeader
-    .split(';')
-    .map((part) => part.trim())
-    .find((part) => part.startsWith(`${COOKIE_NAME}=`));
-  if (entry == null) {
+  const parsed = readJsonCookie(cookieHeader, COOKIE_NAME);
+  if (!isRecord(parsed)) {
     return defaultSessionDrawerState();
   }
+  const { collapsedSections, isOpen } = parsed;
 
-  try {
-    const parsed: unknown = JSON.parse(
-      decodeURIComponent(entry.slice(COOKIE_NAME.length + 1)),
-    );
-    if (!isRecord(parsed)) {
-      return defaultSessionDrawerState();
-    }
-    const { collapsedSections, isOpen } = parsed;
-
-    return {
-      collapsedSections: isStringArray(collapsedSections)
-        ? collapsedSections
-        : [],
-      isOpen: typeof isOpen === 'boolean' ? isOpen : false,
-    };
-  } catch {
-    return defaultSessionDrawerState();
-  }
+  return {
+    collapsedSections: isStringArray(collapsedSections)
+      ? collapsedSections
+      : [],
+    isOpen: typeof isOpen === 'boolean' ? isOpen : false,
+  };
 };
 
 /** @description A `document.cookie` assignment that persists the drawer state for a year. */
 export const serializeSessionDrawerCookie = (
   state: SessionDrawerState,
 ): string => {
-  const ONE_YEAR_SECONDS = 31_536_000;
-  const value = encodeURIComponent(
-    JSON.stringify({
-      collapsedSections: state.collapsedSections,
-      isOpen: state.isOpen,
-    }),
-  );
-
-  return `${COOKIE_NAME}=${value}; path=/; max-age=${ONE_YEAR_SECONDS}; samesite=lax`;
+  return serializeJsonCookie(COOKIE_NAME, {
+    collapsedSections: state.collapsedSections,
+    isOpen: state.isOpen,
+  });
 };

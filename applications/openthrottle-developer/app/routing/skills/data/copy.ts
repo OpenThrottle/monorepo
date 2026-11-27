@@ -73,11 +73,8 @@ export const SKILLS_SEARCH_COPY = {
  * diverges from its static frontmatter value.
  */
 export const SKILLS_MODEL_INVOCATION_COPY = {
-  effectiveLabel: `Effective`,
   overrideIndicatorLabel: `Overridden by rule`,
   overrideTooltip: `Overridden by rule — see details`,
-  provenanceLabel: `Provenance`,
-  staticLabel: `Static`,
 } as const;
 
 /**
@@ -88,7 +85,6 @@ export const SKILLS_MODEL_INVOCATION_COPY = {
  * specific reason — it wins when both apply).
  */
 export const SKILL_DETAIL_COPY = {
-  backLink: `Back to skills`,
   cancelLabel: `Cancel`,
   editDisabledTooltip: `Editing needs a local checkout — no monorepo root resolved (set WORKSPACE_ROOT), so this deployed view is read-only.`,
   editExternalTooltip: `This skill is installed from an external source. Editing it here would fork it from upstream — change it upstream and re-sync.`,
@@ -98,7 +94,6 @@ export const SKILL_DETAIL_COPY = {
   notFoundStatusText: `Skill not found`,
   pathCopyLabel: `Copy path`,
   saveLabel: `Save`,
-  tagsLabel: `Tags`,
 } as const;
 
 /**
@@ -112,7 +107,6 @@ export const SKILL_RECORD_TAGS_COPY = {
   emptyTags: `No tags yet`,
   orphanBadge: `Missing from disk`,
   orphanRemoveLabel: `Remove from registry`,
-  tagsColumnHeader: `Tags`,
 } as const;
 
 /**
@@ -214,7 +208,6 @@ export const SKILL_CREATE_COPY = {
   cancelLabel: `Cancel`,
   descriptionFieldDescription: `The only thing a model sees when deciding whether to open this skill. Lead with what it does, then the trigger phrases that should fire it.`,
   descriptionFieldLabel: `Description`,
-  descriptionRequiredError: `A description is required — it is the whole basis on which a model decides to fire the skill.`,
   destinationCustomDescription: `Lands in .agents/skills/ as an untracked directory in this repository for you to commit. Everyone on your team gets it once you push.`,
   destinationCustomLabel: `This repository`,
   destinationFieldLabel: `Where should this live?`,
@@ -233,7 +226,6 @@ export const SKILL_CREATE_COPY = {
   nameFieldDescription: `Kebab-case. Becomes the directory name and must match the frontmatter name.`,
   nameFieldLabel: `Name`,
   noRootError: `Creating a skill needs a local checkout — no monorepo root resolved (set WORKSPACE_ROOT).`,
-  pageDescription: `Author a new SKILL.md and save it to your personal tier or this repository.`,
   pageTitle: `Create skill`,
   pathEscapeError: `Create rejected — the resolved skill path is outside its expected root.`,
   personalCollisionError: `Create rejected — a personal skill named '{slug}' already exists. Pick another name, or edit the existing one.`,

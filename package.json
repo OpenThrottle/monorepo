@@ -246,6 +246,8 @@
     "audit:component-shape:shadcn": "tsx ./scripts/audit-component-shape.ts --shadcn",
     "audit:component-shape:shadcn:strict": "tsx ./scripts/audit-component-shape.ts --shadcn --strict",
     "audit:component-shape:strict": "tsx ./scripts/audit-component-shape.ts --strict",
+    "audit:copy-keys": "tsx ./scripts/audit-copy-keys.ts",
+    "audit:copy-keys:strict": "tsx ./scripts/audit-copy-keys.ts --strict",
     "audit:file-name-casing": "tsx ./scripts/audit-file-name-casing.ts",
     "audit:file-name-casing:strict": "tsx ./scripts/audit-file-name-casing.ts --strict",
     "audit:hook-shape": "tsx ./scripts/audit-hook-shape.ts",

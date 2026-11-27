@@ -1,8 +1,8 @@
+import { fillTemplate } from '@openthrottle/nodejs-utils';
 import { DiffView } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import { CHAT_SESSION_DRAWER_COPY } from '../data/copy';
-import { fillTemplate } from '../utils/fillTemplate';
 
 export interface ChatSessionDrawerChangesPatchProps {
   /** True for a binary file: there is no patch to show. */

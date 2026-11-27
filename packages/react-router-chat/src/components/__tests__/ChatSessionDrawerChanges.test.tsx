@@ -36,7 +36,7 @@ const DIFF: ChatSessionDiffAvailable = {
 };
 
 const touched = (path: string): SessionFile => {
-  return { added: 1, count: 1, op: 'edited', path, removed: 0 };
+  return { added: 1, count: 1, op: 'modified', path, removed: 0 };
 };
 
 const renderChanges = (overrides: Partial<ChatSessionDrawerChangesProps>) => {
@@ -45,6 +45,7 @@ const renderChanges = (overrides: Partial<ChatSessionDrawerChangesProps>) => {
   const onSelectFile = vi.fn();
   const component = render(
     <ChatSessionDrawerChanges
+      buildFileHref={undefined}
       diff={DIFF}
       isLoading={false}
       isPatchTruncated={false}
@@ -219,6 +220,18 @@ describe('ChatSessionDrawerChanges', () => {
       expect(
         component.getByTestId('ChatSessionDrawerChangesTouched'),
       ).toHaveTextContent('a.ts');
+    });
+  });
+
+  describe('when the host supplies a file-link builder', () => {
+    test('puts an open-in-editor link on every changed file', () => {
+      const { component } = renderChanges({
+        buildFileHref: (path) => `vscode://file/repo/${path}`,
+      });
+
+      expect(
+        component.getAllByRole('link').map((link) => link.getAttribute('href')),
+      ).toEqual(['vscode://file/repo/src/a.ts', 'vscode://file/repo/src/b.ts']);
     });
   });
 });

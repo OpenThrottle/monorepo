@@ -16,7 +16,10 @@ export interface UseCheckoutDiffOptions {
   readonly isStreaming: boolean;
 }
 
-export interface UseCheckoutDiffResult extends ChatSessionChanges {}
+export interface UseCheckoutDiffResult extends Omit<
+  ChatSessionChanges,
+  'buildFileHref'
+> {}
 
 /**
  * @description Client state for the session drawer's Changes section: the checkout's diff

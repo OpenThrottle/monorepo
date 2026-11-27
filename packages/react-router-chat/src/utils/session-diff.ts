@@ -1,10 +1,11 @@
+import { fillTemplate } from '@openthrottle/nodejs-utils';
+
 import { CHAT_SESSION_DRAWER_COPY } from '../data/copy';
 import type {
   ChatSessionDiffAvailable,
   ChatSessionDiffFile,
   ChatSessionDiffPullRequest,
 } from '../types';
-import { fillTemplate } from './fillTemplate';
 
 /** "1 file" / "N files". */
 export const formatFileCount = (count: number): string => {

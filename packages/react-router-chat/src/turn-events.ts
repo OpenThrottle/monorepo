@@ -24,7 +24,9 @@ import type {
 import type { ChatToolStatusValue } from './types';
 import { CHAT_TOOL_STATUS } from './types';
 import { hasUsageCounts, normalizeUsage, sumUsage } from './usage';
+import { parseJson } from './utils/json';
 import { readLegacyCodexItem } from './utils/readLegacyCodexItem';
+import { parseMcpServers } from './utils/session-mcp-servers';
 
 const asString = (value: unknown): string | null => {
   return typeof value === 'string' ? value : null;
@@ -33,17 +35,9 @@ const asString = (value: unknown): string | null => {
 const safeParse = (
   json: string | null | undefined,
 ): Record<string, unknown> | null => {
-  if (json === null || json === undefined || json === '') {
-    return null;
-  }
+  const parsed = parseJson(json);
 
-  try {
-    const parsed: unknown = JSON.parse(json);
-
-    return isRecord(parsed) ? parsed : null;
-  } catch {
-    return null;
-  }
+  return isRecord(parsed) ? parsed : null;
 };
 
 /**
@@ -949,7 +943,14 @@ export const foldPersistedTurnEvents = (
       } else if (kind === 'session') {
         events = [
           ...events,
-          { kind: 'session', sessionId: meta.sessionId, sortOrder: order },
+          {
+            kind: 'session',
+            mcpServers: parseMcpServers(
+              isRecord(raw.metadata) ? raw.metadata.mcpServers : undefined,
+            ),
+            sessionId: meta.sessionId,
+            sortOrder: order,
+          },
         ];
       } else if (kind === 'permission_request') {
         events = applyTurnPermission(
