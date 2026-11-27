@@ -12,8 +12,8 @@ arguments:
   planId: string
 metadata:
   author: openthrottle
-  last-reviewed: '2026-11-22'
-  version: '1.4.0'
+  last-reviewed: '2026-11-27'
+  version: '1.5.0'
 ---
 
 `$planId` is the only argument. If it is not an OpenThrottle plan or task id, stop and say so.
@@ -40,17 +40,21 @@ A session started from a kickoff brief (`/ot-loop <planUuid>` on line 1 — [`ot
 
 Each `/loop` iteration works exactly one task. Resume the lowest-`sortOrder` `IN_PROGRESS` task first; otherwise pick the lowest `sortOrder` `PENDING`/`QUEUED`.
 
-> **Invariant — at most ONE task `IN_PROGRESS` at a time.** Steps 1→5 are one atomic unit: never run step 1 (`IN_PROGRESS`) for a task while another task is still `IN_PROGRESS`. Even when you power through several tasks in a single turn, fully close the current one — through **step 4 (`COMPLETED`)** — _before_ you start the next. Dropping the step-4 flip strands the task `IN_PROGRESS` with no server-side reconcile. **This is the most common failure of this loop** — two tasks `IN_PROGRESS` means you skipped a step 4. Issue the step-4 flip and the next step-1 flip as separate calls, never in one parallel batch.
+> **Invariant — at most ONE task `IN_PROGRESS` at a time.** Steps 1→5 are one atomic unit: never run step 1 (`IN_PROGRESS`) for a task while another task is still `IN_PROGRESS`. Even when you power through several tasks in a single turn, fully close the current one — commit it (step 4), then flip it **`COMPLETED` (step 5)** — _before_ you start the next. Dropping the step-5 flip strands the task `IN_PROGRESS` with no server-side reconcile. **This is the most common failure of this loop** — two tasks `IN_PROGRESS` means you skipped a step 5. Issue the step-5 flip and the next step-1 flip as separate calls, never in one parallel batch.
+>
+> **The order is commit, then `COMPLETED` — never the reverse.** A `COMPLETED` task whose commit a hook rejected looks finished in OT while its work sits uncommitted in the worktree, and nothing reconciles the two. The headless job commits first for the same reason (`commitAndComplete`, [design § 7](https://github.com/openthrottle/monorepo/blob/main/docs/workflows/ot-loop-job.md)).
 
 1. **Start:** `update_task(taskId, { status: 'IN_PROGRESS' })`, then `begin_task_session({ planId, taskId, model })` to open a work session scoped to this task carrying the model that will do its work. (Precondition: no other task is `IN_PROGRESS` — see the invariant above.) Where `model` comes from is [§ Model routing](#model-routing); declare what will actually do the work, and omit it rather than guess — a session's model is fixed when it opens and cannot be corrected later.
 2. **Do the work** for that task, following the repo's rules. Do it yourself, or hand it to a subagent on the routed model — [§ Model routing](#model-routing). **This is the only step that may be delegated.**
    - **Claim the inbox before any destructive step** (delete, migrate, rewrite history, push) **and on both sides of a delegation** — [§ Your run row](#your-run-row).
 3. **Validate** before completing with the repo's own checks for the touched projects, run **sequentially** (Nx targets share a cache). Don't mark a task done on red.
-4. **Complete — do this BEFORE starting any other task:** `update_task(taskId, { status: 'COMPLETED' })`. If the task genuinely can't be finished, set `BLOCKED` or `SKIPPED` instead — but never leave it `IN_PROGRESS` while you move on. Committing the work (step 5) is **not** a substitute for this flip. **On the plan's last open task, do step 6 first.**
-5. **Commit per task** with `/github-commit` — conventional commit, with `Plan-Id:` and `Task-Id:` footers for traceability. Do **not** record a work-ledger artifact for these per-task work commits; the footers carry the traceability. A task that changes no tracked file needs **no** commit — never make an empty or cosmetic one to carry the footer. Its step-4 `COMPLETED` flip is the record; the squash picks it up from OT (`github-squash` § Footers).
+4. **Commit per task** with `/github-commit` — conventional commit, with `Plan-Id:` and `Task-Id:` footers for traceability — and **verify it landed** before going on: HEAD moved and `git log -1` carries this task's `Task-Id:` (`github-commit` § Verify the commit landed). A commit piped through `grep` or `tail` hides the hook's exit status, so never judge one by its output alone. Do **not** record a work-ledger artifact for these per-task work commits; the footers carry the traceability.
+   - **No tracked change, no commit.** A task that changes no tracked file needs **no** commit — never make an empty or cosmetic one to carry the footer. Go straight to step 5; its `COMPLETED` flip is the record, and the squash picks it up from OT (`github-squash` § Footers).
+   - **A rejected commit gets one fix attempt.** When commitlint or a Husky hook refuses the commit, fix what it reported (header length, subject case, a lint error) and commit again. If the second commit is refused too, set the task `BLOCKED` with the hook output in `summary`, never `COMPLETED`. The headless job spends the same one-attempt budget (`commitFixUsed`).
    - **Commit per task, push once per plan.** Every push to a branch with a ready PR triggers a full CI run; one push at the end validates the whole batch. Push mid-plan only to hand off, exit, or save a worktree at risk of being reaped.
-6. **Add tasks when the work reveals more work** (`create_tasks` appends after the plan max when `sortOrder` is omitted). Completing the last open task closes the plan, so add them **before** that step-4 flip. Already closed? `update_plan` it back to `IN_PROGRESS` first.
-7. **Repeat** — before selecting the next task, confirm the one you just finished is `COMPLETED` (not still `IN_PROGRESS`), then poll for a cancel and claim the plan inbox ([§ Your run row](#your-run-row)). Continue until no task is `PENDING`, `QUEUED` or `IN_PROGRESS`.
+5. **Complete — only after step 4, and BEFORE starting any other task:** `update_task(taskId, { status: 'COMPLETED' })`. If the task genuinely can't be finished, set `BLOCKED` or `SKIPPED` instead — but never leave it `IN_PROGRESS` while you move on. A `BLOCKED` or `SKIPPED` task leaves no work behind: `git stash push -u -m "ot-loop <taskId>"` and name the stash in its `summary`, so the next task's commit cannot absorb it under the wrong `Task-Id:` (the headless job discards it instead). `git status --short` is empty before the next step 1. The commit (step 4) is **not** a substitute for this flip, and this flip is not a substitute for a commit that did not land. **On the plan's last open task, do step 6 first.**
+6. **Add tasks when the work reveals more work** (`create_tasks` appends after the plan max when `sortOrder` is omitted). Completing the last open task closes the plan, so add them **before** that step-5 flip. Already closed? `update_plan` it to `PENDING`, then `IN_PROGRESS` (a `COMPLETED` plan cannot go straight back), before `create_tasks`.
+7. **Repeat** — before selecting the next task, confirm the one you just finished is committed (or changed no tracked file) and `COMPLETED` (not still `IN_PROGRESS`), then poll for a cancel and claim the plan inbox ([§ Your run row](#your-run-row)). Continue until no task is `PENDING`, `QUEUED` or `IN_PROGRESS`.
 
 **Narrate as you go.** Use `append_plan_output(planId, ...)` for decisions and progress, passing `taskId` = the task the log actually describes (omit only for genuinely plan-level notes). One iteration can touch several tasks — tag the right id.
 
@@ -68,10 +72,10 @@ non-default tier. In the JSON, mind `READ_COST_CORRECTLY`.
 
 ### What delegates, and what never does
 
-Step 2 is the only delegatable step; the status flips (steps 1 and 4), session open, validation
-(step 3), the commit (step 5), narration, the cancel poll and inbox claim, and settling the run row
+Step 2 is the only delegatable step; the status flips (steps 1 and 5), session open, validation
+(step 3), the commit (step 4), narration, the cancel poll and inbox claim, and settling the run row
 all stay in the parent turn. A subagent must not touch OT status or git history; it reports back and
-the parent decides. If it fails or returns something unusable, the parent still owns step 4 — set
+the parent decides. If it fails or returns something unusable, the parent still owns step 5 — set
 `BLOCKED` rather than leaving the task `IN_PROGRESS`.
 
 A subagent inherits none of your context: build its prompt from the task row alone (template in

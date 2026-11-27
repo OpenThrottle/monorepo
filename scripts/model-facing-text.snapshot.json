@@ -210,14 +210,14 @@
     "prompt/Job_TestHealth.md": 8163,
     "prompt/Job_WorkInFlight.md": 9943,
     "skill/github-cleanup": 8122,
-    "skill/github-commit": 5619,
+    "skill/github-commit": 6984,
     "skill/github-pull-request": 12074,
     "skill/github-squash": 6945,
     "skill/ot-client-node-boundary": 3862,
     "skill/ot-code-review": 8950,
     "skill/ot-folders": 15795,
     "skill/ot-generators": 6734,
-    "skill/ot-loop": 16252,
+    "skill/ot-loop": 17840,
     "skill/ot-onboarding": 17051,
     "skill/ot-plans": 9189,
     "skill/ot-postgres": 5672,
@@ -255,6 +255,6 @@
     "mcpInstructions": 2183,
     "mcpTools": 40887,
     "prompts": 137762,
-    "skills": 163955
+    "skills": 166908
   }
 }
