@@ -2072,6 +2072,7 @@ export function StartConversationStreamInputSchema(): z.ZodObject<
   Properties<StartConversationStreamInput>
 > {
   return z.object({
+    attachmentIds: z.array(z.string().min(1)).nullish(),
     backend: z.string().nullish(),
     baseUrl: z.string().nullish(),
     conversationId: z.string().nullish(),

@@ -196,4 +196,45 @@ describe('buildCodexArgv', () => {
       expect(argv.at(-1)).toBe('p');
     });
   });
+
+  describe('image attachments', () => {
+    const IMAGES = ['/att/a.png', '/att/b.jpg'];
+
+    it('emits one --image per attachment, before the -- marker', () => {
+      const argv = buildCodexArgv({
+        imagePaths: IMAGES,
+        prompt: 'look',
+        resume: false,
+      });
+
+      expect(argv.filter((entry) => entry === '--image')).toHaveLength(2);
+      expect(argv.indexOf('--image')).toBeLessThan(argv.indexOf('--'));
+      expect(argv.slice(argv.indexOf('--image'), argv.indexOf('--'))).toEqual([
+        '--image',
+        '/att/a.png',
+        '--image',
+        '/att/b.jpg',
+      ]);
+      expect(argv.at(-1)).toBe('look');
+    });
+
+    it('also emits them on a resumed turn, ahead of the session id and prompt', () => {
+      const argv = buildCodexArgv({
+        imagePaths: IMAGES,
+        prompt: 'look',
+        resume: true,
+        sessionId: 'thread-1',
+      });
+
+      expect(argv.slice(0, 2)).toEqual(['exec', 'resume']);
+      expect(argv.indexOf('--image')).toBeLessThan(argv.indexOf('--'));
+      expect(argv.slice(-3)).toEqual(['--', 'thread-1', 'look']);
+    });
+
+    it('emits no --image when there are none', () => {
+      expect(buildCodexArgv({ prompt: 'p', resume: false })).not.toContain(
+        '--image',
+      );
+    });
+  });
 });

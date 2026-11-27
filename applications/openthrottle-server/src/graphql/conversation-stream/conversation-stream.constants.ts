@@ -22,3 +22,22 @@ export const PROMPT_HISTORY_WINDOW = 100;
  * emits it. Persisted turns only: a Private-mode turn has no other viewer.
  */
 export const USER_MESSAGE_CHUNK_KIND = 'user_message';
+
+/** Most images one turn may carry; a longer `attachmentIds` list is refused. */
+export const MAX_TURN_ATTACHMENTS = 8;
+
+/**
+ * `extensions.reason` of the `BAD_USER_INPUT` GraphQL error a start mutation throws for a bad
+ * `attachmentIds` list.
+ */
+export const CONVERSATION_ATTACHMENT_FAILURE = {
+  ATTACHMENTS_UNSUPPORTED: 'ATTACHMENTS_UNSUPPORTED',
+  ATTACHMENT_NOT_FOUND: 'ATTACHMENT_NOT_FOUND',
+  TOO_MANY_ATTACHMENTS: 'TOO_MANY_ATTACHMENTS',
+} as const;
+
+export type ConversationAttachmentFailureKey =
+  keyof typeof CONVERSATION_ATTACHMENT_FAILURE;
+
+export type ConversationAttachmentFailureValue =
+  (typeof CONVERSATION_ATTACHMENT_FAILURE)[ConversationAttachmentFailureKey];

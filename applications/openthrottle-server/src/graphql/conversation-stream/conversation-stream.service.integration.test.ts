@@ -105,6 +105,7 @@ function toServiceRun(prepared: PreparedReplay): StartConversationStreamRun {
   return {
     additionalDirectories: [],
     assistantMessageId: 'assistant-1',
+    attachments: [],
     backend: 'claude',
     baseUrl: null,
     conversationId: 'conversation-1',

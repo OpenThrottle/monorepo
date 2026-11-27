@@ -81,6 +81,7 @@ export interface DiscoveredAgentCli {
   readonly capabilities?: {
     readonly approvals: boolean;
     readonly editApprovals: boolean;
+    readonly imageInput: boolean;
   };
   readonly chatCapable: boolean;
   readonly driver: string;
@@ -209,7 +210,7 @@ export function toChatModelOptions(
 /**
  * Project each discovered agent's live runtime facts (ACP approvals, auth
  * status), keyed by backend id. Missing fields degrade to `approvals: false`,
- * `editApprovals: false`, `authStatus: 'unknown'`.
+ * `editApprovals: false`, `imageInput: false`, `authStatus: 'unknown'`.
  * @public
  */
 export function toAgentRuntimes(
@@ -222,6 +223,7 @@ export function toAgentRuntimes(
         approvals: agent.capabilities?.approvals ?? false,
         authStatus: agent.authState?.status ?? 'unknown',
         editApprovals: agent.capabilities?.editApprovals ?? false,
+        imageInput: agent.capabilities?.imageInput ?? false,
       },
     ]),
   );

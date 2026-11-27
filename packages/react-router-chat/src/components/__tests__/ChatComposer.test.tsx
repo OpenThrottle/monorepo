@@ -5,6 +5,7 @@ import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { dispatchFileEvent } from '../../__tests__/dispatchFileEvent';
 import type { ChatComposerProps } from '../ChatComposer';
 import { ChatComposer } from '../ChatComposer';
 
@@ -239,6 +240,53 @@ describe('ChatComposer Component', () => {
       mountComposer({ textAreaRef: ref });
 
       expect(ref.current).toBeInstanceOf(HTMLTextAreaElement);
+    });
+  });
+
+  describe('image attachments', () => {
+    const png = (): File => {
+      return new File(['x'], 'a.png', { type: 'image/png' });
+    };
+
+    test('a pasted image reaches onAddFiles from the textarea', () => {
+      const onAddFiles = vi.fn();
+      mountComposer({ onAddFiles });
+      const file = png();
+
+      dispatchFileEvent(component!.getByLabelText('Message'), 'paste', [file]);
+
+      expect(onAddFiles).toHaveBeenCalledWith([file]);
+    });
+
+    test('shows chips and removes one through onRemoveAttachment', async () => {
+      const onRemoveAttachment = vi.fn();
+      mountComposer({
+        attachments: [
+          {
+            localId: 'l-1',
+            name: 'a.png',
+            previewUrl: 'blob:a',
+            status: 'ready',
+          },
+        ],
+        onAddFiles: vi.fn(),
+        onRemoveAttachment,
+      });
+
+      await userEvent
+        .setup()
+        .click(component!.getByRole('button', { name: 'Remove a.png' }));
+
+      expect(onRemoveAttachment).toHaveBeenCalledWith('l-1');
+    });
+
+    test('ignores a paste while attachments are disabled', () => {
+      const onAddFiles = vi.fn();
+      mountComposer({ attachmentsDisabledReason: 'No images', onAddFiles });
+
+      dispatchFileEvent(component!.getByLabelText('Message'), 'paste', [png()]);
+
+      expect(onAddFiles).not.toHaveBeenCalled();
     });
   });
 

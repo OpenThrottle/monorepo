@@ -11,6 +11,7 @@ import { Module } from '@nestjs/common';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 
 import { AgenticTestQueueProducerModule } from '../../../queues/agentic-test/producer/producer.module.ts';
+import { AttachmentsJanitorQueueProducerModule } from '../../../queues/attachments-janitor/producer/producer.module.ts';
 import { CodeIndexQueueProducerModule } from '../../../queues/code-index/producer/producer.module.ts';
 import { DailyStatsQueueProducerModule } from '../../../queues/daily-stats/producer/producer.module.ts';
 import { DataRetentionQueueProducerModule } from '../../../queues/data-retention/producer/producer.module.ts';
@@ -34,6 +35,7 @@ import { QueuesService } from './queues-service.service.ts';
   exports: [QueuesService],
   imports: [
     AgenticTestQueueProducerModule,
+    AttachmentsJanitorQueueProducerModule,
     CodeIndexQueueProducerModule,
     DailyStatsQueueProducerModule,
     DatabaseBackupQueueProducerModule,

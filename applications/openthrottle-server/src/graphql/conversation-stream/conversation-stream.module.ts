@@ -9,6 +9,7 @@ import { Module } from '@nestjs/common';
 import { NestjsModelDiscoveryModule } from '@openthrottle/nestjs-model-discovery';
 import { LoggerModule } from '@openthrottle/nestjs-modules';
 import {
+  AgentConversationMessageAttachmentsModule,
   AgentConversationMessagesModule,
   AgentConversationsModule,
   AgentTokenUsageModule,
@@ -17,6 +18,7 @@ import {
 } from '@openthrottle/nestjs-repositories-server';
 
 import { AgentAccountStampingModule } from '../../services/agent-account-stamping/agent-account-stamping.module.ts';
+import { AttachmentStoreModule } from '../../services/attachment-store/attachment-store.module.ts';
 import { CheckoutPathModule } from '../../services/checkout-path/checkout-path.module.ts';
 import { ConversationStreamResolver } from './conversation-stream.resolver.ts';
 import { ConversationStreamService } from './conversation-stream.service.ts';
@@ -24,12 +26,14 @@ import { ConversationStreamService } from './conversation-stream.service.ts';
 @Module({
   exports: [ConversationStreamService],
   imports: [
+    AgentConversationMessageAttachmentsModule,
     AgentConversationMessagesModule,
     AgentConversationsModule,
     AgentTokenUsageModule,
     CustomPromptsModule,
     UserDisabledAgentClisModule,
     AgentAccountStampingModule,
+    AttachmentStoreModule,
     CheckoutPathModule,
     LoggerModule,
     NestjsModelDiscoveryModule,

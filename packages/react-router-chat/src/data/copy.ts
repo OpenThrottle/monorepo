@@ -200,3 +200,27 @@ export const CHAT_LOAD_EARLIER_COPY = {
   label: 'Load earlier messages',
   loading: 'Loading earlier messages…',
 } as const;
+
+/** Copy for the composer's image attachment picker, chips and drop zone. @public */
+export const CHAT_COMPOSER_ATTACHMENT_COPY = {
+  attachImages: 'Attach images',
+  dropHint: 'Drop images to attach',
+  removePrefix: 'Remove',
+  uploading: 'Uploading',
+} as const;
+
+/** Copy for the image thumbnails on a sent message. @public */
+export const CHAT_MESSAGE_ATTACHMENT_COPY = {
+  altFallback: 'Attached image',
+  missing: 'Image unavailable',
+} as const;
+
+/**
+ * Turn-error copy keyed by the `extensions.reason` the server puts on a
+ * rejected attachment turn. @public
+ */
+export const CHAT_ATTACHMENT_TURN_ERROR_COPY = {
+  ATTACHMENTS_UNSUPPORTED: `The selected model does not accept images. Pick an image-capable model or remove the attachments.`,
+  ATTACHMENT_NOT_FOUND: `An attached image is no longer available. Remove it and attach it again.`,
+  TOO_MANY_ATTACHMENTS: 'Too many images on one message (the limit is 8).',
+} as const;

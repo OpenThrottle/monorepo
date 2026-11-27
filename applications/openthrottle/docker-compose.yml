@@ -93,6 +93,9 @@ x-server: &server
   # you set yourself is never touched. Empty token = nothing written.
   OPENTHROTTLE_MCP_AUTH_TOKEN: ${OPENTHROTTLE_MCP_AUTH_TOKEN}
   OPENTHROTTLE_USER_CONFIG_DIR: /host-openthrottle
+  # Chat image uploads live under the bind-mounted host config dir, so they survive
+  # container recreation (the container's own ~/.openthrottle is ephemeral).
+  OPENTHROTTLE_ATTACHMENTS_DIR: /host-openthrottle/attachments
   # Service-to-service over the compose network (container ports).
   POSTGRES_HOST: postgres
   POSTGRES_PORT: 5432

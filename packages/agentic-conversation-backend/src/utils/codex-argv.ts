@@ -36,6 +36,11 @@ export interface CodexArgvOptions {
    * custom provider because codex owns the OSS wire adapter.
    */
   readonly baseUrl?: string;
+  /**
+   * Absolute paths of attached images, emitted as one `--image <path>` each
+   * (accepted by both `exec` and `exec resume`), before the `--` marker.
+   */
+  readonly imagePaths?: readonly string[];
   /** Model id; omitted when undefined/blank/`auto` so codex uses its default. */
   readonly model?: string;
   /**
@@ -134,6 +139,10 @@ export function buildCodexArgv(options: CodexArgvOptions): string[] {
       '-c',
       `model_providers.oss.base_url=${JSON.stringify(baseUrl)}`,
     );
+  }
+
+  for (const imagePath of options.imagePaths ?? []) {
+    common.push('--image', imagePath);
   }
 
   const model = options.model?.trim();

@@ -34,8 +34,20 @@ export interface AgentConversationRow {
   readonly updatedAt: unknown;
 }
 
+/** An image attached to a persisted message, as a GraphQL selection may type it. @public */
+export interface PersistedAgentAttachmentRow {
+  readonly byteSize: number;
+  readonly height?: number | null;
+  readonly id: string;
+  readonly mimeType: string;
+  readonly originalName?: string | null;
+  readonly width?: number | null;
+}
+
 /** A persisted agent message row the loader maps into the chat thread. @public */
 export interface PersistedAgentMessageRow {
+  /** Absent when an app's document does not select it (the admin app). */
+  readonly attachments?: readonly PersistedAgentAttachmentRow[];
   readonly content: string;
   readonly createdAt: string;
   readonly id: string;
@@ -313,6 +325,14 @@ export function createAgentConversationsApi(
 
     const messages = mapPersistedAgentConversationMessages(
       items.map((message) => ({
+        attachments: (message.attachments ?? []).map((attachment) => ({
+          byteSize: attachment.byteSize,
+          height: attachment.height ?? null,
+          id: attachment.id,
+          mimeType: attachment.mimeType,
+          originalName: attachment.originalName ?? null,
+          width: attachment.width ?? null,
+        })),
         content: message.content,
         createdAt: message.createdAt,
         id: message.id,

@@ -27,6 +27,7 @@ import type {
   ConversationStreamChunk,
 } from '../types/conversation-backend.ts';
 import { CONVERSATION_STREAM_CHUNK_KINDS } from '../types/conversation-backend.ts';
+import { attachmentPaths } from './attachments.ts';
 import {
   buildCodexArgv,
   CODEX_BIN_ENV,
@@ -112,6 +113,7 @@ async function* streamCodex(
     resolveCodexBin(),
     buildCodexArgv({
       baseUrl: run.baseUrl,
+      imagePaths: attachmentPaths(run.attachments),
       model: run.model,
       permissionMode: run.permissionMode,
       prompt: withFileMentions(composePrompt(run), run.fileMentions),

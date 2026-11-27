@@ -6,6 +6,7 @@ fragment AgentClisDiscovery on DiscoverAgentClisResult {
     capabilities {
       approvals
       editApprovals
+      imageInput
     }
     chatCapable
     driver

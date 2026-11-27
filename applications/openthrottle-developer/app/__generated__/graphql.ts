@@ -352,8 +352,26 @@ export type AgentConversationGroupObject = {
   userId: Scalars['String']['output'];
 };
 
+export type AgentConversationMessageAttachmentObject = {
+  __typename?: 'AgentConversationMessageAttachmentObject';
+  /** File size in bytes */
+  byteSize: Scalars['Int']['output'];
+  /** Pixel height, or null when the header could not be read */
+  height?: Maybe<Scalars['Int']['output']>;
+  /** Attachment id; the image is GET /attachments/<id> */
+  id: Scalars['ID']['output'];
+  /** Image MIME type, e.g. image/png */
+  mimeType: Scalars['String']['output'];
+  /** File name the client uploaded, display only */
+  originalName?: Maybe<Scalars['String']['output']>;
+  /** Pixel width, or null when the header could not be read */
+  width?: Maybe<Scalars['Int']['output']>;
+};
+
 export type AgentConversationMessageObject = {
   __typename?: 'AgentConversationMessageObject';
+  /** Images sent with this message, oldest first; empty for messages without any */
+  attachments: Array<AgentConversationMessageAttachmentObject>;
   content: Scalars['String']['output'];
   conversationId: Scalars['String']['output'];
   createdAt: Scalars['DateTime']['output'];
@@ -7837,6 +7855,8 @@ export type StartAgentSetupResult = {
 };
 
 export type StartConversationStreamInput = {
+  /** Ids of images uploaded through POST /attachments to send with this message (at most 8; duplicates are ignored). Nullable + additive. Each must be the caller's own, not yet sent with another message. Rejected with BAD_USER_INPUT (extensions.reason ATTACHMENTS_UNSUPPORTED, TOO_MANY_ATTACHMENTS or ATTACHMENT_NOT_FOUND) when the backend takes no images, the list is too long, or an id is unknown, foreign, already used or no longer on disk. */
+  attachmentIds?: InputMaybe<Array<Scalars['ID']['input']>>;
   /** Backend to stream from: "openai" (default) or an allowlisted agent CLI (e.g. "cursor"). Omit for openai. */
   backend?: InputMaybe<Scalars['String']['input']>;
   /** OpenAI-compatible base URL of a discovered local endpoint, e.g. http://localhost:11434/v1. Required for the openai backend. */
@@ -9811,6 +9831,15 @@ export type GetAgentConversationMessagesQuery = {
       routingConfidence?: number | null;
       routingReason?: string | null;
       toolMetadataJson?: string | null;
+      attachments: Array<{
+        __typename?: 'AgentConversationMessageAttachmentObject';
+        byteSize: number;
+        height?: number | null;
+        id: string;
+        mimeType: string;
+        originalName?: string | null;
+        width?: number | null;
+      }>;
     }>;
   };
 };
@@ -9993,6 +10022,7 @@ export type AgentClisDiscoveryFragment = {
       __typename?: 'ChatBackendCapabilitiesObject';
       approvals: boolean;
       editApprovals: boolean;
+      imageInput: boolean;
     };
     modelOptions: Array<{
       __typename?: 'AgentCliModelOption';
@@ -10023,6 +10053,7 @@ export type DiscoverAgentClisQuery = {
         __typename?: 'ChatBackendCapabilitiesObject';
         approvals: boolean;
         editApprovals: boolean;
+        imageInput: boolean;
       };
       modelOptions: Array<{
         __typename?: 'AgentCliModelOption';
@@ -18999,6 +19030,10 @@ export const AgentClisDiscoveryFragmentDoc = {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'editApprovals' },
                       },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'imageInput' },
+                      },
                     ],
                   },
                 },
@@ -26715,6 +26750,39 @@ export const GetAgentConversationMessagesDocument = {
                     selections: [
                       {
                         kind: 'Field',
+                        name: { kind: 'Name', value: 'attachments' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'byteSize' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'height' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'mimeType' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'originalName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'width' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
                         name: { kind: 'Name', value: 'content' },
                       },
                       {
@@ -27240,6 +27308,10 @@ export const DiscoverAgentClisDocument = {
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'editApprovals' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'imageInput' },
                       },
                     ],
                   },

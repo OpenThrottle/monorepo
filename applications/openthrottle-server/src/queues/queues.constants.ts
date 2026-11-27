@@ -9,6 +9,7 @@
  * names are Redis keys, so a rename orphans the queue's existing jobs and repeatables.
  */
 import { AGENTIC_TEST_QUEUE_NAME } from './agentic-test/agentic-test.constants.ts';
+import { ATTACHMENTS_JANITOR_QUEUE_NAME } from './attachments-janitor/attachments-janitor.constants.ts';
 import { CODE_INDEX_QUEUE_NAME } from './code-index/code-index.constants.ts';
 import { DAILY_STATS_QUEUE_NAME } from './daily-stats/daily-stats.constants.ts';
 import { DATA_RETENTION_QUEUE_NAME } from './data-retention/data-retention.constants.ts';
@@ -29,6 +30,7 @@ import { WORK_LEDGER_VERIFY_QUEUE_NAME } from './work-ledger-verify/work-ledger-
 
 export const SERVER_QUEUE_NAMES = [
   AGENTIC_TEST_QUEUE_NAME,
+  ATTACHMENTS_JANITOR_QUEUE_NAME,
   CODE_INDEX_QUEUE_NAME,
   DAILY_STATS_QUEUE_NAME,
   DATA_RETENTION_QUEUE_NAME,

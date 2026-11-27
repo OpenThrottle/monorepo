@@ -8,10 +8,7 @@ import {
   ChatQueuedMessages,
 } from '@openthrottle/react-router-chat';
 import type { ChatAgentRuntime } from '@openthrottle/react-router-chat-state';
-import {
-  CHAT_TOOLBAR_CONTEXT_SOURCES,
-  chatContextMeterAtom,
-} from '@openthrottle/react-router-chat-state';
+import { chatContextMeterAtom } from '@openthrottle/react-router-chat-state';
 import { InlineErrors } from '@openthrottle/react-router-shadcn';
 import { FEATURE_BETA_PREVIEW } from '@openthrottle/react-router-utils';
 import { useAtomValue } from 'jotai';
@@ -66,6 +63,7 @@ export const HomeComposer = (props: HomeComposerProps): React.ReactElement => {
   const navigate = useNavigate();
   const showContextMeter = useAtomValue(chatContextMeterAtom);
   const {
+    attachmentProps,
     capabilities,
     checkouts,
     composerTextAreaRef,
@@ -125,17 +123,15 @@ export const HomeComposer = (props: HomeComposerProps): React.ReactElement => {
   const toolbar = (
     <div className="flex flex-col gap-2">
       <ChatComposerToolbar
+        attachmentsDisabledReason={attachmentProps.attachmentsDisabledReason}
         capabilities={capabilities}
         checkouts={checkouts}
-        contextSources={
-          FEATURE_BETA_PREVIEW ? CHAT_TOOLBAR_CONTEXT_SOURCES : undefined
-        }
         micState={FEATURE_BETA_PREVIEW ? voice.micState : undefined}
         mode={mode}
         modelGroups={modelGroups}
         modelId={modelId}
         models={models}
-        onAddContext={FEATURE_BETA_PREVIEW ? () => {} : undefined}
+        onAddFiles={attachmentProps.onAddFiles}
         onCheckoutChange={setRepositoryId}
         onCheckoutsChange={setRepositoryIds}
         onMicToggle={
@@ -188,6 +184,7 @@ export const HomeComposer = (props: HomeComposerProps): React.ReactElement => {
         onSendNow={turn.sendQueuedNow}
       />
       <ChatComposer
+        {...attachmentProps}
         className="border-t-0"
         disabled={!hasModels}
         draft={draft}

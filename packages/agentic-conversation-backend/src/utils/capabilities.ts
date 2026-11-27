@@ -53,12 +53,22 @@ const NO_CAPABILITIES: ChatBackendCapabilities = {
  */
 const CLI_CAPABILITIES: Readonly<Record<string, ChatBackendCapabilities>> = {
   antigravity: { ...NO_CAPABILITIES, resume: true },
-  claude: { ...NO_CAPABILITIES, mcpInjection: true, resume: true },
-  codex: { ...NO_CAPABILITIES, resume: true },
+  claude: {
+    ...NO_CAPABILITIES,
+    imageInput: true,
+    mcpInjection: true,
+    resume: true,
+  },
+  codex: { ...NO_CAPABILITIES, imageInput: true, resume: true },
   cursor: { ...NO_CAPABILITIES, resume: true },
   grok: { ...NO_CAPABILITIES, resume: true },
   openai: { ...NO_CAPABILITIES, replaysFullHistory: true },
-  opencode: { ...NO_CAPABILITIES, mcpInjection: true, resume: true },
+  opencode: {
+    ...NO_CAPABILITIES,
+    imageInput: true,
+    mcpInjection: true,
+    resume: true,
+  },
 };
 
 /**

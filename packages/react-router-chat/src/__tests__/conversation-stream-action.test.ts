@@ -1,9 +1,23 @@
-import { describe, expect, it } from 'vitest';
+import { GraphqlResponseError } from '@openthrottle/react-router-graphql';
+import { parse } from 'graphql';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   buildStartConversationStreamInput,
+  createConversationStreamAction,
   parseFileMentionsField,
 } from '../conversation-stream-action';
+
+const { executeGraphqlWithAuth } = vi.hoisted(() => {
+  return { executeGraphqlWithAuth: vi.fn() };
+});
+
+vi.mock('@openthrottle/react-router-graphql', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('@openthrottle/react-router-graphql')>();
+
+  return { ...actual, executeGraphqlWithAuth };
+});
 
 describe('parseFileMentionsField', () => {
   it('decodes a JSON array of paths', () => {
@@ -62,6 +76,7 @@ describe('buildStartConversationStreamInput', () => {
     );
 
     expect(input).toEqual({
+      attachmentIds: null,
       backend: 'cursor',
       baseUrl: null,
       conversationId: null,
@@ -95,6 +110,20 @@ describe('buildStartConversationStreamInput', () => {
     ).toEqual(['a.ts', 'b.ts']);
   });
 
+  it('decodes the attachmentIds JSON field', () => {
+    expect(
+      buildStartConversationStreamInput(
+        formOf({ attachmentIds: JSON.stringify(['att-1', 'att-2']) }),
+      ).attachmentIds,
+    ).toEqual(['att-1', 'att-2']);
+  });
+
+  it('nulls an absent attachmentIds', () => {
+    expect(
+      buildStartConversationStreamInput(formOf({})).attachmentIds,
+    ).toBeNull();
+  });
+
   it('decodes repositoryIds primary-first, preserving order', () => {
     expect(
       buildStartConversationStreamInput(
@@ -125,5 +154,48 @@ describe('buildStartConversationStreamInput', () => {
 
     expect(input.repositoryId).toBe('repo-legacy');
     expect(input.repositoryIds).toBeNull();
+  });
+});
+
+describe('createConversationStreamAction start errors', () => {
+  const run = async (): Promise<unknown> => {
+    const action = createConversationStreamAction({
+      cancelDocument: parse('query Noop { __typename }'),
+      respondPermissionDocument: parse('query Noop { __typename }'),
+      startDocument: parse('query Noop { __typename }'),
+    });
+    const body = new FormData();
+    body.set('message', 'hi');
+
+    return action({
+      request: new Request('http://localhost/x', { body, method: 'POST' }),
+    });
+  };
+
+  beforeEach(() => {
+    executeGraphqlWithAuth.mockReset();
+  });
+
+  it.each([
+    ['ATTACHMENTS_UNSUPPORTED', /does not accept images/],
+    ['TOO_MANY_ATTACHMENTS', /Too many images/],
+    ['ATTACHMENT_NOT_FOUND', /no longer available/],
+  ])('maps the %s reason to plain-language copy', async (reason, pattern) => {
+    executeGraphqlWithAuth.mockRejectedValue(
+      new GraphqlResponseError('GraphQL errors: raw', {
+        code: 'BAD_USER_INPUT',
+        reason,
+      }),
+    );
+
+    expect(await run()).toMatchObject({
+      errorMessage: expect.stringMatching(pattern),
+    });
+  });
+
+  it('keeps the raw message for any other failure', async () => {
+    executeGraphqlWithAuth.mockRejectedValue(new Error('boom'));
+
+    expect(await run()).toMatchObject({ errorMessage: 'boom' });
   });
 });

@@ -14,6 +14,7 @@ import {
   AGENT_CONVERSATION_LIST_MAX_LIMIT,
   AGENT_CONVERSATION_MESSAGES_MAX_LIMIT,
   AGENT_CONVERSATION_STATUSES,
+  AgentConversationMessageAttachmentsRepository,
   AgentConversationMessagesRepository,
   AgentConversationsRepository,
 } from '@openthrottle/nestjs-repositories-server';
@@ -33,6 +34,7 @@ import {
   UpdateAgentConversationTitleInput,
 } from './agent-conversation.input.ts';
 import {
+  groupAttachmentsByMessageId,
   parseAgentConversationMetadataJson,
   toAgentConversationMessageObject,
   toAgentConversationObject,
@@ -63,6 +65,7 @@ export class AgentConversationsResolver {
     private readonly agentConversationsRepository: AgentConversationsRepository,
     private readonly agentConversationMessagesRepository: AgentConversationMessagesRepository,
     private readonly conversationStreamService: ConversationStreamService,
+    private readonly attachmentsRepository: AgentConversationMessageAttachmentsRepository,
   ) {}
 
   @Query(() => ListAgentConversationsResultObject, {
@@ -162,7 +165,17 @@ export class AgentConversationsResolver {
 
     const result = new ListAgentConversationMessagesResultObject();
 
-    const items = messages.map(toAgentConversationMessageObject);
+    // One query for the whole page, grouped by message: no per-message lookups.
+    const attachmentRows = await this.attachmentsRepository.listByMessageIds(
+      messages.map((message) => message.id),
+    );
+    const attachmentsByMessageId = groupAttachmentsByMessageId(attachmentRows);
+    const items = messages.map((message) => {
+      return toAgentConversationMessageObject(
+        message,
+        attachmentsByMessageId.get(message.id),
+      );
+    });
     // Read only after the list call, which throws for a conversation the caller
     // does not own, so another user's running turn never leaks.
     const activeTurn = this.conversationStreamService.getActiveTurn(

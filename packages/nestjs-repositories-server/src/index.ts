@@ -19,6 +19,11 @@ export * from './modules/agent-conversation-groups/agent-conversation-groups.mod
 export * from './modules/agent-conversation-groups/agent-conversation-groups.repository.ts';
 export type * from './modules/agent-conversation-groups/agent-conversation-groups.types.ts';
 export * from './modules/agent-conversation-groups/group-names/group-names.utils.ts';
+export * from './modules/agent-conversation-message-attachments/agent-conversation-message-attachment.entity.ts';
+export * from './modules/agent-conversation-message-attachments/agent-conversation-message-attachments.constants.ts';
+export * from './modules/agent-conversation-message-attachments/agent-conversation-message-attachments.module.ts';
+export * from './modules/agent-conversation-message-attachments/agent-conversation-message-attachments.repository.ts';
+export type * from './modules/agent-conversation-message-attachments/agent-conversation-message-attachments.types.ts';
 export * from './modules/agent-conversation-messages/agent-conversation-message.entity.ts';
 export * from './modules/agent-conversation-messages/agent-conversation-messages.constants.ts';
 export * from './modules/agent-conversation-messages/agent-conversation-messages.module.ts';

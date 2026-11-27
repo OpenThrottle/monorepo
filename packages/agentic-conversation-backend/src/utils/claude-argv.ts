@@ -35,6 +35,13 @@ export interface ClaudeArgvOptions {
    */
   readonly additionalDirectories?: readonly string[];
   /**
+   * Directories holding the turn's attached images, as ABSOLUTE paths. Each is
+   * granted with `--add-dir` (deduplicated against
+   * {@link ClaudeArgvOptions.additionalDirectories}) so claude's Read tool may
+   * open the images from outside the cwd.
+   */
+  readonly attachmentDirectories?: readonly string[];
+  /**
    * Managed MCP servers (canonical `.mcp.json` schema) to expose to this turn.
    * When non-empty, they are passed inline via `--mcp-config` + a
    * `--strict-mcp-config` so only these load (project `.mcp.json` and the
@@ -98,9 +105,15 @@ export function buildClaudeArgv(options: ClaudeArgvOptions): string[] {
 
   // One repeated `--add-dir` per extra granted directory. Blank entries are
   // dropped rather than emitted as an empty flag value.
-  for (const directory of options.additionalDirectories ?? []) {
+  const grantedDirectories = new Set<string>();
+  const requestedDirectories = [
+    ...(options.additionalDirectories ?? []),
+    ...(options.attachmentDirectories ?? []),
+  ];
+  for (const directory of requestedDirectories) {
     const trimmed = directory.trim();
-    if (trimmed !== '') {
+    if (trimmed !== '' && !grantedDirectories.has(trimmed)) {
+      grantedDirectories.add(trimmed);
       argv.push('--add-dir', trimmed);
     }
   }

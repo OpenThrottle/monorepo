@@ -12,27 +12,41 @@ import { Paperclip } from 'lucide-react';
 import * as React from 'react';
 
 import type { ChatContextSource } from '../types';
+import { ChatComposerAttachPicker } from './ChatComposerAttachPicker';
 
 export interface ChatComposerAttachControlProps {
+  /** Image picker mode only: why attaching is unavailable (tooltip + disabled). */
+  readonly attachmentsDisabledReason?: string;
   /** Context sources offered in the menu; an empty list disables the control. */
   readonly contextSources?: readonly ChatContextSource[];
   /** Add a context source; the control renders nothing when omitted. */
   readonly onAddContext?: (sourceId: string) => void;
+  /**
+   * Image picker mode: when supplied the control is the image file picker and
+   * the context-source menu is not used.
+   */
+  readonly onAddFiles?: (files: readonly File[]) => void;
 }
 
 /**
  * @description Attach/add-context control for {@link ChatComposerToolbar}: a
  * paperclip button that opens a menu of {@link ChatContextSource}s, or a
  * disabled button with an explanatory tooltip when no sources are available.
- * Renders nothing when {@link ChatComposerAttachControlProps.onAddContext} is
- * omitted.
+ * Renders nothing when neither {@link ChatComposerAttachControlProps.onAddContext}
+ * nor {@link ChatComposerAttachControlProps.onAddFiles} is supplied; with
+ * `onAddFiles` it is the image file picker ({@link ChatComposerAttachPicker}).
  *
  * @public
  */
 export const ChatComposerAttachControl = (
   props: ChatComposerAttachControlProps,
 ): React.ReactElement | null => {
-  const { contextSources, onAddContext } = props;
+  const {
+    attachmentsDisabledReason,
+    contextSources,
+    onAddContext,
+    onAddFiles,
+  } = props;
 
   // Hooks
 
@@ -46,6 +60,15 @@ export const ChatComposerAttachControl = (
   // Life Cycle
 
   // 🔌 Short Circuit
+  if (onAddFiles !== undefined) {
+    return (
+      <ChatComposerAttachPicker
+        disabledReason={attachmentsDisabledReason}
+        onAddFiles={onAddFiles}
+      />
+    );
+  }
+
   if (onAddContext == null) {
     return null;
   }

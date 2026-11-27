@@ -158,4 +158,22 @@ describe('mapPersistedAgentConversationMessages', () => {
     expect(message?.events).toBeUndefined();
     expect(message?.body).toBe('just text');
   });
+
+  test('carries the attachments of a user row and omits the key when there are none', () => {
+    const attachment = {
+      byteSize: 5,
+      height: 2,
+      id: 'att-1',
+      mimeType: 'image/png',
+      originalName: 'a.png',
+      width: 3,
+    };
+    const [withImage, plain] = mapPersistedAgentConversationMessages([
+      baseMessage({ attachments: [attachment] }),
+      baseMessage({ attachments: [], id: 'msg-2' }),
+    ]);
+
+    expect(withImage?.attachments).toEqual([attachment]);
+    expect(plain).not.toHaveProperty('attachments');
+  });
 });

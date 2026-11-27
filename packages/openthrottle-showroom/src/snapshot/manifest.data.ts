@@ -23,6 +23,10 @@ export const SNAPSHOT_MANIFEST: SnapshotManifest = {
     classification: 'ignored',
     reason: `per-user organisation of the chat sidebar — the demo user makes its own groups`,
   },
+  agent_conversation_message_attachments: {
+    classification: 'ignored',
+    reason: `uploaded chat images are user-owned files on the local disk; the snapshot carries no bytes, so the demo user uploads its own`,
+  },
   agent_conversation_messages: {
     classification: 'exported',
     columns: {

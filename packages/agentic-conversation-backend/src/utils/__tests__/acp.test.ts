@@ -3,15 +3,20 @@
  * ACP agent: the real SDK on both sides, no child process.
  */
 
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import type {
   PermissionOption,
   PromptResponse,
   SessionConfigOption,
 } from '@agentclientprotocol/sdk';
 import { methods } from '@agentclientprotocol/sdk';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import type {
+  ConversationAttachment,
   ConversationBackendRun,
   ConversationStreamChunk,
 } from '../../types/conversation-backend.ts';
@@ -731,6 +736,108 @@ describe('createAcpConversationBackend', () => {
           resolution: { optionId: null, outcome: 'cancelled' },
         });
       });
+    });
+  });
+
+  describe('image attachments', () => {
+    const directories: string[] = [];
+
+    afterEach(async () => {
+      await Promise.all(
+        directories.splice(0).map((directory) => {
+          return rm(directory, { force: true, recursive: true });
+        }),
+      );
+    });
+
+    const writeImages = async (): Promise<ConversationAttachment[]> => {
+      const directory = await mkdtemp(join(tmpdir(), 'acp-images-'));
+      directories.push(directory);
+      const first = join(directory, 'a.png');
+      const second = join(directory, 'b.jpg');
+      await Promise.all([
+        writeFile(first, Buffer.from('first-bytes')),
+        writeFile(second, Buffer.from('second-bytes')),
+      ]);
+
+      return [
+        { mimeType: 'image/png', path: first, sha256: 'a'.repeat(64) },
+        { mimeType: 'image/jpeg', path: second, sha256: 'b'.repeat(64) },
+      ];
+    };
+
+    it('sends base64 image blocks after the text when the agent advertises image support', async () => {
+      const attachments = await writeImages();
+      const fake = createFakeLauncher({
+        authMethods: [],
+        configOptions: [],
+        imageInput: true,
+        loadable: [],
+        modes: undefined,
+        onPrompt: reply('seen'),
+      });
+      const backend = createAcpConversationBackend(FAKE_SPEC, {
+        launch: fake.launch,
+      });
+
+      const chunks = visible(
+        await collect(backend.stream(run({ attachments }))),
+      );
+
+      expect(chunks.at(-1)).toMatchObject({ done: true, error: null });
+      expect(fake.log.prompts).toHaveLength(1);
+      expect(fake.log.images).toEqual([
+        {
+          data: Buffer.from('first-bytes').toString('base64'),
+          mimeType: 'image/png',
+        },
+        {
+          data: Buffer.from('second-bytes').toString('base64'),
+          mimeType: 'image/jpeg',
+        },
+      ]);
+    });
+
+    it('ends the turn with a clear error and sends no prompt when the agent does not advertise image support', async () => {
+      const attachments = await writeImages();
+      const fake = createFakeLauncher({
+        authMethods: [],
+        configOptions: [],
+        loadable: [],
+        modes: undefined,
+        onPrompt: reply('never'),
+      });
+      const backend = createAcpConversationBackend(FAKE_SPEC, {
+        launch: fake.launch,
+      });
+
+      const chunks = visible(
+        await collect(backend.stream(run({ attachments }))),
+      );
+
+      expect(chunks.at(-1)).toMatchObject({
+        done: true,
+        error: 'This agent does not accept images.',
+      });
+      expect(fake.log.prompts).toEqual([]);
+      expect(fake.log.images).toEqual([]);
+    });
+
+    it('does not require image support when there are no attachments', async () => {
+      const fake = createFakeLauncher({
+        authMethods: [],
+        configOptions: [],
+        loadable: [],
+        modes: undefined,
+        onPrompt: reply('ok'),
+      });
+      const backend = createAcpConversationBackend(FAKE_SPEC, {
+        launch: fake.launch,
+      });
+
+      const chunks = visible(await collect(backend.stream(run({}))));
+
+      expect(chunks.at(-1)).toMatchObject({ done: true, error: null });
     });
   });
 

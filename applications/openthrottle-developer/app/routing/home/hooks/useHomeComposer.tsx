@@ -1,6 +1,7 @@
 import type {
   ChatBackendCapabilities,
   ChatCheckoutOption,
+  ChatComposerAttachmentProps,
   ChatComposerModeValue,
   ChatMentionProvider,
   ChatModelGroup,
@@ -30,7 +31,9 @@ import { useAtom } from 'jotai';
 import * as React from 'react';
 
 import { ConversationListContext } from '~/global/config/ConversationListContext';
+import { HOME_ATTACHMENT_COPY } from '~/routing/home/data/copy';
 import type { UseAgenticChatTurnResult } from '~/routing/home/hooks/useAgenticChatTurn';
+import { useComposerAttachments } from '~/routing/home/hooks/useComposerAttachments';
 import type { UseConversationListResult } from '~/routing/home/hooks/useConversationList';
 import { useConversationUrlSync } from '~/routing/home/hooks/useConversationUrlSync';
 import { useFileMentionProvider } from '~/routing/home/hooks/useFileMentionProvider';
@@ -63,6 +66,8 @@ export interface UseHomeComposerOptions {
 }
 
 export interface UseHomeComposerResult {
+  /** The composer's image attachment props: chips, handlers and why attaching is off (if it is). */
+  readonly attachmentProps: ChatComposerAttachmentProps;
   readonly capabilities: ChatBackendCapabilities;
   readonly checkouts: ChatCheckoutOption[];
   readonly composerTextAreaRef: React.RefObject<HTMLTextAreaElement | null>;
@@ -137,6 +142,7 @@ export const useHomeComposer = (
   const sharedConversations = React.useContext(ConversationListContext);
 
   const composerTextAreaRef = React.useRef<HTMLTextAreaElement | null>(null);
+  const attachments = useComposerAttachments();
   // Dedupes the "new conversation created" refresh to one per conversation id.
   const refreshedForIdRef = React.useRef<string | null>(null);
 
@@ -210,6 +216,15 @@ export const useHomeComposer = (
     decodedOption,
     decodedOption != null ? agentRuntimes[decodedOption.backend] : undefined,
   );
+  // Images ride the turn only for runtimes that report `imageInput`.
+  const acceptsImages = decodedOption != null && agentRuntimes[decodedOption.backend]?.imageInput === true; // prettier-ignore
+  const attachmentsDisabledReason = acceptsImages ? undefined : HOME_ATTACHMENT_COPY.unsupportedModel; // prettier-ignore
+  const attachmentProps: ChatComposerAttachmentProps = {
+    attachments: attachments.entries,
+    attachmentsDisabledReason,
+    onAddFiles: attachments.addFiles,
+    onRemoveAttachment: attachments.remove,
+  };
   // A backend that runs in a repository (agent CLIs) needs a checkout picked.
   const isCliBackend = decodedOption !== null && capabilities.requiresRepository; // prettier-ignore
   const modelGroups = React.useMemo(() => buildModelGroups(models), [models]);
@@ -287,6 +302,15 @@ export const useHomeComposer = (
       return;
     }
 
+    if (attachments.hasUploading) {
+      turn.setError(HOME_ATTACHMENT_COPY.uploadingBlocker);
+      return;
+    }
+    if (attachments.attachmentIds.length > 0 && !acceptsImages) {
+      turn.setError(HOME_ATTACHMENT_COPY.unsupportedModel);
+      return;
+    }
+
     turn.setError(null);
 
     // @-mentioned files are parsed from the outgoing message and attached to the
@@ -308,7 +332,15 @@ export const useHomeComposer = (
       serviceTier,
     });
 
-    turn.submitTurn(trimmed, fields);
+    // Only the ids ride the turn (a JSON array, like fileMentions); the ready
+    // chips are cleared once it is handed off.
+    const hasAttachments = attachments.attachmentIds.length > 0;
+    const attachmentFields: Record<string, string> = hasAttachments
+      ? { attachmentIds: JSON.stringify(attachments.attachmentIds) }
+      : {};
+
+    turn.submitTurn(trimmed, { ...fields, ...attachmentFields });
+    attachments.clear();
     clearDraft();
   };
 
@@ -363,6 +395,7 @@ export const useHomeComposer = (
   // 🔌 Short Circuit
 
   return {
+    attachmentProps,
     capabilities,
     checkouts,
     composerTextAreaRef,

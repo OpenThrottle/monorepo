@@ -19,15 +19,22 @@ const ALL_BACKENDS = [
 ];
 
 describe('resolveChatBackendCapabilities (CLI paths)', () => {
-  it('is headless everywhere: no approvals, steering, or image input', () => {
+  it('is headless everywhere: no approvals or steering', () => {
     for (const backend of ALL_BACKENDS) {
       expect(resolveChatBackendCapabilities(backend, {})).toMatchObject({
         approvals: false,
         editApprovals: false,
-        imageInput: false,
         steering: false,
       });
     }
+  });
+
+  it('accepts image input only where the adapter delivers attachments', () => {
+    const imageCapable = ALL_BACKENDS.filter((backend) => {
+      return resolveChatBackendCapabilities(backend, {}).imageInput;
+    });
+
+    expect(imageCapable).toEqual(['claude', 'codex', 'opencode']);
   });
 
   it('resumes by session id for claude, cursor, codex, grok, opencode and antigravity', () => {

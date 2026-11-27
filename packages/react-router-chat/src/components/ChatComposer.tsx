@@ -6,14 +6,16 @@ import { useChatComposerMentions } from '../hooks/useChatComposerMentions';
 import { useChatComposerPromptRecall } from '../hooks/useChatComposerPromptRecall';
 import { useChatComposerSlashCommands } from '../hooks/useChatComposerSlashCommands';
 import type {
+  ChatComposerAttachmentProps,
   ChatMentionProvider,
   ChatSlashCommandProvider,
   ChatTokenUsage,
 } from '../types';
+import { ChatComposerAttachmentZone } from './ChatComposerAttachmentZone';
 import { ChatComposerFooter } from './ChatComposerFooter';
 import { ChatComposerInput } from './ChatComposerInput';
 
-export interface ChatComposerProps {
+export interface ChatComposerProps extends ChatComposerAttachmentProps {
   readonly className?: string;
   readonly disabled?: boolean;
   /** Controlled draft; pair with {@link onDraftChange}. Omit for uncontrolled. */
@@ -77,6 +79,7 @@ export const ChatComposer = (props: ChatComposerProps): React.ReactElement => {
     submitLabel = 'Send',
     textAreaRef,
     toolbar,
+    ...attachmentProps
   } = props;
 
   // Hooks
@@ -142,10 +145,9 @@ export const ChatComposer = (props: ChatComposerProps): React.ReactElement => {
   const onTextAreaKeyDown = (
     event: React.KeyboardEvent<HTMLTextAreaElement>,
   ): void => {
-    // Only one popover can be open at once (`/` is anchored to a line start,
-    // `@` scans back mid-text), so the order here is not a precedence conflict —
-    // whichever consumed the key bails before Enter-to-send. Prompt recall goes
-    // last so an open popover keeps the arrow keys.
+    // One popover is open at most (`/` anchors to a line start, `@` scans back
+    // mid-text), so order is no conflict: whoever consumed the key bails before
+    // Enter-to-send. Recall goes last so an open popover keeps the arrows.
     if (
       mentions.handleKeyDown(event) ||
       slash.handleKeyDown(event) ||
@@ -175,17 +177,22 @@ export const ChatComposer = (props: ChatComposerProps): React.ReactElement => {
       data-testid="ChatComposer"
       onSubmit={onFormSubmit}
     >
-      <ChatComposerInput
-        disabled={disabled}
-        draft={draft}
-        mentionProvider={mentionProvider}
-        mentions={mentions}
-        onKeyDown={onTextAreaKeyDown}
-        placeholder={isQueueing ? queuePlaceholder : placeholder}
-        readOnly={readOnly}
-        slash={slash}
-        slashCommandProvider={slashCommandProvider}
-      />
+      <ChatComposerAttachmentZone
+        {...attachmentProps}
+        disabled={disabled || readOnly}
+      >
+        <ChatComposerInput
+          disabled={disabled}
+          draft={draft}
+          mentionProvider={mentionProvider}
+          mentions={mentions}
+          onKeyDown={onTextAreaKeyDown}
+          placeholder={isQueueing ? queuePlaceholder : placeholder}
+          readOnly={readOnly}
+          slash={slash}
+          slashCommandProvider={slashCommandProvider}
+        />
+      </ChatComposerAttachmentZone>
       <ChatComposerFooter
         disabled={disabled}
         draft={draft}

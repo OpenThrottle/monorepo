@@ -11,6 +11,12 @@ import { Field, ID, InputType } from '@nestjs/graphql';
 
 @InputType()
 export class StartConversationStreamInput {
+  @Field(() => [ID], {
+    description: `Ids of images uploaded through POST /attachments to send with this message (at most 8; duplicates are ignored). Nullable + additive. Each must be the caller's own, not yet sent with another message. Rejected with BAD_USER_INPUT (extensions.reason ATTACHMENTS_UNSUPPORTED, TOO_MANY_ATTACHMENTS or ATTACHMENT_NOT_FOUND) when the backend takes no images, the list is too long, or an id is unknown, foreign, already used or no longer on disk.`,
+    nullable: true,
+  })
+  attachmentIds?: string[] | null;
+
   @Field(() => String, {
     description: `Backend to stream from: "openai" (default) or an allowlisted agent CLI (e.g. "cursor"). Omit for openai.`,
     nullable: true,

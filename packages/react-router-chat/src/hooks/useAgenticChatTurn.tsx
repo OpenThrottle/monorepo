@@ -12,6 +12,7 @@ import type {
   ConversationStreamSubscriptionData,
   ConversationStreamSubscriptionVariables,
 } from '../conversation-stream';
+import { parseFileMentionsField } from '../conversation-stream-action';
 import { EMPTY_CHAT_SEED } from '../data/chat-agentic-turn-seed';
 import {
   AGENT_CONVERSATIONS_ACTION,
@@ -341,9 +342,25 @@ export function useAgenticChatTurn(
 
     localIdRef.current += 1;
     const userId = `local-user-${localIdRef.current}`;
+    // The just-sent row knows only the uploaded ids; the persisted row brings the rest.
+    const attachments = (
+      parseFileMentionsField(fields.attachmentIds ?? null) ?? []
+    ).map((id) => ({
+      byteSize: null,
+      height: null,
+      id,
+      mimeType: null,
+      originalName: null,
+      width: null,
+    }));
     setMessages((previous) => [
       ...previous,
-      { body: message, id: userId, role: 'user' },
+      {
+        ...(attachments.length > 0 ? { attachments } : {}),
+        body: message,
+        id: userId,
+        role: 'user',
+      },
     ]);
 
     startFetcher.submit(
