@@ -168,7 +168,7 @@ export const RepositoryEditForm = (
                 />
                 <Switch
                   checked={injectionEnabled}
-                  className="mt-0.5 shrink-0"
+                  className="shrink-0"
                   data-testid="RepositoryEditForm-injection"
                   id="repository-foreign-skill-injection"
                   onCheckedChange={setInjectionEnabled}

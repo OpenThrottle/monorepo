@@ -4,15 +4,16 @@ import { describe, expect, test, vi } from 'vitest';
 
 import type { ChatSessionDrawerSectionsValue } from '../../data/chat-session-drawer-sections';
 import { CHAT_SESSION_DRAWER_SECTIONS } from '../../data/chat-session-drawer-sections';
+import type { ChatSessionChanges } from '../../types';
 import type { ChatSessionDrawerProps } from '../ChatSessionDrawer';
 import { ChatSessionDrawer } from '../ChatSessionDrawer';
-import type { ChatSessionDrawerChangesProps } from '../ChatSessionDrawerChanges';
 
 const onSelectFile = vi.fn();
-const CHANGES: ChatSessionDrawerChangesProps = {
+const CHANGES: ChatSessionChanges = {
   diff: undefined,
   isLoading: false,
   isPatchTruncated: false,
+  onCloseFile: vi.fn(),
   onRefresh: vi.fn(),
   onSelectFile,
   selectedFile: undefined,
@@ -44,12 +45,11 @@ const SECTION_IDS: readonly ChatSessionDrawerSectionsValue[] = [
   CHAT_SESSION_DRAWER_SECTIONS.RUNNING,
   CHAT_SESSION_DRAWER_SECTIONS.CONTEXT,
   CHAT_SESSION_DRAWER_SECTIONS.ENVIRONMENT,
-  CHAT_SESSION_DRAWER_SECTIONS.FILES,
   CHAT_SESSION_DRAWER_SECTIONS.CHANGES,
 ];
 
 describe('ChatSessionDrawer', () => {
-  test('renders the five sections', () => {
+  test('renders the four sections', () => {
     const { component } = renderDrawer();
 
     for (const id of SECTION_IDS) {
@@ -60,9 +60,9 @@ describe('ChatSessionDrawer', () => {
   });
 
   test('a collapsed section hides its body', () => {
-    const { component } = renderDrawer({ collapsedSections: ['files'] });
+    const { component } = renderDrawer({ collapsedSections: ['changes'] });
 
-    expect(component.queryByTestId('ChatSessionDrawerFiles')).toBeNull();
+    expect(component.queryByTestId('ChatSessionDrawerChanges')).toBeNull();
     expect(
       component.getByTestId('ChatSessionDrawerRunning'),
     ).toBeInTheDocument();

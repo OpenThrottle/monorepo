@@ -1,37 +1,30 @@
-import { Badge, Button, cn } from '@openthrottle/react-router-shadcn';
-import { GitPullRequest, RefreshCw } from 'lucide-react';
+import { Button, cn } from '@openthrottle/react-router-shadcn';
+import { RefreshCw } from 'lucide-react';
 import * as React from 'react';
 
+import { CHAT_PANEL_HOVER_CLASSES } from '../data/chat-panel.classes';
 import { CHAT_SESSION_DRAWER_COPY } from '../data/copy';
-import type { ChatSessionDiff } from '../types';
+import type { ChatSessionChanges } from '../types';
+import type { SessionFile } from '../utils/deriveSessionFiles';
 import { fillTemplate } from '../utils/fillTemplate';
-import {
-  formatBaseRef,
-  formatDiffSummary,
-  formatPullRequestState,
-} from '../utils/session-diff';
-import { ChatSessionDrawerChangesPatch } from './ChatSessionDrawerChangesPatch';
+import { formatBaseRef, formatDiffSummary } from '../utils/session-diff';
+import { ChatSessionDrawerChangesDialog } from './ChatSessionDrawerChangesDialog';
 import { ChatSessionDrawerChangesRow } from './ChatSessionDrawerChangesRow';
+import { ChatSessionDrawerChangesTouched } from './ChatSessionDrawerChangesTouched';
 
-export interface ChatSessionDrawerChangesProps {
-  /** The checkout's changes; undefined until fetched or when no checkout is known. */
-  readonly diff: ChatSessionDiff | undefined;
-  readonly isLoading: boolean;
-  /** True when the host cut the selected file's patch at its size cap. */
-  readonly isPatchTruncated: boolean;
-  readonly onRefresh: () => void;
-  readonly onSelectFile: (path: string) => void;
-  /** Path (relative to the checkout) whose patch shows below the list. */
-  readonly selectedFile: string | undefined;
-  /** The selected file's unified patch; undefined while it loads. */
-  readonly selectedPatch: string | undefined;
+export interface ChatSessionDrawerChangesProps extends ChatSessionChanges {
+  /** True while a turn streams: the diff only catches up when it ends. */
+  readonly isStreaming: boolean;
+  /** Files the agent's edit tools touched in this conversation. */
+  readonly touchedFiles: readonly SessionFile[];
 }
 
 /**
  * @description Body of the session drawer's Changes section: `+A −D across N files vs <base>`,
- * the branch's pull-request chip when there is one, a refresh button, one row per changed file
- * and, under the list, the selected file's patch. Presentational: the diff, the selection and
- * the lazily loaded patch all come from the host.
+ * a refresh button, one row per changed file (marked when this conversation touched it) and
+ * a dialog with the selected file's patch. Files the conversation touched that the diff does
+ * not list follow in a muted list; with no diff to show, that list is all there is.
+ * Presentational: the diff, the selection and the lazily loaded patch come from the host.
  *
  * @public
  */
@@ -42,10 +35,13 @@ export const ChatSessionDrawerChanges = (
     diff,
     isLoading,
     isPatchTruncated,
+    isStreaming,
+    onCloseFile,
     onRefresh,
     onSelectFile,
     selectedFile,
     selectedPatch,
+    touchedFiles,
   } = props;
 
   // Hooks
@@ -54,50 +50,48 @@ export const ChatSessionDrawerChanges = (
   const copy = CHAT_SESSION_DRAWER_COPY.changes;
   const files = diff?.available === true ? diff.files : [];
   const selected = files.find((file) => file.path === selectedFile);
-  const pullRequest = diff?.available === true ? diff.pullRequest : undefined;
+  const touchedPaths = new Set(touchedFiles.map((file) => file.path));
+  const listedPaths = new Set(files.map((file) => file.path));
+  const touchedElsewhere = touchedFiles.filter((file) => {
+    return !listedPaths.has(file.path);
+  });
+  // Only a settled, complete diff can say a touched file netted out to nothing.
+  const isNetChangeKnown =
+    diff?.available === true && !diff.filesTruncated && !isStreaming;
+  const touchedHeading = isNetChangeKnown
+    ? copy.touchedNoNetChange
+    : copy.touchedHeading;
 
   // Handlers
 
   // Markup
+  const touchedList = touchedElsewhere.length > 0 && (
+    <ChatSessionDrawerChangesTouched
+      files={touchedElsewhere}
+      heading={touchedHeading}
+    />
+  );
+
   const note = (text: string): React.ReactElement => {
     return (
-      <p
-        className="text-muted-foreground px-4 pb-3 text-xs"
+      <div
+        className="flex flex-col gap-3 p-4"
         data-testid="ChatSessionDrawerChanges"
       >
-        {text}
-      </p>
+        <p className="text-muted-foreground text-xs">{text}</p>
+        {touchedList}
+      </div>
     );
   };
 
-  const pullRequestState =
-    pullRequest === undefined ? '' : formatPullRequestState(pullRequest);
-  const pullRequestChip = pullRequest !== undefined && (
-    <Badge asChild={true} data-testid="ChatSessionDrawerChanges-pr">
-      <a
-        href={pullRequest.url}
-        rel="noopener noreferrer"
-        target="_blank"
-        title={fillTemplate(copy.pullRequest, {
-          number: `${pullRequest.number}`,
-          state: pullRequestState,
-        })}
-      >
-        <GitPullRequest aria-hidden={true} className="size-3" />
-        {fillTemplate(copy.pullRequestChip, {
-          number: `${pullRequest.number}`,
-          state: pullRequestState,
-        })}
-      </a>
-    </Badge>
-  );
-
-  const selectedPatchPanel = selected !== undefined && (
-    <ChatSessionDrawerChangesPatch
-      isBinary={selected.binary}
+  const patchDialog = (
+    <ChatSessionDrawerChangesDialog
+      file={selected}
+      files={files}
       isTruncated={isPatchTruncated}
+      onClose={onCloseFile}
+      onSelectFile={onSelectFile}
       patch={selectedPatch}
-      path={selected.path}
     />
   );
 
@@ -113,7 +107,7 @@ export const ChatSessionDrawerChanges = (
 
   return (
     <div
-      className="flex flex-col gap-2 px-4 pb-3"
+      className="flex flex-col gap-2 p-4"
       data-testid="ChatSessionDrawerChanges"
     >
       <div className="flex items-center gap-2">
@@ -123,9 +117,9 @@ export const ChatSessionDrawerChanges = (
         >
           {formatDiffSummary(diff)}
         </span>
-        {pullRequestChip}
         <Button
           aria-label={copy.refresh}
+          className={CHAT_PANEL_HOVER_CLASSES}
           data-testid="ChatSessionDrawerChanges-refresh"
           disabled={isLoading}
           onClick={onRefresh}
@@ -147,20 +141,20 @@ export const ChatSessionDrawerChanges = (
       )}
       <ul className="flex flex-col">
         {files.map((file) => (
-          <React.Fragment key={file.path}>
-            <ChatSessionDrawerChangesRow
-              file={file}
-              isSelected={file.path === selectedFile}
-              onSelect={onSelectFile}
-            />
-            {/* The patch opens right under its row, not after the whole list. */}
-            {file.path === selected?.path && <li>{selectedPatchPanel}</li>}
-          </React.Fragment>
+          <ChatSessionDrawerChangesRow
+            file={file}
+            isSelected={file.path === selectedFile}
+            isTouched={touchedPaths.has(file.path)}
+            key={file.path}
+            onSelect={onSelectFile}
+          />
         ))}
       </ul>
+      {patchDialog}
       {diff.filesTruncated && (
         <p className="text-muted-foreground text-xs">{copy.filesTruncated}</p>
       )}
+      {touchedList}
     </div>
   );
 };

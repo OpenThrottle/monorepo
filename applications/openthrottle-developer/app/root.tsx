@@ -729,7 +729,6 @@ export default function App(): React.ReactElement {
                     authenticated={data?.user !== null}
                     backgroundActivities={backgroundActivities}
                     data={navigation}
-                    dock={isDockShown ? dockMarkup : null}
                     health={data?.serverHealth}
                     overrides={{
                       footer: isFooterHidden,
@@ -751,9 +750,17 @@ export default function App(): React.ReactElement {
 
                     {isHeaderHidden ? null : headerMarkup}
 
-                    <GlobalRouteViewTransition>
-                      <Outlet />
-                    </GlobalRouteViewTransition>
+                    {/* The dock shares a row with the page, under the sticky
+                        header, so it pins below the header like the session
+                        drawer does. */}
+                    <div className="flex min-h-0 flex-1">
+                      {isDockShown ? dockMarkup : null}
+                      <div className="flex min-w-0 flex-1 flex-col">
+                        <GlobalRouteViewTransition>
+                          <Outlet />
+                        </GlobalRouteViewTransition>
+                      </div>
+                    </div>
 
                     {isMetricsHidden ? null : metricsMarkup}
 

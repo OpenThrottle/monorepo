@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import type { ChatSessionDiffAvailable } from '../../types';
+import type { SessionFile } from '../../utils/deriveSessionFiles';
 import type { ChatSessionDrawerChangesProps } from '../ChatSessionDrawerChanges';
 import { ChatSessionDrawerChanges } from '../ChatSessionDrawerChanges';
 
@@ -34,7 +35,12 @@ const DIFF: ChatSessionDiffAvailable = {
   pullRequest: undefined,
 };
 
+const touched = (path: string): SessionFile => {
+  return { added: 1, count: 1, op: 'edited', path, removed: 0 };
+};
+
 const renderChanges = (overrides: Partial<ChatSessionDrawerChangesProps>) => {
+  const onCloseFile = vi.fn();
   const onRefresh = vi.fn();
   const onSelectFile = vi.fn();
   const component = render(
@@ -42,15 +48,18 @@ const renderChanges = (overrides: Partial<ChatSessionDrawerChangesProps>) => {
       diff={DIFF}
       isLoading={false}
       isPatchTruncated={false}
+      isStreaming={false}
+      onCloseFile={onCloseFile}
       onRefresh={onRefresh}
       onSelectFile={onSelectFile}
       selectedFile={undefined}
       selectedPatch={undefined}
+      touchedFiles={[]}
       {...overrides}
     />,
   );
 
-  return { component, onRefresh, onSelectFile };
+  return { component, onCloseFile, onRefresh, onSelectFile };
 };
 
 describe('ChatSessionDrawerChanges', () => {
@@ -115,16 +124,33 @@ describe('ChatSessionDrawerChanges', () => {
       expect(onRefresh).toHaveBeenCalledTimes(1);
     });
 
-    test('shows the selected file patch', () => {
+    test('opens the selected file patch in a dialog', () => {
       const { component } = renderChanges({
         selectedFile: 'src/a.ts',
         selectedPatch: '@@ -1 +1 @@\n-old\n+new\n',
       });
 
       expect(
-        component.getByTestId('ChatSessionDrawerChangesPatch'),
+        component.getByRole('dialog', { name: 'src/a.ts' }),
       ).toBeInTheDocument();
       expect(component.getAllByTestId('DiffView-line')).toHaveLength(3);
+    });
+
+    test('keeps the dialog closed with no selection', () => {
+      const { component } = renderChanges({});
+
+      expect(component.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    test('closing the dialog reports onCloseFile', async () => {
+      const { onCloseFile } = renderChanges({
+        selectedFile: 'src/a.ts',
+        selectedPatch: '@@ -1 +1 @@\n-old\n+new\n',
+      });
+
+      await userEvent.keyboard('{Escape}');
+
+      expect(onCloseFile).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -140,26 +166,59 @@ describe('ChatSessionDrawerChanges', () => {
     });
   });
 
-  describe('when the branch has a pull request', () => {
-    test('links to it in a new tab', () => {
+  describe('when this conversation touched files', () => {
+    test('marks the changed files it touched', () => {
       const { component } = renderChanges({
-        diff: {
-          ...DIFF,
-          pullRequest: {
-            number: 7,
-            state: 'open',
-            url: 'https://github.com/acme/repo/pull/7',
-          },
-        },
+        touchedFiles: [touched('src/b.ts')],
       });
-      const chip = component.getByRole('link', { name: /#7/ });
+      const rows = component.getAllByTestId('ChatSessionDrawerChanges-row');
 
-      expect(chip).toHaveAttribute(
-        'href',
-        'https://github.com/acme/repo/pull/7',
+      expect(
+        rows[0]?.querySelector(
+          '[data-testid="ChatSessionDrawerChanges-touched"]',
+        ),
+      ).toBeNull();
+      expect(rows[1]).toContainElement(
+        component.getByTestId('ChatSessionDrawerChanges-touched'),
       );
-      expect(chip).toHaveAttribute('target', '_blank');
-      expect(chip).toHaveAttribute('rel', expect.stringContaining('noopener'));
+    });
+
+    test('lists touched files the diff nets out as no net change', () => {
+      const { component } = renderChanges({
+        touchedFiles: [touched('src/a.ts'), touched('src/gone.ts')],
+      });
+      const list = component.getByTestId('ChatSessionDrawerChangesTouched');
+
+      expect(list).toHaveTextContent('Touched in this chat, no net change');
+      expect(
+        component.getAllByTestId('ChatSessionDrawerChangesTouched-row'),
+      ).toHaveLength(1);
+      expect(list).toHaveTextContent('gone.ts');
+    });
+
+    test('does not claim no net change while a turn streams', () => {
+      const { component } = renderChanges({
+        isStreaming: true,
+        touchedFiles: [touched('src/new.ts')],
+      });
+
+      expect(
+        component.getByTestId('ChatSessionDrawerChangesTouched'),
+      ).not.toHaveTextContent('no net change');
+    });
+
+    test('still lists them when there is no diff', () => {
+      const { component } = renderChanges({
+        diff: { available: false, reason: 'Not a git repository.' },
+        touchedFiles: [touched('src/a.ts')],
+      });
+
+      expect(
+        component.getByTestId('ChatSessionDrawerChanges'),
+      ).toHaveTextContent('Not a git repository.');
+      expect(
+        component.getByTestId('ChatSessionDrawerChangesTouched'),
+      ).toHaveTextContent('a.ts');
     });
   });
 });

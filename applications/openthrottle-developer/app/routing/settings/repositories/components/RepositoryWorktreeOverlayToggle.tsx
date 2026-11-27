@@ -56,7 +56,7 @@ export const RepositoryWorktreeOverlayToggle = (
       />
       <Switch
         checked={enabled}
-        className="mt-0.5 shrink-0"
+        className="shrink-0"
         data-testid="RepositoryEditForm-overlay"
         id="repository-worktree-skill-overlay"
         onCheckedChange={setEnabled}

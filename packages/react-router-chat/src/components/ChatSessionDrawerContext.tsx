@@ -47,7 +47,7 @@ export const ChatSessionDrawerContext = (
   if (summary.isEmpty) {
     return (
       <p
-        className="text-muted-foreground px-4 pb-3 text-xs"
+        className="text-muted-foreground p-4 text-xs"
         data-testid="ChatSessionDrawerContext"
       >
         {copy.empty}
@@ -57,7 +57,7 @@ export const ChatSessionDrawerContext = (
 
   return (
     <div
-      className="flex flex-col gap-2 px-4 pb-3"
+      className="flex flex-col gap-2 p-4"
       data-testid="ChatSessionDrawerContext"
     >
       {window !== undefined && (

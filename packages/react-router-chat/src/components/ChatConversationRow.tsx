@@ -2,6 +2,10 @@ import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import { CHAT_CONVERSATION_SIDEBAR_COPY } from '../data/chat-conversation-sidebar.copy';
+import {
+  CHAT_PANEL_HOVER_CLASSES,
+  CHAT_PANEL_SELECTED_CLASSES,
+} from '../data/chat-panel.classes';
 import type {
   AgentConversationGroup,
   AgentConversationListItem,
@@ -102,9 +106,10 @@ export const ChatConversationRow = (
   return (
     <div
       className={cn(
-        'group/row hover:bg-accent/50 mx-1 flex max-w-full items-center gap-1 rounded-md py-1 pr-1 pl-2 pointer-coarse:py-0.5',
+        'group/row mx-1 flex max-w-full items-center gap-1 rounded-md py-1 pr-1 pl-2 pointer-coarse:py-0.5',
+        CHAT_PANEL_HOVER_CLASSES,
         indented && 'pl-6',
-        isActive && 'bg-accent',
+        isActive && CHAT_PANEL_SELECTED_CLASSES,
       )}
     >
       {/* w-0: ScrollArea's display:table viewport would otherwise grow to the untruncated title. */}

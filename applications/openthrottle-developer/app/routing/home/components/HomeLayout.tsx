@@ -1,4 +1,3 @@
-import { CHAT_SESSION_DRAWER_SECTIONS } from '@openthrottle/react-router-chat';
 import * as React from 'react';
 
 import { HomeSessionDrawer } from '~/routing/home/components/HomeSessionDrawer';
@@ -6,7 +5,7 @@ import type { HomeThreadColumnProps } from '~/routing/home/components/HomeThread
 import { HomeThreadColumn } from '~/routing/home/components/HomeThreadColumn';
 import { useCheckoutDiff } from '~/routing/home/hooks/useCheckoutDiff';
 import type { UseSessionDrawerResult } from '~/routing/home/hooks/useSessionDrawer';
-import { isChangesVisible } from '~/routing/home/utils/isChangesVisible';
+import { isCheckoutDiffVisible } from '~/routing/home/utils/isCheckoutDiffVisible';
 
 export interface HomeLayoutProps extends Pick<
   HomeThreadColumnProps,
@@ -28,7 +27,7 @@ export const HomeLayout = (props: HomeLayoutProps): React.ReactElement => {
   // Hooks
   const checkoutDiff = useCheckoutDiff({
     checkoutId: drawer.environment?.checkout?.id,
-    isEnabled: isChangesVisible(drawer),
+    isEnabled: isCheckoutDiffVisible(drawer),
     isStreaming: turn.isStreaming,
   });
 
@@ -36,18 +35,8 @@ export const HomeLayout = (props: HomeLayoutProps): React.ReactElement => {
   const isEmptyThread = turn.messages.length === 0;
 
   // Handlers
-  const onSelectFile = (path: string): void => {
-    // Selecting from the Files section must also reveal the diff it points at.
-    if (
-      drawer.collapsedSections.includes(CHAT_SESSION_DRAWER_SECTIONS.CHANGES)
-    ) {
-      drawer.toggleSection(CHAT_SESSION_DRAWER_SECTIONS.CHANGES);
-    }
-    checkoutDiff.onSelectFile(path);
-  };
 
   // Markup
-  const changes = { ...checkoutDiff, onSelectFile };
 
   const hero = (
     <div className="flex flex-1 flex-col items-center justify-center">
@@ -79,7 +68,7 @@ export const HomeLayout = (props: HomeLayoutProps): React.ReactElement => {
       </div>
 
       <HomeSessionDrawer
-        changes={changes}
+        changes={checkoutDiff}
         collapsedSections={drawer.collapsedSections}
         environment={drawer.environment}
         isOpen={drawer.isOpen}

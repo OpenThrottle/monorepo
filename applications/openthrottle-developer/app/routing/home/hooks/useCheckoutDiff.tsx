@@ -1,4 +1,4 @@
-import type { ChatSessionDrawerChangesProps } from '@openthrottle/react-router-chat';
+import type { ChatSessionChanges } from '@openthrottle/react-router-chat';
 import * as React from 'react';
 import { useFetcher } from 'react-router';
 
@@ -10,13 +10,13 @@ import { toChatSessionDiff } from '~/routing/home/utils/toChatSessionDiff';
 export interface UseCheckoutDiffOptions {
   /** The selected checkout's registered id; undefined until the composer reports one. */
   readonly checkoutId: string | undefined;
-  /** Whether the Changes section is on screen; nothing is fetched while it is not. */
+  /** Whether a section that reads the diff (Changes, Environment) is on screen; nothing is fetched while none is. */
   readonly isEnabled: boolean;
   /** True while a turn streams; its end refetches, because the agent may have edited files. */
   readonly isStreaming: boolean;
 }
 
-export interface UseCheckoutDiffResult extends ChatSessionDrawerChangesProps {}
+export interface UseCheckoutDiffResult extends ChatSessionChanges {}
 
 /**
  * @description Client state for the session drawer's Changes section: the checkout's diff
@@ -71,6 +71,10 @@ export const useCheckoutDiff = (
     setRefreshTick((tick) => tick + 1);
   }, []);
 
+  const onCloseFile = React.useCallback((): void => {
+    setSelectedFile(undefined);
+  }, []);
+
   const onSelectFile = React.useCallback((path: string): void => {
     setSelectedFile(path);
   }, []);
@@ -116,6 +120,7 @@ export const useCheckoutDiff = (
     diff,
     isLoading,
     isPatchTruncated: file?.truncated ?? false,
+    onCloseFile,
     onRefresh,
     onSelectFile,
     selectedFile,

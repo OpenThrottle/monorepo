@@ -2,24 +2,25 @@ import { Button } from '@openthrottle/react-router-shadcn';
 import { X } from 'lucide-react';
 import * as React from 'react';
 
+import { CHAT_PANEL_HOVER_CLASSES } from '../data/chat-panel.classes';
 import { CHAT_SESSION_DRAWER_SECTIONS } from '../data/chat-session-drawer-sections';
 import { CHAT_SESSION_DRAWER_COPY } from '../data/copy';
 import type {
   ChatMessage,
   ChatQueuedMessage,
+  ChatSessionChanges,
   ChatSessionEnvironment,
 } from '../types';
-import type { ChatSessionDrawerChangesProps } from './ChatSessionDrawerChanges';
+import { deriveSessionFiles } from '../utils/deriveSessionFiles';
 import { ChatSessionDrawerChanges } from './ChatSessionDrawerChanges';
 import { ChatSessionDrawerContext } from './ChatSessionDrawerContext';
 import { ChatSessionDrawerEnvironment } from './ChatSessionDrawerEnvironment';
-import { ChatSessionDrawerFiles } from './ChatSessionDrawerFiles';
 import { ChatSessionDrawerRunning } from './ChatSessionDrawerRunning';
 import { ChatSessionDrawerSection } from './ChatSessionDrawerSection';
 
 export interface ChatSessionDrawerProps {
   /** The Changes section's diff, selection and callbacks, owned by the host. */
-  readonly changes: ChatSessionDrawerChangesProps;
+  readonly changes: ChatSessionChanges;
   /** Ids of the sections shown collapsed. */
   readonly collapsedSections: readonly string[];
   /** What the next turn runs with, once the composer has reported it. */
@@ -38,7 +39,8 @@ export interface ChatSessionDrawerProps {
 
 /**
  * @description The collapsible session panel beside a chat: Running, Context,
- * Environment, Files touched and Changes, each a collapsible section. Presentational —
+ * Environment and Changes (which marks the files this conversation touched), each a
+ * collapsible section. Presentational —
  * open state, the collapsed set and any persistence belong to the host; this
  * renders the panel's content and reports toggles and close.
  *
@@ -60,10 +62,15 @@ export const ChatSessionDrawer = (
   } = props;
 
   // Hooks
+  const rootPath = environment?.checkout?.filesystemPath;
+  const touchedFiles = React.useMemo(() => {
+    return deriveSessionFiles(messages, rootPath);
+  }, [messages, rootPath]);
 
   // Setup
   const copy = CHAT_SESSION_DRAWER_COPY;
   const sections = CHAT_SESSION_DRAWER_SECTIONS;
+  const liveDiff = changes.diff?.available === true ? changes.diff : undefined;
   const sectionFor = (
     sectionId: string,
     title: string,
@@ -87,6 +94,7 @@ export const ChatSessionDrawer = (
   const closeButton = (
     <Button
       aria-label={copy.closeLabel}
+      className={CHAT_PANEL_HOVER_CLASSES}
       data-testid="ChatSessionDrawer-close"
       onClick={onClose}
       size="icon"
@@ -130,21 +138,20 @@ export const ChatSessionDrawer = (
         {sectionFor(
           sections.ENVIRONMENT,
           copy.sectionTitles.environment,
-          <ChatSessionDrawerEnvironment environment={environment} />,
-        )}
-        {sectionFor(
-          sections.FILES,
-          copy.sectionTitles.files,
-          <ChatSessionDrawerFiles
-            messages={messages}
-            onSelectFile={changes.onSelectFile}
-            rootPath={environment?.checkout?.filesystemPath}
+          <ChatSessionDrawerEnvironment
+            environment={environment}
+            headBranch={liveDiff?.headBranch}
+            pullRequest={liveDiff?.pullRequest}
           />,
         )}
         {sectionFor(
           sections.CHANGES,
           copy.sectionTitles.changes,
-          <ChatSessionDrawerChanges {...changes} />,
+          <ChatSessionDrawerChanges
+            {...changes}
+            isStreaming={isStreaming}
+            touchedFiles={touchedFiles}
+          />,
         )}
       </div>
     </aside>

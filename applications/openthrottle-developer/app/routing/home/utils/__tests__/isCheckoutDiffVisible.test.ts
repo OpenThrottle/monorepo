@@ -1,12 +1,12 @@
 import { CHAT_SESSION_DRAWER_SECTIONS } from '@openthrottle/react-router-chat';
 import { describe, expect, test } from 'vitest';
 
-import { isChangesVisible } from '~/routing/home/utils/isChangesVisible';
+import { isCheckoutDiffVisible } from '~/routing/home/utils/isCheckoutDiffVisible';
 
-describe('isChangesVisible', () => {
+describe('isCheckoutDiffVisible', () => {
   test('is false when neither the column nor the sheet is open', () => {
     expect(
-      isChangesVisible({
+      isCheckoutDiffVisible({
         collapsedSections: [],
         isOpen: false,
         isSheetOpen: false,
@@ -16,7 +16,7 @@ describe('isChangesVisible', () => {
 
   test('is true when the column is open and Changes is expanded', () => {
     expect(
-      isChangesVisible({
+      isCheckoutDiffVisible({
         collapsedSections: [],
         isOpen: true,
         isSheetOpen: false,
@@ -26,7 +26,7 @@ describe('isChangesVisible', () => {
 
   test('is true when only the sheet is open', () => {
     expect(
-      isChangesVisible({
+      isCheckoutDiffVisible({
         collapsedSections: [],
         isOpen: false,
         isSheetOpen: true,
@@ -34,10 +34,23 @@ describe('isChangesVisible', () => {
     ).toBe(true);
   });
 
-  test('is false when Changes is collapsed', () => {
+  test('is true when Changes is collapsed but Environment is expanded', () => {
     expect(
-      isChangesVisible({
+      isCheckoutDiffVisible({
         collapsedSections: [CHAT_SESSION_DRAWER_SECTIONS.CHANGES],
+        isOpen: true,
+        isSheetOpen: false,
+      }),
+    ).toBe(true);
+  });
+
+  test('is false when both Changes and Environment are collapsed', () => {
+    expect(
+      isCheckoutDiffVisible({
+        collapsedSections: [
+          CHAT_SESSION_DRAWER_SECTIONS.CHANGES,
+          CHAT_SESSION_DRAWER_SECTIONS.ENVIRONMENT,
+        ],
         isOpen: true,
         isSheetOpen: false,
       }),

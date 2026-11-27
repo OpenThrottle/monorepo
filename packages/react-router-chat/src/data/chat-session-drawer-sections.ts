@@ -8,7 +8,6 @@ export const CHAT_SESSION_DRAWER_SECTIONS = {
   CHANGES: 'changes',
   CONTEXT: 'context',
   ENVIRONMENT: 'environment',
-  FILES: 'files',
   RUNNING: 'running',
 } as const;
 

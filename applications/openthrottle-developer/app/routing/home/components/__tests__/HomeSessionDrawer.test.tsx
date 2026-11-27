@@ -17,6 +17,7 @@ describe('HomeSessionDrawer Component', () => {
         diff: undefined,
         isLoading: false,
         isPatchTruncated: false,
+        onCloseFile: vi.fn(),
         onRefresh: vi.fn(),
         onSelectFile: vi.fn(),
         selectedFile: undefined,

@@ -1,5 +1,8 @@
 import type { ChatSessionDrawerProps } from '@openthrottle/react-router-chat';
-import { ChatSessionDrawer } from '@openthrottle/react-router-chat';
+import {
+  CHAT_PANEL_HOVER_CLASSES,
+  ChatSessionDrawer,
+} from '@openthrottle/react-router-chat';
 import {
   Button,
   cn,
@@ -72,12 +75,16 @@ export const HomeSessionDrawer = (
   // Markup
   const rail = (
     <div
-      className="hover:bg-accent flex h-full w-10 shrink-0 cursor-pointer flex-col items-center py-2"
+      className={cn(
+        'flex h-full w-10 shrink-0 cursor-pointer flex-col items-center py-2',
+        CHAT_PANEL_HOVER_CLASSES,
+      )}
       data-testid="HomeSessionDrawer-rail"
       onClick={onToggleOpen}
     >
       <Button
         aria-label={copy.show}
+        className={CHAT_PANEL_HOVER_CLASSES}
         data-testid="HomeSessionDrawer-show"
         size="icon"
         title={copy.show}
@@ -138,7 +145,7 @@ export const HomeSessionDrawer = (
   return (
     <>
       <div
-        className="sticky top-0 z-10 hidden h-svh shrink-0 md:flex"
+        className="sticky top-(--global-header-height,0px) z-10 hidden h-[calc(100svh-var(--global-header-height,0px))] shrink-0 md:flex"
         data-testid="HomeSessionDrawer"
       >
         <div
