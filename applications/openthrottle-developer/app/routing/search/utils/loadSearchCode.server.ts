@@ -1,4 +1,7 @@
-import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
+import {
+  executeGraphqlWithAuth,
+  isGraphqlForbiddenError,
+} from '@openthrottle/react-router-graphql';
 import { redirect } from 'react-router';
 
 import type { SearchCodeRepositoryFragment } from '~/__generated__/graphql';
@@ -11,7 +14,6 @@ import { SEARCH_SCOPE } from '~/routing/search/config';
 import type { SearchIndexCodeData } from '~/routing/search/types/search-index';
 import {
   isCodeIndexSearchable,
-  isGraphqlForbiddenError,
   resolveCodeSearchRepository,
   toCodeSearchRepositories,
 } from '~/routing/search/utils/code-search';

@@ -38,6 +38,12 @@ const AUTH_HTTP_STATUSES: ReadonlyArray<number> = [401, 403];
 const UNAUTHENTICATED_CODE = 'UNAUTHENTICATED';
 
 /**
+ * @description The `extensions.code` openthrottle-server puts on a GraphQL
+ * error when a signed-in caller lacks the permission an operation needs.
+ */
+const FORBIDDEN_CODE = 'FORBIDDEN';
+
+/**
  * @description The HTTP status recorded on a {@link GraphqlAuthError} built
  * from an `UNAUTHENTICATED` GraphQL error, which arrives on an HTTP 200
  * response. 401 is what the server's guard would have answered over REST.
@@ -80,6 +86,35 @@ export class GraphqlAuthError extends Error {
  */
 export function isAuthError(error: unknown): error is GraphqlAuthError {
   return error instanceof GraphqlAuthError;
+}
+
+/**
+ * @description The `extensions.code` of a thrown GraphQL error
+ * (`GraphqlResponseError`), or `null` when the error is anything else
+ * (network, timeout, a non-GraphQL throw) or carries no string code. Read the
+ * code through this rather than indexing `extensions` by hand.
+ *
+ * @public
+ */
+export function getGraphqlErrorCode(error: unknown): string | null {
+  if (!isGraphqlResponseError(error)) {
+    return null;
+  }
+
+  const code = error.extensions['code'];
+
+  return typeof code === 'string' ? code : null;
+}
+
+/**
+ * @description True when a thrown GraphQL error is the server refusing a
+ * signed-in caller a permission (`extensions.code` `FORBIDDEN`). Unlike
+ * {@link isAuthError}, this is not a reason to redirect to login.
+ *
+ * @public
+ */
+export function isGraphqlForbiddenError(error: unknown): boolean {
+  return getGraphqlErrorCode(error) === FORBIDDEN_CODE;
 }
 
 /**
@@ -212,10 +247,7 @@ function classifyError(error: unknown, timeoutMs: number): unknown {
     return new GraphqlTimeoutError(error.message, timeoutMs, { cause: error });
   }
 
-  if (
-    isGraphqlResponseError(error) &&
-    error.extensions['code'] === UNAUTHENTICATED_CODE
-  ) {
+  if (getGraphqlErrorCode(error) === UNAUTHENTICATED_CODE) {
     return new GraphqlAuthError(error.message, UNAUTHENTICATED_HTTP_STATUS, {
       cause: error,
     });

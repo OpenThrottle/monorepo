@@ -8,7 +8,7 @@ client/hooks for subscriptions.
 
 ## Layout
 
-- [src/index.ts](src/index.ts) — `executeGraphqlWithAuth`, `GraphqlAuthError`/`GraphqlTimeoutError` + `isAuthError`/`isTimeoutError` guards, `redirectOnAuthError`, re-export of `executeGraphql`.
+- [src/index.ts](src/index.ts) — `executeGraphqlWithAuth`, `GraphqlAuthError`/`GraphqlTimeoutError` + `isAuthError`/`isTimeoutError` guards, `getGraphqlErrorCode`/`isGraphqlForbiddenError` (read a GraphQL error's `extensions.code`), `redirectOnAuthError`, re-export of `executeGraphql`.
 - [src/hooks/createGraphqlWsClient.tsx](src/hooks/createGraphqlWsClient.tsx) — browser graphql-ws client; returns `null` during SSR.
 - [src/hooks/useSubscription.tsx](src/hooks/useSubscription.tsx) — subscribe-while-mounted hook (no Apollo); pair with a loader snapshot, merge deltas by id.
 - [src/hooks/executeWsMutation.tsx](src/hooks/executeWsMutation.tsx) — run a mutation/query over the already-open ws socket (graphql-ws `subscribe`, one `next` + `complete`).

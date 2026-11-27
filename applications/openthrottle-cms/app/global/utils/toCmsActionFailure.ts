@@ -1,5 +1,6 @@
 import { isRecord, toErrorMessage } from '@openthrottle/nodejs-utils';
 import {
+  getGraphqlErrorCode,
   isAuthError,
   isGraphqlResponseError,
 } from '@openthrottle/react-router-graphql';
@@ -59,11 +60,9 @@ export const toCmsActionFailure = (
     return failure(toErrorMessage(error));
   }
 
-  const { code, issues } = error.extensions;
-
-  switch (code) {
+  switch (getGraphqlErrorCode(error)) {
     case 'BAD_USER_INPUT': {
-      const read = readIssues(issues);
+      const read = readIssues(error.extensions['issues']);
 
       return read.length > 0
         ? failure(copy.invalid, read)
