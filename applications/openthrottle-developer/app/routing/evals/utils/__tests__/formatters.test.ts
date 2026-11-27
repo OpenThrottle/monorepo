@@ -25,18 +25,22 @@ describe('formatTrajectoryCost', () => {
 
 describe('formatTrajectoryDuration', () => {
   test.each([
+    [0, '0ms'],
     [850, '850ms'],
+    [999.6, '1000ms'],
+    [1_000, '1s'],
     [42_000, '42s'],
+    [59_500, '1m 00s'],
     [187_000, '3m 07s'],
+    [3_600_000, '1h 00m'],
     [3_720_000, '1h 02m'],
+    [90_000_000, '25h 00m'],
   ])('%i ms reads as %s', (ms, expected) => {
     expect(formatTrajectoryDuration(ms)).toBe(expected);
   });
 
-  test('reads null as unknown', () => {
-    expect(formatTrajectoryDuration(null)).toBe(
-      TRAJECTORY_SUMMARY_COPY.unknown,
-    );
+  test.each([null, undefined, -1])('reads %p as unknown', (ms) => {
+    expect(formatTrajectoryDuration(ms)).toBe(TRAJECTORY_SUMMARY_COPY.unknown);
   });
 });
 

@@ -1,3 +1,5 @@
+import { formatDuration } from '@openthrottle/nodejs-utils';
+
 import type { AgentTrajectorySummaryFragment } from '~/__generated__/graphql';
 import { TRAJECTORY_SUMMARY_COPY } from '~/routing/evals/data/copy';
 
@@ -53,20 +55,7 @@ export const formatTrajectoryDuration = (
     return `${Math.round(durationMs)}ms`;
   }
 
-  const totalSeconds = Math.round(durationMs / 1_000);
-  const hours = Math.floor(totalSeconds / 3_600);
-  const minutes = Math.floor((totalSeconds % 3_600) / 60);
-  const seconds = totalSeconds % 60;
-
-  if (hours > 0) {
-    return `${hours}h ${String(minutes).padStart(2, '0')}m`;
-  }
-
-  if (minutes > 0) {
-    return `${minutes}m ${String(seconds).padStart(2, '0')}s`;
-  }
-
-  return `${seconds}s`;
+  return formatDuration(durationMs, { padded: true });
 };
 
 /**

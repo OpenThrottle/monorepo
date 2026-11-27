@@ -10,23 +10,21 @@ util paired with a spec that starts from the shape our generators scaffold.
 The generator spec templates are the source of truth; this document is their
 written contract; `scripts/audit-test-coverage.ts` is the enforcer.
 
-> **Operating principle — warning mode first.** We split the UI into many small,
+> **Operating principle — the gap cannot grow.** We split the UI into many small,
 > easy-to-work-with files and moved a lot around: great for maintainability, but
-> it opened a large test gap. This audit exists to _surface_ that gap, not to
-> block on it yet. It ships **report-only** (exit 0) and runs in CI as a
-> **non-blocking annotation**. A JSON inventory, regenerated on demand and
-> never committed, snapshots the current gap; separate remediation plans carve
-> from it. Only once a category's gap
-> closes do we flip _that category_ to `--strict` (and, later, into the husky
-> three-surface gate the way the component-shape gate is mirrored). Never flip a
-> category with an open gap.
+> it opened a large test gap. The existing gap is frozen in a shrink-only
+> allowlist, [`scripts/audit-test-coverage.allowlist.ts`](../../scripts/audit-test-coverage.allowlist.ts),
+> and `--strict` runs in the blocking `audit:strict` aggregate (CI's `gates` job
+> and `check:local`). A **new** route, component, hook or util without a spec
+> fails; an allowlisted file that gains a spec must leave the list in the same
+> change. Remediation plans burn the list down; nobody adds to it.
 
 ## Categories
 
 Every in-scope source file is classified into exactly one category by its
 on-disk location.
 
-### Enforced (warn now → strict later)
+### Enforced (gated against the allowlist)
 
 | Category     | Classifier (repo-relative)                                                            |
 | ------------ | ------------------------------------------------------------------------------------- |
@@ -129,9 +127,13 @@ Precedence, first match wins:
 
 ## `--strict` semantics
 
-- Report-only (exit 0) by default.
-- `--strict` exits non-zero (`process.exit(1)`) when **any enforced-category
-  file is `missing`**.
+- Report-only (exit 0) by default; allowlisted misses are tagged `[allowlisted]`.
+- `--strict` exits non-zero (`process.exit(1)`) when an **enforced-category file
+  is `missing` and not in the allowlist**, or when an **allowlist entry is
+  stale** — the file now has a spec, opts out, moved or no longer exists. Delete
+  a stale entry; never add one to get a new file past the gate.
+- `--categories` scopes the stale check too: only entries in the scanned
+  categories can be stale.
 - `config` and `data` never gate, even under `--strict`.
 - `stub` does not fail `--strict` yet (see [Stub detection](#stub-detection)).
 
@@ -171,31 +173,22 @@ these as template gaps rather than inventing conformance we can't generate:
 pnpm run audit:test-coverage                       # report-only rollup (exit 0)
 pnpm run audit:test-coverage -- --categories=hooks # scope to one/some categories
 pnpm run audit:test-coverage:json                  # full machine-readable inventory
-pnpm run audit:test-coverage:strict                # exit 1 on enforced-category misses
+pnpm run audit:test-coverage:strict                # exit 1 on an unlisted miss or a stale allowlist entry
 ```
 
 The audit is a repo-root `tsx` script mirroring the other `audit:*` guard-rails.
 Cross-file / repo-wide dimensions (does a sibling spec exist?) live in the
 script; per-file structural dimensions live in `@tools/dotfiles` ESLint rules.
-This audit is intentionally **not** in the `.husky/utils` / `.husky/pre-commit` /
-`.husky/pre-push` gate yet — it runs in CI as a non-blocking warning only
-(`continue-on-error`).
+`audit:test-coverage:strict` is part of the blocking `audit:strict` aggregate
+(`/^audit:.*:strict$/`), which CI's `gates` job and `check:local:audit` both
+run. It is not in the `.husky/` pre-commit / pre-push gate.
 
-`audit:test-coverage:strict` is also **deliberately excluded** from the blocking
-`audit:strict` aggregate: that script uses a negative-lookahead pattern
-(`/^audit:(?!test-coverage).*:strict$/`) so the wide-open gap does not fail CI
-while we baseline it.
+### Burn down the allowlist
 
-### Flip a category to strict (later, per category)
-
-Once a category's gap is closed:
-
-1. Drop `test-coverage` from the negative lookahead in the `audit:strict` script
-   so `audit:test-coverage:strict` rejoins the blocking aggregate (optionally
-   scope with `--categories` first while other categories still have gaps).
-2. Mirror it into the husky three-surface gate the way the component-shape gate
-   is mirrored byte-identical across `.husky/utils`, `.husky/pre-commit`,
-   `.husky/pre-push`, and CI.
+Write the missing spec (from the generator template above), then delete the
+file's entry from `scripts/audit-test-coverage.allowlist.ts` in the same
+change — `--strict` fails on the stale entry otherwise. When the list is empty,
+delete the weekly scheduled workflow, which only exists to track the burn-down.
 
 ## Baseline
 
@@ -224,4 +217,6 @@ every added, renamed or newly tested file, so a gate comparing the regen with a
 committed copy would fail most UI PRs and force a regen commit on each — a
 blocking tax on an audit whose whole operating principle is report-only until a
 category's gap closes. When a category does flip to `--strict`, the strict run
-is the gate; it needs no snapshot to compare against.
+is the gate; it needs no snapshot to compare against. The allowlist is not that
+snapshot: it holds only the frozen misses, changes only when one is fixed, and
+the strict run itself fails when it drifts.

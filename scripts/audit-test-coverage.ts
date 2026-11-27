@@ -11,13 +11,16 @@
  * `<Name>.loader.test.ts` count). A spec still carrying the generator placeholder
  * `FIXME: should be defined` is STUB coverage, not real coverage.
  *
- * Categories: routes/components/hooks/utils are ENFORCED (warn now → strict
- * later); config/data are INFORMATIONAL (counted, never gate — not even under
- * --strict).
+ * Categories: routes/components/hooks/utils are ENFORCED (gated by --strict
+ * against a shrink-only allowlist); config/data are INFORMATIONAL (counted,
+ * never gate — not even under --strict).
  *
  * Usage: tsx ./scripts/audit-test-coverage.ts [--json] [--strict] [--categories=routes,hooks]
  *   --json               emit the full machine-readable inventory (the baseline).
- *   --strict             exit non-zero when any ENFORCED-category file is missing.
+ *   --strict             exit non-zero on an ENFORCED-category file missing a spec
+ *                        that is not in scripts/audit-test-coverage.allowlist.ts,
+ *                        and on an allowlist entry that is no longer missing
+ *                        (delete it) — the list only shrinks.
  *   --categories=a,b     restrict the scan to the given categories.
  * Report-only (exit 0) otherwise.
  */
@@ -27,6 +30,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { globSync } from 'glob';
+
+import { TEST_COVERAGE_ALLOWLIST } from './audit-test-coverage.allowlist.ts';
 
 const ROOT = process.cwd();
 
@@ -295,13 +300,37 @@ export const rollup = (entries: readonly CoverageEntry[]): CategoryRollup[] => {
     );
 };
 
-/** True when any enforced-category file is missing a spec (the --strict gate). */
-export const hasStrictFailure = (
+export interface StrictResult {
+  /** Allowlist entries in the scanned categories that are no longer missing — delete them. */
+  readonly stale: readonly string[];
+  /** Enforced-category files missing a spec that are not allowlisted. */
+  readonly unlisted: readonly CoverageEntry[];
+}
+
+/**
+ * @description Compare the enforced-category misses against the allowlist in
+ * both directions (the --strict gate). Only entries whose path classifies into
+ * a `selected` category can be stale, so `--categories` scopes the gate too.
+ */
+export const checkAllowlist = (
   entries: readonly CoverageEntry[],
-): boolean => {
-  return entries.some(
+  allowlist: readonly string[],
+  selected: ReadonlySet<Category> = new Set(CATEGORIES),
+): StrictResult => {
+  const missing = entries.filter(
     (e) => ENFORCED_CATEGORIES.includes(e.category) && e.status === 'missing',
   );
+  const allowed = new Set(allowlist);
+  const missingFiles = new Set(missing.map((e) => e.file));
+
+  return {
+    stale: allowlist.filter((file) => {
+      const category = classify(file);
+      const isScanned = category === null || selected.has(category);
+      return isScanned && !missingFiles.has(file);
+    }),
+    unlisted: missing.filter((e) => !allowed.has(e.file)),
+  };
 };
 
 const parseCategories = (argv: readonly string[]): Set<Category> => {
@@ -336,11 +365,13 @@ const run = (): void => {
     selected.has(e.category),
   );
   const rollups = rollup(entries);
+  const result = checkAllowlist(entries, TEST_COVERAGE_ALLOWLIST, selected);
+  const failing = strict && (result.unlisted.length > 0 || result.stale.length > 0); // prettier-ignore
 
   if (json) {
     const inventory: CoverageInventory = { entries, rollups };
     console.log(JSON.stringify(inventory, null, 2));
-    if (strict && hasStrictFailure(entries)) process.exit(1);
+    if (failing) process.exit(1);
     return;
   }
 
@@ -392,10 +423,14 @@ const run = (): void => {
   const missingEnforced = entries.filter(
     (e) => ENFORCED_CATEGORIES.includes(e.category) && e.status === 'missing',
   );
+  const allowed = new Set(TEST_COVERAGE_ALLOWLIST);
   console.log(
     `\nMissing specs in enforced categories: ${missingEnforced.length}`,
   );
-  for (const e of missingEnforced) console.log(`  [${e.category}] ${e.file}`);
+  for (const e of missingEnforced) {
+    const tag = allowed.has(e.file) ? ' [allowlisted]' : '';
+    console.log(`  [${e.category}] ${e.file}${tag}`);
+  }
 
   const stubs = entries.filter((e) => e.status === 'stub');
   if (stubs.length > 0) {
@@ -403,16 +438,32 @@ const run = (): void => {
     for (const e of stubs) console.log(`  [${e.category}] ${e.file}`);
   }
 
-  console.log(
-    '\nReport-only: warning mode. Flip a category to --strict only once its gap closes.',
-  );
-
-  if (strict && hasStrictFailure(entries)) {
+  if (!strict) {
     console.log(
-      `\n${missingEnforced.length} enforced-category file(s) missing a spec — failing (--strict).`,
+      '\nReport-only. --strict fails on a missing spec outside scripts/audit-test-coverage.allowlist.ts.',
     );
-    process.exit(1);
+    return;
   }
+
+  if (result.unlisted.length > 0) {
+    console.log(
+      `\n${result.unlisted.length} enforced-category file(s) missing a spec and not allowlisted — write the spec (do not add allowlist entries):`,
+    );
+    for (const e of result.unlisted) console.log(`  [${e.category}] ${e.file}`);
+  }
+
+  if (result.stale.length > 0) {
+    console.log(
+      `\n${result.stale.length} stale allowlist entr(ies) — the file has a spec, opts out or is gone; delete the entry from scripts/audit-test-coverage.allowlist.ts:`,
+    );
+    for (const file of result.stale) console.log(`  ${file}`);
+  }
+
+  if (failing) process.exit(1);
+
+  console.log(
+    `\nTest coverage OK — ${TEST_COVERAGE_ALLOWLIST.length} allowlisted missing spec(s) remain.`,
+  );
 };
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

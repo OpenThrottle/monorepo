@@ -30,6 +30,7 @@ import { createPlanRunsRepositoryMock } from '@openthrottle/nestjs-repositories-
 import { asMock } from '@openthrottle/nestjs-testing';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { GitRunnerService } from '../git-runner/git-runner.service.ts';
 import { PlanRunWorktreeProvisionService } from '../plan-run-worktree-provision/plan-run-worktree-provision.service.ts';
 import { PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME } from './plan-run-worktree-teardown.constants.ts';
 import { PlanRunWorktreeTeardownService } from './plan-run-worktree-teardown.service.ts';
@@ -111,6 +112,7 @@ describe('plan-run worktree lifecycle in a foreign repo', () => {
   it('provisions with create.sh and tears down to REMOVED with destroy.sh, never pnpm', async () => {
     const provision = new PlanRunWorktreeProvisionService(
       createMock<LoggerService>(),
+      new GitRunnerService(),
     );
     const teardown = new PlanRunWorktreeTeardownService(
       createMock<LoggerService>(),
@@ -118,6 +120,7 @@ describe('plan-run worktree lifecycle in a foreign repo', () => {
         createRepositoryCheckoutsRepositoryMock(),
       ),
       createMock<PlanRunsRepository>(createPlanRunsRepositoryMock()),
+      new GitRunnerService(),
     );
 
     const worktreePath = await provision.provision({

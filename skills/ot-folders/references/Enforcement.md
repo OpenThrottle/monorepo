@@ -26,7 +26,7 @@ trusting this table if the two ever disagree.
 | `check-package-entrypoints`              | package `main`/`types`/`exports`, plus live `build` and `dev` targets on every `technology:nestjs` package | **error**                                 | an empty `NESTJS_BLOCKERS` map, which errors when stale | `pnpm run check:local:package-entrypoints`     | `docs/monorepo/source-first-packages-and-strip-only.md` |
 | `check-catalog-coverage`                 | pnpm catalog dependency versions                                                                           | **error**                                 | none                                                    | `pnpm run check:catalog`                       | `CONTRIBUTING.md`                                       |
 | `audit-templates-compliance`             | `.tsx` vs generator templates                                                                              | advisory                                  | n/a                                                     | `pnpm run audit:templates-compliance`          | `docs/tools/templates/AGENT_USAGE.md`                   |
-| `audit-test-coverage`                    | repo-wide test coverage                                                                                    | advisory (warn-mode)                      | n/a                                                     | `pnpm run audit:test-coverage`                 | `docs/monorepo/test-coverage-audit.md`                  |
+| `audit-test-coverage`                    | repo-wide test coverage                                                                                    | **error** on new files                    | shrink-only `scripts/audit-test-coverage.allowlist.ts`  | `pnpm run audit:test-coverage:strict`          | `docs/monorepo/test-coverage-audit.md`                  |
 
 **The component audit's `--strict` gates R4/R5/R6.** It exits non-zero on hoist
 violations, multi-component files, and authored components over the 210-line
@@ -38,10 +38,10 @@ final content. The shadcn profile's VR6 cap stays report-only.
 `pnpm run nx:validate` runs all three `nx:validate-*` scripts, but
 `nx:validate-configurations` currently exits 1 in a clean checkout when
 `.cursor/plans/` is absent — the audit passes and only the report write fails.
-`pnpm run audit:strict` runs every `audit:*:strict` except test-coverage.
+`pnpm run audit:strict` runs every `audit:*:strict`, test-coverage included.
 
 **What actually gates locally:** `check:local` runs `check:local:audit`, the same
-`audit:*:strict` glob CI's `gates` job runs, so every strict audit (component,
+`audit:*:strict` glob CI's `gates` job runs, so every strict audit (component, test coverage,
 shadcn, route, hook, file-name casing, workspace and third-party deps) fails
 locally exactly where it fails in CI. A new `audit:<thing>:strict` joins both
 the moment it is named. See `docs/monorepo/CI-quality-gates.md` for what blocks

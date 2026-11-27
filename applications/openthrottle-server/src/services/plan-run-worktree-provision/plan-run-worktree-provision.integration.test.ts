@@ -24,6 +24,7 @@ import { createMock } from '@golevelup/ts-vitest';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { GitRunnerService } from '../git-runner/git-runner.service.ts';
 import { PlanRunWorktreeProvisionService } from './plan-run-worktree-provision.service.ts';
 
 /** The env keys this test overrides, restored after each case. */
@@ -91,6 +92,7 @@ describe('PlanRunWorktreeProvisionService against a foreign repo', () => {
   it('creates the worktree under <root>/<org>/<repo>/<name> without spawning pnpm', async () => {
     const service = new PlanRunWorktreeProvisionService(
       createMock<LoggerService>(),
+      new GitRunnerService(),
     );
 
     const path = await service.provision({

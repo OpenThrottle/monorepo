@@ -1,29 +1,20 @@
 ################################################################################
 #
-#   Test-coverage guard-rail — WARNING MODE ONLY (report-only).
+#   Test-coverage burn-down report (report-only).
 #
-#   Surfaces routes/components/hooks/utils missing a co-located spec, and
-#   uploads the full JSON inventory as an artifact so remediation plans can
-#   carve from a fresh snapshot. The inventory is never committed: a committed
-#   copy drifted with every rename (see docs/monorepo/test-coverage-audit.md).
-#
-#   💰 Why this is a schedule and not a step in Continuous Integration:
-#   the audit is `continue-on-error` and is deliberately EXCLUDED from the
-#   blocking `audit:strict` aggregate (that script filters test-coverage out via
-#   a negative lookahead) and from the husky pre-commit/pre-push gate. It
-#   therefore gates nothing, so running it on every PR bought a report nobody
-#   was blocked by. Weekly is often enough to feed remediation planning.
+#   The GATE is `audit:test-coverage:strict`, in the blocking `audit:strict`
+#   aggregate of Continuous Integration's `gates` job: a new spec-less file
+#   fails there against scripts/audit-test-coverage.allowlist.ts. This weekly
+#   run only reports the remaining allowlisted gap and uploads the full JSON
+#   inventory as an artifact so remediation plans can carve from a fresh
+#   snapshot. The inventory is never committed: a committed copy drifted with
+#   every rename (see docs/monorepo/test-coverage-audit.md).
 #
 #   Runs on `ubuntu-26.04` — free and unlimited on this PUBLIC repo. See
 #   docs/monorepo/ci-cost.md before changing `runs-on` or adding a schedule.
 #
-#   FLIP PATH (unchanged — this workflow is a staging area, not a demotion):
-#   once a category's gap closes, drop test-coverage from the negative lookahead
-#   in the `audit:strict` script so `audit:test-coverage:strict` joins the
-#   blocking aggregate, and mirror it into the husky three-surface gate the way
-#   the component-shape gate is. At that point the gate lives in
-#   continuous-integration.yml again (as a blocking step) and this scheduled
-#   workflow should be deleted. See docs/monorepo/test-coverage-audit.md.
+#   Delete this workflow once the allowlist is empty: there is nothing left to
+#   burn down. See docs/monorepo/test-coverage-audit.md.
 #
 ################################################################################
 name: '🧪 Scheduled Test-coverage Audit'
