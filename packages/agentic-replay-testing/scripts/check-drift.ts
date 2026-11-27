@@ -26,8 +26,10 @@ import { parseArgs } from 'node:util';
 
 import type { DriftFinding, RecordingProfile } from '../src/index.ts';
 import {
+  acpTranscriptStems,
   compareTranscripts,
   parseTranscript,
+  recordAcpScenario,
   RECORDING_PROFILES,
   recordScenario,
   SCENARIOS,
@@ -58,14 +60,20 @@ function resolveBin(name: string): string | null {
   }
 }
 
+const ACP_DIR = 'acp';
+
+/** Stems under `dir`; an ACP transcript's stem is `acp/<stem>`. */
 function listStems(dir: string): string[] {
   if (!existsSync(dir)) {
     return [];
   }
-  return readdirSync(dir)
+  const own = readdirSync(dir)
     .filter((name) => name.endsWith('.ndjson'))
-    .map((name) => name.replace(/\.ndjson$/, ''))
-    .sort();
+    .map((name) => name.replace(/\.ndjson$/, ''));
+  const acp = existsSync(join(dir, ACP_DIR))
+    ? listStems(join(dir, ACP_DIR)).map((stem) => `${ACP_DIR}/${stem}`)
+    : [];
+  return [...own, ...acp].sort();
 }
 
 function readTranscript(path: string): ReturnType<typeof parseTranscript> {
@@ -76,22 +84,46 @@ async function recordAll(
   profile: RecordingProfile,
   realBin: string,
   outDir: string,
+  committed: readonly string[],
 ): Promise<Map<string, string>> {
   const failures = new Map<string, string>();
   const model = profile.defaultModel;
+  const hasCli = committed.some((stem) => !stem.startsWith(`${ACP_DIR}/`));
 
   for (const scenario of SCENARIOS) {
     // Sequential: recordings share one login and rate limit per CLI.
-    // eslint-disable-next-line no-await-in-loop -- recordings share one login and rate limit per CLI
-    const result = await recordScenario({
-      model,
-      outDir,
-      profile,
-      realBin,
-      scenario,
+    if (hasCli) {
+      // eslint-disable-next-line no-await-in-loop -- recordings share one login and rate limit per CLI
+      const result = await recordScenario({
+        model,
+        outDir,
+        profile,
+        realBin,
+        scenario,
+      });
+      if (!result.ok) {
+        failures.set(scenario.slug, result.error);
+      }
+    }
+
+    // Only the ACP stems that are committed are re-recorded.
+    const stems = acpTranscriptStems(scenario).filter((stem) => {
+      return committed.includes(`${ACP_DIR}/${stem}`);
     });
-    if (!result.ok) {
-      failures.set(scenario.slug, result.error);
+    if (stems.length > 0) {
+      // eslint-disable-next-line no-await-in-loop -- recordings share one login and rate limit per CLI
+      const result = await recordAcpScenario({
+        model,
+        onChunk: undefined,
+        outDir: join(outDir, ACP_DIR),
+        profile,
+        realBin,
+        scenario,
+        stems,
+      });
+      if (!result.ok) {
+        failures.set(`${ACP_DIR}/${scenario.slug}`, result.error);
+      }
     }
   }
 
@@ -121,7 +153,7 @@ async function checkBackend(profile: RecordingProfile): Promise<BackendReport> {
 
   const outDir = mkdtempSync(join(tmpdir(), `ot-drift-${profile.backend}-`));
   try {
-    const failures = await recordAll(profile, realBin, outDir);
+    const failures = await recordAll(profile, realBin, outDir, committed);
     const fresh = new Set(listStems(outDir));
     const stems: StemReport[] = [];
     let committedVersion: string | null = null;

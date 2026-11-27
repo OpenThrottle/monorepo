@@ -137,6 +137,7 @@ export async function recordScenario(
             conversation: current,
             cwd,
             model,
+            onChunk: undefined,
             resolved: { scenario, turn, turnIndex: index },
           });
         },
@@ -155,6 +156,7 @@ export async function recordScenario(
           backend: profile.backend,
           cliVersion,
           model,
+          protocol: undefined,
           recordedAt: new Date().toISOString(),
           scenario: stem,
           schemaVersion: TRANSCRIPT_SCHEMA_VERSION,

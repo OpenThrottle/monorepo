@@ -202,7 +202,7 @@
     "prompt/Job_Issue_Reporting.md": 11673,
     "prompt/Job_MemoryDrift.md": 10220,
     "prompt/Job_Performance.md": 8936,
-    "prompt/Job_ReplayDrift.md": 7790,
+    "prompt/Job_ReplayDrift.md": 8338,
     "prompt/Job_Roadmap.md": 9551,
     "prompt/Job_RulesConformance.md": 11706,
     "prompt/Job_Security.md": 9531,
@@ -254,7 +254,7 @@
     "alwaysInjected": 49022,
     "mcpInstructions": 2183,
     "mcpTools": 40887,
-    "prompts": 137762,
+    "prompts": 138310,
     "skills": 163955
   }
 }

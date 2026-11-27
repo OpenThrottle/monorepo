@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { Transcript } from '../../types/transcript.ts';
 import {
   TRANSCRIPT_LINE_TYPES,
+  TRANSCRIPT_PROTOCOLS,
   TRANSCRIPT_SCHEMA_VERSION,
   TRANSCRIPT_SURFACES,
 } from '../../types/transcript.ts';
@@ -36,12 +37,14 @@ const transcript = (overrides: Partial<Transcript>): Transcript => {
       backend: 'claude',
       cliVersion: '2.1.0',
       model: null,
+      protocol: undefined,
       recordedAt: '2026-11-07T00:00:00.000Z',
       scenario: 'simple-turn',
       schemaVersion: TRANSCRIPT_SCHEMA_VERSION,
       surface: TRANSCRIPT_SURFACES.conversation,
       type: TRANSCRIPT_LINE_TYPES.header,
     },
+    protocol: TRANSCRIPT_PROTOCOLS.cli,
     stderr: '',
     stdin: '',
     stdout: [],

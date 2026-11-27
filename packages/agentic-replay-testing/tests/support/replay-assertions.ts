@@ -8,8 +8,13 @@ import type { ConversationStreamChunk } from '@openthrottle/agentic-conversation
 import { CONVERSATION_STREAM_CHUNK_KINDS } from '@openthrottle/agentic-conversation-backend';
 import { expect } from 'vitest';
 
-import type { ReplayFixtureResult, ReplayProfile } from '../../src/index.ts';
-import { replayFixture } from '../../src/index.ts';
+import type {
+  ReplayAcpFixtureOptions,
+  ReplayAcpFixtureResult,
+  ReplayFixtureResult,
+  ReplayProfile,
+} from '../../src/index.ts';
+import { replayAcpFixture, replayFixture } from '../../src/index.ts';
 
 /** Replay through `profile`, asserting the bin matched the argv strictly. */
 export async function replayStrict(
@@ -45,4 +50,38 @@ export function countOf(
   kind: ConversationStreamChunk['kind'],
 ): number {
   return ofKind(chunks, kind).length;
+}
+
+/**
+ * Replay an ACP transcript through a fresh production ACP backend, asserting
+ * the replay bin matched every client frame and that its process ended.
+ * `turn` picks one turn's chunks from a multi-turn transcript.
+ */
+export async function replayAcpStrict(
+  fixturePath: string,
+  onChunk: ReplayAcpFixtureOptions['onChunk'] = undefined,
+): Promise<ReplayAcpFixtureResult> {
+  const result = await replayAcpFixture({
+    fixturePath,
+    idleTtlMs: undefined,
+    onChunk,
+  });
+  expect(result.report).toEqual({ ok: true });
+  expect(result.exited).toBe(true);
+  return result;
+}
+
+/** The chunks of turn `index` (0-based) of an ACP replay. */
+export function turnChunks(
+  result: ReplayAcpFixtureResult,
+  index: number,
+): readonly ConversationStreamChunk[] {
+  return result.chunks[index] ?? [];
+}
+
+/** Kinds in stream order, with consecutive repeats collapsed. */
+export function kindsOf(chunks: readonly ConversationStreamChunk[]): string[] {
+  return chunks
+    .map((chunk) => chunk.kind)
+    .filter((kind, index, all) => kind !== all[index - 1]);
 }

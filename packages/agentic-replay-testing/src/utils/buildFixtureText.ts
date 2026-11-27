@@ -9,7 +9,7 @@ import type { TranscriptHeader } from '../types/transcript.ts';
 import { replayPaths } from './replayPaths.ts';
 import type { Sanitizer } from './sanitizer.ts';
 import { findSanitizerLeaks } from './sanitizer.ts';
-import { parseTranscript, serializeTranscript } from './transcript.ts';
+import { parseCliTranscript, serializeTranscript } from './transcript.ts';
 
 /** @public */
 export type FixtureTextResult =
@@ -30,7 +30,7 @@ export function buildFixtureText(
   header: TranscriptHeader,
   cwd: string,
 ): FixtureTextResult {
-  const parsed = parseTranscript(`${JSON.stringify(header)}\n${capture}`);
+  const parsed = parseCliTranscript(`${JSON.stringify(header)}\n${capture}`);
   if (!parsed.ok) {
     return { error: `capture unreadable: ${parsed.error}`, ok: false };
   }

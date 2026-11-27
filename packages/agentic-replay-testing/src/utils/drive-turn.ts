@@ -29,6 +29,8 @@ export interface DriveScenarioTurnOptions {
   readonly conversation: ConversationState;
   readonly cwd: string;
   readonly model: string | null;
+  /** Called with every chunk as it arrives, e.g. to answer a permission request. */
+  readonly onChunk: ((chunk: ConversationStreamChunk) => void) | undefined;
   readonly resolved: ResolvedScenarioTurn;
 }
 
@@ -66,6 +68,7 @@ export async function driveScenarioTurn(
 
   for await (const chunk of profile.conversationBackend.stream(run)) {
     chunks.push(chunk);
+    options.onChunk?.(chunk);
     const isText =
       chunk.kind === CONVERSATION_STREAM_CHUNK_KINDS.text && chunk.delta !== '';
     if (options.resolved.turn.abortAfterFirstChunk && isText) {
