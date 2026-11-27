@@ -114,6 +114,7 @@ export const ChatDialog = (props: ChatDialogProps): React.ReactElement => {
     <div className="flex min-h-0 flex-1 flex-col gap-4">
       <ChatThread
         canRetry={composer?.canRetry}
+        loadEarlier={composer?.loadEarlier}
         messages={messages}
         onPinnedChange={setIsPinned}
         onRespondToPermission={composer?.onRespondToPermission}
@@ -139,11 +140,7 @@ export const ChatDialog = (props: ChatDialogProps): React.ReactElement => {
           onSubmit={onSendMessage}
           sessionUsage={composer?.sessionUsage}
           showContextMeter={composer?.showContextMeter}
-          toolbar={
-            composer !== undefined ? (
-              <ChatComposerToolbar {...composer} />
-            ) : undefined
-          }
+          toolbar={composer && <ChatComposerToolbar {...composer} />}
         />
       </div>
     </div>

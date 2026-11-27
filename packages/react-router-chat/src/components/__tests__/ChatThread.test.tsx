@@ -1,5 +1,6 @@
 import type { RenderResult } from '@testing-library/react';
 import { act, render, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import {
@@ -12,6 +13,7 @@ import {
   vi,
 } from 'vitest';
 
+import { CHAT_LOAD_EARLIER_COPY } from '../../data/copy';
 import type { ChatMessage } from '../../types';
 import type { ChatThreadProps } from '../ChatThread';
 import { ChatThread } from '../ChatThread';
@@ -291,6 +293,37 @@ describe('ChatThread Component', () => {
       scrollTo(thread, 0);
 
       expect(pinned.current).toBe(false);
+    });
+
+    describe('when Load earlier prepends a page', () => {
+      test('keeps the reading position', async () => {
+        const onLoadEarlier = vi.fn();
+        const shown: readonly ChatMessage[] = [
+          { body: 'Newest question', id: 'u2', role: 'user' },
+        ];
+        const { result, update } = renderControllable(shown, {
+          loadEarlier: { hasEarlier: true, isLoading: false, onLoadEarlier },
+        });
+        const thread = within(result.container).getByTestId('ChatThread');
+        stubGeometry(thread);
+        scrollTo(thread, 100);
+
+        await userEvent.click(
+          within(thread).getByRole('button', {
+            name: CHAT_LOAD_EARLIER_COPY.label,
+          }),
+        );
+        expect(onLoadEarlier).toHaveBeenCalledTimes(1);
+
+        // The prepended page makes the content 600px taller.
+        Object.defineProperty(thread, 'scrollHeight', {
+          configurable: true,
+          value: SCROLL_HEIGHT + 600,
+        });
+        update([{ body: 'Older question', id: 'u1', role: 'user' }, ...shown]);
+
+        expect(thread.scrollTop).toBe(700);
+      });
     });
 
     test('a small scroll inside the near-bottom threshold keeps the pin', () => {

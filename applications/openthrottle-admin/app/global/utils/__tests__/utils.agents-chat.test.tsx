@@ -36,6 +36,7 @@ describe('utils.agents-chat handlers', () => {
         activeTurn: null,
         conversationId: null,
         errorMessage: 'conversationId is required',
+        firstMessageIndex: 0,
         messages: [],
       });
       expect(mockGraphql).not.toHaveBeenCalled();
@@ -84,6 +85,7 @@ describe('utils.agents-chat handlers', () => {
         activeTurn: null,
         conversationId: 'c1',
         errorMessage: 'boom',
+        firstMessageIndex: 0,
         messages: [],
       });
     });

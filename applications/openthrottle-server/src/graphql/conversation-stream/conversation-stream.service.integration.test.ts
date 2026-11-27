@@ -123,6 +123,7 @@ function toServiceRun(prepared: PreparedReplay): StartConversationStreamRun {
     sessionId: run.sessionId ?? null,
     systemPrompt: run.systemPrompt ?? null,
     userId: 'user-1',
+    userMessage: null,
   };
 }
 

@@ -263,6 +263,7 @@ export function useHeaderChatController(
     checkouts,
     contextSources,
     isStreaming: turn.isStreaming,
+    loadEarlier: turn.loadEarlier,
     mode,
     modelGroups,
     modelId,

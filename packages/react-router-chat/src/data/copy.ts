@@ -186,3 +186,9 @@ export const CHAT_SESSION_DRAWER_COPY = {
   },
   title: 'Session',
 } as const;
+
+/** Copy for {@link ChatLoadEarlier}. */
+export const CHAT_LOAD_EARLIER_COPY = {
+  label: 'Load earlier messages',
+  loading: 'Loading earlier messages…',
+} as const;

@@ -34,6 +34,11 @@ const turn: UseAgenticChatTurnResult = {
   error: null,
   isQueuePaused: false,
   isStreaming: false,
+  loadEarlier: {
+    hasEarlier: false,
+    isLoading: false,
+    onLoadEarlier: vi.fn(),
+  },
   messages: [],
   onRespondToPermission: vi.fn(),
   onRetry: vi.fn(),

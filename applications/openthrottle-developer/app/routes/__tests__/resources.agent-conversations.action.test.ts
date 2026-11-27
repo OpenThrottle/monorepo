@@ -74,6 +74,7 @@ describe('routes/resources.agent-conversations action', () => {
       activeTurn: null,
       conversationId: 'c1',
       errorMessage: null,
+      firstMessageIndex: 0,
       messages: [],
     };
     mockLoadMessages.mockResolvedValue(loadResult);

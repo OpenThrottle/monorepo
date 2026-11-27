@@ -20,6 +20,7 @@ import { useSubscription } from '@openthrottle/react-router-graphql';
 import * as React from 'react';
 
 import type {
+  ChatStreamPrompt,
   ConversationStreamSubscriptionData,
   ConversationStreamSubscriptionVariables,
   StreamState,
@@ -66,6 +67,8 @@ export interface UseConversationStreamResult {
    * so the running indicator can name the model/tool during the pre-content gap.
    */
   readonly phaseByMessageId: ReadonlyMap<string, ResolvedRunPhase>;
+  /** The user message that started each turn, keyed by the turn's messageId. */
+  readonly prompts: ReadonlyMap<string, ChatStreamPrompt>;
   /**
    * messageIds whose terminal chunk was a retryable timeout (safe to auto-retry
    * rather than a fatal error). Subset of {@link UseConversationStreamResult.completedIds}.
@@ -127,6 +130,7 @@ export function useConversationStream(
     lastActivityAt,
     messages,
     phaseByMessageId: state.phaseByMessageId,
+    prompts: state.prompts,
     retryableIds: state.retryableIds,
   };
 }

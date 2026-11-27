@@ -69,6 +69,7 @@ export const HomeThreadColumn = (
         canRetry={turn.canRetry}
         emptyStateLabel=""
         getScrollElement={getGlobalScrollElement}
+        loadEarlier={turn.loadEarlier}
         messages={turn.messages}
         onPinnedChange={setIsPinned}
         onRespondToPermission={turn.onRespondToPermission}

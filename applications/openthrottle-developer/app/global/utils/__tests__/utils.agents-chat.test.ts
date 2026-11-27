@@ -44,6 +44,7 @@ const baseHistory = (
     activeTurn: null,
     conversationId: null,
     errorMessage: null,
+    firstMessageIndex: 0,
     messages: [],
     ...overrides,
   };
@@ -180,11 +181,57 @@ describe('callLoadAgentConversationMessages', () => {
     });
 
     const result = await callLoadAgentConversationMessages(request, {
+      before: undefined,
       conversationId: 'conv-1',
     });
 
     expect(result.messages).toHaveLength(100);
     expect(result.messages.at(-1)?.id).toBe('msg-150');
+    expect(result.firstMessageIndex).toBe(50);
+  });
+
+  test('loads the page just before an earlier position, counted from the oldest row', async () => {
+    const items = Array.from({ length: 30 }, (_, index) => ({
+      content: `Message ${index + 1}`,
+      createdAt: '2026-06-07T00:00:00.000Z',
+      id: `msg-${index + 1}`,
+      role: 'user',
+      routingConfidence: null,
+      routingReason: null,
+      toolMetadataJson: null,
+    }));
+    mockExecute.mockResolvedValueOnce({
+      getAgentConversationMessages: { items, totalCount: 150 },
+    });
+
+    const result = await callLoadAgentConversationMessages(request, {
+      before: 30,
+      conversationId: 'conv-1',
+    });
+
+    expect(mockExecute).toHaveBeenCalledWith(
+      request,
+      GetAgentConversationMessagesDocument,
+      {
+        input: {
+          conversationId: 'conv-1',
+          fromNewest: false,
+          limit: 30,
+          offset: 0,
+        },
+      },
+    );
+    expect(result.firstMessageIndex).toBe(0);
+  });
+
+  test('reads nothing before the first row', async () => {
+    const result = await callLoadAgentConversationMessages(request, {
+      before: 0,
+      conversationId: 'conv-1',
+    });
+
+    expect(mockExecute).not.toHaveBeenCalled();
+    expect(result).toEqual(baseHistory({ conversationId: 'conv-1' }));
   });
 
   test('maps persisted messages into chat thread rows', async () => {
@@ -215,6 +262,7 @@ describe('callLoadAgentConversationMessages', () => {
     });
 
     const result = await callLoadAgentConversationMessages(request, {
+      before: undefined,
       conversationId: 'conv-1',
     });
 
@@ -226,6 +274,7 @@ describe('callLoadAgentConversationMessages', () => {
           conversationId: 'conv-1',
           fromNewest: true,
           limit: 100,
+          offset: 0,
         },
       },
     );

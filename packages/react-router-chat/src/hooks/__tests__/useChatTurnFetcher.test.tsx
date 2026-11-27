@@ -278,6 +278,7 @@ describe('useChatTurnFetcher', () => {
       activeTurn: null,
       conversationId: 'stored-server-id',
       errorMessage: null,
+      firstMessageIndex: 0,
       messages: [
         {
           body: 'Earlier question',
@@ -397,6 +398,7 @@ describe('useChatTurnFetcher', () => {
       activeTurn: null,
       conversationId: null,
       errorMessage: 'Conversation not found',
+      firstMessageIndex: 0,
       messages: [],
     };
     historyFetcherState = 'idle';

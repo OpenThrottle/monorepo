@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  CHAT_STREAM_USER_MESSAGE_KIND,
   INITIAL_STREAM_STATE,
   reduceStreamChunk,
   toThreadMessages,
@@ -37,6 +38,41 @@ describe('reduceStreamChunk', () => {
 
     expect(state.bodies.get('assistant-1')).toBe('Hello');
     expect(state.isStreaming).toBe(true);
+  });
+
+  it('records a turn prompt without adding it to the reply', () => {
+    let state = INITIAL_STREAM_STATE;
+    state = reduceStreamChunk(
+      state,
+      chunk({
+        delta: 'Question',
+        kind: CHAT_STREAM_USER_MESSAGE_KIND,
+        metadataJson: JSON.stringify({ userMessageId: 'user-1' }),
+        sortOrder: 0,
+      }),
+    );
+    state = reduceStreamChunk(state, chunk({ delta: 'Answer', sortOrder: 1 }));
+
+    expect(state.prompts.get('assistant-1')).toEqual({
+      body: 'Question',
+      id: 'user-1',
+    });
+    expect(state.bodies.get('assistant-1')).toBe('Answer');
+    expect(toThreadMessages([], state.bodies, state.events)).toHaveLength(1);
+  });
+
+  it('drops a prompt chunk with no user message id', () => {
+    const state = reduceStreamChunk(
+      INITIAL_STREAM_STATE,
+      chunk({
+        delta: 'Question',
+        kind: CHAT_STREAM_USER_MESSAGE_KIND,
+        sortOrder: 0,
+      }),
+    );
+
+    expect(state.prompts.size).toBe(0);
+    expect(state.bodies.size).toBe(0);
   });
 
   it('ignores a duplicate sortOrder', () => {

@@ -92,6 +92,21 @@ export interface ConversationStreamSubscriptionVariables {
   readonly conversationId: string;
 }
 
+/**
+ * Chunk `kind` of a persisted turn's first chunk: the user message that started
+ * it (`delta` is its text, `metadataJson` carries `{ userMessageId }`). Lets a
+ * tab show a prompt another tab sent.
+ * @public
+ */
+export const CHAT_STREAM_USER_MESSAGE_KIND = 'user_message';
+
+/** The user message that started a streamed turn. @public */
+export interface ChatStreamPrompt {
+  readonly body: string;
+  /** The persisted user message id. */
+  readonly id: string;
+}
+
 /** Accumulated streaming state folded from {@link ChatStreamChunk}s. @public */
 export interface StreamState {
   /** Accumulated assistant body keyed by messageId (flat markdown fallback). */
@@ -109,6 +124,8 @@ export interface StreamState {
    * elapsed-based guess).
    */
   readonly phaseByMessageId: ReadonlyMap<string, ResolvedRunPhase>;
+  /** The user message that started each turn, keyed by the turn's messageId. */
+  readonly prompts: ReadonlyMap<string, ChatStreamPrompt>;
   /**
    * messageIds whose terminal chunk carried the server's retryable timeout
    * marker (`TerminalTimeoutMetadata`) — the turn stalled and was safely
@@ -128,6 +145,7 @@ export const INITIAL_STREAM_STATE: StreamState = {
   events: new Map(),
   isStreaming: false,
   phaseByMessageId: new Map(),
+  prompts: new Map(),
   retryableIds: new Set(),
   seen: new Set(),
 };
@@ -166,6 +184,20 @@ export function reduceStreamChunk(
 
   const seen = new Set(state.seen);
   seen.add(dedupeKey);
+
+  // The turn's prompt is not part of the reply: record it and leave the
+  // reply's body and events alone.
+  if (chunk.kind === CHAT_STREAM_USER_MESSAGE_KIND) {
+    const metadata = parseChunkMetadataRecord(chunk.metadataJson ?? null);
+    const userMessageId = metadata?.userMessageId;
+    if (typeof userMessageId !== 'string') {
+      return { ...state, seen };
+    }
+    const prompts = new Map(state.prompts);
+    prompts.set(chunk.messageId, { body: chunk.delta, id: userMessageId });
+
+    return { ...state, isStreaming: true, prompts, seen };
+  }
 
   const bodies = new Map(state.bodies);
   const events = new Map(state.events);
@@ -219,6 +251,7 @@ export function reduceStreamChunk(
       events,
       isStreaming: false,
       phaseByMessageId: state.phaseByMessageId,
+      prompts: state.prompts,
       retryableIds,
       seen,
     };
@@ -318,6 +351,7 @@ export function reduceStreamChunk(
     events,
     isStreaming: true,
     phaseByMessageId: state.phaseByMessageId,
+    prompts: state.prompts,
     retryableIds: state.retryableIds,
     seen,
   };

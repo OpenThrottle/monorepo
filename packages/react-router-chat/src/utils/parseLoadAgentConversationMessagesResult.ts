@@ -95,6 +95,8 @@ export const parseLoadAgentConversationMessagesResult = (
     activeTurn: parseActiveTurn(d.activeTurn),
     conversationId: nullableString(d.conversationId),
     errorMessage: nullableString(d.errorMessage),
+    firstMessageIndex:
+      typeof d.firstMessageIndex === 'number' ? d.firstMessageIndex : 0,
     messages,
   };
 };

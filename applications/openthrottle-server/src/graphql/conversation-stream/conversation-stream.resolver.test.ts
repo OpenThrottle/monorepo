@@ -32,7 +32,10 @@ import type { DiscoveryResult } from '@openthrottle/openthrottle-agentic-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CheckoutPathService } from '../../services/checkout-path/checkout-path.service.ts';
-import { TURN_IN_PROGRESS_ERROR } from './conversation-stream.constants.ts';
+import {
+  PROMPT_HISTORY_WINDOW,
+  TURN_IN_PROGRESS_ERROR,
+} from './conversation-stream.constants.ts';
 import { ConversationStreamResolver } from './conversation-stream.resolver.ts';
 import type { ConversationStreamService } from './conversation-stream.service.ts';
 
@@ -1178,6 +1181,51 @@ describe('ConversationStreamResolver.conversationStreamChunkAdded', () => {
       expect(messages?.at(-1)?.content).toBe('now cursor');
     });
 
+    it('sends the newest messages of a thread longer than the window', async () => {
+      const built = arrange({});
+      const longThread = Array.from({ length: 150 }, (_, index) => {
+        return agentConversationMessagesFactory.build({
+          content: `message ${index}`,
+          id: index === 149 ? 'user-msg-1' : `m${index}`,
+          role: index % 2 === 0 ? 'user' : 'assistant',
+          sortOrder: index,
+        });
+      });
+      // Honor the repository's paging contract so the window is exercised.
+      vi.mocked(built.messages.listMessagesForConversation).mockImplementation(
+        async (_userId, _conversationId, options = {}) => {
+          const limit = options.limit ?? 100;
+          const offset = options.offset ?? 0;
+          if (options.fromNewest === true) {
+            const end = longThread.length - offset;
+
+            return longThread.slice(Math.max(end - limit, 0), end);
+          }
+
+          return longThread.slice(offset, offset + limit);
+        },
+      );
+
+      await start(built.resolver, 'openai');
+
+      const messages = startedMessages(built.streamService);
+      expect(messages).toHaveLength(PROMPT_HISTORY_WINDOW);
+      expect(messages.at(-1)?.content).toBe('message 149');
+      expect(messages[0]?.content).toBe('message 50');
+    });
+
+    it('hands the persisted prompt to the stream to publish', async () => {
+      const { resolver, streamService } = arrange({});
+
+      await start(resolver, 'openai');
+
+      expect(streamService.start).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userMessage: { content: 'now cursor', id: 'user-msg-1' },
+        }),
+      );
+    });
+
     it('leaves a Private-mode turn untouched', async () => {
       const { resolver, streamService } = arrange({});
 
@@ -1194,6 +1242,7 @@ describe('ConversationStreamResolver.conversationStreamChunkAdded', () => {
       expect(streamService.start).toHaveBeenCalledWith(
         expect.objectContaining({
           messages: [{ content: 'now cursor', role: 'user' }],
+          userMessage: null,
         }),
       );
     });
