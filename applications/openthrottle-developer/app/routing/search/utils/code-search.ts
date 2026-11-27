@@ -1,5 +1,3 @@
-import { isGraphqlResponseError } from '@openthrottle/react-router-graphql';
-
 import type {
   SearchCodeIndexStatusFragment,
   SearchCodeMatchFragment,
@@ -142,14 +140,4 @@ export const getCodeSearchNotice = (
   }
 
   return null;
-};
-
-/**
- * @description True when a thrown GraphQL error is the server refusing the caller a permission
- * (`extensions.code` `FORBIDDEN`): signed in, but not allowed.
- */
-export const isGraphqlForbiddenError = (error: unknown): boolean => {
-  return (
-    isGraphqlResponseError(error) && error.extensions['code'] === 'FORBIDDEN'
-  );
 };

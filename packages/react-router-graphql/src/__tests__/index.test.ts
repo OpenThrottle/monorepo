@@ -52,7 +52,9 @@ const {
   GraphqlAuthError,
   GraphqlTimeoutError,
   executeGraphqlWithAuth,
+  getGraphqlErrorCode,
   isAuthError,
+  isGraphqlForbiddenError,
   isTimeoutError,
   redirectOnAuthError,
 } = await import('../index');
@@ -388,6 +390,52 @@ describe('isAuthError', () => {
     } else {
       throw new Error('expected isAuthError to narrow the type');
     }
+  });
+});
+
+describe('getGraphqlErrorCode', () => {
+  it("reads a GraphQL error's string extensions.code", () => {
+    const error = new FakeGraphqlResponseError('Nope', { code: 'FORBIDDEN' });
+
+    expect(getGraphqlErrorCode(error)).toBe('FORBIDDEN');
+  });
+
+  it('is null for a GraphQL error without a code', () => {
+    expect(getGraphqlErrorCode(new FakeGraphqlResponseError('x', {}))).toBe(
+      null,
+    );
+  });
+
+  it('is null for a GraphQL error whose code is not a string', () => {
+    const error = new FakeGraphqlResponseError('x', { code: 403 });
+
+    expect(getGraphqlErrorCode(error)).toBe(null);
+  });
+
+  it('is null for a non-GraphQL error or a non-error value', () => {
+    expect(getGraphqlErrorCode(new Error('FORBIDDEN'))).toBe(null);
+    expect(getGraphqlErrorCode(undefined)).toBe(null);
+    expect(getGraphqlErrorCode({ extensions: { code: 'FORBIDDEN' } })).toBe(
+      null,
+    );
+  });
+});
+
+describe('isGraphqlForbiddenError', () => {
+  it('is true for a FORBIDDEN GraphQL error', () => {
+    const error = new FakeGraphqlResponseError('x', { code: 'FORBIDDEN' });
+
+    expect(isGraphqlForbiddenError(error)).toBe(true);
+  });
+
+  it('is false for another GraphQL error code', () => {
+    const error = new FakeGraphqlResponseError('x', { code: 'BAD_REQUEST' });
+
+    expect(isGraphqlForbiddenError(error)).toBe(false);
+  });
+
+  it('is false for a plain Error whose message says FORBIDDEN', () => {
+    expect(isGraphqlForbiddenError(new Error('FORBIDDEN'))).toBe(false);
   });
 });
 

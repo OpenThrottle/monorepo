@@ -1,4 +1,3 @@
-import { GraphqlResponseError } from '@openthrottle/react-router-graphql';
 import { describe, expect, test } from 'vitest';
 
 import type { SearchCodeIndexStatusFragment } from '~/__generated__/graphql';
@@ -9,7 +8,6 @@ import {
   getCodeIndexStatusLabel,
   getCodeSearchNotice,
   isCodeIndexSearchable,
-  isGraphqlForbiddenError,
   resolveCodeSearchRepository,
   toCodeMatchHref,
   toCodeSearchRepositories,
@@ -148,17 +146,6 @@ describe('getCodeSearchNotice', () => {
         index: null,
       }),
     ).toBe('forbidden');
-  });
-});
-
-describe('isGraphqlForbiddenError', () => {
-  test('matches only a GraphQL FORBIDDEN error', () => {
-    const forbidden = new GraphqlResponseError('x', { code: 'FORBIDDEN' });
-    const other = new GraphqlResponseError('x', { code: 'BAD_REQUEST' });
-
-    expect(isGraphqlForbiddenError(forbidden)).toBe(true);
-    expect(isGraphqlForbiddenError(other)).toBe(false);
-    expect(isGraphqlForbiddenError(new Error('FORBIDDEN'))).toBe(false);
   });
 });
 
