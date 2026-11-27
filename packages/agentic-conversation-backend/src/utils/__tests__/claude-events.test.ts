@@ -22,6 +22,45 @@ describe('mapClaudeEvent', () => {
     });
   });
 
+  describe('system/init mcp_servers', () => {
+    it('keeps each server as a name/status pair', () => {
+      const chunk = mapOne({
+        mcp_servers: [
+          { name: 'openthrottle-mcp', status: 'connected', tools: ['x'] },
+          { name: 'broken', status: 'failed' },
+        ],
+        session_id: 'sid-9',
+        subtype: 'init',
+        type: 'system',
+      });
+
+      expect(chunk?.metadata?.mcpServers).toEqual([
+        { name: 'openthrottle-mcp', status: 'connected' },
+        { name: 'broken', status: 'failed' },
+      ]);
+    });
+
+    it('drops malformed entries and defaults a missing status', () => {
+      const chunk = mapOne({
+        mcp_servers: ['nope', { status: 'connected' }, { name: 'a' }],
+        subtype: 'init',
+        type: 'system',
+      });
+
+      expect(chunk?.metadata?.mcpServers).toEqual([
+        { name: 'a', status: 'unknown' },
+      ]);
+    });
+
+    it('omits the key when absent or empty', () => {
+      for (const extra of [{}, { mcp_servers: [] }, { mcp_servers: 'x' }]) {
+        const chunk = mapOne({ subtype: 'init', type: 'system', ...extra });
+
+        expect(chunk?.metadata).not.toHaveProperty('mcpServers');
+      }
+    });
+  });
+
   it('ignores non-init system subtypes', () => {
     expect(mapOne({ subtype: 'hook_started', type: 'system' })).toBeNull();
   });

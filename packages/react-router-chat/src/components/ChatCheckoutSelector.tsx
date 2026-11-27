@@ -11,6 +11,7 @@ import {
 import * as React from 'react';
 
 import type { ChatCheckoutOption } from '../types';
+import { resolveCheckoutBranch } from '../utils/checkout-branch';
 import { groupCheckoutOptions } from '../utils/checkout-groups';
 import { checkoutSearchFilter } from '../utils/checkoutSearchFilter';
 import type { ChatCheckoutDescriptor } from '../utils/describeCheckouts';
@@ -139,7 +140,7 @@ export const ChatCheckoutSelector = (
   // Markup
   const trigger = (
     <ChatCheckoutSelectorTrigger
-      branch={selectedCheckout?.branch}
+      branch={resolveCheckoutBranch(selectedCheckout)}
       className={className}
       enabled={hasCheckouts}
       label={triggerLabel}

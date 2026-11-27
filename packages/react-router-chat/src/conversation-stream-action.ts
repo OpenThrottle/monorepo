@@ -2,6 +2,7 @@ import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 
 import type { ChatStartActionResult } from './types';
+import { parseJson } from './utils/json';
 
 /**
  * @description Shared `/resources/conversation-stream` resource-route action —
@@ -26,18 +27,14 @@ export const parseFileMentionsField = (
   if (typeof value !== 'string' || value === '') {
     return null;
   }
-  try {
-    const parsed: unknown = JSON.parse(value);
-    if (!Array.isArray(parsed)) {
-      return null;
-    }
-    const paths = parsed.filter(
-      (entry): entry is string => typeof entry === 'string',
-    );
-    return paths.length > 0 ? paths : null;
-  } catch {
+  const parsed = parseJson(value);
+  if (!Array.isArray(parsed)) {
     return null;
   }
+  const paths = parsed.filter(
+    (entry): entry is string => typeof entry === 'string',
+  );
+  return paths.length > 0 ? paths : null;
 };
 
 /**

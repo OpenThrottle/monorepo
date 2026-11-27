@@ -55,7 +55,9 @@ describe('routes/resources.chat-options loader', () => {
         },
       },
     });
-    mockRepositories.mockResolvedValue([{ displayName: 'Repo', id: 'r1' }]);
+    mockRepositories.mockResolvedValue([
+      { defaultBranch: undefined, displayName: 'Repo', id: 'r1' },
+    ]);
     mockPersonas.mockResolvedValue([{ id: 'p1', label: 'Persona One' }]);
 
     const loaded = await loader(loaderArgs());

@@ -15,6 +15,7 @@ const CHECKOUTS: readonly [
 ] = [
   {
     branch: 'main',
+    defaultBranch: undefined,
     filesystemPath: '/Users/matt/Development/openthrottle',
     id: '4f1f0a3a-0000-4000-8000-000000000001',
     label: 'monorepo',
@@ -23,6 +24,7 @@ const CHECKOUTS: readonly [
   },
   {
     branch: 'main',
+    defaultBranch: undefined,
     filesystemPath: '/Users/matt/Development/shiftsmart-monorepo',
     id: '4f1f0a3a-0000-4000-8000-000000000002',
     label: 'monorepo',
@@ -30,6 +32,7 @@ const CHECKOUTS: readonly [
   },
   {
     branch: 'develop',
+    defaultBranch: undefined,
     filesystemPath: '/Users/matt/Development/nativeapps',
     id: '4f1f0a3a-0000-4000-8000-000000000003',
     label: 'nativeapps',

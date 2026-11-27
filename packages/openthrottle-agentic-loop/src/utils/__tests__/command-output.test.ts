@@ -4,7 +4,6 @@ import type { ScheduleClock } from '../../types/validation.ts';
 import {
   createAnsiStripStream,
   createBatchedChunkSink,
-  formatDuration,
   labelForCommand,
   stripAnsi,
   summarizeCommand,
@@ -67,13 +66,6 @@ describe('labelForCommand', () => {
     );
     expect(labelForCommand('a\n  b')).toBe('a b');
     expect(labelForCommand('x'.repeat(100))).toHaveLength(60);
-  });
-});
-
-describe('formatDuration', () => {
-  it('formats seconds and minutes', () => {
-    expect(formatDuration(46_400)).toBe('46s');
-    expect(formatDuration(125_000)).toBe('2m 5s');
   });
 });
 

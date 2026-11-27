@@ -30,9 +30,40 @@ const asString = (value: unknown): string | undefined => {
 };
 
 /**
+ * @description The init event's `mcp_servers` (`[{ name, status }]`) as `{ name, status }`
+ * string pairs. Anything malformed is dropped; null when none survive, so the
+ * chunk's metadata carries the key only when there is something to show.
+ */
+const parseMcpServers = (
+  event: Record<string, unknown>,
+): ReadonlyArray<{ readonly name: string; readonly status: string }> | null => {
+  const raw = event.mcp_servers;
+
+  if (!Array.isArray(raw)) {
+    return null;
+  }
+
+  const servers: Array<{ readonly name: string; readonly status: string }> = [];
+
+  for (const entry of raw) {
+    if (!isRecord(entry)) {
+      continue;
+    }
+    const name = asString(entry.name);
+
+    if (name !== undefined && name !== '') {
+      servers.push({ name, status: asString(entry.status) ?? 'unknown' });
+    }
+  }
+
+  return servers.length > 0 ? servers : null;
+};
+
+/**
  * `system` → a session-id confirmation chunk on init; otherwise ignored. It also
  * carries `apiKeySource`, so a failed run can say whether the CLI billed an
- * `ANTHROPIC_API_KEY` from its environment or used the host login.
+ * `ANTHROPIC_API_KEY` from its environment or used the host login, and the
+ * `mcp_servers` the CLI connected (name + status) for the session drawer.
  */
 function mapSystem(
   event: Record<string, unknown>,
@@ -41,12 +72,15 @@ function mapSystem(
     return null;
   }
 
+  const mcpServers = parseMcpServers(event);
+
   return {
     delta: '',
     done: false,
     kind: CONVERSATION_STREAM_CHUNK_KINDS.session,
     metadata: {
       apiKeySource: parseClaudeApiKeySource(event),
+      ...(mcpServers === null ? {} : { mcpServers }),
       sessionId: asString(event.session_id) ?? null,
     },
   };

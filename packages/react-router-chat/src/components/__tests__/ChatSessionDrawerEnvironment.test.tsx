@@ -17,6 +17,7 @@ describe('ChatSessionDrawerEnvironment', () => {
             agentLabel: 'Claude Code',
             checkout: {
               branch: 'feat/x',
+              defaultBranch: undefined,
               filesystemPath: `/Users/me/dev/some/deep/folder/monorepo-worktree`,
               id: 'c1',
               kind: CHAT_CHECKOUT_KIND.worktree,
@@ -27,6 +28,7 @@ describe('ChatSessionDrawerEnvironment', () => {
             reasoning: CHAT_REASONING_LEVEL.high,
           }}
           headBranch={undefined}
+          mcpServers={[]}
           pullRequest={undefined}
         />,
       );
@@ -64,6 +66,7 @@ describe('ChatSessionDrawerEnvironment', () => {
             reasoning: undefined,
           }}
           headBranch={undefined}
+          mcpServers={[]}
           pullRequest={undefined}
         />,
       );
@@ -86,6 +89,7 @@ describe('ChatSessionDrawerEnvironment', () => {
         <ChatSessionDrawerEnvironment
           environment={undefined}
           headBranch={undefined}
+          mcpServers={[]}
           pullRequest={undefined}
         />,
       );
@@ -104,6 +108,7 @@ describe('ChatSessionDrawerEnvironment', () => {
       agentLabel: undefined,
       checkout: {
         branch: 'main',
+        defaultBranch: undefined,
         filesystemPath: undefined,
         id: 'c1',
         kind: CHAT_CHECKOUT_KIND.primary,
@@ -119,6 +124,7 @@ describe('ChatSessionDrawerEnvironment', () => {
         <ChatSessionDrawerEnvironment
           environment={environment}
           headBranch="feat/live"
+          mcpServers={[]}
           pullRequest={undefined}
         />,
       );
@@ -134,6 +140,7 @@ describe('ChatSessionDrawerEnvironment', () => {
         <ChatSessionDrawerEnvironment
           environment={environment}
           headBranch="feat/live"
+          mcpServers={[]}
           pullRequest={{
             number: 7,
             state: 'open',
@@ -154,6 +161,53 @@ describe('ChatSessionDrawerEnvironment', () => {
         'data-testid',
         'ChatSessionDrawerEnvironment-checkout',
       );
+    });
+  });
+
+  describe('with MCP servers', () => {
+    test('renders a row per server with its status tone', () => {
+      const component = render(
+        <ChatSessionDrawerEnvironment
+          environment={undefined}
+          headBranch={undefined}
+          mcpServers={[
+            { name: 'openthrottle-mcp', status: 'connected' },
+            { name: 'broken', status: 'failed' },
+            { name: 'odd', status: 'weird' },
+          ]}
+          pullRequest={undefined}
+        />,
+      );
+
+      expect(
+        component.getByTestId('ChatSessionDrawerEnvironment-mcp'),
+      ).toBeInTheDocument();
+      expect(
+        component.getByTestId(
+          'ChatSessionDrawerEnvironment-mcp-openthrottle-mcp',
+        ),
+      ).toHaveAttribute('data-tone', 'ok');
+      expect(
+        component.getByTestId('ChatSessionDrawerEnvironment-mcp-broken'),
+      ).toHaveAttribute('data-tone', 'error');
+      expect(
+        component.getByTestId('ChatSessionDrawerEnvironment-mcp-odd'),
+      ).toHaveTextContent('weird');
+    });
+
+    test('hides the group when no server was reported', () => {
+      const component = render(
+        <ChatSessionDrawerEnvironment
+          environment={undefined}
+          headBranch={undefined}
+          mcpServers={[]}
+          pullRequest={undefined}
+        />,
+      );
+
+      expect(
+        component.queryByTestId('ChatSessionDrawerEnvironment-mcp'),
+      ).not.toBeInTheDocument();
     });
   });
 });

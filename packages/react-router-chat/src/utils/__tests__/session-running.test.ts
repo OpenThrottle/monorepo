@@ -5,7 +5,6 @@ import { CHAT_TOOL_STATUS } from '../../types';
 import {
   describeAgentCall,
   findInFlightMessage,
-  formatElapsed,
   isAgentTool,
   summarizeSessionRunning,
 } from '../session-running';
@@ -125,17 +124,5 @@ describe('summarizeSessionRunning', () => {
     ]);
 
     expect(summary.tools[0]?.key).toBe('bash-7');
-  });
-});
-
-describe('formatElapsed', () => {
-  it('formats seconds, minutes and hours compactly', () => {
-    expect(formatElapsed(42_000)).toBe('42s');
-    expect(formatElapsed(185_000)).toBe('3m 05s');
-    expect(formatElapsed(3_720_000)).toBe('1h 02m');
-  });
-
-  it('clamps negative input to 0s', () => {
-    expect(formatElapsed(-5)).toBe('0s');
   });
 });

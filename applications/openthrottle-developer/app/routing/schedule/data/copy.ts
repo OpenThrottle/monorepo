@@ -40,8 +40,6 @@ export const SCHEDULE_COPY = {
   runNowQueued: `Run queued.`,
   runNowSubmitting: `Queueing…`,
   runNowViewRun: `View run`,
-  runRepositoryHelp: `Where this run actually executed — a snapshot from when it fired, which may differ from the schedule's current target.`,
-  runRepositoryLabel: `Repository`,
   searchLabel: `Search schedules`,
   searchPlaceholder: `Search schedules`,
   statEnabledTitle: `Enabled / total schedules`,
@@ -126,10 +124,8 @@ export const SCHEDULE_APPROVAL_COPY = {
 export const SCHEDULE_WEBHOOK_COPY = {
   coalesceHelp: `Leading edge: the first delivery runs and the ones inside the window after it are recorded as coalesced. 0 turns it off.`,
   coalesceLabel: `Coalesce window (seconds)`,
-  copied: `Copied`,
   copyAction: `Copy`,
   createAction: `Create webhook`,
-  createError: `Could not create the webhook.`,
   customDeliveryIdHeaderHelp: `The sender's unique id per delivery, used to drop duplicates for 7 days. Blank dedupes on the body hash.`,
   customDeliveryIdHeaderLabel: `Delivery id header (optional)`,
   customEncodingLabel: `Signature encoding`,
@@ -162,7 +158,6 @@ export const SCHEDULE_WEBHOOK_COPY = {
   enabledLabel: `Accept deliveries`,
   filterAdd: `Add filter`,
   filterCountError: `Use at most 16 filters.`,
-  filterExistsNote: `No value needed.`,
   filterHelp: `All filters must match (AND), up to 16. A path is a dot path into the JSON payload (pull_request.base.ref) or header:<name> for an allowed header (header:x-github-event). There is no regex, by design.`,
   filterInError: `An "is one of" filter needs 1 to 32 comma-separated values.`,
   filterOpLabel: `Operator`,
@@ -178,7 +173,6 @@ export const SCHEDULE_WEBHOOK_COPY = {
   presetLabel: `Signature preset`,
   rateLimitHelp: `Most accepted deliveries in a trailing minute (1 to 120).`,
   rateLimitLabel: `Rate limit (per minute)`,
-  revealCopyHint: `Copy these now.`,
   revealDismiss: `I have copied them`,
   revealHeading: `Webhook credentials`,
   revealSecretLabel: `Signing secret`,
@@ -190,8 +184,6 @@ export const SCHEDULE_WEBHOOK_COPY = {
   rotateTitle: `Rotate this webhook?`,
   rotatedLabel: `Rotated`,
   saveAction: `Save webhook`,
-  saveError: `Could not save the webhook.`,
-  setupHeading: `Webhook trigger`,
   signatureHeaderError: `Enter the header that carries the signature.`,
   statusDisabled: `Webhook off`,
   statusEnabled: `Webhook on`,
@@ -205,7 +197,6 @@ export const SCHEDULE_WEBHOOK_COPY = {
   tokenPrefixLabel: `URL token starts with`,
   toleranceHelp: `A delivery is rejected unless its signed timestamp is within this many seconds of now (30 to 900).`,
   toleranceLabel: `Timestamp tolerance (seconds)`,
-  updateAction: `Save changes`,
 } as const;
 
 /**

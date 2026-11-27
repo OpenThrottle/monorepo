@@ -8,7 +8,7 @@ import {
 import * as React from 'react';
 
 import { useDefaultEditor } from '~/global/hooks/useDefaultEditor';
-import { getCheckoutEditorLink } from '~/routing/plans/utils/getCheckoutEditorLink';
+import { getCheckoutEditorLink } from '~/global/utils/getCheckoutEditorLink';
 
 export interface PlanRunProvenanceCheckout {
   readonly displayName: string;

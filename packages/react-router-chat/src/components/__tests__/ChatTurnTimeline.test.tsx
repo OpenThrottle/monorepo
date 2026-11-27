@@ -247,7 +247,12 @@ describe('ChatTurnTimeline Component', () => {
 
   test('ignores session events (internal handle, no UI)', () => {
     const component = renderTimeline([
-      { kind: 'session', sessionId: 'sess-1', sortOrder: 0 },
+      {
+        kind: 'session',
+        mcpServers: undefined,
+        sessionId: 'sess-1',
+        sortOrder: 0,
+      },
       { kind: 'text', sortOrder: 1, text: 'visible text' },
     ]);
 

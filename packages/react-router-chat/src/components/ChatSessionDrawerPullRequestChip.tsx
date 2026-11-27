@@ -1,10 +1,10 @@
+import { fillTemplate } from '@openthrottle/nodejs-utils';
 import { Badge } from '@openthrottle/react-router-shadcn';
 import { GitPullRequest } from 'lucide-react';
 import * as React from 'react';
 
 import { CHAT_SESSION_DRAWER_COPY } from '../data/copy';
 import type { ChatSessionDiffPullRequest } from '../types';
-import { fillTemplate } from '../utils/fillTemplate';
 import { formatPullRequestState } from '../utils/session-diff';
 
 export interface ChatSessionDrawerPullRequestChipProps {

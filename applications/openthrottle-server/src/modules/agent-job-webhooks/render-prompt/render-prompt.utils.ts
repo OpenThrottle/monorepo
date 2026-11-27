@@ -1,5 +1,7 @@
 import { randomBytes } from 'node:crypto';
 
+import { fillTemplate } from '@openthrottle/nodejs-utils';
+
 import {
   FORBIDDEN_PATH_SEGMENTS,
   MAX_PLACEHOLDER_LENGTH,
@@ -167,7 +169,7 @@ export const renderWebhookPrompt = (
   generateNonce: () => string = generateWebhookNonce,
 ): RenderedWebhookPrompt => {
   const nonce = generateNonce();
-  const preamble = PREAMBLE_TEMPLATE.replace('{nonce}', nonce);
+  const preamble = fillTemplate(PREAMBLE_TEMPLATE, { nonce });
   const full = `${preamble}\n\n${expandTemplate(input, nonce)}`;
   const prompt = truncateBytes(
     full,

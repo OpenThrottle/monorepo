@@ -1,5 +1,7 @@
 import { isRecord, isStringArray } from '@openthrottle/nodejs-utils';
 
+import { readJsonCookie, serializeJsonCookie } from './json-cookie';
+
 /** What the docked conversations column remembers across a refresh. */
 export interface ChatDockState {
   /** Conversation groups shown collapsed. */
@@ -24,43 +26,24 @@ export const defaultChatDockState = (): ChatDockState => {
  * A missing or malformed cookie yields {@link defaultChatDockState}.
  */
 export const parseChatDockCookie = (cookieHeader: string): ChatDockState => {
-  const entry = cookieHeader
-    .split(';')
-    .map((part) => part.trim())
-    .find((part) => part.startsWith(`${COOKIE_NAME}=`));
-  if (entry == null) {
+  const parsed = readJsonCookie(cookieHeader, COOKIE_NAME);
+  if (!isRecord(parsed)) {
     return defaultChatDockState();
   }
+  const { collapsedGroupIds, isOpen } = parsed;
 
-  try {
-    const parsed: unknown = JSON.parse(
-      decodeURIComponent(entry.slice(COOKIE_NAME.length + 1)),
-    );
-    if (!isRecord(parsed)) {
-      return defaultChatDockState();
-    }
-    const { collapsedGroupIds, isOpen } = parsed;
-
-    return {
-      collapsedGroupIds: isStringArray(collapsedGroupIds)
-        ? collapsedGroupIds
-        : [],
-      isOpen: typeof isOpen === 'boolean' ? isOpen : false,
-    };
-  } catch {
-    return defaultChatDockState();
-  }
+  return {
+    collapsedGroupIds: isStringArray(collapsedGroupIds)
+      ? collapsedGroupIds
+      : [],
+    isOpen: typeof isOpen === 'boolean' ? isOpen : false,
+  };
 };
 
 /** @description A `document.cookie` assignment that persists the dock state for a year. */
 export const serializeChatDockCookie = (state: ChatDockState): string => {
-  const ONE_YEAR_SECONDS = 31_536_000;
-  const value = encodeURIComponent(
-    JSON.stringify({
-      collapsedGroupIds: state.collapsedGroupIds,
-      isOpen: state.isOpen,
-    }),
-  );
-
-  return `${COOKIE_NAME}=${value}; path=/; max-age=${ONE_YEAR_SECONDS}; samesite=lax`;
+  return serializeJsonCookie(COOKIE_NAME, {
+    collapsedGroupIds: state.collapsedGroupIds,
+    isOpen: state.isOpen,
+  });
 };

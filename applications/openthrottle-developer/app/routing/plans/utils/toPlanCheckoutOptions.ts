@@ -35,8 +35,8 @@ export const toPlanCheckoutOptions = (
 ): ChatCheckoutOption[] => {
   return repositories.flatMap((repository) =>
     repository.checkouts.map((checkout) => ({
-      branch: firstNonEmpty(
-        checkout.inspection?.git?.currentBranch,
+      branch: firstNonEmpty(checkout.inspection?.git?.currentBranch),
+      defaultBranch: firstNonEmpty(
         repository.defaultBranch,
         checkout.inspection?.git?.defaultBranch,
       ),

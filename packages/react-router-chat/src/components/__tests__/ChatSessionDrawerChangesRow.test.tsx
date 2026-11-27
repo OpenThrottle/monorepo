@@ -14,11 +14,20 @@ const FILE: ChatSessionDiffFile = {
   status: 'modified',
 };
 
-const renderRow = (file: ChatSessionDiffFile, isSelected = false) => {
+const toHref = (path: string): string | null => {
+  return `vscode://file/repo/${path}`;
+};
+
+const renderRow = (
+  file: ChatSessionDiffFile,
+  isSelected = false,
+  buildFileHref: ((path: string) => string | null) | undefined = undefined,
+) => {
   const onSelect = vi.fn();
   const component = render(
     <ul>
       <ChatSessionDrawerChangesRow
+        buildFileHref={buildFileHref}
         file={file}
         isSelected={isSelected}
         isTouched={false}
@@ -72,5 +81,23 @@ describe('ChatSessionDrawerChangesRow', () => {
       'title',
       'Renamed from src/old.ts',
     );
+  });
+
+  test('links to the file in the editor beside the show-diff button', async () => {
+    const { component, onSelect } = renderRow(FILE, false, toHref);
+    const link = component.getByRole('link', {
+      name: 'Open src/a.ts in your editor',
+    });
+
+    expect(link).toHaveAttribute('href', 'vscode://file/repo/src/a.ts');
+    await userEvent.click(component.getByRole('button'));
+    expect(onSelect).toHaveBeenCalledWith('src/a.ts');
+  });
+
+  test('has no editor link without a builder or when it yields null', () => {
+    expect(renderRow(FILE).component.queryByRole('link')).toBeNull();
+    expect(
+      renderRow(FILE, false, () => null).component.queryByRole('link'),
+    ).toBeNull();
   });
 });

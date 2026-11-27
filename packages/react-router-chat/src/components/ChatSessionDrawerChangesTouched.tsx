@@ -2,13 +2,18 @@ import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
 import {
-  SESSION_FILE_OP_ICONS,
-  SESSION_FILE_OP_TONES,
-} from '../data/chat-session-file-ops';
+  SESSION_DIFF_STATUS_ICONS,
+  SESSION_DIFF_STATUS_TONES,
+} from '../data/chat-session-diff-status';
 import { CHAT_SESSION_DRAWER_COPY } from '../data/copy';
+import type { ChatFileHrefBuilder } from '../types';
 import type { SessionFile } from '../utils/deriveSessionFiles';
+import { splitPath } from '../utils/path';
+import { ChatSessionDrawerOpenFile } from './ChatSessionDrawerOpenFile';
 
 export interface ChatSessionDrawerChangesTouchedProps {
+  /** Builds the open-in-editor link; undefined hides the action. */
+  readonly buildFileHref: ChatFileHrefBuilder | undefined;
   readonly files: readonly SessionFile[];
   /** What the list is: touched with no net change, or touched before the diff caught up. */
   readonly heading: string;
@@ -17,28 +22,26 @@ export interface ChatSessionDrawerChangesTouchedProps {
 /**
  * @description The Changes section's muted list of files this conversation touched that the
  * diff does not list: op icon, path (directory muted) and the tool-reported +/- counts, newest
- * first. Rows are plain text; there is no patch to open.
+ * first. Rows have no patch to open; each may carry an open-in-editor link.
  *
  * @public
  */
 export const ChatSessionDrawerChangesTouched = (
   props: ChatSessionDrawerChangesTouchedProps,
 ): React.ReactElement => {
-  const { files, heading } = props;
+  const { buildFileHref, files, heading } = props;
 
   // Hooks
 
   // Setup
-  const copy = CHAT_SESSION_DRAWER_COPY.files;
+  const copy = CHAT_SESSION_DRAWER_COPY.changes;
 
   // Handlers
 
   // Markup
   const rows = files.map((file) => {
-    const Icon = SESSION_FILE_OP_ICONS[file.op];
-    const slash = file.path.lastIndexOf('/');
-    const directory = file.path.slice(0, slash + 1);
-    const name = file.path.slice(slash + 1);
+    const Icon = SESSION_DIFF_STATUS_ICONS[file.op];
+    const { directory, name } = splitPath(file.path);
     const hasCounts = file.added !== undefined || file.removed !== undefined;
     const counts = hasCounts && (
       <span className="shrink-0 tabular-nums">
@@ -56,14 +59,21 @@ export const ChatSessionDrawerChangesTouched = (
         title={file.path}
       >
         <Icon
-          aria-label={copy.ops[file.op]}
-          className={cn('size-3.5 shrink-0', SESSION_FILE_OP_TONES[file.op])}
+          aria-label={copy.statuses[file.op]}
+          className={cn(
+            'size-3.5 shrink-0',
+            SESSION_DIFF_STATUS_TONES[file.op],
+          )}
           role="img"
         />
         <span className="min-w-0 flex-1 truncate">
           <span className="font-medium">{name}</span> <span>{directory}</span>
         </span>
         {counts}
+        <ChatSessionDrawerOpenFile
+          buildFileHref={buildFileHref}
+          path={file.path}
+        />
       </li>
     );
   });

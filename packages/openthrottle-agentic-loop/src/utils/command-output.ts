@@ -1,5 +1,8 @@
+import { formatDuration } from '@openthrottle/nodejs-utils';
+
 import { ANSI_PARTIAL_TAIL_PATTERN, ANSI_PATTERN } from '../data/ansi.ts';
 import {
+  COMMAND_DURATION_OPTIONS,
   NX_TARGET_FLAG_PATTERN,
   NX_TARGET_RUN_PATTERN,
   SUMMARY_EXIT_WORD,
@@ -62,9 +65,6 @@ export const createAnsiStripStream = (
   return { flush, push };
 };
 
-const MS_PER_SECOND = 1000;
-const SECONDS_PER_MINUTE = 60;
-
 /**
  * @description Short name for a validation command: the target list for `nx affected` /
  * `nx run-many`, otherwise the command collapsed to one line and truncated.
@@ -84,18 +84,6 @@ export const labelForCommand = (command: string): string => {
   return oneLine.length <= SUMMARY_LABEL_MAX_CHARS
     ? oneLine
     : `${oneLine.slice(0, SUMMARY_LABEL_MAX_CHARS - 1)}${SUMMARY_LABEL_ELLIPSIS}`;
-};
-
-/**
- * @description `46s`, or `2m 5s` from a minute up; rounds to whole seconds.
- * @public
- */
-export const formatDuration = (durationMs: number): string => {
-  const totalSeconds = Math.max(0, Math.round(durationMs / MS_PER_SECOND));
-  const minutes = Math.floor(totalSeconds / SECONDS_PER_MINUTE);
-  const seconds = totalSeconds % SECONDS_PER_MINUTE;
-
-  return minutes === 0 ? `${seconds}s` : `${minutes}m ${seconds}s`;
 };
 
 /** @public */
@@ -125,7 +113,7 @@ export const summarizeCommand = (input: {
   readonly outcome: CommandSummaryOutcome;
 }): string => {
   const label = labelForCommand(input.command);
-  const duration = formatDuration(input.durationMs);
+  const duration = formatDuration(input.durationMs, COMMAND_DURATION_OPTIONS);
 
   if (input.outcome.kind === 'green') {
     return `${label} ${SUMMARY_GREEN_MARK} ${SUMMARY_SEPARATOR} ${duration}`;

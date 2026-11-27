@@ -6,11 +6,9 @@
  * RepositoryCheckoutsRepository (DB is a cache; disk is the source of truth).
  * Pattern precedent: agent-discovery / model-discovery cached snapshots.
  */
-import { execFile } from 'node:child_process';
 import { existsSync, realpathSync, statSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { promisify } from 'node:util';
 
 import { Injectable } from '@nestjs/common';
 import { describeTelemetryConfig } from '@openthrottle/agentic-hooks';
@@ -22,6 +20,7 @@ import {
 import { isRecord } from '@openthrottle/nodejs-utils';
 import { toHostPath } from '@openthrottle/openthrottle-agentic-utils';
 
+import { GitRunnerService } from '../../services/git-runner/git-runner.service.ts';
 import {
   HOOK_TELEMETRY_PRODUCER_MARKERS,
   HOOK_TELEMETRY_REASONS,
@@ -42,13 +41,6 @@ import {
 } from './repository-inspection.utils.ts';
 import { parseLinkedWorktrees } from './repository-inspection.utils.ts';
 
-const execFileAsync = promisify(execFile);
-
-/** Per-git-command timebox; a scan runs a handful of these sequentially. */
-const GIT_COMMAND_TIMEOUT_MS = 2_000;
-
-/** Cap on stdout per git command (worktree/status lists stay bounded). */
-const GIT_MAX_BUFFER_BYTES = 1024 * 1024;
 const OPENTHROTTLE_MANIFEST_RELATIVE_PATH = `.openthrottle/workspace-editors.json`;
 
 /** Root-level marker files → language tags. Root checks only, no walks. */
@@ -78,6 +70,7 @@ export class RepositoryInspectionService {
   constructor(
     private readonly logger: LoggerService,
     private readonly checkoutsRepository: RepositoryCheckoutsRepository,
+    private readonly gitRunner: GitRunnerService,
   ) {
     this.logger.debug('🧩 repository-inspection 🧩');
   }
@@ -412,19 +405,14 @@ export class RepositoryInspectionService {
     warnings: string[],
     args: readonly string[],
   ): Promise<string | null> {
-    try {
-      const { stdout } = await execFileAsync('git', ['-C', root, ...args], {
-        maxBuffer: GIT_MAX_BUFFER_BYTES,
-        timeout: GIT_COMMAND_TIMEOUT_MS,
-      });
-      return stdout;
-    } catch {
-      // Expected for e.g. symbolic-ref on repos without origin/HEAD; only
-      // note probes that matter for completeness.
-      if (args[0] !== 'symbolic-ref') {
-        warnings.push(`git ${args[0]} probe failed or timed out`);
-      }
-      return null;
+    const result = await this.gitRunner.run(root, args);
+    if (result.ok) return result.stdout;
+
+    // Expected for e.g. symbolic-ref on repos without origin/HEAD; only
+    // note probes that matter for completeness.
+    if (args[0] !== 'symbolic-ref') {
+      warnings.push(`git ${args[0]} probe failed or timed out`);
     }
+    return null;
   }
 }

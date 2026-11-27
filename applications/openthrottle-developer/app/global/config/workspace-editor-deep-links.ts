@@ -11,6 +11,11 @@ export interface WorkspaceEditorLaunchInput {
 
 export interface WorkspaceEditorDeepLink {
   /**
+   * Open-one-file link for an absolute path. `null` when the path is empty or
+   * the editor has no file URL scheme (Claude Code links carry only a folder).
+   */
+  readonly buildFileHref: (absolutePath: string) => string | null;
+  /**
    * Open-folder link, no prompt. `null` when no working directory resolved —
    * callers skip the button rather than render a dead link.
    */
@@ -75,6 +80,24 @@ const buildClaudePlanHref = (
   );
 };
 
+const buildClaudeFileHref = (): null => {
+  return null;
+};
+
+const buildCursorFileHref = (absolutePath: string): string | null => {
+  if (absolutePath === '') {
+    return null;
+  }
+  return editorHref({ absolutePath, scheme: 'cursor' });
+};
+
+const buildVscodeFileHref = (absolutePath: string): string | null => {
+  if (absolutePath === '') {
+    return null;
+  }
+  return editorHref({ absolutePath, scheme: 'vscode' });
+};
+
 const buildCursorFolderHref = (workingDirectory: string): string | null => {
   if (workingDirectory === '') {
     return null;
@@ -109,18 +132,23 @@ const buildVscodeFolderHref = (workingDirectory: string): string | null => {
  * - **VS Code** — `vscode://file…`, open-folder only. There is no stable
  *   prompt parameter (microsoft/vscode#279701 is still open); do not invent
  *   one.
+ *
+ * Per-file links (`buildFileHref`) exist for the two editors with a
+ * `<scheme>://file/<abs>` handler; Claude Code has none, so it returns null.
  */
 export const WORKSPACE_EDITOR_DEEP_LINKS: Record<
   WorkspaceEditorId,
   WorkspaceEditorDeepLink
 > = {
   [WorkspaceEditorId.Claude]: {
+    buildFileHref: buildClaudeFileHref,
     buildFolderHref: buildClaudeFolderHref,
     buildPlanHref: buildClaudePlanHref,
     label: 'Claude Code',
     promptTargetsFocusedWindow: false,
   },
   [WorkspaceEditorId.Cursor]: {
+    buildFileHref: buildCursorFileHref,
     buildFolderHref: buildCursorFolderHref,
     buildPlanHref: ({ planId }) =>
       `cursor://anysphere.cursor-deeplink/prompt?${toQueryString(
@@ -132,6 +160,7 @@ export const WORKSPACE_EDITOR_DEEP_LINKS: Record<
     promptTargetsFocusedWindow: true,
   },
   [WorkspaceEditorId.Vscode]: {
+    buildFileHref: buildVscodeFileHref,
     buildFolderHref: buildVscodeFolderHref,
     buildPlanHref: ({ workingDirectory }) =>
       buildVscodeFolderHref(workingDirectory),

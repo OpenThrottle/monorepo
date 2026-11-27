@@ -700,6 +700,29 @@ describe('reduceStreamChunk — structured events', () => {
       { kind: 'session', sessionId: 'sess-9', sortOrder: 0 },
     ]);
   });
+
+  it('carries the mcpServers a session chunk reported', () => {
+    const state = reduceStreamChunk(
+      INITIAL_STREAM_STATE,
+      chunk({
+        kind: 'session',
+        metadataJson: JSON.stringify({
+          mcpServers: [{ name: 'ot', status: 'failed' }],
+          sessionId: 'sess-9',
+        }),
+        sortOrder: 0,
+      }),
+    );
+
+    expect(eventsOf(state)).toEqual([
+      {
+        kind: 'session',
+        mcpServers: [{ name: 'ot', status: 'failed' }],
+        sessionId: 'sess-9',
+        sortOrder: 0,
+      },
+    ]);
+  });
 });
 
 describe('toThreadMessages', () => {

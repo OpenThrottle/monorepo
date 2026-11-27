@@ -1,11 +1,11 @@
 import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { CHAT_CONTEXT_METER_TONE_CLASSES } from '../data/chat-context-meter.classes';
 import { CHAT_CONTEXT_METER_COPY } from '../data/copy';
 import type { ChatTokenUsage } from '../types';
 import { resolveContextWindowUsage } from '../utils/chat-context-window';
 import { formatContextMeterLabel } from '../utils/formatContextMeterLabel';
+import { ChatContextMeterBar } from './ChatContextMeterBar';
 
 export interface ChatContextMeterProps {
   readonly className?: string;
@@ -55,20 +55,7 @@ export const ChatContextMeter = (
       role="meter"
       title={CHAT_CONTEXT_METER_COPY.title}
     >
-      <span
-        aria-hidden="true"
-        className="bg-muted relative h-1.5 w-10 overflow-hidden rounded-full"
-      >
-        <span
-          className={cn(
-            'absolute inset-y-0 left-0 rounded-full',
-            CHAT_CONTEXT_METER_TONE_CLASSES[fill.tone],
-          )}
-          data-testid="ChatContextMeter-fill"
-          data-tone={fill.tone}
-          style={{ width: `${fill.percent}%` }}
-        />
-      </span>
+      <ChatContextMeterBar className="w-10" fill={fill} />
       <span aria-hidden="true">{fill.percent}%</span>
     </span>
   );

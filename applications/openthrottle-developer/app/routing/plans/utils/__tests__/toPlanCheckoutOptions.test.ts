@@ -85,6 +85,7 @@ describe('toPlanCheckoutOptions', () => {
 
     expect(option).toEqual({
       branch: 'feature/x',
+      defaultBranch: 'main',
       filesystemPath: '/Users/me/worktrees/monorepo',
       id: 'checkout-1',
       label: 'monorepo (worktree)',
@@ -92,7 +93,7 @@ describe('toPlanCheckoutOptions', () => {
     });
   });
 
-  test('falls back to the repository default branch for a detached checkout', () => {
+  test('keeps the repository default separate for a checkout with no current branch', () => {
     const [option] = toPlanCheckoutOptions([
       buildRepository({
         checkouts: [
@@ -106,10 +107,11 @@ describe('toPlanCheckoutOptions', () => {
       }),
     ]);
 
-    expect(option?.branch).toBe('trunk');
+    expect(option?.branch).toBeUndefined();
+    expect(option?.defaultBranch).toBe('trunk');
   });
 
-  test('falls back to the git-reported default branch when the repository has none', () => {
+  test('uses the git-reported default branch when the repository has none', () => {
     const [option] = toPlanCheckoutOptions([
       buildRepository({
         checkouts: [
@@ -122,7 +124,8 @@ describe('toPlanCheckoutOptions', () => {
       }),
     ]);
 
-    expect(option?.branch).toBe('develop');
+    expect(option?.branch).toBeUndefined();
+    expect(option?.defaultBranch).toBe('develop');
   });
 
   test('leaves the branch unset when nothing reports one', () => {
@@ -133,6 +136,7 @@ describe('toPlanCheckoutOptions', () => {
     ]);
 
     expect(option?.branch).toBeUndefined();
+    expect(option?.defaultBranch).toBeUndefined();
   });
 
   test('labels an unnamed checkout with its folder name', () => {

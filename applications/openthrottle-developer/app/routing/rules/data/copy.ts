@@ -125,7 +125,6 @@ export const RULES_COPY = {
   statsRepositoryLabel: `Repository-scoped`,
   statsTotalLabel: `Total rules`,
   statusLabel: `Status`,
-  tableActionsHeader: `Actions`,
   tableMatchHeader: `Match`,
   tableRuleHeader: `Rule`,
   tagAllowPlaceholder: `tagAllow (comma-separated)`,
@@ -137,12 +136,9 @@ export const RULES_COPY = {
 } as const;
 
 export const RULE_DETAIL_COPY = {
-  actionSummaryLabel: `Action`,
   applicationsDescription: `Every plan this rule has touched. Flagged and orphaned rows need attention.`,
   applicationsEmpty: `This rule has not been applied to any plan yet.`,
   applicationsTitle: `Applications`,
-  deleteFailedFallback: `The rule could not be updated.`,
-  detailsExtraLabel: `Other details`,
   detailsPromptLabel: `Prompt`,
   detailsReasonLabels: {
     'already-attached': `Already attached`,
@@ -153,7 +149,6 @@ export const RULE_DETAIL_COPY = {
   },
   detailsRuleLabel: `Rule`,
   enabledLabel: `Enabled`,
-  matchLabel: `Matches`,
   notFoundTitle: `Rule not found`,
   stateLabels: {
     applied: `Applied`,

@@ -10,6 +10,7 @@ import { ChatSessionDrawer } from '../ChatSessionDrawer';
 
 const onSelectFile = vi.fn();
 const CHANGES: ChatSessionChanges = {
+  buildFileHref: undefined,
   diff: undefined,
   isLoading: false,
   isPatchTruncated: false,

@@ -1,16 +1,21 @@
 import { isRecord } from '@openthrottle/nodejs-utils';
 
 import { normalizeToolName, toolCategoryOf } from '../turn-tool-groups';
-import type { ChatMessage, ChatTurnToolEvent } from '../types';
+import type {
+  ChatMessage,
+  ChatSessionDiffFileStatus,
+  ChatTurnToolEvent,
+} from '../types';
 import { CHAT_TOOL_STATUS } from '../types';
+import { parseJson } from './json';
 
 /**
  * What happened to a file in the conversation. `Write`-style tools are
- * `edited`: the tool cannot say whether the file pre-existed, so only an
+ * `modified`: the tool cannot say whether the file pre-existed, so only an
  * explicit create (patch `Add File`, Codex `add`, Cursor `create_file`) is
- * `created`.
+ * `added`.
  */
-export type SessionFileOp = 'created' | 'deleted' | 'edited';
+export type SessionFileOp = Exclude<ChatSessionDiffFileStatus, 'renamed'>;
 
 /** One file the agent touched, deduped across the whole conversation. */
 export interface SessionFile {
@@ -18,7 +23,7 @@ export interface SessionFile {
   readonly added: number | undefined;
   /** How many tool calls touched the file. */
   readonly count: number;
-  /** The net operation (created stays created; a later delete wins). */
+  /** The net operation (added stays added; a later delete wins). */
   readonly op: SessionFileOp;
   /** Relative to the checkout root when one was given and matched. */
   readonly path: string;
@@ -63,20 +68,8 @@ const PATCH_HEADER_KINDS = [
 ] as const;
 
 const PATCH_KIND_OPS: Readonly<Record<string, SessionFileOp | undefined>> = {
-  'Add File': 'created',
+  'Add File': 'added',
   'Delete File': 'deleted',
-};
-
-const parseJson = (json: string | null): unknown => {
-  if (json === null) {
-    return undefined;
-  }
-
-  try {
-    return JSON.parse(json);
-  } catch {
-    return undefined;
-  }
 };
 
 const countLines = (text: string): number => {
@@ -181,7 +174,7 @@ const readPatchText = (patch: string): readonly Touch[] => {
       current = { ...current, path };
     } else if (kind !== undefined && path !== undefined) {
       flush();
-      current = { added: 0, op: PATCH_KIND_OPS[kind] ?? 'edited', path };
+      current = { added: 0, op: PATCH_KIND_OPS[kind] ?? 'modified', path };
     } else if (current !== undefined && current.op !== 'deleted') {
       if (line.startsWith('+')) {
         current = { ...current, added: current.added + 1 };
@@ -196,7 +189,7 @@ const readPatchText = (patch: string): readonly Touch[] => {
 };
 
 const CODEX_KIND_OPS: Readonly<Record<string, SessionFileOp | undefined>> = {
-  add: 'created',
+  add: 'added',
   delete: 'deleted',
 };
 
@@ -214,7 +207,7 @@ const readCodexChanges = (
     const kind = typeof rawKind === 'string' ? rawKind.toLowerCase() : '';
     touches.push({
       added: undefined,
-      op: CODEX_KIND_OPS[kind] ?? 'edited',
+      op: CODEX_KIND_OPS[kind] ?? 'modified',
       path: change.path,
       removed: undefined,
     });
@@ -258,23 +251,23 @@ const readToolTouches = (name: string, args: unknown): readonly Touch[] => {
   const none = { added: undefined, removed: undefined };
   switch (name) {
     case 'create_file':
-      return [{ ...none, op: 'created', path }];
+      return [{ ...none, op: 'added', path }];
     case 'delete_file':
       return [{ ...none, op: 'deleted', path }];
     case 'multi_edit':
     case 'multiedit':
-      return [{ ...readMultiEdit(args), op: 'edited', path }];
+      return [{ ...readMultiEdit(args), op: 'modified', path }];
     case 'write':
     case 'write_file':
     case 'write_to_file':
-      return [{ ...readWrite(args), op: 'edited', path }];
+      return [{ ...readWrite(args), op: 'modified', path }];
     case 'edit':
     case 'replace':
     case 'str_replace':
     case 'search_replace':
-      return [{ ...readReplacement(args), op: 'edited', path }];
+      return [{ ...readReplacement(args), op: 'modified', path }];
     default:
-      return [{ ...none, op: 'edited', path }];
+      return [{ ...none, op: 'modified', path }];
   }
 };
 
@@ -331,12 +324,12 @@ const mergeOp = (
   if (next === 'deleted') {
     return 'deleted';
   }
-  if (next === 'created') {
-    return 'created';
+  if (next === 'added') {
+    return 'added';
   }
 
   // An edit keeps a create, and revives a delete as an edit.
-  return previous === 'created' ? 'created' : 'edited';
+  return previous === 'added' ? 'added' : 'modified';
 };
 
 const sumKnown = (

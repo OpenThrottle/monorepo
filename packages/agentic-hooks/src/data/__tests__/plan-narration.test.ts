@@ -6,7 +6,6 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
   appendPlanNarration,
-  formatElapsed,
   readNarratedKeys,
   recordNarratedKeys,
 } from '../plan-narration.ts';
@@ -17,15 +16,6 @@ const chunk = {
   planId: 'plan-1',
   taskId: 'task-1',
 };
-
-describe('formatElapsed', () => {
-  it('formats seconds, minutes and hours', () => {
-    expect(formatElapsed(45_000)).toBe('45s');
-    expect(formatElapsed(750_000)).toBe('12m 30s');
-    expect(formatElapsed(3_840_000)).toBe('1h 4m');
-    expect(formatElapsed(-5)).toBe('0s');
-  });
-});
 
 describe('narration state', () => {
   let stateDir: string;

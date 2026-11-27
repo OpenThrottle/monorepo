@@ -35,6 +35,7 @@ import {
 
 import type { ForeignSkillMaterializationService } from '../../../services/foreign-skill-injection/materialization/materialization.service.ts';
 import type { WorktreeSkillOverlayService } from '../../../services/foreign-skill-injection/worktree-skill-overlay/worktree-skill-overlay.service.ts';
+import { GitRunnerService } from '../../../services/git-runner/git-runner.service.ts';
 import { RepositoryInspectionService } from '../../repository-inspection/repository-inspection.service.ts';
 import { NATIVE_PICKER_ENV } from '../native-folder-picker/native-folder-picker.constants.ts';
 import {
@@ -64,6 +65,7 @@ describe('WorkspaceFoldersService', () => {
   const inspectionService = new RepositoryInspectionService(
     createMock<LoggerService>(),
     mockCheckoutsRepository,
+    new GitRunnerService(),
   );
 
   const mockForeignSkillMaterialization =

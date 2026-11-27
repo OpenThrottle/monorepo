@@ -22,7 +22,7 @@ import {
   RUN_TRIGGER_LABEL,
 } from '~/routing/schedule/data/run-status';
 import { useElapsedTicker } from '~/routing/schedule/hooks/useElapsedTicker';
-import { formatDuration } from '~/routing/schedule/utils/formatDuration';
+import { formatRunDuration } from '~/routing/schedule/utils/formatRunDuration';
 
 export interface ScheduleActiveRunsProps {
   className?: string;
@@ -79,7 +79,7 @@ export const ScheduleActiveRuns = (
           {runs.map((run) => {
             const cancelRequested = run.cancelRequestedAt != null;
             const hasStarted = run.startedAt !== null;
-            const runDuration = formatDuration(run.startedAt, now);
+            const runDuration = formatRunDuration(run.startedAt, now);
             const queuedBadge = (
               <span className="text-muted-foreground">
                 {SCHEDULE_COPY.activeRunsQueued}

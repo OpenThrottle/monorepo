@@ -1,15 +1,14 @@
+import { formatDuration } from '@openthrottle/nodejs-utils';
 import { Bot, ListOrdered, Wrench } from 'lucide-react';
 import * as React from 'react';
 
+import { ELAPSED_DURATION_OPTIONS } from '../config/elapsed-duration-options';
 import { CHAT_SESSION_DRAWER_COPY } from '../data/copy';
 import { useElapsedMs } from '../hooks/useElapsedMs';
 import { deriveRunPhaseFromEvents } from '../run-phase';
 import type { ChatMessage, ChatQueuedMessage } from '../types';
 import { CHAT_RUN_PHASE } from '../types';
-import {
-  formatElapsed,
-  summarizeSessionRunning,
-} from '../utils/session-running';
+import { summarizeSessionRunning } from '../utils/session-running';
 import { RunningIndicator } from './RunningIndicator';
 
 export interface ChatSessionDrawerRunningProps {
@@ -88,7 +87,7 @@ export const ChatSessionDrawerRunning = (
         className="text-muted-foreground text-xs tabular-nums"
         data-testid="ChatSessionDrawerRunning-elapsed"
       >
-        {formatElapsed(elapsedMs ?? 0)}
+        {formatDuration(elapsedMs ?? 0, ELAPSED_DURATION_OPTIONS)}
       </span>
     </div>
   );

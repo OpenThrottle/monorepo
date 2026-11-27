@@ -2,6 +2,7 @@ import { isRecord } from '@openthrottle/nodejs-utils';
 
 import type { ChatMessage, ChatTurnToolEvent } from '../types';
 import { CHAT_TOOL_STATUS } from '../types';
+import { parseJson } from './json';
 
 /** Tool names Claude uses to launch a subagent. */
 const AGENT_TOOL_NAMES: readonly string[] = ['agent', 'task'];
@@ -42,22 +43,15 @@ export const isAgentTool = (event: ChatTurnToolEvent): boolean => {
  * to the name.
  */
 export const describeAgentCall = (event: ChatTurnToolEvent): string => {
-  if (event.argsJson === null) {
+  const parsed = parseJson(event.argsJson);
+  if (!isRecord(parsed)) {
     return event.name;
   }
-  try {
-    const parsed: unknown = JSON.parse(event.argsJson);
-    if (!isRecord(parsed)) {
-      return event.name;
+  for (const field of ['description', 'subagent_type']) {
+    const value = parsed[field];
+    if (typeof value === 'string' && value.trim() !== '') {
+      return value.trim();
     }
-    for (const field of ['description', 'subagent_type']) {
-      const value = parsed[field];
-      if (typeof value === 'string' && value.trim() !== '') {
-        return value.trim();
-      }
-    }
-  } catch {
-    return event.name;
   }
 
   return event.name;
@@ -88,21 +82,4 @@ export const summarizeSessionRunning = (
     message,
     tools: running.filter((event) => !isAgentTool(event)).map(toItem),
   };
-};
-
-/** Compact duration: `42s`, `3m 05s`, `1h 02m`. Negative input reads as 0s. */
-export const formatElapsed = (ms: number): string => {
-  const totalSeconds = Math.floor(Math.max(0, ms) / 1_000);
-  const hours = Math.floor(totalSeconds / 3_600);
-  const minutes = Math.floor((totalSeconds % 3_600) / 60);
-  const seconds = totalSeconds % 60;
-
-  if (hours > 0) {
-    return `${hours}h ${String(minutes).padStart(2, '0')}m`;
-  }
-  if (minutes > 0) {
-    return `${minutes}m ${String(seconds).padStart(2, '0')}s`;
-  }
-
-  return `${seconds}s`;
 };

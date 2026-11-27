@@ -159,11 +159,11 @@ export async function loadRepositories(
     );
 
     return data.workspaceLocalRepositories.map((repository) => ({
-      // The branch the checkout is actually on; the repository's default only
-      // until the first inspection scan lands. Showing the default for every
-      // row made a worktree on `feat/x` read as `main`.
-      branch:
-        repository.gitCurrentBranch ?? repository.gitDefaultBranch ?? undefined,
+      // The branch the checkout is actually on, once scanned. The default is
+      // carried separately so a surface labels it instead of presenting it as
+      // current (a worktree on `feat/x` must never read as `main`).
+      branch: repository.gitCurrentBranch ?? undefined,
+      defaultBranch: repository.gitDefaultBranch ?? undefined,
       displayName: repository.displayName,
       filesystemPath: repository.filesystemPath,
       id: repository.id,

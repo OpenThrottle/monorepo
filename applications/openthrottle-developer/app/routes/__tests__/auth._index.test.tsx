@@ -12,7 +12,9 @@ const composerData = Promise.resolve({
   defaultAgent: null,
   models: [{ id: 'model-1', label: 'GPT-4' }],
   personas: [{ id: 'persona-1', label: 'Engineer' }],
-  repositories: [{ displayName: 'monorepo', id: 'repo-1' }],
+  repositories: [
+    { defaultBranch: undefined, displayName: 'monorepo', id: 'repo-1' },
+  ],
 });
 
 const matches: Route.ComponentProps['matches'] = [

@@ -27,6 +27,7 @@ const openaiModel: ChatModelOption = {
 };
 
 const repository: RepositoryOption = {
+  defaultBranch: undefined,
   displayName: 'monorepo',
   id: 'repo-1',
 };
@@ -89,6 +90,7 @@ describe('useRunSkillDialog', () => {
 
   test('setRepositoryId writes through the shared toolbar atom', () => {
     const secondRepository: RepositoryOption = {
+      defaultBranch: undefined,
       displayName: 'other',
       id: 'repo-2',
     };

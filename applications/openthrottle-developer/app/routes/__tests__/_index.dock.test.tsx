@@ -7,6 +7,7 @@ import { createRoutesStub } from 'react-router';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/_index';
+import { HOME_HERO_COPY } from '~/routing/home/data/copy';
 import { buildRootMatch } from '~/testing/buildRootMatch';
 
 import Index from '../_index';
@@ -164,7 +165,7 @@ describe('routes/_index.tsx docked composer', () => {
     await component.findByTestId('ChatComposer');
 
     expect(
-      component.queryByText('What would you like to build today?'),
+      component.queryByText(HOME_HERO_COPY.heading),
     ).not.toBeInTheDocument();
   });
 

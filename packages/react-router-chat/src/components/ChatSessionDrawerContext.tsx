@@ -1,13 +1,12 @@
-import { cn } from '@openthrottle/react-router-shadcn';
 import * as React from 'react';
 
-import { CHAT_CONTEXT_METER_TONE_CLASSES } from '../data/chat-context-meter.classes';
 import { CHAT_SESSION_DRAWER_COPY } from '../data/copy';
 import type { ChatMessage } from '../types';
 import {
   formatWindowLabel,
   summarizeSessionContext,
 } from '../utils/session-context';
+import { ChatContextMeterBar } from './ChatContextMeterBar';
 
 export interface ChatSessionDrawerContextProps {
   readonly messages: readonly ChatMessage[];
@@ -70,17 +69,7 @@ export const ChatSessionDrawerContext = (
           data-testid="ChatSessionDrawerContext-window"
           role="meter"
         >
-          <span className="bg-muted relative h-1.5 w-full overflow-hidden rounded-full">
-            <span
-              className={cn(
-                'absolute inset-y-0 left-0 rounded-full',
-                CHAT_CONTEXT_METER_TONE_CLASSES[window.tone],
-              )}
-              data-testid="ChatSessionDrawerContext-fill"
-              data-tone={window.tone}
-              style={{ width: `${window.percent}%` }}
-            />
-          </span>
+          <ChatContextMeterBar className="w-full" fill={window} />
           <span className="text-muted-foreground text-xs tabular-nums">
             {windowLabel}
           </span>

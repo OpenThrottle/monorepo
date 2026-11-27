@@ -1,8 +1,10 @@
+import { fillTemplate } from '@openthrottle/nodejs-utils';
 import type { RenderResult } from '@testing-library/react';
 import { render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
+import { CHAT_CHECKOUT_ROW_COPY } from '../../data/copy';
 import type { ChatCheckoutSelectorTriggerProps } from '../ChatCheckoutSelectorTrigger';
 import { ChatCheckoutSelectorTrigger } from '../ChatCheckoutSelectorTrigger';
 
@@ -11,7 +13,7 @@ const renderTrigger = (
 ): RenderResult => {
   return render(
     <ChatCheckoutSelectorTrigger
-      branch="main"
+      branch={{ name: 'main', source: 'current' }}
       enabled={true}
       label="openthrottle/monorepo"
       secondaryCount={2}
@@ -33,6 +35,19 @@ describe('ChatCheckoutSelectorTrigger Component', () => {
     expect(
       component.getByTestId('ChatCheckoutSelector-branch'),
     ).toHaveTextContent('main');
+  });
+
+  test('labels a not-yet-scanned default branch as the default', () => {
+    const component = renderTrigger({
+      branch: { name: 'main', source: 'default' },
+    });
+
+    const branch = component.getByTestId('ChatCheckoutSelector-branch');
+    expect(branch).toHaveAttribute('data-branch-source', 'default');
+    expect(branch).toHaveAttribute(
+      'title',
+      fillTemplate(CHAT_CHECKOUT_ROW_COPY.branchDefault, { branch: 'main' }),
+    );
   });
 
   test('renders icon-only in minimal mode', () => {
@@ -62,6 +77,7 @@ describe('ChatCheckoutSelectorTrigger Component', () => {
     const ref = React.createRef<HTMLButtonElement>();
     const component = render(
       <ChatCheckoutSelectorTrigger
+        branch={undefined}
         data-state="open"
         enabled={true}
         label="openthrottle"

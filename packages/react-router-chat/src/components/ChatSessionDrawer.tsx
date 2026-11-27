@@ -12,6 +12,7 @@ import type {
   ChatSessionEnvironment,
 } from '../types';
 import { deriveSessionFiles } from '../utils/deriveSessionFiles';
+import { deriveSessionMcpServers } from '../utils/session-mcp-servers';
 import { ChatSessionDrawerChanges } from './ChatSessionDrawerChanges';
 import { ChatSessionDrawerContext } from './ChatSessionDrawerContext';
 import { ChatSessionDrawerEnvironment } from './ChatSessionDrawerEnvironment';
@@ -66,16 +67,23 @@ export const ChatSessionDrawer = (
   const touchedFiles = React.useMemo(() => {
     return deriveSessionFiles(messages, rootPath);
   }, [messages, rootPath]);
+  const mcpServers = React.useMemo(() => {
+    return deriveSessionMcpServers(messages);
+  }, [messages]);
 
   // Setup
   const copy = CHAT_SESSION_DRAWER_COPY;
   const sections = CHAT_SESSION_DRAWER_SECTIONS;
   const liveDiff = changes.diff?.available === true ? changes.diff : undefined;
+
+  // Handlers
+
+  // Markup
   const sectionFor = (
     sectionId: string,
     title: string,
     body: React.ReactNode,
-  ) => {
+  ): React.ReactElement => {
     return (
       <ChatSessionDrawerSection
         isCollapsed={collapsedSections.includes(sectionId)}
@@ -87,10 +95,6 @@ export const ChatSessionDrawer = (
       </ChatSessionDrawerSection>
     );
   };
-
-  // Handlers
-
-  // Markup
   const closeButton = (
     <Button
       aria-label={copy.closeLabel}
@@ -141,6 +145,7 @@ export const ChatSessionDrawer = (
           <ChatSessionDrawerEnvironment
             environment={environment}
             headBranch={liveDiff?.headBranch}
+            mcpServers={mcpServers}
             pullRequest={liveDiff?.pullRequest}
           />,
         )}

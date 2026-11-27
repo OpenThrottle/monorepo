@@ -14,6 +14,7 @@ import type {
   MutateAgentConversationGroupResult,
   MutateAgentConversationResult,
 } from './types';
+import { parseJson } from './utils/json';
 
 /**
  * @description Pinning and user-defined groups for the chat conversations
@@ -114,13 +115,9 @@ const parseGroupIds = (value: FormDataEntryValue | null): string[] | null => {
   if (typeof value !== 'string') {
     return null;
   }
-  try {
-    const parsed: unknown = JSON.parse(value);
+  const parsed = parseJson(value);
 
-    return isStringArray(parsed) && parsed.length > 0 ? parsed : null;
-  } catch {
-    return null;
-  }
+  return isStringArray(parsed) && parsed.length > 0 ? parsed : null;
 };
 
 const toAgentConversationGroup = (

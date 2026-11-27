@@ -74,6 +74,7 @@ export const useRunSkillDialog = (
   const checkouts = React.useMemo(
     () =>
       repositories.map((repository) => ({
+        defaultBranch: undefined,
         id: repository.id,
         label: repository.displayName,
       })),

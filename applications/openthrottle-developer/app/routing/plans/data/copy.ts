@@ -201,8 +201,6 @@ export const PLAN_RUN_OT_LOOP_COPY = {
 export const PLAN_RUN_GATING_COPY = {
   /** Why Run is disabled while the run branch is blank (the toolbar tooltip and the Run dialog). */
   branchRequired: `Set the git branch in Configuration → Workspace before running (branch is required).`,
-  /** Server-side refusal when a run is submitted with no branch. */
-  missingBranch: `Cannot start a run without a branch. Wait for the workspace to finish loading, then try again.`,
   /**
    * Shown while `workspaceRepositories` is still resolving. Deliberately phrased
    * as progress, not as a validation failure: the run config is not invalid, it
@@ -314,11 +312,8 @@ export const LINKED_ARTIFACTS_PANEL_COPY = {
 } as const;
 
 export const PLAN_TAB_OUTPUT_COPY = {
-  agentOutputHeading: `Agent output`,
   linkedArtifactsEmpty: `No linked artifacts yet. Artifacts appear here once a run produces and links them.`,
   linkedArtifactsHeading: `Linked artifacts`,
-  ruleChangeLogEmpty: `No rule changes recorded yet. Evaluating rules records applications here.`,
-  ruleChangeLogHeading: `Rule applications`,
 } as const;
 
 /**
@@ -504,7 +499,6 @@ export const PLAN_RUN_MODEL_EFFORT_COPY = {
  */
 export const PLAN_RUN_STATUS_CELL_COPY = {
   cancelledBadge: `Cancelled`,
-  columnLabel: `Status`,
   completedBadge: `Completed`,
   failedBadge: `Failed`,
   firesPrefix: `Fires at`,
@@ -533,7 +527,6 @@ export const PLAN_RUN_STATUS_CELL_COPY = {
  * Cancelling removes only that scheduled run; live runs and plan/task status are untouched. "Keep it scheduled" is the dialog dismissal so it does not read as a second "Cancel".
  */
 export const PLAN_RUN_CANCEL_SCHEDULED_COPY = {
-  actionsColumnLabel: `Actions`,
   ariaLabel: `Cancel scheduled run`,
   confirmLabel: `Cancel run`,
   dialogBody: `This scheduled run will not fire. The plan, its tasks and any run that is already active are left as they are.`,
@@ -610,22 +603,6 @@ export const PLAN_SCHEDULE_CONFIRM_COPY = {
   unscheduleConfirmLabel: `Unschedule`,
   unscheduleLabel: `Unschedule`,
   unschedulePendingLabel: `Unscheduling…`,
-} as const;
-
-/**
- * @description Plans index row Actions menu (Queue + optional Kill run).
- */
-export const PLANS_ROW_ACTIONS_COPY = {
-  killCancel: `Cancel`,
-  killConfirm: `Kill run`,
-  killDescriptionSuffix: `or signals an active run to terminate. Task or plan edits are not deleted.`,
-  killPendingLabel: `Stopping…`,
-  killTitle: `Kill plan run?`,
-  menuAriaLabelPrefix: `Plan actions for`,
-  queue: `Queue plan`,
-  queueAriaLabelSuffix: `with default worker tuning (open plan details to set Workflow run options)`,
-  queuePendingLabel: `Queuing…`,
-  view: `View plan`,
 } as const;
 
 /**

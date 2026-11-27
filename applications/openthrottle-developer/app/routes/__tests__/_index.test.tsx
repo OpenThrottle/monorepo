@@ -10,6 +10,7 @@ import * as React from 'react';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import type { Route } from '@/app/routes/+types/_index';
+import { HOME_HERO_COPY } from '~/routing/home/data/copy';
 import { buildRootMatch } from '~/testing/buildRootMatch';
 import { renderRouteHarness } from '~/testing/route-fixtures';
 
@@ -71,9 +72,7 @@ describe('routes/_index.tsx', () => {
     );
 
     // Shell (hero) paints immediately — not blocked on the deferred composer.
-    expect(
-      view.getByText('What would you like to build today?'),
-    ).toBeInTheDocument();
+    expect(view.getByText(HOME_HERO_COPY.heading)).toBeInTheDocument();
 
     // The composer streams in behind Suspense once composerData resolves; with
     // no models it renders disabled with the discovery hint.
@@ -98,9 +97,7 @@ describe('routes/_index.tsx', () => {
     );
 
     // Shell is present, and the fallback skeleton stands in for the composer.
-    expect(
-      view.getByText('What would you like to build today?'),
-    ).toBeInTheDocument();
+    expect(view.getByText(HOME_HERO_COPY.heading)).toBeInTheDocument();
     expect(view.getByTestId('HomeComposerSkeleton')).toBeInTheDocument();
     expect(view.getByText('Discovering models…')).toBeInTheDocument();
     expect(view.queryByTestId('ChatComposer')).not.toBeInTheDocument();
@@ -121,7 +118,9 @@ describe('routes/_index.tsx toolbar persistence', () => {
         { description: 'cursor-agent', groupId: 'cursor', id: 'cursor', label: 'cursor-agent', subLabel: 'cursor-agent' }, // prettier-ignore
       ],
       personas: [{ id: 'p1', label: 'Persona One' }],
-      repositories: [{ displayName: 'Repo One', id: 'r1' }],
+      repositories: [
+        { defaultBranch: undefined, displayName: 'Repo One', id: 'r1' },
+      ],
     }),
     sessionDrawer: { collapsedSections: [], isOpen: false },
   };
@@ -192,9 +191,7 @@ describe('routes/_index.tsx toolbar persistence', () => {
     );
 
     // Shell renders immediately despite the stale ids...
-    expect(
-      component.getByText('What would you like to build today?'),
-    ).toBeInTheDocument();
+    expect(component.getByText(HOME_HERO_COPY.heading)).toBeInTheDocument();
 
     // ...and once the composer streams in and reconciliation runs, it is
     // derive-only: the stale blob is NOT rewritten to storage.

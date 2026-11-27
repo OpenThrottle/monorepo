@@ -15,7 +15,7 @@ import {
   hasRunUsage,
   runUsageRows,
 } from '~/routing/schedule/utils/format-usage';
-import { formatDuration } from '~/routing/schedule/utils/formatDuration';
+import { formatRunDuration } from '~/routing/schedule/utils/formatRunDuration';
 import { formatWhen } from '~/routing/schedule/utils/formatWhen';
 import { runUsageLimitRows } from '~/routing/schedule/utils/runUsageLimitRows';
 
@@ -70,7 +70,7 @@ export const RunDetail = (props: RunDetailProps): React.ReactElement => {
     { label: fields.exitCode, value: run.exitCode ?? '—' },
     {
       label: fields.duration,
-      value: formatDuration(run.startedAt, run.finishedAt),
+      value: formatRunDuration(run.startedAt, run.finishedAt),
     },
     {
       label: fields.bullmqJobId,

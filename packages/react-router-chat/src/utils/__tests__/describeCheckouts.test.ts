@@ -10,28 +10,37 @@ import { describeCheckouts } from '../describeCheckouts';
  */
 const REPORTED: readonly ChatCheckoutOption[] = [
   {
+    defaultBranch: undefined,
     filesystemPath: '/Users/matt/Development/openthrottle',
     id: 'ot',
     label: 'monorepo',
     remoteUrl: 'git@github.com:openthrottle/monorepo.git',
   },
   {
+    defaultBranch: undefined,
     filesystemPath: '/Users/matt/Work/monorepo',
     id: 'ss',
     label: 'monorepo',
     remoteUrl: 'git@github.com:shiftsmart/monorepo.git',
   },
   {
+    defaultBranch: undefined,
     id: 'na',
     label: 'native-apps',
     remoteUrl: 'git@github.com:shiftsmart/native-apps.git',
   },
   {
+    defaultBranch: undefined,
     id: 'nna',
     label: 'nativeapps',
     remoteUrl: 'git@github.com:visormatt/nativeapps.git',
   },
-  { filesystemPath: '/Users/matt/scratch/sandbox', id: 'sb', label: 'sandbox' },
+  {
+    defaultBranch: undefined,
+    filesystemPath: '/Users/matt/scratch/sandbox',
+    id: 'sb',
+    label: 'sandbox',
+  },
 ];
 
 const byId = (
@@ -73,12 +82,14 @@ describe('describeCheckouts', () => {
     // A worktree beside its primary: same name, same owner, same repo.
     const worktrees: readonly ChatCheckoutOption[] = [
       {
+        defaultBranch: undefined,
         filesystemPath: '/Users/matt/Development/openthrottle',
         id: 'primary',
         label: 'monorepo',
         remoteUrl: 'git@github.com:openthrottle/monorepo.git',
       },
       {
+        defaultBranch: undefined,
         filesystemPath: '/Users/matt/Development/openthrottle-worktrees/loop',
         id: 'worktree',
         label: 'monorepo',
@@ -96,8 +107,8 @@ describe('describeCheckouts', () => {
 
   it('degrades to the bare name when everything is ambiguous', () => {
     const hopeless: readonly ChatCheckoutOption[] = [
-      { id: 'a', label: 'monorepo' },
-      { id: 'b', label: 'monorepo' },
+      { defaultBranch: undefined, id: 'a', label: 'monorepo' },
+      { defaultBranch: undefined, id: 'b', label: 'monorepo' },
     ];
 
     expect(describeCheckouts(hopeless)).toEqual([

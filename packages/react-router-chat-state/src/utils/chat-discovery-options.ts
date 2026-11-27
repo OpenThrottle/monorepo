@@ -137,11 +137,13 @@ export interface DiscoveredPersonaPrompt {
  */
 export interface RepositoryOption {
   /**
-   * Default branch of the checkout, when the discovery query selected it. Shown
-   * as a chip beside the row so two checkouts of the same repository are
-   * tellable apart.
+   * The branch the checkout is actually on, once an inspection scan has
+   * reported it. Shown as a chip beside the row so two checkouts of the same
+   * repository are tellable apart. Never the repository default.
    */
   readonly branch?: string;
+  /** The repository's default branch; the labelled fallback before the first scan. */
+  readonly defaultBranch: string | undefined;
   readonly displayName: string;
   /**
    * Absolute path on the server host. The disambiguation fallback for a
@@ -423,6 +425,7 @@ export function toCheckoutOptions(
 ): ChatCheckoutOption[] {
   return repositories.map((repository) => ({
     branch: repository.branch,
+    defaultBranch: repository.defaultBranch,
     filesystemPath: repository.filesystemPath,
     id: repository.id,
     kind: repository.kind,

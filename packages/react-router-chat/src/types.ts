@@ -116,9 +116,22 @@ export interface ChatTurnUsageEvent {
   readonly usageJson: string | null;
 }
 
+/**
+ * @description One MCP server the agent CLI reported connecting at session start.
+ *
+ * @public
+ */
+export interface ChatMcpServer {
+  readonly name: string;
+  /** The CLI's own status word (`connected`, `failed`, `needs-auth`, ...). */
+  readonly status: string;
+}
+
 /** Backend session handle confirmation (e.g. a resumed cursor chat id). @public */
 export interface ChatTurnSessionEvent {
   readonly kind: 'session';
+  /** MCP servers the CLI reported at init; undefined when the backend reports none. */
+  readonly mcpServers: readonly ChatMcpServer[] | undefined;
   readonly sessionId: string | null;
   readonly sortOrder: number;
 }
@@ -538,8 +551,17 @@ export type ChatCheckoutKindValue =
   (typeof CHAT_CHECKOUT_KIND)[ChatCheckoutKindKey];
 
 export interface ChatCheckoutOption {
-  /** Current branch shown alongside the checkout (e.g. `main`), when known. */
+  /**
+   * The branch the checkout is on right now, when an inspection scan has
+   * reported it. Never the repository default: that is {@link defaultBranch},
+   * so a surface cannot present a guess as the current branch.
+   */
   readonly branch?: string;
+  /**
+   * The repository's default branch. Shown as a fallback only, and labelled as
+   * the default, when {@link branch} is not yet known.
+   */
+  readonly defaultBranch: string | undefined;
   /**
    * Absolute path on the host. The row/trigger qualifier of last resort — used
    * when there is no remote to derive `owner/name` from, or when `owner/name`
@@ -993,10 +1015,25 @@ export type ChatSessionDiff =
   ChatSessionDiffAvailable | ChatSessionDiffUnavailable;
 
 /**
+ * @description Builds a deep link that opens a file in the user's editor from the file's path
+ * as the drawer shows it; returns null for a file it cannot link.
+ *
+ * @public
+ */
+export type ChatFileHrefBuilder = (path: string) => string | null;
+
+/**
  * The session drawer's Changes state, owned by the host: the checkout's diff, the selected
  * file and its lazily loaded patch, and the callbacks that drive them.
  */
 export interface ChatSessionChanges {
+  /**
+   * Deep link that opens a file in the user's editor, given the file's path as the
+   * drawer shows it (relative to the checkout). Undefined when the host has no editor or
+   * checkout path; returns null for a file it cannot link. The drawer hides the control
+   * in both cases.
+   */
+  readonly buildFileHref: ChatFileHrefBuilder | undefined;
   /** The checkout's changes; undefined until fetched or when no checkout is known. */
   readonly diff: ChatSessionDiff | undefined;
   readonly isLoading: boolean;

@@ -48,6 +48,7 @@ vi.mock('node:fs', () => ({
   statSync: mockStatSync,
 }));
 
+import { GitRunnerService } from '../git-runner/git-runner.service.ts';
 import { MAX_DISCOVERED_WORKTREES } from './worktree-discovery.constants.ts';
 import {
   MISSING_CHECKOUT_REASON,
@@ -228,6 +229,7 @@ const build = (
     asMock<UserWorkspaceSettingsRepository>(
       createUserWorkspaceSettingsRepositoryMock(),
     ),
+    new GitRunnerService(),
   );
 };
 

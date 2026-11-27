@@ -77,6 +77,7 @@ export async function loadRepositories(
     );
 
     return data.workspaceLocalRepositories.map((repository) => ({
+      defaultBranch: undefined,
       displayName: repository.displayName,
       id: repository.id,
     }));

@@ -1,16 +1,28 @@
+import { fillTemplate } from '@openthrottle/nodejs-utils';
 import type { RenderResult } from '@testing-library/react';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
+import { CHAT_CHECKOUT_ROW_COPY } from '../../data/copy';
 import type { ChatCheckoutOption } from '../../types';
 import type { ChatCheckoutSelectorProps } from '../ChatCheckoutSelector';
 import { ChatCheckoutSelector } from '../ChatCheckoutSelector';
 
 const CHECKOUTS: readonly ChatCheckoutOption[] = [
-  { branch: 'main', id: 'repo-a', label: 'openthrottle' },
-  { branch: 'develop', id: 'repo-b', label: 'playground' },
+  {
+    branch: 'main',
+    defaultBranch: undefined,
+    id: 'repo-a',
+    label: 'openthrottle',
+  },
+  {
+    branch: 'develop',
+    defaultBranch: undefined,
+    id: 'repo-b',
+    label: 'playground',
+  },
 ];
 
 const renderSelector = (
@@ -73,7 +85,7 @@ describe('ChatCheckoutSelector Component', () => {
 
 const CHECKOUTS_THREE: readonly ChatCheckoutOption[] = [
   ...CHECKOUTS,
-  { branch: 'main', id: 'repo-c', label: 'showroom' },
+  { branch: 'main', defaultBranch: undefined, id: 'repo-c', label: 'showroom' },
 ];
 
 const renderMulti = (
@@ -207,6 +219,7 @@ describe('ChatCheckoutSelector Component — multiple mode', () => {
 const LOOKALIKES: readonly ChatCheckoutOption[] = [
   {
     branch: 'main',
+    defaultBranch: undefined,
     filesystemPath: '/Users/matt/Development/openthrottle',
     id: 'ot',
     label: 'monorepo',
@@ -215,12 +228,14 @@ const LOOKALIKES: readonly ChatCheckoutOption[] = [
   },
   {
     branch: 'trunk',
+    defaultBranch: undefined,
     filesystemPath: '/Users/matt/Work/monorepo',
     id: 'ss',
     label: 'monorepo',
     remoteUrl: 'git@github.com:shiftsmart/monorepo.git',
   },
   {
+    defaultBranch: undefined,
     filesystemPath: '/Users/matt/scratch/sandbox',
     id: 'sb',
     label: 'sandbox',
@@ -275,6 +290,7 @@ describe('ChatCheckoutSelector Component — disambiguation', () => {
     const component = renderLookalikes({
       checkouts: [
         {
+          defaultBranch: undefined,
           id: 'np',
           label: 'monorepo',
           remoteUrl: 'git@github.com:openthrottle/monorepo.git',
@@ -296,6 +312,7 @@ describe('ChatCheckoutSelector Component — disambiguation', () => {
       checkouts: [
         {
           branch: 'openthrottle/plan-0b6dfaf8',
+          defaultBranch: undefined,
           filesystemPath: `/Users/matt/.openthrottle/worktrees/OpenThrottle/monorepo/plan-0b6dfaf8`,
           id: 'wt',
           kind: 'worktree',
@@ -304,6 +321,7 @@ describe('ChatCheckoutSelector Component — disambiguation', () => {
         },
         {
           branch: 'main',
+          defaultBranch: undefined,
           filesystemPath: '/Users/matt/Development/openthrottle/monorepo',
           id: 'main',
           kind: 'primary',
@@ -327,6 +345,22 @@ describe('ChatCheckoutSelector Component — disambiguation', () => {
     expect(
       component.getByTestId('ChatCheckoutSelector-row-branch-wt'),
     ).toHaveAttribute('title', 'openthrottle/plan-0b6dfaf8');
+  });
+
+  test('labels a row whose current branch is not yet scanned as the default', async () => {
+    const user = userEvent.setup();
+    const component = renderLookalikes({
+      checkouts: [{ defaultBranch: 'main', id: 'np', label: 'monorepo' }],
+      selectedCheckoutId: 'np',
+    });
+    await user.click(component.getByTestId('ChatCheckoutSelector-trigger'));
+
+    const row = component.getByTestId('ChatCheckoutSelector-row-branch-np');
+    expect(row).toHaveAttribute('data-branch-source', 'default');
+    expect(row).toHaveAttribute(
+      'title',
+      fillTemplate(CHAT_CHECKOUT_ROW_COPY.branchDefault, { branch: 'main' }),
+    );
   });
 
   test('groups rows under their owner, with the remote-less ones last', async () => {
@@ -446,6 +480,7 @@ describe('ChatCheckoutSelector Component — disambiguation', () => {
 const SHARED_PATH_PREFIX: readonly ChatCheckoutOption[] = [
   {
     branch: 'main',
+    defaultBranch: undefined,
     filesystemPath: '/Users/matt/Development/openthrottle',
     id: 'mine',
     label: 'monorepo',
@@ -454,6 +489,7 @@ const SHARED_PATH_PREFIX: readonly ChatCheckoutOption[] = [
   },
   {
     branch: 'main',
+    defaultBranch: undefined,
     filesystemPath: '/Users/matt/Development/shiftsmart-monorepo',
     id: 'work-mono',
     label: 'monorepo',
@@ -461,6 +497,7 @@ const SHARED_PATH_PREFIX: readonly ChatCheckoutOption[] = [
   },
   {
     branch: 'develop',
+    defaultBranch: undefined,
     filesystemPath: '/Users/matt/Development/nativeapps',
     id: 'work-native',
     label: 'nativeapps',
