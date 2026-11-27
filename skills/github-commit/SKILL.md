@@ -4,8 +4,8 @@ description: Stage changes and create a conventional commit from the current dif
 compatibility: 'git; the github-pull-request skill supplies the repo resolver and attribution guard'
 metadata:
   author: openthrottle
-  last-reviewed: '2026-11-22'
-  version: '1.3.0'
+  last-reviewed: '2026-11-27'
+  version: '1.4.0'
 ---
 
 ## Resolve the host repo first
@@ -58,8 +58,33 @@ that is what keeps the commit traceable to its plan (see the `ot-plans` skill). 
 task rather than letting uncommitted work pile up. Work that is not an OpenThrottle plan carries
 neither footer.
 
-**The commit landing is the finish line.** Once `git log -1` shows it, report the outcome in the
-same step ([§ Report the outcome](#report-the-outcome)); if a hook stopped it, report `error`.
+## Verify the commit landed
+
+**The commit landing is the finish line, and "no error on screen" is not proof of it.** A hook that
+rejects the message prints a few lines among dozens of lint-staged and audit lines, and the commit
+quietly does not happen. Prove it instead:
+
+```bash
+before="$(git rev-parse -q --verify HEAD)"
+git commit -F "$msg_file"; rc=$?
+after="$(git rev-parse -q --verify HEAD)"
+if [ "$rc" -ne 0 ] || [ "$after" = "$before" ]; then echo "COMMIT DID NOT LAND (exit $rc)"; fi
+git log -1 --format='%(trailers:key=Task-Id,valueonly)'   # an OT task: must print its id
+```
+
+- **Never pipe `git commit` into `grep`, `tail` or `head`.** The pipeline exits with the filter's
+  status, not the commit's, so a rejected commit and a clean one look the same. Filtering the
+  output for `error` or `✖` is exactly how a refused commit once went unnoticed. To trim the
+  output, add `set -o pipefail;` first, and still check that HEAD moved.
+- **Check the header length before committing** when commitlint caps it (`header-max-length` in
+  `COMMITLINT_CONFIG`; 100 in this monorepo): `head -1 "$msg_file" | awk '{ print length }'`. With
+  `COMMITLINT_CONFIG` a path, `npx --no-install commitlint < "$msg_file"` runs every rule the hook
+  will.
+- **On a rejection, fix the message and commit again.** Never call the work committed until HEAD
+  has moved and, for an OT task, `git log -1` shows its `Task-Id:`.
+
+Once it has landed, report the outcome in the same step ([§ Report the outcome](#report-the-outcome));
+if a hook stopped it, report `error`.
 
 ## Safety
 
