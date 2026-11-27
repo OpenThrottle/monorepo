@@ -1120,6 +1120,14 @@ that also keep a `data/` folder. It reports a function declaration, a `const` bo
 arrow or function expression, or a local function exported by specifier or `default`; a
 re-export (`export … from`) is left to the file it names.
 
+A function **nested** inside a data object or array is the same logic in a data costume —
+an entry like ``count: (n) => `${n} rows` `` in a `data/copy.ts` object, or a method on a
+fixture. Write copy with a variable as a `{token}` template the caller fills with
+[`fillTemplate`](#fill-copy-templates-with-filltemplate), and move anything else to `utils/`.
+`openthrottle/data-nested-function` reports it, through `as const` and `satisfies`, at `warn`
+in the same `dataFolderEslintConfig`: it landed with 83 legacy sites (developer 77, website 4,
+react-router-shadcn 2) and flips to `error` once they are templates.
+
 ### Named functions use block bodies
 
 A function bound to a name — a `const` declarator or a class property — has a block body

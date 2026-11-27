@@ -31,6 +31,7 @@ import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import { teardown as teardownForeignSkillLayer } from '@openthrottle/openthrottle-agentic-utils';
 import { In } from 'typeorm';
 
+import { GitRunnerService } from '../git-runner/git-runner.service.ts';
 import { OT_WORKTREE_ACTION } from '../ot-worktree-script/ot-worktree-script.constants.ts';
 import { resolveOtWorktreeScript } from '../ot-worktree-script/ot-worktree-script.utils.ts';
 import { realPath } from '../paths/real-path/real-path.utils.ts';
@@ -82,6 +83,7 @@ export class PlanRunWorktreeTeardownService {
     private readonly logger: LoggerService,
     private readonly checkoutsRepository: RepositoryCheckoutsRepository,
     private readonly planRunsRepository: PlanRunsRepository,
+    private readonly gitRunner: GitRunnerService,
   ) {
     this.logger.debug(`🧩 ${this.name} 🧩`);
   }
@@ -231,7 +233,7 @@ export class PlanRunWorktreeTeardownService {
       );
     }
 
-    const identity = this.checkPlanRunWorktreeIdentity(
+    const identity = await this.checkPlanRunWorktreeIdentity(
       resolved,
       baseCheckoutPath,
     );
@@ -283,10 +285,10 @@ export class PlanRunWorktreeTeardownService {
    * @description Null when the path is a linked worktree named `plan-<8 hex>` directly under the
    * resolved worktree root; otherwise the reason it is not one.
    */
-  private checkPlanRunWorktreeIdentity(
+  private async checkPlanRunWorktreeIdentity(
     resolvedWorktreePath: string,
     baseCheckoutPath: string,
-  ): string | null {
+  ): Promise<string | null> {
     if (!isLinkedWorktreeDirectory(resolvedWorktreePath)) {
       return 'it is not a linked git worktree';
     }
@@ -294,7 +296,12 @@ export class PlanRunWorktreeTeardownService {
       return 'its name is not plan-<8 hex>, so the server did not provision it';
     }
 
-    const root = resolveWorktreeRoot({ baseCheckoutPath }).resolvedRoot;
+    const originRemote =
+      await this.gitRunner.readOriginRemote(baseCheckoutPath);
+    const root = resolveWorktreeRoot({
+      baseCheckoutPath,
+      originRemote,
+    }).resolvedRoot;
     if (dirname(resolvedWorktreePath) !== realPath(root)) {
       return `it is not directly under the worktree root ${root}`;
     }

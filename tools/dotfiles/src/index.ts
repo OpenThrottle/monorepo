@@ -16,6 +16,7 @@ import { agentCliSpawnChokepoint } from './rules/agentCliSpawnChokepoint.ts';
 import { asConstEnumShape } from './rules/asConstEnumShape.ts';
 import { componentPrimitiveShape } from './rules/componentPrimitiveShape.ts';
 import { dataFileShape } from './rules/dataFileShape.ts';
+import { dataNestedFunction } from './rules/dataNestedFunction.ts';
 import { disableRequiresReason } from './rules/disableRequiresReason.ts';
 import { fileHeaderFirst } from './rules/fileHeaderFirst.ts';
 import { hookPrimitiveShape } from './rules/hookPrimitiveShape.ts';
@@ -24,6 +25,7 @@ import { mcpToolRegistration } from './rules/mcpToolRegistration.ts';
 import { namedFunctionBlockBody } from './rules/namedFunctionBlockBody.ts';
 import { nestjsFileExports } from './rules/nestjsFileExports.ts';
 import { nestjsFileNaming } from './rules/nestjsFileNaming.ts';
+import { noCrossAreaRouteImport } from './rules/noCrossAreaRouteImport.ts';
 import { noFireEvent } from './rules/noFireEvent.ts';
 import { noHandRolledTemplateFill } from './rules/noHandRolledTemplateFill.ts';
 import { noPerTestTimeout } from './rules/noPerTestTimeout.ts';
@@ -289,6 +291,7 @@ export const eslintConfig = tslint.config([
           'as-const-enum-shape': asConstEnumShape,
           'component-primitive-shape': componentPrimitiveShape,
           'data-file-shape': dataFileShape,
+          'data-nested-function': dataNestedFunction,
           'disable-requires-reason': disableRequiresReason,
           'file-header-first': fileHeaderFirst,
           'hook-primitive-shape': hookPrimitiveShape,
@@ -297,6 +300,7 @@ export const eslintConfig = tslint.config([
           'named-function-block-body': namedFunctionBlockBody,
           'nestjs-file-exports': nestjsFileExports,
           'nestjs-file-naming': nestjsFileNaming,
+          'no-cross-area-route-import': noCrossAreaRouteImport,
           'no-fire-event': noFireEvent,
           'no-hand-rolled-template-fill': noHandRolledTemplateFill,
           'no-per-test-timeout': noPerTestTimeout,
@@ -906,6 +910,21 @@ export const eslintConfig = tslint.config([
   },
 
   /**
+   * Route areas do not import each other (ot-folders promotion ladder;
+   * ot-code-review `place-05`): `app/routing/<a>/` reaching into
+   * `~/routing/<b>/` is promoted to `app/global/`. Only React Router apps have
+   * `app/routing/`, so the glob scopes it. **warn-first**: 137 cross-area
+   * imports existed when the rule landed (developer app almost entirely), so
+   * `error` would break lint repo-wide; each app ratchets once clean.
+   */
+  {
+    files: ['**/app/routing/**/*.{ts,tsx}'],
+    rules: {
+      'openthrottle/no-cross-area-route-import': 'warn',
+    },
+  },
+
+  /**
    * The shadcn primitive variant — root-cwd coverage
    * (docs/monorepo/component-shape-shadcn-variant.md). `nx lint` runs each
    * project with cwd at the package, where a `packages/react-router-shadcn/**`
@@ -1108,6 +1127,10 @@ export const nestjsEslintConfig = tslint.config([
  * tell those projects from the Node packages that also have a `data/` folder.
  * `error` since the migration (plan a8cb40e5, "Migrate the data/ folder
  * violations") brought every consumer to zero.
+ *
+ * `openthrottle/data-nested-function` (a function inside a data object, such as
+ * a `data/copy.ts` entry `count: (n) => …`) is `warn`: 83 such entries existed
+ * when it landed. Flip it to `error` once they are `{token}` templates.
  * @public
  */
 export const dataFolderEslintConfig = tslint.config([
@@ -1124,6 +1147,7 @@ export const dataFolderEslintConfig = tslint.config([
     ],
     rules: {
       'openthrottle/data-file-shape': 'error',
+      'openthrottle/data-nested-function': 'warn',
     },
   },
 ]);

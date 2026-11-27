@@ -4,6 +4,8 @@
  * axis label so a reader never has to guess which clock the chart is on.
  */
 
+import { formatDuration } from '@openthrottle/nodejs-utils';
+
 /** Full timestamp for a tooltip or popover. */
 export const formatTimelineTimestamp = (
   value: Date | number | string,
@@ -45,13 +47,5 @@ export const timelineZoneLabel = (): string => {
 export const formatTimelineDuration = (ms: number): string => {
   if (ms < 1000) return '<1s';
 
-  const totalSeconds = Math.floor(ms / 1000);
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-
-  if (hours > 0) return `${hours}h ${minutes}m`;
-  if (minutes > 0) return `${minutes}m ${seconds}s`;
-
-  return `${seconds}s`;
+  return formatDuration(ms, { rounding: 'floor' });
 };

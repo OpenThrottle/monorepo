@@ -22,6 +22,7 @@ import { LoggerService } from '@openthrottle/nestjs-modules';
 import { toErrorMessage } from '@openthrottle/nodejs-utils';
 import { UnrecoverableError } from 'bullmq';
 
+import { GitRunnerService } from '../git-runner/git-runner.service.ts';
 import { OT_WORKTREE_ACTION } from '../ot-worktree-script/ot-worktree-script.constants.ts';
 import { resolveOtWorktreeScript } from '../ot-worktree-script/ot-worktree-script.utils.ts';
 import { resolveWorktreeRoot } from '../worktree-root/worktree-root.utils.ts';
@@ -57,7 +58,10 @@ export class PlanRunWorktreeProvisionService {
   /** Serializes provisioning per target so two runs cannot race on the same worktree name. */
   private readonly inFlight = new Map<string, Promise<string>>();
 
-  constructor(private readonly logger: LoggerService) {
+  constructor(
+    private readonly logger: LoggerService,
+    private readonly gitRunner: GitRunnerService,
+  ) {
     this.logger.debug(`🧩 ${this.name} 🧩`);
   }
 
@@ -114,29 +118,24 @@ export class PlanRunWorktreeProvisionService {
     baseCheckoutPath: string,
     worktreeName: string,
   ): Promise<string | null> {
-    try {
-      const { stdout } = await execFileAsync(
-        'git',
-        ['-C', baseCheckoutPath, 'worktree', 'list', '--porcelain'],
-        { maxBuffer: PROVISION_MAX_BUFFER_BYTES },
-      );
-
-      const paths = stdout
-        .split('\n')
-        .filter((line) => line.startsWith('worktree '))
-        .map((line) => line.slice('worktree '.length).trim());
-
-      return (
-        paths.find((path) => path.split('/').pop() === worktreeName) ?? null
-      );
-    } catch (error) {
+    const result = await this.gitRunner.run(
+      baseCheckoutPath,
+      ['worktree', 'list', '--porcelain'],
+      { maxBufferBytes: PROVISION_MAX_BUFFER_BYTES },
+    );
+    if (!result.ok) {
       this.logger.warn(
-        `[${this.name}] could not list worktrees in ${baseCheckoutPath}: ${toErrorMessage(
-          error,
-        )}`,
+        `[${this.name}] could not list worktrees in ${baseCheckoutPath}: ${result.error}`,
       );
       return null;
     }
+
+    const paths = result.stdout
+      .split('\n')
+      .filter((line) => line.startsWith('worktree '))
+      .map((line) => line.slice('worktree '.length).trim());
+
+    return paths.find((path) => path.split('/').pop() === worktreeName) ?? null;
   }
 
   /**
@@ -153,7 +152,7 @@ export class PlanRunWorktreeProvisionService {
     // is forwarded here — a second channel is exactly what used to let the server and the CLI
     // disagree. The shared ladder is still consulted so the log names the directory discovery will
     // look in.
-    const resolved = this.describeResolvedRoot(baseCheckoutPath);
+    const resolved = await this.describeResolvedRoot(baseCheckoutPath);
 
     const script = resolveOtWorktreeScript({
       action: OT_WORKTREE_ACTION.CREATE,
@@ -241,9 +240,14 @@ export class PlanRunWorktreeProvisionService {
    * line only — never forwarded to the script. Soft-fails to null so a misconfigured root surfaces
    * from the script (the one entrypoint) rather than from a log helper.
    */
-  private describeResolvedRoot(baseCheckoutPath: string): string | null {
+  private async describeResolvedRoot(
+    baseCheckoutPath: string,
+  ): Promise<string | null> {
+    const originRemote =
+      await this.gitRunner.readOriginRemote(baseCheckoutPath);
     try {
-      return resolveWorktreeRoot({ baseCheckoutPath }).resolvedRoot;
+      return resolveWorktreeRoot({ baseCheckoutPath, originRemote })
+        .resolvedRoot;
     } catch {
       return null;
     }

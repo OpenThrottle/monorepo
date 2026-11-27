@@ -9,13 +9,11 @@ import { resolve } from 'node:path';
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { mockExecFileSync, mockHomedir, mockReadFileSync } = vi.hoisted(() => ({
-  mockExecFileSync: vi.fn(),
+const { mockHomedir, mockReadFileSync } = vi.hoisted(() => ({
   mockHomedir: vi.fn(),
   mockReadFileSync: vi.fn(),
 }));
 
-vi.mock('node:child_process', () => ({ execFileSync: mockExecFileSync }));
 vi.mock('node:fs', () => ({ readFileSync: mockReadFileSync }));
 vi.mock('node:os', () => ({ homedir: mockHomedir }));
 
@@ -23,6 +21,7 @@ import {
   DEFAULT_WORKTREE_ROOT_RELATIVE_PATH,
   WORKTREE_ROOT_SOURCE,
 } from './worktree-root.constants.ts';
+import type { ResolveWorktreeRootParams } from './worktree-root.types.ts';
 import {
   normalizeWorktreeRootSetting,
   repositoryNamespace,
@@ -34,12 +33,18 @@ const BASE = '/Users/matt/Development/openthrottle';
 /** What OT appends beneath the root for BASE, given the remote stubbed below. */
 const NS = 'acme/openthrottle';
 
-/** Stubs `git remote get-url origin`; pass null for a repo with no remote. */
+/** The origin remote the next {@link resolveRoot} call passes in; null for a repo with none. */
+const remoteState: { current: string | null } = { current: null };
+
 const withRemote = (remote: string | null): void => {
-  mockExecFileSync.mockImplementation(() => {
-    if (remote === null) throw new Error('no origin');
-    return remote;
-  });
+  remoteState.current = remote;
+};
+
+/** {@link resolveWorktreeRoot} with the remote {@link withRemote} last set, as a caller passes it. */
+const resolveRoot = (
+  params: Omit<ResolveWorktreeRootParams, 'originRemote'>,
+): ReturnType<typeof resolveWorktreeRoot> => {
+  return resolveWorktreeRoot({ ...params, originRemote: remoteState.current });
 };
 
 /** No `.env` on disk — the common case; `readFileSync` throws ENOENT. */
@@ -61,7 +66,6 @@ describe('resolveWorktreeRoot', () => {
     mockReadFileSync.mockReset();
     mockHomedir.mockReset();
     mockHomedir.mockReturnValue('/Users/matt');
-    mockExecFileSync.mockReset();
     withRemote('https://github.com/acme/openthrottle.git');
     withoutCheckoutEnv();
   });
@@ -70,7 +74,7 @@ describe('resolveWorktreeRoot', () => {
     withCheckoutEnv('OPENTHROTTLE_WORKTREE_ROOT=/from/dot-env\n');
 
     expect(
-      resolveWorktreeRoot({
+      resolveRoot({
         baseCheckoutPath: BASE,
         env: { OPENTHROTTLE_WORKTREE_ROOT: '/from/env' },
       }),
@@ -84,7 +88,7 @@ describe('resolveWorktreeRoot', () => {
   it("falls to the target repo's .env — how a repo customizes its own worktrees", () => {
     withCheckoutEnv('FOO=bar\nOPENTHROTTLE_WORKTREE_ROOT=/from/dot-env\n');
 
-    expect(resolveWorktreeRoot({ baseCheckoutPath: BASE, env: {} })).toEqual({
+    expect(resolveRoot({ baseCheckoutPath: BASE, env: {} })).toEqual({
       baseRoot: '/from/dot-env',
       resolvedRoot: `/from/dot-env/${NS}`,
       source: WORKTREE_ROOT_SOURCE.CHECKOUT_ENV,
@@ -96,9 +100,9 @@ describe('resolveWorktreeRoot', () => {
       'OPENTHROTTLE_WORKTREE_ROOT=/first\r\nOPENTHROTTLE_WORKTREE_ROOT = "/second/wt"\r\n',
     );
 
-    expect(
-      resolveWorktreeRoot({ baseCheckoutPath: BASE, env: {} }).resolvedRoot,
-    ).toBe(`/second/wt/${NS}`);
+    expect(resolveRoot({ baseCheckoutPath: BASE, env: {} }).resolvedRoot).toBe(
+      `/second/wt/${NS}`,
+    );
   });
 
   it('drops an inline comment after a quoted value, not just the quotes', () => {
@@ -108,29 +112,29 @@ describe('resolveWorktreeRoot', () => {
       'OPENTHROTTLE_WORKTREE_ROOT="/wt" # Where git worktrees are created\n',
     );
 
-    expect(
-      resolveWorktreeRoot({ baseCheckoutPath: BASE, env: {} }).resolvedRoot,
-    ).toBe(`/wt/${NS}`);
+    expect(resolveRoot({ baseCheckoutPath: BASE, env: {} }).resolvedRoot).toBe(
+      `/wt/${NS}`,
+    );
   });
 
   it('drops an inline comment after an unquoted value', () => {
     withCheckoutEnv('OPENTHROTTLE_WORKTREE_ROOT=/wt   # somewhere else\n');
 
-    expect(
-      resolveWorktreeRoot({ baseCheckoutPath: BASE, env: {} }).resolvedRoot,
-    ).toBe(`/wt/${NS}`);
+    expect(resolveRoot({ baseCheckoutPath: BASE, env: {} }).resolvedRoot).toBe(
+      `/wt/${NS}`,
+    );
   });
 
   it('keeps a # that is part of the path itself', () => {
     withCheckoutEnv('OPENTHROTTLE_WORKTREE_ROOT=/wt/a#b\n');
 
-    expect(
-      resolveWorktreeRoot({ baseCheckoutPath: BASE, env: {} }).resolvedRoot,
-    ).toBe(`/wt/a#b/${NS}`);
+    expect(resolveRoot({ baseCheckoutPath: BASE, env: {} }).resolvedRoot).toBe(
+      `/wt/a#b/${NS}`,
+    );
   });
 
   it('falls back to ~/.openthrottle/worktrees/<org>/<repo>', () => {
-    expect(resolveWorktreeRoot({ baseCheckoutPath: BASE, env: {} })).toEqual({
+    expect(resolveRoot({ baseCheckoutPath: BASE, env: {} })).toEqual({
       baseRoot: `/Users/matt/${DEFAULT_WORKTREE_ROOT_RELATIVE_PATH}`,
       resolvedRoot: `/Users/matt/${DEFAULT_WORKTREE_ROOT_RELATIVE_PATH}/${NS}`,
       source: WORKTREE_ROOT_SOURCE.DEFAULT,
@@ -141,7 +145,7 @@ describe('resolveWorktreeRoot', () => {
     // The root is a root, not a final destination. If a configured root were used verbatim, every
     // repo sharing it would pile its worktrees into one directory.
     expect(
-      resolveWorktreeRoot({
+      resolveRoot({
         baseCheckoutPath: BASE,
         env: { OPENTHROTTLE_WORKTREE_ROOT: '/configured' },
       }).resolvedRoot,
@@ -150,13 +154,13 @@ describe('resolveWorktreeRoot', () => {
 
   it('separates same-named repos from different orgs', () => {
     withRemote('https://github.com/acme/monorepo.git');
-    const acme = resolveWorktreeRoot({
+    const acme = resolveRoot({
       baseCheckoutPath: '/w/monorepo',
       env: {},
     });
 
     withRemote('git@github.com:other-org/monorepo.git');
-    const other = resolveWorktreeRoot({
+    const other = resolveRoot({
       baseCheckoutPath: '/w/monorepo',
       env: {},
     });
@@ -171,14 +175,13 @@ describe('resolveWorktreeRoot', () => {
     withRemote(null);
 
     expect(
-      resolveWorktreeRoot({ baseCheckoutPath: '/w/local-only', env: {} })
-        .resolvedRoot,
+      resolveRoot({ baseCheckoutPath: '/w/local-only', env: {} }).resolvedRoot,
     ).toBe(`/Users/matt/${DEFAULT_WORKTREE_ROOT_RELATIVE_PATH}/local-only`);
   });
 
   it('expands a leading ~ and strips trailing slashes', () => {
     expect(
-      resolveWorktreeRoot({
+      resolveRoot({
         baseCheckoutPath: BASE,
         env: { OPENTHROTTLE_WORKTREE_ROOT: '~/wt/here///' },
       }),
@@ -192,7 +195,7 @@ describe('resolveWorktreeRoot', () => {
   it('reports a ~-prefixed, trailing-slashed checkout .env root as its base, without <org>/<repo>', () => {
     withCheckoutEnv('OPENTHROTTLE_WORKTREE_ROOT="~/elsewhere/"\n');
 
-    expect(resolveWorktreeRoot({ baseCheckoutPath: BASE, env: {} })).toEqual({
+    expect(resolveRoot({ baseCheckoutPath: BASE, env: {} })).toEqual({
       baseRoot: '/Users/matt/elsewhere',
       resolvedRoot: `/Users/matt/elsewhere/${NS}`,
       source: WORKTREE_ROOT_SOURCE.CHECKOUT_ENV,
@@ -201,10 +204,10 @@ describe('resolveWorktreeRoot', () => {
 
   it('keeps baseRoot independent of the repository, so repos sharing a root report one root', () => {
     withRemote('https://github.com/acme/monorepo.git');
-    const acme = resolveWorktreeRoot({ baseCheckoutPath: '/w/a', env: {} });
+    const acme = resolveRoot({ baseCheckoutPath: '/w/a', env: {} });
 
     withRemote('https://github.com/other-org/site.git');
-    const other = resolveWorktreeRoot({ baseCheckoutPath: '/w/b', env: {} });
+    const other = resolveRoot({ baseCheckoutPath: '/w/b', env: {} });
 
     expect(acme.resolvedRoot).not.toBe(other.resolvedRoot);
     expect(acme.baseRoot).toBe(other.baseRoot);
@@ -214,7 +217,7 @@ describe('resolveWorktreeRoot', () => {
     withCheckoutEnv('OPENTHROTTLE_WORKTREE_ROOT=   \n');
 
     expect(
-      resolveWorktreeRoot({
+      resolveRoot({
         baseCheckoutPath: BASE,
         env: { OPENTHROTTLE_WORKTREE_ROOT: '  ' },
       }),
@@ -227,7 +230,7 @@ describe('resolveWorktreeRoot', () => {
 
   it('fails fast on a configured root that is not absolute', () => {
     expect(() =>
-      resolveWorktreeRoot({
+      resolveRoot({
         baseCheckoutPath: BASE,
         env: { OPENTHROTTLE_WORKTREE_ROOT: 'relative/worktrees' },
       }),
@@ -256,10 +259,6 @@ describe('normalizeWorktreeRootSetting', () => {
 });
 
 describe('repositoryNamespace', () => {
-  beforeEach(() => {
-    mockExecFileSync.mockReset();
-  });
-
   it.each([
     ['https://github.com/acme/monorepo.git', 'acme/monorepo'],
     ['https://github.com/acme/monorepo', 'acme/monorepo'],
@@ -267,15 +266,14 @@ describe('repositoryNamespace', () => {
     ['ssh://git@github.com/Acme_Org/my.repo', 'Acme_Org/my.repo'],
     ['https://github.com/acme/monorepo/', 'acme/monorepo'],
   ])('derives %s -> %s', (remote, expected) => {
-    withRemote(remote);
-
-    expect(repositoryNamespace('/w/whatever')).toBe(expected);
+    expect(repositoryNamespace('/w/whatever', remote)).toBe(expected);
   });
 
   it('sanitizes segments so a hostile remote cannot escape the root', () => {
-    withRemote('https://github.com/../..%2Fetc/passwd');
-
-    const ns = repositoryNamespace('/w/whatever');
+    const ns = repositoryNamespace(
+      '/w/whatever',
+      'https://github.com/../..%2Fetc/passwd',
+    );
 
     // The invariant is non-escape, not the absence of dots: `..-2Fetc` is a harmless directory
     // name, because a segment only traverses when it IS exactly `..`.
@@ -284,8 +282,6 @@ describe('repositoryNamespace', () => {
   });
 
   it('falls back to the directory basename without a remote', () => {
-    withRemote(null);
-
-    expect(repositoryNamespace('/w/local-only')).toBe('local-only');
+    expect(repositoryNamespace('/w/local-only', null)).toBe('local-only');
   });
 });

@@ -20,6 +20,7 @@ vi.mock('../ot-worktree-script/ot-worktree-script.utils.ts', () => ({
   resolveOtWorktreeScript: mockResolveScript,
 }));
 
+import { GitRunnerService } from '../git-runner/git-runner.service.ts';
 import { PlanRunWorktreeProvisionService } from './plan-run-worktree-provision.service.ts';
 
 const BASE = '/Users/matt/Development/openthrottle';
@@ -27,7 +28,8 @@ const WORKTREE = '/Users/matt/Development/openthrottle-worktrees/plan-5e172b67';
 const CREATE_SCRIPT = '/opt/openthrottle/skills/ot-worktree/scripts/create.sh';
 
 /**
- * Answers one promisified execFile call: `git worktree list` yields `list`, everything else `stdout`.
+ * Answers one promisified execFile call: `git worktree list` yields `list`, `git remote get-url`
+ * an origin, everything else `stdout`.
  */
 const respond = (options: {
   readonly failCreate?: Error & { stderr?: string };
@@ -46,6 +48,13 @@ const respond = (options: {
     ) => {
       if (file === 'git' && args.includes('list')) {
         callback(null, { stderr: '', stdout: options.list });
+        return;
+      }
+      if (file === 'git' && args.includes('get-url')) {
+        callback(null, {
+          stderr: '',
+          stdout: 'https://github.com/acme/openthrottle.git\n',
+        });
         return;
       }
       if (options.failCreate !== undefined) {
@@ -68,7 +77,10 @@ describe('PlanRunWorktreeProvisionService', () => {
       rung: 'openthrottle-ssot',
       scriptPath: CREATE_SCRIPT,
     });
-    service = new PlanRunWorktreeProvisionService(createMock<LoggerService>());
+    service = new PlanRunWorktreeProvisionService(
+      createMock<LoggerService>(),
+      new GitRunnerService(),
+    );
   });
 
   it('reuses an existing worktree instead of recreating it', async () => {

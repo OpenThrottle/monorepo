@@ -92,8 +92,8 @@ list while working, or `--json` for the full report.
 
 ## Shape-rule rollout and local quirks
 
-- **Blocking today:** `component-primitive-shape` (both profiles) and `hook-primitive-shape` at `error`, `audit:hook-shape:strict`, the component `max-lines` cap, `@nx/enforce-module-boundaries`, `@nx/dependency-checks`, tag validation and package entrypoints.
-- **Advisory today (warn-first rollout):** `route-primitive-shape`, `pre-hooks-unpack` and the route `max-lines` cap are `warn`. Each application ratchets its own routes to `error` in its `eslint.config.ts` once they are clean. `audit-templates-compliance` and `audit-test-coverage` are report-only. The warnings exist because remediating existing violations was out of scope, not because the shape is negotiable.
+- **Blocking today:** `component-primitive-shape` (both profiles) and `hook-primitive-shape` at `error`, `audit:hook-shape:strict`, `audit:test-coverage:strict` (new spec-less files only; the existing gap is allowlisted), the component `max-lines` cap, `@nx/enforce-module-boundaries`, `@nx/dependency-checks`, tag validation and package entrypoints.
+- **Advisory today (warn-first rollout):** `route-primitive-shape`, `pre-hooks-unpack` and the route `max-lines` cap are `warn`. Each application ratchets its own routes to `error` in its `eslint.config.ts` once they are clean. `audit-templates-compliance` is report-only. The warnings exist because remediating existing violations was out of scope, not because the shape is negotiable.
 - **Quirk:** `pnpm run nx:validate` also runs `nx:validate-projects` and `nx:validate-configurations`; the latter currently exits 1 in a clean checkout when `.cursor/plans/` is absent. The audit itself passes and only the report write fails, so read the output rather than trusting the exit code.
 
 ## Related OpenThrottle plans (audit unwind)

@@ -3,6 +3,8 @@ import * as path from 'node:path';
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
 
+import { isFunctionExpression } from './isFunctionExpression.ts';
+
 /**
  * The data-file-shape rule: data files hold data
  * (docs/monorepo/code-style.md, "Data files hold data").
@@ -12,7 +14,9 @@ import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
  *     needs JSX (`misnamed`). The folder already says the file is data, so a
  *     `data.` prefix or `.data` suffix repeating it is misnamed too.
  *   - It exports values, never functions. A merge, filter, formatter or row
- *     builder belongs in the sibling `utils/` (`exportsFunction`).
+ *     builder belongs in the sibling `utils/` (`exportsFunction`). A function
+ *     nested inside an exported object is the sibling `data-nested-function`
+ *     rule's, which ships at `warn` while its legacy sites burn down.
  *
  * Only the immediate parent folder counts: `data/fixtures/x.ts` is not a data
  * file. A `data/index.ts` barrel is exempt from the naming check — it
@@ -71,21 +75,6 @@ const suggestName = (basename: string): string => {
     .replace(/_/g, '-')
     .toLowerCase();
   return `${prefix}${bareStem}${extension}`;
-};
-
-/**
- * @description Whether an expression is a function, looking through
- * `satisfies`, which leaves the value a function.
- */
-const isFunctionExpression = (node: TSESTree.Node | null): boolean => {
-  if (node === null) return false;
-  if (node.type === AST_NODE_TYPES.TSSatisfiesExpression) {
-    return isFunctionExpression(node.expression);
-  }
-  return (
-    node.type === AST_NODE_TYPES.ArrowFunctionExpression ||
-    node.type === AST_NODE_TYPES.FunctionExpression
-  );
 };
 
 /**

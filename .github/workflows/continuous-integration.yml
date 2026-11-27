@@ -1182,7 +1182,7 @@ jobs:
           printf '%s\n' "$changed" | tr '\n' '\0' \
             | xargs -0 pnpm exec prettier --ignore-unknown --check
 
-      # Runs every `audit:*:strict` script except test-coverage, via the glob in
+      # Runs every `audit:*:strict` script, test-coverage included, via the glob in
       # the root `audit:strict`; the glob is the list, so none is named here. A
       # new strict audit is gated here the moment it is named
       # `audit:<thing>:strict`, and no audit needs a step of its own. Local
@@ -1218,12 +1218,9 @@ jobs:
         with:
           cache-suffix: gates
 
-      # 💰 The warn-only test-coverage audit MOVED OUT of the per-PR path to
-      # .github/workflows/test-coverage-audit-scheduled.yml (weekly). It is
-      # `continue-on-error` and excluded from the blocking `audit:strict`
-      # aggregate above, so it gated nothing here. The flip path is preserved
-      # verbatim in that workflow's header: when a category's gap closes it comes
-      # back HERE as a blocking step and the schedule is deleted.
+      # 💰 `audit:test-coverage:strict` gates here through `audit:strict` above,
+      # against its shrink-only allowlist. The report-only burn-down run lives in
+      # .github/workflows/test-coverage-audit-scheduled.yml (weekly).
       # See docs/monorepo/test-coverage-audit.md.
 
       # - name: '🗄️ Migration COMMENT ON TABLE (diff-scoped)'

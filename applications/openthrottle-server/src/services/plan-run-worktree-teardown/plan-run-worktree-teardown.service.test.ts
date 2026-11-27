@@ -54,6 +54,7 @@ vi.mock('../worktree-root/worktree-root.utils.ts', () => ({
   resolveWorktreeRoot: mockResolveRoot,
 }));
 
+import { GitRunnerService } from '../git-runner/git-runner.service.ts';
 import { PLAN_RUN_WORKTREE_TEARDOWN_OUTCOME } from './plan-run-worktree-teardown.constants.ts';
 import { PlanRunWorktreeTeardownService } from './plan-run-worktree-teardown.service.ts';
 
@@ -197,6 +198,7 @@ const build = (options: {
       findBy: find,
     }),
     createMock<PlanRunsRepository>(planRunsRepository),
+    new GitRunnerService(),
   );
   return { deleteWorktreeCheckout, service };
 };
@@ -555,6 +557,7 @@ describe('PlanRunWorktreeTeardownService', () => {
           findBy: vi.fn().mockRejectedValue(new Error('db down')),
         }),
         createMock<PlanRunsRepository>(createPlanRunsRepositoryMock()),
+        new GitRunnerService(),
       );
 
       const result = await service.teardown({

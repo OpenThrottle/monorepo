@@ -11,11 +11,17 @@ import {
   RepositoryCheckoutsModule,
 } from '@openthrottle/nestjs-repositories-server';
 
+import { GitRunnerModule } from '../git-runner/git-runner.module.ts';
 import { PlanRunWorktreeTeardownService } from './plan-run-worktree-teardown.service.ts';
 
 @Module({
   exports: [PlanRunWorktreeTeardownService],
-  imports: [LoggerModule, PlanRunsModule, RepositoryCheckoutsModule],
+  imports: [
+    GitRunnerModule,
+    LoggerModule,
+    PlanRunsModule,
+    RepositoryCheckoutsModule,
+  ],
   providers: [PlanRunWorktreeTeardownService],
 })
 export class PlanRunWorktreeTeardownModule {}

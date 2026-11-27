@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import type { CoverageEntry, CoverageStatus } from '../audit-test-coverage.ts';
 import {
   analyzeCoverage,
+  checkAllowlist,
   classify,
-  hasStrictFailure,
   rollup,
 } from '../audit-test-coverage.ts';
 
@@ -175,16 +175,27 @@ describe('analyzeCoverage', () => {
   });
 });
 
-describe('hasStrictFailure', () => {
-  it('fails when an enforced-category file is missing', () => {
-    const entries = analyzeCoverage(
-      ['packages/pkg-a/src/hooks/useThing.ts'],
-      reader(),
-    );
-    expect(hasStrictFailure(entries)).toBe(true);
+describe('checkAllowlist', () => {
+  const HOOK = 'packages/pkg-a/src/hooks/useThing.ts';
+
+  it('reports an enforced-category file missing a spec that is not allowlisted', () => {
+    const entries = analyzeCoverage([HOOK], reader());
+
+    expect(checkAllowlist(entries, []).unlisted.map((e) => e.file)).toEqual([
+      HOOK,
+    ]);
   });
 
-  it('does not fail for missing config/data (never gated)', () => {
+  it('tolerates an allowlisted miss', () => {
+    const entries = analyzeCoverage([HOOK], reader());
+
+    expect(checkAllowlist(entries, [HOOK])).toEqual({
+      stale: [],
+      unlisted: [],
+    });
+  });
+
+  it('does not report missing config/data (never gated)', () => {
     const entries = analyzeCoverage(
       [
         'applications/app-a/app/global/config/defaults.ts',
@@ -193,18 +204,27 @@ describe('hasStrictFailure', () => {
       reader(),
     );
     expect(entries.every((e) => e.status === 'missing')).toBe(true);
-    expect(hasStrictFailure(entries)).toBe(false);
+    expect(checkAllowlist(entries, []).unlisted).toEqual([]);
   });
 
-  it('does not fail when every enforced file is tested', () => {
+  it('flags an allowlist entry whose file now has a spec as stale', () => {
     const entries = analyzeCoverage(
-      [
-        'packages/pkg-a/src/hooks/useThing.ts',
-        'packages/pkg-a/src/hooks/useThing.test.tsx',
-      ],
+      [HOOK, 'packages/pkg-a/src/hooks/useThing.test.tsx'],
       reader(),
     );
-    expect(hasStrictFailure(entries)).toBe(false);
+
+    expect(checkAllowlist(entries, [HOOK])).toEqual({
+      stale: [HOOK],
+      unlisted: [],
+    });
+  });
+
+  it('flags an allowlist entry for a file that no longer exists as stale', () => {
+    expect(checkAllowlist([], [HOOK]).stale).toEqual([HOOK]);
+  });
+
+  it('only flags stale entries in the scanned categories', () => {
+    expect(checkAllowlist([], [HOOK], new Set(['utils'])).stale).toEqual([]);
   });
 });
 

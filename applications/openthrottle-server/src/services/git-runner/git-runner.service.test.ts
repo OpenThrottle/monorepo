@@ -112,4 +112,32 @@ describe('GitRunnerService', () => {
       });
     });
   });
+
+  describe('readOriginRemote', () => {
+    it('returns the trimmed origin URL', async () => {
+      succeedWith('git@github.com:acme/monorepo.git\n');
+
+      await expect(service.readOriginRemote('/repo')).resolves.toBe(
+        'git@github.com:acme/monorepo.git',
+      );
+      expect(execFileMock).toHaveBeenCalledWith(
+        'git',
+        ['-C', '/repo', 'remote', 'get-url', 'origin'],
+        expect.any(Object),
+        expect.any(Function),
+      );
+    });
+
+    it('returns null when git prints nothing', async () => {
+      succeedWith('  \n');
+
+      await expect(service.readOriginRemote('/repo')).resolves.toBeNull();
+    });
+
+    it('returns null when the checkout has no origin', async () => {
+      failWith(new Error("error: No such remote 'origin'"));
+
+      await expect(service.readOriginRemote('/repo')).resolves.toBeNull();
+    });
+  });
 });

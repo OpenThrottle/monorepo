@@ -42,4 +42,16 @@ export class GitRunnerService {
       return { error: toErrorMessage(error), ok: false, stdout };
     }
   }
+
+  /**
+   * @description The checkout's `origin` remote URL, or null when it has none, is not a git
+   * repository, or the probe fails — a missing remote is an answer here, not an error.
+   */
+  async readOriginRemote(cwd: string): Promise<string | null> {
+    const result = await this.run(cwd, ['remote', 'get-url', 'origin']);
+    if (!result.ok) return null;
+
+    const remote = result.stdout.trim();
+    return remote === '' ? null : remote;
+  }
 }

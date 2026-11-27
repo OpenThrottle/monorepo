@@ -20,8 +20,9 @@
  *
  * The org comes from the repo's git remote, not its directory name, so two checkouts of different
  * orgs' `monorepo` cannot land on one path. A repo with no remote falls back to its directory name.
+ * The caller reads that remote (through `GitRunnerService`) and passes it in, so this module stays
+ * pure: no git, no blocking child process.
  */
-import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { basename, isAbsolute, join } from 'node:path';
@@ -51,20 +52,6 @@ const safeSegment = (value: string): string | null => {
     : replaced;
 };
 
-/** The repo's `origin` remote, or null when it has none / is not a git repo. */
-const readOriginRemote = (repoPath: string): string | null => {
-  try {
-    const output = execFileSync(
-      'git',
-      ['-C', repoPath, 'remote', 'get-url', 'origin'],
-      { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 5000 },
-    ).trim();
-    return output === '' ? null : output;
-  } catch {
-    return null;
-  }
-};
-
 /**
  * @description `<org>/<repo>` for a checkout, or just `<repo>` when it has no usable remote.
  * Mirrors `_ot_repo_namespace`. Handles `https://host/org/repo.git`, `ssh://host/org/repo` and
@@ -72,15 +59,12 @@ const readOriginRemote = (repoPath: string): string | null => {
  */
 export const repositoryNamespace = (
   repoPath: string,
-  originRemote: string | null | undefined = undefined,
+  originRemote: string | null,
 ): string => {
   const fallback = safeSegment(basename(repoPath)) ?? 'repo';
+  if (originRemote === null) return fallback;
 
-  const remote =
-    originRemote === undefined ? readOriginRemote(repoPath) : originRemote;
-  if (remote === null) return fallback;
-
-  const trimmed = remote.replace(/\.git$/, '').replace(/\/$/, '');
+  const trimmed = originRemote.replace(/\.git$/, '').replace(/\/$/, '');
   const segments = trimmed.split(/[/:]/).filter((segment) => segment !== '');
   const repoSegment = segments[segments.length - 1];
   const orgSegment = segments[segments.length - 2];
