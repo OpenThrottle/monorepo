@@ -123,9 +123,11 @@ export const KNOWN_BLOCKERS: readonly KnownBlocker[] = [
   {
     backend: 'cursor',
     facets: ['usage'],
-    id: 'no-usage-chunk',
+    id: 'agent-sends-no-usage',
     plan: PARITY_PLAN,
-    reason: `the ACP backend never emits a usage chunk (acp-events maps usage_update to nothing, and the prompt result is not read for token counts); the CLI adapter emits one every turn and the server persists it`,
+    // A gap in the agent, not in our backend: no change here can produce the
+    // counts. Accepting it moves this entry to ACCEPTED_DIFFERENCES.
+    reason: `cursor-agent sends no token usage over ACP (no usage on the session/prompt result and no usage_update in any fixture), so cursor chats over ACP lose the token counts the CLI adapter emits every turn and the server persists; accept the loss or keep the CLI adapter until cursor-agent reports usage`,
     scenarios: [
       'accept-edits',
       'multi-tool',
@@ -141,9 +143,10 @@ export const KNOWN_BLOCKERS: readonly KnownBlocker[] = [
   {
     backend: 'antigravity',
     facets: ['usage'],
-    id: 'no-usage-chunk',
+    id: 'prompt-usage-dropped',
     plan: PARITY_PLAN,
-    reason: `the ACP backend never emits a usage chunk, although agy reports token counts on the session/prompt result; the CLI adapter emits one every turn and the server persists it`,
+    // A gap in our backend, not in ACP: the counts arrive and are dropped.
+    reason: `agy reports token counts on every session/prompt result (usage.inputTokens / outputTokens / totalTokens), but acp-events reads only usage_update, a context-window gauge, so the ACP backend emits no usage chunk; the CLI adapter emits one every turn and the server persists it`,
     scenarios: [
       'accept-edits',
       'error',
