@@ -17,6 +17,17 @@ service and backend with no agentic-utils mock (ids seeded, `Date` frozen).
   `serializeTranscript`.
 - [src/utils/sanitizer.ts](src/utils/sanitizer.ts) — `createSanitizer`, `findSanitizerLeaks`,
   `placeholderUuid`.
+- `src/utils/acp-normalize.ts`, `recordAcp.ts`, `runAcpRecordingShim.ts`, `buildAcpFixtureText.ts` — the ACP
+  recording path: the shared frame normalizer, `recordAcpScenario` (drives `createAcpConversationBackend`;
+  `record --protocol acp` writes `fixtures/<backend>/acp/`) and its `*_BIN` shim. A transcript whose header
+  says `protocol: "acp"` is one agent process lifetime: `rpc` lines (`client`/`agent` JSON-RPC frames in wire
+  order) instead of stdin/stdout. `parseTranscript` returns a union; narrow on `protocol`, or call
+  `parseCliTranscript` where only CLI makes sense.
+- `src/utils/acp-replay-bin.ts`, `installAcpReplayBin.ts`, `prepareAcpReplay.ts` — ACP replay: a causal stdio
+  JSON-RPC stand-in (`runAcpReplayBin`; client frames asserted strictly after the shared normalizer, agent
+  frames emitted once everything recorded before them matched, live ids echoed, placeholder UUIDs emitted as
+  live UUIDs) and `replayAcpFixture`, which drives a fresh `createAcpConversationBackend` through it.
+  `answerPermissions(optionId | null)` is the `onChunk` that answers a supervised turn's permission request.
 - [src/utils/record.ts](src/utils/record.ts) — `recordScenario` (drives the production backend) and
   `runRecordingShim` (`runRecordingShim.ts`, the `*_BIN` stand-in that runs the real CLI and captures it).
 - `src/utils/replay-bin.ts`, `replay.ts`, `installReplayBin.ts`, `prepareReplay.ts`, `replayPaths.ts` — `runReplayBin` (the strict `*_BIN` stand-in),
@@ -31,6 +42,11 @@ service and backend with no agentic-utils mock (ids seeded, `Date` frozen).
   production claude backend. [tests/replay-coverage.guard.test.ts](tests/replay-coverage.guard.test.ts)
   fails when a transcript is not named literally (`replayFixturePath('<backend>', '<stem>')`) by a
   test in this package.
+- `src/utils/chunkParity.ts` + [tests/acp-parity.test.ts](tests/acp-parity.test.ts) — the CLI-vs-ACP parity gate:
+  each scenario replayed on both paths, reduced by `chunkShape`, compared by `compareChunkShapes`. The differing
+  facets must equal exactly what `tests/support/parity-expectations.ts` lists (accepted differences, known
+  blockers, missing capabilities), so a fixed blocker fails until its entry is removed. Its `retirement verdict`
+  test is the GO/NO-GO for deleting a backend's per-CLI chat adapter.
 - [src/utils/compareTranscripts.ts](src/utils/compareTranscripts.ts) — `compareTranscripts` / `stdoutShape`, the structural
   drift comparison behind [scripts/check-drift.ts](scripts/check-drift.ts) (the `check-drift`
   target, run weekly by `.agents/prompts/Job_ReplayDrift.md`).
@@ -44,7 +60,7 @@ service and backend with no agentic-utils mock (ids seeded, `Date` frozen).
   directly under Node's type stripping, outside Vite and workspace resolution — a workspace import
   there breaks every replay.
 - **The bin-side modules import only node built-ins**: `replay-bin.ts`, `replayPaths.ts`,
-  `runRecordingShim.ts`, `sanitizer.ts`, `transcript.ts` and the `types/transcript.ts` they share.
+  `runRecordingShim.ts`, `runAcpRecordingShim.ts`, `acp-normalize.ts`, `acp-replay-bin.ts`, `createLineSplitter.ts`, `sanitizer.ts`, `transcript.ts` and the `types/transcript.ts` they share.
 - **`withBinEnv` mutates `process.env`.** Never run two replays concurrently in one process.
 - **Paths are listed in every spelling** (`replayPaths`): macOS `/var` vs `/private/var` — a child's
   `process.cwd()` is resolved, a backend-built argv is not.

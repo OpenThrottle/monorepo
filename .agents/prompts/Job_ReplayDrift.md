@@ -26,6 +26,8 @@ Facts that change the analysis:
   - **argv** and **stdin**, exactly. A change means our argv builders or prompt layers moved, or a scenario changed. The replay tests fail on the same change, so check whether `test` is already red before you call it CLI drift.
   - **stdout event shapes**, as sets. A shape is the line's `type`/`subtype`/`event` plus the `type` of a nested `event`, `item`, `part`, `message` or `step_update`. An added shape is an event the parsers may not handle. A removed shape may be one they depend on.
   - **exit class**: success, failure or termination.
+- **ACP transcripts** (`acp/<stem>`, under `fixtures/<backend>/acp/`) are JSON-RPC sessions. Client frames are compared exactly, in order (`rpc-outbound`: a change is **our drift**). Agent frames are compared as shape sets (method plus `sessionUpdate`/`kind`/`status`; check new ones against `acp-events.ts`). A `protocol` finding is always a repo change.
+- `test` includes the CLI-vs-ACP parity gate (`tests/acp-parity.test.ts`). If it goes red after a re-record, name the scenario and facet in the finding.
 - **Model variance produces shape noise.** A model that chooses a different tool this week adds or removes tool-call shapes with no CLI change at all. Re-run the scenario before you trust a shape-only finding. Use `--backend <id>` and compare the reported shapes across both runs.
 - A backend is **skipped** when its CLI is not installed or it has no committed transcripts. That is not drift; just list it.
 - A transcript that **could not be re-recorded** is usually auth, quota or account configuration. Report the error text. It is only drift if the CLI itself changed how it fails.
@@ -38,7 +40,7 @@ Facts that change the analysis:
    - **Model variance**: same version, shape-only, and gone or different on a second run. Drop it, but count it.
    - **Our drift**: argv or stdin changed and `pnpm nx run agentic-replay-testing:test` also fails. This is a repo change that forgot to re-record, not a CLI change.
    - **Environment**: recording failed for auth, quota or account reasons.
-3. For each CLI-drift finding, open the backend's parser (`packages/agentic-conversation-backend/src/utils/<backend>-events.ts`) and say whether the new or removed shape is handled, ignored, or mis-mapped.
+3. For each CLI-drift finding, open the backend's parser (`packages/agentic-conversation-backend/src/utils/<backend>-events.ts`, or `acp-events.ts` for an `acp/` stem) and say whether the new or removed shape is handled, ignored, or mis-mapped.
 
 ## Ranking
 

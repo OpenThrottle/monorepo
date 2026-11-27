@@ -53,6 +53,7 @@ async function replayTurn(
         conversation,
         cwd: prepared.cwd,
         model: prepared.transcript.header.model,
+        onChunk: undefined,
         resolved: prepared.resolved,
       });
     });

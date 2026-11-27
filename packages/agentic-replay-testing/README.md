@@ -20,6 +20,15 @@ One recorded spawn of an agent CLI, one JSON object per line:
 Paths, emails, tokens and account config are stripped before a transcript is written; UUIDs are
 mapped to deterministic placeholders (`placeholderUuid(1)`, …) in order of first appearance.
 
+### ACP transcripts
+
+The ACP chat backend keeps one agent process per conversation and speaks newline-delimited JSON-RPC
+both ways, so its transcript has header `"protocol": "acp"` (absent means `cli`) and one `rpc` line
+per frame, `{"type":"rpc","from":"client"|"agent","message":{…}}`, in wire order, instead of
+`stdin`/`stdout`. It reuses `outbound`/`argv` (the spawn args), `inbound`/`stderr` and `exit`. One
+transcript is one process lifetime and may span several turns. Frames are normalized when written:
+JSON-RPC ids renumbered per direction from 0, `_meta` dropped, MCP server `env` values redacted.
+
 ## Recording
 
 ```bash
@@ -31,6 +40,10 @@ Recording drives the **production** conversation backend with its `*_BIN` overri
 generated recording shim. The backend builds the argv, scrubs the env and spawns exactly as in
 production; the shim runs the real CLI underneath and captures the traffic. Nothing rebuilds an
 argv, so a recorded argv is by construction what production sends.
+
+`--protocol acp` (cursor and antigravity only) records through `createAcpConversationBackend`
+instead, into `fixtures/<backend>/acp/`: `<slug>` is every turn in one warm process, and
+`<slug>.turn-N` (multi-turn scenarios) is turn N on a fresh process that resumes via `session/load`.
 
 It spends real tokens on the logged-in account. Every transcript is sanitized and leak-checked
 before it is written to `fixtures/<backend>/`, and a scenario that expects a write to be denied

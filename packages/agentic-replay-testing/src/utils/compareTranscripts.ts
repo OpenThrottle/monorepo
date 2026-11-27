@@ -12,16 +12,30 @@
  *   sequences: how many deltas a reply takes is model drift; a new event type,
  *   or one that vanished, is CLI drift the parsers may not handle.
  * - **exit class** — success, failure, or termination.
+ *
+ * An ACP transcript is compared the same way: spawn args exactly; the SET of
+ * frame shapes (`from` + method, a `session/update`'s `sessionUpdate`/`kind`/
+ * `status`, a response's request method plus `stopReason` or error code); and
+ * the client's frames exactly, in sequence (`rpc-outbound`) — a changed
+ * prompt, param or answer is our code moving, not model drift.
  */
 
 import { isRecord } from '@openthrottle/nodejs-utils';
 
-import type { Transcript } from '../types/transcript.ts';
+import type {
+  AcpFrame,
+  AcpTranscript,
+  ParsedTranscript,
+  Transcript,
+} from '../types/transcript.ts';
+import { TRANSCRIPT_PROTOCOLS } from '../types/transcript.ts';
 
 /** @public */
 export const DRIFT_KINDS = {
   argv: 'argv',
   exit: 'exit',
+  protocol: 'protocol',
+  rpcOutbound: 'rpc-outbound',
   shapesAdded: 'shapes-added',
   shapesRemoved: 'shapes-removed',
   stdin: 'stdin',
@@ -92,7 +106,7 @@ export function stdoutShape(line: string): string {
   return parts.length === 0 ? '<untyped-json>' : parts.join(' ');
 }
 
-function exitClass(exit: Transcript['exit']): string {
+function exitClass(exit: ParsedTranscript['exit']): string {
   if (exit.signal !== null || exit.code === 130 || exit.code === 143) {
     return 'terminated';
   }
@@ -103,13 +117,7 @@ function shapes(transcript: Transcript): Set<string> {
   return new Set(transcript.stdout.map(stdoutShape));
 }
 
-/**
- * Compare a fresh recording against the committed transcript of the same
- * scenario.
- *
- * @public
- */
-export function compareTranscripts(
+function compareCli(
   committed: Transcript,
   fresh: Transcript,
 ): TranscriptComparison {
@@ -158,5 +166,181 @@ export function compareTranscripts(
   return {
     cliVersionChanged: committed.header.cliVersion !== fresh.header.cliVersion,
     findings,
+  };
+}
+
+/**
+ * The method each response answers, per direction of the REQUEST: ids are
+ * normalized per direction, so a client request and an agent request can both
+ * be id 0.
+ */
+function requestMethods(frames: readonly AcpFrame[]): {
+  readonly agent: Map<unknown, string>;
+  readonly client: Map<unknown, string>;
+} {
+  const methods = {
+    agent: new Map<unknown, string>(),
+    client: new Map<unknown, string>(),
+  };
+  for (const { from, message } of frames) {
+    if (typeof message.method === 'string' && 'id' in message) {
+      methods[from].set(message.id, message.method);
+    }
+  }
+  return methods;
+}
+
+function updateShape(params: unknown): string {
+  const update = isRecord(params) ? params.update : undefined;
+  if (!isRecord(update)) {
+    return '';
+  }
+  const parts: string[] = [];
+  for (const key of ['sessionUpdate', 'kind', 'status'] as const) {
+    const value = update[key];
+    if (typeof value === 'string') {
+      parts.push(`${key}=${value}`);
+    }
+  }
+  return parts.length === 0 ? '' : ` ${parts.join(' ')}`;
+}
+
+function responseShape(
+  frame: AcpFrame,
+  methods: ReturnType<typeof requestMethods>,
+): string {
+  const { message } = frame;
+  const answered = frame.from === 'agent' ? methods.client : methods.agent;
+  const method = answered.get(message.id) ?? '<unknown>';
+  if (isRecord(message.error)) {
+    return `${frame.from} error:${method} code=${String(message.error.code)}`;
+  }
+  const { result } = message;
+  const isPrompt = method === 'session/prompt' && isRecord(result);
+  const stop = isPrompt ? ` stopReason=${String(result.stopReason)}` : '';
+  return `${frame.from} result:${method}${stop}`;
+}
+
+/**
+ * The shape key of one ACP frame, e.g. `agent session/update
+ * sessionUpdate=tool_call kind=read status=pending` or `agent
+ * result:session/prompt stopReason=end_turn`.
+ */
+function acpFrameShape(
+  frame: AcpFrame,
+  methods: ReturnType<typeof requestMethods>,
+): string {
+  const { method, params } = frame.message;
+  if (typeof method !== 'string') {
+    return responseShape(frame, methods);
+  }
+  const detail = method === 'session/update' ? updateShape(params) : '';
+  return `${frame.from} ${method}${detail}`;
+}
+
+function acpShapes(transcript: AcpTranscript): Set<string> {
+  const methods = requestMethods(transcript.frames);
+  return new Set(
+    transcript.frames.map((frame) => acpFrameShape(frame, methods)),
+  );
+}
+
+function compareAcp(
+  committed: AcpTranscript,
+  fresh: AcpTranscript,
+): TranscriptComparison {
+  const findings: DriftFinding[] = [];
+
+  const argvMatches =
+    committed.argv.length === fresh.argv.length &&
+    committed.argv.every((value, index) => value === fresh.argv[index]);
+  if (!argvMatches) {
+    findings.push({
+      detail: `committed ${JSON.stringify(committed.argv)} → fresh ${JSON.stringify(fresh.argv)}`,
+      kind: DRIFT_KINDS.argv,
+    });
+  }
+
+  const sent = (transcript: AcpTranscript): string[] => {
+    return transcript.frames
+      .filter((frame) => frame.from === 'client')
+      .map((frame) => JSON.stringify(frame.message));
+  };
+  const before = sent(committed);
+  const after = sent(fresh);
+  const first = before.findIndex((frame, index) => frame !== after[index]);
+  const isTruncated = first === -1 && before.length !== after.length;
+  const at = isTruncated ? Math.min(before.length, after.length) : first;
+  if (at !== -1) {
+    findings.push({
+      detail: `client frame ${at} (of ${before.length} → ${after.length}): committed ${before[at] ?? '<none>'} → fresh ${after[at] ?? '<none>'}`,
+      kind: DRIFT_KINDS.rpcOutbound,
+    });
+  }
+
+  const shapesBefore = acpShapes(committed);
+  const shapesAfter = acpShapes(fresh);
+  const added = [...shapesAfter]
+    .filter((shape) => !shapesBefore.has(shape))
+    .sort();
+  const removed = [...shapesBefore]
+    .filter((shape) => !shapesAfter.has(shape))
+    .sort();
+  if (added.length > 0) {
+    findings.push({ detail: added.join('; '), kind: DRIFT_KINDS.shapesAdded });
+  }
+  if (removed.length > 0) {
+    findings.push({
+      detail: removed.join('; '),
+      kind: DRIFT_KINDS.shapesRemoved,
+    });
+  }
+
+  const exitBefore = exitClass(committed.exit);
+  const exitAfter = exitClass(fresh.exit);
+  if (exitBefore !== exitAfter) {
+    findings.push({
+      detail: `${exitBefore} → ${exitAfter}`,
+      kind: DRIFT_KINDS.exit,
+    });
+  }
+
+  return {
+    cliVersionChanged: committed.header.cliVersion !== fresh.header.cliVersion,
+    findings,
+  };
+}
+
+/**
+ * Compare a fresh recording against the committed transcript of the same
+ * scenario. Both must use the same protocol; a protocol change is itself a
+ * finding.
+ *
+ * @public
+ */
+export function compareTranscripts(
+  committed: ParsedTranscript,
+  fresh: ParsedTranscript,
+): TranscriptComparison {
+  if (
+    committed.protocol === TRANSCRIPT_PROTOCOLS.cli &&
+    fresh.protocol === TRANSCRIPT_PROTOCOLS.cli
+  ) {
+    return compareCli(committed, fresh);
+  }
+  if (
+    committed.protocol === TRANSCRIPT_PROTOCOLS.acp &&
+    fresh.protocol === TRANSCRIPT_PROTOCOLS.acp
+  ) {
+    return compareAcp(committed, fresh);
+  }
+  return {
+    cliVersionChanged: committed.header.cliVersion !== fresh.header.cliVersion,
+    findings: [
+      {
+        detail: `${committed.protocol} → ${fresh.protocol}`,
+        kind: DRIFT_KINDS.protocol,
+      },
+    ],
   };
 }

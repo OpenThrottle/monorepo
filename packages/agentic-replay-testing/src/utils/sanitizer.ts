@@ -37,8 +37,13 @@ export interface SanitizerOptions {
 export interface Sanitizer {
   /** Sanitize a free-text value (an argv element, a stderr chunk). */
   readonly sanitizeText: (text: string) => string;
-  /** Sanitize every string in a transcript, header included. */
+  /** Sanitize every string in a CLI transcript, header included. */
   readonly sanitizeTranscript: (transcript: Transcript) => Transcript;
+  /**
+   * Sanitize a decoded JSON value: every string through {@link sanitizeText},
+   * and the configured redact keys replaced wholesale at any depth.
+   */
+  readonly sanitizeValue: (value: unknown) => unknown;
 }
 
 /**
@@ -178,13 +183,14 @@ export function createSanitizer(options: SanitizerOptions): Sanitizer {
       argv: transcript.argv.map(sanitizeText),
       exit: transcript.exit,
       header: transcript.header,
+      protocol: transcript.protocol,
       stderr: sanitizeText(transcript.stderr),
       stdin: sanitizeText(transcript.stdin),
       stdout: transcript.stdout.map(sanitizeStdoutLine),
     };
   };
 
-  return { sanitizeText, sanitizeTranscript };
+  return { sanitizeText, sanitizeTranscript, sanitizeValue };
 }
 
 /** @public */

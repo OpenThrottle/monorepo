@@ -14,10 +14,10 @@
 
 import { readFileSync, writeFileSync } from 'node:fs';
 
-import type { Transcript } from '../types/transcript.ts';
+import type { AcpMessage, Transcript } from '../types/transcript.ts';
 import { replayPaths } from './replayPaths.ts';
 import { createSanitizer } from './sanitizer.ts';
-import { parseTranscript } from './transcript.ts';
+import { parseCliTranscript } from './transcript.ts';
 
 /**
  * Exit code of a replay whose outbound traffic did not match.
@@ -60,6 +60,24 @@ export type ReplayReport =
       readonly received: string;
     }
   | { readonly error: string; readonly kind: 'transcript'; readonly ok: false }
+  | {
+      /** The next client frame the transcript still expected. */
+      readonly expected: AcpMessage;
+      /** Index into the transcript's frames. */
+      readonly index: number;
+      readonly kind: 'incomplete';
+      readonly ok: false;
+    }
+  | {
+      /** The recorded frame, or null for a frame after the script ended. */
+      readonly expected: AcpMessage | null;
+      /** Index into the transcript's frames. */
+      readonly index: number;
+      readonly kind: 'rpc';
+      readonly ok: false;
+      /** The client frame as received, after normalization. */
+      readonly received: AcpMessage;
+    }
   | { readonly ok: true };
 
 /**
@@ -125,12 +143,32 @@ async function readExpectedStdin(expected: string): Promise<string> {
   return received;
 }
 
-function describeMismatch(report: ReplayReport): string {
+/**
+ * The stderr diff for a failed report.
+ *
+ * @public
+ */
+export function describeMismatch(report: ReplayReport): string {
   if (report.ok) {
     return '';
   }
   if (report.kind === 'transcript') {
     return `[replay] unreadable transcript: ${report.error}\n`;
+  }
+  if (report.kind === 'incomplete') {
+    return [
+      `[replay] the client stopped before frame ${report.index}`,
+      `  expected: ${JSON.stringify(report.expected)}`,
+      '',
+    ].join('\n');
+  }
+  if (report.kind === 'rpc') {
+    return [
+      `[replay] outbound rpc mismatch at frame ${report.index}`,
+      `  expected: ${JSON.stringify(report.expected)}`,
+      `  received: ${JSON.stringify(report.received)}`,
+      '',
+    ].join('\n');
   }
   return [
     `[replay] outbound ${report.kind} mismatch`,
@@ -150,8 +188,10 @@ function describeMismatch(report: ReplayReport): string {
  * already holds how the CLI reacted to any signal it got (agy, for one, traps
  * SIGTERM, writes an `interrupted` result and exits 1), so a signal must never
  * cut the replay short of the recording.
+ *
+ * @public
  */
-function trapTermination(): Promise<void> {
+export function trapTermination(): Promise<void> {
   return new Promise((resolve) => {
     for (const signal of ['SIGINT', 'SIGTERM'] as const) {
       process.on(signal, () => {
@@ -181,7 +221,9 @@ export async function runReplayBin(options: ReplayBinOptions): Promise<void> {
     writeFileSync(options.reportPath, JSON.stringify(value), 'utf8');
   };
 
-  const parsed = parseTranscript(readFileSync(options.transcriptPath, 'utf8'));
+  const parsed = parseCliTranscript(
+    readFileSync(options.transcriptPath, 'utf8'),
+  );
   if (!parsed.ok) {
     const failure: ReplayReport = {
       error: parsed.error,

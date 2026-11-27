@@ -7,15 +7,22 @@
 import { isRecord, isStringArray } from '@openthrottle/nodejs-utils';
 
 import type {
+  AcpFrame,
+  AcpTranscript,
+  ParsedTranscript,
   Transcript,
   TranscriptHeader,
   TranscriptLine,
   TranscriptParseResult,
+  TranscriptProtocolsValue,
+  TranscriptRpcDirectionsValue,
   TranscriptSurfacesValue,
 } from '../types/transcript.ts';
 import {
   TRANSCRIPT_CHANNELS,
   TRANSCRIPT_LINE_TYPES,
+  TRANSCRIPT_PROTOCOLS,
+  TRANSCRIPT_RPC_DIRECTIONS,
   TRANSCRIPT_SCHEMA_VERSION,
   TRANSCRIPT_SURFACES,
 } from '../types/transcript.ts';
@@ -24,6 +31,18 @@ function isSurface(value: unknown): value is TranscriptSurfacesValue {
   return Object.values(TRANSCRIPT_SURFACES).some(
     (surface) => surface === value,
   );
+}
+
+function isProtocol(value: unknown): value is TranscriptProtocolsValue {
+  return Object.values(TRANSCRIPT_PROTOCOLS).some((protocol) => {
+    return protocol === value;
+  });
+}
+
+function isRpcDirection(value: unknown): value is TranscriptRpcDirectionsValue {
+  return Object.values(TRANSCRIPT_RPC_DIRECTIONS).some((direction) => {
+    return direction === value;
+  });
 }
 
 function isNullableString(value: unknown): value is string | null {
@@ -41,11 +60,20 @@ function toTranscriptLine(value: unknown): TranscriptLine | null {
   const { channel, type } = value;
 
   if (type === TRANSCRIPT_LINE_TYPES.header) {
-    const { backend, cliVersion, model, recordedAt, scenario, surface } = value;
+    const {
+      backend,
+      cliVersion,
+      model,
+      protocol,
+      recordedAt,
+      scenario,
+      surface,
+    } = value;
     if (
       typeof backend !== 'string' ||
       typeof cliVersion !== 'string' ||
       !isNullableString(model) ||
+      (protocol !== undefined && !isProtocol(protocol)) ||
       typeof recordedAt !== 'string' ||
       typeof scenario !== 'string' ||
       value.schemaVersion !== TRANSCRIPT_SCHEMA_VERSION ||
@@ -57,6 +85,7 @@ function toTranscriptLine(value: unknown): TranscriptLine | null {
       backend,
       cliVersion,
       model,
+      protocol,
       recordedAt,
       scenario,
       schemaVersion: TRANSCRIPT_SCHEMA_VERSION,
@@ -72,6 +101,14 @@ function toTranscriptLine(value: unknown): TranscriptLine | null {
       return null;
     }
     return { code, signal, type };
+  }
+
+  if (type === TRANSCRIPT_LINE_TYPES.rpc) {
+    const { from, message } = value;
+    if (isRpcDirection(from) && isRecord(message)) {
+      return { from, message, type };
+    }
+    return null;
   }
 
   if (type === TRANSCRIPT_LINE_TYPES.outbound) {
@@ -110,9 +147,114 @@ function decodeLine(raw: string): unknown {
   }
 }
 
+/** Fold the lines between the header and the exit into a CLI transcript. */
+function foldCli(
+  header: TranscriptHeader,
+  body: readonly TranscriptLine[],
+  exit: Transcript['exit'],
+): TranscriptParseResult {
+  let argv: readonly string[] | null = null;
+  let stdin = '';
+  let stderr = '';
+  const stdout: string[] = [];
+
+  for (const line of body) {
+    if (line.type === TRANSCRIPT_LINE_TYPES.header) {
+      return { error: 'more than one header line', ok: false };
+    }
+    if (line.type === TRANSCRIPT_LINE_TYPES.exit) {
+      return { error: 'more than one exit line', ok: false };
+    }
+    if (line.type === TRANSCRIPT_LINE_TYPES.rpc) {
+      return { error: 'a cli transcript carries no rpc lines', ok: false };
+    }
+    if (line.channel === TRANSCRIPT_CHANNELS.argv) {
+      if (argv !== null) {
+        return { error: 'more than one argv line', ok: false };
+      }
+      argv = line.argv;
+    } else if (line.channel === TRANSCRIPT_CHANNELS.stdin) {
+      stdin += line.data;
+    } else if (line.channel === TRANSCRIPT_CHANNELS.stdout) {
+      stdout.push(line.data);
+    } else {
+      stderr += line.data;
+    }
+  }
+
+  if (argv === null) {
+    return { error: 'missing the argv line', ok: false };
+  }
+
+  return {
+    ok: true,
+    transcript: {
+      argv,
+      exit,
+      header,
+      protocol: TRANSCRIPT_PROTOCOLS.cli,
+      stderr,
+      stdin,
+      stdout,
+    },
+  };
+}
+
+/** Fold the lines between the header and the exit into an ACP transcript. */
+function foldAcp(
+  header: TranscriptHeader,
+  body: readonly TranscriptLine[],
+  exit: AcpTranscript['exit'],
+): TranscriptParseResult {
+  let argv: readonly string[] | null = null;
+  let stderr = '';
+  const frames: AcpFrame[] = [];
+
+  for (const line of body) {
+    if (line.type === TRANSCRIPT_LINE_TYPES.header) {
+      return { error: 'more than one header line', ok: false };
+    }
+    if (line.type === TRANSCRIPT_LINE_TYPES.exit) {
+      return { error: 'more than one exit line', ok: false };
+    }
+    if (line.type === TRANSCRIPT_LINE_TYPES.rpc) {
+      frames.push({ from: line.from, message: line.message });
+    } else if (line.channel === TRANSCRIPT_CHANNELS.argv) {
+      if (argv !== null) {
+        return { error: 'more than one argv line', ok: false };
+      }
+      argv = line.argv;
+    } else if (line.channel === TRANSCRIPT_CHANNELS.stderr) {
+      stderr += line.data;
+    } else {
+      return {
+        error: `an acp transcript carries no ${line.channel} lines`,
+        ok: false,
+      };
+    }
+  }
+
+  if (argv === null) {
+    return { error: 'missing the argv line', ok: false };
+  }
+
+  return {
+    ok: true,
+    transcript: {
+      argv,
+      exit,
+      frames,
+      header,
+      protocol: TRANSCRIPT_PROTOCOLS.acp,
+      stderr,
+    },
+  };
+}
+
 /**
  * Parse NDJSON transcript text. The header must come first and the exit last;
- * exactly one argv line is required.
+ * exactly one argv line is required. A header without `protocol` is a CLI
+ * transcript.
  *
  * @public
  */
@@ -137,95 +279,100 @@ export function parseTranscript(text: string): TranscriptParseResult {
     return { error: 'the last line must be the exit', ok: false };
   }
 
-  let argv: readonly string[] | null = null;
-  let stdin = '';
-  let stderr = '';
-  const stdout: string[] = [];
+  const body = lines.slice(1, -1);
+  const exit = { code: last.code, signal: last.signal };
 
-  for (const line of lines.slice(1, -1)) {
-    if (line.type === TRANSCRIPT_LINE_TYPES.header) {
-      return { error: 'more than one header line', ok: false };
-    }
-    if (line.type === TRANSCRIPT_LINE_TYPES.exit) {
-      return { error: 'more than one exit line', ok: false };
-    }
-    if (line.channel === TRANSCRIPT_CHANNELS.argv) {
-      if (argv !== null) {
-        return { error: 'more than one argv line', ok: false };
-      }
-      argv = line.argv;
-    } else if (line.channel === TRANSCRIPT_CHANNELS.stdin) {
-      stdin += line.data;
-    } else if (line.channel === TRANSCRIPT_CHANNELS.stdout) {
-      stdout.push(line.data);
-    } else {
-      stderr += line.data;
-    }
+  if (first.protocol === TRANSCRIPT_PROTOCOLS.acp) {
+    return foldAcp(first, body, exit);
   }
+  return foldCli(first, body, exit);
+}
 
-  if (argv === null) {
-    return { error: 'missing the argv line', ok: false };
+/**
+ * Parse a transcript that must be a CLI one: the strict CLI replay paths
+ * (replay bin, drift check) call this so an ACP transcript fails clearly
+ * instead of being replayed as something it is not.
+ *
+ * @public
+ */
+export function parseCliTranscript(
+  text: string,
+):
+  | { readonly error: string; readonly ok: false }
+  | { readonly ok: true; readonly transcript: Transcript } {
+  const parsed = parseTranscript(text);
+  if (!parsed.ok) {
+    return parsed;
   }
-
-  return {
-    ok: true,
-    transcript: {
-      argv,
-      exit: { code: last.code, signal: last.signal },
-      header: first,
-      stderr,
-      stdin,
-      stdout,
-    },
-  };
+  if (parsed.transcript.protocol === TRANSCRIPT_PROTOCOLS.acp) {
+    return {
+      error: 'an acp transcript cannot be used as a cli transcript',
+      ok: false,
+    };
+  }
+  return { ok: true, transcript: parsed.transcript };
 }
 
 /**
  * Serialize a transcript back to NDJSON, one line per record, newline-ended.
- * Empty stdin and stderr are omitted so a fixture carries only what happened.
+ * A CLI transcript omits empty stdin and stderr and never writes `protocol`
+ * (so the bytes match every pre-ACP fixture); an ACP transcript writes
+ * `protocol: 'acp'`, its frames as `rpc` lines in order, then stderr.
  *
  * @public
  */
-export function serializeTranscript(transcript: Transcript): string {
-  const header: TranscriptHeader = transcript.header;
-  const lines: TranscriptLine[] = [
-    header,
-    {
-      argv: transcript.argv,
-      channel: TRANSCRIPT_CHANNELS.argv,
-      type: TRANSCRIPT_LINE_TYPES.outbound,
-    },
-  ];
-
-  if (transcript.stdin !== '') {
-    lines.push({
-      channel: TRANSCRIPT_CHANNELS.stdin,
-      data: transcript.stdin,
-      type: TRANSCRIPT_LINE_TYPES.outbound,
-    });
-  }
-
-  for (const data of transcript.stdout) {
-    lines.push({
-      channel: TRANSCRIPT_CHANNELS.stdout,
-      data,
-      type: TRANSCRIPT_LINE_TYPES.inbound,
-    });
-  }
-
+export function serializeTranscript(transcript: ParsedTranscript): string {
+  const argvLine: TranscriptLine = {
+    argv: transcript.argv,
+    channel: TRANSCRIPT_CHANNELS.argv,
+    type: TRANSCRIPT_LINE_TYPES.outbound,
+  };
+  const exitLine: TranscriptLine = {
+    code: transcript.exit.code,
+    signal: transcript.exit.signal,
+    type: TRANSCRIPT_LINE_TYPES.exit,
+  };
+  const stderrLines: TranscriptLine[] = [];
   if (transcript.stderr !== '') {
-    lines.push({
+    stderrLines.push({
       channel: TRANSCRIPT_CHANNELS.stderr,
       data: transcript.stderr,
       type: TRANSCRIPT_LINE_TYPES.inbound,
     });
   }
+  const lines: TranscriptLine[] = [];
 
-  lines.push({
-    code: transcript.exit.code,
-    signal: transcript.exit.signal,
-    type: TRANSCRIPT_LINE_TYPES.exit,
-  });
+  if (transcript.protocol === TRANSCRIPT_PROTOCOLS.acp) {
+    lines.push(
+      { ...transcript.header, protocol: TRANSCRIPT_PROTOCOLS.acp },
+      argvLine,
+    );
+    for (const frame of transcript.frames) {
+      lines.push({
+        from: frame.from,
+        message: frame.message,
+        type: TRANSCRIPT_LINE_TYPES.rpc,
+      });
+    }
+    lines.push(...stderrLines, exitLine);
+  } else {
+    lines.push({ ...transcript.header, protocol: undefined }, argvLine);
+    if (transcript.stdin !== '') {
+      lines.push({
+        channel: TRANSCRIPT_CHANNELS.stdin,
+        data: transcript.stdin,
+        type: TRANSCRIPT_LINE_TYPES.outbound,
+      });
+    }
+    for (const data of transcript.stdout) {
+      lines.push({
+        channel: TRANSCRIPT_CHANNELS.stdout,
+        data,
+        type: TRANSCRIPT_LINE_TYPES.inbound,
+      });
+    }
+    lines.push(...stderrLines, exitLine);
+  }
 
   return `${lines.map((line) => JSON.stringify(line)).join('\n')}\n`;
 }

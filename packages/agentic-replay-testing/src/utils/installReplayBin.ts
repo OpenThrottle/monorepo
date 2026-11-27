@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 import type { Transcript } from '../types/transcript.ts';
 import type { ReplayReport } from './replay-bin.ts';
 import { writeNodeBin } from './stub-bin.ts';
-import { parseTranscript } from './transcript.ts';
+import { parseCliTranscript } from './transcript.ts';
 
 const REPLAY_BIN_PATH = fileURLToPath(
   new URL('replay-bin.ts', import.meta.url),
@@ -41,7 +41,7 @@ function isReplayReport(value: unknown): value is ReplayReport {
  * @public
  */
 export function installReplayBin(transcriptPath: string): ReplayBin {
-  const parsed = parseTranscript(readFileSync(transcriptPath, 'utf8'));
+  const parsed = parseCliTranscript(readFileSync(transcriptPath, 'utf8'));
   if (!parsed.ok) {
     throw new Error(`${transcriptPath}: ${parsed.error}`);
   }
