@@ -2997,16 +2997,35 @@ var asString3 = (value) => {
   const isString = typeof value === "string";
   return isString ? value : void 0;
 };
+var parseMcpServers = (event) => {
+  const raw = event.mcp_servers;
+  if (!Array.isArray(raw)) {
+    return null;
+  }
+  const servers = [];
+  for (const entry of raw) {
+    if (!isRecord(entry)) {
+      continue;
+    }
+    const name = asString3(entry.name);
+    if (name !== void 0 && name !== "") {
+      servers.push({ name, status: asString3(entry.status) ?? "unknown" });
+    }
+  }
+  return servers.length > 0 ? servers : null;
+};
 function mapSystem2(event) {
   if (event.subtype !== "init") {
     return null;
   }
+  const mcpServers = parseMcpServers(event);
   return {
     delta: "",
     done: false,
     kind: CONVERSATION_STREAM_CHUNK_KINDS.session,
     metadata: {
       apiKeySource: parseClaudeApiKeySource(event),
+      ...mcpServers === null ? {} : { mcpServers },
       sessionId: asString3(event.session_id) ?? null
     }
   };

@@ -217,6 +217,48 @@ var sanitizeSessionId = (sessionId) => {
   return String(sessionId).replace(/[^A-Za-z0-9._-]/g, "-");
 };
 
+// packages/nodejs-utils/src/utils/duration.ts
+var SECONDS_PER_UNIT = {
+  day: 86400,
+  hour: 3600,
+  minute: 60,
+  second: 1
+};
+var UNIT_LADDER = [
+  { key: "day", suffix: "d" },
+  { key: "hour", suffix: "h" },
+  { key: "minute", suffix: "m" },
+  { key: "second", suffix: "s" }
+];
+var formatDuration = (ms, options = {}) => {
+  const {
+    dropZeroTail = false,
+    largestUnit = "hour",
+    maxUnits = 2,
+    padded = false,
+    rounding = "round"
+  } = options;
+  const safeMs = Number.isFinite(ms) ? Math.max(0, ms) : 0;
+  const seconds = safeMs / 1e3;
+  let remaining = rounding === "floor" ? Math.floor(seconds) : Math.round(seconds);
+  const ceiling = UNIT_LADDER.findIndex((unit) => unit.key === largestUnit);
+  const parts = UNIT_LADDER.slice(ceiling).map((unit) => {
+    const value = Math.floor(remaining / SECONDS_PER_UNIT[unit.key]);
+    remaining -= value * SECONDS_PER_UNIT[unit.key];
+    return { suffix: unit.suffix, value };
+  });
+  const firstNonZero = parts.findIndex((part) => part.value > 0);
+  const start = firstNonZero === -1 ? parts.length - 1 : firstNonZero;
+  const shown = parts.slice(start, start + maxUnits);
+  return shown.filter((part, index) => {
+    return !(dropZeroTail && index === 1 && part.value === 0);
+  }).map((part, index) => {
+    const isPadded = padded && index > 0;
+    const digits = isPadded ? String(part.value).padStart(2, "0") : String(part.value);
+    return `${digits}${part.suffix}`;
+  }).join(" ");
+};
+
 // packages/nodejs-utils/src/utils/errors.ts
 var toErrorMessage = (error) => {
   return error instanceof Error ? error.message : String(error);
@@ -496,18 +538,9 @@ var readTaskHistories = (events, adapter, fromIndex, skipToolUseId) => {
   }
   return histories;
 };
-var formatElapsed = (ms) => {
-  const totalSeconds = Math.max(0, Math.round(ms / 1e3));
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor(totalSeconds % 3600 / 60);
-  const seconds = totalSeconds % 60;
-  if (hours > 0) return `${hours}h ${minutes}m`;
-  if (minutes > 0) return `${minutes}m ${seconds}s`;
-  return `${seconds}s`;
-};
 var elapsedSuffixOf = (status, startedAtMs, nowMs) => {
   if (status === IN_PROGRESS2 || startedAtMs === null) return "";
-  return ` after ${formatElapsed(nowMs - startedAtMs)}`;
+  return ` after ${formatDuration(nowMs - startedAtMs)}`;
 };
 var runKeyOf = (planId, planRunId) => {
   return planRunId ?? planId;
