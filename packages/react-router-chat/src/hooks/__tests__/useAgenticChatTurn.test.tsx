@@ -8,6 +8,7 @@ import { createRoutesStub } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type {
+  ChatStreamPrompt,
   ConversationStreamSubscriptionData,
   ConversationStreamSubscriptionVariables,
 } from '../../conversation-stream';
@@ -24,6 +25,11 @@ let streamControl: {
   markCompleted: (id: string, failed?: boolean) => void;
   markRetryable: (id: string) => void;
   streamPartial: (conversationId: string, message: ChatMessage) => void;
+  streamPrompt: (
+    conversationId: string,
+    turnId: string,
+    prompt: ChatStreamPrompt,
+  ) => void;
   streamReply: (conversationId: string, message: ChatMessage) => void;
 } | null = null;
 
@@ -36,6 +42,7 @@ vi.mock('../useConversationStream', () => ({
     lastActivityAt: number | null;
     messages: ChatMessage[];
     phaseByMessageId: ReadonlyMap<string, never>;
+    prompts: ReadonlyMap<string, ChatStreamPrompt>;
     retryableIds: ReadonlySet<string>;
   } => {
     const [retryableIds, setRetryableIds] = React.useState<ReadonlySet<string>>(
@@ -47,6 +54,9 @@ vi.mock('../useConversationStream', () => ({
     const [messages, setMessages] = React.useState<ChatMessage[]>([]);
     const [streamed, setStreamed] = React.useState<
       ReadonlyMap<string, ChatMessage[]>
+    >(new Map());
+    const [prompts, setPrompts] = React.useState<
+      ReadonlyMap<string, ReadonlyMap<string, ChatStreamPrompt>>
     >(new Map());
     streamControl = {
       markCompleted: (id: string, failed = false): void => {
@@ -76,6 +86,15 @@ vi.mock('../useConversationStream', () => ({
           ]),
         );
       },
+      // Streams a turn's first chunk: the user message that started it.
+      streamPrompt: (conversationId, turnId, prompt): void => {
+        setPrompts((previous) =>
+          new Map(previous).set(
+            conversationId,
+            new Map(previous.get(conversationId)).set(turnId, prompt),
+          ),
+        );
+      },
       // Streams a finished reply: like a terminal chunk, it also completes the turn.
       streamReply: (conversationId: string, message: ChatMessage): void => {
         setStreamed((previous) =>
@@ -96,6 +115,7 @@ vi.mock('../useConversationStream', () => ({
         ...(streamed.get(options.conversationId ?? '') ?? []),
       ],
       phaseByMessageId: new Map<string, never>(),
+      prompts: prompts.get(options.conversationId ?? '') ?? new Map(),
       retryableIds,
     };
   },
@@ -183,6 +203,12 @@ const Harness = (): React.ReactElement => {
       <button onClick={() => turn.resumeQueue()} type="button">
         Resume
       </button>
+      <span data-testid="user-bodies">
+        {turn.messages
+          .filter((message) => message.role === 'user')
+          .map((message) => message.body)
+          .join('|')}
+      </span>
       <span data-testid="assistant-bodies">
         {turn.messages
           .filter((message) => message.role === 'assistant')
@@ -315,6 +341,91 @@ describe('useAgenticChatTurn restore/reset', () => {
         ),
       );
       expect(component.getByTestId('message-count')).toHaveTextContent('3');
+    });
+
+    describe('when another tab sends a prompt', () => {
+      test('shows the prompt above the reply it starts', async () => {
+        const user = userEvent.setup();
+        const component = renderTurn();
+
+        await user.click(component.getByRole('button', { name: 'Restore' }));
+        await waitFor(() =>
+          expect(component.getByTestId('message-count')).toHaveTextContent('2'),
+        );
+        act(() =>
+          streamControl?.streamPrompt('conv-42', 'a-other', {
+            body: 'From tab A',
+            id: 'u-other',
+          }),
+        );
+        act(() =>
+          streamControl?.streamPartial('conv-42', {
+            body: 'Answer to A',
+            id: 'a-other',
+            role: 'assistant',
+          }),
+        );
+
+        await waitFor(() =>
+          expect(component.getByTestId('user-bodies')).toHaveTextContent(
+            'Earlier question|From tab A',
+          ),
+        );
+        expect(component.getByTestId('message-count')).toHaveTextContent('4');
+      });
+
+      test('never repeats a prompt the thread already holds', async () => {
+        const user = userEvent.setup();
+        const component = renderTurn();
+
+        await user.click(component.getByRole('button', { name: 'Restore' }));
+        await waitFor(() =>
+          expect(component.getByTestId('message-count')).toHaveTextContent('2'),
+        );
+        act(() =>
+          streamControl?.streamPrompt('conv-42', 'a-old', {
+            body: 'Earlier question',
+            id: 'm1',
+          }),
+        );
+
+        await new Promise((resolve) => {
+          setTimeout(resolve, 50);
+        });
+        expect(component.getByTestId('message-count')).toHaveTextContent('2');
+      });
+    });
+
+    describe('when this tab sent the prompt', () => {
+      test('keeps only its own bubble', async () => {
+        const user = userEvent.setup();
+        const component = renderTurn();
+
+        await user.click(component.getByRole('button', { name: 'Restore' }));
+        await waitFor(() =>
+          expect(component.getByTestId('message-count')).toHaveTextContent('2'),
+        );
+        await user.click(component.getByRole('button', { name: 'Follow up' }));
+        await waitFor(() =>
+          expect(component.getByTestId('pending-ids')).toHaveTextContent('a1'),
+        );
+        act(() =>
+          streamControl?.streamPrompt('conv-42', 'a1', {
+            body: 'follow-up',
+            id: 'u-persisted',
+          }),
+        );
+
+        await new Promise((resolve) => {
+          setTimeout(resolve, 50);
+        });
+        expect(component.getByTestId('user-bodies')).toHaveTextContent(
+          'Earlier question|follow-up',
+        );
+        expect(component.getByTestId('user-bodies').textContent).toBe(
+          'Earlier question|follow-up',
+        );
+      });
     });
 
     test('adopts it as the running turn, so Stop cancels it', async () => {

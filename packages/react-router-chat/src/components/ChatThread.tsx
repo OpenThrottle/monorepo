@@ -3,8 +3,14 @@ import * as React from 'react';
 
 import { ChatPermissionResponderContext } from '../data/chat-permission-responder-context';
 import { usePinnedToBottom } from '../hooks/usePinnedToBottom';
-import type { ChatMessage, ChatPermissionResponder } from '../types';
+import type {
+  ChatMessage,
+  ChatPermissionResponder,
+  ChatThreadLoadEarlier,
+} from '../types';
 import { findLastUserMessageId } from '../utils/findLastUserMessageId';
+import { findScroller } from '../utils/findScroller';
+import { ChatLoadEarlier } from './ChatLoadEarlier';
 import { ChatRetryNotice } from './ChatRetryNotice';
 import { ChatThreadMessage } from './ChatThreadMessage';
 
@@ -25,6 +31,11 @@ export interface ChatThreadProps {
   readonly getScrollElement?: () => HTMLElement | null;
   /** Disable the Retry button while a replay is in flight. */
   readonly isRetrying?: boolean;
+  /**
+   * Pages back through a restored conversation. Renders a Load earlier control
+   * above the oldest message while older rows exist.
+   */
+  readonly loadEarlier?: ChatThreadLoadEarlier;
   readonly messages: readonly ChatMessage[];
   /** Told when the view stops or resumes following the bottom. */
   readonly onPinnedChange?: (isPinned: boolean) => void;
@@ -47,7 +58,9 @@ export interface ChatThreadProps {
  * view follows the bottom while pinned, sending a message re-pins, and only the
  * user scrolling away unpins it — a streamed token never does. Because the
  * scroll owner differs by surface, {@link ChatThreadProps.getScrollElement}
- * plugs in the real scroller when the thread does not own it.
+ * plugs in the real scroller when the thread does not own it. Loading earlier
+ * messages keeps the reader where they were: the distance from the bottom is
+ * captured before the page loads and restored once it is prepended.
  */
 export const ChatThread = (props: ChatThreadProps): React.ReactElement => {
   const {
@@ -56,6 +69,7 @@ export const ChatThread = (props: ChatThreadProps): React.ReactElement => {
     emptyStateLabel = 'No messages yet. Send one to start.',
     getScrollElement,
     isRetrying = false,
+    loadEarlier,
     messages,
     onPinnedChange,
     onRespondToPermission,
@@ -70,15 +84,44 @@ export const ChatThread = (props: ChatThreadProps): React.ReactElement => {
     getScrollElement,
     repinKey: findLastUserMessageId(messages),
   });
+  // Distance from the bottom when Load earlier was clicked, restored once the
+  // older page is prepended so the reading position does not jump.
+  const offsetFromBottomRef = React.useRef<number | null>(null);
 
   // Setup
   const isEmpty = messages.length === 0;
+  const firstMessageId = messages[0]?.id ?? null;
+  const showLoadEarlier = loadEarlier?.hasEarlier === true;
 
   // Handlers
+  const resolveScroller = (): HTMLElement | null => {
+    const content = contentRef.current;
+
+    return getScrollElement?.() ?? findScroller(content) ?? content;
+  };
+
+  const onLoadEarlier = (): void => {
+    const scroller = resolveScroller();
+    if (scroller !== null) {
+      offsetFromBottomRef.current = scroller.scrollHeight - scroller.scrollTop;
+    }
+    loadEarlier?.onLoadEarlier();
+  };
 
   // Markup
 
   // Life Cycle
+  // Before paint, so the prepended page never flashes at the old offset.
+  React.useLayoutEffect(() => {
+    const offset = offsetFromBottomRef.current;
+    const scroller = resolveScroller();
+    if (offset === null || scroller === null) {
+      return;
+    }
+    offsetFromBottomRef.current = null;
+    scroller.scrollTop = scroller.scrollHeight - offset;
+  }, [firstMessageId]);
+
   React.useEffect(() => {
     onPinnedChange?.(isPinned);
   }, [isPinned, onPinnedChange]);
@@ -108,6 +151,12 @@ export const ChatThread = (props: ChatThreadProps): React.ReactElement => {
         ref={contentRef}
         role="log"
       >
+        {showLoadEarlier && (
+          <ChatLoadEarlier
+            isLoading={loadEarlier.isLoading}
+            onLoadEarlier={onLoadEarlier}
+          />
+        )}
         {isEmpty && (
           <p className="text-muted-foreground text-sm">{emptyStateLabel}</p>
         )}

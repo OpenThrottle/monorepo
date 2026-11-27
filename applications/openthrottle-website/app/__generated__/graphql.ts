@@ -1348,7 +1348,7 @@ export type ConversationStreamChunkObject = {
   error?: Maybe<Scalars['String']['output']>;
   /** Unique id for this chunk (subscription dedupe / cursor). */
   id: Scalars['String']['output'];
-  /** Event kind: text (assistant output) | thinking | tool_call | tool_result | usage | usage_limit | session. */
+  /** Event kind: text (assistant output) | thinking | tool_call | tool_result | usage | usage_limit | session | user_message (the turn's prompt, first chunk of a persisted turn). */
   kind: Scalars['String']['output'];
   /** Assistant message id the deltas accumulate into. */
   messageId: Scalars['String']['output'];

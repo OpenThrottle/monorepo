@@ -295,7 +295,25 @@ export interface LoadAgentConversationMessagesResult {
   readonly activeTurn: ChatActiveTurn | null;
   readonly conversationId: string | null;
   readonly errorMessage: string | null;
+  /**
+   * Position of the page's oldest row among all of the conversation's rows,
+   * oldest first: 0 means nothing earlier exists. Counted from the oldest end,
+   * so turns appended after the load never shift it.
+   */
+  readonly firstMessageIndex: number;
   readonly messages: readonly ChatMessage[];
+}
+
+/**
+ * @description The thread's Load earlier control: pages back through a
+ * restored conversation's older messages.
+ * @public
+ */
+export interface ChatThreadLoadEarlier {
+  /** True while rows older than the oldest shown one exist. */
+  readonly hasEarlier: boolean;
+  readonly isLoading: boolean;
+  readonly onLoadEarlier: () => void;
 }
 
 /**
@@ -858,6 +876,8 @@ export interface ChatComposerControls extends Omit<
    * a Stop button wired to {@link onStop}.
    */
   readonly isStreaming?: boolean;
+  /** Pages back through a restored thread; {@link ChatDialog} renders the control. */
+  readonly loadEarlier?: ChatThreadLoadEarlier;
   /** Answers an ACP permission request card; see {@link ChatPermissionResponder}. */
   readonly onRespondToPermission?: ChatPermissionResponder;
   /** Replay the last turn; surfaced by the Retry affordance when {@link canRetry}. */

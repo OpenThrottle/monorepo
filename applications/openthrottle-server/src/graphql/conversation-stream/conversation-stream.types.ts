@@ -132,4 +132,15 @@ export interface StartConversationStreamRun {
   readonly systemPrompt: string | null;
   /** Owning user id (conversation ownership is enforced on persist). */
   readonly userId: string;
+  /**
+   * The persisted user message that started the turn, published as its first
+   * chunk; null in Private mode, where nothing is persisted.
+   */
+  readonly userMessage: ConversationStreamUserMessage | null;
+}
+
+/** The user message a persisted turn publishes as its first chunk. */
+export interface ConversationStreamUserMessage {
+  readonly content: string;
+  readonly id: string;
 }

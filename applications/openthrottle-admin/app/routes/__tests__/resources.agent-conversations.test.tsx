@@ -58,6 +58,7 @@ describe('routes/resources.agent-conversations action (admin)', () => {
       activeTurn: null,
       conversationId: 'c1',
       errorMessage: null,
+      firstMessageIndex: 0,
       messages: [],
     });
 
@@ -73,6 +74,7 @@ describe('routes/resources.agent-conversations action (admin)', () => {
       activeTurn: null,
       conversationId: 'c1',
       errorMessage: null,
+      firstMessageIndex: 0,
       messages: [],
     });
   });

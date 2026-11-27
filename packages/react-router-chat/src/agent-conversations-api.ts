@@ -53,6 +53,7 @@ export const emptyLoadAgentConversationMessagesResult = (
     activeTurn: null,
     conversationId: null,
     errorMessage: null,
+    firstMessageIndex: 0,
     messages: [],
     ...overrides,
   };
@@ -141,6 +142,48 @@ const parseIntFormField = (
   return Number.isFinite(parsed) ? parsed : undefined;
 };
 
+/** Rows per load-messages page: a restore, and each Load earlier after it. */
+const DEFAULT_MESSAGES_PAGE_SIZE = 100;
+
+/** @public */
+export interface LoadAgentConversationMessagesParams {
+  /**
+   * Load the page of rows just before this position (a previous result's
+   * `firstMessageIndex`), or undefined for the newest page.
+   */
+  readonly before: number | undefined;
+  readonly conversationId: string;
+  readonly limit?: number;
+}
+
+interface MessagesPage {
+  readonly fromNewest: boolean;
+  readonly limit: number;
+  readonly offset: number;
+}
+
+/**
+ * @description The page a load reads: the newest `limit` rows, or the `limit`
+ * rows ending just before `before`, counted from the oldest row so turns sent
+ * since the restore never shift it. Null when nothing precedes `before`.
+ */
+const resolveMessagesPage = (
+  before: number | undefined,
+  limit: number,
+): MessagesPage | null => {
+  if (before === undefined) {
+    return { fromNewest: true, limit, offset: 0 };
+  }
+
+  if (before <= 0) {
+    return null;
+  }
+
+  const offset = Math.max(before - limit, 0);
+
+  return { fromNewest: false, limit: before - offset, offset };
+};
+
 /**
  * The app-generated conversation-CRUD documents the shared API executes. Kept
  * structural so each app's generated documents are assignable.
@@ -160,9 +203,17 @@ export interface AgentConversationsDocuments {
           readonly startedAt: unknown;
         } | null;
         items: readonly PersistedAgentMessageRow[];
+        totalCount: number;
       };
     },
-    { input: { conversationId: string; fromNewest: boolean; limit: number } }
+    {
+      input: {
+        conversationId: string;
+        fromNewest: boolean;
+        limit: number;
+        offset: number;
+      };
+    }
   >;
   readonly listDocument: TypedDocumentNode<
     {
@@ -195,7 +246,7 @@ export interface AgentConversationsApi {
   ): Promise<ListAgentConversationsResult>;
   callLoadAgentConversationMessages(
     request: Request,
-    params: { conversationId: string; limit?: number },
+    params: LoadAgentConversationMessagesParams,
   ): Promise<LoadAgentConversationMessagesResult>;
   callRenameAgentConversation(
     request: Request,
@@ -236,24 +287,32 @@ export function createAgentConversationsApi(
 ): AgentConversationsApi {
   const callLoadAgentConversationMessages = async (
     request: Request,
-    params: { conversationId: string; limit?: number },
+    params: LoadAgentConversationMessagesParams,
   ): Promise<LoadAgentConversationMessagesResult> => {
+    const limit = params.limit ?? DEFAULT_MESSAGES_PAGE_SIZE;
+    const page = resolveMessagesPage(params.before, limit);
+
+    if (page === null) {
+      return emptyLoadAgentConversationMessagesResult({
+        conversationId: params.conversationId,
+      });
+    }
+
     const data = await executeGraphqlWithAuth(
       request,
       documents.getMessagesDocument,
-      {
-        // The newest page: a thread longer than the limit must restore its
-        // latest turns, not its first ones.
-        input: {
-          conversationId: params.conversationId,
-          fromNewest: true,
-          limit: params.limit ?? 100,
-        },
-      },
+      { input: { conversationId: params.conversationId, ...page } },
     );
 
+    const { items, totalCount } = data.getAgentConversationMessages;
+    // A newest page starts `items.length` rows before the end; an earlier page
+    // starts at its own offset from the oldest row.
+    const firstMessageIndex = page.fromNewest
+      ? Math.max(totalCount - items.length, 0)
+      : page.offset;
+
     const messages = mapPersistedAgentConversationMessages(
-      data.getAgentConversationMessages.items.map((message) => ({
+      items.map((message) => ({
         content: message.content,
         createdAt: message.createdAt,
         id: message.id,
@@ -269,6 +328,7 @@ export function createAgentConversationsApi(
     return emptyLoadAgentConversationMessagesResult({
       activeTurn: toChatActiveTurn(activeTurn),
       conversationId: params.conversationId,
+      firstMessageIndex,
       messages,
     });
   };
@@ -354,8 +414,9 @@ export function createAgentConversationsApi(
 
     try {
       return await callLoadAgentConversationMessages(request, {
+        before: parseIntFormField(formData.get('before')),
         conversationId,
-        limit: 100,
+        limit: DEFAULT_MESSAGES_PAGE_SIZE,
       });
     } catch (error) {
       const errorMessage =

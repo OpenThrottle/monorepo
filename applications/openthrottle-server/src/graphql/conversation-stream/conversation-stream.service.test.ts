@@ -21,6 +21,7 @@ import { sleep } from '@openthrottle/nodejs-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { AgentAccountStampingService } from '../../services/agent-account-stamping/agent-account-stamping.service.ts';
+import { USER_MESSAGE_CHUNK_KIND } from './conversation-stream.constants.ts';
 import { ConversationStreamService } from './conversation-stream.service.ts';
 import type { StartConversationStreamRun } from './conversation-stream.types.ts';
 
@@ -98,6 +99,7 @@ const baseRun: StartConversationStreamRun = {
   sessionId: null,
   systemPrompt: null,
   userId: 'user-1',
+  userMessage: null,
 };
 
 function buildService(): {
@@ -197,6 +199,35 @@ describe('ConversationStreamService', () => {
       modelName: 'llama3',
       modelProvider: 'ollama',
     });
+  });
+
+  it('publishes the persisted prompt as the first chunk, keeping it out of the reply', async () => {
+    openAiStreamMock.mockReturnValue(fakeStream(['Hi']));
+    const { messages, publish, service } = buildService();
+
+    await service.runStream({
+      ...baseRun,
+      userMessage: { content: 'hi', id: 'user-msg-1' },
+    });
+
+    const published = publish.mock.calls.map(
+      ([, payload]) => payload.conversationStreamChunkAdded,
+    );
+    expect(published[0]).toEqual(
+      expect.objectContaining({
+        delta: 'hi',
+        kind: USER_MESSAGE_CHUNK_KIND,
+        messageId: 'assistant-msg-1',
+        metadataJson: JSON.stringify({ userMessageId: 'user-msg-1' }),
+        sortOrder: 0,
+      }),
+    );
+    expect(published[1]).toEqual(
+      expect.objectContaining({ delta: 'Hi', kind: 'text', sortOrder: 1 }),
+    );
+    expect(messages.appendMessages).toHaveBeenCalledWith('user-1', 'conv-1', [
+      expect.objectContaining({ content: 'Hi', role: 'assistant' }),
+    ]);
   });
 
   it('persists non-text events (thinking/tool) to the assistant message tool_metadata', async () => {

@@ -42,7 +42,10 @@ import { isRecord, toErrorMessage } from '@openthrottle/nodejs-utils';
 import type { UsageLimit } from '@openthrottle/openthrottle-drivers';
 
 import { AgentAccountStampingService } from '../../services/agent-account-stamping/agent-account-stamping.service.ts';
-import { CONVERSATION_STREAM_CHUNK_FIELD } from './conversation-stream.constants.ts';
+import {
+  CONVERSATION_STREAM_CHUNK_FIELD,
+  USER_MESSAGE_CHUNK_KIND,
+} from './conversation-stream.constants.ts';
 import type { StartConversationStreamRun } from './conversation-stream.types.ts';
 import type {
   ActiveConversationTurn,
@@ -348,6 +351,23 @@ export class ConversationStreamService {
     let accumulated = '';
     let sortOrder = 0;
     let sessionPersisted = false;
+
+    // The prompt first, buffered like any chunk, so every tab on the
+    // conversation (and a late subscriber's replay) shows what started the turn.
+    if (run.userMessage !== null) {
+      await this.publishChunk({
+        conversationId: run.conversationId,
+        delta: run.userMessage.content,
+        done: false,
+        error: null,
+        id: randomUUID(),
+        kind: USER_MESSAGE_CHUNK_KIND,
+        messageId: run.assistantMessageId,
+        metadataJson: JSON.stringify({ userMessageId: run.userMessage.id }),
+        sortOrder,
+      });
+      sortOrder += 1;
+    }
     // Error the backend reported on its terminal chunk (claude gates this on
     // `is_error`); forwarded onto the published done chunk instead of dropped.
     let terminalError: string | null = null;

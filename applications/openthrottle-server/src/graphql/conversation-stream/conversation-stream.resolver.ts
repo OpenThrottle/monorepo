@@ -56,7 +56,10 @@ import { toErrorMessage } from '@openthrottle/nodejs-utils';
 
 import { CheckoutPathService } from '../../services/checkout-path/checkout-path.service.ts';
 import { buildManagedMcpServers } from '../../services/workspace-editor-config/workspace-editor-config.utils.ts';
-import { TURN_IN_PROGRESS_ERROR } from './conversation-stream.constants.ts';
+import {
+  PROMPT_HISTORY_WINDOW,
+  TURN_IN_PROGRESS_ERROR,
+} from './conversation-stream.constants.ts';
 import { StartConversationStreamInput } from './conversation-stream.input.ts';
 import {
   ConversationStreamChunkObject,
@@ -406,9 +409,12 @@ export class ConversationStreamResolver {
       );
       userMessageId = userMessage?.id ?? null;
 
+      // The newest window, not the oldest: a long thread's prompt must end at
+      // the message just appended. Rows still come back oldest first.
       const history = await this.messages.listMessagesForConversation(
         userId,
         conversationId,
+        { fromNewest: true, limit: PROMPT_HISTORY_WINDOW },
       );
 
       const promptRows = history.filter((row) => IS_PROMPT_ROLE[row.role]);
@@ -462,6 +468,8 @@ export class ConversationStreamResolver {
       sessionId: resolved.sessionId,
       systemPrompt: resolved.systemPrompt,
       userId,
+      userMessage:
+        userMessageId === null ? null : { content: message, id: userMessageId },
     });
 
     const result = new StartConversationStreamResult();

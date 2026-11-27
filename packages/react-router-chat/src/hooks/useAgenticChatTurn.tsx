@@ -23,6 +23,7 @@ import type {
   ChatPermissionResponder,
   ChatQueuedMessage,
   ChatStartActionResult,
+  ChatThreadLoadEarlier,
   ChatTokenUsage,
   LoadAgentConversationMessagesResult,
 } from '../types';
@@ -34,6 +35,7 @@ import {
   didTurnFail,
   overlayStreamedMessage,
 } from '../utils/agentic-chat-turn-messages';
+import { useChatEarlierMessages } from './useChatEarlierMessages';
 import { useChatMessageQueue } from './useChatMessageQueue';
 import { useConversationStream } from './useConversationStream';
 
@@ -70,6 +72,8 @@ export interface UseAgenticChatTurnResult {
    */
   readonly isQueuePaused: boolean;
   readonly isStreaming: boolean;
+  /** The thread's Load earlier control, for a restored conversation. */
+  readonly loadEarlier: ChatThreadLoadEarlier;
   /** User messages + streamed assistant turns (placeholders flagged `pending`). */
   readonly messages: ChatMessage[];
   /** Answer a pending permission request: an option id, or null to cancel. */
@@ -170,6 +174,7 @@ export function useAgenticChatTurn(
   const localIdRef = React.useRef(0);
   const startFetcher = useFetcher<ChatStartActionResult>();
   const restoreFetcher = useFetcher<LoadAgentConversationMessagesResult>();
+  const earlier = useChatEarlierMessages({ conversationId, setMessages });
 
   // Last submitted turn, remembered so a stall/timeout can replay it verbatim
   // without re-appending the user bubble (it is already in the thread).
@@ -214,6 +219,9 @@ export function useAgenticChatTurn(
   // adopted as the pending turn once. Never re-adopting is what keeps Stop and
   // a stall recovery, which clear the pending id early, from re-arming it.
   const trackedTurnIdsRef = React.useRef<Set<string>>(new Set());
+  // Turns this tab started: their prompt is already in the thread as the local
+  // bubble, so the stream's copy of it is skipped.
+  const startedTurnIdsRef = React.useRef<Set<string>>(new Set());
   const conversationIdRef = React.useRef<string | null>(null);
 
   const stream = useConversationStream({
@@ -529,6 +537,7 @@ export function useAgenticChatTurn(
     setError(null);
     setPendingAssistantId(null);
     setConversationId(params.conversationId);
+    earlier.seed(null);
     restoreFetcher.submit(
       { conversationId: params.conversationId, intent: 'load-messages' },
       {
@@ -551,6 +560,7 @@ export function useAgenticChatTurn(
     setPendingAssistantId(null);
     setConversationId(null);
     setMessages([]);
+    earlier.seed(null);
   };
 
   // Markup
@@ -584,6 +594,7 @@ export function useAgenticChatTurn(
       // The replayed turn's stream has begun → leave the retry bridge state.
       setIsRetrying(false);
       const assistantId = result.assistantMessageId;
+      startedTurnIdsRef.current.add(assistantId);
       trackedTurnIdsRef.current.add(assistantId);
       lastAssistantIdRef.current = assistantId;
       setPendingAssistantId(assistantId);
@@ -623,6 +634,38 @@ export function useAgenticChatTurn(
     stream.completedIds,
     stream.messages,
   ]);
+
+  // Show a prompt sent from another tab: the stream carries each turn's user
+  // message, and one for a turn this tab did not start is appended unless the
+  // thread already holds it (a restore loaded the persisted row). Waits while a
+  // start is in flight, so this tab's own prompt is known as its own first.
+  React.useEffect(() => {
+    if (startPendingRef.current || startFetcher.state !== 'idle') {
+      return;
+    }
+
+    const foreign = Array.from(stream.prompts.entries())
+      .filter(([turnId]) => !startedTurnIdsRef.current.has(turnId))
+      .map(([, prompt]) => prompt);
+    if (foreign.length === 0) {
+      return;
+    }
+
+    setMessages((previous) => {
+      const known = new Set(previous.map((message) => message.id));
+      const missing = foreign.filter((prompt) => !known.has(prompt.id));
+      if (missing.length === 0) {
+        return previous;
+      }
+
+      return [
+        ...previous,
+        ...missing.map((prompt): ChatMessage => {
+          return { body: prompt.body, id: prompt.id, role: 'user' };
+        }),
+      ];
+    });
+  }, [startFetcher.state, stream.prompts]);
 
   // Recover on a retryable timeout terminal for the current pending turn: the
   // server already ended the turn, so replay directly (no cancel). The loop
@@ -778,6 +821,7 @@ export function useAgenticChatTurn(
       return;
     }
 
+    earlier.seed(result.firstMessageIndex);
     const { activeTurn } = result;
     if (activeTurn === null) {
       setMessages([...result.messages]);
@@ -809,6 +853,7 @@ export function useAgenticChatTurn(
     error,
     isQueuePaused: queue.isPaused,
     isStreaming,
+    loadEarlier: earlier.loadEarlier,
     messages: messagesView,
     onRespondToPermission,
     onRetry,
