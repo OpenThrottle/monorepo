@@ -14,7 +14,8 @@ export interface HeaderChatOptionsCache {
 /**
  * Live per-agent runtime facts from agent-CLI discovery that refine a backend's
  * static capability descriptor: whether chat runs over ACP (`approvals`),
- * whether Supervised gates file edits (`editApprovals`) and the agent's auth
+ * whether Supervised gates file edits (`editApprovals`), whether it accepts
+ * image attachments (`imageInput`) and the agent's auth
  * status (`unauthenticated` | `authenticated` | `unknown`).
  * @public
  */
@@ -22,4 +23,6 @@ export interface ChatAgentRuntime {
   readonly approvals: boolean;
   readonly authStatus: string;
   readonly editApprovals: boolean;
+  /** Whether the backend accepts image attachments (`imageInput` capability). */
+  readonly imageInput: boolean;
 }

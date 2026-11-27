@@ -5,6 +5,11 @@ export type {
 export { useAgenticChatTurn } from './useAgenticChatTurn';
 export { useChat } from './useChat';
 export type {
+  UseChatComposerImageInputOptions,
+  UseChatComposerImageInputResult,
+} from './useChatComposerImageInput';
+export { useChatComposerImageInput } from './useChatComposerImageInput';
+export type {
   UseChatComposerMentionsOptions,
   UseChatComposerMentionsResult,
 } from './useChatComposerMentions';

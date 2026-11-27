@@ -434,7 +434,11 @@ describe('toAgentRuntimes', () => {
       agents: [
         {
           authState: { status: 'authenticated' },
-          capabilities: { approvals: true, editApprovals: false },
+          capabilities: {
+            approvals: true,
+            editApprovals: false,
+            imageInput: true,
+          },
           chatCapable: true,
           driver: 'cursor',
           label: 'cursor-agent',
@@ -447,6 +451,7 @@ describe('toAgentRuntimes', () => {
         approvals: true,
         authStatus: 'authenticated',
         editApprovals: false,
+        imageInput: true,
       },
     });
   });
@@ -457,7 +462,12 @@ describe('toAgentRuntimes', () => {
     });
 
     expect(runtimes).toEqual({
-      claude: { approvals: false, authStatus: 'unknown', editApprovals: false },
+      claude: {
+        approvals: false,
+        authStatus: 'unknown',
+        editApprovals: false,
+        imageInput: false,
+      },
     });
   });
 });
@@ -465,7 +475,12 @@ describe('toAgentRuntimes', () => {
 describe('buildChatOptionsResponse', () => {
   it('spreads agent models after local models and passes runtimes through', async () => {
     const runtimes = {
-      cursor: { approvals: true, authStatus: 'unknown', editApprovals: false },
+      cursor: {
+        approvals: true,
+        authStatus: 'unknown',
+        editApprovals: false,
+        imageInput: false,
+      },
     };
     const response = await buildChatOptionsResponse({
       loadAgentClis: async () => ({

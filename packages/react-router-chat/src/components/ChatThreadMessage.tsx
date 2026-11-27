@@ -4,6 +4,7 @@ import * as React from 'react';
 import { CHAT_ROLE_LABEL } from '../data/chat-thread-message-role-labels';
 import type { ChatMessage } from '../types';
 import { formatChatTimestamp } from '../utils/index';
+import { ChatMessageAttachments } from './ChatMessageAttachments';
 import { ChatMessageBody } from './ChatMessageBody';
 import { ChatTurnTimeline } from './ChatTurnTimeline';
 import { RunningIndicator } from './RunningIndicator';
@@ -81,6 +82,7 @@ const ChatThreadMessageComponent = (
             message.role === 'system',
         })}
       >
+        <ChatMessageAttachments attachments={message.attachments} />
         {hasTimeline && message.events !== undefined && (
           <ChatTurnTimeline events={message.events} />
         )}

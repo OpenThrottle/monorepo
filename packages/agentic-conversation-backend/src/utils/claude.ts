@@ -24,6 +24,7 @@ import type {
   ConversationStreamChunk,
 } from '../types/conversation-backend.ts';
 import { CONVERSATION_STREAM_CHUNK_KINDS } from '../types/conversation-backend.ts';
+import { attachmentDirectories, withAttachments } from './attachments.ts';
 import {
   buildClaudeArgv,
   CLAUDE_BIN_ENV,
@@ -177,10 +178,14 @@ async function* streamClaude(
     resolveClaudeBin(),
     buildClaudeArgv({
       additionalDirectories: run.additionalDirectories,
+      attachmentDirectories: attachmentDirectories(run.attachments),
       mcpServers: run.mcpServers,
       model: run.model,
       permissionMode: run.permissionMode,
-      prompt: withFileMentions(latestUserMessage(run), run.fileMentions),
+      prompt: withAttachments(
+        withFileMentions(latestUserMessage(run), run.fileMentions),
+        run.attachments,
+      ),
       reasoning: run.reasoning,
       resume: run.resumeSession === true,
       sessionId: run.sessionId,

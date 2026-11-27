@@ -3,6 +3,7 @@ import * as React from 'react';
 
 import type {
   ChatCheckoutOption,
+  ChatComposerAttachmentProps,
   ChatComposerCapabilityProps,
   ChatComposerModeValue,
   ChatContextSource,
@@ -22,7 +23,13 @@ import { ChatPermissionModeControl } from './ChatPermissionModeControl';
 import { ChatReasoningTierControl } from './ChatReasoningTierControl';
 
 /** Toolbar props; the capability-gated ones come from {@link ChatComposerCapabilityProps}. */
-export interface ChatComposerToolbarProps extends ChatComposerCapabilityProps {
+export interface ChatComposerToolbarProps
+  extends
+    ChatComposerCapabilityProps,
+    Pick<
+      ChatComposerAttachmentProps,
+      'attachmentsDisabledReason' | 'onAddFiles'
+    > {
   /** Checkouts for {@link ChatComposerCheckoutControl}, which gates on them. */
   readonly checkouts?: readonly ChatCheckoutOption[];
   readonly className?: string;
@@ -93,6 +100,7 @@ export const ChatComposerToolbar = (
   props: ChatComposerToolbarProps,
 ): React.ReactElement => {
   const {
+    attachmentsDisabledReason,
     capabilities,
     checkouts,
     className,
@@ -103,6 +111,7 @@ export const ChatComposerToolbar = (
     modelId,
     models,
     onAddContext,
+    onAddFiles,
     onCheckoutChange,
     onCheckoutsChange,
     onMicToggle,
@@ -186,8 +195,10 @@ export const ChatComposerToolbar = (
         selectedPersonaId={personaId}
       />
       <ChatComposerAttachControl
+        attachmentsDisabledReason={attachmentsDisabledReason}
         contextSources={contextSources}
         onAddContext={onAddContext}
+        onAddFiles={onAddFiles}
       />
       <ChatComposerMicControl micState={micState} onMicToggle={onMicToggle} />
       <ChatComposerPersistControl

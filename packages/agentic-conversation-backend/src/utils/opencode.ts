@@ -28,6 +28,7 @@ import {
   CONVERSATION_PERMISSION_MODES,
   CONVERSATION_STREAM_CHUNK_KINDS,
 } from '../types/conversation-backend.ts';
+import { attachmentPaths } from './attachments.ts';
 import { warnUnsupportedAdditionalDirectories } from './capabilities.ts';
 import { createOpencodeEventMapper } from './createOpencodeEventMapper.ts';
 import {
@@ -171,6 +172,7 @@ async function* streamOpencode(
     buildOpencodeArgv({
       auto: run.permissionMode === CONVERSATION_PERMISSION_MODES.fullAccess,
       cwd: run.cwd,
+      filePaths: attachmentPaths(run.attachments),
       model,
       prompt: withFileMentions(composePrompt(run), run.fileMentions),
       reasoning: run.reasoning,

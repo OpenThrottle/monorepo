@@ -8,14 +8,17 @@ import {
 import type {
   AgentConversation,
   AgentConversationMessage,
+  AgentConversationMessageAttachment,
 } from '@openthrottle/nestjs-repositories-server';
 import {
   AGENT_CONVERSATION_STATUSES,
+  AgentConversationMessageAttachmentsRepository,
   AgentConversationMessagesRepository,
   AgentConversationsRepository,
   RolesRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import {
+  createAgentConversationMessageAttachmentsRepositoryMock,
   createAgentConversationMessagesRepositoryMock,
   createAgentConversationsRepositoryMock,
   createRolesRepositoryMock,
@@ -74,6 +77,9 @@ describe('AgentConversationsResolver', () => {
   const agentConversationMessagesRepository =
     createAgentConversationMessagesRepositoryMock();
 
+  const attachmentsRepository =
+    createAgentConversationMessageAttachmentsRepositoryMock();
+
   const conversationStreamService = {
     getActiveTurn: vi
       .fn<ConversationStreamService['getActiveTurn']>()
@@ -97,6 +103,10 @@ describe('AgentConversationsResolver', () => {
         {
           provide: AgentConversationMessagesRepository,
           useValue: agentConversationMessagesRepository,
+        },
+        {
+          provide: AgentConversationMessageAttachmentsRepository,
+          useValue: attachmentsRepository,
         },
         {
           provide: ConversationStreamService,
@@ -198,6 +208,64 @@ describe('AgentConversationsResolver', () => {
       expect(result.items).toHaveLength(1);
       expect(result.items[0]?.sortOrder).toBe(1);
       expect(result.totalCount).toBe(1);
+    });
+
+    test('attaches each message its images from one batched query', async () => {
+      const second: AgentConversationMessage = {
+        ...mockMessage,
+        id: '33333333-3333-4333-8333-333333333333',
+        sortOrder: 2,
+      };
+      const attachment: AgentConversationMessageAttachment = {
+        byteSize: 1234,
+        createdAt: new Date('2026-06-07T10:00:30.000Z'),
+        height: 20,
+        id: '44444444-4444-4444-8444-444444444444',
+        messageId: mockMessage.id,
+        mimeType: 'image/png',
+        originalName: 'shot.png',
+        sha256: 'a'.repeat(64),
+        updatedAt: new Date('2026-06-07T10:00:30.000Z'),
+        userId: humanPrincipal.sub,
+        width: 10,
+      };
+      vi.mocked(
+        agentConversationMessagesRepository.listMessagesForConversation,
+      ).mockResolvedValue([mockMessage, second]);
+      agentConversationMessagesRepository.countMessagesForConversation.mockResolvedValue(
+        2,
+      );
+      attachmentsRepository.listByMessageIds.mockClear();
+      attachmentsRepository.listByMessageIds.mockResolvedValueOnce([
+        attachment,
+      ]);
+
+      const result = await resolver.getAgentConversationMessages(
+        humanPrincipal,
+        {
+          conversationId: mockConversation.id,
+          fromNewest: null,
+          limit: 100,
+          offset: 0,
+        },
+      );
+
+      expect(attachmentsRepository.listByMessageIds).toHaveBeenCalledTimes(1);
+      expect(attachmentsRepository.listByMessageIds).toHaveBeenCalledWith([
+        mockMessage.id,
+        second.id,
+      ]);
+      expect(result.items[0]?.attachments).toEqual([
+        {
+          byteSize: 1234,
+          height: 20,
+          id: attachment.id,
+          mimeType: 'image/png',
+          originalName: 'shot.png',
+          width: 10,
+        },
+      ]);
+      expect(result.items[1]?.attachments).toEqual([]);
     });
 
     test('pages back from the newest message for a long thread', async () => {

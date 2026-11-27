@@ -103,6 +103,7 @@ import { WorkLedgerGraphqlModule } from './graphql/work-ledger/work-ledger.modul
 import { WorkspaceSettingsGraphqlModule } from './graphql/workspace-settings/workspace-settings.module.ts';
 import { MetricsModule } from './metrics/metrics.module.ts';
 import { AgentJobWebhooksModule } from './modules/agent-job-webhooks/agent-job-webhooks.module.ts';
+import { AttachmentsModule } from './modules/attachments/attachments.module.ts';
 import { CspReportsModule } from './modules/csp-reports/csp-reports.module.ts';
 import { DevelopmentModule } from './modules/development/development.module.ts';
 import { isDevelopmentGraphqlEnabled } from './modules/development/development.utils.ts';
@@ -112,6 +113,7 @@ import { McpDeveloperModule } from './modules/mcp-developer/mcp-developer.module
 import { OAuthRoutesModule } from './modules/oauth/oauth.module.ts';
 import { NotificationsModule } from './notifications/notifications.module.ts';
 import { AgenticTestQueueModule } from './queues/agentic-test/agentic-test.module.ts';
+import { AttachmentsJanitorQueueModule } from './queues/attachments-janitor/attachments-janitor.module.ts';
 import { BullMqRunOutputModule } from './queues/bullmq-run-output/bullmq-run-output.module.ts';
 import { CodeIndexQueueModule } from './queues/code-index/code-index.module.ts';
 import { DailyStatsQueueModule } from './queues/daily-stats/daily-stats.module.ts';
@@ -258,6 +260,7 @@ export const buildImports = (role: ProcessRole): AppModuleImports => {
   if (isWorkerLike) {
     imports.push(
       AgenticTestQueueModule,
+      AttachmentsJanitorQueueModule,
       CodeIndexQueueModule,
       CspReportsModule,
       DailyStatsQueueModule,
@@ -274,7 +277,12 @@ export const buildImports = (role: ProcessRole): AppModuleImports => {
   }
 
   if (isApiLike) {
-    imports.push(AgentJobWebhooksModule, GeneratorsModule, McpDeveloperModule);
+    imports.push(
+      AgentJobWebhooksModule,
+      AttachmentsModule,
+      GeneratorsModule,
+      McpDeveloperModule,
+    );
   }
 
   if (isWorkerLike) {

@@ -2,10 +2,16 @@ import { isRecord } from '@openthrottle/nodejs-utils';
 
 import { buildAgentsChatAssistantFooter } from './agents-chat-footer';
 import { foldPersistedTurnEvents } from './turn-events';
-import type { ChatMessage, ChatTurnResult } from './types';
+import type {
+  ChatMessage,
+  ChatMessageAttachment,
+  ChatTurnResult,
+} from './types';
 import { parseJson } from './utils/json';
 
 export interface PersistedAgentConversationMessage {
+  /** Absent when the app's document does not select attachments. */
+  readonly attachments?: readonly ChatMessageAttachment[];
   readonly content: string;
   readonly createdAt: string;
   readonly id: string;
@@ -85,7 +91,10 @@ export const mapPersistedAgentConversationMessages = (
     // events (thinking/tool). Plain turns fold to [] and keep the flat body.
     const events = foldAssistantEvents(role, message);
 
+    const attachments = message.attachments ?? [];
+
     mapped.push({
+      ...(attachments.length > 0 ? { attachments } : {}),
       body: message.content,
       createdAt: message.createdAt,
       ...(events.length > 0 ? { events } : {}),

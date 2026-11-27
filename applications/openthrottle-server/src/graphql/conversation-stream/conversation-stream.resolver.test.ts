@@ -8,6 +8,8 @@ import {
 import type { NestjsModelDiscoveryService } from '@openthrottle/nestjs-model-discovery';
 import type { LoggerService } from '@openthrottle/nestjs-modules';
 import type {
+  AgentConversationMessageAttachment,
+  AgentConversationMessageAttachmentsRepository,
   AgentConversationMessagesRepository,
   AgentConversationsRepository,
   CustomPrompt,
@@ -17,20 +19,23 @@ import type {
   UserDisabledAgentClisRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import type {
+  AgentConversationMessageAttachmentsRepositoryMock,
   AgentConversationMessagesRepositoryMock,
   AgentConversationsRepositoryMock,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import {
   agentConversationMessagesFactory,
   agentConversationsFactory,
+  createAgentConversationMessageAttachmentsRepositoryMock,
   createAgentConversationMessagesRepositoryMock,
   createAgentConversationsRepositoryMock,
   createCustomPromptsRepositoryMock,
   createUserDisabledAgentClisRepositoryMock,
 } from '@openthrottle/nestjs-repositories-server/testing';
 import type { DiscoveryResult } from '@openthrottle/openthrottle-agentic-utils';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { AttachmentStoreService } from '../../services/attachment-store/attachment-store.service.ts';
 import { CheckoutPathService } from '../../services/checkout-path/checkout-path.service.ts';
 import {
   PROMPT_HISTORY_WINDOW,
@@ -86,9 +91,32 @@ const userMessage = agentConversationMessagesFactory.build({
   role: 'user',
 });
 
+/** An unlinked PNG upload owned by user-1. */
+function buildAttachment(
+  id: string,
+  overrides: Partial<AgentConversationMessageAttachment> = {},
+): AgentConversationMessageAttachment {
+  return {
+    byteSize: 100,
+    createdAt: new Date('2026-06-17T00:00:00.000Z'),
+    height: 10,
+    id,
+    messageId: null,
+    mimeType: 'image/png',
+    originalName: null,
+    sha256: id.padEnd(64, '0'),
+    updatedAt: new Date('2026-06-17T00:00:00.000Z'),
+    userId: 'user-1',
+    width: 10,
+    ...overrides,
+  };
+}
+
 function build(): {
   agentIsEnabled: ReturnType<typeof vi.fn>;
   agentModelIsEnabled: ReturnType<typeof vi.fn>;
+  attachmentStoreTouch: ReturnType<typeof vi.fn>;
+  attachmentsRepository: AgentConversationMessageAttachmentsRepositoryMock;
   conversations: AgentConversationsRepositoryMock;
   messages: AgentConversationMessagesRepositoryMock;
   modelDiscovery: NestjsModelDiscoveryService;
@@ -137,6 +165,9 @@ function build(): {
     debug: vi.fn(),
     warn: vi.fn(),
   });
+  const attachmentsRepository =
+    createAgentConversationMessageAttachmentsRepositoryMock();
+  const attachmentStoreTouch = vi.fn();
   const resolver = new ConversationStreamResolver(
     new CheckoutPathService(repositories, logger),
     disabledAgentClis,
@@ -146,10 +177,16 @@ function build(): {
     createMock<AgentConversationMessagesRepository>(messages),
     modelDiscovery,
     streamService,
+    createMock<AgentConversationMessageAttachmentsRepository>(
+      attachmentsRepository,
+    ),
+    createMock<AttachmentStoreService>({ touch: attachmentStoreTouch }),
   );
   return {
     agentIsEnabled,
     agentModelIsEnabled,
+    attachmentStoreTouch,
+    attachmentsRepository,
     conversations,
     messages,
     modelDiscovery,
@@ -924,6 +961,214 @@ describe('ConversationStreamResolver.startConversationStream', () => {
 
     expect(streamService.start).toHaveBeenCalledWith(
       expect.objectContaining({ cwd: '/repo/repo-chosen' }),
+    );
+  });
+});
+
+describe('ConversationStreamResolver.startConversationStream attachments', () => {
+  const start = {
+    backend: 'cursor',
+    baseUrl: null,
+    conversationId: null,
+    message: 'what is this?',
+    modelId: null,
+    repositoryIds: ['repo-primary'],
+  };
+
+  /** `build()` with a checkout the cursor backend can run in. */
+  function buildWithCheckout(): ReturnType<typeof build> {
+    const built = build();
+    vi.mocked(built.repositories.findByIdForUser).mockResolvedValue(
+      createMock<RepositoryCheckout>({ filesystemPath: '/repo/repo-primary' }),
+    );
+    return built;
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // cursor takes images only when its chat is routed over ACP.
+    vi.stubEnv('OPENTHROTTLE_CHAT_ACP_BACKENDS', 'cursor');
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  /** Runs the mutation and returns the rejection, so a test can read its extensions. */
+  async function rejection(
+    resolver: ConversationStreamResolver,
+    attachmentIds: string[],
+    backend = 'cursor',
+  ): Promise<unknown> {
+    return resolver
+      .startConversationStream(human, { ...start, attachmentIds, backend })
+      .then(
+        () => null,
+        (error: unknown) => error,
+      );
+  }
+
+  it('refuses a backend that takes no images, before any row is created', async () => {
+    const { conversations, resolver, streamService } = buildWithCheckout();
+
+    const error = await rejection(resolver, ['att-1'], 'grok');
+
+    expect(error).toMatchObject({
+      extensions: {
+        code: 'BAD_USER_INPUT',
+        reason: 'ATTACHMENTS_UNSUPPORTED',
+      },
+    });
+    expect(conversations.createConversation).not.toHaveBeenCalled();
+    expect(streamService.start).not.toHaveBeenCalled();
+  });
+
+  it('refuses more than 8 distinct ids, counting duplicates once', async () => {
+    const { resolver } = buildWithCheckout();
+    const nine = Array.from({ length: 9 }, (_, index) => `att-${index}`);
+
+    expect(await rejection(resolver, nine)).toMatchObject({
+      extensions: { code: 'BAD_USER_INPUT', reason: 'TOO_MANY_ATTACHMENTS' },
+    });
+  });
+
+  it('answers an unknown or foreign id with ATTACHMENT_NOT_FOUND', async () => {
+    const { attachmentsRepository, resolver, streamService } =
+      buildWithCheckout();
+    // findOwnedByIds drops ids the caller does not own, so foreign and unknown look the same.
+    attachmentsRepository.findOwnedByIds.mockResolvedValue([
+      buildAttachment('att-1'),
+    ]);
+
+    const error = await rejection(resolver, ['att-1', 'att-foreign']);
+
+    expect(error).toMatchObject({
+      extensions: {
+        code: 'BAD_USER_INPUT',
+        reason: 'ATTACHMENT_NOT_FOUND',
+      },
+    });
+    expect(attachmentsRepository.findOwnedByIds).toHaveBeenCalledWith(
+      ['att-1', 'att-foreign'],
+      'user-1',
+    );
+    expect(streamService.start).not.toHaveBeenCalled();
+  });
+
+  it('answers an already-linked id with ATTACHMENT_NOT_FOUND', async () => {
+    const { attachmentsRepository, resolver } = buildWithCheckout();
+    attachmentsRepository.findOwnedByIds.mockResolvedValue([
+      buildAttachment('att-1', { messageId: 'older-msg' }),
+    ]);
+
+    expect(await rejection(resolver, ['att-1'])).toMatchObject({
+      extensions: { reason: 'ATTACHMENT_NOT_FOUND' },
+    });
+  });
+
+  it('answers a file the store cannot resolve (outside the root, gone) with ATTACHMENT_NOT_FOUND', async () => {
+    const { attachmentsRepository, attachmentStoreTouch, resolver } =
+      buildWithCheckout();
+    attachmentsRepository.findOwnedByIds.mockResolvedValue([
+      buildAttachment('att-1'),
+    ]);
+    attachmentStoreTouch.mockResolvedValue({
+      message: 'attachment resolves outside the attachments root',
+      ok: false,
+      reason: 'OUTSIDE_ROOT',
+    });
+
+    expect(await rejection(resolver, ['att-1'])).toMatchObject({
+      extensions: { reason: 'ATTACHMENT_NOT_FOUND' },
+    });
+    expect(attachmentsRepository.linkToMessage).not.toHaveBeenCalled();
+  });
+
+  it('dedupes ids, hands the files to the stream in order, and links them to the persisted user message', async () => {
+    const {
+      attachmentsRepository,
+      attachmentStoreTouch,
+      resolver,
+      streamService,
+    } = buildWithCheckout();
+    attachmentsRepository.findOwnedByIds.mockResolvedValue([
+      buildAttachment('att-2'),
+      buildAttachment('att-1'),
+    ]);
+    attachmentStoreTouch.mockImplementation(async (sha256: string) => ({
+      ok: true,
+      value: `/root/${sha256}.png`,
+    }));
+
+    const result = await resolver.startConversationStream(human, {
+      ...start,
+      attachmentIds: ['att-1', 'att-2', 'att-1'],
+    });
+
+    expect(result.errorMessage).toBeNull();
+    expect(attachmentsRepository.findOwnedByIds).toHaveBeenCalledWith(
+      ['att-1', 'att-2'],
+      'user-1',
+    );
+    expect(streamService.start).toHaveBeenCalledWith(
+      expect.objectContaining({
+        attachments: [
+          {
+            mimeType: 'image/png',
+            path: `/root/${'att-1'.padEnd(64, '0')}.png`,
+            sha256: 'att-1'.padEnd(64, '0'),
+          },
+          {
+            mimeType: 'image/png',
+            path: `/root/${'att-2'.padEnd(64, '0')}.png`,
+            sha256: 'att-2'.padEnd(64, '0'),
+          },
+        ],
+      }),
+    );
+    expect(attachmentsRepository.linkToMessage).toHaveBeenCalledWith(
+      ['att-1', 'att-2'],
+      'user-msg-1',
+      'user-1',
+    );
+  });
+
+  it('lets a Private turn attach without linking the rows', async () => {
+    const {
+      attachmentsRepository,
+      attachmentStoreTouch,
+      resolver,
+      streamService,
+    } = buildWithCheckout();
+    attachmentsRepository.findOwnedByIds.mockResolvedValue([
+      buildAttachment('att-1'),
+    ]);
+    attachmentStoreTouch.mockResolvedValue({ ok: true, value: '/root/a.png' });
+
+    await resolver.startConversationStream(human, {
+      ...start,
+      attachmentIds: ['att-1'],
+      persist: false,
+    });
+
+    expect(streamService.start).toHaveBeenCalledWith(
+      expect.objectContaining({
+        attachments: [expect.objectContaining({ path: '/root/a.png' })],
+      }),
+    );
+    expect(attachmentsRepository.linkToMessage).not.toHaveBeenCalled();
+  });
+
+  it('does not touch the attachment services when no ids are sent', async () => {
+    const { attachmentsRepository, resolver, streamService } =
+      buildWithCheckout();
+
+    await resolver.startConversationStream(human, start);
+
+    expect(attachmentsRepository.findOwnedByIds).not.toHaveBeenCalled();
+    expect(attachmentsRepository.linkToMessage).not.toHaveBeenCalled();
+    expect(streamService.start).toHaveBeenCalledWith(
+      expect.objectContaining({ attachments: [] }),
     );
   });
 });

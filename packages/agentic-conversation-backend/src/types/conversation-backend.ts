@@ -253,6 +253,21 @@ export interface ConversationStreamChunk {
 }
 
 /**
+ * An image the user attached to the turn, already validated and stored on the
+ * server's disk. Backends that accept image input read the file at `path`.
+ *
+ * @public
+ */
+export interface ConversationAttachment {
+  /** Image MIME type, e.g. `image/png`. */
+  readonly mimeType: string;
+  /** Absolute path of the stored file, resolved inside the attachments root. */
+  readonly path: string;
+  /** Lowercase hex sha256 of the file bytes (its content address). */
+  readonly sha256: string;
+}
+
+/**
  * Everything a backend needs to produce one streamed turn. OpenAI uses
  * `messages` + `baseUrl`; CLI backends (added later) extend this with their own
  * fields (working directory, session handle, system prompt). All backends honor
@@ -268,6 +283,13 @@ export interface ConversationBackendRun {
    * only: the agent still RUNS in `cwd`.
    */
   readonly additionalDirectories?: readonly string[];
+  /**
+   * Images attached to the latest user message, in the order the user attached
+   * them. Each adapter delivers them per its own capability
+   * (`ChatBackendCapabilities.imageInput`); an adapter that cannot take images
+   * ignores the list. Empty/absent means no images.
+   */
+  readonly attachments?: readonly ConversationAttachment[];
   /** OpenAI-compatible base URL; required by the openai backend. */
   readonly baseUrl?: string;
   /** Working directory the CLI runs in; required by CLI backends. */

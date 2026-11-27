@@ -451,6 +451,7 @@ export class ConversationStreamService {
 
     const backendRun: ConversationBackendRun = {
       additionalDirectories,
+      attachments: run.attachments.length > 0 ? run.attachments : undefined,
       baseUrl: run.baseUrl ?? undefined,
       cwd: run.cwd ?? undefined,
       fileMentions: run.fileMentions.length > 0 ? run.fileMentions : undefined,

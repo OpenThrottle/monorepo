@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 
 import { AgentAccountsModule } from './modules/agent-accounts/agent-accounts.module.ts';
 import { AgentConversationGroupsModule } from './modules/agent-conversation-groups/agent-conversation-groups.module.ts';
+import { AgentConversationMessageAttachmentsModule } from './modules/agent-conversation-message-attachments/agent-conversation-message-attachments.module.ts';
 import { AgentConversationMessagesModule } from './modules/agent-conversation-messages/agent-conversation-messages.module.ts';
 import { AgentConversationsModule } from './modules/agent-conversations/agent-conversations.module.ts';
 import { AgentTokenUsageModule } from './modules/agent-token-usage/agent-token-usage.module.ts';
@@ -76,6 +77,7 @@ import { WorktreeRemovalsModule } from './modules/worktree-removals/worktree-rem
   exports: [
     AgentAccountsModule,
     AgentConversationGroupsModule,
+    AgentConversationMessageAttachmentsModule,
     AgentConversationMessagesModule,
     AgentConversationsModule,
     AgentTokenUsageModule,
@@ -141,6 +143,7 @@ import { WorktreeRemovalsModule } from './modules/worktree-removals/worktree-rem
   imports: [
     AgentAccountsModule,
     AgentConversationGroupsModule,
+    AgentConversationMessageAttachmentsModule,
     AgentConversationMessagesModule,
     AgentConversationsModule,
     AgentTokenUsageModule,

@@ -81,6 +81,7 @@ async function* fakeStream(
 const baseRun: StartConversationStreamRun = {
   additionalDirectories: [],
   assistantMessageId: 'assistant-msg-1',
+  attachments: [],
   backend: 'openai',
   baseUrl: 'http://localhost:11434/v1',
   conversationId: 'conv-1',
@@ -963,6 +964,24 @@ describe('ConversationStreamService', () => {
       resumeSession: false,
       sessionId: 'uuid-1',
     });
+  });
+
+  it('hands the turn attachments to the backend run, and omits an empty list', async () => {
+    claudeStreamMock.mockImplementation(() => fakeStream(['hi']));
+    const { service } = buildService();
+    const attachments = [
+      {
+        mimeType: 'image/png',
+        path: '/attachments/a.png',
+        sha256: 'a'.repeat(64),
+      },
+    ];
+
+    await service.runStream({ ...baseRun, attachments, backend: 'claude' });
+    await service.runStream({ ...baseRun, backend: 'claude' });
+
+    expect(claudeStreamMock.mock.calls[0]?.[0]).toMatchObject({ attachments });
+    expect(claudeStreamMock.mock.calls[1]?.[0].attachments).toBeUndefined();
   });
 
   it('persists an opencode-minted session id from the session chunk', async () => {

@@ -29,6 +29,17 @@ vi.mock('~/services/getGraphqlWsClient', () => ({
   getGraphqlWsClient: () => null,
 }));
 
+vi.mock('~/routing/home/utils/uploadComposerAttachment', () => ({
+  uploadComposerAttachment: vi.fn(async () => ({ id: 'att-1', ok: true })),
+}));
+
+const imageRuntime = {
+  approvals: false,
+  authStatus: 'authenticated',
+  editApprovals: false,
+  imageInput: true,
+};
+
 const store = getDefaultStore();
 
 const openaiModel: ChatModelOption = {
@@ -396,6 +407,115 @@ describe('useHomeComposer', () => {
         repositoryIds: JSON.stringify([repositoryB.id, repositoryA.id]),
       }),
     );
+  });
+
+  describe('image attachments', () => {
+    const png = new File(['x'], 'a.png', { type: 'image/png' });
+
+    beforeEach(() => {
+      vi.stubGlobal('URL', {
+        createObjectURL: () => 'blob:preview',
+        revokeObjectURL: vi.fn(),
+      });
+    });
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    test('attaching is disabled with a reason for a runtime without imageInput', async () => {
+      await renderComposer({ models: [cliModel] });
+
+      expect(value.current?.attachmentProps.attachmentsDisabledReason).toMatch(
+        /does not accept images/,
+      );
+    });
+
+    test('attaching is enabled for a runtime that reports imageInput', async () => {
+      await renderComposer({
+        agentRuntimes: { claude: imageRuntime },
+        models: [cliModel],
+      });
+
+      expect(
+        value.current?.attachmentProps.attachmentsDisabledReason,
+      ).toBeUndefined();
+    });
+
+    test('onSubmit sends the ready attachment ids as a JSON field, then clears the chips', async () => {
+      const turn = makeTurn();
+      await renderComposer({
+        agentRuntimes: { claude: imageRuntime },
+        models: [cliModel],
+        turn,
+      });
+
+      act(() => value.current?.setRepositoryId(repositoryA.id));
+      act(() => value.current?.attachmentProps.onAddFiles?.([png]));
+      await flush();
+      act(() => value.current?.onSubmit('what is this'));
+
+      expect(turn.submitTurn).toHaveBeenCalledWith(
+        'what is this',
+        expect.objectContaining({ attachmentIds: JSON.stringify(['att-1']) }),
+      );
+      expect(value.current?.attachmentProps.attachments).toEqual([]);
+    });
+
+    test('onSubmit omits attachmentIds when nothing is attached', async () => {
+      const turn = makeTurn();
+      await renderComposer({
+        agentRuntimes: { claude: imageRuntime },
+        models: [cliModel],
+        turn,
+      });
+
+      act(() => value.current?.setRepositoryId(repositoryA.id));
+      act(() => value.current?.onSubmit('hello'));
+
+      expect(turn.submitTurn).toHaveBeenCalledWith(
+        'hello',
+        expect.not.objectContaining({ attachmentIds: expect.anything() }),
+      );
+    });
+
+    test('onSubmit is blocked with an error while an upload is in flight', async () => {
+      const turn = makeTurn();
+      await renderComposer({
+        agentRuntimes: { claude: imageRuntime },
+        models: [cliModel],
+        turn,
+      });
+
+      act(() => value.current?.setRepositoryId(repositoryA.id));
+      act(() => value.current?.attachmentProps.onAddFiles?.([png]));
+      act(() => value.current?.onSubmit('too soon'));
+
+      expect(turn.submitTurn).not.toHaveBeenCalled();
+      expect(turn.setError).toHaveBeenCalledWith(
+        expect.stringMatching(/uploads to finish/),
+      );
+    });
+
+    test('onSubmit refuses attachments after switching to a model without imageInput', async () => {
+      const turn = makeTurn();
+      await renderComposer({
+        agentRuntimes: { claude: imageRuntime },
+        models: [cliModel, openaiModel],
+        turn,
+      });
+
+      act(() => value.current?.setRepositoryId(repositoryA.id));
+      act(() => value.current?.attachmentProps.onAddFiles?.([png]));
+      await flush();
+      act(() => value.current?.setModelId(openaiModel.id));
+      act(() => value.current?.onSubmit('hello'));
+
+      expect(turn.submitTurn).not.toHaveBeenCalled();
+      expect(turn.setError).toHaveBeenCalledWith(
+        expect.stringMatching(/does not accept images/),
+      );
+    });
   });
 
   test('lists a new persisted conversation at once, then refreshes once', async () => {

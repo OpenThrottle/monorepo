@@ -2,7 +2,7 @@
  * @description GraphQL ObjectTypes for persisted agent conversations and messages.
  */
 
-import { Field, Float, Int, ObjectType } from '@nestjs/graphql';
+import { Field, Float, ID, Int, ObjectType } from '@nestjs/graphql';
 import { OffsetPageObject } from '@openthrottle/nestjs-graphql';
 
 @ObjectType()
@@ -72,8 +72,46 @@ export class AgentConversationObject {
   userId!: string;
 }
 
+/** An image sent with a user message; the bytes are served by GET /attachments/:id. */
+@ObjectType()
+export class AgentConversationMessageAttachmentObject {
+  @Field(() => Int, { description: `File size in bytes` })
+  byteSize!: number;
+
+  @Field(() => Int, {
+    description: `Pixel height, or null when the header could not be read`,
+    nullable: true,
+  })
+  height!: number | null;
+
+  @Field(() => ID, {
+    description: `Attachment id; the image is GET /attachments/<id>`,
+  })
+  id!: string;
+
+  @Field(() => String, { description: `Image MIME type, e.g. image/png` })
+  mimeType!: string;
+
+  @Field(() => String, {
+    description: `File name the client uploaded, display only`,
+    nullable: true,
+  })
+  originalName!: string | null;
+
+  @Field(() => Int, {
+    description: `Pixel width, or null when the header could not be read`,
+    nullable: true,
+  })
+  width!: number | null;
+}
+
 @ObjectType()
 export class AgentConversationMessageObject {
+  @Field(() => [AgentConversationMessageAttachmentObject], {
+    description: `Images sent with this message, oldest first; empty for messages without any`,
+  })
+  attachments!: AgentConversationMessageAttachmentObject[];
+
   @Field(() => String)
   content!: string;
 

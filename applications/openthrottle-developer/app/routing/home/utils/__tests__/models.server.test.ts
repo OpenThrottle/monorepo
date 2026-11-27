@@ -77,7 +77,11 @@ describe('loadComposerData', () => {
           {
             ...AGENT_PAYLOAD.discoverAgentClis.agents[0],
             authState: { status: 'unauthenticated' },
-            capabilities: { approvals: true, editApprovals: false },
+            capabilities: {
+              approvals: true,
+              editApprovals: false,
+              imageInput: true,
+            },
           },
         ],
       },
@@ -92,6 +96,7 @@ describe('loadComposerData', () => {
         approvals: true,
         authStatus: 'unauthenticated',
         editApprovals: false,
+        imageInput: true,
       },
     });
   });

@@ -1,5 +1,5 @@
 import type { RenderResult } from '@testing-library/react';
-import { render } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
 import * as React from 'react';
 import { describe, expect, test } from 'vitest';
 
@@ -83,5 +83,55 @@ describe('ChatThreadMessage Component', () => {
 
     expect(component.queryByTestId('ChatTurnTimeline')).not.toBeInTheDocument();
     expect(component.getByText('a user question')).toBeInTheDocument();
+  });
+
+  test('renders thumbnails for the attachments of a user message', () => {
+    const component = renderMessage({
+      attachments: [
+        {
+          byteSize: 10,
+          height: null,
+          id: 'att-1',
+          mimeType: 'image/png',
+          originalName: 'shot.png',
+          width: null,
+        },
+      ],
+      body: 'look at this',
+      id: 'user-1',
+      role: 'user',
+    });
+
+    expect(component.getByRole('img', { name: 'shot.png' })).toHaveAttribute(
+      'src',
+      '/resources/attachments/att-1',
+    );
+    expect(component.getByText('look at this')).toBeInTheDocument();
+  });
+
+  test('shows the missing-image placeholder when a thumbnail fails to load', () => {
+    const component = renderMessage({
+      attachments: [
+        {
+          byteSize: null,
+          height: null,
+          id: 'gone',
+          mimeType: null,
+          originalName: null,
+          width: null,
+        },
+      ],
+      body: 'hi',
+      id: 'user-2',
+      role: 'user',
+    });
+
+    act(() => {
+      component.getByRole('img').dispatchEvent(new Event('error'));
+    });
+
+    expect(
+      component.getByRole('img', { name: 'Image unavailable' }),
+    ).toBeInTheDocument();
   });
 });

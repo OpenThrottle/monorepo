@@ -52,6 +52,7 @@ describe('routes/resources.chat-options loader', () => {
           approvals: true,
           authStatus: 'unknown',
           editApprovals: false,
+          imageInput: false,
         },
       },
     });
@@ -68,6 +69,7 @@ describe('routes/resources.chat-options loader', () => {
           approvals: true,
           authStatus: 'unknown',
           editApprovals: false,
+          imageInput: false,
         },
       },
       models: [

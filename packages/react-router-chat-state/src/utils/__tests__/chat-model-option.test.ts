@@ -158,6 +158,7 @@ describe('capabilitiesForChatOption runtime overlay', () => {
       approvals: true,
       authStatus: 'authenticated',
       editApprovals: false,
+      imageInput: false,
     });
 
     expect(caps.permissionModes).toEqual([
@@ -171,7 +172,12 @@ describe('capabilitiesForChatOption runtime overlay', () => {
   it('keeps the static descriptor without approvals or without a runtime', () => {
     const withoutApprovals = capabilitiesForChatOption(
       decodeChatOption('cursor'),
-      { approvals: false, authStatus: 'unknown', editApprovals: true },
+      {
+        approvals: false,
+        authStatus: 'unknown',
+        editApprovals: true,
+        imageInput: false,
+      },
     );
     const withoutRuntime = capabilitiesForChatOption(
       decodeChatOption('cursor'),

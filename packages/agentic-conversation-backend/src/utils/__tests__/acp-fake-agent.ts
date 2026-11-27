@@ -22,6 +22,8 @@ export interface FakeAgentLog {
   readonly authenticated: string[];
   readonly cancels: string[];
   readonly configSets: Array<{ configId: string; value: string }>;
+  /** Image blocks received on session/prompt, in order. */
+  readonly images: Array<{ data: string; mimeType: string }>;
   readonly loads: string[];
   readonly modeSets: string[];
   readonly news: Array<{ cwd: string; mcpServerNames: string[] }>;
@@ -32,6 +34,8 @@ export interface FakeAgentLog {
 export interface FakeAgentScript {
   readonly authMethods: readonly string[];
   readonly configOptions: SessionConfigOption[];
+  /** Advertise `promptCapabilities.image` at initialize. Defaults to false. */
+  readonly imageInput?: boolean;
   /** Session ids `session/load` accepts; undefined disables loadSession. */
   readonly loadable: readonly string[] | undefined;
   /** Legacy `modes` returned by session/new|load; undefined advertises none. */
@@ -98,6 +102,7 @@ export function createFakeLauncher(script: FakeAgentScript): FakeLauncher {
     authenticated: [],
     cancels: [],
     configSets: [],
+    images: [],
     loads: [],
     modeSets: [],
     news: [],
@@ -114,7 +119,10 @@ export function createFakeLauncher(script: FakeAgentScript): FakeLauncher {
     const app = agent({ name: 'fake-agent' })
       .onRequest(methods.agent.initialize, () => {
         return {
-          agentCapabilities: { loadSession: script.loadable !== undefined },
+          agentCapabilities: {
+            loadSession: script.loadable !== undefined,
+            promptCapabilities: { image: script.imageInput === true },
+          },
           authMethods: script.authMethods.map((id) => ({ id, name: id })),
           protocolVersion: 1,
         };
@@ -168,6 +176,11 @@ export function createFakeLauncher(script: FakeAgentScript): FakeLauncher {
         const [block] = params.prompt;
         const text = block?.type === 'text' ? block.text : '';
         log.prompts.push(text);
+        for (const entry of params.prompt) {
+          if (entry.type === 'image') {
+            log.images.push({ data: entry.data, mimeType: entry.mimeType });
+          }
+        }
         const cancelled = new Promise<void>((resolve) => {
           cancelWaiters.set(params.sessionId, resolve);
         });

@@ -4,6 +4,7 @@
 
 import { Module } from '@nestjs/common';
 import {
+  AgentConversationMessageAttachmentsModule,
   AgentConversationMessagesModule,
   AgentConversationsModule,
   RolesModule,
@@ -15,6 +16,7 @@ import { AgentConversationsResolver } from './agent-conversations.resolver.ts';
 
 @Module({
   imports: [
+    AgentConversationMessageAttachmentsModule,
     AgentConversationMessagesModule,
     AgentConversationsModule,
     ConversationStreamGraphqlModule,

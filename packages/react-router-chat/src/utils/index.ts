@@ -69,6 +69,7 @@ export const formatRelativeChatTimestamp = (
   return new Date(then).toLocaleDateString();
 };
 
+export * from './chat-attachments';
 export * from './checkout-display';
 export * from './checkout-groups';
 export * from './checkoutSearchFilter';

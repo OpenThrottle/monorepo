@@ -3,6 +3,7 @@ import { isRecord } from '@openthrottle/nodejs-utils';
 import type {
   ChatActiveTurn,
   ChatMessage,
+  ChatMessageAttachment,
   LoadAgentConversationMessagesResult,
 } from '../types';
 import { nullableString } from './nullableString';
@@ -17,6 +18,33 @@ const parseFooter = (value: unknown): string | null | undefined => {
   }
 
   return undefined;
+};
+
+const parseAttachment = (value: unknown): ChatMessageAttachment | null => {
+  if (!isRecord(value) || typeof value.id !== 'string') {
+    return null;
+  }
+
+  return {
+    byteSize: typeof value.byteSize === 'number' ? value.byteSize : null,
+    height: typeof value.height === 'number' ? value.height : null,
+    id: value.id,
+    mimeType: nullableString(value.mimeType),
+    originalName: nullableString(value.originalName),
+    width: typeof value.width === 'number' ? value.width : null,
+  };
+};
+
+const parseAttachments = (value: unknown): ChatMessageAttachment[] => {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map(parseAttachment)
+    .filter((attachment): attachment is ChatMessageAttachment => {
+      return attachment !== null;
+    });
 };
 
 const parseChatMessage = (value: unknown): ChatMessage | null => {
@@ -42,7 +70,10 @@ const parseChatMessage = (value: unknown): ChatMessage | null => {
     return null;
   }
 
+  const attachments = parseAttachments(message.attachments);
+
   return {
+    ...(attachments.length > 0 ? { attachments } : {}),
     body: message.body,
     createdAt:
       typeof message.createdAt === 'string' ? message.createdAt : undefined,

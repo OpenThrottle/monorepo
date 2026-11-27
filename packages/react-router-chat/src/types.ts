@@ -248,8 +248,78 @@ export type ChatRunPhaseKey = keyof typeof CHAT_RUN_PHASE;
 /** Union of {@link CHAT_RUN_PHASE} values. @public */
 export type ChatRunPhaseValue = (typeof CHAT_RUN_PHASE)[ChatRunPhaseKey];
 
+/**
+ * An image attached to a sent user message, served from
+ * `/resources/attachments/<id>`.
+ * @public
+ */
+export interface ChatMessageAttachment {
+  readonly byteSize: number | null;
+  readonly height: number | null;
+  readonly id: string;
+  readonly mimeType: string | null;
+  readonly originalName: string | null;
+  readonly width: number | null;
+}
+
+/** Fields every {@link ChatComposerAttachment} carries. */
+interface ChatComposerAttachmentBase {
+  /** Stable client-side key; the server id only exists once the upload is ready. */
+  readonly localId: string;
+  readonly name: string;
+  /** Object URL (or any image URL) the chip renders as its thumbnail. */
+  readonly previewUrl: string;
+}
+
+/** An image whose upload is in flight. @public */
+export interface ChatComposerAttachmentUploading extends ChatComposerAttachmentBase {
+  readonly status: 'uploading';
+}
+
+/** An uploaded image, ready to send with the turn. @public */
+export interface ChatComposerAttachmentReady extends ChatComposerAttachmentBase {
+  readonly status: 'ready';
+}
+
+/** An image whose upload failed; `error` is shown on the chip. @public */
+export interface ChatComposerAttachmentFailed extends ChatComposerAttachmentBase {
+  readonly error: string;
+  readonly status: 'error';
+}
+
+/**
+ * A composer attachment chip, discriminated on `status`. Controlled by the
+ * consumer, which performs the uploads.
+ * @public
+ */
+export type ChatComposerAttachment =
+  | ChatComposerAttachmentFailed
+  | ChatComposerAttachmentReady
+  | ChatComposerAttachmentUploading;
+
+/**
+ * Image attachment props shared by {@link ChatComposer} and the toolbar's attach
+ * control. Presentational: the consumer uploads and owns the list.
+ * @public
+ */
+export interface ChatComposerAttachmentProps {
+  /** Chips to show, oldest first. */
+  readonly attachments?: readonly ChatComposerAttachment[];
+  /** Why attaching is unavailable (e.g. the model takes no images); disables the picker with this tooltip and ignores paste/drop. */
+  readonly attachmentsDisabledReason?: string;
+  /** Images picked, pasted or dropped. Omit to hide image attachment entirely. */
+  readonly onAddFiles?: (files: readonly File[]) => void;
+  readonly onRemoveAttachment?: (localId: string) => void;
+}
+
 /** Single message in a modal chat thread. */
 export interface ChatMessage {
+  /**
+   * Images attached to a user message. Persisted rows carry the full metadata;
+   * the optimistic row of a just-sent turn knows only the ids (the rest is
+   * null). Optional and additive: absent reads as no attachments.
+   */
+  readonly attachments?: readonly ChatMessageAttachment[];
   readonly body: string;
   readonly createdAt?: string;
   /**

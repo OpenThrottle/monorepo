@@ -1,6 +1,8 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import { isRecord } from '@openthrottle/nodejs-utils';
 import { executeGraphqlWithAuth } from '@openthrottle/react-router-graphql';
 
+import { CHAT_ATTACHMENT_TURN_ERROR_COPY } from './data/copy';
 import type { ChatStartActionResult } from './types';
 import { parseJson } from './utils/json';
 
@@ -44,6 +46,8 @@ export const parseFileMentionsField = (
  * @public
  */
 export interface ConversationStreamStartInput {
+  /** Uploaded image attachment ids to send with the turn (max 8). */
+  readonly attachmentIds: string[] | null;
   readonly backend: string | null;
   readonly baseUrl: string | null;
   readonly conversationId: string | null;
@@ -75,6 +79,7 @@ export function buildStartConversationStreamInput(
   const conversationId = String(formData.get('conversationId') ?? '');
 
   return {
+    attachmentIds: parseFileMentionsField(formData.get('attachmentIds')),
     backend: String(formData.get('backend') ?? '') || null,
     baseUrl: String(formData.get('baseUrl') ?? '') || null,
     conversationId: conversationId || null,
@@ -92,6 +97,33 @@ export function buildStartConversationStreamInput(
     serviceTier: String(formData.get('serviceTier') ?? '') || null,
   };
 }
+
+/** Whether a GraphQL `extensions.reason` has attachment-specific copy. */
+const isAttachmentReason = (
+  value: unknown,
+): value is keyof typeof CHAT_ATTACHMENT_TURN_ERROR_COPY => {
+  return (
+    typeof value === 'string' &&
+    Object.hasOwn(CHAT_ATTACHMENT_TURN_ERROR_COPY, value)
+  );
+};
+
+/**
+ * The message a failed start shows. A rejected attachment turn carries a
+ * machine-readable `extensions.reason` the user gets plain-language copy for;
+ * anything else keeps the error's own message.
+ */
+const toStartErrorMessage = (error: unknown): string => {
+  // A GraphqlResponseError carries the server's `extensions`; read it
+  // structurally so this stays independent of the graphql client's module.
+  const extensions = error instanceof Error && 'extensions' in error ? error.extensions : null; // prettier-ignore
+  const reason = isRecord(extensions) ? extensions.reason : undefined;
+  if (isAttachmentReason(reason)) {
+    return CHAT_ATTACHMENT_TURN_ERROR_COPY[reason];
+  }
+
+  return error instanceof Error ? error.message : 'Failed to start stream.';
+};
 
 /** Structural `StartConversationStreamResult` the action reads. */
 interface StartConversationStreamPayload {
@@ -189,12 +221,10 @@ export function createConversationStreamAction(
         userMessageId: result.userMessageId ?? null,
       };
     } catch (error) {
-      const isError = error instanceof Error;
-
       return {
         assistantMessageId: null,
         conversationId: null,
-        errorMessage: isError ? error.message : 'Failed to start stream.',
+        errorMessage: toStartErrorMessage(error),
         userMessageId: null,
       };
     }

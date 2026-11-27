@@ -299,4 +299,35 @@ describe('buildClaudeArgv', () => {
     expect(argv[argv.length - 1]).toBe('the prompt');
     expect(argv[argv.length - 2]).toBe('--');
   });
+
+  it('grants each attachment directory once, deduped against additional directories', () => {
+    const argv = buildClaudeArgv({
+      additionalDirectories: [
+        '/abs/second',
+        '/home/u/.openthrottle/attachments',
+      ],
+      attachmentDirectories: [
+        '/home/u/.openthrottle/attachments',
+        '/home/u/.openthrottle/attachments/other',
+      ],
+      prompt: 'p',
+      resume: false,
+      sessionId: 'sess-1',
+    });
+
+    const dirs = argv.reduce<string[]>((paths, entry, index) => {
+      const next = argv[index + 1];
+
+      return entry === '--add-dir' && next !== undefined
+        ? [...paths, next]
+        : paths;
+    }, []);
+
+    expect(dirs).toEqual([
+      '/abs/second',
+      '/home/u/.openthrottle/attachments',
+      '/home/u/.openthrottle/attachments/other',
+    ]);
+    expect(argv.at(-2)).toBe('--');
+  });
 });

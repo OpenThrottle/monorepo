@@ -17,6 +17,7 @@ import {
 } from '@nestjs/graphql';
 import type {
   ChatCompletionMessage,
+  ConversationAttachment,
   ConversationPermissionModesValue,
   ConversationReasoningEffort,
   ConversationServiceTiersValue,
@@ -47,6 +48,7 @@ import type {
 } from '@openthrottle/nestjs-repositories-server';
 import {
   AGENT_CONVERSATION_MESSAGE_ROLES,
+  AgentConversationMessageAttachmentsRepository,
   AgentConversationMessagesRepository,
   AgentConversationsRepository,
   CustomPromptsRepository,
@@ -54,9 +56,12 @@ import {
 } from '@openthrottle/nestjs-repositories-server';
 import { toErrorMessage } from '@openthrottle/nodejs-utils';
 
+import { AttachmentStoreService } from '../../services/attachment-store/attachment-store.service.ts';
+import { extensionForMimeType } from '../../services/attachment-store/attachment-store.utils.ts';
 import { CheckoutPathService } from '../../services/checkout-path/checkout-path.service.ts';
 import { buildManagedMcpServers } from '../../services/workspace-editor-config/workspace-editor-config.utils.ts';
 import {
+  CONVERSATION_ATTACHMENT_FAILURE,
   PROMPT_HISTORY_WINDOW,
   TURN_IN_PROGRESS_ERROR,
 } from './conversation-stream.constants.ts';
@@ -67,6 +72,10 @@ import {
 } from './conversation-stream.object.ts';
 import { ConversationStreamService } from './conversation-stream.service.ts';
 import type { ConversationStreamChunkEnvelope } from './conversation-stream.types.ts';
+import {
+  selectAttachmentIds,
+  toAttachmentGraphqlError,
+} from './conversation-stream.utils.ts';
 
 /**
  * Roles the model accepts; persisted `tool` rows are excluded from the prompt.
@@ -256,6 +265,8 @@ export class ConversationStreamResolver {
     private readonly messages: AgentConversationMessagesRepository,
     private readonly modelDiscovery: NestjsModelDiscoveryService,
     private readonly streamService: ConversationStreamService,
+    private readonly attachmentsRepository: AgentConversationMessageAttachmentsRepository,
+    private readonly attachmentStore: AttachmentStoreService,
   ) {}
 
   // 🔌 graphql-ws only: connection auth (onConnect) validated the token and
@@ -323,6 +334,10 @@ export class ConversationStreamResolver {
     if (backend !== OPENAI_BACKEND && !CLI_BACKENDS.has(backend)) {
       return failed(`Unsupported backend: ${backend}.`);
     }
+
+    // Attachment gate, before any row is read or written: a backend that takes
+    // no images, or too long a list, is refused with a BAD_USER_INPUT error.
+    const attachmentIds = selectAttachmentIds(backend, input.attachmentIds);
 
     // Per-user gate: a CLI backend the user disabled on /settings/agents cannot be
     // started (the openai HTTP path is not an agent CLI, so it is never gated).
@@ -396,6 +411,11 @@ export class ConversationStreamResolver {
       return failed(resolved);
     }
 
+    // Resolved before the user message is written, so a missing file leaves no
+    // orphan row. A Private turn attaches too; its rows stay unlinked and the
+    // retention janitor sweeps them.
+    const attachments = await this.resolveAttachments(attachmentIds, userId);
+
     // Persist the user message + rebuild history from storage only when
     // persisting. In Private mode there is no row: the turn runs with just this
     // message as context (single-turn), and no user message id is returned.
@@ -408,6 +428,16 @@ export class ConversationStreamResolver {
         [{ content: message, role: AGENT_CONVERSATION_MESSAGE_ROLES.user }],
       );
       userMessageId = userMessage?.id ?? null;
+
+      // Link the uploads to the persisted user message so history shows them
+      // and the janitor leaves them alone.
+      if (userMessageId !== null && attachmentIds.length > 0) {
+        await this.attachmentsRepository.linkToMessage(
+          attachmentIds,
+          userMessageId,
+          userId,
+        );
+      }
 
       // The newest window, not the oldest: a long thread's prompt must end at
       // the message just appended. Rows still come back oldest first.
@@ -450,6 +480,7 @@ export class ConversationStreamResolver {
     this.streamService.start({
       additionalDirectories: resolved.additionalDirectories,
       assistantMessageId,
+      attachments,
       backend,
       baseUrl: resolved.baseUrl,
       conversationId,
@@ -480,6 +511,57 @@ export class ConversationStreamResolver {
     result.userMessageId = userMessageId;
 
     return result;
+  }
+
+  /**
+   * Turns attachment ids into files the backend can read, in the order given.
+   * Any id that is unknown, another user's, already sent with a message, of an
+   * unknown type, or whose file the store cannot resolve (missing, a symlink,
+   * outside the root) is one `ATTACHMENT_NOT_FOUND`, so the error never says
+   * which ids exist. The store's `touch` also refreshes the file's retention
+   * clock.
+   */
+  private async resolveAttachments(
+    ids: readonly string[],
+    userId: string,
+  ): Promise<ConversationAttachment[]> {
+    if (ids.length === 0) {
+      return [];
+    }
+
+    const notFound = (): Error => {
+      return toAttachmentGraphqlError(
+        CONVERSATION_ATTACHMENT_FAILURE.ATTACHMENT_NOT_FOUND,
+        `An attached image was not found. Upload it again and resend.`,
+      );
+    };
+
+    const rows = await this.attachmentsRepository.findOwnedByIds(ids, userId);
+    const rowsById = new Map(rows.map((row) => [row.id, row]));
+
+    const touched = await Promise.all(
+      ids.map(async (id) => {
+        const row = rowsById.get(id);
+        const ext =
+          row === undefined ? null : extensionForMimeType(row.mimeType);
+        if (row === undefined || row.messageId !== null || ext === null) {
+          throw notFound();
+        }
+
+        const resolved = await this.attachmentStore.touch(row.sha256, ext);
+        if (!resolved.ok) {
+          throw notFound();
+        }
+
+        return {
+          mimeType: row.mimeType,
+          path: resolved.value,
+          sha256: row.sha256,
+        };
+      }),
+    );
+
+    return touched;
   }
 
   /**

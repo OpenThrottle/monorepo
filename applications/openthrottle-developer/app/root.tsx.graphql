@@ -259,6 +259,14 @@ query getAgentConversationMessages($input: GetAgentConversationMessagesInput!) {
       startedAt
     }
     items {
+      attachments {
+        byteSize
+        height
+        id
+        mimeType
+        originalName
+        width
+      }
       content
       createdAt
       id

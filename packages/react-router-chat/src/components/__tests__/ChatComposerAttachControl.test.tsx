@@ -62,4 +62,25 @@ describe('ChatComposerAttachControl Component', () => {
 
     expect(onAddContext).toHaveBeenCalledWith('project');
   });
+
+  test('is the image picker when onAddFiles is supplied', async () => {
+    const onAddFiles = vi.fn();
+    const component = renderControl({ onAddFiles });
+    const file = new File(['x'], 'a.png', { type: 'image/png' });
+
+    await userEvent
+      .setup()
+      .upload(component.getByTestId('ChatComposerAttachPicker-input'), file);
+
+    expect(onAddFiles).toHaveBeenCalledWith([file]);
+  });
+
+  test('the image picker is disabled when a reason is given', () => {
+    const component = renderControl({
+      attachmentsDisabledReason: 'No image support',
+      onAddFiles: vi.fn(),
+    });
+
+    expect(component.getByTestId('ChatComposerToolbar-attach')).toBeDisabled();
+  });
 });

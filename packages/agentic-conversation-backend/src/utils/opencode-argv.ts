@@ -34,6 +34,11 @@ export interface OpencodeArgvOptions {
   readonly auto?: boolean;
   /** Workspace directory; passed as `--dir` (and used as the spawn cwd). */
   readonly cwd: string;
+  /**
+   * Absolute paths of attached images, emitted as one `--file <path>` each
+   * (opencode's repeatable attachment flag), before the `--` marker.
+   */
+  readonly filePaths?: readonly string[];
   /** Model as `provider/model`; omitted when undefined so opencode uses its default. */
   readonly model?: string;
   /**
@@ -82,6 +87,10 @@ export function buildOpencodeArgv(options: OpencodeArgvOptions): string[] {
   const modelVariant = opencodeVariant(options.reasoning);
   if (modelVariant !== undefined) {
     argv.push('--variant', modelVariant);
+  }
+
+  for (const filePath of options.filePaths ?? []) {
+    argv.push('--file', filePath);
   }
 
   argv.push('--', options.prompt);

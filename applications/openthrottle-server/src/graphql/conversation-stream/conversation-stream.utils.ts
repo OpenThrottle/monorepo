@@ -15,9 +15,16 @@ import type { CursorFailureKindsValue } from '@openthrottle/agentic-conversation
 import {
   classifyCursorFailure,
   CURSOR_FAILURE_KINDS,
+  resolveChatBackendCapabilities,
   stripAnsi,
 } from '@openthrottle/agentic-conversation-backend';
+import { GraphQLError } from 'graphql';
 
+import type { ConversationAttachmentFailureValue } from './conversation-stream.constants.ts';
+import {
+  CONVERSATION_ATTACHMENT_FAILURE,
+  MAX_TURN_ATTACHMENTS,
+} from './conversation-stream.constants.ts';
 import type { ConversationStreamChunkPayload } from './conversation-stream.types.ts';
 
 /** True for a plain text/thinking delta that can fold into its predecessor. */
@@ -112,3 +119,48 @@ export function composeCursorStartupErrorText(rawMessage: string): string {
 
   return `${copy}\n\nDetails: ${detail}`;
 }
+
+/**
+ * @description A bad `attachmentIds` list as an ordinary GraphQL error (HTTP 200, `errors[]`) with
+ * `extensions.code = 'BAD_USER_INPUT'` and the failure as `extensions.reason`.
+ */
+export const toAttachmentGraphqlError = (
+  reason: ConversationAttachmentFailureValue,
+  message: string,
+): GraphQLError => {
+  return new GraphQLError(message, {
+    extensions: { code: 'BAD_USER_INPUT', reason },
+  });
+};
+
+/**
+ * @description The turn's attachment ids with duplicates dropped (first occurrence wins). An empty
+ * or absent list is `[]` and never fails. Throws the `BAD_USER_INPUT` error when the backend takes
+ * no images or more than {@link MAX_TURN_ATTACHMENTS} distinct ids were sent. Runs before anything
+ * is read or written, so a refusal leaves no trace.
+ */
+export const selectAttachmentIds = (
+  backend: string,
+  attachmentIds: readonly string[] | null | undefined,
+): string[] => {
+  const ids = [...new Set(attachmentIds ?? [])];
+  if (ids.length === 0) {
+    return [];
+  }
+
+  if (!resolveChatBackendCapabilities(backend).imageInput) {
+    throw toAttachmentGraphqlError(
+      CONVERSATION_ATTACHMENT_FAILURE.ATTACHMENTS_UNSUPPORTED,
+      `The ${backend} backend does not accept image attachments.`,
+    );
+  }
+
+  if (ids.length > MAX_TURN_ATTACHMENTS) {
+    throw toAttachmentGraphqlError(
+      CONVERSATION_ATTACHMENT_FAILURE.TOO_MANY_ATTACHMENTS,
+      `A message can carry at most ${MAX_TURN_ATTACHMENTS} images.`,
+    );
+  }
+
+  return ids;
+};

@@ -104,4 +104,29 @@ describe('buildOpencodeArgv', () => {
       expect(argv.at(-1)).toBe('hi');
     });
   });
+
+  describe('file attachments', () => {
+    it('emits one --file per attachment, before the -- marker', () => {
+      const argv = buildOpencodeArgv({
+        cwd: '/repo',
+        filePaths: ['/att/a.png', '/att/b.jpg'],
+        prompt: 'look',
+      });
+
+      expect(argv.filter((entry) => entry === '--file')).toHaveLength(2);
+      expect(argv.slice(argv.indexOf('--file'), argv.indexOf('--'))).toEqual([
+        '--file',
+        '/att/a.png',
+        '--file',
+        '/att/b.jpg',
+      ]);
+      expect(argv.at(-1)).toBe('look');
+    });
+
+    it('emits no --file when there are none', () => {
+      expect(buildOpencodeArgv({ cwd: '/repo', prompt: 'p' })).not.toContain(
+        '--file',
+      );
+    });
+  });
 });

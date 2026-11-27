@@ -6,6 +6,7 @@
 
 import type {
   ChatCompletionMessage,
+  ConversationAttachment,
   ConversationPermissionModesValue,
   ConversationReasoningEffort,
   ConversationServiceTiersValue,
@@ -86,6 +87,8 @@ export interface StartConversationStreamRun {
   readonly additionalDirectories: readonly string[];
   /** Pre-allocated assistant message id (returned to the client by the mutation). */
   readonly assistantMessageId: string;
+  /** Resolved images attached to the turn's user message; empty when none. */
+  readonly attachments: readonly ConversationAttachment[];
   /** Backend discriminator (`openai` | `cursor`). */
   readonly backend: string;
   /** OpenAI-compatible base URL of the discovered endpoint (openai backend). */

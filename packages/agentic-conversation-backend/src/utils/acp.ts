@@ -23,9 +23,11 @@
  */
 
 import { randomUUID } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
 
 import type {
   ClientConnection,
+  ContentBlock,
   RequestPermissionRequest,
   RequestPermissionResponse,
   SessionConfigOption,
@@ -36,6 +38,7 @@ import { client, methods, PROTOCOL_VERSION } from '@agentclientprotocol/sdk';
 import { isRecord, toErrorMessage } from '@openthrottle/nodejs-utils';
 
 import type {
+  ConversationAttachment,
   ConversationBackend,
   ConversationBackendRun,
   ConversationStreamChunk,
@@ -110,6 +113,8 @@ interface LiveAcpSession {
   readonly connection: ClientConnection;
   readonly dispose: () => void;
   idleTimer: NodeJS.Timeout | null;
+  /** The agent advertised `promptCapabilities.image` at `initialize`. */
+  readonly imageInput: boolean;
   readonly key: string;
   lastUsedAt: number;
   /** The agent's legacy `modes` state, used when it has no `mode` config option. */
@@ -197,6 +202,25 @@ function composePrompt(run: ConversationBackendRun, fresh: boolean): string {
   }
 
   return body;
+}
+
+/** The message of the terminal error when attachments meet an agent without image input. */
+const IMAGES_UNSUPPORTED_MESSAGE = 'This agent does not accept images.';
+
+/** One ACP `image` content block per attachment, read concurrently. */
+async function imageBlocks(
+  attachments: readonly ConversationAttachment[],
+): Promise<ContentBlock[]> {
+  return Promise.all(
+    attachments.map(async (attachment): Promise<ContentBlock> => {
+      const bytes = await readFile(attachment.path);
+      return {
+        data: bytes.toString('base64'),
+        mimeType: attachment.mimeType,
+        type: 'image',
+      };
+    }),
+  );
 }
 
 /** Select options of an ACP select config, flattening groups. */
@@ -369,6 +393,8 @@ export function createAcpConversationBackend(
         connection,
         dispose: agentProcess.dispose,
         idleTimer: null,
+        imageInput:
+          initialized.agentCapabilities?.promptCapabilities?.image === true,
         key: poolKey(cwd, sessionId),
         lastUsedAt: Date.now(),
         modes,
@@ -620,10 +646,19 @@ export function createAcpConversationBackend(
 
     const prompting = (async (): Promise<void> => {
       try {
+        const attachments = run.attachments ?? [];
+        if (attachments.length > 0 && !live.imageInput) {
+          queue.push(terminalError(IMAGES_UNSUPPORTED_MESSAGE));
+          return;
+        }
         await applyMode(live, run);
         await applyModel(live, run.model);
+        const images = await imageBlocks(attachments);
         const response = await agent.request(methods.agent.session.prompt, {
-          prompt: [{ text: composePrompt(run, fresh), type: 'text' }],
+          prompt: [
+            { text: composePrompt(run, fresh), type: 'text' },
+            ...images,
+          ],
           sessionId: live.sessionId,
         });
         queue.push(acpTerminalChunk(response, [...deniedActions]));
