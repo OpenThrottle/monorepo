@@ -971,3 +971,23 @@ export interface ChatSessionDiffAvailable {
  */
 export type ChatSessionDiff =
   ChatSessionDiffAvailable | ChatSessionDiffUnavailable;
+
+/**
+ * The session drawer's Changes state, owned by the host: the checkout's diff, the selected
+ * file and its lazily loaded patch, and the callbacks that drive them.
+ */
+export interface ChatSessionChanges {
+  /** The checkout's changes; undefined until fetched or when no checkout is known. */
+  readonly diff: ChatSessionDiff | undefined;
+  readonly isLoading: boolean;
+  /** True when the host cut the selected file's patch at its size cap. */
+  readonly isPatchTruncated: boolean;
+  /** Closes the patch dialog; the host clears the selected file. */
+  readonly onCloseFile: () => void;
+  readonly onRefresh: () => void;
+  readonly onSelectFile: (path: string) => void;
+  /** Path (relative to the checkout) whose patch is open in the dialog. */
+  readonly selectedFile: string | undefined;
+  /** The selected file's unified patch; undefined while it loads. */
+  readonly selectedPatch: string | undefined;
+}

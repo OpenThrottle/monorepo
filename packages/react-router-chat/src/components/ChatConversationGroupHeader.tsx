@@ -26,6 +26,7 @@ import {
   MENU_TRIGGER_VISIBILITY_CLASSES,
 } from '../data/chat-conversation-row.classes';
 import { CHAT_CONVERSATION_SIDEBAR_COPY } from '../data/chat-conversation-sidebar.copy';
+import { CHAT_PANEL_HOVER_CLASSES } from '../data/chat-panel.classes';
 import type { AgentConversationGroup } from '../types';
 
 export interface ChatConversationGroupHeaderProps {
@@ -106,7 +107,10 @@ export const ChatConversationGroupHeader = (
 
   return (
     <div
-      className="group/row hover:bg-accent/40 mx-1 mt-2 flex items-center gap-1 rounded-md pr-1"
+      className={cn(
+        'group/row mx-1 mt-2 flex items-center gap-1 rounded-md pr-1',
+        CHAT_PANEL_HOVER_CLASSES,
+      )}
       data-testid={`ChatConversationSidebar-group-${group.id}`}
     >
       <button
@@ -138,6 +142,7 @@ export const ChatConversationGroupHeader = (
             aria-label={`${copy.moreOptionsForGroup} ${group.name}`}
             className={cn(
               'text-muted-foreground size-7 shrink-0',
+              CHAT_PANEL_HOVER_CLASSES,
               MENU_TRIGGER_VISIBILITY_CLASSES,
             )}
             data-testid={`ChatConversationSidebar-group-more-${group.id}`}

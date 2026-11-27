@@ -21,6 +21,7 @@ const renderRow = (file: ChatSessionDiffFile, isSelected = false) => {
       <ChatSessionDrawerChangesRow
         file={file}
         isSelected={isSelected}
+        isTouched={false}
         onSelect={onSelect}
       />
     </ul>,
@@ -38,12 +39,12 @@ describe('ChatSessionDrawerChangesRow', () => {
     expect(onSelect).toHaveBeenCalledWith('src/a.ts');
   });
 
-  test('marks the selected row pressed', () => {
+  test('announces that it opens a dialog', () => {
     const { component } = renderRow(FILE, true);
 
     expect(component.getByRole('button')).toHaveAttribute(
-      'aria-pressed',
-      'true',
+      'aria-haspopup',
+      'dialog',
     );
   });
 

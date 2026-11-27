@@ -66,7 +66,7 @@ export const SettingsMcpManagePanel = (
   // Markup
   const errorMarkup = (
     <p
-      className="text-destructive px-4 pb-3 text-sm"
+      className="text-destructive p-4 text-sm"
       data-testid="SettingsMcpManagePanel-error"
       role="alert"
     >

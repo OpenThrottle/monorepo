@@ -30,6 +30,7 @@ import {
   MENU_TRIGGER_VISIBILITY_CLASSES,
 } from '../data/chat-conversation-row.classes';
 import { CHAT_CONVERSATION_SIDEBAR_COPY } from '../data/chat-conversation-sidebar.copy';
+import { CHAT_PANEL_HOVER_CLASSES } from '../data/chat-panel.classes';
 import type {
   AgentConversationGroup,
   AgentConversationListItem,
@@ -142,6 +143,7 @@ export const ChatConversationRowMenu = (
           aria-label={`${copy.moreOptionsFor} ${label}`}
           className={cn(
             'text-muted-foreground size-7 shrink-0 pointer-coarse:size-11',
+            CHAT_PANEL_HOVER_CLASSES,
             !alwaysVisible && MENU_TRIGGER_VISIBILITY_CLASSES,
           )}
           data-testid={`ChatConversationSidebar-more-${conversation.id}`}

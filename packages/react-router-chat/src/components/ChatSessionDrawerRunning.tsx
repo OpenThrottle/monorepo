@@ -122,7 +122,7 @@ export const ChatSessionDrawerRunning = (
   if (isIdle) {
     return (
       <p
-        className="text-muted-foreground px-4 pb-3 text-xs"
+        className="text-muted-foreground p-4 text-xs"
         data-testid="ChatSessionDrawerRunning"
       >
         {copy.idle}
@@ -132,7 +132,7 @@ export const ChatSessionDrawerRunning = (
 
   return (
     <div
-      className="flex flex-col gap-3 px-4 pb-3"
+      className="flex flex-col gap-3 p-4"
       data-testid="ChatSessionDrawerRunning"
     >
       {isStreaming ? turnRow : null}

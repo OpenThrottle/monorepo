@@ -26,6 +26,8 @@ describe('ChatSessionDrawerEnvironment', () => {
             permissionMode: CHAT_PERMISSION_MODE.supervised,
             reasoning: CHAT_REASONING_LEVEL.high,
           }}
+          headBranch={undefined}
+          pullRequest={undefined}
         />,
       );
 
@@ -61,6 +63,8 @@ describe('ChatSessionDrawerEnvironment', () => {
             permissionMode: undefined,
             reasoning: undefined,
           }}
+          headBranch={undefined}
+          pullRequest={undefined}
         />,
       );
 
@@ -79,7 +83,11 @@ describe('ChatSessionDrawerEnvironment', () => {
   describe('without an environment', () => {
     test('renders the empty line and no rows', () => {
       const component = render(
-        <ChatSessionDrawerEnvironment environment={undefined} />,
+        <ChatSessionDrawerEnvironment
+          environment={undefined}
+          headBranch={undefined}
+          pullRequest={undefined}
+        />,
       );
 
       expect(
@@ -88,6 +96,64 @@ describe('ChatSessionDrawerEnvironment', () => {
       expect(
         component.queryByTestId('ChatSessionDrawerEnvironment-model'),
       ).not.toBeInTheDocument();
+    });
+  });
+
+  describe('with a live branch and pull request', () => {
+    const environment = {
+      agentLabel: undefined,
+      checkout: {
+        branch: 'main',
+        filesystemPath: undefined,
+        id: 'c1',
+        kind: CHAT_CHECKOUT_KIND.primary,
+        label: 'monorepo',
+      },
+      modelLabel: undefined,
+      permissionMode: undefined,
+      reasoning: undefined,
+    };
+
+    test('shows the live branch over the checkout list branch', () => {
+      const component = render(
+        <ChatSessionDrawerEnvironment
+          environment={environment}
+          headBranch="feat/live"
+          pullRequest={undefined}
+        />,
+      );
+
+      expect(
+        component.getByTestId('ChatSessionDrawerEnvironment-branch'),
+      ).toHaveTextContent('feat/live');
+      expect(component.queryByTitle('main')).not.toBeInTheDocument();
+    });
+
+    test('puts the pull request chip first, above the checkout', () => {
+      const component = render(
+        <ChatSessionDrawerEnvironment
+          environment={environment}
+          headBranch="feat/live"
+          pullRequest={{
+            number: 7,
+            state: 'open',
+            url: 'https://github.com/acme/repo/pull/7',
+          }}
+        />,
+      );
+      const items = component.getAllByRole('listitem');
+
+      expect(items[0]).toHaveAttribute(
+        'data-testid',
+        'ChatSessionDrawerEnvironment-pullRequest',
+      );
+      expect(items[0]).toContainElement(
+        component.getByRole('link', { name: /#7/ }),
+      );
+      expect(items[1]).toHaveAttribute(
+        'data-testid',
+        'ChatSessionDrawerEnvironment-checkout',
+      );
     });
   });
 });

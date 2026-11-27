@@ -15,7 +15,7 @@ export interface ChatSessionDrawerChangesPatchProps {
 }
 
 /**
- * @description The selected file's patch under the Changes list: a scrollable monospace
+ * @description The selected file's patch, inside {@link ChatSessionDrawerChangesDialog}: a scrollable monospace
  * {@link DiffView}, or the reason there is none yet (loading, binary).
  *
  * @public
@@ -57,12 +57,12 @@ export const ChatSessionDrawerChangesPatch = (
 
   return (
     <div
-      className="flex flex-col gap-1"
+      className="flex min-h-0 flex-1 flex-col gap-1"
       data-testid="ChatSessionDrawerChangesPatch"
     >
       <DiffView
         aria-label={label}
-        className="bg-muted/30 max-h-72 rounded border"
+        className="bg-muted/30 min-h-0 flex-1 overflow-auto rounded border"
         patch={patch}
         role="region"
         tabIndex={0}

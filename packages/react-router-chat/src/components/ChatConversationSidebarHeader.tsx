@@ -3,6 +3,7 @@ import { FolderPlus, MessageSquarePlus } from 'lucide-react';
 import * as React from 'react';
 
 import { CHAT_CONVERSATION_SIDEBAR_COPY } from '../data/chat-conversation-sidebar.copy';
+import { CHAT_PANEL_HOVER_CLASSES } from '../data/chat-panel.classes';
 
 export interface ChatConversationSidebarHeaderProps {
   /** Extra controls after New chat (e.g. the docked column's collapse button). */
@@ -33,6 +34,7 @@ export const ChatConversationSidebarHeader = (
   const newGroupControl = (
     <Button
       aria-label={copy.newGroup}
+      className={CHAT_PANEL_HOVER_CLASSES}
       data-testid="ChatConversationSidebar-new-group"
       onClick={onNewGroup ?? undefined}
       size="icon"
@@ -56,10 +58,10 @@ export const ChatConversationSidebarHeader = (
       data-testid="ChatConversationSidebar-header"
       role="group"
     >
-      <div className="flex min-w-0 flex-1 items-center justify-end">
-        {newGroupButton}
+      <div className="flex min-w-0 flex-1 items-center justify-between">
         <Button
           aria-label={copy.newChat}
+          className={CHAT_PANEL_HOVER_CLASSES}
           data-testid="ChatConversationSidebar-new-chat"
           onClick={onNewChat}
           size="sm"
@@ -67,8 +69,9 @@ export const ChatConversationSidebarHeader = (
           variant="ghost"
         >
           <MessageSquarePlus className="size-4" />
-          {copy.newChat}
+          {/* {copy.newChat} */}
         </Button>
+        {newGroupButton}
         {end}
       </div>
     </div>

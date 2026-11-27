@@ -371,6 +371,7 @@
     "start": "pnpm run sync:skills && pnpm run start:docker && pnpm install && NX_TUI=false pnpm run start:openthrottle",
     "start:docker": "pnpm run database:start",
     "start:openthrottle": "nx run-many -t start -p openthrottle-developer openthrottle-server",
+    "start:server": "nx run-many -t start -p openthrottle-server",
     "stop": "pnpm run database:stop",
     "sync": "pnpm run \"/^sync:openthrottle:.*/\"",
     "sync:openthrottle": "node --experimental-strip-types ./scripts/sync-subtree.ts applications/openthrottle openthrottle main",

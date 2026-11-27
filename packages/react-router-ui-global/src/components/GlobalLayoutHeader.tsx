@@ -14,6 +14,7 @@ import { SignOutIcon } from '@phosphor-icons/react/dist/ssr/SignOut';
 import * as React from 'react';
 import { Link } from 'react-router';
 
+import { useHeaderHeightVariable } from '../hooks/useHeaderHeightVariable';
 import { GlobalLayoutBreadcrumbs } from './GlobalLayoutBreadcrumbs';
 import { GlobalLayoutHeaderLinks } from './GlobalLayoutHeaderLinks';
 import type { GlobalLayoutHeaderSearchEvent } from './GlobalLayoutHeaderSearch';
@@ -47,6 +48,8 @@ export const GlobalLayoutHeader = (
   } = props;
 
   // Hooks
+  const navRef = React.useRef<HTMLElement>(null);
+  useHeaderHeightVariable({ headerRef: navRef });
 
   // Setup
   const showProfile = false;
@@ -72,6 +75,7 @@ export const GlobalLayoutHeader = (
         className,
       )}
       data-testid="global-layout-nav"
+      ref={navRef}
     >
       <div className="flex min-w-0 flex-1 items-center gap-2 pointer-coarse:max-sm:gap-0">
         <Tooltip delayDuration={1_000}>

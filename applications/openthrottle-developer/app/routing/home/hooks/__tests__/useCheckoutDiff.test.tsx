@@ -172,6 +172,24 @@ describe('useCheckoutDiff', () => {
       expect(value.current?.selectedFile).toBe('src/a.ts');
     });
 
+    test('closing the file clears the selection', async () => {
+      const { value } = renderHook(ENABLED);
+
+      await waitFor(() => {
+        expect(value.current?.diff).toBeDefined();
+      });
+
+      act(() => {
+        value.current?.onSelectFile('src/a.ts');
+      });
+      act(() => {
+        value.current?.onCloseFile();
+      });
+
+      expect(value.current?.selectedFile).toBeUndefined();
+      expect(value.current?.selectedPatch).toBeUndefined();
+    });
+
     test('refresh fetches the diff again', async () => {
       const { requests, value } = renderHook(ENABLED);
 

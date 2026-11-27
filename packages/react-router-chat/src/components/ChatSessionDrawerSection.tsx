@@ -8,6 +8,7 @@ import {
 import { ChevronDown } from 'lucide-react';
 import * as React from 'react';
 
+import { CHAT_PANEL_HOVER_CLASSES } from '../data/chat-panel.classes';
 import { CHAT_SESSION_DRAWER_COPY } from '../data/copy';
 
 export interface ChatSessionDrawerSectionProps {
@@ -59,7 +60,10 @@ export const ChatSessionDrawerSection = (
       <CollapsibleTrigger asChild={true}>
         <Button
           aria-label={`${toggleLabel}: ${title}`}
-          className="h-9 w-full justify-between rounded-none px-4 text-xs font-medium"
+          className={cn(
+            'h-9 w-full justify-between rounded-none px-4 text-xs font-medium',
+            CHAT_PANEL_HOVER_CLASSES,
+          )}
           data-testid={`ChatSessionDrawerSection-${sectionId}-toggle`}
           type="button"
           variant="ghost"

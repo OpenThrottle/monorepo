@@ -8,6 +8,7 @@ import {
 import * as React from 'react';
 
 import { CHAT_CONVERSATION_SIDEBAR_COPY } from '../data/chat-conversation-sidebar.copy';
+import { CHAT_PANEL_HOVER_CLASSES } from '../data/chat-panel.classes';
 import { useChatConversationSidebar } from '../hooks/useChatConversationSidebar';
 import type {
   AgentConversationListItem,
@@ -170,7 +171,7 @@ export const ChatConversationSidebar = (
   const loadMore = (
     <div className="px-2 py-1">
       <Button
-        className="w-full"
+        className={cn('w-full', CHAT_PANEL_HOVER_CLASSES)}
         data-testid="ChatConversationSidebar-load-more"
         disabled={isLoadingMore}
         onClick={onLoadMore}

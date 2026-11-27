@@ -25,11 +25,6 @@ export interface GlobalLayoutProps {
   readonly children: React.ReactNode;
   readonly className?: string;
   readonly data?: Record<string, GlobalSidebarContentLinkProps[]>;
-  /**
-   * A column docked between the nav sidebar and the page (the developer app's
-   * conversations); it does not scroll with the page.
-   */
-  readonly dock?: React.ReactNode;
   readonly health?: ServerHealthObject;
 
   readonly overrides?: {
@@ -52,7 +47,6 @@ export const GlobalLayout = (props: GlobalLayoutProps): React.ReactElement => {
     children,
     className,
     data,
-    dock = null,
     health,
     overrides,
   } = props;
@@ -102,7 +96,6 @@ export const GlobalLayout = (props: GlobalLayoutProps): React.ReactElement => {
         {footerMarkup}
         {!hideRail ? <SidebarRail /> : null}
       </Sidebar>
-      {dock}
       <div
         {...{ [GLOBAL_SCROLL_CONTAINER_ATTRIBUTE]: true }}
         className="relative flex max-h-screen w-full max-w-full flex-col overflow-auto"
