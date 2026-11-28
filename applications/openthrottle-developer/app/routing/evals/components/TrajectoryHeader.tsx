@@ -5,10 +5,7 @@ import * as React from 'react';
 import { Link } from 'react-router';
 
 import type { AgentTrajectorySummaryFragment } from '~/__generated__/graphql';
-import {
-  TRAJECTORY_SUMMARY_COPY,
-  TRAJECTORY_VIEWER_COPY,
-} from '~/routing/evals/data/copy';
+import { TRAJECTORY_SUMMARY_COPY } from '~/routing/evals/data/copy';
 import type { AtifTrajectory } from '~/routing/evals/types';
 import {
   formatTrajectoryAgent,
@@ -18,10 +15,12 @@ import { buildTrajectorySummaryFacts } from '~/routing/evals/utils/summaries';
 import { PlanRunTime } from '~/routing/plans/components/PlanRunTime';
 
 export interface TrajectoryHeaderProps {
+  /** Where the back link goes. */
+  readonly backHref: string;
+  /** The back link's text. */
+  readonly backLabel: string;
   readonly className?: string;
   readonly summary: AgentTrajectorySummaryFragment;
-  /** The task page's Trajectories tab, for the back link. */
-  readonly taskHref: string;
   /** The parsed document; `null` when it could not be read, so the summary stands alone. */
   readonly trajectory: AtifTrajectory | null;
 }
@@ -34,7 +33,7 @@ export interface TrajectoryHeaderProps {
 export const TrajectoryHeader = (
   props: TrajectoryHeaderProps,
 ): React.ReactElement => {
-  const { className, summary, taskHref, trajectory } = props;
+  const { backHref, backLabel, className, summary, trajectory } = props;
 
   // Hooks
 
@@ -70,9 +69,9 @@ export const TrajectoryHeader = (
     >
       <div>
         <Button asChild={true} size="sm" variant="outline">
-          <Link to={taskHref}>
+          <Link to={backHref}>
             <ChevronLeftIcon />
-            {TRAJECTORY_VIEWER_COPY.backToTask}
+            {backLabel}
           </Link>
         </Button>
       </div>

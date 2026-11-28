@@ -1,0 +1,57 @@
+# evals.trajectories._index
+
+# The Trajectories tab: recorded runs grouped by plan, with your scoring
+# progress. Counts cover the whole plan; `trajectories` holds only the rows
+# the score filter kept. The plan fields are null for the deleted-plan group.
+fragment AgentTrajectoryPlanGroupItemRow on AgentTrajectoryPlanGroupItem {
+  cachedTokens
+  costUsd
+  durationMs
+  id
+  inputTokens
+  outputTokens
+  planRunId
+  recordedAt
+  source
+  taskId
+  taskTitle
+  truncated
+  verdict
+}
+
+fragment AgentTrajectoryPlanGroupRow on AgentTrajectoryPlanGroup {
+  failCount
+  labelledCount
+  latestRecordedAt
+  passCount
+  planId
+  planStatus
+  planTitle
+  scoredCount
+  trajectories {
+    ...AgentTrajectoryPlanGroupItemRow
+  }
+  trajectoryCount
+}
+
+fragment AgentTrajectoryPlanGroupPageRow on AgentTrajectoryPlanGroupPage {
+  endCursor
+  groups {
+    ...AgentTrajectoryPlanGroupRow
+  }
+  hasNextPage
+}
+
+query EvalsTrajectoryPlanGroups(
+  $after: String
+  $repositoryId: ID
+  $scoreState: AgentTrajectoryScoreState!
+) {
+  agentTrajectoryPlanGroups(
+    after: $after
+    repositoryId: $repositoryId
+    scoreState: $scoreState
+  ) {
+    ...AgentTrajectoryPlanGroupPageRow
+  }
+}

@@ -1,16 +1,27 @@
+import { createMock } from '@golevelup/ts-vitest';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import type { AgentTrajectory } from '@openthrottle/nestjs-repositories-server';
+import { GlobalClsService } from '@openthrottle/nestjs-modules';
+import type {
+  AgentTrajectory,
+  PlanRun,
+} from '@openthrottle/nestjs-repositories-server';
 import {
+  AGENT_TRAJECTORY_SCORE_STATE,
   AGENT_TRAJECTORY_SOURCE,
   AgentTrajectoriesRepository,
+  PlanRunsRepository,
 } from '@openthrottle/nestjs-repositories-server';
-import { createAgentTrajectoriesRepositoryMock } from '@openthrottle/nestjs-repositories-server/testing';
+import {
+  createAgentTrajectoriesRepositoryMock,
+  createPlanRunsRepositoryMock,
+} from '@openthrottle/nestjs-repositories-server/testing';
 import type { AtifTrajectory } from '@openthrottle/openthrottle-agentic-utils';
 import { QueryFailedError } from 'typeorm';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { AgentTrajectoriesResolver } from './agent-trajectories.resolver.ts';
+import { toAgentTrajectoryObject } from './agent-trajectory.mapper.ts';
 
 const planRunId = '9a1c2b3d-4e5f-4a6b-8c7d-0e1f2a3b4c5d';
 const taskId = '2f1e7d4c-1b43-4a4c-9e3a-6bb1f3b4c001';
@@ -97,20 +108,187 @@ const buildInput = (
 
 const mockRepository = createAgentTrajectoriesRepositoryMock();
 
+const mockPlanRuns = createPlanRunsRepositoryMock();
+
+const mockCls = createMock<GlobalClsService>({ get: vi.fn() });
+
 describe('AgentTrajectoriesResolver', () => {
   let resolver: AgentTrajectoriesResolver;
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    vi.mocked(mockCls.get).mockReturnValue({
+      displayName: 'visormatt',
+      email: 'visormatt@example.com',
+      isDeleted: false,
+      roles: [],
+      uuid: 'u1',
+    });
 
     const app = await Test.createTestingModule({
       providers: [
         AgentTrajectoriesResolver,
         { provide: AgentTrajectoriesRepository, useValue: mockRepository },
+        { provide: GlobalClsService, useValue: mockCls },
+        { provide: PlanRunsRepository, useValue: mockPlanRuns },
       ],
     }).compile();
 
     resolver = app.get(AgentTrajectoriesResolver);
+  });
+
+  describe('planId', () => {
+    test("resolves the plan of the trajectory's plan run", async () => {
+      vi.mocked(mockPlanRuns.findRunById).mockResolvedValue(
+        createMock<PlanRun>({ planId: 'plan-1' }),
+      );
+
+      await expect(
+        resolver.planId(toAgentTrajectoryObject(buildRow())),
+      ).resolves.toBe('plan-1');
+      expect(mockPlanRuns.findRunById).toHaveBeenCalledWith(planRunId);
+    });
+
+    test('is null when the run cannot be read', async () => {
+      vi.mocked(mockPlanRuns.findRunById).mockResolvedValue(null);
+
+      await expect(
+        resolver.planId(toAgentTrajectoryObject(buildRow())),
+      ).resolves.toBeNull();
+    });
+  });
+
+  describe('agentTrajectoryPlanGroups', () => {
+    const recordedAt = new Date('2026-11-20T10:00:00.000Z');
+    const page = {
+      endCursor: 'cursor-1',
+      groups: [
+        {
+          failCount: 0,
+          labelledCount: 1,
+          latestRecordedAt: recordedAt,
+          passCount: 1,
+          planId: 'e1e2e3e4-0000-4000-8000-000000000005',
+          planStatus: 'COMPLETED',
+          planTitle: 'Alpha',
+          scoredCount: 1,
+          trajectories: [
+            {
+              cachedTokens: null,
+              costUsd: null,
+              durationMs: 9000,
+              id: 'f1f2f3f4-0000-4000-8000-000000000010',
+              inputTokens: 3000,
+              outputTokens: 200,
+              planRunId,
+              recordedAt,
+              source: AGENT_TRAJECTORY_SOURCE.SESSION_UPLOAD,
+              taskId: null,
+              taskTitle: null,
+              truncated: false,
+              verdict: null,
+            },
+          ],
+          trajectoryCount: 2,
+        },
+      ],
+      hasNextPage: true,
+    };
+
+    test('lists the caller-scoped groups with the default page size', async () => {
+      vi.mocked(mockRepository.findPlanGroups).mockResolvedValue({
+        kind: 'page',
+        page,
+      });
+
+      const result = await resolver.agentTrajectoryPlanGroups(
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        AGENT_TRAJECTORY_SCORE_STATE.UNSCORED,
+        undefined,
+      );
+
+      expect(mockRepository.findPlanGroups).toHaveBeenCalledWith({
+        after: null,
+        first: 20,
+        planId: null,
+        rater: 'visormatt',
+        repositoryId: null,
+        scoreState: AGENT_TRAJECTORY_SCORE_STATE.UNSCORED,
+      });
+      expect(result).toEqual(page);
+    });
+
+    test('passes the cursor, page size and repository through', async () => {
+      await resolver.agentTrajectoryPlanGroups(
+        'cursor-1',
+        5,
+        'plan-1',
+        'repo-1',
+        AGENT_TRAJECTORY_SCORE_STATE.SCORED,
+        undefined,
+      );
+
+      expect(mockRepository.findPlanGroups).toHaveBeenCalledWith(
+        expect.objectContaining({
+          after: 'cursor-1',
+          first: 5,
+          planId: 'plan-1',
+          repositoryId: 'repo-1',
+          scoreState: AGENT_TRAJECTORY_SCORE_STATE.SCORED,
+        }),
+      );
+    });
+
+    test('reads as nobody when the request carries no identity', async () => {
+      vi.mocked(mockCls.get).mockReturnValue(undefined);
+
+      await resolver.agentTrajectoryPlanGroups(
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        AGENT_TRAJECTORY_SCORE_STATE.ALL,
+        undefined,
+      );
+
+      expect(mockRepository.findPlanGroups).toHaveBeenCalledWith(
+        expect.objectContaining({ rater: null }),
+      );
+    });
+
+    test.each([0, 51, 1.5])('rejects a page size of %s', async (first) => {
+      await expect(
+        resolver.agentTrajectoryPlanGroups(
+          undefined,
+          first,
+          undefined,
+          undefined,
+          AGENT_TRAJECTORY_SCORE_STATE.ALL,
+          undefined,
+        ),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(mockRepository.findPlanGroups).not.toHaveBeenCalled();
+    });
+
+    test('rejects a cursor the listing did not issue', async () => {
+      vi.mocked(mockRepository.findPlanGroups).mockResolvedValue({
+        kind: 'invalid-cursor',
+      });
+
+      await expect(
+        resolver.agentTrajectoryPlanGroups(
+          'bogus',
+          undefined,
+          undefined,
+          undefined,
+          AGENT_TRAJECTORY_SCORE_STATE.ALL,
+          undefined,
+        ),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
   });
 
   describe('recordAgentTrajectory', () => {

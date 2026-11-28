@@ -469,6 +469,8 @@ export type AgentTrajectory = {
   outcome?: Maybe<Scalars['String']['output']>;
   /** Completion tokens produced. Null when the run reported none. */
   outputTokens?: Maybe<Scalars['Int']['output']>;
+  /** Plan the trajectory's plan run belongs to. Null only if the run can no longer be read. Costs one lookup per trajectory, so select it for one trajectory rather than a list. */
+  planId?: Maybe<Scalars['ID']['output']>;
   /** Plan run the trajectory belongs to. */
   planRunId: Scalars['ID']['output'];
   /** ATIF schema version of the stored document, for example ATIF-v1.8. */
@@ -506,6 +508,82 @@ export type AgentTrajectoryLabel = {
   verdict: Scalars['String']['output'];
 };
 
+/** One plan's recorded trajectories and your scoring progress on them. The counts cover every trajectory of the plan; trajectories holds only those the score-state filter kept. The plan fields are null for the one group that collects trajectories of deleted plans. */
+export type AgentTrajectoryPlanGroup = {
+  __typename?: 'AgentTrajectoryPlanGroup';
+  /** Trajectories you labelled fail. */
+  failCount: Scalars['Int']['output'];
+  /** Trajectories anyone has labelled. */
+  labelledCount: Scalars['Int']['output'];
+  /** When the plan's newest trajectory was recorded. */
+  latestRecordedAt: Scalars['DateTime']['output'];
+  /** Trajectories you labelled pass. */
+  passCount: Scalars['Int']['output'];
+  /** The plan. Null for the group of trajectories whose plan was deleted. */
+  planId?: Maybe<Scalars['ID']['output']>;
+  /** The plan's status. Null when the plan was deleted. */
+  planStatus?: Maybe<Scalars['String']['output']>;
+  /** The plan's title. Null when the plan was deleted. */
+  planTitle?: Maybe<Scalars['String']['output']>;
+  /** Trajectories you have labelled. */
+  scoredCount: Scalars['Int']['output'];
+  /** The plan's trajectories the filter kept: plan-scoped ones first, then in task order, then oldest first. */
+  trajectories: Array<AgentTrajectoryPlanGroupItem>;
+  /** Every trajectory recorded for the plan. */
+  trajectoryCount: Scalars['Int']['output'];
+};
+
+/** One trajectory in a plan group: the summary a scoring list shows, plus your verdict. */
+export type AgentTrajectoryPlanGroupItem = {
+  __typename?: 'AgentTrajectoryPlanGroupItem';
+  /** Cached prompt tokens (included in inputTokens). Null when the run reported none. */
+  cachedTokens?: Maybe<Scalars['Int']['output']>;
+  /** Cost of the run in USD. Null when unpriceable, which is not the same as zero. */
+  costUsd?: Maybe<Scalars['Float']['output']>;
+  /** Wall-clock duration of the run in milliseconds. Null when unknown. */
+  durationMs?: Maybe<Scalars['Int']['output']>;
+  /** Trajectory id. */
+  id: Scalars['ID']['output'];
+  /** Prompt tokens consumed, including cached tokens. Null when the run reported none. */
+  inputTokens?: Maybe<Scalars['Int']['output']>;
+  /** Completion tokens produced. Null when the run reported none. */
+  outputTokens?: Maybe<Scalars['Int']['output']>;
+  /** Plan run the trajectory belongs to. */
+  planRunId: Scalars['ID']['output'];
+  /** When the trajectory was recorded. */
+  recordedAt: Scalars['DateTime']['output'];
+  /** How the trajectory was captured: spawned or session_upload. */
+  source: Scalars['String']['output'];
+  /** Task the run worked on. Null for a plan-scoped trajectory. */
+  taskId?: Maybe<Scalars['ID']['output']>;
+  /** Title of the task the run worked on. Null for a plan-scoped trajectory. */
+  taskTitle?: Maybe<Scalars['String']['output']>;
+  /** True when the server elided observation content to fit the size caps. */
+  truncated: Scalars['Boolean']['output'];
+  /** Your verdict on the trajectory (pass or fail). Null when you have not labelled it. */
+  verdict?: Maybe<Scalars['String']['output']>;
+};
+
+/** A page of plan groups, newest activity first. */
+export type AgentTrajectoryPlanGroupPage = {
+  __typename?: 'AgentTrajectoryPlanGroupPage';
+  /** Pass as after to read the next page. Null when the page is empty. */
+  endCursor?: Maybe<Scalars['String']['output']>;
+  /** The plan groups on this page. */
+  groups: Array<AgentTrajectoryPlanGroup>;
+  /** True when another page follows this one. */
+  hasNextPage: Scalars['Boolean']['output'];
+};
+
+/** Which trajectories to keep, judged by your own label: ALL, SCORED (you labelled it) or UNSCORED (still waiting on your verdict). */
+export const AgentTrajectoryScoreState = {
+  All: 'ALL',
+  Scored: 'SCORED',
+  Unscored: 'UNSCORED',
+} as const;
+
+export type AgentTrajectoryScoreState =
+  (typeof AgentTrajectoryScoreState)[keyof typeof AgentTrajectoryScoreState];
 export type AgentsChatTurnResult = {
   __typename?: 'AgentsChatTurnResult';
   /** Assistant-visible reply text. Null when the turn failed (see errorMessage). */
@@ -5172,6 +5250,8 @@ export type Query = {
   agentTrajectory?: Maybe<AgentTrajectory>;
   /** List every rater's label on an agent trajectory, most recently updated first. */
   agentTrajectoryLabels: Array<AgentTrajectoryLabel>;
+  /** List recorded trajectories grouped by their plan, newest activity first, with your scoring progress per plan. scoreState keeps every trajectory (ALL), only those you labelled (SCORED) or only those still waiting on your verdict (UNSCORED); a plan with none left is omitted. Trajectories of deleted plans share one group with null plan fields. Cursor-paginated by plan: first is 1 to 50 (default 20), after is the previous page's endCursor. planId narrows the listing to one plan, for a scoring view's progress and next unscored trajectory. */
+  agentTrajectoryPlanGroups: AgentTrajectoryPlanGroupPage;
   /** Typenames an editor can add to a live layout: every live ACTIVE schema typename except the root "Layout", sorted. NOT_FOUND when the layout is missing or deleted. */
   availableCmsTypenames: Array<Scalars['String']['output']>;
   /** Long-running server work in progress, oldest first; empty when the server is idle. Served from Redis without counting database rows, so it is cheap to poll. */
@@ -5531,6 +5611,14 @@ export type QueryAgentTrajectoryArgs = {
 
 export type QueryAgentTrajectoryLabelsArgs = {
   trajectoryId: Scalars['ID']['input'];
+};
+
+export type QueryAgentTrajectoryPlanGroupsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  planId?: InputMaybe<Scalars['ID']['input']>;
+  repositoryId?: InputMaybe<Scalars['ID']['input']>;
+  scoreState?: AgentTrajectoryScoreState;
 };
 
 export type QueryAvailableCmsTypenamesArgs = {

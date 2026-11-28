@@ -16,8 +16,9 @@ describe('TrajectoryHeader Component', () => {
   test('titles the run with the agent name and version from the document', () => {
     const component = renderEvals(
       <TrajectoryHeader
+        backHref={TASK_HREF}
+        backLabel={TRAJECTORY_VIEWER_COPY.backToTask}
         summary={MOCK_TRAJECTORY_SUMMARY}
-        taskHref={TASK_HREF}
         trajectory={MOCK_TRAJECTORY}
       />,
     );
@@ -33,8 +34,9 @@ describe('TrajectoryHeader Component', () => {
   test('falls back to the driver when the document could not be read', () => {
     const component = renderEvals(
       <TrajectoryHeader
+        backHref={TASK_HREF}
+        backLabel={TRAJECTORY_VIEWER_COPY.backToTask}
         summary={MOCK_TRAJECTORY_SUMMARY}
-        taskHref={TASK_HREF}
         trajectory={null}
       />,
     );

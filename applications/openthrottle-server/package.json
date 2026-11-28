@@ -291,6 +291,7 @@
   "sideEffects": [
     "./src/assert-node-version.ts",
     "./src/bootstrap.ts",
+    "./src/graphql/agent-trajectories/agent-trajectory-score-state.enum.ts",
     "./src/graphql/blog/blog-post-state.enum.ts",
     "./src/graphql/blog/blog-post-status.enum.ts",
     "./src/graphql/blog/blog-reference-entity.enum.ts",

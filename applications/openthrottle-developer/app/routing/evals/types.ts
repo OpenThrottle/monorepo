@@ -73,3 +73,21 @@ export interface TrajectoryLabelSaved {
 export interface TrajectoryLabelRemoved {
   readonly ok: true;
 }
+
+/** Where "score next" goes once you have labelled the trajectory in front of you. */
+export type TrajectoryScoringNext =
+  | { readonly kind: 'all-scored' }
+  | { readonly kind: 'in-plan'; readonly trajectoryId: string }
+  | {
+      readonly kind: 'next-plan';
+      /** Null for the group of trajectories whose plan was deleted. */
+      readonly planTitle: string | null;
+      readonly trajectoryId: string;
+    };
+
+/** The viewer's scoring run-through: your progress on this plan and what comes next. */
+export interface TrajectoryScoring {
+  readonly next: TrajectoryScoringNext;
+  readonly scoredCount: number;
+  readonly trajectoryCount: number;
+}

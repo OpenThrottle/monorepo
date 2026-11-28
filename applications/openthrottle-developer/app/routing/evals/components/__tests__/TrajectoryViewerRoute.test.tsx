@@ -14,10 +14,11 @@ import { TrajectoryViewerRoute } from '../TrajectoryViewerRoute';
 const renderViewer = (trajectory: AtifTrajectory | null) => {
   return renderEvals(
     <TrajectoryViewerRoute
+      backHref="/plans/plan-1/tasks/task-1?tab=trajectories"
+      backLabel={TRAJECTORY_VIEWER_COPY.backToTask}
       labels={{ mine: null, others: [] }}
-      planId="plan-1"
+      scoring={null}
       summary={MOCK_TRAJECTORY_SUMMARY}
-      taskId="task-1"
       trajectory={trajectory}
     />,
   );

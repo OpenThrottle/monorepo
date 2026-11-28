@@ -17,6 +17,9 @@ import * as React from 'react';
 import { Link } from 'react-router';
 
 import type { EvalRunListRowFragment } from '~/__generated__/graphql';
+import { EvalRepositoryPicker } from '~/routing/evals/components/EvalRepositoryPicker';
+import { EvalsTabs } from '~/routing/evals/components/EvalsTabs';
+import { EVALS_TAB } from '~/routing/evals/config/defaults';
 import { EVAL_RUNS_COPY } from '~/routing/evals/data/copy';
 import {
   describeRunConfig,
@@ -61,6 +64,12 @@ export const EvalRunsRoute = (
   const hasDatasets = (datasets ?? []).length > 0;
   const hasRepositories = repositories.length > 0;
 
+  const buildRepositoryHref = (repositoryId: string | null): string => {
+    return repositoryId === null
+      ? '/evals'
+      : `/evals?repositoryId=${repositoryId}`;
+  };
+
   // Handlers
 
   // Markup
@@ -68,20 +77,13 @@ export const EvalRunsRoute = (
     <p className="text-muted-foreground text-sm">{copy.emptyRepositories}</p>
   );
   const repositoryLinks = (
-    <ul className="flex flex-col gap-1 text-sm">
-      {repositories.map((repository) => {
-        return (
-          <li key={repository.id}>
-            <Link
-              className="underline-offset-4 hover:underline"
-              to={`/evals?repositoryId=${repository.id}`}
-            >
-              {repository.displayName}
-            </Link>
-          </li>
-        );
-      })}
-    </ul>
+    <EvalRepositoryPicker
+      allLabel={null}
+      buildHref={buildRepositoryHref}
+      label={copy.repositoryHeading}
+      repositories={repositories}
+      selectedRepositoryId={selectedRepositoryId}
+    />
   );
   const repositoryList = (
     <section
@@ -179,6 +181,7 @@ export const EvalRunsRoute = (
         icon={FlaskConicalIcon}
         title={copy.pageTitle}
       />
+      <EvalsTabs active={EVALS_TAB.runs} />
       <div data-testid="EvalRunsRoute">
         {selectedRepositoryId === null ? repositoryList : datasetList}
       </div>

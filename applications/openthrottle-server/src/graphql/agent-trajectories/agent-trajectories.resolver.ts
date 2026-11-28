@@ -6,11 +6,27 @@
  */
 
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
-import type { AgentTrajectorySource } from '@openthrottle/nestjs-repositories-server';
+import {
+  Args,
+  ID,
+  Int,
+  Mutation,
+  Parent,
+  Query,
+  ResolveField,
+  Resolver,
+} from '@nestjs/graphql';
+import type { AuthPrincipal } from '@openthrottle/nestjs-auth';
+import { CurrentUser } from '@openthrottle/nestjs-auth';
+import { GlobalClsService } from '@openthrottle/nestjs-modules';
+import type {
+  AgentTrajectoryScoreStateValue,
+  AgentTrajectorySource,
+} from '@openthrottle/nestjs-repositories-server';
 import {
   AGENT_TRAJECTORY_SOURCE,
   AgentTrajectoriesRepository,
+  PlanRunsRepository,
 } from '@openthrottle/nestjs-repositories-server';
 import {
   capTrajectory,
@@ -19,15 +35,23 @@ import {
 } from '@openthrottle/openthrottle-agentic-utils';
 import { QueryFailedError } from 'typeorm';
 
+import { resolveLabelRater } from '../eval-human-labels/eval-human-labels.utils.ts';
 import {
   RecordAgentTrajectoryInput,
   ReplaceAgentTrajectoryInput,
 } from './agent-trajectory.input.ts';
-import { toAgentTrajectoryObject } from './agent-trajectory.mapper.ts';
+import {
+  toAgentTrajectoryObject,
+  toAgentTrajectoryPlanGroupPageObject,
+} from './agent-trajectory.mapper.ts';
 import { AgentTrajectoryObject } from './agent-trajectory.object.ts';
+import { AgentTrajectoryPlanGroupPageObject } from './agent-trajectory-plan-group.object.ts';
+import { AgentTrajectoryScoreState } from './agent-trajectory-score-state.enum.ts';
 
 const FOREIGN_KEY_VIOLATION = '23503';
 const MAX_IDEMPOTENCY_KEY_LENGTH = 200;
+const DEFAULT_PLAN_GROUPS_PAGE_SIZE = 20;
+const MAX_PLAN_GROUPS_PAGE_SIZE = 50;
 
 const isAgentTrajectorySource = (
   value: string,
@@ -56,7 +80,21 @@ const isForeignKeyViolation = (error: unknown): boolean => {
 export class AgentTrajectoriesResolver {
   constructor(
     private readonly agentTrajectoriesRepository: AgentTrajectoriesRepository,
+    private readonly globalCls: GlobalClsService,
+    private readonly planRunsRepository: PlanRunsRepository,
   ) {}
+
+  @ResolveField('planId', () => ID, {
+    description: `Plan the trajectory's plan run belongs to. Null only if the run can no longer be read. Costs one lookup per trajectory, so select it for one trajectory rather than a list.`,
+    nullable: true,
+  })
+  async planId(
+    @Parent() trajectory: AgentTrajectoryObject,
+  ): Promise<string | null> {
+    const run = await this.planRunsRepository.findRunById(trajectory.planRunId);
+
+    return run?.planId ?? null;
+  }
 
   @Query(() => AgentTrajectoryObject, {
     description: `Fetch one recorded agent trajectory by id. Null when it does not exist.`,
@@ -91,6 +129,55 @@ export class AgentTrajectoriesResolver {
     const rows = await this.agentTrajectoriesRepository.findByTask(taskId);
 
     return rows.map(toAgentTrajectoryObject);
+  }
+
+  @Query(() => AgentTrajectoryPlanGroupPageObject, {
+    description: `List recorded trajectories grouped by their plan, newest activity first, with your scoring progress per plan. scoreState keeps every trajectory (ALL), only those you labelled (SCORED) or only those still waiting on your verdict (UNSCORED); a plan with none left is omitted. Trajectories of deleted plans share one group with null plan fields. Cursor-paginated by plan: first is 1 to 50 (default 20), after is the previous page's endCursor. planId narrows the listing to one plan, for a scoring view's progress and next unscored trajectory.`,
+  })
+  async agentTrajectoryPlanGroups(
+    @Args('after', { nullable: true, type: () => String })
+    after: string | null | undefined,
+    @Args('first', { nullable: true, type: () => Int })
+    first: number | null | undefined,
+    @Args('planId', { nullable: true, type: () => ID })
+    planId: string | null | undefined,
+    @Args('repositoryId', { nullable: true, type: () => ID })
+    repositoryId: string | null | undefined,
+    @Args('scoreState', {
+      defaultValue: AgentTrajectoryScoreState.ALL,
+      type: () => AgentTrajectoryScoreState,
+    })
+    scoreState: AgentTrajectoryScoreStateValue,
+    @CurrentUser() principal: AuthPrincipal | undefined,
+  ): Promise<AgentTrajectoryPlanGroupPageObject> {
+    const pageSize = first ?? DEFAULT_PLAN_GROUPS_PAGE_SIZE;
+
+    if (
+      !Number.isInteger(pageSize) ||
+      pageSize < 1 ||
+      pageSize > MAX_PLAN_GROUPS_PAGE_SIZE
+    ) {
+      throw new BadRequestException(
+        `first must be 1 to ${MAX_PLAN_GROUPS_PAGE_SIZE}`,
+      );
+    }
+
+    const result = await this.agentTrajectoriesRepository.findPlanGroups({
+      after: after ?? null,
+      first: pageSize,
+      planId: planId ?? null,
+      rater: resolveLabelRater(this.globalCls.get('user'), principal),
+      repositoryId: repositoryId ?? null,
+      scoreState,
+    });
+
+    if (result.kind === 'invalid-cursor') {
+      throw new BadRequestException(
+        'after is not a cursor this listing issued',
+      );
+    }
+
+    return toAgentTrajectoryPlanGroupPageObject(result.page);
   }
 
   @Mutation(() => AgentTrajectoryObject, {
