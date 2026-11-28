@@ -10,14 +10,11 @@ import * as React from 'react';
 import type { Route } from '@/app/routes/+types/plans.$planId.tasks.$taskId.trajectories.$trajectoryId';
 import { TrajectoryViewerDocument } from '~/__generated__/graphql';
 import { SITE_TITLE } from '~/global/config/settings';
-import {
-  labelTrajectory,
-  removeTrajectoryLabel,
-} from '~/routing/evals/actions/trajectoryId';
+import { handleTrajectoryLabelAction } from '~/routing/evals/actions/trajectoryId';
 import { TrajectoryViewerRoute } from '~/routing/evals/components/TrajectoryViewerRoute';
-import { TRAJECTORY_LABEL_INTENT } from '~/routing/evals/config/defaults';
 import { TRAJECTORY_VIEWER_COPY } from '~/routing/evals/data/copy';
-import { splitTrajectoryLabels } from '~/routing/evals/utils/labels';
+import { buildTaskTrajectoriesHref } from '~/routing/evals/utils/hrefs';
+import { readTrajectoryViewerData } from '~/routing/evals/utils/readTrajectoryViewerData';
 
 type HandleData = Route.ComponentProps['loaderData'];
 
@@ -62,22 +59,16 @@ export const loader = async (args: Route.LoaderArgs) => {
     throw new Response('Trajectory not found', { status: 404 });
   }
 
-  // The ATIF parser is node-only: parse on the server and hand the client the
-  // plain document, never the package.
-  const { parseTrajectoryDocument } =
-    await import('~/routing/evals/utils/parseTrajectoryDocument.server');
-  const { trajectoryJson, ...summary } = record;
-  const { me } = result;
-  const identity = me
-    ? { email: me.email, githubUsername: me.githubUsername, id: me.id }
-    : null;
+  const viewer = await readTrajectoryViewerData({
+    labels: result.agentTrajectoryLabels,
+    me: result.me,
+    record,
+  });
 
   return {
-    labels: splitTrajectoryLabels(result.agentTrajectoryLabels, identity),
+    ...viewer,
     plan: result.plan ?? null,
-    summary,
     task: result.task ?? null,
-    trajectory: parseTrajectoryDocument(trajectoryJson),
   };
 };
 
@@ -103,6 +94,7 @@ export default function Component(
   // Hooks
 
   // Setup
+  const backHref = buildTaskTrajectoriesHref(params.planId, params.taskId);
 
   // Handlers
 
@@ -114,10 +106,11 @@ export default function Component(
 
   return (
     <TrajectoryViewerRoute
+      backHref={backHref}
+      backLabel={TRAJECTORY_VIEWER_COPY.backToTask}
       labels={loaderData.labels}
-      planId={params.planId}
+      scoring={null}
       summary={loaderData.summary}
-      taskId={params.taskId}
       trajectory={loaderData.trajectory}
     />
   );
@@ -128,18 +121,7 @@ export const action = async (args: Route.ActionArgs) => {
     throw new Response('Not Found', { status: 404 });
   }
 
-  const { trajectoryId } = args.params;
-  const formData = await args.request.formData();
-  const intent = formData.get('intent');
-
-  switch (intent) {
-    case TRAJECTORY_LABEL_INTENT.label:
-      return labelTrajectory(args, trajectoryId, formData);
-    case TRAJECTORY_LABEL_INTENT.remove:
-      return removeTrajectoryLabel(args, trajectoryId);
-    default:
-      return { error: 'Unknown action.', ok: false };
-  }
+  return handleTrajectoryLabelAction(args, args.params.trajectoryId);
 };
 
 export const ErrorBoundary = GlobalErrorBoundary;

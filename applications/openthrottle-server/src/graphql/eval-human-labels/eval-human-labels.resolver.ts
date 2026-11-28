@@ -22,9 +22,9 @@ import {
 } from '@openthrottle/nestjs-repositories-server';
 import { QueryFailedError } from 'typeorm';
 
-import { resolveNoteAuthor } from '../notes/notes.utils.ts';
 import { toAgentTrajectoryLabelObject } from './agent-trajectory-label.mapper.ts';
 import { AgentTrajectoryLabelObject } from './agent-trajectory-label.object.ts';
+import { resolveLabelRater } from './eval-human-labels.utils.ts';
 import { LabelAgentTrajectoryInput } from './label-agent-trajectory.input.ts';
 
 const FOREIGN_KEY_VIOLATION = '23503';
@@ -135,11 +135,7 @@ export class EvalHumanLabelsResolver {
    * same way plan messages stamp their author. There is no input path for it.
    */
   private resolveRater(principal: AuthPrincipal | undefined): string {
-    const rater = resolveNoteAuthor(
-      null,
-      this.globalCls.get('user'),
-      principal,
-    );
+    const rater = resolveLabelRater(this.globalCls.get('user'), principal);
 
     if (rater == null) {
       throw new UnauthorizedException(

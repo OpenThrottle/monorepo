@@ -12,6 +12,7 @@ import {
   AddTaskTagInput,
   AddWorkspaceFolderInput,
   AgentAssetSearchInput,
+  AgentTrajectoryScoreState,
   AgentsRunChatTurnInput,
   AppendPlanOutputInput,
   ApplyWorkspaceEditorConfigurationInput,
@@ -244,6 +245,9 @@ export const isDefinedNonNullAny = (v: any): v is definedNonNullAny =>
 export const definedNonNullAnySchema = z
   .any()
   .refine((v) => isDefinedNonNullAny(v));
+
+export const AgentTrajectoryScoreStateSchema: z.ZodType<AgentTrajectoryScoreState> =
+  z.nativeEnum(AgentTrajectoryScoreState);
 
 export const BlogPostStateSchema: z.ZodType<BlogPostState> =
   z.nativeEnum(BlogPostState);

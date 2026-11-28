@@ -13,9 +13,7 @@ query TrajectoryViewer($planId: ID!, $taskId: ID!, $trajectoryId: ID!) {
     ...AgentTrajectoryLabelRow
   }
   me {
-    email
-    githubUsername
-    id
+    ...TrajectoryViewerMe
   }
   plan(id: $planId) {
     id
@@ -51,6 +49,14 @@ fragment AgentTrajectorySummary on AgentTrajectory {
   taskId
   toolCallCount
   truncated
+}
+
+# Every identity the server may stamp as your label's rater, so the viewer
+# can tell your label from other raters'.
+fragment TrajectoryViewerMe on UserObject {
+  email
+  githubUsername
+  id
 }
 
 fragment AgentTrajectoryLabelRow on AgentTrajectoryLabel {

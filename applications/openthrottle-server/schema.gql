@@ -1667,6 +1667,114 @@ type AgentTrajectory {
 
   """True when the server elided observation content to fit the size caps."""
   truncated: Boolean!
+
+  """
+  Plan the trajectory's plan run belongs to. Null only if the run can no longer be read. Costs one lookup per trajectory, so select it for one trajectory rather than a list.
+  """
+  planId: ID
+}
+
+"""
+One trajectory in a plan group: the summary a scoring list shows, plus your verdict.
+"""
+type AgentTrajectoryPlanGroupItem {
+  """
+  Cached prompt tokens (included in inputTokens). Null when the run reported none.
+  """
+  cachedTokens: Int
+
+  """
+  Cost of the run in USD. Null when unpriceable, which is not the same as zero.
+  """
+  costUsd: Float
+
+  """Wall-clock duration of the run in milliseconds. Null when unknown."""
+  durationMs: Int
+
+  """Trajectory id."""
+  id: ID!
+
+  """
+  Prompt tokens consumed, including cached tokens. Null when the run reported none.
+  """
+  inputTokens: Int
+
+  """Completion tokens produced. Null when the run reported none."""
+  outputTokens: Int
+
+  """Plan run the trajectory belongs to."""
+  planRunId: ID!
+
+  """When the trajectory was recorded."""
+  recordedAt: DateTime!
+
+  """How the trajectory was captured: spawned or session_upload."""
+  source: String!
+
+  """Task the run worked on. Null for a plan-scoped trajectory."""
+  taskId: ID
+
+  """
+  Title of the task the run worked on. Null for a plan-scoped trajectory.
+  """
+  taskTitle: String
+
+  """True when the server elided observation content to fit the size caps."""
+  truncated: Boolean!
+
+  """
+  Your verdict on the trajectory (pass or fail). Null when you have not labelled it.
+  """
+  verdict: String
+}
+
+"""
+One plan's recorded trajectories and your scoring progress on them. The counts cover every trajectory of the plan; trajectories holds only those the score-state filter kept. The plan fields are null for the one group that collects trajectories of deleted plans.
+"""
+type AgentTrajectoryPlanGroup {
+  """Trajectories you labelled fail."""
+  failCount: Int!
+
+  """Trajectories anyone has labelled."""
+  labelledCount: Int!
+
+  """When the plan's newest trajectory was recorded."""
+  latestRecordedAt: DateTime!
+
+  """Trajectories you labelled pass."""
+  passCount: Int!
+
+  """The plan. Null for the group of trajectories whose plan was deleted."""
+  planId: ID
+
+  """The plan's status. Null when the plan was deleted."""
+  planStatus: String
+
+  """The plan's title. Null when the plan was deleted."""
+  planTitle: String
+
+  """Trajectories you have labelled."""
+  scoredCount: Int!
+
+  """
+  The plan's trajectories the filter kept: plan-scoped ones first, then in task order, then oldest first.
+  """
+  trajectories: [AgentTrajectoryPlanGroupItem!]!
+
+  """Every trajectory recorded for the plan."""
+  trajectoryCount: Int!
+}
+
+"""A page of plan groups, newest activity first."""
+type AgentTrajectoryPlanGroupPage {
+  """Pass as after to read the next page. Null when the page is empty."""
+  endCursor: String
+
+  """The plan groups on this page."""
+  groups: [AgentTrajectoryPlanGroup!]!
+
+  """True when another page follows this one."""
+  hasNextPage: Boolean!
 }
 
 type EnqueueAgenticWorkflowMockResultObject {
@@ -6913,6 +7021,11 @@ type Query {
   agentTrajectoriesByTask(taskId: ID!): [AgentTrajectory!]!
 
   """
+  List recorded trajectories grouped by their plan, newest activity first, with your scoring progress per plan. scoreState keeps every trajectory (ALL), only those you labelled (SCORED) or only those still waiting on your verdict (UNSCORED); a plan with none left is omitted. Trajectories of deleted plans share one group with null plan fields. Cursor-paginated by plan: first is 1 to 50 (default 20), after is the previous page's endCursor. planId narrows the listing to one plan, for a scoring view's progress and next unscored trajectory.
+  """
+  agentTrajectoryPlanGroups(after: String, first: Int, planId: ID, repositoryId: ID, scoreState: AgentTrajectoryScoreState! = ALL): AgentTrajectoryPlanGroupPage!
+
+  """
   Long-running server work in progress, oldest first; empty when the server is idle. Served from Redis without counting database rows, so it is cheap to poll.
   """
   backgroundActivities: [BackgroundActivityObject!]!
@@ -7681,6 +7794,15 @@ input GetAgentConversationMessagesInput {
   Count offset back from the newest message, so limit N returns the newest N (still sorted oldest first) and hasNextPage means older messages remain. Default false: offset counts from the oldest
   """
   fromNewest: Boolean = false
+}
+
+"""
+Which trajectories to keep, judged by your own label: ALL, SCORED (you labelled it) or UNSCORED (still waiting on your verdict).
+"""
+enum AgentTrajectoryScoreState {
+  ALL
+  SCORED
+  UNSCORED
 }
 
 """The post in any state, or BlogPostNotFoundError."""

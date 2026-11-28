@@ -17,3 +17,19 @@ export const AGENT_TRAJECTORY_SOURCE = {
 export type AgentTrajectorySourceKey = keyof typeof AGENT_TRAJECTORY_SOURCE;
 export type AgentTrajectorySourceValue =
   (typeof AGENT_TRAJECTORY_SOURCE)[AgentTrajectorySourceKey];
+
+/**
+ * Which trajectories a plan-group listing keeps, judged by the caller's own label: every one,
+ * only those the caller has scored, or only those still waiting on the caller's verdict.
+ * @public
+ */
+export const AGENT_TRAJECTORY_SCORE_STATE = {
+  ALL: 'all',
+  SCORED: 'scored',
+  UNSCORED: 'unscored',
+} as const;
+
+export type AgentTrajectoryScoreStateKey =
+  keyof typeof AGENT_TRAJECTORY_SCORE_STATE;
+export type AgentTrajectoryScoreStateValue =
+  (typeof AGENT_TRAJECTORY_SCORE_STATE)[AgentTrajectoryScoreStateKey];

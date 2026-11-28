@@ -35,6 +35,14 @@ export function createAgentTrajectoriesRepositoryMock(): AgentTrajectoriesReposi
     findByTask: vi.fn(async () => {
       return [];
     }),
+    findPlanGroups: vi.fn<AgentTrajectoriesRepository['findPlanGroups']>(
+      async () => {
+        return {
+          kind: 'page',
+          page: { endCursor: null, groups: [], hasNextPage: false },
+        };
+      },
+    ),
     findTrajectoryById: vi.fn(async () => {
       return null;
     }),

@@ -1,11 +1,15 @@
 /**
  * @description Maps the AgentTrajectory entity to the GraphQL AgentTrajectoryObject, serializing
- * the stored ATIF document into `trajectoryJson`.
+ * the stored ATIF document into `trajectoryJson`, and a plan-group page to its ObjectTypes.
  */
 
-import type { AgentTrajectory } from '@openthrottle/nestjs-repositories-server';
+import type {
+  AgentTrajectory,
+  AgentTrajectoryPlanGroupPage,
+} from '@openthrottle/nestjs-repositories-server';
 
 import type { AgentTrajectoryObject } from './agent-trajectory.object.ts';
+import type { AgentTrajectoryPlanGroupPageObject } from './agent-trajectory-plan-group.object.ts';
 
 export const toAgentTrajectoryObject = (
   row: AgentTrajectory,
@@ -32,5 +36,22 @@ export const toAgentTrajectoryObject = (
     toolCallCount: row.toolCallCount,
     trajectoryJson: JSON.stringify(row.trajectory),
     truncated: row.truncated,
+  };
+};
+
+export const toAgentTrajectoryPlanGroupPageObject = (
+  page: AgentTrajectoryPlanGroupPage,
+): AgentTrajectoryPlanGroupPageObject => {
+  return {
+    endCursor: page.endCursor,
+    groups: page.groups.map((group) => {
+      return {
+        ...group,
+        trajectories: group.trajectories.map((item) => {
+          return { ...item };
+        }),
+      };
+    }),
+    hasNextPage: page.hasNextPage,
   };
 };

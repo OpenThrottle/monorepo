@@ -1,0 +1,66 @@
+# evals.trajectories.$trajectoryId
+
+# The viewer for any trajectory, including plan-scoped ones (taskId null) the
+# task route cannot open. `planId` is resolved per trajectory, so it is
+# selected here and never in a list. `me` tells your label from others'.
+query EvalsTrajectoryViewer($trajectoryId: ID!) {
+  agentTrajectory(id: $trajectoryId) {
+    ...AgentTrajectorySummary
+    planId
+    trajectoryJson
+  }
+  agentTrajectoryLabels(trajectoryId: $trajectoryId) {
+    ...AgentTrajectoryLabelRow
+  }
+  me {
+    ...TrajectoryViewerMe
+  }
+}
+
+# Breadcrumb context, read once the trajectory names its plan.
+query EvalsTrajectoryViewerPlan($planId: ID!) {
+  plan(id: $planId) {
+    id
+    title
+  }
+}
+
+# Breadcrumb context for a task-scoped trajectory.
+query EvalsTrajectoryViewerTask($taskId: ID!) {
+  task(id: $taskId) {
+    id
+    title
+  }
+}
+
+# The score-next run-through: this plan's trajectories in group order (all of
+# them, for "k of N scored" and the next unscored one), and the first plans
+# that still have unscored rows, for the fallback once this plan is done.
+query EvalsTrajectoryViewerScoring($hasPlan: Boolean!, $planId: ID) {
+  plan: agentTrajectoryPlanGroups(first: 1, planId: $planId, scoreState: ALL)
+    @include(if: $hasPlan) {
+    groups {
+      ...AgentTrajectoryScoringGroup
+    }
+  }
+  unscored: agentTrajectoryPlanGroups(first: 2, scoreState: UNSCORED) {
+    groups {
+      ...AgentTrajectoryScoringGroup
+    }
+  }
+}
+
+fragment AgentTrajectoryScoringGroup on AgentTrajectoryPlanGroup {
+  planId
+  planTitle
+  scoredCount
+  trajectories {
+    ...AgentTrajectoryScoringItem
+  }
+  trajectoryCount
+}
+
+fragment AgentTrajectoryScoringItem on AgentTrajectoryPlanGroupItem {
+  id
+  verdict
+}

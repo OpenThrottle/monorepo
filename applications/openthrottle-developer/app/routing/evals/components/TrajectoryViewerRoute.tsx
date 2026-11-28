@@ -10,23 +10,28 @@ import { TrajectoryErrors } from '~/routing/evals/components/TrajectoryErrors';
 import { TrajectoryFinalMetrics } from '~/routing/evals/components/TrajectoryFinalMetrics';
 import { TrajectoryHeader } from '~/routing/evals/components/TrajectoryHeader';
 import { TrajectoryLabelPanel } from '~/routing/evals/components/TrajectoryLabelPanel';
+import { TrajectoryScoreNext } from '~/routing/evals/components/TrajectoryScoreNext';
 import { TrajectoryTimeline } from '~/routing/evals/components/TrajectoryTimeline';
 import { TRAJECTORY_VIEWER_COPY } from '~/routing/evals/data/copy';
-import type { AtifTrajectory } from '~/routing/evals/types';
+import type { AtifTrajectory, TrajectoryScoring } from '~/routing/evals/types';
 import {
   buildTrajectoryTimeline,
   readTrajectoryErrors,
 } from '~/routing/evals/utils/timeline';
 
 export interface TrajectoryViewerRouteProps {
+  /** Where the header's back link goes: the task's Trajectories tab, or the plan's group on /evals/trajectories. */
+  readonly backHref: string;
+  /** The back link's text. */
+  readonly backLabel: string;
   readonly className?: string;
   readonly labels: {
     readonly mine: AgentTrajectoryLabelRowFragment | null;
     readonly others: readonly AgentTrajectoryLabelRowFragment[];
   };
-  readonly planId: string;
+  /** The score-next run-through; null where the viewer is not a scoring surface. */
+  readonly scoring: TrajectoryScoring | null;
   readonly summary: AgentTrajectorySummaryFragment;
-  readonly taskId: string;
   /** The parsed ATIF document; `null` when it could not be read. */
   readonly trajectory: AtifTrajectory | null;
 }
@@ -39,7 +44,15 @@ export interface TrajectoryViewerRouteProps {
 export const TrajectoryViewerRoute = (
   props: TrajectoryViewerRouteProps,
 ): React.ReactElement => {
-  const { className, labels, planId, summary, taskId, trajectory } = props;
+  const {
+    backHref,
+    backLabel,
+    className,
+    labels,
+    scoring,
+    summary,
+    trajectory,
+  } = props;
 
   // Hooks
   const timeline = React.useMemo(() => {
@@ -49,7 +62,6 @@ export const TrajectoryViewerRoute = (
   // Setup
   const copy = TRAJECTORY_VIEWER_COPY;
   const errors = trajectory ? readTrajectoryErrors(trajectory) : [];
-  const taskHref = `/plans/${planId}/tasks/${taskId}?tab=trajectories`;
 
   // Handlers
 
@@ -67,6 +79,9 @@ export const TrajectoryViewerRoute = (
       {timeline ? <TrajectoryTimeline timeline={timeline} /> : null}
     </section>
   );
+  const scoreNext = scoring ? (
+    <TrajectoryScoreNext isLabelled={labels.mine !== null} scoring={scoring} />
+  ) : null;
   const metrics = (
     <TrajectoryFinalMetrics finalMetrics={trajectory?.final_metrics} />
   );
@@ -80,8 +95,9 @@ export const TrajectoryViewerRoute = (
       className={cn('flex w-full flex-col gap-6 p-4 md:p-8 lg:p-12', className)}
     >
       <TrajectoryHeader
+        backHref={backHref}
+        backLabel={backLabel}
         summary={summary}
-        taskHref={taskHref}
         trajectory={trajectory}
       />
 
@@ -95,7 +111,8 @@ export const TrajectoryViewerRoute = (
           {trajectory ? metrics : null}
         </div>
 
-        <aside className="xl:sticky xl:top-4 xl:self-start">
+        <aside className="flex flex-col gap-4 xl:sticky xl:top-4 xl:self-start">
+          {scoreNext}
           <TrajectoryLabelPanel labels={labels} />
         </aside>
       </div>

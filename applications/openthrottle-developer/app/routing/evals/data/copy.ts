@@ -42,6 +42,7 @@ export const TRAJECTORY_SUMMARY_COPY = {
  * @description The viewer header, run errors and final metrics blocks.
  */
 export const TRAJECTORY_VIEWER_COPY = {
+  backToPlanGroup: `Back to the plan's trajectories`,
   backToTask: `Back to task`,
   errorsHeading: `Run errors`,
   finalMetricsHeading: `Final metrics`,
@@ -106,6 +107,72 @@ export const TRAJECTORY_LABEL_COPY = {
   updated: `Updated`,
   verdict: `Verdict`,
   verdictRequired: `Choose pass or fail.`,
+} as const;
+
+/**
+ * @description The Trajectories tab on /evals: recorded runs grouped by plan,
+ * ready to score.
+ */
+export const EVAL_TRAJECTORIES_COPY = {
+  allRepositories: `All repositories`,
+  breadcrumb: `Trajectories`,
+  columns: {
+    cost: `Cost`,
+    duration: `Duration`,
+    recorded: `Recorded`,
+    source: `Source`,
+    trajectory: `Trajectory`,
+    verdict: `Your verdict`,
+  },
+  empty: {
+    all: `No trajectories have been recorded yet. They appear here as plans run.`,
+    scored: `You have not scored any trajectories yet.`,
+    unscored: `Nothing left to score: every trajectory has your verdict.`,
+  },
+  failCount: `{count} fail`,
+  filterLabel: `Show`,
+  filters: {
+    all: `All`,
+    scored: `Scored`,
+    unscored: `Unscored`,
+  },
+  loadMore: `Load more plans`,
+  loadingMore: `Loading…`,
+  pageDescription: `Recorded agent runs grouped by plan. Score each one pass or fail: those verdicts are the ground truth judges are calibrated against.`,
+  passCount: `{count} pass`,
+  planLevel: `Plan-level`,
+  repositoryLabel: `Repository`,
+  scoredProgress: `{scored} of {total} scored`,
+  startScoring: `Start scoring`,
+  toggleGroup: `Show or hide this plan's trajectories`,
+  unknownPlan: `Unknown plan`,
+  verdicts: {
+    fail: `Fail`,
+    pass: `Pass`,
+    unscored: `Unscored`,
+  },
+} as const;
+
+/**
+ * @description The viewer's score-next card: your progress on this plan and
+ * where to go once this trajectory has your label.
+ */
+export const TRAJECTORY_SCORE_NEXT_COPY = {
+  allScored: `Nothing left to score: every trajectory has your verdict.`,
+  backToList: `Back to trajectories`,
+  heading: `Scoring`,
+  nextInPlan: `Next unscored in this plan`,
+  nextPlan: `Next plan: {title}`,
+  progress: `{scored} of {total} scored in this plan`,
+} as const;
+
+/**
+ * @description The tab bar shared by the Runs and Trajectories pages.
+ */
+export const EVALS_TABS_COPY = {
+  label: `Evals sections`,
+  runs: `Runs`,
+  trajectories: `Trajectories`,
 } as const;
 
 /**

@@ -291,6 +291,16 @@ The flag gates the **UI only**, as the BETA flag does. **Capture is not gated.**
 accumulate from the moment task 4 lands, bounded by Decision 5's caps and retention, so there is
 data to analyze by the time the UI is switched on.
 
+**Where scoring happens.** `/evals` has two tabs: **Runs** (datasets and their runs, still the
+landing tab at `/evals`) and **Trajectories** (`/evals/trajectories`), which lists every recorded
+trajectory grouped by its plan, filtered by your own label (Unscored, the default; Scored; All).
+Each group shows "k of N scored" and your pass/fail counts, and its **Start scoring** button opens
+the first unscored trajectory in `/evals/trajectories/<id>`, the viewer for any trajectory,
+plan-scoped ones (no task) included. Once you label one, the viewer offers the next unscored
+trajectory in the plan, then the next plan with unscored rows. The data comes from the
+`agentTrajectoryPlanGroups` query (OT plan `08ee3e48`). The task page's Trajectories tab and its
+viewer under `/plans/<plan>/tasks/<task>` remain for reading a task's own runs.
+
 ## Decision 11 — CI and isolation
 
 - **Live suites never run in CI** ([ci-cost.md](../monorepo/ci-cost.md)). CI runs only the unit
