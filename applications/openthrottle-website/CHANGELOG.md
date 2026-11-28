@@ -1,3 +1,35 @@
+# 3.0.0 (2026-11-28)
+
+### 🚀 Features
+
+- **react-router-chat:** chat image follow-ups: vision for local models, header dialog, hardening ([#1037](https://github.com/OpenThrottle/monorepo/pull/1037))
+- **openthrottle-developer:** score agent trajectories grouped by plan ([#1036](https://github.com/OpenThrottle/monorepo/pull/1036))
+- **react-router-chat:** attach images to chat turns, stored under ~/.openthrottle ([#1035](https://github.com/OpenThrottle/monorepo/pull/1035))
+- **react-router-chat:** finish chat restore: newest history, Load earlier, cross-tab prompts ([#1032](https://github.com/OpenThrottle/monorepo/pull/1032))
+- **openthrottle-developer:** add a session drawer beside the chat ([#1027](https://github.com/OpenThrottle/monorepo/pull/1027))
+- **openthrottle-developer:** dock conversations beside the nav with pins and groups ([#1016](https://github.com/OpenThrottle/monorepo/pull/1016))
+- **openthrottle-developer:** star projects and list them first in the project picker ([#1015](https://github.com/OpenThrottle/monorepo/pull/1015))
+- **openthrottle-developer:** search route refresh with stats, table results and code scope ([#1014](https://github.com/OpenThrottle/monorepo/pull/1014))
+- **openthrottle-developer:** spinner-only agent setup cell and model list filter ([#1009](https://github.com/OpenThrottle/monorepo/pull/1009))
+- **openthrottle-website:** share the org hero card instead of the logo ([#1008](https://github.com/OpenThrottle/monorepo/pull/1008))
+- **openthrottle-server:** let every agent schedule mcp jobs with a per-job command allowlist ([#1002](https://github.com/OpenThrottle/monorepo/pull/1002))
+- **openthrottle-mcp:** expose code semantic search over MCP ([#988](https://github.com/OpenThrottle/monorepo/pull/988))
+- **monorepo:** measure skill outcomes and durations for every owned skill ([#981](https://github.com/OpenThrottle/monorepo/pull/981))
+- **monorepo:** make ~/.openthrottle/.env a reliable, visible agent credential path ([#978](https://github.com/OpenThrottle/monorepo/pull/978))
+
+### 🩹 Fixes
+
+- **react-router-chat:** restore a reopened conversation in full, including a running reply ([#1023](https://github.com/OpenThrottle/monorepo/pull/1023))
+- **openthrottle-ide:** make code indexing finish on the monorepo and fail loudly ([#989](https://github.com/OpenThrottle/monorepo/pull/989))
+
+### 💅 Refactors
+
+- **monorepo:** drop the data. prefix from data/ file names ([#1007](https://github.com/OpenThrottle/monorepo/pull/1007))
+
+### ❤️ Thank You
+
+- Matthew Scholta @visormatt
+
 # 2.0.0 (2026-11-24)
 
 ### 🚀 Features

@@ -1,3 +1,19 @@
+# 3.0.0 (2026-11-28)
+
+### 🩹 Fixes
+
+- **monorepo:** run OpenThrottle on the right Node everywhere it starts ([#1006](https://github.com/OpenThrottle/monorepo/pull/1006))
+
+### 💅 Refactors
+
+- **monorepo:** move package folders that sit outside src/ into the vocabulary ([#1010](https://github.com/OpenThrottle/monorepo/pull/1010))
+- **monorepo:** drop the data. prefix from data/ file names ([#1007](https://github.com/OpenThrottle/monorepo/pull/1007))
+- **monorepo:** consolidate shared helpers into @openthrottle/nodejs-utils ([#994](https://github.com/OpenThrottle/monorepo/pull/994))
+
+### ❤️ Thank You
+
+- Matthew Scholta @visormatt
+
 # 2.0.0 (2026-11-24)
 
 ### 💅 Refactors
