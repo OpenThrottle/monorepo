@@ -27,6 +27,7 @@ import type {
   ChatThreadLoadEarlier,
   ChatTokenUsage,
   LoadAgentConversationMessagesResult,
+  SubmitTurnOptions,
 } from '../types';
 import { sumUsage } from '../usage';
 import {
@@ -118,6 +119,7 @@ export interface UseAgenticChatTurnResult {
   readonly submitTurn: (
     message: string,
     fields: Record<string, string>,
+    options?: SubmitTurnOptions,
   ) => void;
 }
 
@@ -210,6 +212,8 @@ export function useAgenticChatTurn(
   // `isStreaming` would blip false — which the queue drain would read as "the
   // turn ended" and start a queued message on top of the running turn.
   const handledStartResultRef = React.useRef<ChatStartActionResult | undefined>(undefined); // prettier-ignore
+  // The in-flight start's `onAccepted`; consumed by the start-result effect.
+  const startAcceptedRef = React.useRef<(() => void) | undefined>(undefined);
 
   const streamedByIdRef = React.useRef<ReadonlyMap<string, ChatMessage>>(
     new Map(),
@@ -329,8 +333,10 @@ export function useAgenticChatTurn(
   const startTurn = (
     message: string,
     fields: Readonly<Record<string, string>>,
+    onAccepted: (() => void) | undefined,
   ): void => {
     startPendingRef.current = true;
+    startAcceptedRef.current = onAccepted;
     // Remember the turn and reset the retry budget so a stall/timeout can replay
     // it, and clear any prior manual-retry state.
     lastTurnRef.current = { fields, message };
@@ -381,12 +387,14 @@ export function useAgenticChatTurn(
   const submitTurn = (
     message: string,
     fields: Record<string, string>,
+    options?: SubmitTurnOptions,
   ): void => {
     if (isBusy || startPendingRef.current) {
       queue.enqueue(message, fields);
+      options?.onAccepted();
       return;
     }
-    startTurn(message, fields);
+    startTurn(message, fields, options?.onAccepted);
   };
 
   /**
@@ -522,7 +530,7 @@ export function useAgenticChatTurn(
       cancelTurn();
       return;
     }
-    startTurn(item.message, item.fields);
+    startTurn(item.message, item.fields, undefined);
   };
 
   const resumeQueue = (): void => {
@@ -532,7 +540,7 @@ export function useAgenticChatTurn(
     }
     const next = queue.take();
     if (next !== undefined) {
-      startTurn(next.message, next.fields);
+      startTurn(next.message, next.fields, undefined);
     }
   };
 
@@ -589,6 +597,8 @@ export function useAgenticChatTurn(
       return;
     }
     handledStartResultRef.current = result;
+    const onAccepted = startAcceptedRef.current;
+    startAcceptedRef.current = undefined;
 
     if (result.errorMessage || !result.conversationId) {
       // A failed (re)start must never leave the composer wedged mid-retry.
@@ -606,6 +616,7 @@ export function useAgenticChatTurn(
     }
 
     setConversationId(result.conversationId);
+    onAccepted?.();
 
     if (result.assistantMessageId) {
       // The replayed turn's stream has begun → leave the retry bridge state.
@@ -720,7 +731,7 @@ export function useAgenticChatTurn(
       return;
     }
     sendNowRef.current = null;
-    startTurn(sendNow.message, sendNow.fields);
+    startTurn(sendNow.message, sendNow.fields, undefined);
   }, [cancelFetcher.state]);
 
   // Stall watchdog: if a turn is pending but no chunk arrives for the stall
@@ -802,7 +813,7 @@ export function useAgenticChatTurn(
     const sendNow = sendNowRef.current;
     if (sendNow !== null) {
       sendNowRef.current = null;
-      startTurn(sendNow.message, sendNow.fields);
+      startTurn(sendNow.message, sendNow.fields, undefined);
       return;
     }
 
@@ -820,7 +831,7 @@ export function useAgenticChatTurn(
 
     const next = queue.take();
     if (next !== undefined) {
-      startTurn(next.message, next.fields);
+      startTurn(next.message, next.fields, undefined);
     }
   }, [isBusy]);
 

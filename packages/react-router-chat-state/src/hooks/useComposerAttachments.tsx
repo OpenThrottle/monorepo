@@ -1,10 +1,11 @@
 import { CHAT_ATTACHMENT_MAX_COUNT } from '@openthrottle/react-router-chat';
 import * as React from 'react';
 
-import { HOME_ATTACHMENT_COPY } from '~/routing/home/data/copy';
-import type { ComposerAttachmentEntry } from '~/routing/home/types';
-import { uploadComposerAttachment } from '~/routing/home/utils/uploadComposerAttachment';
+import { CHAT_ATTACHMENT_COPY } from '../data/copy';
+import type { ComposerAttachmentEntry } from '../types';
+import { uploadComposerAttachment } from '../utils/uploadComposerAttachment';
 
+/** What {@link useComposerAttachments} returns. @public */
 export interface UseComposerAttachmentsResult {
   readonly addFiles: (files: readonly File[]) => void;
   /** Server ids of the uploaded images, in attach order. */
@@ -17,11 +18,12 @@ export interface UseComposerAttachmentsResult {
 }
 
 /**
- * @description The home composer's image attachments: for each added file it
- * makes a preview object URL, uploads it to `/resources/attachments`, and tracks
- * uploading / ready / error per chip. Preview URLs are revoked on remove, on
- * clear and on unmount. An upload that finishes after its chip was removed is
- * ignored.
+ * @description A chat composer's image attachments (the home composer and the
+ * header chat dialog): for each added file it makes a preview object URL,
+ * uploads it to `/resources/attachments`, and tracks uploading / ready / error
+ * per chip. Preview URLs are revoked on remove, on clear and on unmount. An
+ * upload that finishes after its chip was removed is ignored.
+ * @public
  */
 export const useComposerAttachments = (): UseComposerAttachmentsResult => {
   // Hooks
@@ -85,7 +87,7 @@ export const useComposerAttachments = (): UseComposerAttachmentsResult => {
       if (index >= room) {
         return {
           ...base,
-          error: HOME_ATTACHMENT_COPY.tooMany,
+          error: CHAT_ATTACHMENT_COPY.tooMany,
           status: 'error',
         };
       }

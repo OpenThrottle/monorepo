@@ -18,6 +18,7 @@ describe('toChatModelOptions', () => {
           host: 'localhost',
           models: ['llama3', 'qwen'],
           provider: 'ollama',
+          visionModels: ['qwen'],
         },
         {
           baseUrl: 'http://localhost:1234/v1',
@@ -33,18 +34,21 @@ describe('toChatModelOptions', () => {
         description: 'ollama',
         groupId: 'openai:ollama',
         id: 'http://localhost:11434/v1::llama3',
+        imageInput: false,
         label: 'llama3',
       },
       {
         description: 'ollama',
         groupId: 'openai:ollama',
         id: 'http://localhost:11434/v1::qwen',
+        imageInput: true,
         label: 'qwen',
       },
       {
         description: 'localhost',
         groupId: 'openai:localhost',
         id: 'http://localhost:1234/v1::mlx',
+        imageInput: false,
         label: 'mlx',
       },
     ]);

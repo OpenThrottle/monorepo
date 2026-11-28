@@ -7,7 +7,7 @@ const { uploadComposerAttachment } = vi.hoisted(() => {
   return { uploadComposerAttachment: vi.fn() };
 });
 
-vi.mock('~/routing/home/utils/uploadComposerAttachment', () => ({
+vi.mock('../../utils/uploadComposerAttachment', () => ({
   uploadComposerAttachment,
 }));
 

@@ -35,6 +35,13 @@ locals {
   # into.
   postgres_data_dir = var.data_volume_size_gb > 0 ? "/mnt/openthrottle-data/postgres" : "${local.app_dir}/postgres-data"
 
+  # Where chat image attachments live on the host, bind-mounted into the
+  # server (which runs read_only, so the image's default ~/.openthrottle is not
+  # writable). Same storage rung as Postgres: on the block volume when one is
+  # attached, so uploads survive a server rebuild with the database rows that
+  # reference them.
+  attachments_data_dir = var.data_volume_size_gb > 0 ? "/mnt/openthrottle-data/attachments" : "${local.app_dir}/attachments"
+
   app_dir = "/opt/openthrottle"
 
   caddyfile = templatefile("${path.module}/templates/Caddyfile.tpl", {
@@ -44,15 +51,16 @@ locals {
   })
 
   compose_content = templatefile("${path.module}/templates/docker-compose.yml.tpl", {
-    caddy_image       = var.caddy_image
-    developer_domain  = var.developer_domain
-    developer_image   = var.developer_image
-    mcp_image         = var.mcp_image
-    migrations_image  = var.migrations_image
-    postgres_data_dir = local.postgres_data_dir
-    postgres_image    = var.postgres_image
-    redis_image       = var.redis_image
-    server_image      = var.server_image
+    attachments_data_dir = local.attachments_data_dir
+    caddy_image          = var.caddy_image
+    developer_domain     = var.developer_domain
+    developer_image      = var.developer_image
+    mcp_image            = var.mcp_image
+    migrations_image     = var.migrations_image
+    postgres_data_dir    = local.postgres_data_dir
+    postgres_image       = var.postgres_image
+    redis_image          = var.redis_image
+    server_image         = var.server_image
   })
 
   # The backup script is shipped verbatim onto the box rather than duplicated in
@@ -62,6 +70,7 @@ locals {
 
   startup_script = var.deploy_enabled ? templatefile("${path.module}/templates/startup.sh.tpl", {
     api_domain             = var.api_domain
+    attachments_data_dir   = local.attachments_data_dir
     backup_remote          = var.backup_remote
     backup_retention_count = tostring(var.backup_retention_count)
     backup_script          = local.backup_script

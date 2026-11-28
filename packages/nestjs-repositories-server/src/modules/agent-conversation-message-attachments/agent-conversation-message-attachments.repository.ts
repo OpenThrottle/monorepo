@@ -106,6 +106,20 @@ export class AgentConversationMessageAttachmentsRepository extends BaseRepositor
   }
 
   /**
+   * @description Releases the user's attachments linked to `messageId` back to unlinked and
+   * returns how many rows were released. Used when a turn that linked only some of its ids has to
+   * be abandoned.
+   */
+  async unlinkFromMessage(messageId: string, userId: string): Promise<number> {
+    const result = await this.repository.update(
+      { messageId, userId },
+      { messageId: null },
+    );
+
+    return result.affected ?? 0;
+  }
+
+  /**
    * @description The attachments linked to any of the messages, oldest first. Empty input never
    * queries.
    */

@@ -95,6 +95,44 @@ describe('streamChatCompletion', () => {
     );
   });
 
+  it('sends text + image_url parts for a user message that carries images', async () => {
+    createMock.mockResolvedValue(fakeStream(['ok']));
+
+    await collect({
+      baseUrl: 'http://localhost:1234/v1',
+      messages: [
+        {
+          content: 'what is this?',
+          images: ['data:image/png;base64,AAAA', 'data:image/jpeg;base64,BBBB'],
+          role: 'user',
+        },
+      ],
+      model: 'llava',
+    });
+
+    expect(createMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        messages: [
+          {
+            content: [
+              { text: 'what is this?', type: 'text' },
+              {
+                image_url: { url: 'data:image/png;base64,AAAA' },
+                type: 'image_url',
+              },
+              {
+                image_url: { url: 'data:image/jpeg;base64,BBBB' },
+                type: 'image_url',
+              },
+            ],
+            role: 'user',
+          },
+        ],
+      }),
+      expect.anything(),
+    );
+  });
+
   it('only forwards reasoning_effort when the caller set it', async () => {
     createMock.mockResolvedValue(fakeStream(['ok']));
 

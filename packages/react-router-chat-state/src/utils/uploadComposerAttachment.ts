@@ -1,7 +1,7 @@
 import { isRecord } from '@openthrottle/nodejs-utils';
 import { CHAT_ATTACHMENT_UPLOAD_ROUTE } from '@openthrottle/react-router-chat';
 
-import { HOME_ATTACHMENT_COPY } from '~/routing/home/data/copy';
+import { CHAT_ATTACHMENT_COPY } from '../data/copy';
 
 /**
  * Outcome of one image upload; failures are values (with the message the chip
@@ -13,16 +13,16 @@ export type UploadComposerAttachmentResult =
 
 const toFailureMessage = (status: number): string => {
   if (status === 413) {
-    return HOME_ATTACHMENT_COPY.tooLarge;
+    return CHAT_ATTACHMENT_COPY.tooLarge;
   }
   if (status === 415) {
-    return HOME_ATTACHMENT_COPY.unsupportedFormat;
+    return CHAT_ATTACHMENT_COPY.unsupportedFormat;
   }
   if (status === 401) {
-    return HOME_ATTACHMENT_COPY.signedOut;
+    return CHAT_ATTACHMENT_COPY.signedOut;
   }
 
-  return HOME_ATTACHMENT_COPY.failed;
+  return CHAT_ATTACHMENT_COPY.failed;
 };
 
 /**
@@ -47,11 +47,11 @@ export const uploadComposerAttachment = async (
 
     const json: unknown = await response.json();
     if (!isRecord(json) || typeof json.id !== 'string') {
-      return { error: HOME_ATTACHMENT_COPY.failed, ok: false };
+      return { error: CHAT_ATTACHMENT_COPY.failed, ok: false };
     }
 
     return { id: json.id, ok: true };
   } catch {
-    return { error: HOME_ATTACHMENT_COPY.failed, ok: false };
+    return { error: CHAT_ATTACHMENT_COPY.failed, ok: false };
   }
 };

@@ -76,6 +76,10 @@ services:
       migrations:
         condition: service_completed_successfully
     env_file: .env
+    environment:
+      # read_only root filesystem: the default ~/.openthrottle/attachments is not
+      # writable, so uploads go to the bind mount below.
+      OPENTHROTTLE_ATTACHMENTS_DIR: /data/attachments
     healthcheck:
       interval: 30s
       retries: 3
@@ -91,6 +95,12 @@ services:
     tmpfs:
       - /tmp
     user: "1000:1000"
+    volumes:
+      # Chat image attachments on the instance's persistent boot disk, owned
+      # 1000:1000 by the startup script. Must persist: the database references
+      # these files by hash, and the daily janitor only removes files nothing
+      # references.
+      - /opt/openthrottle/attachments:/data/attachments
 
   #############################################################################
   #

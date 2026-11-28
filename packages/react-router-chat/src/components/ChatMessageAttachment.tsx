@@ -7,17 +7,19 @@ import { getChatAttachmentSrc } from '../utils/chat-attachments';
 
 export interface ChatMessageAttachmentProps {
   readonly attachment: ChatMessageAttachmentValue;
+  /** Called when the thumbnail is activated; the parent owns the preview. */
+  readonly onOpen: (opener: HTMLElement) => void;
 }
 
 /**
  * @description One image thumbnail on a sent message, served from the
- * attachments resource route and opened full size in a new tab. A failed load
+ * attachments resource route; activating it asks the parent to open the preview. A failed load
  * (deleted, not yours, offline) swaps in a "missing image" placeholder.
  */
 export const ChatMessageAttachment = (
   props: ChatMessageAttachmentProps,
 ): React.ReactElement => {
-  const { attachment } = props;
+  const { attachment, onOpen } = props;
 
   // Hooks
   const [hasFailed, setHasFailed] = React.useState(false);
@@ -51,13 +53,17 @@ export const ChatMessageAttachment = (
   }
 
   return (
-    <a href={src} rel="noreferrer" target="_blank">
+    <button
+      className="rounded-md focus-visible:ring-2 focus-visible:outline-none"
+      onClick={(event) => onOpen(event.currentTarget)}
+      type="button"
+    >
       <img
         alt={alt}
         className="max-h-40 max-w-48 rounded-md border object-cover"
         onError={onError}
         src={src}
       />
-    </a>
+    </button>
   );
 };

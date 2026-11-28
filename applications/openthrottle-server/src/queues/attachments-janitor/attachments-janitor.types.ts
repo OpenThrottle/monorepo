@@ -12,13 +12,15 @@ export interface AttachmentsJanitorSummary {
   readonly filesKept: number;
   readonly rowsDeleted: number;
   readonly tempFilesDeleted: number;
+  readonly turnDirsDeleted: number;
 }
 
 /** What the janitor concluded about one directory entry. */
 export type AttachmentsJanitorEntryKind =
   | { readonly kind: 'attachment'; readonly sha256: string }
   | { readonly kind: 'ignored' }
-  | { readonly kind: 'temp' };
+  | { readonly kind: 'temp' }
+  | { readonly kind: 'turn' };
 
 /** The outcome for one examined file. */
 export type AttachmentsJanitorFileOutcome = 'deleted' | 'gone' | 'kept';

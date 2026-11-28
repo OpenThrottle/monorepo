@@ -1,7 +1,16 @@
-import { chmodSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { isRecord, isStringArray } from '@openthrottle/nodejs-utils';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import type { ConversationStreamChunk } from '../../types/conversation-backend.ts';
@@ -152,6 +161,19 @@ const configDirBin = (): string => {
     'claude-configdir.js',
     `const configDir = process.env.CLAUDE_CONFIG_DIR || 'none';
     process.stdout.write(JSON.stringify({ type: 'result', subtype: 'success', is_error: false, result: configDir }) + '\\n');`,
+  );
+};
+
+// Reports its own argv plus, for each --add-dir value, the directory's file
+// names as seen WHILE the turn is running.
+const argvBin = (): string => {
+  return writeFakeBin(
+    'claude-argv.js',
+    `const fs = require('node:fs');
+    const argv = process.argv.slice(2);
+    const dirs = argv.flatMap((arg, i) => (argv[i - 1] === '--add-dir' ? [arg] : []));
+    const listing = Object.fromEntries(dirs.map((d) => [d, fs.readdirSync(d).sort()]));
+    process.stdout.write(JSON.stringify({ type: 'result', subtype: 'success', is_error: false, result: JSON.stringify({ argv, listing }) }) + '\\n');`,
   );
 };
 
@@ -492,5 +514,120 @@ describe('claudeConversationBackend', () => {
     const terminal = chunks.at(-1);
     expect(terminal).toMatchObject({ done: true });
     expect(terminal?.error).toContain('cancelled');
+  });
+});
+
+describe('claudeConversationBackend attachments', () => {
+  const sha = 'a'.repeat(64);
+  const turnResult = (
+    chunks: readonly ConversationStreamChunk[],
+  ): { argv: string[]; listing: Record<string, string[]> } => {
+    const raw = chunks.at(-1)?.metadata?.result;
+    const parsed: unknown = JSON.parse(typeof raw === 'string' ? raw : '{}');
+    if (
+      !isRecord(parsed) ||
+      !isStringArray(parsed['argv']) ||
+      !isRecord(parsed['listing'])
+    ) {
+      throw new Error('stub did not report argv');
+    }
+    const listing: Record<string, string[]> = {};
+    for (const [key, value] of Object.entries(parsed['listing'])) {
+      if (isStringArray(value)) {
+        listing[key] = value;
+      }
+    }
+    return { argv: parsed['argv'], listing };
+  };
+
+  it('grants only a per-turn directory holding exactly the turn files, and removes it after the run', async () => {
+    process.env[CLAUDE_BIN_ENV] = argvBin();
+    const root = mkdtempSync(join(dir, 'attachments-'));
+    const mine = join(root, `${sha}.png`);
+    const other = join(root, `${'b'.repeat(64)}.png`);
+    writeFileSync(mine, 'mine');
+    writeFileSync(other, 'someone else');
+
+    const chunks = await collect({
+      attachments: [{ mimeType: 'image/png', path: mine, sha256: sha }],
+      cwd: dir,
+      messages: [{ content: 'look', role: 'user' }],
+      model: 'auto',
+      sessionId: 'sess-1',
+    });
+
+    const { argv, listing } = turnResult(chunks);
+    const grants = argv.flatMap((arg, i) =>
+      argv[i - 1] === '--add-dir' ? [arg] : [],
+    );
+    expect(grants).toHaveLength(1);
+    const turnDir = grants[0] ?? '';
+    expect(turnDir).not.toBe(root);
+    expect(turnDir.startsWith(`${root}/.turn-`)).toBe(true);
+    expect(listing[turnDir]).toEqual([`${sha}.png`]);
+    const prompt = argv.at(-1) ?? '';
+    expect(prompt).toContain(`- ${turnDir}/${sha}.png`);
+    expect(prompt).not.toContain(mine);
+    expect(existsSync(turnDir)).toBe(false);
+    expect(readdirSync(root).sort()).toEqual([
+      `${sha}.png`,
+      `${'b'.repeat(64)}.png`,
+    ]);
+  });
+
+  it('removes the per-turn directory when the turn is aborted', async () => {
+    process.env[CLAUDE_BIN_ENV] = hangBin();
+    const root = mkdtempSync(join(dir, 'attachments-'));
+    const file = join(root, `${sha}.png`);
+    writeFileSync(file, 'x');
+    const controller = new AbortController();
+
+    for await (const _chunk of claudeConversationBackend.stream({
+      attachments: [{ mimeType: 'image/png', path: file, sha256: sha }],
+      cwd: dir,
+      messages: [{ content: 'hi', role: 'user' }],
+      model: 'auto',
+      sessionId: 'sess-1',
+      signal: controller.signal,
+    })) {
+      controller.abort();
+    }
+
+    expect(readdirSync(root)).toEqual([`${sha}.png`]);
+  });
+
+  it('passes no --add-dir when the turn has no attachments', async () => {
+    process.env[CLAUDE_BIN_ENV] = argvBin();
+    mkdirSync(join(dir, 'unused'), { recursive: true });
+
+    const chunks = await collect({
+      cwd: dir,
+      messages: [{ content: 'hi', role: 'user' }],
+      model: 'auto',
+      sessionId: 'sess-1',
+    });
+
+    expect(turnResult(chunks)).toMatchObject({
+      argv: expect.not.arrayContaining(['--add-dir']),
+    });
+  });
+
+  it('fails the turn with a terminal error when an attachment cannot be staged', async () => {
+    process.env[CLAUDE_BIN_ENV] = argvBin();
+    const root = mkdtempSync(join(dir, 'attachments-'));
+
+    const chunks = await collect({
+      attachments: [
+        { mimeType: 'image/png', path: join(root, `${sha}.png`), sha256: sha },
+      ],
+      cwd: dir,
+      messages: [{ content: 'hi', role: 'user' }],
+      model: 'auto',
+      sessionId: 'sess-1',
+    });
+
+    expect(chunks).toHaveLength(1);
+    expect(chunks[0]?.error).toContain('Could not stage');
+    expect(readdirSync(root)).toEqual([]);
   });
 });

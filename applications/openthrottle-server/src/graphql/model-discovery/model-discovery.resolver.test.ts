@@ -27,6 +27,7 @@ const SNAPSHOT: DiscoveryResult = {
       models: ['llama3', 'qwen'],
       port: 11434,
       provider: 'ollama',
+      visionModels: ['qwen'],
     },
     {
       baseUrl: 'http://localhost:8000/v1',
@@ -34,6 +35,7 @@ const SNAPSHOT: DiscoveryResult = {
       models: ['vllm-model'],
       port: 8000,
       provider: null,
+      visionModels: [],
     },
   ],
   scannedAt: '2026-06-14T00:00:00.000Z',
@@ -88,6 +90,7 @@ describe('ModelDiscoveryResolver', () => {
       models: ['llama3', 'qwen'],
       port: 11434,
       provider: 'ollama',
+      visionModels: ['qwen'],
     });
     expect(result.endpoints[1]?.provider).toBeNull();
   });

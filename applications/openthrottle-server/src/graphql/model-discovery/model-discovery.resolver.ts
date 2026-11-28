@@ -37,6 +37,7 @@ export class ModelDiscoveryResolver {
         models: [...endpoint.models],
         port: endpoint.port,
         provider: endpoint.provider,
+        visionModels: [...endpoint.visionModels],
       }),
     );
 

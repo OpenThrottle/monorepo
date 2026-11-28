@@ -3187,6 +3187,8 @@ export type ModelEndpointObject = {
   port: Scalars['Int']['output'];
   /** Best-effort provider label (ollama, lmstudio) or null when not fingerprinted. */
   provider?: Maybe<Scalars['String']['output']>;
+  /** Subset of `models` that accept image input, detected per provider (Ollama /api/show capabilities, LM Studio model metadata). Empty when the provider exposes no modality metadata — chat image attachments are then refused for that endpoint's models. */
+  visionModels: Array<Scalars['String']['output']>;
 };
 
 export type MoveAgentConversationToGroupInput = {

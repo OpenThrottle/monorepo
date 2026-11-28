@@ -115,6 +115,9 @@ services:
     environment:
       APP_NAME: openthrottle-server
       APP_NAME_SHORT: API
+      # read_only root filesystem: the default ~/.openthrottle/attachments is not
+      # writable, so uploads go to the bind mount below.
+      OPENTHROTTLE_ATTACHMENTS_DIR: /data/attachments
     healthcheck:
       interval: 30s
       retries: 3
@@ -132,6 +135,12 @@ services:
     tmpfs:
       - /tmp
     user: "1000:1000"
+    volumes:
+      # Chat image attachments. A host directory chosen by Terraform (on the
+      # data volume when one is attached) and owned 1000:1000 by cloud-init.
+      # Must persist: the database references these files by hash, and the
+      # daily janitor only removes files nothing references.
+      - ${attachments_data_dir}:/data/attachments
 
   #############################################################################
   #

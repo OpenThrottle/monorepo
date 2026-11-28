@@ -9,7 +9,7 @@ import {
   DEFAULT_CHAT_DRAFTS_STATE,
   DEFAULT_CHAT_TOOLBAR_STATE,
 } from '@openthrottle/react-router-chat-state';
-import { act, render } from '@testing-library/react';
+import { act, render, waitFor } from '@testing-library/react';
 import { getDefaultStore } from 'jotai';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
@@ -29,10 +29,6 @@ vi.mock('~/services/getGraphqlWsClient', () => ({
   getGraphqlWsClient: () => null,
 }));
 
-vi.mock('~/routing/home/utils/uploadComposerAttachment', () => ({
-  uploadComposerAttachment: vi.fn(async () => ({ id: 'att-1', ok: true })),
-}));
-
 const imageRuntime = {
   approvals: false,
   authStatus: 'authenticated',
@@ -47,6 +43,14 @@ const openaiModel: ChatModelOption = {
   groupId: 'openai:ollama',
   id: 'http://localhost:11434/v1::llama3',
   label: 'llama3',
+};
+
+const visionOpenaiModel: ChatModelOption = {
+  description: 'ollama',
+  groupId: 'openai:ollama',
+  id: 'http://localhost:11434/v1::llava',
+  imageInput: true,
+  label: 'llava',
 };
 
 const cliModel: ChatModelOption = {
@@ -363,6 +367,7 @@ describe('useHomeComposer', () => {
         baseUrl: 'http://localhost:11434/v1',
         modelId: 'llama3',
       }),
+      expect.anything(),
     );
   });
 
@@ -385,6 +390,7 @@ describe('useHomeComposer', () => {
         modelId: 'sonnet',
         repositoryIds: JSON.stringify([repositoryA.id]),
       }),
+      expect.anything(),
     );
   });
 
@@ -406,6 +412,7 @@ describe('useHomeComposer', () => {
       expect.objectContaining({
         repositoryIds: JSON.stringify([repositoryB.id, repositoryA.id]),
       }),
+      expect.anything(),
     );
   });
 
@@ -417,6 +424,11 @@ describe('useHomeComposer', () => {
         createObjectURL: () => 'blob:preview',
         revokeObjectURL: vi.fn(),
       });
+      // The upload route answers every image with the same attachment id.
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => Response.json({ id: 'att-1' }, { status: 201 })),
+      );
     });
 
     afterEach(() => {
@@ -442,7 +454,20 @@ describe('useHomeComposer', () => {
       ).toBeUndefined();
     });
 
-    test('onSubmit sends the ready attachment ids as a JSON field, then clears the chips', async () => {
+    test('attaching follows the selected model for a local endpoint', async () => {
+      await renderComposer({ models: [visionOpenaiModel, openaiModel] });
+      act(() => value.current?.setModelId(visionOpenaiModel.id));
+      expect(
+        value.current?.attachmentProps.attachmentsDisabledReason,
+      ).toBeUndefined();
+
+      act(() => value.current?.setModelId(openaiModel.id));
+      expect(value.current?.attachmentProps.attachmentsDisabledReason).toMatch(
+        /does not accept images/,
+      );
+    });
+
+    test('onSubmit sends the ready attachment ids as a JSON field and keeps the chips until accepted', async () => {
       const turn = makeTurn();
       await renderComposer({
         agentRuntimes: { claude: imageRuntime },
@@ -458,8 +483,50 @@ describe('useHomeComposer', () => {
       expect(turn.submitTurn).toHaveBeenCalledWith(
         'what is this',
         expect.objectContaining({ attachmentIds: JSON.stringify(['att-1']) }),
+        expect.anything(),
       );
-      expect(value.current?.attachmentProps.attachments).toEqual([]);
+      // Not cleared on hand-off: the turn only reports acceptance via onAccepted.
+      expect(value.current?.attachmentProps.attachments).toHaveLength(1);
+    });
+
+    test('the chips clear once the server accepts the turn', async () => {
+      const turn = makeTurn({
+        submitTurn: vi.fn((_message, _fields, options) => {
+          options?.onAccepted();
+        }),
+      });
+      await renderComposer({
+        agentRuntimes: { claude: imageRuntime },
+        models: [cliModel],
+        turn,
+      });
+
+      act(() => value.current?.setRepositoryId(repositoryA.id));
+      act(() => value.current?.attachmentProps.onAddFiles?.([png]));
+      await flush();
+      act(() => value.current?.onSubmit('what is this'));
+
+      await waitFor(() => {
+        expect(value.current?.attachmentProps.attachments).toEqual([]);
+      });
+    });
+
+    test('the chips stay when the server rejects the turn', async () => {
+      // A rejected start never calls onAccepted.
+      const turn = makeTurn({ submitTurn: vi.fn() });
+      await renderComposer({
+        agentRuntimes: { claude: imageRuntime },
+        models: [cliModel],
+        turn,
+      });
+
+      act(() => value.current?.setRepositoryId(repositoryA.id));
+      act(() => value.current?.attachmentProps.onAddFiles?.([png]));
+      await flush();
+      act(() => value.current?.onSubmit('what is this'));
+
+      expect(turn.submitTurn).toHaveBeenCalled();
+      expect(value.current?.attachmentProps.attachments).toHaveLength(1);
     });
 
     test('onSubmit omits attachmentIds when nothing is attached', async () => {
@@ -476,6 +543,7 @@ describe('useHomeComposer', () => {
       expect(turn.submitTurn).toHaveBeenCalledWith(
         'hello',
         expect.not.objectContaining({ attachmentIds: expect.anything() }),
+        expect.anything(),
       );
     });
 

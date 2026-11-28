@@ -135,20 +135,22 @@ export const toAttachmentGraphqlError = (
 
 /**
  * @description The turn's attachment ids with duplicates dropped (first occurrence wins). An empty
- * or absent list is `[]` and never fails. Throws the `BAD_USER_INPUT` error when the backend takes
- * no images or more than {@link MAX_TURN_ATTACHMENTS} distinct ids were sent. Runs before anything
+ * or absent list is `[]` and never fails. Throws the `BAD_USER_INPUT` error when the backend/model
+ * takes no images (`acceptsImages`, resolved by the caller: {@link backendAcceptsImages} for CLI
+ * backends, the discovered per-model vision flag for `openai`) or more than {@link MAX_TURN_ATTACHMENTS} distinct ids were sent. Runs before anything
  * is read or written, so a refusal leaves no trace.
  */
 export const selectAttachmentIds = (
   backend: string,
   attachmentIds: readonly string[] | null | undefined,
+  acceptsImages: boolean,
 ): string[] => {
   const ids = [...new Set(attachmentIds ?? [])];
   if (ids.length === 0) {
     return [];
   }
 
-  if (!resolveChatBackendCapabilities(backend).imageInput) {
+  if (!acceptsImages) {
     throw toAttachmentGraphqlError(
       CONVERSATION_ATTACHMENT_FAILURE.ATTACHMENTS_UNSUPPORTED,
       `The ${backend} backend does not accept image attachments.`,
@@ -163,4 +165,12 @@ export const selectAttachmentIds = (
   }
 
   return ids;
+};
+
+/**
+ * @description Whether a CLI backend accepts image input, from its static capability descriptor.
+ * The `openai` backend is decided per model from endpoint discovery instead, never from here.
+ */
+export const backendAcceptsImages = (backend: string): boolean => {
+  return resolveChatBackendCapabilities(backend).imageInput;
 };

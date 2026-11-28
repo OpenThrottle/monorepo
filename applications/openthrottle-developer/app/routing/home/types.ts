@@ -1,10 +1,4 @@
 import type {
-  ChatComposerAttachmentFailed,
-  ChatComposerAttachmentReady,
-  ChatComposerAttachmentUploading,
-} from '@openthrottle/react-router-chat';
-
-import type {
   CheckoutDiffSummaryFragment,
   CheckoutFilePatchFragment,
 } from '~/__generated__/graphql';
@@ -52,14 +46,3 @@ export type CheckoutDiffResourceData =
   | CheckoutDiffResourceDiff
   | CheckoutDiffResourceFailed
   | CheckoutDiffResourceFile;
-
-/** An uploaded chip that also remembers the server id sent with the turn. */
-export interface ComposerAttachmentReadyEntry extends ChatComposerAttachmentReady {
-  readonly attachmentId: string;
-}
-
-/** One composer chip; assignable to the package's `ChatComposerAttachment`. */
-export type ComposerAttachmentEntry =
-  | ChatComposerAttachmentFailed
-  | ChatComposerAttachmentUploading
-  | ComposerAttachmentReadyEntry;

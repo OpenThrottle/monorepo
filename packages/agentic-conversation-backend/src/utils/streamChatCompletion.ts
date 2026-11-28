@@ -24,6 +24,12 @@ export type ChatRole = 'assistant' | 'system' | 'user';
 export interface ChatCompletionMessage {
   /** Plain-text message body. */
   readonly content: string;
+  /**
+   * Images attached to a `user` message, as `data:<mime>;base64,…` URLs. Sent
+   * as OpenAI `image_url` content parts after the text part; only honored for
+   * `user` messages, and only meaningful for a vision-capable model.
+   */
+  readonly images?: readonly string[];
   /** Who authored the message. */
   readonly role: ChatRole;
 }
@@ -72,8 +78,22 @@ function toMessageParam(
       return { content: message.content, role: 'assistant' };
     case 'system':
       return { content: message.content, role: 'system' };
-    case 'user':
-      return { content: message.content, role: 'user' };
+    case 'user': {
+      if (message.images === undefined || message.images.length === 0) {
+        return { content: message.content, role: 'user' };
+      }
+
+      return {
+        content: [
+          { text: message.content, type: 'text' },
+          ...message.images.map((url) => ({
+            image_url: { url },
+            type: 'image_url' as const,
+          })),
+        ],
+        role: 'user',
+      };
+    }
   }
 }
 

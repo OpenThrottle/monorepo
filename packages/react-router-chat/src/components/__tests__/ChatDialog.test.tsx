@@ -1,11 +1,12 @@
 import { TooltipProvider } from '@openthrottle/react-router-shadcn';
 import type { RenderResult } from '@testing-library/react';
-import { act, render } from '@testing-library/react';
+import { act, render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import * as React from 'react';
 import { createRoutesStub } from 'react-router';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { dispatchFileEvent } from '../../__tests__/dispatchFileEvent';
 import type { ChatComposerControls } from '../../types';
 import type { ChatMessage } from '../../types';
 import { CHAT_COMPOSER_MODE } from '../../types';
@@ -264,6 +265,107 @@ describe('ChatDialog Component', () => {
       );
       await user.click(component!.getByRole('button', { name: 'Stop' }));
       expect(onStop).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('image attachments', () => {
+    const png = new File(['x'], 'a.png', { type: 'image/png' });
+
+    const mountWithAttachments = async (
+      overrides: Partial<ChatComposerControls>,
+    ): Promise<void> => {
+      component?.unmount();
+      // eslint-disable-next-line react/no-multi-comp -- test-local wrapper component
+      const Comp = () => {
+        return (
+          <TooltipProvider>
+            <ChatDialog
+              composer={{
+                mode: CHAT_COMPOSER_MODE.plan,
+                modelId: 'm1',
+                models: [{ id: 'm1', label: 'Model One' }],
+                ...overrides,
+              }}
+              messages={messages}
+              onSendMessage={onSendMessage}
+              triggerLabel="Open assistant"
+            />
+          </TooltipProvider>
+        );
+      };
+      const RoutesStub = createRoutesStub([{ Component: Comp, path: '/' }]);
+      component = render(<RoutesStub />);
+      await userEvent
+        .setup()
+        .click(component.getByRole('button', { name: 'Open assistant' }));
+    };
+
+    test('a pasted image reaches the composer onAddFiles', async () => {
+      const onAddFiles = vi.fn();
+      await mountWithAttachments({ onAddFiles });
+
+      dispatchFileEvent(component!.getByLabelText('Message'), 'paste', [png]);
+
+      expect(onAddFiles).toHaveBeenCalledWith([png]);
+    });
+
+    test('the toolbar picker hands chosen files to onAddFiles', async () => {
+      const user = userEvent.setup();
+      const onAddFiles = vi.fn();
+      await mountWithAttachments({ onAddFiles });
+
+      await user.upload(
+        component!.getByTestId('ChatComposerAttachPicker-input'),
+        png,
+      );
+
+      await waitFor(() => expect(onAddFiles).toHaveBeenCalledWith([png]));
+    });
+
+    test('shows the chips and removes one through onRemoveAttachment', async () => {
+      const user = userEvent.setup();
+      const onRemoveAttachment = vi.fn();
+      await mountWithAttachments({
+        attachments: [
+          {
+            localId: 'l-1',
+            name: 'a.png',
+            previewUrl: 'blob:preview',
+            status: 'ready',
+          },
+        ],
+        onAddFiles: vi.fn(),
+        onRemoveAttachment,
+      });
+
+      await user.click(
+        component!.getByRole('button', { name: 'Remove a.png' }),
+      );
+
+      expect(onRemoveAttachment).toHaveBeenCalledWith('l-1');
+    });
+
+    test('ignores a paste and disables the picker while attachments are off', async () => {
+      const onAddFiles = vi.fn();
+      await mountWithAttachments({
+        attachmentsDisabledReason: 'No images here',
+        onAddFiles,
+      });
+
+      dispatchFileEvent(component!.getByLabelText('Message'), 'paste', [png]);
+
+      expect(onAddFiles).not.toHaveBeenCalled();
+      expect(
+        component!.getByTestId('ChatComposerToolbar-attach'),
+      ).toBeDisabled();
+    });
+
+    test('offers no picker when the composer carries no onAddFiles', async () => {
+      await mountWithAttachments({});
+
+      expect(
+        component!.queryByTestId('ChatComposerAttachPicker-input'),
+      ).not.toBeInTheDocument();
     });
   });
 

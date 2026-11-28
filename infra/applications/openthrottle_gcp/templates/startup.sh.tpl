@@ -21,6 +21,9 @@ if ! command -v gcloud >/dev/null 2>&1; then
 fi
 
 install -d -m 0755 /opt/openthrottle
+# Chat image attachments, bind-mounted into the server (read_only, uid 1000).
+# A bind mount keeps the host directory's owner, so it must be the server's.
+install -d -m 0750 -o 1000 -g 1000 /opt/openthrottle/attachments
 cd /opt/openthrottle
 
 ################################################################################

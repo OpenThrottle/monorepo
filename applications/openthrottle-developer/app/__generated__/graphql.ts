@@ -3187,6 +3187,8 @@ export type ModelEndpointObject = {
   port: Scalars['Int']['output'];
   /** Best-effort provider label (ollama, lmstudio) or null when not fingerprinted. */
   provider?: Maybe<Scalars['String']['output']>;
+  /** Subset of `models` that accept image input, detected per provider (Ollama /api/show capabilities, LM Studio model metadata). Empty when the provider exposes no modality metadata — chat image attachments are then refused for that endpoint's models. */
+  visionModels: Array<Scalars['String']['output']>;
 };
 
 export type MoveAgentConversationToGroupInput = {
@@ -10162,6 +10164,7 @@ export type LocalModelsDiscoveryFragment = {
     host: string;
     models: Array<string>;
     provider?: string | null;
+    visionModels: Array<string>;
   }>;
 };
 
@@ -10178,6 +10181,7 @@ export type DiscoverLocalModelsQuery = {
       host: string;
       models: Array<string>;
       provider?: string | null;
+      visionModels: Array<string>;
     }>;
   };
 };
@@ -19439,6 +19443,10 @@ export const LocalModelsDiscoveryFragmentDoc = {
                 { kind: 'Field', name: { kind: 'Name', value: 'host' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'models' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'provider' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'visionModels' },
+                },
               ],
             },
           },
@@ -28032,6 +28040,10 @@ export const DiscoverLocalModelsDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'host' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'models' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'provider' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'visionModels' },
+                },
               ],
             },
           },

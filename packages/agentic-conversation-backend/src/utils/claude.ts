@@ -24,7 +24,8 @@ import type {
   ConversationStreamChunk,
 } from '../types/conversation-backend.ts';
 import { CONVERSATION_STREAM_CHUNK_KINDS } from '../types/conversation-backend.ts';
-import { attachmentDirectories, withAttachments } from './attachments.ts';
+import type { StagedTurnAttachments } from './attachments.ts';
+import { stageTurnAttachments, withAttachments } from './attachments.ts';
 import {
   buildClaudeArgv,
   CLAUDE_BIN_ENV,
@@ -164,6 +165,34 @@ async function* streamClaude(
     throw new Error('The claude backend requires a sessionId.');
   }
 
+  // Grant only this turn's own files: hardlink them into a private per-turn
+  // directory and pass that (not the shared attachments root) to `--add-dir`.
+  const stage = await stageTurnAttachments(run.attachments);
+  if (!stage.ok) {
+    yield {
+      delta: '',
+      done: true,
+      error: stage.error,
+      kind: CONVERSATION_STREAM_CHUNK_KINDS.text,
+    };
+    return;
+  }
+
+  const staged = stage.staged;
+  try {
+    yield* streamClaudeChild(run, run.cwd, run.sessionId, staged);
+  } finally {
+    // Runs on success, error, abort, and consumer `return()`.
+    await staged?.cleanup();
+  }
+}
+
+async function* streamClaudeChild(
+  run: ConversationBackendRun,
+  cwd: string,
+  sessionId: string,
+  staged: StagedTurnAttachments | undefined,
+): AsyncGenerator<ConversationStreamChunk> {
   const claudeConfigDir = resolveClaudeConfigDirOverride();
   const configDirEnv: Record<string, string> = {};
   if (claudeConfigDir !== undefined) {
@@ -178,21 +207,21 @@ async function* streamClaude(
     resolveClaudeBin(),
     buildClaudeArgv({
       additionalDirectories: run.additionalDirectories,
-      attachmentDirectories: attachmentDirectories(run.attachments),
+      attachmentDirectories: staged === undefined ? [] : [staged.dir],
       mcpServers: run.mcpServers,
       model: run.model,
       permissionMode: run.permissionMode,
       prompt: withAttachments(
         withFileMentions(latestUserMessage(run), run.fileMentions),
-        run.attachments,
+        staged?.attachments,
       ),
       reasoning: run.reasoning,
       resume: run.resumeSession === true,
-      sessionId: run.sessionId,
+      sessionId,
       systemPrompt: run.systemPrompt,
     }),
     {
-      cwd: run.cwd,
+      cwd,
       env: buildScrubbedEnv(process.env, {
         ...run.mcpEnv,
         // When set, isolate this headless turn onto a plugin-free config dir so

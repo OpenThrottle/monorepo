@@ -2,6 +2,8 @@
  * @description Pure decisions for the attachments janitor: how long to keep a file, which directory
  * entries it may touch, and whether an mtime is old enough. Nothing here touches disk or the clock.
  */
+import { TURN_ATTACHMENTS_DIR_PREFIX } from '@openthrottle/agentic-conversation-backend';
+
 import {
   ATTACHMENT_EXTENSION,
   ATTACHMENT_TEMP_PREFIX,
@@ -37,7 +39,7 @@ export const retentionDaysToMs = (days: number): number => {
 
 /**
  * @description Classifies a directory entry by name. Only `<sha256>.<png|jpg|gif|webp>` and
- * `.tmp-*` are the janitor's to touch; every other name is ignored.
+ * `.tmp-*` files and `.turn-*` staging directories are the janitor's to touch; every other name is ignored.
  */
 export const classifyEntryName = (
   name: string,
@@ -45,6 +47,7 @@ export const classifyEntryName = (
   const sha256 = ATTACHMENT_FILE_PATTERN.exec(name)?.groups?.['sha256'];
   if (sha256 !== undefined) return { kind: 'attachment', sha256 };
   if (name.startsWith(ATTACHMENT_TEMP_PREFIX)) return { kind: 'temp' };
+  if (name.startsWith(TURN_ATTACHMENTS_DIR_PREFIX)) return { kind: 'turn' };
   return { kind: 'ignored' };
 };
 

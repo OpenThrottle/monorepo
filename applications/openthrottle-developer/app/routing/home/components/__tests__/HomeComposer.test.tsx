@@ -162,6 +162,7 @@ describe('HomeComposer Component', () => {
       expect(submitTurn).toHaveBeenCalledWith(
         'check vercel',
         expect.any(Object),
+        expect.any(Object),
       );
       expect(component.getByRole('button', { name: 'Stop' })).toBeEnabled();
     });

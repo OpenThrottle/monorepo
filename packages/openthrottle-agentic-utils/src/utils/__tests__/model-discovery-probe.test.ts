@@ -95,7 +95,64 @@ describe('probeEndpoint', () => {
       models: ['llama3', 'qwen'],
       port: 11434,
       provider: 'ollama',
+      visionModels: [],
     });
+  });
+
+  it('flags Ollama models whose /api/show capabilities include vision', async () => {
+    const shown: string[] = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((input: Parameters<typeof fetch>[0], init?: RequestInit) => {
+        const url = String(input);
+        if (url.endsWith('/api/show')) {
+          const model = JSON.parse(String(init?.body)).model;
+          shown.push(model);
+          return Promise.resolve(
+            json({
+              capabilities:
+                model === 'llava' ? ['completion', 'vision'] : ['completion'],
+            }),
+          );
+        }
+        if (url.endsWith('/api/tags')) {
+          return Promise.resolve(json({ models: [] }));
+        }
+        if (url.endsWith('/v1/models')) {
+          return Promise.resolve(
+            json({ data: [{ id: 'llama3' }, { id: 'llava' }] }),
+          );
+        }
+        return Promise.resolve(new Response('', { status: 404 }));
+      }),
+    );
+    const endpoint = await probeEndpoint('localhost', 11434);
+    expect(shown.sort()).toEqual(['llama3', 'llava']);
+    expect(endpoint?.visionModels).toEqual(['llava']);
+  });
+
+  it('flags LM Studio vision models from /api/v1/models metadata', async () => {
+    routeFetch({
+      '/api/v1/models': () =>
+        json({
+          data: [
+            { capabilities: { vision: true }, key: 'qwen-vl' },
+            { architecture: 'qwen2', key: 'qwen' },
+            { id: 'old-vlm', key: 'old-vlm', type: 'vlm' },
+          ],
+        }),
+      '/v1/models': () =>
+        json({ data: [{ id: 'old-vlm' }, { id: 'qwen' }, { id: 'qwen-vl' }] }),
+    });
+    const endpoint = await probeEndpoint('localhost', 1234);
+    expect(endpoint?.provider).toBe('lmstudio');
+    expect(endpoint?.visionModels).toEqual(['old-vlm', 'qwen-vl']);
+  });
+
+  it('defaults visionModels to empty for an unfingerprinted server', async () => {
+    routeFetch({ '/v1/models': () => json({ data: [{ id: 'm' }] }) });
+    const endpoint = await probeEndpoint('localhost', 8000);
+    expect(endpoint?.visionModels).toEqual([]);
   });
 
   it('returns null when the /v1/models body has no data array', async () => {
@@ -114,6 +171,7 @@ describe('probeEndpoint', () => {
       models: [],
       port: 8001,
       provider: null,
+      visionModels: [],
     });
   });
 
