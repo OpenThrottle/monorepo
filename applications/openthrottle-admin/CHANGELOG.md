@@ -1,3 +1,24 @@
+# 3.0.0 (2026-11-28)
+
+### 🚀 Features
+
+- **react-router-chat:** chat image follow-ups: vision for local models, header dialog, hardening ([#1037](https://github.com/OpenThrottle/monorepo/pull/1037))
+- **react-router-chat:** finish chat restore: newest history, Load earlier, cross-tab prompts ([#1032](https://github.com/OpenThrottle/monorepo/pull/1032))
+- **openthrottle-developer:** dock conversations beside the nav with pins and groups ([#1016](https://github.com/OpenThrottle/monorepo/pull/1016))
+
+### 🩹 Fixes
+
+- **react-router-chat:** restore a reopened conversation in full, including a running reply ([#1023](https://github.com/OpenThrottle/monorepo/pull/1023))
+
+### 💅 Refactors
+
+- **react-router-chat:** chat session drawer follow-ups ([#1031](https://github.com/OpenThrottle/monorepo/pull/1031))
+- **monorepo:** drop the data. prefix from data/ file names ([#1007](https://github.com/OpenThrottle/monorepo/pull/1007))
+
+### ❤️ Thank You
+
+- Matthew Scholta @visormatt
+
 # 2.0.0 (2026-11-24)
 
 ### 🚀 Features

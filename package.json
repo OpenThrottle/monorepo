@@ -1,7 +1,7 @@
 {
   "name": "monorepo",
   "description": "Monorepo of many different applications... OpenThrottle + ALL OF IT",
-  "version": "5.0.0",
+  "version": "6.0.0",
   "author": {
     "email": "matthew.scholta@gmail.com",
     "name": "Matthew Scholta",

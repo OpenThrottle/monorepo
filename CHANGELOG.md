@@ -1,3 +1,37 @@
+# 6.0.0 (2026-11-28)
+
+### 🚀 Features
+
+- **react-router-chat:** chat image follow-ups: vision for local models, header dialog, hardening ([#1037](https://github.com/OpenThrottle/monorepo/pull/1037))
+- **react-router-chat:** attach images to chat turns, stored under ~/.openthrottle ([#1035](https://github.com/OpenThrottle/monorepo/pull/1035))
+- **openthrottle-server:** let every agent schedule mcp jobs with a per-job command allowlist ([#1002](https://github.com/OpenThrottle/monorepo/pull/1002))
+- **monorepo:** enforce a per-bucket src/ folder allowlist ([#1001](https://github.com/OpenThrottle/monorepo/pull/1001))
+- **monorepo:** add the ot-code-review convention review skill ([#986](https://github.com/OpenThrottle/monorepo/pull/986))
+- **agentic-hooks:** skill outcome reporting for every agent that can support it ([#983](https://github.com/OpenThrottle/monorepo/pull/983))
+- **monorepo:** measure skill outcomes and durations for every owned skill ([#981](https://github.com/OpenThrottle/monorepo/pull/981))
+
+### 🩹 Fixes
+
+- **monorepo:** run OpenThrottle on the right Node everywhere it starts ([#1006](https://github.com/OpenThrottle/monorepo/pull/1006))
+- **ci:** prune superseded warm Nx caches on main ([#990](https://github.com/OpenThrottle/monorepo/pull/990))
+
+### 💅 Refactors
+
+- **monorepo:** drawer review follow-ups — leftover dedupe and three machine checks ([#1033](https://github.com/OpenThrottle/monorepo/pull/1033))
+- **monorepo:** retire 11 grandfathered src/ folders in three packages ([#1024](https://github.com/OpenThrottle/monorepo/pull/1024))
+- **monorepo:** move package folders that sit outside src/ into the vocabulary ([#1010](https://github.com/OpenThrottle/monorepo/pull/1010))
+- **monorepo:** drop the data. prefix from data/ file names ([#1007](https://github.com/OpenThrottle/monorepo/pull/1007))
+- **monorepo:** keep vocabulary folders flat below src/ and enforce it ([#1005](https://github.com/OpenThrottle/monorepo/pull/1005))
+- **monorepo:** retire the light-case grandfathered src/ folders ([#1003](https://github.com/OpenThrottle/monorepo/pull/1003))
+
+### 🤖 CI
+
+- **ci:** prune superseded pnpm store caches on main ([#996](https://github.com/OpenThrottle/monorepo/pull/996))
+
+### ❤️ Thank You
+
+- Matthew Scholta @visormatt
+
 # 5.0.0 (2026-11-24)
 
 ### 🚀 Features
