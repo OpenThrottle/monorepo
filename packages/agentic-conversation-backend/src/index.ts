@@ -25,6 +25,7 @@ export {
   ANTIGRAVITY_BIN_ENV,
   ANTIGRAVITY_DEFAULT_BIN,
 } from './utils/antigravity-argv.ts';
+export { TURN_ATTACHMENTS_DIR_PREFIX } from './utils/attachments.ts';
 export * from './utils/capabilities.ts';
 export { claudeConversationBackend } from './utils/claude.ts';
 export { CLAUDE_BIN_ENV, CLAUDE_DEFAULT_BIN } from './utils/claude-argv.ts';

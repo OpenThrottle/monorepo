@@ -139,6 +139,28 @@ describe('AgentConversationMessageAttachmentsRepository', () => {
     });
   });
 
+  describe('unlinkFromMessage', () => {
+    it('releases the user rows linked to the message and returns the count', async () => {
+      mockRepository.update.mockResolvedValue({ affected: 1 });
+
+      await expect(
+        repository.unlinkFromMessage(messageId, userId),
+      ).resolves.toBe(1);
+      expect(mockRepository.update).toHaveBeenCalledWith(
+        { messageId, userId },
+        { messageId: null },
+      );
+    });
+
+    it('treats a missing affected count as 0', async () => {
+      mockRepository.update.mockResolvedValue({});
+
+      await expect(
+        repository.unlinkFromMessage(messageId, userId),
+      ).resolves.toBe(0);
+    });
+  });
+
   describe('listByMessageIds', () => {
     it('returns an empty list without a query for empty input', async () => {
       await expect(repository.listByMessageIds([])).resolves.toEqual([]);

@@ -27,6 +27,7 @@ set -euo pipefail
 readonly APP_DIR=/opt/openthrottle
 readonly SECRETS_FILE="$${APP_DIR}/.secrets"
 readonly DATA_DIR="${postgres_data_dir}"
+readonly ATTACHMENTS_DIR="${attachments_data_dir}"
 readonly VOLUME_DEVICE="${data_volume_device}"
 
 log() { echo "[openthrottle-startup] $*"; }
@@ -109,6 +110,11 @@ fi
 # A named volume would hide this: Docker copies the image's ownership onto an
 # empty one, but never onto a bind mount.
 install -d -m 0700 -o 999 -g 999 "$${DATA_DIR}"
+
+# Chat image attachments: bind-mounted into the server, which runs as 1000:1000
+# on a read-only root filesystem. Same reason as above: a bind mount keeps the
+# host directory's owner, so it must be the server's uid or every upload fails.
+install -d -m 0750 -o 1000 -g 1000 "$${ATTACHMENTS_DIR}"
 
 ################################################################################
 # 3. Secrets

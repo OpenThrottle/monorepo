@@ -156,8 +156,22 @@ const Harness = (): React.ReactElement => {
     streamClient: null,
     streamDocument: STREAM_DOCUMENT,
   });
+  const [acceptedCount, setAcceptedCount] = React.useState(0);
   return (
     <div>
+      <span data-testid="accepted-count">{acceptedCount}</span>
+      <button
+        onClick={() =>
+          turn.submitTurn(
+            'hi',
+            { backend: 'openai', baseUrl: 'x', modelId: 'llama3' },
+            { onAccepted: () => setAcceptedCount((count) => count + 1) },
+          )
+        }
+        type="button"
+      >
+        Submit with callback
+      </button>
       <span data-testid="conversation-id">{turn.conversationId ?? 'none'}</span>
       <span data-testid="can-retry">{turn.canRetry ? 'yes' : 'no'}</span>
       <span data-testid="message-count">{turn.messages.length}</span>
@@ -243,6 +257,8 @@ const Harness = (): React.ReactElement => {
 
 // Counts POSTs to the conversation-stream action registered by renderTurn.
 let turnPosts = 0;
+// When true the start action answers with a rejection instead of a conversation.
+let rejectStarts = false;
 
 const renderTurn = (
   pageLoader: (() => null) | undefined = undefined,
@@ -257,6 +273,9 @@ const renderTurn = (
     {
       action: () => {
         turnPosts += 1;
+        if (rejectStarts) {
+          return { errorMessage: 'ATTACHMENT_NOT_FOUND' };
+        }
         return { assistantMessageId: 'a1', conversationId: 'conv-42' };
       },
       path: '/resources/conversation-stream',
@@ -265,6 +284,42 @@ const renderTurn = (
 
   return render(<RoutesStub />);
 };
+
+describe('useAgenticChatTurn submitTurn onAccepted', () => {
+  beforeEach(() => {
+    turnPosts = 0;
+  });
+
+  afterEach(() => {
+    rejectStarts = false;
+  });
+
+  test('runs once the server accepts the start', async () => {
+    const user = userEvent.setup();
+    const component = renderTurn();
+
+    await user.click(
+      await component.findByRole('button', { name: 'Submit with callback' }),
+    );
+
+    await waitFor(() =>
+      expect(component.getByTestId('accepted-count')).toHaveTextContent('1'),
+    );
+  });
+
+  test('never runs when the server rejects the start', async () => {
+    rejectStarts = true;
+    const user = userEvent.setup();
+    const component = renderTurn();
+
+    await user.click(
+      await component.findByRole('button', { name: 'Submit with callback' }),
+    );
+
+    await waitFor(() => expect(turnPosts).toBeGreaterThan(0));
+    expect(component.getByTestId('accepted-count')).toHaveTextContent('0');
+  });
+});
 
 describe('useAgenticChatTurn restore/reset', () => {
   test('restore seeds the conversation id and hydrates its messages', async () => {

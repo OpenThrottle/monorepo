@@ -47,4 +47,7 @@ export interface AgentConversationMessageAttachmentsRepositoryMock extends BaseR
   readonly listByMessageIds: Mock<
     AgentConversationMessageAttachmentsRepository['listByMessageIds']
   >;
+  readonly unlinkFromMessage: Mock<
+    AgentConversationMessageAttachmentsRepository['unlinkFromMessage']
+  >;
 }

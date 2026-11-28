@@ -73,9 +73,10 @@ const discovery: DiscoveryResult = {
     {
       baseUrl: 'http://localhost:11434/v1',
       host: 'localhost',
-      models: ['llama3'],
+      models: ['llama3', 'llava'],
       port: 11434,
       provider: 'ollama',
+      visionModels: ['llava'],
     },
   ],
   scannedAt: '2026-06-17T00:00:00.000Z',
@@ -139,6 +140,7 @@ function build(): {
   const messages = createAgentConversationMessagesRepositoryMock();
   messages.appendMessages.mockResolvedValue([userMessage]);
   messages.listMessagesForConversation.mockResolvedValue([userMessage]);
+  messages.remove.mockResolvedValue(userMessage);
   const customPromptsMock = createCustomPromptsRepositoryMock();
   const personaFindOne = customPromptsMock.findVisibleById;
   const customPrompts = createMock<CustomPromptsRepository>(customPromptsMock);
@@ -167,6 +169,9 @@ function build(): {
   });
   const attachmentsRepository =
     createAgentConversationMessageAttachmentsRepositoryMock();
+  attachmentsRepository.linkToMessage.mockImplementation(async (ids) => {
+    return ids.length;
+  });
   const attachmentStoreTouch = vi.fn();
   const resolver = new ConversationStreamResolver(
     new CheckoutPathService(repositories, logger),
@@ -1157,6 +1162,102 @@ describe('ConversationStreamResolver.startConversationStream attachments', () =>
       }),
     );
     expect(attachmentsRepository.linkToMessage).not.toHaveBeenCalled();
+  });
+
+  it('fails the losing turn of a concurrent double-send: ATTACHMENT_NOT_FOUND, cleanup, no stream', async () => {
+    const {
+      attachmentsRepository,
+      attachmentStoreTouch,
+      messages,
+      resolver,
+      streamService,
+    } = buildWithCheckout();
+    attachmentsRepository.findOwnedByIds.mockResolvedValue([
+      buildAttachment('att-1'),
+      buildAttachment('att-2'),
+    ]);
+    attachmentStoreTouch.mockImplementation(async (sha256: string) => ({
+      ok: true,
+      value: `/root/${sha256}.png`,
+    }));
+    // The other turn linked att-2 between our read and our link.
+    attachmentsRepository.linkToMessage.mockResolvedValue(1);
+
+    expect(await rejection(resolver, ['att-1', 'att-2'])).toMatchObject({
+      extensions: {
+        code: 'BAD_USER_INPUT',
+        reason: 'ATTACHMENT_NOT_FOUND',
+      },
+    });
+    expect(attachmentsRepository.unlinkFromMessage).toHaveBeenCalledWith(
+      'user-msg-1',
+      'user-1',
+    );
+    expect(messages.remove).toHaveBeenCalledWith('user-msg-1');
+    expect(streamService.start).not.toHaveBeenCalled();
+  });
+
+  describe('openai backend (per-model vision)', () => {
+    const openAiStart = {
+      ...start,
+      backend: 'openai',
+      baseUrl: 'http://localhost:11434/v1',
+      repositoryIds: undefined,
+    };
+
+    it('refuses images for a model the endpoint does not report as vision-capable', async () => {
+      const { conversations, resolver, streamService } = build();
+
+      const error = await resolver
+        .startConversationStream(human, {
+          ...openAiStart,
+          attachmentIds: ['att-1'],
+          modelId: 'llama3',
+        })
+        .then(
+          () => null,
+          (thrown: unknown) => thrown,
+        );
+
+      expect(error).toMatchObject({
+        extensions: {
+          code: 'BAD_USER_INPUT',
+          reason: 'ATTACHMENTS_UNSUPPORTED',
+        },
+      });
+      expect(conversations.createConversation).not.toHaveBeenCalled();
+      expect(streamService.start).not.toHaveBeenCalled();
+    });
+
+    it('hands the images to the stream for a vision-capable model', async () => {
+      const {
+        attachmentsRepository,
+        attachmentStoreTouch,
+        resolver,
+        streamService,
+      } = build();
+      attachmentsRepository.findOwnedByIds.mockResolvedValue([
+        buildAttachment('att-1'),
+      ]);
+      attachmentStoreTouch.mockResolvedValue({
+        ok: true,
+        value: '/root/a.png',
+      });
+
+      const result = await resolver.startConversationStream(human, {
+        ...openAiStart,
+        attachmentIds: ['att-1'],
+        modelId: 'llava',
+      });
+
+      expect(result.errorMessage).toBeNull();
+      expect(streamService.start).toHaveBeenCalledWith(
+        expect.objectContaining({
+          attachments: [expect.objectContaining({ path: '/root/a.png' })],
+          backend: 'openai',
+        }),
+      );
+    });
   });
 
   it('does not touch the attachment services when no ids are sent', async () => {

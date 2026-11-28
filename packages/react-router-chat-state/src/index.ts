@@ -19,9 +19,11 @@ export * from './data/chat-context-meter-state';
 export * from './data/chat-drafts-state';
 export * from './data/chat-toolbar-seeds';
 export * from './data/chat-toolbar-state';
+export { CHAT_ATTACHMENT_COPY } from './data/copy';
 
 // 🪝 React Hooks
 export * from './hooks/useChatDraft';
+export * from './hooks/useComposerAttachments';
 export * from './hooks/useHeaderChatController';
 /**
  * Pre-split public names for the header chat controller's input and result.
@@ -37,6 +39,8 @@ export * from './hooks/useSessionPermissionDecay';
 export * from './types';
 
 // 🛠️ Utilities
+export * from './utils/acceptsImageInput';
+export * from './utils/attachment-send';
 export * from './utils/buildChatTurnFields';
 export * from './utils/chat-discovery-options';
 export * from './utils/chat-drafts';

@@ -73,6 +73,7 @@ import {
 import { ConversationStreamService } from './conversation-stream.service.ts';
 import type { ConversationStreamChunkEnvelope } from './conversation-stream.types.ts';
 import {
+  backendAcceptsImages,
   selectAttachmentIds,
   toAttachmentGraphqlError,
 } from './conversation-stream.utils.ts';
@@ -337,7 +338,13 @@ export class ConversationStreamResolver {
 
     // Attachment gate, before any row is read or written: a backend that takes
     // no images, or too long a list, is refused with a BAD_USER_INPUT error.
-    const attachmentIds = selectAttachmentIds(backend, input.attachmentIds);
+    const attachmentIds = selectAttachmentIds(
+      backend,
+      input.attachmentIds,
+      (input.attachmentIds ?? []).length === 0
+        ? false
+        : await this.acceptsImages(backend, input),
+    );
 
     // Per-user gate: a CLI backend the user disabled on /settings/agents cannot be
     // started (the openai HTTP path is not an agent CLI, so it is never gated).
@@ -430,13 +437,26 @@ export class ConversationStreamResolver {
       userMessageId = userMessage?.id ?? null;
 
       // Link the uploads to the persisted user message so history shows them
-      // and the janitor leaves them alone.
+      // and the janitor leaves them alone. The link is conditional (only
+      // still-unlinked rows), so a short count means a concurrent turn sent the
+      // same id first: this turn lost. Message insert and link are separate
+      // repositories, so they cannot share one transaction; instead the losing
+      // turn releases what it linked, hides its user message and never starts
+      // the stream.
       if (userMessageId !== null && attachmentIds.length > 0) {
-        await this.attachmentsRepository.linkToMessage(
+        const linked = await this.attachmentsRepository.linkToMessage(
           attachmentIds,
           userMessageId,
           userId,
         );
+
+        if (linked < attachmentIds.length) {
+          await this.discardLostTurn(userMessageId, userId);
+          throw toAttachmentGraphqlError(
+            CONVERSATION_ATTACHMENT_FAILURE.ATTACHMENT_NOT_FOUND,
+            `An attached image was not found. Upload it again and resend.`,
+          );
+        }
       }
 
       // The newest window, not the oldest: a long thread's prompt must end at
@@ -511,6 +531,47 @@ export class ConversationStreamResolver {
     result.userMessageId = userMessageId;
 
     return result;
+  }
+
+  /**
+   * Cleans up a turn that lost the attachment link race: unlinks any rows it did win so they stay
+   * usable, then removes its user message so no orphan row shows in history. Best effort; a failure
+   * is logged and never replaces the `ATTACHMENT_NOT_FOUND` the client gets.
+   */
+  private async discardLostTurn(
+    userMessageId: string,
+    userId: string,
+  ): Promise<void> {
+    try {
+      await this.attachmentsRepository.unlinkFromMessage(userMessageId, userId);
+      await this.messages.remove(userMessageId);
+    } catch (error) {
+      this.logger.warn(
+        `Could not clean up a lost attachment turn (message ${userMessageId}): ${toErrorMessage(error)}`,
+      );
+    }
+  }
+
+  /**
+   * Whether this turn's backend takes images. CLI backends answer from their static capability
+   * descriptor; `openai` answers per model: the discovered endpoint must list the model in its
+   * `visionModels` (an unknown endpoint or model is false, so the later SSRF guard still owns that
+   * error).
+   */
+  private async acceptsImages(
+    backend: string,
+    input: StartConversationStreamInput,
+  ): Promise<boolean> {
+    if (backend !== OPENAI_BACKEND) {
+      return backendAcceptsImages(backend);
+    }
+
+    const discovery = await this.modelDiscovery.discover();
+    return discovery.endpoints.some(
+      (endpoint) =>
+        endpoint.baseUrl === input.baseUrl &&
+        endpoint.visionModels.includes(input.modelId ?? ''),
+    );
   }
 
   /**

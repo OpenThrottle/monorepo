@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 
 import type { ConversationAttachment } from '../../types/conversation-backend.ts';
 import {
-  attachmentDirectories,
   attachmentPaths,
   attachmentsPreamble,
   withAttachments,
@@ -26,22 +25,6 @@ describe('attachmentPaths', () => {
         attachment('/att/a.png'),
       ]),
     ).toEqual(['/att/a.png', '/att/b.png']);
-  });
-});
-
-describe('attachmentDirectories', () => {
-  it('returns each distinct parent directory once', () => {
-    expect(
-      attachmentDirectories([
-        attachment('/att/one/a.png'),
-        attachment('/att/one/b.png'),
-        attachment('/att/two/c.png'),
-      ]),
-    ).toEqual(['/att/one', '/att/two']);
-  });
-
-  it('is empty when there are no attachments', () => {
-    expect(attachmentDirectories(undefined)).toEqual([]);
   });
 });
 

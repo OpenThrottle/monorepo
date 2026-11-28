@@ -1,4 +1,4 @@
-import { readdir, stat, unlink } from 'node:fs/promises';
+import { lstat, readdir, rm, stat, unlink } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { Processor, WorkerHost } from '@nestjs/bullmq';
@@ -16,6 +16,7 @@ import {
   ATTACHMENTS_RETENTION_DAYS_ENV_VAR,
   JANITOR_CHUNK_SIZE,
   STALE_TEMP_FILE_MAX_AGE_MS,
+  STALE_TURN_DIR_MAX_AGE_MS,
   UNLINKED_ROW_MAX_AGE_MS,
 } from './attachments-janitor.constants.ts';
 import type {
@@ -35,7 +36,7 @@ import {
 const CONCURRENCY = 1;
 
 interface AttachmentsJanitorFileResult {
-  readonly kind: 'attachment' | 'temp';
+  readonly kind: 'attachment' | 'temp' | 'turn';
   readonly outcome: AttachmentsJanitorFileOutcome;
 }
 
@@ -52,7 +53,7 @@ const countResults = (
 /**
  * @description Daily cleanup of chat attachments. Drops upload rows never attached to a sent
  * message (older than 24h), then reaps files in the attachments root: stale `.tmp-*` writes
- * (older than 1h) and `<sha256>.<ext>` files that are past `OPENTHROTTLE_ATTACHMENTS_RETENTION_DAYS`
+ * (older than 1h), orphaned `.turn-*` staging directories (older than 24h, left by a crashed turn) and `<sha256>.<ext>` files that are past `OPENTHROTTLE_ATTACHMENTS_RETENTION_DAYS`
  * (default 30) by mtime AND unreferenced by any row in this database.
  *
  * Safe against other servers sharing the root: the store refreshes a file's mtime on every
@@ -105,7 +106,7 @@ export class AttachmentsJanitorProcessor
     const summary = await this.sweep(new Date());
 
     this.logger.info(
-      `Attachments janitor done: rowsDeleted=${summary.rowsDeleted}, filesDeleted=${summary.filesDeleted}, tempFilesDeleted=${summary.tempFilesDeleted}, filesKept=${summary.filesKept}`,
+      `Attachments janitor done: rowsDeleted=${summary.rowsDeleted}, filesDeleted=${summary.filesDeleted}, tempFilesDeleted=${summary.tempFilesDeleted}, turnDirsDeleted=${summary.turnDirsDeleted}, filesKept=${summary.filesKept}`,
       AttachmentsJanitorProcessor.name,
     );
   }
@@ -125,6 +126,7 @@ export class AttachmentsJanitorProcessor
         filesKept: 0,
         rowsDeleted,
         tempFilesDeleted: 0,
+        turnDirsDeleted: 0,
       };
     }
 
@@ -153,6 +155,11 @@ export class AttachmentsJanitorProcessor
           const outcome = await this.reapTemp(path, nowMs);
           return { kind: 'temp', outcome };
         });
+      } else if (entry.kind === 'turn') {
+        tasks.push(async () => {
+          const outcome = await this.reapTurnDir(path, nowMs);
+          return { kind: 'turn', outcome };
+        });
       }
     }
 
@@ -172,6 +179,7 @@ export class AttachmentsJanitorProcessor
       filesKept: countResults(results, 'attachment', 'kept'),
       rowsDeleted,
       tempFilesDeleted: countResults(results, 'temp', 'deleted'),
+      turnDirsDeleted: countResults(results, 'turn', 'deleted'),
     };
   }
 
@@ -192,6 +200,41 @@ export class AttachmentsJanitorProcessor
     } catch (error) {
       if (isFileMissingError(error)) return null;
       throw error;
+    }
+  }
+
+  /** mtime in ms, or null when the path is gone or is not a real directory (symlinks included). */
+  private async dirMtimeOf(path: string): Promise<number | null> {
+    try {
+      const info = await lstat(path);
+      return info.isDirectory() ? info.mtimeMs : null;
+    } catch (error) {
+      if (isFileMissingError(error)) return null;
+      throw error;
+    }
+  }
+
+  private async reapTurnDir(
+    path: string,
+    nowMs: number,
+  ): Promise<AttachmentsJanitorFileOutcome> {
+    try {
+      const scanned = await this.dirMtimeOf(path);
+      if (scanned === null) return 'gone';
+      if (!isOlderThan(scanned, nowMs, STALE_TURN_DIR_MAX_AGE_MS)) {
+        return 'kept';
+      }
+
+      // A turn on another server sharing the root may have touched it since the scan.
+      const recheck = await this.dirMtimeOf(path);
+      if (recheck === null) return 'gone';
+      if (!isOlderThan(recheck, nowMs, STALE_TURN_DIR_MAX_AGE_MS)) {
+        return 'kept';
+      }
+      await rm(path, { force: true, recursive: true });
+      return 'deleted';
+    } catch (error) {
+      return this.keepAfterError(path, error);
     }
   }
 

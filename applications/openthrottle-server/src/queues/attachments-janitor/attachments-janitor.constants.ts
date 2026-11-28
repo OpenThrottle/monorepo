@@ -14,5 +14,11 @@ export const UNLINKED_ROW_MAX_AGE_MS = 24 * MS_PER_HOUR;
 /** A `.tmp-*` file older than this is the debris of a crashed write. */
 export const STALE_TEMP_FILE_MAX_AGE_MS = MS_PER_HOUR;
 
+/**
+ * A `.turn-*` staging directory older than this is left by a crashed turn (a live turn removes
+ * its own in a `finally`); well past the longest turn.
+ */
+export const STALE_TURN_DIR_MAX_AGE_MS = 24 * MS_PER_HOUR;
+
 /** Files examined concurrently; keeps the stat/DB fan-out bounded. */
 export const JANITOR_CHUNK_SIZE = 16;

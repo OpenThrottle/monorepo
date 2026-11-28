@@ -34,6 +34,11 @@ export class ModelEndpointObject {
     nullable: true,
   })
   provider!: string | null;
+
+  @Field(() => [String], {
+    description: `Subset of \`models\` that accept image input, detected per provider (Ollama /api/show capabilities, LM Studio model metadata). Empty when the provider exposes no modality metadata — chat image attachments are then refused for that endpoint's models.`,
+  })
+  visionModels!: string[];
 }
 
 @ObjectType()

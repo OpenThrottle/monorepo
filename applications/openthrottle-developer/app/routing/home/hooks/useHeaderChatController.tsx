@@ -34,6 +34,7 @@ export function useHeaderChatController(
 
   // Hooks
   const surface = useSharedHeaderChatController({
+    attachmentsEnabled: true,
     contextSources: CHAT_TOOLBAR_CONTEXT_SOURCES,
     enabled,
     optionsCache: {

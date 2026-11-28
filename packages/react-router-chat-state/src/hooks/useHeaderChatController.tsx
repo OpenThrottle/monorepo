@@ -1,5 +1,6 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import type {
+  ChatComposerAttachmentProps,
   ChatComposerControls,
   ChatComposerModeValue,
   ChatContextSource,
@@ -27,6 +28,12 @@ import { chatContextMeterAtom } from '../data/atom.chat-context-meter';
 import { chatToolbarStateAtom } from '../data/atom.chat-toolbar';
 import { EMPTY_CHAT_OPTIONS } from '../data/chat-options';
 import type { HeaderChatOptionsCache } from '../types';
+import { acceptsImageInput } from '../utils/acceptsImageInput';
+import {
+  buildAttachmentFields,
+  getAttachmentsDisabledReason,
+  getAttachmentSendBlocker,
+} from '../utils/attachment-send';
 import { buildChatTurnFields } from '../utils/buildChatTurnFields';
 import type { ChatOptionsResponse } from '../utils/chat-discovery-options';
 import { toCheckoutOptions } from '../utils/chat-discovery-options';
@@ -34,6 +41,7 @@ import { buildModelGroups } from '../utils/chat-model-option';
 import { decodeChatOption } from '../utils/chat-model-option';
 import { reconcileChatToolbarState } from '../utils/reconcileChatToolbarState';
 import { writeChatToolbarBackendPref } from '../utils/writeChatToolbarBackendPref';
+import { useComposerAttachments } from './useComposerAttachments';
 import { useSessionPermissionDecay } from './useSessionPermissionDecay';
 
 /**
@@ -44,6 +52,11 @@ import { useSessionPermissionDecay } from './useSessionPermissionDecay';
  * @public
  */
 export interface UseHeaderChatControllerOptions {
+  /**
+   * Whether the host serves `/resources/attachments` (the image upload route).
+   * When false the dialog hides paste/drop/picker entirely.
+   */
+  readonly attachmentsEnabled: boolean;
   readonly contextSources: readonly ChatContextSource[];
   readonly enabled: boolean;
   readonly optionsCache?: HeaderChatOptionsCache | null;
@@ -84,6 +97,7 @@ export function useHeaderChatController(
   config: UseHeaderChatControllerOptions,
 ): UseHeaderChatControllerResult {
   const {
+    attachmentsEnabled,
     contextSources,
     enabled,
     optionsCache,
@@ -103,6 +117,7 @@ export function useHeaderChatController(
     () => optionsCache?.read() ?? null,
   );
   const turn = useAgenticChatTurn({ streamClient, streamDocument });
+  const attachments = useComposerAttachments();
   const conversationList = useConversationList({ enabled });
   const [toolbarState, setToolbarState] = useAtom(chatToolbarStateAtom);
   const showContextMeter = useAtomValue(chatContextMeterAtom);
@@ -146,6 +161,10 @@ export function useHeaderChatController(
     decodedOption,
     decodedOption != null ? agentRuntimes[decodedOption.backend] : undefined,
   );
+
+  // Same gate as the home composer: the runtime's `imageInput`, or the selected
+  // model's own flag (a vision-capable local model).
+  const acceptsImages = acceptsImageInput({ agentRuntimes, decodedOption, modelId, models }); // prettier-ignore
 
   // Last-used-wins write path for the capability-gated controls (see
   // writeChatToolbarBackendPref): per-backend entry AND global fallback.
@@ -218,6 +237,16 @@ export function useHeaderChatController(
       return;
     }
 
+    const attachmentBlocker = getAttachmentSendBlocker({
+      acceptsImages,
+      attachmentIds: attachments.attachmentIds,
+      hasUploading: attachments.hasUploading,
+    });
+    if (attachmentBlocker) {
+      turn.setError(attachmentBlocker);
+      return;
+    }
+
     turn.setError(null);
 
     const fileMentions = parseFileMentions(trimmed).map(
@@ -235,7 +264,15 @@ export function useHeaderChatController(
       serviceTier,
     });
 
-    turn.submitTurn(trimmed, fields);
+    const attachmentFields = buildAttachmentFields(attachments.attachmentIds);
+
+    // The chips stay until the server accepts the start, so a rejected turn
+    // (unknown id, unsupported model) keeps them to retry without re-attaching.
+    turn.submitTurn(
+      trimmed,
+      { ...fields, ...attachmentFields },
+      { onAccepted: attachments.clear },
+    );
   };
 
   const onStartNewChat = (): void => {
@@ -257,7 +294,18 @@ export function useHeaderChatController(
     totalCount: conversationList.totalCount,
   };
 
+  // Omitting `onAddFiles` hides attaching altogether (host without the route).
+  const attachmentsDisabledReason = getAttachmentsDisabledReason(acceptsImages);
+  const enabledAttachmentProps: ChatComposerAttachmentProps = {
+    attachments: attachments.entries,
+    attachmentsDisabledReason,
+    onAddFiles: attachments.addFiles,
+    onRemoveAttachment: attachments.remove,
+  };
+  const attachmentProps = attachmentsEnabled ? enabledAttachmentProps : {};
+
   const composer: ChatComposerControls = {
+    ...attachmentProps,
     canRetry: turn.canRetry,
     capabilities,
     checkouts,

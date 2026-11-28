@@ -173,6 +173,7 @@ jobs:
 
             vars = {
               api_domain             = "api.example.com"
+              attachments_data_dir   = "/mnt/openthrottle-data/attachments"
               backup_remote          = "remote:bucket"
               backup_retention_count = "14"
               backup_script          = file("__REPO__/databases/openthrottle/backup-offsite.sh")

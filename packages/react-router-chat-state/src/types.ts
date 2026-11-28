@@ -1,3 +1,9 @@
+import type {
+  ChatComposerAttachmentFailed,
+  ChatComposerAttachmentReady,
+  ChatComposerAttachmentUploading,
+} from '@openthrottle/react-router-chat';
+
 import type { ChatOptionsResponse } from './utils/chat-discovery-options';
 
 /**
@@ -26,3 +32,14 @@ export interface ChatAgentRuntime {
   /** Whether the backend accepts image attachments (`imageInput` capability). */
   readonly imageInput: boolean;
 }
+
+/** An uploaded chip that also remembers the server id sent with the turn. @public */
+export interface ComposerAttachmentReadyEntry extends ChatComposerAttachmentReady {
+  readonly attachmentId: string;
+}
+
+/** One composer chip; assignable to the package's `ChatComposerAttachment`. @public */
+export type ComposerAttachmentEntry =
+  | ChatComposerAttachmentFailed
+  | ChatComposerAttachmentUploading
+  | ComposerAttachmentReadyEntry;

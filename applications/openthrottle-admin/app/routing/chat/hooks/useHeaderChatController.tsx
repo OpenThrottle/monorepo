@@ -30,6 +30,7 @@ export function useHeaderChatController(
 
   // Hooks
   const surface = useSharedHeaderChatController({
+    attachmentsEnabled: false,
     contextSources: CHAT_TOOLBAR_CONTEXT_SOURCES,
     enabled,
     personasFallback: CHAT_TOOLBAR_PERSONAS,

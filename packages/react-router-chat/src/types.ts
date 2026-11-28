@@ -528,6 +528,13 @@ export interface ChatModelOption {
    */
   readonly groupId?: string;
   readonly id: string;
+  /**
+   * True when this specific model accepts image attachments, for backends where
+   * that varies per model (a local OpenAI-compatible endpoint serves both text
+   * and vision models). A backend-wide `imageInput` capability still applies on
+   * top; omit when the model has no per-model flag.
+   */
+  readonly imageInput?: boolean;
   readonly label: string;
   /**
    * Optional keyboard shortcut hint shown on the model's row (e.g. `⌘1`). The
@@ -954,10 +961,10 @@ export interface ChatSlashCommandProvider {
  *
  * @public
  */
-export interface ChatComposerControls extends Omit<
-  ChatComposerToolbarProps,
-  'className'
-> {
+export interface ChatComposerControls
+  extends
+    ChatComposerAttachmentProps,
+    Omit<ChatComposerToolbarProps, 'className'> {
   /**
    * When true, the last turn timed out and its single automatic retry is spent —
    * {@link ChatDialog} renders a manual Retry affordance wired to {@link onRetry}.
@@ -1117,4 +1124,16 @@ export interface ChatSessionChanges {
   readonly selectedFile: string | undefined;
   /** The selected file's unified patch; undefined while it loads. */
   readonly selectedPatch: string | undefined;
+}
+
+/**
+ * @description Per-call hooks for {@link UseAgenticChatTurnResult.submitTurn}.
+ * `onAccepted` runs once the server accepted the start (it returned a
+ * conversation id), or at once when the message was queued behind a running
+ * turn (the queue already holds its payload). It never runs for a rejected
+ * start, so a caller can keep what it would otherwise have discarded.
+ * @public
+ */
+export interface SubmitTurnOptions {
+  readonly onAccepted: () => void;
 }

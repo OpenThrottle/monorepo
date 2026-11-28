@@ -40,6 +40,12 @@ export interface DiscoveredLocalEndpoint {
   readonly host: string;
   readonly models: readonly string[];
   readonly provider?: string | null;
+  /**
+   * The subset of {@link models} that accept image input. Optional because the
+   * admin app's discovery query does not select it; a missing value means no
+   * model is vision-capable (the safe default).
+   */
+  readonly visionModels?: readonly string[];
 }
 
 /** The `discoverLocalModels` payload the mappers read. @public */
@@ -202,6 +208,7 @@ export function toChatModelOptions(
       description: providerOrHost,
       groupId: openaiGroupId(providerOrHost),
       id: encodeModelOptionId(endpoint.baseUrl, model),
+      imageInput: endpoint.visionModels?.includes(model) ?? false,
       label: model,
     }));
   });

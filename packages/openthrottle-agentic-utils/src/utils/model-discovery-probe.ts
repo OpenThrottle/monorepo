@@ -32,7 +32,11 @@ export type LimitFunction = <T>(task: LimitedTask<T>) => Promise<T>;
  * parsed body, or `null` on any non-2xx / network / timeout / parse failure —
  * so a dead host can never stall the sweep.
  */
-async function fetchJson(url: string, timeoutMs: number): Promise<unknown> {
+async function fetchJson(
+  url: string,
+  timeoutMs: number,
+  body?: unknown,
+): Promise<unknown> {
   const controller = new AbortController();
   const timer = setTimeout(() => {
     controller.abort();
@@ -40,7 +44,13 @@ async function fetchJson(url: string, timeoutMs: number): Promise<unknown> {
 
   try {
     const response = await fetch(url, {
-      headers: { accept: `application/json` },
+      headers: {
+        accept: `application/json`,
+        ...(body === undefined ? {} : { 'content-type': `application/json` }),
+      },
+      ...(body === undefined
+        ? {}
+        : { body: JSON.stringify(body), method: `POST` }),
       signal: controller.signal,
     });
     if (!response.ok) {
@@ -112,6 +122,76 @@ export async function fingerprintProvider(
   return null;
 }
 
+/** Ollama's `/api/show` lists `capabilities` (e.g. `completion`, `vision`). */
+async function ollamaAcceptsImages(
+  origin: string,
+  model: string,
+  timeoutMs: number,
+): Promise<boolean> {
+  const show = await fetchJson(`${origin}/api/show`, timeoutMs, { model });
+  return (
+    isRecord(show) &&
+    Array.isArray(show.capabilities) &&
+    show.capabilities.includes(`vision`)
+  );
+}
+
+/**
+ * LM Studio model ids that accept images, from `/api/v1/models`: an item is
+ * vision-capable when it reports `capabilities.vision === true` or the legacy
+ * `type: 'vlm'`. Items are matched by `key` (falling back to `id`).
+ */
+function lmStudioVisionIds(payload: unknown): Set<string> {
+  const ids = new Set<string>();
+  if (!isRecord(payload) || !Array.isArray(payload.data)) {
+    return ids;
+  }
+
+  for (const item of payload.data) {
+    if (!isRecord(item)) {
+      continue;
+    }
+    const hasVision =
+      item.type === `vlm` ||
+      (isRecord(item.capabilities) && item.capabilities.vision === true);
+    const id = typeof item.key === `string` ? item.key : item.id;
+    if (hasVision && typeof id === `string`) {
+      ids.add(id);
+    }
+  }
+
+  return ids;
+}
+
+/**
+ * Which of an endpoint's `models` accept image input, best-effort per provider
+ * (Ollama `/api/show` capabilities; LM Studio model metadata). Any other server
+ * (vLLM, llama.cpp, SGLang) advertises no modality over `/v1/models`, so its
+ * models default to NOT vision-capable. Sorted; never throws.
+ */
+export async function detectVisionModels(
+  origin: string,
+  provider: ModelProvider | null,
+  models: readonly string[],
+  timeoutMs: number = DEFAULT_FINGERPRINT_TIMEOUT_MS,
+): Promise<string[]> {
+  if (provider === `ollama`) {
+    const flags = await Promise.all(
+      models.map((model) => ollamaAcceptsImages(origin, model, timeoutMs)),
+    );
+    return models.filter((_model, index) => flags[index] === true);
+  }
+
+  if (provider === `lmstudio`) {
+    const ids = lmStudioVisionIds(
+      await fetchJson(`${origin}/api/v1/models`, timeoutMs),
+    );
+    return models.filter((model) => ids.has(model));
+  }
+
+  return [];
+}
+
 /**
  * Probe a single `host:port` for an OpenAI-compatible `/v1/models` endpoint.
  * Returns a {@link ModelEndpoint} when the server answers with a model list, or
@@ -135,7 +215,21 @@ export async function probeEndpoint(
     fingerprintTimeoutMs: options.fingerprintTimeoutMs,
   });
 
-  return { baseUrl: `${origin}/v1`, host, models, port, provider };
+  const visionModels = await detectVisionModels(
+    origin,
+    provider,
+    models,
+    options.fingerprintTimeoutMs,
+  );
+
+  return {
+    baseUrl: `${origin}/v1`,
+    host,
+    models,
+    port,
+    provider,
+    visionModels,
+  };
 }
 
 /**

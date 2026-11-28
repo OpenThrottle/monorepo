@@ -52,6 +52,7 @@ describe('dedupeEndpoints', () => {
       models,
       port,
       provider: null,
+      visionModels: [],
     };
   };
 

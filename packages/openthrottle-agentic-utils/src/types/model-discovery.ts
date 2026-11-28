@@ -33,6 +33,12 @@ export interface ModelEndpoint {
   readonly port: number;
   /** Best-effort provider label, or `null` when not fingerprinted. */
   readonly provider: ModelProvider | null;
+  /**
+   * Subset of {@link models} that accept image input, detected per provider
+   * (Ollama `/api/show` capabilities, LM Studio model metadata). Empty when
+   * the provider is unknown or exposes no modality metadata — the safe default.
+   */
+  readonly visionModels: readonly string[];
 }
 
 /**

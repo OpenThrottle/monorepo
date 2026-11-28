@@ -34,6 +34,7 @@ fragment LocalModelsDiscovery on DiscoverLocalModelsResult {
     host
     models
     provider
+    visionModels
   }
   totalCount
 }

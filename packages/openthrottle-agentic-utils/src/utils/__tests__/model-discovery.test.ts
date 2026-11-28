@@ -135,6 +135,7 @@ describe('probeEndpoint', () => {
       models: ['llama3', 'qwen'],
       port: 11434,
       provider: 'ollama',
+      visionModels: [],
     });
   });
 
@@ -172,6 +173,7 @@ describe('dedupeEndpoints', () => {
       models,
       port,
       provider: null,
+      visionModels: [],
     };
   };
 

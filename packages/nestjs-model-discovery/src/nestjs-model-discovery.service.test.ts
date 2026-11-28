@@ -218,6 +218,7 @@ describe('NestjsModelDiscoveryService', () => {
           models: ['llama3'],
           port: 11434,
           provider: 'ollama',
+          visionModels: [],
         },
       ],
       scannedAt: '2026-01-01T00:00:00.000Z',

@@ -15,8 +15,7 @@ import {
 import * as React from 'react';
 
 import { useChatDialog } from '../hooks/useChatDialog';
-import type { ChatComposerControls } from '../types';
-import type { ChatMessage } from '../types';
+import type { ChatComposerControls, ChatMessage } from '../types';
 import { ChatComposer } from './ChatComposer';
 import { ChatComposerToolbar } from './ChatComposerToolbar';
 import type { ChatConversationSidebarProps } from './ChatConversationSidebar';
@@ -133,9 +132,13 @@ export const ChatDialog = (props: ChatDialogProps): React.ReactElement => {
           }}
         />
         <ChatComposer
+          attachments={composer?.attachments}
+          attachmentsDisabledReason={composer?.attachmentsDisabledReason}
           className="border-t-0"
           disabled={composerDisabled}
           isStreaming={composer?.isStreaming}
+          onAddFiles={composer?.onAddFiles}
+          onRemoveAttachment={composer?.onRemoveAttachment}
           onStop={composer?.onStop}
           onSubmit={onSendMessage}
           sessionUsage={composer?.sessionUsage}

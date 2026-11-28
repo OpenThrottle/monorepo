@@ -16,24 +16,27 @@ import type {
 import { parseFileMentions } from '@openthrottle/react-router-chat';
 import type { ChatAgentRuntime } from '@openthrottle/react-router-chat-state';
 import {
+  acceptsImageInput,
+  buildAttachmentFields,
   buildChatTurnFields,
   buildModelGroups,
   capabilitiesForChatOption,
   CHAT_TOOLBAR_PERSONAS,
   chatToolbarStateAtom,
   decodeChatOption,
+  getAttachmentsDisabledReason,
+  getAttachmentSendBlocker,
   reconcileChatToolbarState,
   toCheckoutOptions,
   useChatDraft,
+  useComposerAttachments,
   writeChatToolbarBackendPref,
 } from '@openthrottle/react-router-chat-state';
 import { useAtom } from 'jotai';
 import * as React from 'react';
 
 import { ConversationListContext } from '~/global/config/ConversationListContext';
-import { HOME_ATTACHMENT_COPY } from '~/routing/home/data/copy';
 import type { UseAgenticChatTurnResult } from '~/routing/home/hooks/useAgenticChatTurn';
-import { useComposerAttachments } from '~/routing/home/hooks/useComposerAttachments';
 import type { UseConversationListResult } from '~/routing/home/hooks/useConversationList';
 import { useConversationUrlSync } from '~/routing/home/hooks/useConversationUrlSync';
 import { useFileMentionProvider } from '~/routing/home/hooks/useFileMentionProvider';
@@ -216,9 +219,10 @@ export const useHomeComposer = (
     decodedOption,
     decodedOption != null ? agentRuntimes[decodedOption.backend] : undefined,
   );
-  // Images ride the turn only for runtimes that report `imageInput`.
-  const acceptsImages = decodedOption != null && agentRuntimes[decodedOption.backend]?.imageInput === true; // prettier-ignore
-  const attachmentsDisabledReason = acceptsImages ? undefined : HOME_ATTACHMENT_COPY.unsupportedModel; // prettier-ignore
+  // Images ride the turn when the runtime reports `imageInput`, or (a local
+  // OpenAI-compatible endpoint) when the selected model is itself vision-capable.
+  const acceptsImages = acceptsImageInput({ agentRuntimes, decodedOption, modelId, models }); // prettier-ignore
+  const attachmentsDisabledReason = getAttachmentsDisabledReason(acceptsImages);
   const attachmentProps: ChatComposerAttachmentProps = {
     attachments: attachments.entries,
     attachmentsDisabledReason,
@@ -302,12 +306,13 @@ export const useHomeComposer = (
       return;
     }
 
-    if (attachments.hasUploading) {
-      turn.setError(HOME_ATTACHMENT_COPY.uploadingBlocker);
-      return;
-    }
-    if (attachments.attachmentIds.length > 0 && !acceptsImages) {
-      turn.setError(HOME_ATTACHMENT_COPY.unsupportedModel);
+    const attachmentBlocker = getAttachmentSendBlocker({
+      acceptsImages,
+      attachmentIds: attachments.attachmentIds,
+      hasUploading: attachments.hasUploading,
+    });
+    if (attachmentBlocker) {
+      turn.setError(attachmentBlocker);
       return;
     }
 
@@ -332,15 +337,15 @@ export const useHomeComposer = (
       serviceTier,
     });
 
-    // Only the ids ride the turn (a JSON array, like fileMentions); the ready
-    // chips are cleared once it is handed off.
-    const hasAttachments = attachments.attachmentIds.length > 0;
-    const attachmentFields: Record<string, string> = hasAttachments
-      ? { attachmentIds: JSON.stringify(attachments.attachmentIds) }
-      : {};
+    // The ready chips are cleared once the server accepts the turn, so a
+    // rejected start keeps them.
+    const attachmentFields = buildAttachmentFields(attachments.attachmentIds);
 
-    turn.submitTurn(trimmed, { ...fields, ...attachmentFields });
-    attachments.clear();
+    turn.submitTurn(
+      trimmed,
+      { ...fields, ...attachmentFields },
+      { onAccepted: attachments.clear },
+    );
     clearDraft();
   };
 

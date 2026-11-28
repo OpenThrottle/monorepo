@@ -46,6 +46,10 @@ describe('classifyEntryName', () => {
     expect(classifyEntryName('.tmp-1234')).toStrictEqual({ kind: 'temp' });
   });
 
+  it('flags a turn staging directory', () => {
+    expect(classifyEntryName('.turn-Ab12Cd')).toStrictEqual({ kind: 'turn' });
+  });
+
   it.each([
     `${SHA}.txt`,
     `${SHA}.jpeg`,

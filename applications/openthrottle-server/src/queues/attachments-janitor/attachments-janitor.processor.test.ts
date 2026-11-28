@@ -7,6 +7,7 @@ import {
   mkdtemp,
   readdir,
   rm,
+  symlink,
   utimes,
   writeFile,
 } from 'node:fs/promises';
@@ -211,6 +212,58 @@ describe('AttachmentsJanitorProcessor', () => {
     });
   });
 
+  describe('turn staging directories', () => {
+    const seedDir = async (name: string, ageMs: number): Promise<void> => {
+      const path = join(root, name);
+      await mkdir(path);
+      await writeFile(join(path, 'staged.png'), 'bytes');
+      const mtime = new Date(NOW.getTime() - ageMs);
+      await utimes(path, mtime, mtime);
+    };
+
+    it('removes a stale .turn-* directory with its contents', async () => {
+      await seedDir('.turn-abc123', 25 * HOUR_MS);
+
+      const summary = await build().sweep(NOW);
+
+      expect(await names()).toStrictEqual([]);
+      expect(summary.turnDirsDeleted).toBe(1);
+    });
+
+    it('keeps a fresh .turn-* directory', async () => {
+      await seedDir('.turn-abc123', HOUR_MS);
+
+      const summary = await build().sweep(NOW);
+
+      expect(await names()).toStrictEqual(['.turn-abc123']);
+      expect(summary.turnDirsDeleted).toBe(0);
+    });
+
+    it('never removes a .turn-* file or a symlink to a directory', async () => {
+      const target = join(root, 'target-dir');
+      await seedDir('target-dir', 400 * DAY_MS);
+      await seed('.turn-file', 400 * DAY_MS);
+      await symlink(target, join(root, '.turn-link'));
+
+      const summary = await build().sweep(NOW);
+
+      expect(await names()).toStrictEqual(
+        ['.turn-file', '.turn-link', 'target-dir'].sort(),
+      );
+      expect(summary.turnDirsDeleted).toBe(0);
+    });
+
+    it('leaves .turn-* directories alone in a worktree', async () => {
+      vi.stubEnv('OT_WORKTREE_DB', 'isolated');
+      await seedDir('.turn-abc123', 25 * HOUR_MS);
+
+      const summary = await build().sweep(NOW);
+
+      expect(await names()).toStrictEqual(['.turn-abc123']);
+      expect(summary.turnDirsDeleted).toBe(0);
+    });
+  });
+
   describe('everything else', () => {
     it('ignores unrelated files and directories', async () => {
       await seed('notes.txt', 400 * DAY_MS);
@@ -241,6 +294,7 @@ describe('AttachmentsJanitorProcessor', () => {
         filesKept: 0,
         rowsDeleted: 0,
         tempFilesDeleted: 0,
+        turnDirsDeleted: 0,
       });
     });
   });

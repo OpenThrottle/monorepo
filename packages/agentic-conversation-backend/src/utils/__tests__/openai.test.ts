@@ -1,3 +1,7 @@
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { openAiConversationBackend } from '../openai.ts';
@@ -122,5 +126,57 @@ describe('openAiConversationBackend', () => {
       }
     }).rejects.toThrow('requires a baseUrl');
     expect(streamChatCompletionMock).not.toHaveBeenCalled();
+  });
+
+  it('attaches the turn images as data URLs to the latest user message only', async () => {
+    streamChatCompletionMock.mockReturnValue(fakeStream(['ok']));
+    const directory = await mkdtemp(join(tmpdir(), 'ot-openai-images-'));
+    try {
+      const path = join(directory, 'pic.png');
+      await writeFile(path, Buffer.from('png-bytes'));
+
+      const stream = openAiConversationBackend.stream({
+        attachments: [{ mimeType: 'image/png', path, sha256: 'a'.repeat(64) }],
+        baseUrl: 'http://localhost:11434/v1',
+        messages: [
+          { content: 'first', role: 'user' },
+          { content: 'answer', role: 'assistant' },
+          { content: 'look at this', role: 'user' },
+        ],
+        model: 'llava',
+      });
+      await stream[Symbol.asyncIterator]().next();
+
+      const expectedUrl = `data:image/png;base64,${Buffer.from('png-bytes').toString('base64')}`;
+      expect(streamChatCompletionMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          messages: [
+            { content: 'first', role: 'user' },
+            { content: 'answer', role: 'assistant' },
+            { content: 'look at this', images: [expectedUrl], role: 'user' },
+          ],
+        }),
+      );
+    } finally {
+      await rm(directory, { force: true, recursive: true });
+    }
+  });
+
+  it('leaves messages untouched when there are no attachments', async () => {
+    streamChatCompletionMock.mockReturnValue(fakeStream(['ok']));
+
+    const stream = openAiConversationBackend.stream({
+      attachments: [],
+      baseUrl: 'http://localhost:11434/v1',
+      messages: [{ content: 'hi', role: 'user' }],
+      model: 'llama3',
+    });
+    await stream[Symbol.asyncIterator]().next();
+
+    expect(streamChatCompletionMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        messages: [{ content: 'hi', role: 'user' }],
+      }),
+    );
   });
 });

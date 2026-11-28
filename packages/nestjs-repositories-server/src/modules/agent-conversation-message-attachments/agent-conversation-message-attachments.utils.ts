@@ -51,5 +51,10 @@ export function createAgentConversationMessageAttachmentsRepositoryMock(): Agent
     >(async () => {
       return [];
     }),
+    unlinkFromMessage: vi.fn<
+      AgentConversationMessageAttachmentsRepository['unlinkFromMessage']
+    >(async () => {
+      return 0;
+    }),
   };
 }

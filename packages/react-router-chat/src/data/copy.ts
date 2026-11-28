@@ -215,6 +215,14 @@ export const CHAT_MESSAGE_ATTACHMENT_COPY = {
   missing: 'Image unavailable',
 } as const;
 
+/** Copy for the full-size image preview dialog. @public */
+export const CHAT_IMAGE_PREVIEW_COPY = {
+  nextImage: 'Next image',
+  openOriginal: 'Open original',
+  position: '{index} of {total}',
+  previousImage: 'Previous image',
+} as const;
+
 /**
  * Turn-error copy keyed by the `extensions.reason` the server puts on a
  * rejected attachment turn. @public
